@@ -4,6 +4,9 @@ using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddMudServices();
+builder.Services.AddMudMarkdownServices();
+builder.Services.AddSingleton<SettingsManager>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddHubOptions(x =>
@@ -15,8 +18,6 @@ builder.WebHost.UseKestrel();
 builder.WebHost.UseWebRoot("wwwroot");
 builder.WebHost.UseStaticWebAssets();
 builder.WebHost.UseUrls("http://localhost:5000");
-builder.Services.AddMudServices();
-builder.Services.AddMudMarkdownServices();
 
 var app = builder.Build();
 app.UseStaticFiles();
