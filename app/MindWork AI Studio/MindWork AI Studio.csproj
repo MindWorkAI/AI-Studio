@@ -4,8 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>MindWork AI Studio</RootNamespace>
-        <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+        <RootNamespace>AIStudio</RootNamespace>
+        <AssemblyName>mindworkAIStudio</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,4 +1,5 @@
-using MindWork_AI_Studio.Components;
+using AIStudio;
+using AIStudio.Components;
 using MudBlazor;
 using MudBlazor.Services;
 
