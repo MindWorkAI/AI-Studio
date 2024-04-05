@@ -1,9 +1,20 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<MudLayout>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+    <MudDrawerContainer Class="mud-height-full">
+        <MudDrawer Fixed="@false" Elevation="0" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@true" Color="Color.Default">
+            <MudNavMenu>
+                <MudNavLink Href="/start" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">Chats</MudNavLink>
+                <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
+    </MudDrawerContainer>
+    
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+            @this.Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>

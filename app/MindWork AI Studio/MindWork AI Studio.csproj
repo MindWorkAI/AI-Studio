@@ -12,4 +12,9 @@
       <None Remove="Properties\launchSettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MudBlazor" Version="6.19.1" />
+      <PackageReference Include="MudBlazor.Markdown" Version="0.1.3" />
+    </ItemGroup>
+
 </Project>
