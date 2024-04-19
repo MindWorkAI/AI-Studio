@@ -4,6 +4,7 @@
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
                 @bind-Text="@this.dataInstanceName"
@@ -12,7 +13,8 @@
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
                 Required="@true"
-                RequiredError="Please add an instance name."
+                RequiredError="Please enter an instance name."
+                Validation="@this.ValidatingInstanceName"
             />
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@

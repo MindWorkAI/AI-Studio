@@ -31,8 +31,13 @@ public partial class Settings : ComponentBase
     
     private async Task AddProvider()
     {
+        var dialogParameters = new DialogParameters<ProviderDialog>
+        {
+            { x => x.UsedInstanceNames, this.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList() },
+        };
+
         var dialogOptions = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium };
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogOptions);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, dialogOptions);
         var dialogResult = await dialogReference.Result;
         if (dialogResult.Canceled)
             return;
