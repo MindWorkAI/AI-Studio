@@ -1,0 +1,46 @@
+@using AIStudio.Provider
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataInstanceName"
+                Label="Instance Name"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentColor="Color.Info"
+                Required="@true"
+                RequiredError="Please add an instance name."
+            />
+            
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudSelect @bind-Value="@this.dataProvider" Label="Provider" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
+                @foreach (Providers provider in Enum.GetValues(typeof(Providers)))
+                {
+                    <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                }
+            </MudSelect>
+        </MudForm>
+
+        @if (this.dataIssues.Any())
+        {
+            <MudPaper Class="pa-2 mt-3">
+                <MudText Typo="Typo.h6">Issues</MudText>
+                <MudList Clickable="@true">
+                    @foreach (var issue in this.dataIssues)
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.Error" IconColor="Color.Error">
+                            @issue
+                        </MudListItem> 
+                    }
+                </MudList>
+            </MudPaper>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel">Cancel</MudButton>
+        <MudButton OnClick="@this.Add" Color="Color.Primary">Add</MudButton>
+    </DialogActions>
+</MudDialog>
