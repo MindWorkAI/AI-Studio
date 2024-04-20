@@ -4,7 +4,7 @@
 
 <MudPaper Class="pa-3">
     <MudText Typo="Typo.h4" Class="mb-3">Configured Providers</MudText>
-    <MudTable Items="@this.Providers">
+    <MudTable Items="@this.SettingsManager.ConfigurationData.Providers">
         <ColGroup>
             <col style="width: 3em;"/>
             <col style="width: 6em;"/>
@@ -22,17 +22,17 @@
             <MudTd>@context.UsedProvider</MudTd>
             <MudTd>@context.InstanceName</MudTd>
             <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2" OnClick="() => this.EditProvider(context)">
                     Edit
                 </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="mr-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="mr-2" OnClick="() => this.DeleteProvider(context)">
                     Delete
                 </MudButton>
             </MudTd>
         </RowTemplate>
     </MudTable>
 
-    @if(this.Providers.Count == 0)
+    @if(this.SettingsManager.ConfigurationData.Providers.Count == 0)
     {
         <MudText Typo="Typo.h6" Class="mt-3">No providers configured yet.</MudText>
     }

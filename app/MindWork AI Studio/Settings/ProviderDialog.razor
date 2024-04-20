@@ -7,23 +7,33 @@
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
-                @bind-Text="@this.dataInstanceName"
+                @bind-Text="@this.DataInstanceName"
                 Label="Instance Name"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
-                Required="@true"
-                RequiredError="Please enter an instance name."
                 Validation="@this.ValidatingInstanceName"
             />
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
-            <MudSelect @bind-Value="@this.dataProvider" Label="Provider" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
+            <MudSelect @bind-Value="@this.DataProvider" Label="Provider" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
                 @foreach (Providers provider in Enum.GetValues(typeof(Providers)))
                 {
                     <MudSelectItem Value="@provider">@provider</MudSelectItem>
                 }
             </MudSelect>
+            
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataAPIKey"
+                Label="API Key"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.VpnKey"
+                AdornmentColor="Color.Info"
+                InputType="InputType.Password"
+                Validation="@this.ValidatingAPIKey"
+            />
         </MudForm>
 
         @if (this.dataIssues.Any())
@@ -42,7 +52,16 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel">Cancel</MudButton>
-        <MudButton OnClick="@this.Add" Color="Color.Primary">Add</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+            @if(this.IsEditing)
+            {
+                @:Update
+            }
+            else
+            {
+                @:Add
+            }
+        </MudButton>
     </DialogActions>
 </MudDialog>
