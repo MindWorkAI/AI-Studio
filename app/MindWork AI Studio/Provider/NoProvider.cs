@@ -11,10 +11,14 @@ public class NoProvider : IProvider
     public string Id => "none";
 
     public string InstanceName { get; set; } = "None";
-    
-    public IAsyncEnumerable<string> GetChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, Thread chatThread) => throw new NotImplementedException();
 
-    public Task<IList<Model>> GetModels(IJSRuntime jsRuntime, SettingsManager settings) => throw new NotImplementedException();
+    public async IAsyncEnumerable<string> GetChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, Thread chatThread)
+    {
+        await Task.CompletedTask;
+        yield return "";
+    }
+
+    public Task<IList<Model>> GetModels(IJSRuntime jsRuntime, SettingsManager settings) => Task.FromResult<IList<Model>>(new List<Model>());
 
     #endregion
 }
