@@ -1,20 +1,21 @@
 ﻿@inherits LayoutComponentBase
 
-<MudLayout>
+<MudPaper Height="calc(100vh);" Elevation="0">
+    <MudLayout>
+        <MudDrawerContainer Class="mud-height-full absolute">
+            <MudDrawer Elevation="0" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@true" Color="Color.Default">
+                <MudNavMenu>
+                    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                    <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">Chats</MudNavLink>
+                    <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+                </MudNavMenu>
+            </MudDrawer>
+        </MudDrawerContainer>
 
-    <MudDrawerContainer Class="mud-height-full">
-        <MudDrawer Fixed="@false" Elevation="0" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@true" Color="Color.Default">
-            <MudNavMenu>
-                <MudNavLink Href="/start" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-                <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">Chats</MudNavLink>
-                <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
-            </MudNavMenu>
-        </MudDrawer>
-    </MudDrawerContainer>
-    
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
-            @this.Body
-        </MudContainer>
-    </MudMainContent>
-</MudLayout>
+        <MudMainContent Class="mud-height-full pt-1">
+            <MudContainer Fixed="@true" Class="mud-height-full">
+                @this.Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</MudPaper>
