@@ -20,7 +20,7 @@
     </div>
 
     <MudPaper Style="flex: 0 0 auto;">
-        <MudTextField T="string" Variant="Variant.Filled" AutoGrow="@true" Lines="3" MaxLines="12" Label="Your Prompt" Placeholder="Type your question here...">
+        <MudTextField T="string" Variant="Variant.Filled" AutoGrow="@true" Lines="3" MaxLines="12" Label="Your Prompt" Placeholder="Type your question here..." Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()">
         </MudTextField>
     </MudPaper>
 </div>
