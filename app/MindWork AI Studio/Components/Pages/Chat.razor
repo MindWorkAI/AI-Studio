@@ -1,0 +1,26 @@
+@page "/chat"
+@using AIStudio.Chat
+
+<MudText Typo="Typo.h3" Class="mb-12">Chats</MudText>
+
+<div class="d-flex flex-column" style="height: calc(100vh - 8.3em);">
+    <div class="flex-auto overflow-auto">
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+        <ContentBlockComponent/>
+    </div>
+
+    <MudPaper Style="flex: 0 0 auto;">
+        <MudTextField T="string" Variant="Variant.Filled" AutoGrow="@true" Lines="3" MaxLines="12" Label="Your Prompt" Placeholder="Type your question here...">
+        </MudTextField>
+    </MudPaper>
+</div>
