@@ -1,12 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use arboard::Clipboard;
 use keyring::Entry;
 use serde::Serialize;
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![store_secret, get_secret, delete_secret])
+        .invoke_handler(tauri::generate_handler![store_secret, get_secret, delete_secret, set_clipboard])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -79,6 +80,37 @@ fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse
 
 #[derive(Serialize)]
 struct DeleteSecretResponse {
+    success: bool,
+    issue: String,
+}
+
+#[tauri::command]
+fn set_clipboard(text: String) -> SetClipboardResponse {
+    let clipboard_result = Clipboard::new();
+    let mut clipboard = match clipboard_result {
+        Ok(clipboard) => clipboard,
+        Err(e) => return SetClipboardResponse {
+            success: false,
+            issue: e.to_string(),
+        },
+    };
+    
+    let set_text_result = clipboard.set_text(text);
+    match set_text_result {
+        Ok(_) => SetClipboardResponse {
+            success: true,
+            issue: String::from(""),
+        },
+        
+        Err(e) => SetClipboardResponse {
+            success: false,
+            issue: e.to_string(),
+        },
+    }
+}
+
+#[derive(Serialize)]
+struct SetClipboardResponse {
     success: bool,
     issue: String,
 }
