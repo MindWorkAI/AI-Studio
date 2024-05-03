@@ -14,7 +14,9 @@
 
     <ItemGroup>
       <PackageReference Include="MudBlazor" Version="6.19.1" />
-      <PackageReference Include="MudBlazor.Markdown" Version="0.1.3" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\MudBlazor.Markdown\MudBlazor.Markdown.csproj" />
     </ItemGroup>
 
 </Project>

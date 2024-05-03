@@ -1,0 +1,110 @@
+﻿/* Code */
+.mud-markdown-body code:not(.hljs) {
+	background: var(--mud-palette-overlay-dark);
+	color: var(--mud-palette-text-primary) !important;
+	padding: 2.5px 7.5px;
+	border-radius: 5px;
+}
+
+/* This component is public, so apply styling in all places, not only within mud-markdown-body */
+pre code.hljs {
+	display: block !important;
+	overflow-x: auto;
+	padding: 1em;
+}
+
+.mud-markdown-body .snippet-clipboard-content {
+	position: relative !important;
+}
+
+	.mud-markdown-body .snippet-clipboard-content:hover > .snippet-clipboard-copy-icon {
+		display: block !important;
+	}
+
+	.mud-markdown-body .snippet-clipboard-content .snippet-clipboard-copy-icon {
+		position: absolute;
+		display: none;
+		top: 0;
+		right: 0;
+	}
+
+/* Quote */
+.mud-markdown-body blockquote {
+	border-left: .25em solid var(--mud-palette-text-disabled);
+	color: var(--mud-palette-text-secondary);
+	background-color: var(--mud-palette-drawer-background);
+	padding: 0.25em 1em;
+	margin: 0.5em 0 1.25em;
+}
+
+	.mud-markdown-body blockquote p {
+		margin-bottom: 0 !important;
+	}
+
+/* Table */
+.mud-markdown-body table {
+	margin: 1.25em 0;
+}
+
+/* Link */
+.mud-markdown-body .mud-link:hover {
+	cursor: pointer !important;
+}
+
+/* List */
+.mud-markdown-body ul {
+	list-style-type: disc;
+}
+
+.mud-markdown-body ul, .mud-markdown-body ol {
+	padding-left: 2em;
+	margin-bottom: 1.25em !important;
+}
+
+	.mud-markdown-body ul ul {
+		list-style-type: circle;
+		margin-bottom: 0 !important;
+	}
+
+		.mud-markdown-body ul ul ul {
+			list-style-type: square;
+			margin-bottom: 0 !important;
+		}
+
+.mud-markdown-body li {
+	display: list-item !important;
+	text-align: -webkit-match-parent;
+}
+
+/* Headers */
+.mud-markdown-body h1, .mud-markdown-body h2 {
+	border-bottom: 1px solid var(--mud-palette-text-disabled);
+	padding-bottom: 0.125em;
+	margin-bottom: 0.4em;
+}
+
+.mud-markdown-body h1, .mud-markdown-body h2, .mud-markdown-body h3, .mud-markdown-body h4, .mud-markdown-body h5, .mud-markdown-body h6 {
+	scroll-margin-top: 5rem;
+	margin-top: 0.25em;
+	word-wrap: break-word;
+	margin-bottom: 0.3em !important;
+}
+
+.mud-markdown-body .mud-divider {
+	margin: 0.5em 0;
+	height: 0.25em;
+}
+
+/* Paragraphs */
+.mud-markdown-body p {
+	margin-bottom: 1.25em !important;
+}
+
+.mud-markdown-body li p, .mud-markdown-body .mud-expand-panel p {
+	margin-bottom: 0 !important;
+}
+
+/* Images */
+.mud-markdown-body img {
+	max-width: 100%;
+}
