@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>AIStudio</RootNamespace>
         <AssemblyName>mindworkAIStudio</AssemblyName>
