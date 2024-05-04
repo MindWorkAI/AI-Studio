@@ -1,6 +1,7 @@
 using AIStudio;
 using AIStudio.Components;
 using AIStudio.Settings;
+using AIStudio.Tools;
 
 using MudBlazor;
 using MudBlazor.Services;
@@ -22,6 +23,7 @@ builder.Services.AddMudMarkdownServices();
 builder.Services.AddSingleton<Rust>();
 builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
+builder.Services.AddSingleton<Random>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddHubOptions(x =>
