@@ -56,7 +56,7 @@ public partial class Settings : ComponentBase
         await this.SettingsManager.StoreSettings();
     }
 
-    private async Task EditProvider(global::AIStudio.Settings.Provider provider)
+    private async Task EditProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
@@ -76,7 +76,7 @@ public partial class Settings : ComponentBase
         await this.SettingsManager.StoreSettings();
     }
 
-    private async Task DeleteProvider(global::AIStudio.Settings.Provider provider)
+    private async Task DeleteProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters
         {

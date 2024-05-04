@@ -40,7 +40,11 @@
     <MudButton
         Variant="Variant.Filled" Color="@Color.Primary"
         StartIcon="@Icons.Material.Filled.AddRoad"
-        Class="mt-3" OnClick="@this.AddProvider">
+        Class="mt-3 mb-6" OnClick="@this.AddProvider">
         Add Provider
     </MudButton>
+
+    <MudText Typo="Typo.h4" Class="mb-3">Options</MudText>
+    <ConfigurationOption OptionDescription="Save energy?" LabelOn="Energy saving is enabled" LabelOff="Energy saving is disabled" State="@(() => this.SettingsManager.ConfigurationData.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IsSavingEnergy = updatedState)" OptionHelp="When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."/>
+    <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
 </MudPaper>
