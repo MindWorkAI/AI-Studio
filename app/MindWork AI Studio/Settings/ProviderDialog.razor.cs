@@ -9,20 +9,35 @@ using MudBlazor;
 
 namespace AIStudio.Settings;
 
+/// <summary>
+/// The provider settings dialog.
+/// </summary>
 public partial class ProviderDialog : ComponentBase
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
     
+    /// <summary>
+    /// The provider's ID.
+    /// </summary>
     [Parameter]
     public string DataId { get; set; } = Guid.NewGuid().ToString();
     
+    /// <summary>
+    /// The user chosen instance name.
+    /// </summary>
     [Parameter]
     public string DataInstanceName { get; set; } = string.Empty;
     
+    /// <summary>
+    /// The provider to use.
+    /// </summary>
     [Parameter]
     public Providers DataProvider { get; set; } = Providers.NONE;
-
+    
+    /// <summary>
+    /// Should the dialog be in editing mode?
+    /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
     
@@ -32,6 +47,9 @@ public partial class ProviderDialog : ComponentBase
     [Inject]
     private IJSRuntime JsRuntime { get; set; } = null!;
 
+    /// <summary>
+    /// The list of used instance names. We need this to check for uniqueness.
+    /// </summary>
     private List<string> usedInstanceNames { get; set; } = [];
     
     private bool dataIsValid;
@@ -40,14 +58,17 @@ public partial class ProviderDialog : ComponentBase
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     
+    // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        // Load the used instance names:
         this.usedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         
+        // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
@@ -57,6 +78,7 @@ public partial class ProviderDialog : ComponentBase
             
             provider.InstanceName = this.DataInstanceName;
             
+            // Load the API key:
             var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
             if(requestedSecret.Success)
                 this.dataAPIKey = requestedSecret.Secret;
@@ -72,6 +94,8 @@ public partial class ProviderDialog : ComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Reset the validation when not editing and on the first render.
+        // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
         
@@ -86,9 +110,12 @@ public partial class ProviderDialog : ComponentBase
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
         
+        // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
         
+        // Use the data model to store the provider.
+        // We just return this data to the parent component:
         var addedProvider = new Provider
         {
             Id = this.DataId,
@@ -96,9 +123,11 @@ public partial class ProviderDialog : ComponentBase
             UsedProvider = this.DataProvider,
         };
         
+        // We need to instantiate the provider to store the API key:
         var provider = this.DataProvider.CreateProvider();
         provider.InstanceName = this.DataInstanceName;
             
+        // Store the API key in the OS secure storage:
         var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
         if (!storeResponse.Success)
         {

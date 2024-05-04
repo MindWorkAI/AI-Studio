@@ -37,6 +37,8 @@ public partial class Settings : ComponentBase
 
     #endregion
 
+    #region Provider related
+
     private async Task AddProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
@@ -96,4 +98,6 @@ public partial class Settings : ComponentBase
             await this.SettingsManager.StoreSettings();
         }
     }
+
+    #endregion
 }

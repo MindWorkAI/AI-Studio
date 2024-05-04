@@ -4,6 +4,9 @@ using MudBlazor;
 
 namespace AIStudio.Components.CommonDialogs;
 
+/// <summary>
+/// A confirmation dialog that can be used to ask the user for confirmation.
+/// </summary>
 public partial class ConfirmDialog : ComponentBase
 {
     [CascadingParameter]

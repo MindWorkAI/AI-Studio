@@ -13,8 +13,14 @@ public partial class MainLayout : LayoutComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        //
+        // We use the Tauri API (Rust) to get the data and config directories
+        // for this app.
+        //
         var dataDir = await this.JsRuntime.InvokeAsync<string>("window.__TAURI__.path.appLocalDataDir");
         var configDir = await this.JsRuntime.InvokeAsync<string>("window.__TAURI__.path.appConfigDir");
+        
+        // Store the directories in the settings manager:
         SettingsManager.ConfigDirectory = configDir;
         SettingsManager.DataDirectory = dataDir;
         
