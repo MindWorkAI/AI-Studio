@@ -1,26 +1,27 @@
 @page "/chat"
 @using AIStudio.Chat
+@using AIStudio.Settings
 
-<MudText Typo="Typo.h3" Class="mb-12">Chats</MudText>
+<MudText Typo="Typo.h3" Class="mb-2">Chats</MudText>
+<MudSelect T="Provider" @bind-Value="@this.selectedProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-2 rounded-lg" Variant="Variant.Outlined">
+    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+    {
+        <MudSelectItem Value="@provider"/>
+    }
+</MudSelect>
 
-<div class="d-flex flex-column" style="height: calc(100vh - 8.3em);">
+<div class="d-flex flex-column" style="height: calc(100vh - 12.3em);">
     <div class="flex-auto overflow-auto">
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
-        <ContentBlockComponent/>
+        @if (this.chatThread is not null)
+        {
+            foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
+            {
+                <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+            }
+        }
     </div>
 
     <MudPaper Style="flex: 0 0 auto;">
-        <MudTextField T="string" Variant="Variant.Filled" AutoGrow="@true" Lines="3" MaxLines="12" Label="Your Prompt" Placeholder="Type your question here..." Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()">
-        </MudTextField>
+        <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent"/>
     </MudPaper>
 </div>

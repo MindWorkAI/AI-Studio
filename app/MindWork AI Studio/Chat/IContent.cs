@@ -1,0 +1,40 @@
+using AIStudio.Provider;
+using AIStudio.Settings;
+
+using Microsoft.JSInterop;
+
+namespace AIStudio.Chat;
+
+/// <summary>
+/// The interface for any content in the chat.
+/// </summary>
+public interface IContent
+{
+    /// <summary>
+    /// Do we need to wait for the remote, i.e., the AI, to process the related request?
+    /// Does not indicate that the stream is finished; it only indicates that we are
+    /// waiting for the first response, i.e., wait for the remote to pick up the request.
+    /// </summary>
+    public bool InitialRemoteWait { get; set; }
+
+    /// <summary>
+    /// Indicates whether the content is streaming right now. False, if the content is
+    /// either static or the stream has finished.
+    /// </summary>
+    public bool IsStreaming { get; set; }
+
+    /// <summary>
+    /// An action that is called when the content was changed during streaming.
+    /// </summary>
+    public Func<Task> StreamingEvent { get; set; }
+
+    /// <summary>
+    /// An action that is called when the streaming is done.
+    /// </summary>
+    public Func<Task> StreamingDone { get; set; }
+    
+    /// <summary>
+    /// Uses the provider to create the content.
+    /// </summary>
+    public Task CreateFromProviderAsync(IProvider provider, IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread chatChatThread, CancellationToken token = default);
+}

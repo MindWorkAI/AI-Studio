@@ -3,16 +3,58 @@
 <MudCard Class="my-2 rounded-lg" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
-            <MudAvatar Color="Color.Primary">Y</MudAvatar>
+            <MudAvatar Color="@this.Role.ToColor()">
+                <MudIcon Icon="@this.Role.ToIcon()"/>
+            </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
-            <MudText Typo="Typo.body1">You</MudText>
+            <MudText Typo="Typo.body1">@this.Role.ToName() (@this.Time)</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" />
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" OnClick="@this.CopyToClipboard" />
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
-        <MudText Typo="Typo.body2">bla bla bla</MudText>
+        @if (!this.HideContent)
+        {
+            if (this.Content.IsStreaming)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+            }
+            
+            switch (this.Type)
+            {
+                case ContentType.TEXT:
+                    if (this.Content is ContentText textContent)
+                    {
+                        if (textContent.InitialRemoteWait)
+                        {
+                            <MudSkeleton Width="30%" Height="42px;"/>
+                            <MudSkeleton Width="80%"/>
+                            <MudSkeleton Width="100%"/>
+                        }
+                        else
+                        {
+                            <MudMarkdown Value="@textContent.Text"/>
+                        }
+                    }
+
+                    break;
+
+                case ContentType.IMAGE:
+                    if (this.Content is ContentImage imageContent)
+                    {
+                        <MudImage Src="@imageContent.URL"/>
+                    }
+
+                    break;
+
+                default:
+                    <MudText Typo="Typo.body2">
+                        Cannot render content of type @this.Type yet.
+                    </MudText>
+                    break;
+            }
+        }
     </MudCardContent>
 </MudCard>
