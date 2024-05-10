@@ -1,7 +1,11 @@
+using System.Reflection;
+
 using AIStudio;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Tools;
+
+using Microsoft.Extensions.FileProviders;
 
 using MudBlazor;
 using MudBlazor.Services;
@@ -31,13 +35,16 @@ builder.Services.AddRazorComponents()
         x.MaximumReceiveMessageSize = null;
     });
 
-builder.WebHost.UseKestrel();
-builder.WebHost.UseWebRoot("wwwroot");
-builder.WebHost.UseStaticWebAssets();
 builder.WebHost.UseUrls("http://localhost:5000");
 
+var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
 var app = builder.Build();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = fileProvider,
+    RequestPath = string.Empty,
+});
+
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
