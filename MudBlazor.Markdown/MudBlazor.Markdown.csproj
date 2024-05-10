@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(Configuration)'=='Release'">
-		<Exec Command="npm run build" />
+		<!-- <Exec Command="npm run build" /> -->
 	</Target>
 
 	<ItemGroup>
