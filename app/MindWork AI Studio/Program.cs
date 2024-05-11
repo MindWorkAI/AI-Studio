@@ -10,7 +10,7 @@ using Microsoft.Extensions.FileProviders;
 using MudBlazor;
 using MudBlazor.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder();
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
@@ -35,7 +35,8 @@ builder.Services.AddRazorComponents()
         x.MaximumReceiveMessageSize = null;
     });
 
-builder.WebHost.UseUrls("http://localhost:5000");
+var port = args.Length > 0 ? args[0] : "5000";
+builder.WebHost.UseUrls($"http://localhost:{port}");
 
 var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
 var app = builder.Build();
