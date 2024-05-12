@@ -1,7 +1,7 @@
 {
   "build": {
     "devPath": "http://localhost:5000",
-    "distDir": "http://localhost:5000",
+    "distDir": "ui/",
     "withGlobalTauri": true
   },
   "package": {
