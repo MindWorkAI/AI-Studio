@@ -5,7 +5,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "mindwork-ai-studio",
+    "productName": "MindWork AI Studio",
     "version": "0.1.0"
   },
   "tauri": {
