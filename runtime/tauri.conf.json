@@ -12,11 +12,26 @@
     "allowlist": {
       "all": false,
       "shell": {
+        "sidecar": true,
         "all": false,
-        "open": true
+        "open": true,
+        "scope": [
+          {
+            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudio",
+            "sidecar": true,
+            "args": true
+          }
+        ]
       },
       "path": {
         "all": true
+      },
+      "http" : {
+        "all": true,
+        "request": true,
+        "scope": [
+          "http://localhost"
+        ]
       }
     },
     "windows": [
@@ -29,12 +44,19 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "dangerousUseHttpScheme": true
     },
     "bundle": {
       "active": true,
       "targets": "all",
       "identifier": "org.tsommer.mindwork-ai-studio",
+      "externalBin": [
+        "../app/MindWork AI Studio/bin/dist/mindworkAIStudio"
+      ],
+      "macOS": {
+        "exceptionDomain": "localhost"
+      },
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
