@@ -50,4 +50,7 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+var serverTask = app.RunAsync();
+
+Console.WriteLine("RUST/TAURI SERVER STARTED");
+await serverTask;
