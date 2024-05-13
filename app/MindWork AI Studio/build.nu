@@ -82,6 +82,16 @@ def "main publish" []: nothing -> nothing {
     }
     
     print "=============================="
+    print "Start building runtime..."
+    
+    cd ../../runtime
+    try {
+        cargo tauri build
+    };
+    
+    cd "../app/MindWork AI Studio"
+    print "=============================="
+    print "Building done."
 }
 
 def get_rids []: nothing -> list {
