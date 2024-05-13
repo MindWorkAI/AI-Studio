@@ -99,6 +99,7 @@ fn main() {
 
     // Create a thread to handle server events:
     tauri::async_runtime::spawn(async move {
+        info!("Start listening for server events...");
         loop {
             match receiver.recv().await {
                 Some(ServerEvent::Started) => {
