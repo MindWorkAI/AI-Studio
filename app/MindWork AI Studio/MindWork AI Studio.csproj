@@ -36,10 +36,7 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
       <PackageReference Include="MudBlazor" Version="6.19.1" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <ProjectReference Include="..\..\MudBlazor.Markdown\MudBlazor.Markdown.csproj" />
+      <PackageReference Include="MudBlazor.Markdown" Version="0.1.3" />
     </ItemGroup>
 
 </Project>
