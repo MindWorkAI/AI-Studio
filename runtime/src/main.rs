@@ -89,6 +89,8 @@ fn main() {
                 Err(e) => error!("Was not able to send the server stop message: {e}."),
             }
         });
+    } else {
+        warn!("Running in development mode, no .NET server will be started.");
     }
 
     let main_window: Arc<Mutex<Option<Window>>> = Arc::new(Mutex::new(None));
