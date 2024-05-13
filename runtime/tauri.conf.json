@@ -45,7 +45,14 @@
     ],
     "security": {
       "csp": null,
-      "dangerousUseHttpScheme": true
+      "dangerousUseHttpScheme": true,
+      "dangerousRemoteDomainIpcAccess": [
+        {
+            "domain": "localhost",
+            "windows": ["main"],
+            "enableTauriAPI": true
+        }
+      ]
     },
     "bundle": {
       "active": true,
