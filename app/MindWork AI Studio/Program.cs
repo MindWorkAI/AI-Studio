@@ -40,6 +40,7 @@ builder.WebHost.UseUrls($"http://localhost:{port}");
 
 var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
 var app = builder.Build();
+app.Use(Redirect.HandlerContentAsync);
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvider,
