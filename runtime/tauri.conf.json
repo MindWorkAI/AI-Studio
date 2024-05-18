@@ -45,7 +45,6 @@
     ],
     "security": {
       "csp": null,
-      "dangerousUseHttpScheme": true,
       "dangerousRemoteDomainIpcAccess": [
         {
             "domain": "localhost",
