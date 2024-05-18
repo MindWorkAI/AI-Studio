@@ -35,7 +35,16 @@
                         }
                         else
                         {
-                            <MudMarkdown Value="@textContent.Text"/>
+                            @if (this.Content.IsStreaming)
+                            {
+                                <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
+                                    @textContent.Text
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudMarkdown Value="@textContent.Text"/>
+                            }
                         }
                     }
 

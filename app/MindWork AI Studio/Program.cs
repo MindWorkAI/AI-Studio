@@ -1,12 +1,16 @@
+using System.Reflection;
+
 using AIStudio;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Tools;
 
+using Microsoft.Extensions.FileProviders;
+
 using MudBlazor;
 using MudBlazor.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder();
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
@@ -31,15 +35,36 @@ builder.Services.AddRazorComponents()
         x.MaximumReceiveMessageSize = null;
     });
 
-builder.WebHost.UseKestrel();
+var port = args.Length > 0 ? args[0] : "5000";
+builder.WebHost.UseUrls($"http://localhost:{port}");
+
+#if DEBUG
 builder.WebHost.UseWebRoot("wwwroot");
 builder.WebHost.UseStaticWebAssets();
-builder.WebHost.UseUrls("http://localhost:5000");
+#endif
 
 var app = builder.Build();
+app.Use(Redirect.HandlerContentAsync);
+
+#if DEBUG
 app.UseStaticFiles();
+#else
+
+var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
+app.UseDeveloperExceptionPage();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = fileProvider,
+    RequestPath = string.Empty,
+});
+
+#endif
+
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+var serverTask = app.RunAsync();
+
+Console.WriteLine("RUST/TAURI SERVER STARTED");
+await serverTask;

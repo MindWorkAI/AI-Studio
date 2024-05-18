@@ -7,17 +7,36 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>AIStudio</RootNamespace>
         <AssemblyName>mindworkAIStudio</AssemblyName>
+        
+        <PublishSingleFile>true</PublishSingleFile> <!-- Publish as single file -->
+        <SelfContained>true</SelfContained> <!-- Publish as self-contained; requires no .NET runtime installed on the target machine -->
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
+        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
+        
+        <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
+        <TrimMode>partial</TrimMode> <!-- Trim unused assemblies, but keep all assemblies referenced by the project -->
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols> <!-- Remove debug symbols -->
+        <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization> <!-- Remove unsafe binary formatter serialization -->
+        <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding> <!-- Remove unsafe UTF7 encoding -->
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Enable reflection for JSON serialization -->
+        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
+        <NoWarn>IL2026</NoWarn> <!-- Suppress warning IL2026: Usage of methods marked as RequiresUnreferencedCode. None issue here, since we use trim mode partial, though. -->
     </PropertyGroup>
 
     <ItemGroup>
+      <!-- Remove launchSettings.json from the project -->  
       <None Remove="Properties\launchSettings.json" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MudBlazor" Version="6.19.1" />
+        <!-- Embed all files in wwwroot folder -->
+        <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
+
     <ItemGroup>
-      <ProjectReference Include="..\..\MudBlazor.Markdown\MudBlazor.Markdown.csproj" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
+      <PackageReference Include="MudBlazor" Version="6.19.1" />
+      <PackageReference Include="MudBlazor.Markdown" Version="0.1.3" />
     </ItemGroup>
 
 </Project>

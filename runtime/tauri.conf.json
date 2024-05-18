@@ -1,22 +1,37 @@
 {
   "build": {
     "devPath": "http://localhost:5000",
-    "distDir": "http://localhost:5000",
+    "distDir": "ui/",
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "mindwork-ai-studio",
+    "productName": "MindWork AI Studio",
     "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
       "all": false,
       "shell": {
+        "sidecar": true,
         "all": false,
-        "open": true
+        "open": true,
+        "scope": [
+          {
+            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudio",
+            "sidecar": true,
+            "args": true
+          }
+        ]
       },
       "path": {
         "all": true
+      },
+      "http" : {
+        "all": true,
+        "request": true,
+        "scope": [
+          "http://localhost"
+        ]
       }
     },
     "windows": [
@@ -29,12 +44,25 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "dangerousRemoteDomainIpcAccess": [
+        {
+            "domain": "localhost",
+            "windows": ["main"],
+            "enableTauriAPI": true
+        }
+      ]
     },
     "bundle": {
       "active": true,
       "targets": "all",
       "identifier": "org.tsommer.mindwork-ai-studio",
+      "externalBin": [
+        "../app/MindWork AI Studio/bin/dist/mindworkAIStudio"
+      ],
+      "macOS": {
+        "exceptionDomain": "localhost"
+      },
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -42,6 +70,9 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ]
+    },
+    "updater": {
+      "active": false
     }
   }
 }
