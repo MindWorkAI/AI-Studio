@@ -14,11 +14,24 @@ internal static class Redirect
             return;
         }
 
+        
+        #if DEBUG
+        
+        if (path.StartsWith(SYSTEM, StringComparison.InvariantCulture))
+        {
+            context.Response.Redirect(path.Replace(SYSTEM, CONTENT), true, true);
+            return;
+        }
+        
+        #else
+        
         if (path.StartsWith(CONTENT, StringComparison.InvariantCulture))
         {
             context.Response.Redirect(path.Replace(CONTENT, SYSTEM), true, true);
             return;
         }
+
+        #endif
 
         await nextHandler();
     }

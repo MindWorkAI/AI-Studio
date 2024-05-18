@@ -38,14 +38,27 @@ builder.Services.AddRazorComponents()
 var port = args.Length > 0 ? args[0] : "5000";
 builder.WebHost.UseUrls($"http://localhost:{port}");
 
-var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
+#if DEBUG
+builder.WebHost.UseWebRoot("wwwroot");
+builder.WebHost.UseStaticWebAssets();
+#endif
+
 var app = builder.Build();
 app.Use(Redirect.HandlerContentAsync);
+
+#if DEBUG
+app.UseStaticFiles();
+#else
+
+var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
+app.UseDeveloperExceptionPage();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvider,
     RequestPath = string.Empty,
 });
+
+#endif
 
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
