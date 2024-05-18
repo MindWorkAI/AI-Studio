@@ -48,10 +48,10 @@ app.Use(Redirect.HandlerContentAsync);
 
 #if DEBUG
 app.UseStaticFiles();
+app.UseDeveloperExceptionPage();
 #else
 
 var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
-app.UseDeveloperExceptionPage();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvider,
