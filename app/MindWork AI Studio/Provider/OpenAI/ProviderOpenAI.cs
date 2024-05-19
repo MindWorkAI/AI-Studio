@@ -157,13 +157,13 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default)
     {
-        return await this.LoadModels(jsRuntime, settings, "gpt-", token);
+        return this.LoadModels(jsRuntime, settings, "gpt-", token);
     }
 
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default)
     {
-        return await this.LoadModels(jsRuntime, settings, "dall-e-", token);
+        return this.LoadModels(jsRuntime, settings, "dall-e-", token);
     }
 
     #endregion
