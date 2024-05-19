@@ -56,7 +56,7 @@ public partial class ProviderDialog : ComponentBase
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
-    private List<string> usedInstanceNames { get; set; } = [];
+    private List<string> UsedInstanceNames { get; set; } = [];
     
     private bool dataIsValid;
     private string[] dataIssues = [];
@@ -74,7 +74,7 @@ public partial class ProviderDialog : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         // Load the used instance names:
-        this.usedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
+        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -189,7 +189,7 @@ public partial class ProviderDialog : ComponentBase
         
         // The instance name must be unique:
         var lowerInstanceName = instanceName.ToLowerInvariant();
-        if (lowerInstanceName != this.dataEditingPreviousInstanceName && this.usedInstanceNames.Contains(lowerInstanceName))
+        if (lowerInstanceName != this.dataEditingPreviousInstanceName && this.UsedInstanceNames.Contains(lowerInstanceName))
             return "The instance name must be unique; the chosen name is already in use.";
         
         return null;
