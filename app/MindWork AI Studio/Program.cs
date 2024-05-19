@@ -1,14 +1,15 @@
-using System.Reflection;
-
 using AIStudio;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Tools;
 
-using Microsoft.Extensions.FileProviders;
-
 using MudBlazor;
 using MudBlazor.Services;
+
+#if !DEBUG
+using System.Reflection;
+using Microsoft.Extensions.FileProviders;
+#endif
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddMudServices(config =>
