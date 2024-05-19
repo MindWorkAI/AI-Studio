@@ -14,7 +14,12 @@ public sealed class Data
     /// <summary>
     /// List of configured providers.
     /// </summary>
-    public List<Provider> Providers { get; init; } = new();
+    public List<Provider> Providers { get; init; } = [];
+
+    /// <summary>
+    /// The next provider number to use.
+    /// </summary>
+    public uint NextProviderNum { get; set; } = 1;
 
     /// <summary>
     /// Should we save energy? When true, we will update content streamed

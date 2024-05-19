@@ -16,6 +16,12 @@ public partial class ProviderDialog : ComponentBase
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
+
+    /// <summary>
+    /// The provider's number in the list.
+    /// </summary>
+    [Parameter]
+    public uint DataNum { get; set; }
     
     /// <summary>
     /// The provider's ID.
@@ -129,6 +135,7 @@ public partial class ProviderDialog : ComponentBase
         // We just return this data to the parent component:
         var addedProvider = new Provider
         {
+            Num = this.DataNum,
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedProvider = this.DataProvider,
