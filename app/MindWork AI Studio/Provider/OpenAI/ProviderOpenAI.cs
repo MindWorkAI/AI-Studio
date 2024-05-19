@@ -171,18 +171,17 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
     private async Task<IEnumerable<Model>> LoadModels(IJSRuntime jsRuntime, SettingsManager settings, string prefix, CancellationToken token)
     {
         var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
-        if(!requestedSecret.Success)
-            return new List<Model>();
+        if (!requestedSecret.Success)
+            return [];
         
         var request = new HttpRequestMessage(HttpMethod.Get, "models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
-        
-        var emptyList = new List<Model>();
+
         var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
-            return emptyList;
+            return [];
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n => n.Id.StartsWith(prefix, StringComparison.InvariantCulture)).ToList();
+        return modelResponse.Data.Where(n => n.Id.StartsWith(prefix, StringComparison.InvariantCulture));
     }
 }
