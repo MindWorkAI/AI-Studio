@@ -208,6 +208,8 @@ public partial class ProviderDialog : ComponentBase
 
     private void Cancel() => this.MudDialog.Cancel();
 
+    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && !string.IsNullOrWhiteSpace(this.DataInstanceName);
+    
     private async Task ReloadModels()
     {
         var provider = this.DataProvider.CreateProvider(this.DataInstanceName);

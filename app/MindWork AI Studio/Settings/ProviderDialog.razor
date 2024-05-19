@@ -38,7 +38,7 @@
             />
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
-                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Reload</MudButton>
+                <MudButton Disabled="@(!this.CanLoadModels)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Reload</MudButton>
                 <MudSelect @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
                     @foreach (var model in this.availableModels)
                     {
