@@ -26,6 +26,7 @@
     <ItemGroup>
       <!-- Remove launchSettings.json from the project -->  
       <None Remove="Properties\launchSettings.json" />
+      <None Remove="build.nu" />
     </ItemGroup>
 
     <ItemGroup>
