@@ -25,6 +25,7 @@ public static class ExtensionsProvider
     {
         Providers.OPEN_AI => "OpenAI",
         
+        Providers.NONE => "No provider selected",
         _ => "Unknown",
     };
     
