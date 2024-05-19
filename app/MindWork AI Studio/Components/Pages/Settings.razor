@@ -8,19 +8,22 @@
         <ColGroup>
             <col style="width: 3em;"/>
             <col style="width: 6em;"/>
+            <col style="width: 6em;"/>
             <col/>
             <col style="width: 20em;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>#</MudTh>
+            <MudTh>Instance Name</MudTh>
             <MudTh>Provider</MudTh>
-            <MudTh>Name</MudTh>
+            <MudTh>Model</MudTh>
             <MudTh Style="text-align: left;">Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd></MudTd>
-            <MudTd>@context.UsedProvider</MudTd>
             <MudTd>@context.InstanceName</MudTd>
+            <MudTd>@context.UsedProvider</MudTd>
+            <MudTd>@context.Model</MudTd>
             <MudTd Style="text-align: left;">
                 <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2" OnClick="() => this.EditProvider(context)">
                     Edit

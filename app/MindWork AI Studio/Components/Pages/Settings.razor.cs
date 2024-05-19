@@ -63,6 +63,7 @@ public partial class Settings : ComponentBase
             { x => x.DataId, provider.Id },
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataProvider, provider.UsedProvider },
+            { x => x.DataModel, provider.Model },
             { x => x.IsEditing, true },
         };
 
