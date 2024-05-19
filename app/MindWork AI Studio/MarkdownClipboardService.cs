@@ -1,9 +1,5 @@
 using AIStudio.Tools;
 
-using Microsoft.JSInterop;
-
-using MudBlazor;
-
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace AIStudio;

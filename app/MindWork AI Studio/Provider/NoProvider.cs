@@ -3,10 +3,6 @@ using System.Runtime.CompilerServices;
 using AIStudio.Chat;
 using AIStudio.Settings;
 
-using Microsoft.JSInterop;
-
-using MudBlazor;
-
 namespace AIStudio.Provider;
 
 public class NoProvider : IProvider

@@ -1,8 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
 
-using Microsoft.JSInterop;
-
 namespace AIStudio.Chat;
 
 /// <summary>

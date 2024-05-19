@@ -4,9 +4,6 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
-
-using MudBlazor;
 
 namespace AIStudio.Components.Pages;
 
