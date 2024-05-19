@@ -20,7 +20,7 @@ public readonly record struct Provider(string Id, string InstanceName, Providers
     /// <returns>A string that represents the current provider in a human-readable format.</returns>
     public override string ToString()
     {
-        return $"{this.InstanceName} ({this.UsedProvider.ToName()})";
+        return $"{this.InstanceName} ({this.UsedProvider.ToName()}, {this.Model})";
     }
 
     #endregion
