@@ -5,9 +5,15 @@
         <MudDrawerContainer Class="mud-height-full absolute">
             <MudDrawer Elevation="0" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@true" Color="Color.Default">
                 <MudNavMenu>
-                    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-                    <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">Chats</MudNavLink>
-                    <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+                    <MudTooltip Text="Home" Placement="Placement.Right">
+                        <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                    </MudTooltip>
+                    <MudTooltip Text="Chats" Placement="Placement.Right">
+                        <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">Chats</MudNavLink>
+                    </MudTooltip>
+                    <MudTooltip Text="Settings" Placement="Placement.Right">
+                        <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+                    </MudTooltip>
                 </MudNavMenu>
             </MudDrawer>
         </MudDrawerContainer>
