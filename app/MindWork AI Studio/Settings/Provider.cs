@@ -8,7 +8,8 @@ namespace AIStudio.Settings;
 /// <param name="Id">The provider's ID.</param>
 /// <param name="InstanceName">The provider's instance name. Useful for multiple instances of the same provider, e.g., to distinguish between different OpenAI API keys.</param>
 /// <param name="UsedProvider">The provider used.</param>
-public readonly record struct Provider(string Id, string InstanceName, Providers UsedProvider)
+/// <param name="Model">The LLM model to use for chat.</param>
+public readonly record struct Provider(string Id, string InstanceName, Providers UsedProvider, Model Model)
 {
     #region Overrides of ValueType
 
