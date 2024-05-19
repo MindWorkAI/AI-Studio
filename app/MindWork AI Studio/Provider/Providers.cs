@@ -28,15 +28,16 @@ public static class ExtensionsProvider
         Providers.NONE => "No provider selected",
         _ => "Unknown",
     };
-    
+
     /// <summary>
     /// Creates a new provider instance based on the provider value.
     /// </summary>
     /// <param name="provider">The provider value.</param>
+    /// <param name="instanceName">The used instance name.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this Providers provider) => provider switch
+    public static IProvider CreateProvider(this Providers provider, string instanceName) => provider switch
     {
-        Providers.OPEN_AI => new ProviderOpenAI(),
+        Providers.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName },
         
         _ => new NoProvider(),
     };

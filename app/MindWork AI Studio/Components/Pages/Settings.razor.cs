@@ -88,9 +88,7 @@ public partial class Settings : ComponentBase
         if (dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.UsedProvider.CreateProvider();
-        providerInstance.InstanceName = provider.InstanceName;
-        
+        var providerInstance = provider.UsedProvider.CreateProvider(provider.InstanceName);
         var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
         if(deleteSecretResponse.Success)
         {

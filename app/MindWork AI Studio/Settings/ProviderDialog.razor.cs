@@ -72,11 +72,9 @@ public partial class ProviderDialog : ComponentBase
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
-            var provider = this.DataProvider.CreateProvider();
+            var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
             if(provider is NoProvider)
                 return;
-            
-            provider.InstanceName = this.DataInstanceName;
             
             // Load the API key:
             var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
@@ -124,8 +122,7 @@ public partial class ProviderDialog : ComponentBase
         };
         
         // We need to instantiate the provider to store the API key:
-        var provider = this.DataProvider.CreateProvider();
-        provider.InstanceName = this.DataInstanceName;
+        var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
             
         // Store the API key in the OS secure storage:
         var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
