@@ -36,6 +36,12 @@ public partial class ProviderDialog : ComponentBase
     public Providers DataProvider { get; set; } = Providers.NONE;
     
     /// <summary>
+    /// The LLM model to use, e.g., GPT-4o.
+    /// </summary>
+    [Parameter]
+    public Model DataModel { get; set; }
+    
+    /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]
@@ -60,6 +66,8 @@ public partial class ProviderDialog : ComponentBase
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
+    
+    private readonly List<Model> availableModels = new();
 
     #region Overrides of ComponentBase
 
@@ -79,7 +87,12 @@ public partial class ProviderDialog : ComponentBase
             // Load the API key:
             var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
             if(requestedSecret.Success)
+            {
                 this.dataAPIKey = requestedSecret.Secret;
+                
+                // Now, we try to load the list of available models:
+                await this.ReloadModels();
+            }
             else
             {
                 this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
@@ -119,6 +132,7 @@ public partial class ProviderDialog : ComponentBase
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedProvider = this.DataProvider,
+            Model = this.DataModel,
         };
         
         // We need to instantiate the provider to store the API key:
@@ -140,6 +154,14 @@ public partial class ProviderDialog : ComponentBase
     {
         if (provider == Providers.NONE)
             return "Please select a provider.";
+        
+        return null;
+    }
+    
+    private string? ValidatingModel(Model model)
+    {
+        if (model == default)
+            return "Please select a model.";
         
         return null;
     }
@@ -185,4 +207,19 @@ public partial class ProviderDialog : ComponentBase
     }
 
     private void Cancel() => this.MudDialog.Cancel();
+
+    private async Task ReloadModels()
+    {
+        var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
+        if(provider is NoProvider)
+            return;
+
+        var models = await provider.GetTextModels(this.JsRuntime, this.SettingsManager);
+        
+        // Order descending by ID means that the newest models probably come first:
+        var orderedModels = models.OrderByDescending(n => n.Id);
+        
+        this.availableModels.Clear();
+        this.availableModels.AddRange(orderedModels);
+    }
 }
