@@ -16,6 +16,12 @@ public partial class ProviderDialog : ComponentBase
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
+
+    /// <summary>
+    /// The provider's number in the list.
+    /// </summary>
+    [Parameter]
+    public uint DataNum { get; set; }
     
     /// <summary>
     /// The provider's ID.
@@ -36,6 +42,12 @@ public partial class ProviderDialog : ComponentBase
     public Providers DataProvider { get; set; } = Providers.NONE;
     
     /// <summary>
+    /// The LLM model to use, e.g., GPT-4o.
+    /// </summary>
+    [Parameter]
+    public Model DataModel { get; set; }
+    
+    /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]
@@ -50,7 +62,7 @@ public partial class ProviderDialog : ComponentBase
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
-    private List<string> usedInstanceNames { get; set; } = [];
+    private List<string> UsedInstanceNames { get; set; } = [];
     
     private bool dataIsValid;
     private string[] dataIssues = [];
@@ -60,28 +72,33 @@ public partial class ProviderDialog : ComponentBase
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
+    
+    private readonly List<Model> availableModels = new();
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         // Load the used instance names:
-        this.usedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
+        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
-            var provider = this.DataProvider.CreateProvider();
+            var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
             if(provider is NoProvider)
                 return;
-            
-            provider.InstanceName = this.DataInstanceName;
             
             // Load the API key:
             var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
             if(requestedSecret.Success)
+            {
                 this.dataAPIKey = requestedSecret.Secret;
+                
+                // Now, we try to load the list of available models:
+                await this.ReloadModels();
+            }
             else
             {
                 this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
@@ -118,14 +135,15 @@ public partial class ProviderDialog : ComponentBase
         // We just return this data to the parent component:
         var addedProvider = new Provider
         {
+            Num = this.DataNum,
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedProvider = this.DataProvider,
+            Model = this.DataModel,
         };
         
         // We need to instantiate the provider to store the API key:
-        var provider = this.DataProvider.CreateProvider();
-        provider.InstanceName = this.DataInstanceName;
+        var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
             
         // Store the API key in the OS secure storage:
         var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
@@ -143,6 +161,14 @@ public partial class ProviderDialog : ComponentBase
     {
         if (provider == Providers.NONE)
             return "Please select a provider.";
+        
+        return null;
+    }
+    
+    private string? ValidatingModel(Model model)
+    {
+        if (model == default)
+            return "Please select a model.";
         
         return null;
     }
@@ -170,7 +196,7 @@ public partial class ProviderDialog : ComponentBase
         
         // The instance name must be unique:
         var lowerInstanceName = instanceName.ToLowerInvariant();
-        if (lowerInstanceName != this.dataEditingPreviousInstanceName && this.usedInstanceNames.Contains(lowerInstanceName))
+        if (lowerInstanceName != this.dataEditingPreviousInstanceName && this.UsedInstanceNames.Contains(lowerInstanceName))
             return "The instance name must be unique; the chosen name is already in use.";
         
         return null;
@@ -188,4 +214,21 @@ public partial class ProviderDialog : ComponentBase
     }
 
     private void Cancel() => this.MudDialog.Cancel();
+
+    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && !string.IsNullOrWhiteSpace(this.DataInstanceName);
+    
+    private async Task ReloadModels()
+    {
+        var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
+        if(provider is NoProvider)
+            return;
+
+        var models = await provider.GetTextModels(this.JsRuntime, this.SettingsManager);
+        
+        // Order descending by ID means that the newest models probably come first:
+        var orderedModels = models.OrderByDescending(n => n.Id);
+        
+        this.availableModels.Clear();
+        this.availableModels.AddRange(orderedModels);
+    }
 }

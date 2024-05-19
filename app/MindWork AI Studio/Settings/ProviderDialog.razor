@@ -9,6 +9,7 @@
                 T="string"
                 @bind-Text="@this.DataInstanceName"
                 Label="Instance Name"
+                Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
@@ -16,7 +17,7 @@
             />
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
-            <MudSelect @bind-Value="@this.DataProvider" Label="Provider" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
+            <MudSelect @bind-Value="@this.DataProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
                 @foreach (Providers provider in Enum.GetValues(typeof(Providers)))
                 {
                     <MudSelectItem Value="@provider">@provider</MudSelectItem>
@@ -28,12 +29,24 @@
                 T="string"
                 @bind-Text="@this.dataAPIKey"
                 Label="API Key"
+                Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.VpnKey"
                 AdornmentColor="Color.Info"
                 InputType="InputType.Password"
                 Validation="@this.ValidatingAPIKey"
             />
+
+            <MudStack Row="@true" AlignItems="AlignItems.Center">
+                <MudButton Disabled="@(!this.CanLoadModels)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Reload</MudButton>
+                <MudSelect @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
+                    @foreach (var model in this.availableModels)
+                    {
+                        <MudSelectItem Value="@model">@model</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            
         </MudForm>
 
         @if (this.dataIssues.Any())

@@ -52,6 +52,8 @@ public partial class Settings : ComponentBase
             return;
 
         var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data;
+        addedProvider = addedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
+        
         this.SettingsManager.ConfigurationData.Providers.Add(addedProvider);
         await this.SettingsManager.StoreSettings();
     }
@@ -60,9 +62,11 @@ public partial class Settings : ComponentBase
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
+            { x => x.DataNum, provider.Num },
             { x => x.DataId, provider.Id },
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataProvider, provider.UsedProvider },
+            { x => x.DataModel, provider.Model },
             { x => x.IsEditing, true },
         };
 
@@ -72,6 +76,12 @@ public partial class Settings : ComponentBase
             return;
 
         var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data;
+        
+        // Set the provider number if it's not set. This is important for providers
+        // added before we started saving the provider number.
+        if(editedProvider.Num == 0)
+            editedProvider = editedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
+        
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
         await this.SettingsManager.StoreSettings();
     }
@@ -88,9 +98,7 @@ public partial class Settings : ComponentBase
         if (dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.UsedProvider.CreateProvider();
-        providerInstance.InstanceName = provider.InstanceName;
-        
+        var providerInstance = provider.UsedProvider.CreateProvider(provider.InstanceName);
         var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
         if(deleteSecretResponse.Success)
         {

@@ -20,12 +20,18 @@
         <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding> <!-- Remove unsafe UTF7 encoding -->
         <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault> <!-- Enable reflection for JSON serialization -->
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
-        <NoWarn>IL2026</NoWarn> <!-- Suppress warning IL2026: Usage of methods marked as RequiresUnreferencedCode. None issue here, since we use trim mode partial, though. -->
+
+        <!--
+            IL2026: Usage of methods marked as RequiresUnreferencedCode. None issue here, since we use partial trim mode, though.
+            CS8974: Converting method group to non-delegate type; Did you intend to invoke the method? We have this issue with MudBlazor validation methods.
+        -->
+        <NoWarn>IL2026, CS8974</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
       <!-- Remove launchSettings.json from the project -->  
       <None Remove="Properties\launchSettings.json" />
+      <None Remove="build.nu" />
     </ItemGroup>
 
     <ItemGroup>
