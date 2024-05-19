@@ -53,7 +53,7 @@ public interface IProvider
     /// <param name="settings">The settings manager to access the API key.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of text models.</returns>
-    public Task<IList<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default);
+    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default);
     
     /// <summary>
     /// Load all possible image models that can be used with this provider.
@@ -62,5 +62,5 @@ public interface IProvider
     /// <param name="settings">The settings manager to access the API key.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of image models.</returns>
-    public Task<IList<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default);
+    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default);
 }
