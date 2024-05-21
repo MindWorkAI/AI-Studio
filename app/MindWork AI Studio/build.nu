@@ -312,7 +312,9 @@ def update_project_commit_hash []: nothing -> nothing {
         { num_dirty: $num_dirty, first_is_metadata: _, git_tag_present: _, git_tag: _ } if $num_dirty > 1 => ", dev debug",
         { num_dirty: $num_dirty, first_is_metadata: false, git_tag_present: _, git_tag: _ } if $num_dirty == 1 => ", dev debug",
         { num_dirty: $num_dirty, first_is_metadata: true, git_tag_present: false, git_tag: _ } if $num_dirty == 1 => ", dev testing",
+        { num_dirty: $num_dirty, first_is_metadata: false, git_tag_present: false, git_tag: _ } if $num_dirty == 0 => ", dev testing",
         { num_dirty: $num_dirty, first_is_metadata: true, git_tag_present: true, git_tag: $tag } if $num_dirty == 1 => $", release $tag",
+        { num_dirty: $num_dirty, first_is_metadata: false, git_tag_present: true, git_tag: $tag } if $num_dirty == 0 => $", release $tag",
         
         _ => "-dev unknown"
     }
