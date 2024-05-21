@@ -18,10 +18,31 @@ use log::{debug, error, info, warn};
 
 fn main() {
 
+    let metadata = include_str!("../../metadata.txt");
+    let mut metadata_lines = metadata.lines();
+    let app_version = metadata_lines.next().unwrap();
+    let build_time = metadata_lines.next().unwrap();
+    let build_number = metadata_lines.next().unwrap();
+    let dotnet_sdk_version = metadata_lines.next().unwrap();
+    let dotnet_version = metadata_lines.next().unwrap();
+    let rust_version = metadata_lines.next().unwrap();
+    let mud_blazor_version = metadata_lines.next().unwrap();
+    let tauri_version = metadata_lines.next().unwrap();
+    let app_commit_hash = metadata_lines.next().unwrap();
+
     Logger::try_with_str("debug").expect("Cannot create logging")
         .log_to_stdout()
         .adaptive_format_for_stdout(AdaptiveFormat::Detailed)
         .start().expect("Cannot start logging");
+
+    info!("Starting MindWork AI Studio:");
+    info!(".. Version: v{app_version} (commit {app_commit_hash}, build {build_number})");
+    info!(".. Build time: {build_time}");
+    info!(".. .NET SDK: v{dotnet_sdk_version}");
+    info!(".. .NET: v{dotnet_version}");
+    info!(".. Rust: v{rust_version}");
+    info!(".. MudBlazor: v{mud_blazor_version}");
+    info!(".. Tauri: v{tauri_version}");
 
     if is_dev() {
         warn!("Running in development mode.");
