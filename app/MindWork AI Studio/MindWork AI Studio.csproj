@@ -4,6 +4,7 @@
     <UsingTask TaskName="ReadLinesFromFile" AssemblyFile="$(MSBuildBinPath)\Microsoft.Build.Tasks.Core.dll" />
     
     <PropertyGroup>
+        <Authors>Thorsten Sommer</Authors>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
