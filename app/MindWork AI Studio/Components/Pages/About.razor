@@ -1,1 +1,22 @@
-@page "/About"
+@page "/about"
+<MudText Typo="Typo.h3" Class="mb-2">About MindWork AI Studio</MudText>
+
+<MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">Versions</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudText>
+            The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
+        </MudText>
+        <MudList Clickable="@true">
+            <MudListItem Icon="@Icons.Material.Outlined.Apps" Text="@VersionApp"/>
+            <MudListItem Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
+            <MudListItem Icon="@Icons.Material.Outlined.Code" Text="@VersionDotnetSdk"/>
+            <MudListItem Icon="@Icons.Material.Outlined.SystemUpdate" Text="@VersionDotnet"/>
+            <MudListItem Icon="@Icons.Material.Outlined.Code" Text="@VersionRust"/>
+            <MudListItem Icon="@Icons.Material.Outlined.Code" Text="@MudBlazorVersion"/>
+            <MudListItem Icon="@Icons.Material.Outlined.Code" Text="@TauriVersion"/>
+        </MudList>
+    </MudCardContent>
+</MudCard>
