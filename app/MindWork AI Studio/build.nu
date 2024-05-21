@@ -299,7 +299,7 @@ def update_project_commit_hash []: nothing -> nothing {
     # Check, if the work directory is clean. We allow, that the metadata file is dirty:
     let git_status = (^git status --porcelain) | lines
     let dirty_files = $git_status | length
-    let first_is_metadata = ($git_status.0 =~ '^\sM\s+metadata.txt$')
+    let first_is_metadata = ($dirty_files > 0 and $git_status.0 =~ '^\sM\s+metadata.txt$')
     let git_tag_response = ^git describe --tags --exact-match | complete
     let state = {
         num_dirty: $dirty_files,
