@@ -44,9 +44,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.5" />
       <PackageReference Include="MudBlazor" Version="6.19.1" />
-      <PackageReference Include="MudBlazor.Markdown" Version="0.1.3" />
+      <PackageReference Include="MudBlazor.Markdown" Version="1.0.0" />
     </ItemGroup>
 
     <!-- Read the meta data file -->
