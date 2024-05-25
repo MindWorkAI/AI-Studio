@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+    <!-- Using Microsoft.Build.Tasks.Core.dll to be able to read files -->
+    <UsingTask TaskName="ReadLinesFromFile" AssemblyFile="$(MSBuildBinPath)\Microsoft.Build.Tasks.Core.dll" />
+    
     <PropertyGroup>
+        <Authors>Thorsten Sommer</Authors>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
@@ -29,7 +33,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <!-- Remove launchSettings.json from the project -->  
+      <!-- Remove some files from the solution view -->  
       <None Remove="Properties\launchSettings.json" />
       <None Remove="build.nu" />
     </ItemGroup>
@@ -40,9 +44,52 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.5" />
       <PackageReference Include="MudBlazor" Version="6.19.1" />
-      <PackageReference Include="MudBlazor.Markdown" Version="0.1.3" />
+      <PackageReference Include="MudBlazor.Markdown" Version="1.0.0" />
     </ItemGroup>
+
+    <!-- Read the meta data file -->
+    <Target Name="ReadMetaData" BeforeTargets="BeforeBuild">
+        <Error Text="The ../../metadata.txt file was not found!" Condition="!Exists('../../metadata.txt')" />
+        
+        <ReadLinesFromFile File="../../metadata.txt">
+            <Output TaskParameter="Lines" PropertyName="Metadata" />
+        </ReadLinesFromFile>
+        
+        <PropertyGroup>
+            <MetaVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 0 ])</MetaVersion>
+            <MetaBuildTime>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 1 ])</MetaBuildTime>
+            <MetaBuild>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 2 ])</MetaBuild>
+            <MetaDotnetSdkVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 3 ])</MetaDotnetSdkVersion>
+            <MetaDotnetVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 4 ])</MetaDotnetVersion>
+            <MetaRustVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 5 ])</MetaRustVersion>
+            <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
+            <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
+            <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
+            
+            <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+            
+            <AssemblyVersion>$(MetaVersion)</AssemblyVersion>
+            <FileVersion>$(MetaVersion)</FileVersion>
+            <InformationalVersion>$(MetaVersion)</InformationalVersion>
+        </PropertyGroup>
+        
+        <ItemGroup>
+            <AssemblyAttribute Include="AIStudio.MetaDataAttribute">
+                <_Parameter1>$(MetaVersion)</_Parameter1>
+                <_Parameter2>$(MetaBuildTime)</_Parameter2>
+                <_Parameter3>$(MetaBuild)</_Parameter3>
+                <_Parameter3_TypeName>System.UInt32</_Parameter3_TypeName>
+                <_Parameter4>$(MetaDotnetSdkVersion)</_Parameter4>
+                <_Parameter5>$(MetaDotnetVersion)</_Parameter5>
+                <_Parameter6>$(MetaRustVersion)</_Parameter6>
+                <_Parameter7>$(MetaMudBlazorVersion)</_Parameter7>
+                <_Parameter8>$(MetaTauriVersion)</_Parameter8>
+                <_Parameter9>$(MetaAppCommitHash)</_Parameter9>
+            </AssemblyAttribute>
+        </ItemGroup>
+        
+    </Target>
 
 </Project>

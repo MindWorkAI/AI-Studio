@@ -1,6 +1,5 @@
 using AIStudio.Settings;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace AIStudio.Components.Layout;
 

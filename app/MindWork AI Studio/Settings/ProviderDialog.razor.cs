@@ -3,9 +3,6 @@ using System.Text.RegularExpressions;
 using AIStudio.Provider;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-
-using MudBlazor;
 
 namespace AIStudio.Settings;
 
