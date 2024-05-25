@@ -6,7 +6,7 @@
         </CardHeaderContent>
         <CardHeaderActions>
             <MudTooltip Text="Open the repository or website">
-                <MudIconButton Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ForkLeft" Color="Color.Default" Href="@this.RepositoryUrl"/>
+                <MudIconButton Variant="Variant.Outlined" Icon="@Icons.Material.Filled.ForkLeft" Color="Color.Default" Href="@this.RepositoryUrl" Target="_blank"/>
             </MudTooltip>
         </CardHeaderActions>
     </MudCardHeader>
@@ -14,7 +14,7 @@
         <MudText>@this.UseCase</MudText>
     </MudCardContent>
     <MudCardActions Class="mt-auto">
-        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Href="@this.LicenseUrl">License: @this.LicenseName</MudButton>
+        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Href="@this.LicenseUrl" Target="_blank">License: @this.LicenseName</MudButton>
     </MudCardActions>
 </MudCard>
 </MudItem>
