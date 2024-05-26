@@ -41,6 +41,8 @@ def "main metadata" []: nothing -> nothing {
     update_mudblazor_version
     update_tauri_version
     update_project_commit_hash
+    update_license_year "../../LICENSE"
+    update_license_year "Components/Pages/About.razor.cs"
 }
 
 def "main fix_web_assets" []: nothing -> nothing {
@@ -245,6 +247,25 @@ def update_tauri_version []: nothing -> nothing {
     $meta_lines.7 = $version
     
     $meta_lines | save --raw --force ../../metadata.txt
+}
+
+def update_license_year [licence_file: string] {
+    let current_year = (date now | date to-timezone UTC | format date "%Y")
+    let license_text = open --raw $licence_file | lines
+    print $"Updating the license's year in ($licence_file) to ($current_year)."
+    
+    # Target line looks like `Copyright 2024 Thorsten Sommer`.
+    # Perhaps, there are whitespaces at the beginning. Using
+    # a regex to match the year.
+    let updated_license_text = $license_text | each { |it|
+        if $it =~ '^\s*Copyright\s+[0-9]{4}' {
+            $it | str replace --regex '([0-9]{4})' $"($current_year)"
+        } else {
+            $it
+        }
+    }
+    
+    $updated_license_text | save --raw --force $licence_file
 }
 
 def update_app_version [action: string]: string -> bool {

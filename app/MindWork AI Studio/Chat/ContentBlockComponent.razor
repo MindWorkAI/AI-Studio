@@ -1,3 +1,4 @@
+@using AIStudio.Tools
 @using MudBlazor
 
 <MudCard Class="my-2 rounded-lg" Outlined="@true">
@@ -35,7 +36,17 @@
                         }
                         else
                         {
-                            <MudMarkdown Value="@textContent.Text"/>
+                            @if (this.Content.IsStreaming)
+                            {
+                                <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
+                                    @textContent.Text
+                                </MudText>
+                            }
+                            else
+                            {
+
+                                <MudMarkdown Value="@textContent.Text" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
+                            }
                         }
                     }
 
