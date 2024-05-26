@@ -1,6 +1,6 @@
 [package]
 name = "mindwork-ai-studio"
-version = "0.4.0"
+version = "0.4.7"
 edition = "2021"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
