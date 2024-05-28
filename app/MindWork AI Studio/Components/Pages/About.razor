@@ -3,30 +3,29 @@
 
 <MudText Typo="Typo.h3" Class="mb-2">About MindWork AI Studio</MudText>
 
-<MudCard Class="mb-3">
-    <MudCardHeader>
-        <div class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Layers" Size="Size.Medium" class="mr-3"/>
-            <MudText Typo="Typo.h6">Versions</MudText>
-        </div>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudText>
-            The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
-        </MudText>
-        <MudList Clickable="@true">
-            <MudListItem Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
-            <MudListItem Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
-            <MudListItem Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
-            <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnet"/>
-            <MudListItem Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
-            <MudListItem Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
-            <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
-        </MudList>
-    </MudCardContent>
-</MudCard>
-
 <MudExpansionPanels Class="mb-3">
+    <MudExpansionPanel IsInitiallyExpanded="@true">
+        <TitleContent>
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Layers" Size="Size.Medium" class="mr-3"/>
+                <MudText Typo="Typo.h6">Versions</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudText>
+                The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
+            </MudText>
+            <MudList Clickable="@true">
+                <MudListItem Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
+                <MudListItem Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
+                <MudListItem Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
+                <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnet"/>
+                <MudListItem Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
+                <MudListItem Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
+                <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
+            </MudList>
+        </ChildContent>
+    </MudExpansionPanel>
     <MudExpansionPanel>
         <TitleContent>
             <div class="d-flex align-center">
@@ -49,9 +48,6 @@
             </MudGrid>
         </ChildContent>
     </MudExpansionPanel>
-</MudExpansionPanels>
-
-<MudExpansionPanels Class="mb-3">
     <MudExpansionPanel>
         <TitleContent>
             <div class="d-flex align-center">
