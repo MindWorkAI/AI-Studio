@@ -1,0 +1,8 @@
+<MudList Clickable="@this.Clickable" Class="@this.Classes">
+    @foreach(var item in this.Items)
+    {
+        <MudListItem Icon="@this.Icon" Style="display: flex; align-items: flex-start;">
+            <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;"><b>@item.Header:</b> @item.Text</MudText>
+        </MudListItem>
+    }
+</MudList>
