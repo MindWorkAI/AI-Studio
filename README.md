@@ -8,6 +8,7 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 - **Cost-effective**: You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
 - **Privacy**: The data entered into the app is not used for training by the providers since we are using the provider's API.
 - **Flexibility**: Choose the provider and model best suited for your current task.
+- **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
 **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](https://github.com/MindWorkAI/AI-Studio/releases/latest).
 
