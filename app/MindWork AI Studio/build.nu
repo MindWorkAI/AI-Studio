@@ -160,7 +160,7 @@ def get_rids []: nothing -> list {
 }
 
 def get_os []: nothing -> string {
-    (sys).host.name | str downcase
+    (sys host).name | str downcase
 }
 
 def update_build_time []: nothing -> nothing {
