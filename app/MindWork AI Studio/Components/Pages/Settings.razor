@@ -2,9 +2,9 @@
 
 <MudText Typo="Typo.h3" Class="mb-12">Settings</MudText>
 
-<MudPaper Class="pa-3">
+<MudPaper Class="pa-3 border-solid border rounded-lg">
     <MudText Typo="Typo.h4" Class="mb-3">Configured Providers</MudText>
-    <MudTable Items="@this.SettingsManager.ConfigurationData.Providers">
+    <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Class="border-dashed border rounded-lg">
         <ColGroup>
             <col style="width: 3em;"/>
             <col style="width: 12em;"/>
