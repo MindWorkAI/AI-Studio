@@ -30,9 +30,11 @@ builder.Services.AddSingleton<SettingsManager>();
 builder.Services.AddSingleton<Random>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
-    .AddHubOptions(x =>
+    .AddHubOptions(options =>
     {
-        x.MaximumReceiveMessageSize = null;
+        options.MaximumReceiveMessageSize = null;
+        options.ClientTimeoutInterval = TimeSpan.FromSeconds(1_200);
+        options.HandshakeTimeout = TimeSpan.FromSeconds(30);
     });
 
 var port = args.Length > 0 ? args[0] : "5000";
