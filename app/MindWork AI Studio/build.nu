@@ -192,7 +192,7 @@ def update_dotnet_version []: nothing -> nothing {
     mut dotnet_sdk_version = $meta_lines.3
     mut dotnet_version = $meta_lines.4
     
-    let dotnet_data = (^dotnet --info) | parse --regex '.?NET SDK:\s+Version:\s+(?P<sdkVersion>[0-9.]+).+Commit:\s+(?P<sdkCommit>[a-zA-Z0-9]+).+Host:\s+Version:\s+(?P<hostVersion>[0-9.]+).+Commit:\s+(?P<hostCommit>[a-zA-Z0-9]+)'
+    let dotnet_data = (^dotnet --info) | collect | parse --regex '(?ms).?NET SDK:\s+Version:\s+(?P<sdkVersion>[0-9.]+).+Commit:\s+(?P<sdkCommit>[a-zA-Z0-9]+).+Host:\s+Version:\s+(?P<hostVersion>[0-9.]+).+Commit:\s+(?P<hostCommit>[a-zA-Z0-9]+)'
     let sdk_version = $dotnet_data.sdkVersion.0
     let host_version = $dotnet_data.hostVersion.0
     let sdkCommit = $dotnet_data.sdkCommit.0
