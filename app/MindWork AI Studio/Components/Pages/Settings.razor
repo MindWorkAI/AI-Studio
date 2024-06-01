@@ -2,52 +2,56 @@
 
 <MudText Typo="Typo.h3" Class="mb-12">Settings</MudText>
 
-<MudPaper Class="pa-3 border-solid border rounded-lg">
-    <MudText Typo="Typo.h4" Class="mb-3">Configured Providers</MudText>
-    <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Class="border-dashed border rounded-lg">
-        <ColGroup>
-            <col style="width: 3em;"/>
-            <col style="width: 12em;"/>
-            <col style="width: 12em;"/>
-            <col/>
-            <col style="width: 20em;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>#</MudTh>
-            <MudTh>Instance Name</MudTh>
-            <MudTh>Provider</MudTh>
-            <MudTh>Model</MudTh>
-            <MudTh Style="text-align: left;">Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.Num</MudTd>
-            <MudTd>@context.InstanceName</MudTd>
-            <MudTd>@context.UsedProvider</MudTd>
-            <MudTd>@context.Model</MudTd>
-            <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2" OnClick="() => this.EditProvider(context)">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="mr-2" OnClick="() => this.DeleteProvider(context)">
-                    Delete
-                </MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+<div class="d-flex flex-column" style="height: calc(100vh - 6em);">
+    <div class="flex-auto overflow-auto">
+        <MudPaper Class="pa-3 mb-8 border-solid border rounded-lg">
+            <MudText Typo="Typo.h4" Class="mb-3">Configured Providers</MudText>
+            <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Class="border-dashed border rounded-lg">
+                <ColGroup>
+                    <col style="width: 3em;"/>
+                    <col style="width: 12em;"/>
+                    <col style="width: 12em;"/>
+                    <col/>
+                    <col style="width: 20em;"/>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>Instance Name</MudTh>
+                    <MudTh>Provider</MudTh>
+                    <MudTh>Model</MudTh>
+                    <MudTh Style="text-align: left;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Num</MudTd>
+                    <MudTd>@context.InstanceName</MudTd>
+                    <MudTd>@context.UsedProvider</MudTd>
+                    <MudTd>@context.Model</MudTd>
+                    <MudTd Style="text-align: left;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2" OnClick="() => this.EditProvider(context)">
+                            Edit
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="mr-2" OnClick="() => this.DeleteProvider(context)">
+                            Delete
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
 
-    @if(this.SettingsManager.ConfigurationData.Providers.Count == 0)
-    {
-        <MudText Typo="Typo.h6" Class="mt-3">No providers configured yet.</MudText>
-    }
+            @if(this.SettingsManager.ConfigurationData.Providers.Count == 0)
+            {
+                <MudText Typo="Typo.h6" Class="mt-3">No providers configured yet.</MudText>
+            }
 
-    <MudButton
-        Variant="Variant.Filled" Color="@Color.Primary"
-        StartIcon="@Icons.Material.Filled.AddRoad"
-        Class="mt-3 mb-6" OnClick="@this.AddProvider">
-        Add Provider
-    </MudButton>
+            <MudButton
+                Variant="Variant.Filled" Color="@Color.Primary"
+                StartIcon="@Icons.Material.Filled.AddRoad"
+                Class="mt-3 mb-6" OnClick="@this.AddProvider">
+                Add Provider
+            </MudButton>
 
-    <MudText Typo="Typo.h4" Class="mb-3">Options</MudText>
-    <ConfigurationOption OptionDescription="Save energy?" LabelOn="Energy saving is enabled" LabelOff="Energy saving is disabled" State="@(() => this.SettingsManager.ConfigurationData.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IsSavingEnergy = updatedState)" OptionHelp="When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."/>
-    <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
-</MudPaper>
+            <MudText Typo="Typo.h4" Class="mb-3">Options</MudText>
+            <ConfigurationOption OptionDescription="Save energy?" LabelOn="Energy saving is enabled" LabelOff="Energy saving is disabled" State="@(() => this.SettingsManager.ConfigurationData.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IsSavingEnergy = updatedState)" OptionHelp="When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."/>
+            <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
+        </MudPaper>
+    </div>
+</div>
