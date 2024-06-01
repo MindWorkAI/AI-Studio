@@ -56,7 +56,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "org.tsommer.mindwork-ai-studio",
+      "identifier": "com.github.mindwork-ai.ai-studio",
       "externalBin": [
         "../app/MindWork AI Studio/bin/dist/mindworkAIStudio"
       ],
