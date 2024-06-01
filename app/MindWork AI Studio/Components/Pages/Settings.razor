@@ -51,6 +51,7 @@
 
             <MudText Typo="Typo.h4" Class="mb-3">Options</MudText>
             <ConfigurationOption OptionDescription="Save energy?" LabelOn="Energy saving is enabled" LabelOff="Energy saving is disabled" State="@(() => this.SettingsManager.ConfigurationData.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IsSavingEnergy = updatedState)" OptionHelp="When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."/>
+            <ConfigurationOption OptionDescription="Enable spellchecking?" LabelOn="Spellchecking is enabled" LabelOff="Spellchecking is disabled" State="@(() => this.SettingsManager.ConfigurationData.EnableSpellchecking)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.EnableSpellchecking = updatedState)" OptionHelp="When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections." />
             <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
         </MudPaper>
     </div>

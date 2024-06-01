@@ -31,4 +31,9 @@ public sealed class Data
     /// Shortcuts to send the input to the AI.
     /// </summary>
     public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.MODIFER_ENTER_IS_SENDING;
+    
+    /// <summary>
+    /// Should we enable spellchecking for all input fields?
+    /// </summary>
+    public bool EnableSpellchecking { get; set; }
 }
