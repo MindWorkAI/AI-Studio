@@ -187,6 +187,7 @@ fn main() {
             *main_window.lock().unwrap() = Some(window);
             Ok(())
         })
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![store_secret, get_secret, delete_secret, set_clipboard])
         .run(tauri::generate_context!())
         .expect("Error while running Tauri application");
