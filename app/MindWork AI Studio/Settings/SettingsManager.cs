@@ -121,4 +121,6 @@ public sealed class SettingsManager
         var settingsJson = JsonSerializer.Serialize(this.ConfigurationData);
         await File.WriteAllTextAsync(settingsPath, settingsJson);
     }
+    
+    public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.EnableSpellchecking ? "true" : "false";
 }

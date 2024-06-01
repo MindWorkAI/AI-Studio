@@ -22,6 +22,6 @@
     </div>
 
     <MudPaper Style="flex: 0 0 auto;">
-        <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent"/>
+        <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     </MudPaper>
 </div>

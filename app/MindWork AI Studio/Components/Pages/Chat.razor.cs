@@ -20,6 +20,8 @@ public partial class Chat : ComponentBase
 
     [Inject]
     public Random RNG { get; set; } = null!;
+
+    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     private AIStudio.Settings.Provider selectedProvider;
     private ChatThread? chatThread;
@@ -37,6 +39,9 @@ public partial class Chat : ComponentBase
     {
         // Ensure that the settings are loaded:
         await this.SettingsManager.LoadSettings();
+        
+        // Configure the spellchecking for the user input:
+        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         
         // For now, we just create a new chat thread.
         // Later we want the chats to be persisted
