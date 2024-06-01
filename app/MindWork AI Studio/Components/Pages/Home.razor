@@ -7,64 +7,39 @@
 <InnerScrolling HeaderHeight="288px - 3em">
     <MudExpansionPanels Class="mb-3">
 
-        <MudExpansionPanel IsInitiallyExpanded="@true" Class="border-solid border rounded-lg">
-            <TitleContent>
-                <div class="d-flex align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Medium" class="mr-3"/>
-                    <MudText Typo="Typo.h6">Introduction</MudText>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <MudText Typo="Typo.h5" Class="mb-3">
-                    Welcome to MindWork AI Studio!
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness
-                    the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated
-                    LLM. Instead, you will need to bring an API key from a suitable provider.
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    Here's what makes MindWork AI Studio stand out:
-                </MudText>
-                <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@ITEMS_ADVANTAGES" Class="mb-3"/>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    We hope you enjoy using MindWork AI Studio to bring your AI projects to life!
-                </MudText>
-            </ChildContent>
-        </MudExpansionPanel>
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="Introduction" IsExpanded="@true">
+            <MudText Typo="Typo.h5" Class="mb-3">
+                Welcome to MindWork AI Studio!
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
+                Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness
+                the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated
+                LLM. Instead, you will need to bring an API key from a suitable provider.
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-3">
+                Here's what makes MindWork AI Studio stand out:
+            </MudText>
+            <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@ITEMS_ADVANTAGES" Class="mb-3"/>
+            <MudText Typo="Typo.body1" Class="mb-3">
+                We hope you enjoy using MindWork AI Studio to bring your AI projects to life!
+            </MudText>
+        </ExpansionPanel>
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="Our vision">
+            <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
+                Curious about the vision for MindWork AI Studio and what the future holds? We're here to address just that. Remember, this is a free, open-source project, meaning we can't guarantee when or if this vision will be fully realized. Our aim is to share our vision with you to help you decide whether this app is right for you.
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
+                So, where are we headed, and how could the app evolve in the coming months and years? The following list outlines our ideas, though not in order of priority:
+            </MudText>
+            <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@ITEMS_VISION" Class="mb-3"/>
+            <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
+                We hope this vision excites you as much as it excites us. Together, let's build a powerful and flexible AI toolkit to support all your creative, professional, and everyday needs with MindWork AI Studio.
+            </MudText>
+        </ExpansionPanel>
 
-        <MudExpansionPanel Class="border-solid border rounded-lg">
-            <TitleContent>
-                <div class="d-flex align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="Color.Warning" Size="Size.Medium" class="mr-3"/>
-                    <MudText Typo="Typo.h6">Our vision</MudText>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    Curious about the vision for MindWork AI Studio and what the future holds? We're here to address just that. Remember, this is a free, open-source project, meaning we can't guarantee when or if this vision will be fully realized. Our aim is to share our vision with you to help you decide whether this app is right for you.
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    So, where are we headed, and how could the app evolve in the coming months and years? The following list outlines our ideas, though not in order of priority:
-                </MudText>
-                <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@ITEMS_VISION" Class="mb-3"/>
-                <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    We hope this vision excites you as much as it excites us. Together, let's build a powerful and flexible AI toolkit to support all your creative, professional, and everyday needs with MindWork AI Studio.
-                </MudText>
-            </ChildContent>
-        </MudExpansionPanel>
-
-        <MudExpansionPanel Class="border-solid border rounded-lg">
-            <TitleContent>
-                <div class="d-flex align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.RocketLaunch" Size="Size.Medium" class="mr-3"/>
-                    <MudText Typo="Typo.h6">Quick Start Guide</MudText>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <MudMarkdown OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Value="@QUICK_START_GUIDE"/>
-            </ChildContent>
-        </MudExpansionPanel>
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="Quick Start Guide">
+            <MudMarkdown OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Value="@QUICK_START_GUIDE"/>
+        </ExpansionPanel>
 
     </MudExpansionPanels>
 </InnerScrolling>
