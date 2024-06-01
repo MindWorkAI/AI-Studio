@@ -10,8 +10,8 @@
     }
 </MudSelect>
 
-<div class="d-flex flex-column" style="height: calc(100vh - 12.3em);">
-    <div class="flex-auto overflow-auto">
+<InnerScrolling HeaderHeight="12.3em">
+    <ChildContent>
         @if (this.chatThread is not null)
         {
             foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
@@ -19,9 +19,10 @@
                 <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
             }
         }
-    </div>
-
-    <MudPaper Style="flex: 0 0 auto;">
-        <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    </MudPaper>
-</div>
+    </ChildContent>
+    <FooterContent>
+        <MudPaper Style="flex: 0 0 auto;">
+            <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        </MudPaper>
+    </FooterContent>
+</InnerScrolling>
