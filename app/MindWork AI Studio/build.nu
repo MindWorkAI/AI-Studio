@@ -371,7 +371,7 @@ def update_changelog []: nothing -> nothing {
     
     # Next, update the Changelog.Logs.cs file:
     let changelog_logs_source_file = open --raw "Components/Blocks/Changelog.Logs.cs"
-    let result = $changelog_logs_source_file | str replace --regex '(?ms)LOGS =\s+\[[\w\s".,-:()]+\];' $code
+    let result = $changelog_logs_source_file | str replace --regex '(?ms)LOGS =\s+\[[\w\s".,-:()?]+\];' $code
     
     # Save the updated file:
     $result | save --raw --force "Components/Blocks/Changelog.Logs.cs"
