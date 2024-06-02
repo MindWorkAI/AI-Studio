@@ -25,6 +25,10 @@
             </MudText>
         </ExpansionPanel>
 
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Last Changelog">
+            <MudMarkdown Value="@this.LastChangeContent" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
+        </ExpansionPanel>
+
         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="Vision">
             <Vision/>
         </ExpansionPanel>
