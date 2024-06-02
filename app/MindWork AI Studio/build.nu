@@ -31,6 +31,7 @@ def "main prepare" [action: string]: string -> nothing {
         main fix_web_assets
         inc_build_number
         update_build_time
+        update_changelog
         main metadata
     }
 }
@@ -346,4 +347,35 @@ def update_project_commit_hash []: nothing -> nothing {
     
     $meta_lines.8 = $updated_commit_hash
     $meta_lines | save --raw --force ../../metadata.txt
+}
+
+def update_changelog []: nothing -> nothing {
+    # Get all changelog files:
+    let all_changelog_files = glob wwwroot/changelog/*.md
+    
+    # Create a table with the build numbers and the corresponding file names:
+    let table = $all_changelog_files | reduce --fold [] { |it, acc|
+        let header_line = open --raw $it | lines | first
+        let file_name = $it | path basename
+        let header_data = $header_line | parse --regex '#\s+(?P<header>(?P<version>v[0-9.]+)[,\s]+build\s+(?P<build_num>[0-9]+)[,\s]+\((?P<build_time>[0-9-?\s:UTC]+)\))'
+        $acc ++ [[build_num, file_name, header]; [$header_data.build_num.0, $file_name, $header_data.header.0]]
+    } | sort-by build_num --natural --reverse
+    
+    # Now, we build the necessary C# code:
+    const tab = "    "; # using 4 spaces as one tab
+    let code_rows = $table | reduce --fold "" { |it, acc|
+        $acc ++ $"($tab)($tab)new \(($it.build_num), \"($it.header)\", \"($it.file_name)\"\),\n"
+    }
+    
+    let code = ($"LOGS = \n($tab)[\n($code_rows)\n($tab)];")
+    
+    # Next, update the Changelog.Logs.cs file:
+    let changelog_logs_source_file = open --raw "Components/Blocks/Changelog.Logs.cs"
+    let result = $changelog_logs_source_file | str replace --regex '(?ms)LOGS =\s+\[[\w\s".,-:()]+\];' $code
+    
+    # Save the updated file:
+    $result | save --raw --force "Components/Blocks/Changelog.Logs.cs"
+    
+    let number_change_logs = $table | length
+    print $"Updated Changelog.Logs.cs with ($number_change_logs) change logs."
 }
