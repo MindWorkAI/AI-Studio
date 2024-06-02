@@ -6,6 +6,28 @@ namespace AIStudio.Components.Pages;
 
 public partial class Home : ComponentBase
 {
+    [Inject]
+    private HttpClient HttpClient { get; set; } = null!;
+    
+    private string LastChangeContent { get; set; } = string.Empty;
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.ReadLastChangeAsync();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+    
+    private async Task ReadLastChangeAsync()
+    {
+        var latest = Changelog.LOGS.MaxBy(n => n.Build);
+        var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
+        this.LastChangeContent = await response.Content.ReadAsStringAsync();
+    }
+
     private static readonly TextItem[] ITEMS_ADVANTAGES =
     [
         new TextItem("Free of charge", "The app is free to use, both for personal and commercial purposes."),
