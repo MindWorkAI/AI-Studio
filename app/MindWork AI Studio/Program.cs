@@ -10,6 +10,7 @@ using System.Reflection;
 using Microsoft.Extensions.FileProviders;
 #endif
 
+var port = args.Length > 0 ? args[0] : "5000";
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddMudServices(config =>
 {
@@ -37,7 +38,11 @@ builder.Services.AddRazorComponents()
         options.HandshakeTimeout = TimeSpan.FromSeconds(30);
     });
 
-var port = args.Length > 0 ? args[0] : "5000";
+builder.Services.AddSingleton(new HttpClient
+{
+    BaseAddress = new Uri($"http://localhost:{port}")
+});
+
 builder.WebHost.UseUrls($"http://localhost:{port}");
 
 #if DEBUG
