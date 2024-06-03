@@ -13,9 +13,9 @@ public class NoProvider : IProvider
 
     public string InstanceName { get; set; } = "None";
 
-    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 
-    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 
     public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread chatChatThread, [EnumeratorCancellation] CancellationToken token = default)
     {

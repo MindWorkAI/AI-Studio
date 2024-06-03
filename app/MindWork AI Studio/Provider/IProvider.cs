@@ -48,16 +48,18 @@ public interface IProvider
     /// </summary>
     /// <param name="jsRuntime">The JS runtime to access the Rust code.</param>
     /// <param name="settings">The settings manager to access the API key.</param>
+    /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of text models.</returns>
-    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default);
-    
+    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default);
+
     /// <summary>
     /// Load all possible image models that can be used with this provider.
     /// </summary>
     /// <param name="jsRuntime">The JS runtime to access the Rust code.</param>
     /// <param name="settings">The settings manager to access the API key.</param>
+    /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of image models.</returns>
-    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default);
+    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default);
 }

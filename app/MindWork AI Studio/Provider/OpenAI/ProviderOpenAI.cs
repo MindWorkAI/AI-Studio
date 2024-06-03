@@ -151,27 +151,36 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default)
+    public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(jsRuntime, settings, "gpt-", token);
+        return this.LoadModels(jsRuntime, settings, "gpt-", token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, CancellationToken token = default)
+    public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(jsRuntime, settings, "dall-e-", token);
+        return this.LoadModels(jsRuntime, settings, "dall-e-", token, apiKeyProvisional);
     }
 
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(IJSRuntime jsRuntime, SettingsManager settings, string prefix, CancellationToken token)
+    private async Task<IEnumerable<Model>> LoadModels(IJSRuntime jsRuntime, SettingsManager settings, string prefix, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
-        if (!requestedSecret.Success)
+        var secretKey = apiKeyProvisional switch
+        {
+            not null => apiKeyProvisional,
+            _ => await settings.GetAPIKey(jsRuntime, this) switch
+            {
+                { Success: true } result => result.Secret,
+                _ => null,
+            }
+        };
+
+        if (secretKey is null)
             return [];
         
         var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
         var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
