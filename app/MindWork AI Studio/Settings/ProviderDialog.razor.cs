@@ -225,7 +225,7 @@ public partial class ProviderDialog : ComponentBase
         if(provider is NoProvider)
             return;
 
-        var models = await provider.GetTextModels(this.JsRuntime, this.SettingsManager);
+        var models = await provider.GetTextModels(this.JsRuntime, this.SettingsManager, this.dataAPIKey);
         
         // Order descending by ID means that the newest models probably come first:
         var orderedModels = models.OrderByDescending(n => n.Id);
