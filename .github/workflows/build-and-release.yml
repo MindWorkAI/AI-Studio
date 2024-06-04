@@ -1,7 +1,6 @@
 name: Build and Release
 on:
   pull_request:
-    types: [edited, synchronize]
     
 jobs:
   build-dotnet:
