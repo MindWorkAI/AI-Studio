@@ -1,0 +1,39 @@
+name: Build and Release
+on:
+  pull_request:
+    types: [edited]
+    
+jobs:
+  build-dotnet:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8'
+          dotnet-quality: 'ga'
+          cache: true
+      
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      
+      - name: Build .NET project
+        run: |
+          cd "app/MindWork AI Studio"
+          dotnet publish --configuration release --runtime win-arm64 --disable-build-servers --force --output ../../publish/dotnet
+          
+      - name: Upload .NET artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet
+          path: /publish/dotnet
+          if-no-files-found: error
+          retention-days: 1
