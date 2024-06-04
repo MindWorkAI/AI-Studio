@@ -20,7 +20,7 @@ We offer various ways you can support the project:
 
 For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
  
-To view all available tiers and their specific perks, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
+To view all available tiers and their specific perks, please visit our [GitHub Sponsors page](https://github.com/MindWorkAI/AI-Studio/Sponsors.md).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
 
 ## Planned Features
