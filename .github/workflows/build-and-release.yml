@@ -9,6 +9,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
       
       - name: Build .NET project
         run: |
