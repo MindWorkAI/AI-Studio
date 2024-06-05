@@ -58,6 +58,18 @@ jobs:
           cd "app/MindWork AI Studio"
           dotnet publish --configuration release --runtime ${{ matrix.dotnet_runtime }} --disable-build-servers --force --output ../../publish/dotnet
           
+      - name: Move & rename .NET artifact (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          cd publish/dotnet
+          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
+          
+      - name: Move & rename .NET artifact (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          cd publish/dotnet
+          mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
+          
       - name: Move & rename .NET artifact
         run: |
           cd publish/dotnet
