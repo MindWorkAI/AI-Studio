@@ -3,9 +3,44 @@ on:
   push
     
 jobs:
-  build-dotnet:
-    name: Build .NET
-    runs-on: windows-latest
+  build:
+    name: Build app
+    
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: 'macos-latest' # for ARM-based macOS (M1 and above)
+            cargo_args: '--target aarch64-apple-darwin'
+            dotnet_runtime: 'osx-arm64'
+            dotnet_name_postfix: '-aarch64-apple-darwin'
+            
+          - platform: 'macos-latest' # for Intel-based macOS
+            cargo_args: '--target x86_64-apple-darwin'
+            dotnet_runtime: 'osx-x64'
+            dotnet_name_postfix: '-x86_64-apple-darwin'
+            
+          - platform: 'ubuntu-22.04' # for x86-based linux
+            cargo_args: '--target x86_64-unknown-linux-gnu'
+            dotnet_runtime: 'linux-x64'
+            dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
+            
+          - platform: 'ubuntu-22.04' # for ARM-based linux
+            cargo_args: '--target aarch64-unknown-linux-gnu'
+            dotnet_runtime: 'linux-arm64'
+            dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
+            
+          - platform: 'windows-latest' # for x86-based windows
+            cargo_args: '--target x86_64-pc-windows-msvc'
+            dotnet_runtime: 'win-x64'
+            dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
+            
+          - platform: 'windows-latest' # for ARM-based windows
+            cargo_args: '--target aarch64-pc-windows-msvc'
+            dotnet_runtime: 'win-arm64'
+            dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
+    
+    runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,12 +56,106 @@ jobs:
       - name: Build .NET project
         run: |
           cd "app/MindWork AI Studio"
-          dotnet publish --configuration release --runtime win-arm64 --disable-build-servers --force --output ../../publish/dotnet
+          dotnet publish --configuration release --runtime ${{ matrix.dotnet_runtime }} --disable-build-servers --force --output ../../publish/dotnet
           
-      - name: Upload .NET artifacts
+      - name: Move & rename .NET artifact
+        run: |
+          cd publish/dotnet
+          find . -name "mindworkAIStudio*" -exec mv '{}' ."app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}" \;
+
+      - name: Setup Rust stable (ARM macOS)
+        if: matrix.platform == 'macos-latest' && matrix.cargo_args == '--target aarch64-apple-darwin'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'aarch64-apple-darwin'
+          
+      - name: Setup Rust stable (Intel macOS)
+        if: matrix.platform == 'macos-latest' && matrix.cargo_args == '--target x86_64-apple-darwin'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'x86_64-apple-darwin'
+
+      - name: Setup Rust stable (x86 linux)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.cargo_args == '--target x86_64-unknown-linux-gnu'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'x86_64-unknown-linux-gnu'
+
+      - name: Setup Rust stable (ARM linux)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.cargo_args == '--target aarch64-unknown-linux-gnu'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'aarch64-unknown-linux-gnu'
+
+      - name: Setup Rust stable (x86 Windows)
+        if: matrix.platform == 'windows-latest' && matrix.cargo_args == '--target x86_64-pc-windows-msvc'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'x86_64-pc-windows-msvc'
+          
+      - name: Setup Rust stable (ARM Windows)
+        if: matrix.platform == 'windows-latest' && matrix.cargo_args == '--target aarch64-pc-windows-msvc'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: 'aarch64-pc-windows-msvc'
+      
+      - name: Setup dependencies (Ubuntu-specific)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          
+      - name: Setup Tauri
+        run: |
+          cargo install tauri-cli
+          cargo install create-tauri-app --locked
+      
+      - name: Build Tauri project
+        run: |
+          cd runtime
+          cargo tauri build ${{ matrix.cargo_args }}
+
+      - name: Upload artifact (macOS)
+        if: startsWith(matrix.platform, 'macos')
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet
-          path: publish/dotnet/mindworkAIStudio*
+          name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
+          path: runtime/target/release/bundle/dmg/MindWork\ AI\ Studio_*.dmg
+          if-no-files-found: error
+          retention-days: 1
+          
+      - name: Upload artifact (Windows - MSI)
+        if: startsWith(matrix.platform, 'windows')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Windows MSI ${{ matrix.dotnet_runtime }})
+          path: runtime/target/release/bundle/msi/MindWork\ AI\ Studio_*.msi
+          if-no-files-found: error
+          retention-days: 1
+          
+      - name: Upload artifact (Windows - NSIS)
+        if: startsWith(matrix.platform, 'windows')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Windows NSIS ${{ matrix.dotnet_runtime }})
+          path: runtime/target/release/bundle/nsis/MindWork\ AI\ Studio_*.exe
+          if-no-files-found: error
+          retention-days: 1
+          
+      - name: Upload artifact (Linux - Debian Package)
+        if: startsWith(matrix.platform, 'ubuntu')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Debian Package ${{ matrix.dotnet_runtime }})
+          path: runtime/target/release/bundle/deb/MindWork\ AI\ Studio_*.deb
+          if-no-files-found: error
+          retention-days: 1
+          
+      - name: Upload artifact (Linux - AppImage)
+        if: startsWith(matrix.platform, 'ubuntu')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (AppImage ${{ matrix.dotnet_runtime }})
+          path: runtime/target/release/bundle/appimage/MindWork\ AI\ Studio_*.AppImage
           if-no-files-found: error
           retention-days: 1
