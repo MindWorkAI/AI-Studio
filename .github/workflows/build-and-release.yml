@@ -19,6 +19,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dotnet
-          path: publish/dotnet/mindworkAIStudio(.exe)?
+          path: publish/dotnet/mindworkAIStudio*
           if-no-files-found: error
           retention-days: 1
