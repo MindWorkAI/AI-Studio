@@ -16,6 +16,7 @@
         <SelfContained>true</SelfContained> <!-- Publish as self-contained; requires no .NET runtime installed on the target machine -->
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
         <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file; needed for caching NuGet packages-->
         
         <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
         <TrimMode>partial</TrimMode> <!-- Trim unused assemblies, but keep all assemblies referenced by the project -->
