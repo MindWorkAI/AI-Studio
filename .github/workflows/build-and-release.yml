@@ -15,6 +15,7 @@ jobs:
           dotnet-version: '8'
           dotnet-quality: 'ga'
           cache: true
+          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
       
       - name: Cache NuGet packages
         uses: actions/cache@v3
