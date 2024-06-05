@@ -10,14 +10,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8'
-          dotnet-quality: 'ga'
-          cache: true
-          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
-      
       - name: Build .NET project
         run: |
           cd "app/MindWork AI Studio"
@@ -27,6 +19,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dotnet
-          path: publish/dotnet/mindworkAIStudio
+          path: publish/dotnet/mindworkAIStudio(.exe)?
           if-no-files-found: error
           retention-days: 1
