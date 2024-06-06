@@ -46,6 +46,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true  # Enable Git LFS
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -124,7 +126,6 @@ jobs:
       - name: Build Tauri project
         run: |
           cd runtime
-          cargo tauri icon
           cargo tauri build --target ${{ matrix.rust_target }}
 
       - name: Upload artifact (macOS)
