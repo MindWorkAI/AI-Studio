@@ -101,7 +101,7 @@ jobs:
       - name: Build Tauri project
         run: |
           cd runtime
-          cargo tauri build --target ${{ matrix.rust_target }} --bundle ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
 
       - name: Upload artifact (macOS)
         if: startsWith(matrix.platform, 'macos')
