@@ -160,7 +160,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Debian Package ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/deb/MindWork AI Studio_*.deb"
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb"
           if-no-files-found: error
           retention-days: 1
           
@@ -169,6 +169,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (AppImage ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/MindWork AI Studio_*.AppImage"
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage"
           if-no-files-found: error
           retention-days: 1
