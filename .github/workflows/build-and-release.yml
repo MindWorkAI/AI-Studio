@@ -82,7 +82,30 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
           
-      - name: Setup Rust stable
+      - name: Create parts for the Rust cache key
+        run: |
+          cd runtime
+          echo "TAURI_VERSION=$(grep '^tauri = ' Cargo.toml | sed 's/.*version = \"\([^\"]*\)\".*/\1/')" >> $GITHUB_ENV
+          echo "TAURI_BUILD_VERSION=$(grep '^tauri-build = ' Cargo.toml | sed 's/.*version = \"\([^\"]*\)\".*/\1/')" >> $GITHUB_ENV
+          echo "RUST_VERSION=$(rustc --version | sed 's/rustc \([0-9.]*\).*/\1/')" >> $GITHUB_ENV
+          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
+          
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.rustup/toolchains
+            target/
+          key: os-${{ runner.os }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+          restore-keys: |
+            os-${{ runner.os }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+            os-${{ runner.os }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-
+          
+      - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.rust_target }}
@@ -96,7 +119,6 @@ jobs:
       - name: Setup Tauri
         run: |
           cargo install tauri-cli
-          cargo install create-tauri-app --locked
       
       - name: Build Tauri project
         run: |
