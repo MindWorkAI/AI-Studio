@@ -143,8 +143,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
           
-      - name: Upload artifact (Windows - NSIS) && contains(matrix.tauri_bundle, 'nsis')
-        if: startsWith(matrix.platform, 'windows')
+      - name: Upload artifact (Windows - NSIS)
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
@@ -161,8 +161,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
           
-      - name: Upload artifact (Linux - AppImage) && contains(matrix.tauri_bundle, 'appimage')
-        if: startsWith(matrix.platform, 'ubuntu')
+      - name: Upload artifact (Linux - AppImage)
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
