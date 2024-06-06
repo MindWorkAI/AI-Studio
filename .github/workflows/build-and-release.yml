@@ -100,10 +100,10 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.rustup/toolchains
             target/
-          key: os-${{ runner.os }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+          key: target-${{ matrix.dotnet_runtime }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
           restore-keys: |
-            os-${{ runner.os }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
-            os-${{ runner.os }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-
+            target-${{ matrix.dotnet_runtime }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+            target-${{ matrix.dotnet_runtime }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-
           
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@stable
