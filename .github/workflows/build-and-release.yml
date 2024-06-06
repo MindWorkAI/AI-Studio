@@ -11,34 +11,34 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest' # for ARM-based macOS (M1 and above)
-            cargo_args: '--target aarch64-apple-darwin'
+            rust_target: 'aarch64-apple-darwin'
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
             
           - platform: 'macos-latest' # for Intel-based macOS
-            cargo_args: '--target x86_64-apple-darwin'
+            rust_target: 'x86_64-apple-darwin'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
             
           - platform: 'ubuntu-22.04' # for x86-based linux
-            cargo_args: '--target x86_64-unknown-linux-gnu'
+            rust_target: 'x86_64-unknown-linux-gnu'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
 #
 # Issue https://github.com/twistedfall/opencv-rust/issues/457
 #            
 #          - platform: 'ubuntu-22.04' # for ARM-based linux
-#            cargo_args: '--target aarch64-unknown-linux-gnu'
+#            rust_target: 'aarch64-unknown-linux-gnu'
 #            dotnet_runtime: 'linux-arm64'
 #            dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
             
           - platform: 'windows-latest' # for x86-based windows
-            cargo_args: '--target x86_64-pc-windows-msvc'
+            rust_target: 'x86_64-pc-windows-msvc'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             
           - platform: 'windows-latest' # for ARM-based windows
-            cargo_args: '--target aarch64-pc-windows-msvc'
+            rust_target: 'aarch64-pc-windows-msvc'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
     
@@ -75,37 +75,37 @@ jobs:
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
           
       - name: Setup Rust stable (ARM macOS)
-        if: matrix.platform == 'macos-latest' && matrix.cargo_args == '--target aarch64-apple-darwin'
+        if: matrix.platform == 'macos-latest' && matrix.rust_target == 'aarch64-apple-darwin'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'aarch64-apple-darwin'
           
       - name: Setup Rust stable (Intel macOS)
-        if: matrix.platform == 'macos-latest' && matrix.cargo_args == '--target x86_64-apple-darwin'
+        if: matrix.platform == 'macos-latest' && matrix.rust_target == 'x86_64-apple-darwin'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'x86_64-apple-darwin'
 
       - name: Setup Rust stable (x86 linux)
-        if: matrix.platform == 'ubuntu-22.04' && matrix.cargo_args == '--target x86_64-unknown-linux-gnu'
+        if: matrix.platform == 'ubuntu-22.04' && matrix.rust_target == 'x86_64-unknown-linux-gnu'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'x86_64-unknown-linux-gnu'
 
       - name: Setup Rust stable (ARM linux)
-        if: matrix.platform == 'ubuntu-22.04' && matrix.cargo_args == '--target aarch64-unknown-linux-gnu'
+        if: matrix.platform == 'ubuntu-22.04' && matrix.rust_target == 'aarch64-unknown-linux-gnu'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'aarch64-unknown-linux-gnu'
 
       - name: Setup Rust stable (x86 Windows)
-        if: matrix.platform == 'windows-latest' && matrix.cargo_args == '--target x86_64-pc-windows-msvc'
+        if: matrix.platform == 'windows-latest' && matrix.rust_target == 'x86_64-pc-windows-msvc'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'x86_64-pc-windows-msvc'
           
       - name: Setup Rust stable (ARM Windows)
-        if: matrix.platform == 'windows-latest' && matrix.cargo_args == '--target aarch64-pc-windows-msvc'
+        if: matrix.platform == 'windows-latest' && matrix.rust_target == 'aarch64-pc-windows-msvc'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'aarch64-pc-windows-msvc'
@@ -124,14 +124,14 @@ jobs:
       - name: Build Tauri project
         run: |
           cd runtime
-          cargo tauri build ${{ matrix.cargo_args }}
+          cargo tauri build --target ${{ matrix.rust_target }}
 
       - name: Upload artifact (macOS)
         if: startsWith(matrix.platform, 'macos')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
-          path: runtime/target/release/bundle/dmg/MindWork\ AI\ Studio_*.dmg
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg"
           if-no-files-found: error
           retention-days: 1
           
@@ -140,7 +140,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows MSI ${{ matrix.dotnet_runtime }})
-          path: runtime/target/release/bundle/msi/MindWork\ AI\ Studio_*.msi
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi"
           if-no-files-found: error
           retention-days: 1
           
@@ -149,7 +149,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows NSIS ${{ matrix.dotnet_runtime }})
-          path: runtime/target/release/bundle/nsis/MindWork\ AI\ Studio_*.exe
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe"
           if-no-files-found: error
           retention-days: 1
           
@@ -158,7 +158,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Debian Package ${{ matrix.dotnet_runtime }})
-          path: runtime/target/release/bundle/deb/MindWork\ AI\ Studio_*.deb
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/deb/MindWork AI Studio_*.deb"
           if-no-files-found: error
           retention-days: 1
           
@@ -167,6 +167,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (AppImage ${{ matrix.dotnet_runtime }})
-          path: runtime/target/release/bundle/appimage/MindWork\ AI\ Studio_*.AppImage
+          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/MindWork AI Studio_*.AppImage"
           if-no-files-found: error
           retention-days: 1
