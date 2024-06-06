@@ -124,6 +124,7 @@ jobs:
       - name: Build Tauri project
         run: |
           cd runtime
+          cargo tauri icon
           cargo tauri build --target ${{ matrix.rust_target }}
 
       - name: Upload artifact (macOS)
