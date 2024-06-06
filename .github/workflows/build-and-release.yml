@@ -116,7 +116,7 @@ jobs:
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
         uses: actions/upload-artifact@v4
         with:
-          name: MindWork AI Studio (Windows MSI ${{ matrix.dotnet_runtime }})
+          name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi"
           if-no-files-found: error
           retention-days: 1
@@ -125,7 +125,7 @@ jobs:
         if: startsWith(matrix.platform, 'windows')
         uses: actions/upload-artifact@v4
         with:
-          name: MindWork AI Studio (Windows NSIS ${{ matrix.dotnet_runtime }})
+          name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe"
           if-no-files-found: error
           retention-days: 1
@@ -134,7 +134,7 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
         uses: actions/upload-artifact@v4
         with:
-          name: MindWork AI Studio (Debian Package ${{ matrix.dotnet_runtime }})
+          name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb"
           if-no-files-found: error
           retention-days: 1
@@ -143,7 +143,7 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu')
         uses: actions/upload-artifact@v4
         with:
-          name: MindWork AI Studio (AppImage ${{ matrix.dotnet_runtime }})
+          name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage"
           if-no-files-found: error
           retention-days: 1
