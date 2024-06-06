@@ -85,8 +85,6 @@ jobs:
       - name: Create parts for the Rust cache key
         run: |
           cd runtime
-          echo "TAURI_VERSION=$(grep '^tauri = ' Cargo.toml | sed 's/.*version = \"\([^\"]*\)\".*/\1/')" >> $GITHUB_ENV
-          echo "TAURI_BUILD_VERSION=$(grep '^tauri-build = ' Cargo.toml | sed 's/.*version = \"\([^\"]*\)\".*/\1/')" >> $GITHUB_ENV
           echo "RUST_VERSION=$(rustc --version | sed 's/rustc \([0-9.]*\).*/\1/')" >> $GITHUB_ENV
           echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
           
@@ -100,9 +98,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.rustup/toolchains
             target/
-          key: target-${{ matrix.dotnet_runtime }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+          key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
           restore-keys: |
-            target-${{ matrix.dotnet_runtime }}-tauri-build-${{ env.TAURI_BUILD_VERSION }}-tauri-${{ env.TAURI_VERSION }}-cargo-rust-${{ env.RUST_VERSION }}-dependencies-
+            target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
           
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@stable
