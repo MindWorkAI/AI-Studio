@@ -82,11 +82,19 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
           
-      - name: Create parts for the Rust cache key
+      - name: Create parts for the Rust cache key (Unix systems)
+        if: matrix.platform != 'windows-latest'
         run: |
           cd runtime
           echo "RUST_VERSION=$(rustc --version | sed 's/rustc \([0-9.]*\).*/\1/')" >> $GITHUB_ENV
           echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
+          
+      - name: Create parts for the Rust cache key (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          cd runtime
+          echo "RUST_VERSION=$(rustc --version | ForEach-Object { $_ -replace 'rustc (\d+\.\d+\.\d+).*', '$1' })" >> $env:GITHUB_ENV
+          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $env:GITHUB_ENV
           
       - name: Cache Rust
         uses: actions/cache@v4
