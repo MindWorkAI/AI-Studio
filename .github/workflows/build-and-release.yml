@@ -82,7 +82,7 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
           
-      - name: Create parts for the Rust cache key (Unix systems)
+      - name: Create parts for the Rust cache key (Unix)
         if: matrix.platform != 'windows-latest'
         run: |
           cd runtime
@@ -121,13 +121,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
           
-      - name: Setup Tauri
+      - name: Setup Tauri (Unix)
+        if: matrix.platform != 'windows-latest'
         run: |
           if ! cargo tauri --version > /dev/null 2>&1; then
             cargo install tauri-cli
           else
             echo "Tauri is already installed"
           fi
+          
+      - name: Setup Tauri (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          if (-not (Get-Command cargo tauri -ErrorAction SilentlyContinue)) {
+            cargo install tauri-cli
+          } else {
+            Write-Output "Tauri is already installed"
+          }
       
       - name: Build Tauri project
         run: |
