@@ -40,7 +40,7 @@ jobs:
             rust_target: 'x86_64-pc-windows-msvc'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
-            taui_bundle: 'msi nsis'
+            tauri_bundle: 'msi nsis'
             
           - platform: 'windows-latest' # for ARM-based windows
             rust_target: 'aarch64-pc-windows-msvc'
