@@ -123,7 +123,11 @@ jobs:
           
       - name: Setup Tauri
         run: |
-          cargo install tauri-cli
+          if ! cargo tauri --version > /dev/null 2>&1; then
+            cargo install tauri-cli
+          else
+            echo "Tauri is already installed"
+          fi
       
       - name: Build Tauri project
         run: |
