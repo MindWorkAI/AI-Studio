@@ -133,7 +133,7 @@ jobs:
       - name: Setup Tauri (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
-          if (-not (Get-Command cargo tauri -ErrorAction SilentlyContinue)) {
+          if (-not (cargo tauri --version 2>$null)) {
             cargo install tauri-cli
           } else {
             Write-Output "Tauri is already installed"
