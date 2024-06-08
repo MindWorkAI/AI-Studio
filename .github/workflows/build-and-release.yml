@@ -224,9 +224,9 @@ jobs:
             apt-get install --yes --no-install-recommends ca-certificates libc6 libgcc-s1 libgssapi-krb5-2 libicu69 libssl1.1 libstdc++6 zlib1g
             #
             # Download and install the .NET SDK:
-#            wget --no-verbose https://download.visualstudio.microsoft.com/download/pr/cd9decc0-f3ef-46d6-b7d1-348b757781ad/9ad92a8f4b805feb3d017731e78eca15/dotnet-sdk-8.0.301-linux-arm64.tar.gz -O dotnet-sdk.tar.gz
-#            mkdir -p /usr/share/dotnet
-#            tar -zxf dotnet-sdk.tar.gz -C /usr/share/dotnet
+            # wget --no-verbose https://download.visualstudio.microsoft.com/download/pr/cd9decc0-f3ef-46d6-b7d1-348b757781ad/9ad92a8f4b805feb3d017731e78eca15/dotnet-sdk-8.0.301-linux-arm64.tar.gz -O dotnet-sdk.tar.gz
+            # mkdir -p /usr/share/dotnet
+            # tar -zxf dotnet-sdk.tar.gz -C /usr/share/dotnet
             wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
             chmod +x ./dotnet-install.sh
             ./dotnet-install.sh --channel 8.0
