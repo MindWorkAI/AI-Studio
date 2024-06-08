@@ -190,12 +190,14 @@ jobs:
         with:
           lfs: true  # Enable Git LFS
         
-      - uses: pguyot/arm-runner-action@v2.6.5
+      - name: Run ARM runner
+        uses: pguyot/arm-runner-action@v2.6.5
         with:
           base_image: dietpi:rpi_armv8_bullseye
           cpu: cortex-a53
           image_additional_mb: 5000 # ~ 5GB
           optimize_image: false
+          shell: /bin/bash
           commands: |
             # Rust complains (rightly) that $HOME doesn't match eid home:
             export HOME=/root
