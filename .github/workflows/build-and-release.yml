@@ -192,6 +192,7 @@ jobs:
         
       - name: Run ARM runner
         uses: pguyot/arm-runner-action@v2.6.5
+        id: arm-runner
         with:
           base_image: dietpi:rpi_armv8_bullseye
           cpu: cortex-a53
