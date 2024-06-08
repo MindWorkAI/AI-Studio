@@ -202,10 +202,10 @@ jobs:
           commands: |
             # Rust complains (rightly) that $HOME doesn't match eid home:
             export HOME=/root
-            #
+            
             # Workaround to CI worker being stuck on Updating crates.io index:
             export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
-            #
+            
             # Update and upgrade the system:
             apt-get update --yes --allow-releaseinfo-change
             apt-get upgrade --yes
@@ -213,16 +213,18 @@ jobs:
             apt-get install curl wget apt-transport-https --yes
             export DEBIAN_FRONTEND=noninteractive
             export TZ=Europe/Berlin
-            #
+            
             #
             # Install .NET SDK:
             #
             # Note: We cannot use the official Microsoft package because it's not available for ARM64.
             #
-            #
+            
             # Install the dependencies:
-            apt-get install --yes --no-install-recommends ca-certificates libc6 libgcc-s1 libgssapi-krb5-2 libicu69 libssl1.1 libstdc++6 zlib1g
-            #
+            export CLR_ICU_VERSION_OVERRIDE=$(dpkg-query -W -f='${Version}' libicu* | awk -F'-' '{print $1}')
+            echo "CLR_ICU_VERSION_OVERRIDE is set to: $CLR_ICU_VERSION_OVERRIDE"
+            apt-get install --yes --no-install-recommends ca-certificates libc6 libgcc-s1 libgssapi-krb5-2 libicu${CLR_ICU_VERSION_OVERRIDE} libssl1.1 libstdc++6 zlib1g
+            
             # Download and install the .NET SDK:
             # wget --no-verbose https://download.visualstudio.microsoft.com/download/pr/cd9decc0-f3ef-46d6-b7d1-348b757781ad/9ad92a8f4b805feb3d017731e78eca15/dotnet-sdk-8.0.301-linux-arm64.tar.gz -O dotnet-sdk.tar.gz
             # mkdir -p /usr/share/dotnet
@@ -233,28 +235,28 @@ jobs:
             export DOTNET_ROOT=$HOME/.dotnet
             export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
             export DOTNET_CLI_TELEMETRY_OPTOUT=true
-            #         
+                   
             # Compile the app:
             cd "app/MindWork AI Studio"
             dotnet publish --configuration release --runtime linux-arm --disable-build-servers --force --output ../../publish/dotnet
-            #
+            
             # Move & rename the .NET artifact:
             cd ../..
             mkdir -p "app/MindWork AI Studio/bin/dist"
             cd publish/dotnet
             mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio-aarch64-unknown-linux-gnu"
-            #
+            
             # Install Rust:
             cd ../..
             curl https://sh.rustup.rs -sSf | sh -s -- --yes
             . "$HOME/.cargo/env"
-            #
+            
             # Install build tools and tauri-cli requirements:
             apt-get install --yes libwebkit2gtk-4.0-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
-            #
+            
             # Setup Tauri:
             cargo install tauri-cli
-            #
+            
             # Build the runtime:
             cd runtime
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
