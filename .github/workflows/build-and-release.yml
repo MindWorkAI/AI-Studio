@@ -97,7 +97,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.rustup/toolchains
-            target/
+            runtime/target/deps
+            runtime/target/build
             
           # When the entire key matches, Rust might just create the bundles using the current .NET build:
           key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
