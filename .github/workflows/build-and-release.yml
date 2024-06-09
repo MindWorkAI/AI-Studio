@@ -292,6 +292,7 @@ jobs:
           commands: |
             # Build the runtime:
             cd runtime
+            . "$HOME/.cargo/env"
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
 
       - name: Upload artifact (Linux - Debian Package)
