@@ -4,7 +4,7 @@ on:
     
 jobs:
   build_main:
-    name: Build app (Windows [x86, arm64], macOS [arm64, x86], Linux [x86])
+    name: Build app (cross-compilation)
     
     strategy:
       fail-fast: true
@@ -182,7 +182,7 @@ jobs:
           retention-days: 1
           
   build_linux_arm64:
-    name: Build app (Linux [arm64])
+    name: Build app (Linux, arm64)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
