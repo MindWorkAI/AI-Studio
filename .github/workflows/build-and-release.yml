@@ -98,9 +98,18 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.rustup/toolchains
             target/
+            
+          # When the entire key matches, Rust might just create the bundles using the current .NET build:
           key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+          
           restore-keys: |
+            # The Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages:
             target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
+            
+            # Alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
+            # The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
+            # these changes to our app, we have to re-compile everything. Thats the reason, why it makes
+            # no sense to use more parts for the cache key, like Tauri or Tauri build versions.
           
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@stable
@@ -208,10 +217,35 @@ jobs:
           mkdir -p "app/MindWork AI Studio/bin/dist"
           cd publish/dotnet
           mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio-aarch64-unknown-linux-gnu"
-        
-      - name: Run ARM runner for compiling Rust (runtime)
+          
+      - name: Create parts for the Rust cache key
+        run: |
+          cd runtime
+          echo "RUST_VERSION=$(rustc --version | sed 's/rustc \([0-9.]*\).*/\1/')" >> $GITHUB_ENV
+          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
+          
+      - name: Cache linux arm64 runner image
+        uses: actions/cache@v4
+        id: linux_arm_cache
+        with:
+          path: $RUNNER_TEMP/linux_arm_qemu_cache.img
+          
+          # When the entire key matches, Rust might just create the bundles using the current .NET build:
+          key: target-linux-arm-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+
+          restore-keys: |
+            # The Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages:
+            target-linux-arm-rust-${{ env.RUST_VERSION }}-dependencies-
+
+            # Alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
+            # The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
+            # these changes to our app, we have to re-compile everything. Thats the reason, why it makes
+            # no sense to use more parts for the cache key, like Tauri or Tauri build versions.
+            
+      - name: Build linux arm runner image
         uses: pguyot/arm-runner-action@v2.6.5
-        id: arm-runner
+        id: build-linux-arm-runner
+        if: steps.linux_arm_cache.outputs.cache-hit != 'true'
         with:
           base_image: dietpi:rpi_armv8_bullseye
           cpu: cortex-a53
@@ -241,6 +275,22 @@ jobs:
             # Setup Tauri:
             cargo install tauri-cli
             
+      - name: Cache the built runner image
+        if: steps.linux_arm_cache.outputs.cache-hit != 'true'
+        run: |
+          mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
+            
+      - name: Compiling the Rust runtime
+        uses: pguyot/arm-runner-action@v2.6.5
+        id: arm-runner
+        if: steps.linux_arm_cache.outputs.cache-hit != 'true'
+        with:
+          base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
+          cpu: cortex-a53
+          image_additional_mb: 5000 # ~ 5GB
+          optimize_image: false
+          shell: /bin/bash
+          commands: |
             # Build the runtime:
             cd runtime
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
