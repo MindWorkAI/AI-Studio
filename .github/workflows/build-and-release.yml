@@ -232,7 +232,7 @@ jobs:
             apt-get install curl wget --yes
             
             # Install Rust:
-            curl https://sh.rustup.rs -sSf | sh -s -- --yes
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
             . "$HOME/.cargo/env"
             
             # Install build tools and tauri-cli requirements:
