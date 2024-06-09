@@ -285,6 +285,7 @@ jobs:
             
       - name: Compiling the Rust runtime
         uses: pguyot/arm-runner-action@v2.6.5
+        id: build-linux-arm
         with:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
           cpu: cortex-a53
@@ -296,7 +297,11 @@ jobs:
             source "$HOME/.cargo/env"
             cd runtime
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
-
+            
+      - name: Update the runner image to cache the Rust runtime build
+        run: |
+          mv ${{ steps.build-linux-arm.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
+      
       - name: Upload artifact (Linux - Debian Package)
         uses: actions/upload-artifact@v4
         with:
