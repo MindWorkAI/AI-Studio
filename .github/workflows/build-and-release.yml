@@ -102,15 +102,15 @@ jobs:
           # When the entire key matches, Rust might just create the bundles using the current .NET build:
           key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
           
+          # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
+          #
+          # - No match: alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
+          #   The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
+          #   these changes to our app, we have to re-compile everything. That's the reason why it makes
+          #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
           restore-keys: |
-            # The Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages:
             target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
             
-            # Alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
-            # The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
-            # these changes to our app, we have to re-compile everything. Thats the reason, why it makes
-            # no sense to use more parts for the cache key, like Tauri or Tauri build versions.
-          
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -233,14 +233,14 @@ jobs:
           # When the entire key matches, Rust might just create the bundles using the current .NET build:
           key: target-linux-arm-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
 
+          # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
+          #
+          # - No match: alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
+          #   The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
+          #   these changes to our app, we have to re-compile everything. That's the reason why it makes
+          #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
           restore-keys: |
-            # The Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages:
             target-linux-arm-rust-${{ env.RUST_VERSION }}-dependencies-
-
-            # Alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
-            # The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
-            # these changes to our app, we have to re-compile everything. Thats the reason, why it makes
-            # no sense to use more parts for the cache key, like Tauri or Tauri build versions.
             
       - name: Build linux arm runner image
         uses: pguyot/arm-runner-action@v2.6.5
