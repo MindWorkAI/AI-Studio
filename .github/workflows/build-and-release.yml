@@ -1,6 +1,9 @@
 name: Build and Release
 on:
   push
+
+env:
+  RETENTION_DAYS: 30
     
 jobs:
   build_main:
@@ -153,7 +156,7 @@ jobs:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ env.RETENTION_DAYS }}
           
       - name: Upload artifact (Windows - MSI)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
@@ -162,7 +165,7 @@ jobs:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ env.RETENTION_DAYS }}
           
       - name: Upload artifact (Windows - NSIS)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
@@ -171,7 +174,7 @@ jobs:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ env.RETENTION_DAYS }}
           
       - name: Upload artifact (Linux - Debian Package)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
@@ -180,7 +183,7 @@ jobs:
           name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ env.RETENTION_DAYS }}
           
       - name: Upload artifact (Linux - AppImage)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
@@ -189,7 +192,7 @@ jobs:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
           path: "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ env.RETENTION_DAYS }}
           
   build_linux_arm64:
     name: Build app (linux-arm64)
@@ -232,7 +235,7 @@ jobs:
           path: $RUNNER_TEMP/linux_arm_qemu_cache.img
           
           # When the entire key matches, Rust might just create the bundles using the current .NET build:
-          key: target-linux-arm-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+          key: target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
 
           # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
           #
@@ -241,7 +244,7 @@ jobs:
           #   these changes to our app, we have to re-compile everything. That's the reason why it makes
           #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
           restore-keys: |
-            target-linux-arm-rust-${{ env.RUST_VERSION }}-dependencies-
+            target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-
             
       - name: Build linux arm runner image
         uses: pguyot/arm-runner-action@v2.6.5
@@ -276,29 +279,27 @@ jobs:
             # Setup Tauri:
             cargo install tauri-cli
             
-      - name: Cache the built runner image
+      - name: Add the built runner image to the cache
         if: steps.linux_arm_cache.outputs.cache-hit != 'true'
         run: |
           mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
             
       - name: Compiling the Rust runtime
         uses: pguyot/arm-runner-action@v2.6.5
-        id: arm-runner
         with:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
           cpu: cortex-a53
           optimize_image: false
           shell: /bin/bash
           commands: |
-            # Build the runtime:
-            cd runtime
             . "$HOME/.cargo/env"
+            cd runtime
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
 
       - name: Upload artifact (Linux - Debian Package)
         uses: actions/upload-artifact@v4
         with:
-          name: MindWork AI Studio (Linux - deb linux-arm)
+          name: MindWork AI Studio (Linux - deb linux-arm64)
           path: "runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: ${{ env.RETENTION_DAYS }}
