@@ -48,7 +48,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          lfs: true  # Enable Git LFS
+          lfs: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -201,7 +201,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          lfs: true  # Enable Git LFS
+          lfs: false
         
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
