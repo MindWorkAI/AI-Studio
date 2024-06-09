@@ -287,7 +287,6 @@ jobs:
         with:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
           cpu: cortex-a53
-          image_additional_mb: 5000 # ~ 5GB
           optimize_image: false
           shell: /bin/bash
           commands: |
