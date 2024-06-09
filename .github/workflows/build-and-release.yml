@@ -4,7 +4,7 @@ on:
     
 jobs:
   build_main:
-    name: Build app (cross-compilation)
+    name: Build app (${{ matrix.dotnet_runtime }})
     
     strategy:
       fail-fast: true
