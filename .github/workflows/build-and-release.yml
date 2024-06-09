@@ -291,6 +291,8 @@ jobs:
           optimize_image: false
           shell: /bin/bash
           commands: |
+            export HOME=/root
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
             source "$HOME/.cargo/env"
             cd runtime
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
