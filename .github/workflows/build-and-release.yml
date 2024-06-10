@@ -290,6 +290,7 @@ jobs:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
           cpu: cortex-a53
           optimize_image: false
+          copy_artifact_path: runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
           shell: /bin/bash
           commands: |
             export HOME=/root
