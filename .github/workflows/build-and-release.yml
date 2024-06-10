@@ -288,7 +288,7 @@ jobs:
         uses: pguyot/arm-runner-action@v2.6.5
         id: build-linux-arm
         with:
-          base_image: file://qemu/linux_arm_qemu_cache.img
+          base_image: file://$GITHUB_WORKSPACE/qemu/linux_arm_qemu_cache.img
           cpu: cortex-a53
           optimize_image: false
           copy_artifact_path: runtime
