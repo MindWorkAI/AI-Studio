@@ -308,5 +308,5 @@ jobs:
         with:
           name: MindWork AI Studio (Linux - deb linux-arm64)
           path: "runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb"
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: ${{ env.RETENTION_DAYS }}
