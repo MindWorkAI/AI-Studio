@@ -299,6 +299,16 @@ jobs:
             source "$HOME/.cargo/env"
             cd runtime
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
+
+      - name: Debug
+        run: |
+          echo "Current directory: $(pwd)"
+          
+          echo "Searching for linux_arm_qemu_cache.img"
+          find / -name 'linux_arm_qemu_cache.img' -print 2>/dev/null
+          
+          echo "Searching for mind-work-ai-studio_*.deb"
+          find / -name 'mind-work-ai-studio_*.deb' -print 2>/dev/null
       
       - name: Upload artifact (Linux - Debian Package)
         uses: actions/upload-artifact@v4
