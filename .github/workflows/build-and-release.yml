@@ -309,6 +309,9 @@ jobs:
           echo "Searching for linux_arm_qemu_cache.img"
           find $RUNNER_TEMP -name 'linux_arm_qemu_cache.img' -print 2>/dev/null
           
+          echo "Searching for linux_arm_qemu_cache.img, location 2:"
+          find . -name 'linux_arm_qemu_cache.img' -print 2>/dev/null
+          
           echo "Searching for mind-work-ai-studio_*.deb"
           find . -name 'mind-work-ai-studio_*.deb' -print 2>/dev/null
           
