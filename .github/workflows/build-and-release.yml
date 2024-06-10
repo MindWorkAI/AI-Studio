@@ -290,7 +290,8 @@ jobs:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
           cpu: cortex-a53
           optimize_image: false
-          copy_artifact_path: runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+          copy_artifact_path: runtime
+          copy_artifact_dest: result
           shell: /bin/bash
           commands: |
             export HOME=/root
@@ -307,6 +308,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb linux-arm64)
-          path: "runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb"
+          path: "result/runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb"
           if-no-files-found: warn
           retention-days: ${{ env.RETENTION_DAYS }}
