@@ -310,6 +310,10 @@ jobs:
           
           echo "Searching for mind-work-ai-studio_*.deb"
           find . -name 'mind-work-ai-studio_*.deb' -print 2>/dev/null
+          
+      - name: Update the runner image to cache the Rust runtime build
+        run: |
+          mv ${{ steps.build-linux-arm.outputs.image }} qemu/linux_arm_qemu_cache.img
       
       - name: Upload artifact (Linux - Debian Package)
         uses: actions/upload-artifact@v4
