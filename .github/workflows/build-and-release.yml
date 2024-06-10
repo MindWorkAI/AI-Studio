@@ -281,6 +281,7 @@ jobs:
       - name: Add the built runner image to the cache
         if: steps.linux_arm_cache.outputs.cache-hit != 'true'
         run: |
+          mkdir -p qemu
           mv ${{ steps.build-linux-arm-runner.outputs.image }} qemu/linux_arm_qemu_cache.img
             
       - name: Compiling the Rust runtime
@@ -313,6 +314,7 @@ jobs:
           
       - name: Update the runner image to cache the Rust runtime build
         run: |
+          mkdir -p qemu
           mv ${{ steps.build-linux-arm.outputs.image }} qemu/linux_arm_qemu_cache.img
       
       - name: Upload artifact (Linux - Debian Package)
