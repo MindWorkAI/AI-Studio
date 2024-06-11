@@ -20,6 +20,7 @@ flexi_logger = "0.28"
 log = "0.4"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+# See issue https://github.com/tauri-apps/tauri/issues/4470
 reqwest = { version = "0.12", features = ["native-tls-vendored"] }
 
 [features]
