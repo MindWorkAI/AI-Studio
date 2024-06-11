@@ -172,7 +172,7 @@ jobs:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
-            runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio_*.app.tar.gz*
+            runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -183,7 +183,7 @@ jobs:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
-            runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi.zip*
+            runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -194,7 +194,7 @@ jobs:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
-            runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.nsis.zip*
+            runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -214,7 +214,7 @@ jobs:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
-            runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage.tar.gz*
+            runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
