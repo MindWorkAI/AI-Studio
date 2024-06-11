@@ -17,7 +17,7 @@
         "open": true,
         "scope": [
           {
-            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudio",
+            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
             "sidecar": true,
             "args": true
           }
@@ -58,7 +58,7 @@
       "targets": "all",
       "identifier": "com.github.mindwork-ai.ai-studio",
       "externalBin": [
-        "../app/MindWork AI Studio/bin/dist/mindworkAIStudio"
+        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
       ],
       "macOS": {
         "exceptionDomain": "localhost"

@@ -68,14 +68,14 @@ jobs:
         run: |
           mkdir -p "app/MindWork AI Studio/bin/dist"
           cd publish/dotnet
-          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
+          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
           
       - name: Move & rename .NET artifact (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
           New-Item -ItemType Directory -Path "app\MindWork AI Studio\bin\dist" -Force
           cd publish/dotnet
-          mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio${{ matrix.dotnet_name_postfix }}"
+          mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
           
       - name: Create parts for the Rust cache key (Unix)
         if: matrix.platform != 'windows-latest'
@@ -244,7 +244,7 @@ jobs:
         run: |
           mkdir -p "app/MindWork AI Studio/bin/dist"
           cd publish/dotnet
-          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudio-aarch64-unknown-linux-gnu"
+          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-aarch64-unknown-linux-gnu"
           
       - name: Create parts for the Rust cache key
         run: |
