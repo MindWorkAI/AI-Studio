@@ -144,6 +144,7 @@ jobs:
           }
       
       - name: Build Tauri project (Unix)
+        if: matrix.platform != 'windows-latest'
         env:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
@@ -154,6 +155,7 @@ jobs:
           cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
           
       - name: Build Tauri project (Windows)
+        if: matrix.platform == 'windows-latest'
         env:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
