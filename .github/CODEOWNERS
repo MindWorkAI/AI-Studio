@@ -1,0 +1,11 @@
+# The default rule is that the maintainers are responsible for everything:
+* @MindWorkAI/maintainer
+
+# The release team is responsible for anything inside the .github directory, such as workflows, actions, and issue templates:
+/.github/ @MindWorkAI/release
+
+# Our Rust experts are responsible for the Rust codebase:
+/runtime/ @MindWorkAI/rust-experts
+
+# Our .NET experts are responsible for the .NET codebase:
+/app/ @MindWorkAI/net-experts
