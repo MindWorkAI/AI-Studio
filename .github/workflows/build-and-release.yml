@@ -151,7 +151,7 @@ jobs:
         run: |
           cd runtime
           export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
-          export TAURI_KEY_PASSWORD='$PRIVATE_PUBLISH_KEY_PASSWORD'
+          export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
           cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
           
       - name: Build Tauri project (Windows)
