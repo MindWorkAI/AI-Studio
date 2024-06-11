@@ -143,9 +143,24 @@ jobs:
             Write-Output "Tauri is already installed"
           }
       
-      - name: Build Tauri project
+      - name: Build Tauri project (Unix)
+        with:
+          PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
+          PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
           cd runtime
+          export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
+          export TAURI_KEY_PASSWORD='$PRIVATE_PUBLISH_KEY_PASSWORD'
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          
+      - name: Build Tauri project (Windows)
+        with:
+          PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
+          PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+        run: |
+          cd runtime
+          $env:TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
+          $env:TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
           cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
 
       - name: Upload artifact (macOS)
@@ -153,7 +168,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg"
+          path: |
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg"
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio_*.app.tar.gz*"
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -162,7 +179,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi"
+          path: |
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi"
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi.zip*"
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -171,7 +190,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe"
+          path: |
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe"
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.nsis.zip*"
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -189,7 +210,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage"
+          path: |
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage"
+            "runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage.tar.gz*"
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -292,6 +315,16 @@ jobs:
           optimize_image: false
           copy_artifact_path: runtime
           copy_artifact_dest: result
+          
+          #
+          # We do not need to set the PRIVATE_PUBLISH_KEY and PRIVATE_PUBLISH_KEY_PASSWORD here,
+          # because we cannot produce the AppImage on arm64. Only the AppImage supports the automatic
+          # update feature. The Debian package does not support this feature.
+          #
+          #PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
+          #PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          #
+          
           shell: /bin/bash
           commands: |
             export HOME=/root

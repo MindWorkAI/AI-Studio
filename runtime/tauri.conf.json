@@ -72,7 +72,15 @@
       ]
     },
     "updater": {
-      "active": false
+      "active": true,
+      "endpoints": [
+        "https://raw.githubusercontent.com/MindWorkAI/AI-Studio/main/.updates/latest.json"
+      ],
+      "dialog": true,
+      "windows": {
+        "installMode": "passive"
+      },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
     }
   }
 }
