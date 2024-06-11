@@ -161,8 +161,8 @@ jobs:
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
           cd runtime
-          $env:TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
-          $env:TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
+          $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
+          $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
           cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
 
       - name: Upload artifact (macOS)
