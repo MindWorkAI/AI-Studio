@@ -213,7 +213,7 @@ jobs:
       - name: Build .NET project
         run: |
           cd "app/MindWork AI Studio"
-          dotnet publish --configuration release --runtime linux-arm --disable-build-servers --force --output ../../publish/dotnet
+          dotnet publish --configuration release --runtime linux-arm64 --disable-build-servers --force --output ../../publish/dotnet
           
       - name: Move & rename the .NET artifact
         run: |
