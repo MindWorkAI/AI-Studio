@@ -145,8 +145,8 @@ jobs:
       
       - name: Build Tauri project (Unix)
         with:
-          PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
-          PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          PRIVATE_PUBLISH_KEY: "${{ secrets.PRIVATE_PUBLISH_KEY }}"
+          PRIVATE_PUBLISH_KEY_PASSWORD: "${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}"
         run: |
           cd runtime
           export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
@@ -155,8 +155,8 @@ jobs:
           
       - name: Build Tauri project (Windows)
         with:
-          PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
-          PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          PRIVATE_PUBLISH_KEY: "${{ secrets.PRIVATE_PUBLISH_KEY }}"
+          PRIVATE_PUBLISH_KEY_PASSWORD: "${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}"
         run: |
           cd runtime
           $env:TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
