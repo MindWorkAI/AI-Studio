@@ -77,7 +77,7 @@ fn main() {
 
     if is_prod() {
         tauri::async_runtime::spawn(async move {
-            let (mut rx, child) = Command::new_sidecar("mindworkAIStudio")
+            let (mut rx, child) = Command::new_sidecar("mindworkAIStudioServer")
                 .expect("Failed to create sidecar")
                 .args([format!("{port}").as_str()])
                 .spawn()
