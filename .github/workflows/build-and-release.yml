@@ -357,3 +357,84 @@ jobs:
           path: "result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb"
           if-no-files-found: warn
           retention-days: ${{ env.RETENTION_DAYS }}
+        
+  read_metadata:
+    name: Read metadata
+    runs-on: ubuntu-latest
+    outputs:
+      formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
+      formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Read and format metadata
+        id: format_metadata
+        run: |
+          # Read the first two lines of the metadata file:
+          version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+          
+          # Format the version:
+          formatted_version="v${version}"
+          
+          # Format the build time according to RFC 3339:
+          formatted_build_time=$(date -d "${build_time}" --utc +'%Y-%m-%dT%H:%M:%SZ')
+          
+          # Log the formatted metadata:
+          echo "Formatted version: '${formatted_version}'"
+          echo "Formatted build time: '${formatted_build_time}'"
+          
+          # Set the outputs:
+          echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
+          echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
+        
+  create_update_file:
+    name: Create Tauri update file
+    runs-on: ubuntu-latest
+    needs: [build_main, build_linux_arm64, read_metadata]
+    steps:
+      - name: Create artifact directory
+        run: mkdir -p $GITHUB_WORKSPACE/artifacts
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: $GITHUB_WORKSPACE/artifacts
+          merge-multiple: false
+          
+      - name: Display structure of downloaded files
+        run: ls -Rlhat $GITHUB_WORKSPACE/artifacts
+          
+      - name: Collect all signatures
+        id: collect_signatures
+        run: |
+          signatures=()
+          while IFS= read -r -d '' file; do
+          signatures+=("$(cat "$file")")
+          done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
+          
+          # Convert bash array to JSON array:
+          signatures_json=$(printf '%s\n' "${signatures[@]}" | jq -R . | jq -s .)
+          
+          echo "signatures=${signatures_json}" >> $GITHUB_ENV
+
+      - name: Create latest.json
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+          FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
+          SIGNATURES: ${{ env.signatures }}
+          
+        run: |
+          rm -f $GITHUB_WORKSPACE/.updates/latest.json
+          cat <<EOF > $GITHUB_WORKSPACE/.updates/latest.json
+          {
+            "version": "$FORMATTED_VERSION",
+            "pub_date": "$FORMATTED_BUILD_TIME",
+            "signatures": $SIGNATURES
+          }
+          EOF
+
+      - name: Display the content of latest.json
+        run: cat $GITHUB_WORKSPACE/.updates/latest.json
