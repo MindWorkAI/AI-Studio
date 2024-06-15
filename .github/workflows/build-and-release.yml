@@ -15,30 +15,35 @@ jobs:
         include:
           - platform: 'macos-latest' # for ARM-based macOS (M1 and above)
             rust_target: 'aarch64-apple-darwin'
+            update_platform: 'darwin-aarch64'
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
             tauri_bundle: 'dmg updater'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
+            update_platform: 'darwin-x86_64'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
             tauri_bundle: 'dmg updater'
 
           - platform: 'ubuntu-22.04' # for x86-based linux
             rust_target: 'x86_64-unknown-linux-gnu'
+            update_platform: 'linux-x86_64'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage deb updater'
 
           - platform: 'windows-latest' # for x86-based windows
             rust_target: 'x86_64-pc-windows-msvc'
+            update_platform: 'windows-x86_64'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             tauri_bundle: 'msi nsis updater'
 
           - platform: 'windows-latest' # for ARM-based windows
             rust_target: 'aarch64-pc-windows-msvc'
+            update_platform: 'windows-aarch64'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis updater'
@@ -49,6 +54,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: false
+          
+      - name: Store update platform to .updates directory (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: echo ${{ matrix.update_platform }} > .updates/platform
+        
+      - name: Store update platform to .updates directory (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: Write-Output "${{ matrix.update_platform }}" | Out-File -FilePath ".updates/platform" -Encoding utf8
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -173,6 +186,7 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
             runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
+            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -184,6 +198,7 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
+            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -195,6 +210,7 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
+            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -203,7 +219,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
-          path: "runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb"
+          path: |
+            runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
+            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -215,6 +233,7 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
+            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_DAYS }}
           
@@ -228,6 +247,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: false
+          
+      - name: Store update platform to .updates directory
+        run: echo "linux-aarch64" > .updates/platform
         
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -356,7 +378,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb linux-arm64)
-          path: "result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb"
+          path: |
+            result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+            .updates/platform
           if-no-files-found: warn
           retention-days: ${{ env.RETENTION_DAYS }}
         
