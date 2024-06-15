@@ -395,7 +395,7 @@ jobs:
   create_update_file:
     name: Create Tauri update file
     runs-on: ubuntu-latest
-    needs: [build_main, build_linux_arm64, read_metadata]
+    needs: [build_main, read_metadata] # TODO: build_linux_arm64
     steps:
       - name: Create artifact directory
         run: mkdir -p $GITHUB_WORKSPACE/artifacts
