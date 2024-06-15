@@ -409,6 +409,9 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -Rlhat $GITHUB_WORKSPACE/artifacts
           
+      - name: Create .update directory
+        run: mkdir -p $GITHUB_WORKSPACE/.updates
+          
       - name: Collect all signatures
         id: collect_signatures
         run: |
