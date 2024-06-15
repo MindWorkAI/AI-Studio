@@ -401,7 +401,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: $GITHUB_WORKSPACE/artifacts
+          path: ${{ github.workspace }}/artifacts
           merge-multiple: false
           
       - name: Display structure of downloaded files
