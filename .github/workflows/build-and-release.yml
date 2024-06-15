@@ -221,6 +221,8 @@ jobs:
   build_linux_arm64:
     name: Build app (linux-arm64)
     runs-on: ubuntu-latest
+    if: false # disable this job for now
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -412,27 +414,28 @@ jobs:
         run: |
           signatures=()
           while IFS= read -r -d '' file; do
-          signatures+=("$(cat "$file")")
+            signatures+=("$(cat "$file")")
           done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
           
           # Convert bash array to JSON array:
           signatures_json=$(printf '%s\n' "${signatures[@]}" | jq -R . | jq -s .)
           
-          echo "signatures=${signatures_json}" >> $GITHUB_ENV
+          # Write the JSON array to a temporary file
+          echo $signatures_json > $GITHUB_WORKSPACE/.updates/signatures.json
 
       - name: Create latest.json
         env:
           FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
           FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
-          SIGNATURES: ${{ env.signatures }}
           
         run: |
           rm -f $GITHUB_WORKSPACE/.updates/latest.json
+          signatures=$(cat $GITHUB_WORKSPACE/.updates/signatures.json)
           cat <<EOF > $GITHUB_WORKSPACE/.updates/latest.json
           {
             "version": "$FORMATTED_VERSION",
             "pub_date": "$FORMATTED_BUILD_TIME",
-            "signatures": $SIGNATURES
+            "signatures": $signatures
           }
           EOF
 
