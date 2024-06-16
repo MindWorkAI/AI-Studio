@@ -39,7 +39,7 @@ jobs:
             update_platform: 'windows-x86_64'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
-            tauri_bundle: 'msi nsis updater'
+            tauri_bundle: 'nsis updater'
 
           - platform: 'windows-latest' # for ARM-based windows
             rust_target: 'aarch64-pc-windows-msvc'
