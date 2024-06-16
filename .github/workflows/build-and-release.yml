@@ -118,7 +118,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8'
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
@@ -146,14 +146,12 @@ jobs:
         if: matrix.platform != 'windows-latest'
         run: |
           cd runtime
-          echo "RUST_VERSION=$(rustc --version | sed 's/rustc \([0-9.]*\).*/\1/')" >> $GITHUB_ENV
           echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
           
       - name: Create parts for the Rust cache key (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
           cd runtime
-          echo "RUST_VERSION=$(rustc --version | ForEach-Object { $_ -replace 'rustc (\d+\.\d+\.\d+).*', '$1' })" >> $env:GITHUB_ENV
           echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $env:GITHUB_ENV
           
       - name: Cache Rust
@@ -180,7 +178,7 @@ jobs:
             target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
             
       - name: Setup Rust (stable)
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@${{ env.RUST_VERSION }}
         with:
           targets: ${{ matrix.rust_target }}
       
@@ -194,7 +192,7 @@ jobs:
         if: matrix.platform != 'windows-latest'
         run: |
           if ! cargo tauri --version > /dev/null 2>&1; then
-            cargo install tauri-cli
+            cargo install tauri-cli --version ${{ env.TAURI_VERSION }}
           else
             echo "Tauri is already installed"
           fi
@@ -203,7 +201,7 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           if (-not (cargo tauri --version 2>$null)) {
-            cargo install tauri-cli
+            cargo install tauri-cli --version ${{ env.TAURI_VERSION }}
           } else {
             Write-Output "Tauri is already installed"
           }
@@ -358,7 +356,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8'
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
@@ -377,7 +375,6 @@ jobs:
       - name: Create parts for the Rust cache key
         run: |
           cd runtime
-          echo "RUST_VERSION=$(rustc --version | sed 's/rustc \([0-9.]*\).*/\1/')" >> $GITHUB_ENV
           echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
           
       - name: Cache linux arm64 runner image
@@ -402,6 +399,10 @@ jobs:
         uses: pguyot/arm-runner-action@v2
         id: build-linux-arm-runner
         if: steps.linux_arm_cache.outputs.cache-hit != 'true'
+        env:
+          RUST_VERSION: ${{ env.RUST_VERSION }}
+          TAURI_VERSION: ${{ env.TAURI_VERSION }}
+          
         with:
           base_image: dietpi:rpi_armv8_bullseye
           cpu: cortex-a53
@@ -422,21 +423,22 @@ jobs:
             apt-get install curl wget --yes
             
             # Install Rust:
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain none -y
+            rustup toolchain install $RUST_VERSION
             source "$HOME/.cargo/env"
             
             # Install build tools and tauri-cli requirements:
             apt-get install --yes libwebkit2gtk-4.0-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
             
             # Setup Tauri:
-            cargo install tauri-cli
+            cargo install tauri-cli --version $TAURI_VERSION
             
       - name: Add the built runner image to the cache
         if: steps.linux_arm_cache.outputs.cache-hit != 'true'
         run: |
           mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
             
-      - name: Compiling the Rust runtime
+      - name: Build Tauri project
         uses: pguyot/arm-runner-action@v2
         id: build-linux-arm
         with:
