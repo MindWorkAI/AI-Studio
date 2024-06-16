@@ -63,15 +63,15 @@ jobs:
           build_time=$(sed -n '2p' metadata.txt)
           build_number=$(sed -n '3p' metadata.txt)
           
-          # Next line is the .NET build version.
+          # Next line is the .NET SDK version.
           # The format is '8.0.205 (commit 3e1383b780)'.
           # We extract only the version number, though:
-          dotnet_build_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
           
-          # Next line is the .NET SDK version.
+          # Next line is the .NET runtime version.
           # The format is '8.0.5 (commit 087e15321b)'.
           # We extract only the version number, though:
-          dotnet_sdk_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          dotnet_runtime_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
           
           # Next line is the Rust version.
           # The format is '1.78.0 (commit 9b00956e5)'.
@@ -91,8 +91,8 @@ jobs:
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
           echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
           echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
-          echo "DOTNET_BUILD_VERSION=${dotnet_build_version}" >> $GITHUB_ENV
           echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $GITHUB_ENV
           echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
           echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
@@ -101,8 +101,8 @@ jobs:
           echo "App version: '${formatted_app_version}'"
           echo "Build time: '${build_time}'"
           echo "Build number: '${build_number}'"
-          echo ".NET build version: '${dotnet_build_version}'"
           echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo ".NET runtime version: '${dotnet_runtime_version}'"
           echo "Rust version: '${rust_version}'"
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
@@ -306,15 +306,15 @@ jobs:
           build_time=$(sed -n '2p' metadata.txt)
           build_number=$(sed -n '3p' metadata.txt)
 
-          # Next line is the .NET build version.
+          # Next line is the .NET SDK version.
           # The format is '8.0.205 (commit 3e1383b780)'.
           # We extract only the version number, though:
-          dotnet_build_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
 
-          # Next line is the .NET SDK version.
+          # Next line is the .NET runtime version.
           # The format is '8.0.5 (commit 087e15321b)'.
           # We extract only the version number, though:
-          dotnet_sdk_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          dotnet_runtime_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
 
           # Next line is the Rust version.
           # The format is '1.78.0 (commit 9b00956e5)'.
@@ -334,8 +334,8 @@ jobs:
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
           echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
           echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
-          echo "DOTNET_BUILD_VERSION=${dotnet_build_version}" >> $GITHUB_ENV
           echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $GITHUB_ENV
           echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
           echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
@@ -344,8 +344,8 @@ jobs:
           echo "App version: '${formatted_app_version}'"
           echo "Build time: '${build_time}'"
           echo "Build number: '${build_number}'"
-          echo ".NET build version: '${dotnet_build_version}'"
           echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo ".NET runtime version: '${dotnet_runtime_version}'"
           echo "Rust version: '${rust_version}'"
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
@@ -356,7 +356,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          dotnet-version: ${{ env.DOTNET_SDK_VERSI }}
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
           
