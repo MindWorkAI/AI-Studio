@@ -340,7 +340,7 @@ jobs:
   build_linux_arm64:
     name: Build app (linux-arm64)
     runs-on: ubuntu-latest
-    if: false # disable this job for now
+    if: true # disable this job for now
     
     steps:
       - name: Checkout repository
@@ -574,7 +574,7 @@ jobs:
   create_update_file:
     name: Create Tauri update file
     runs-on: ubuntu-latest
-    needs: [build_main, read_metadata] # TODO: build_linux_arm64
+    needs: [build_main, read_metadata, build_linux_arm64] # TODO: build_linux_arm64
     steps:
       - name: Create artifact directory
         run: mkdir -p $GITHUB_WORKSPACE/artifacts
