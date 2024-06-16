@@ -9,7 +9,7 @@ public partial class About : ComponentBase
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
 
-    private static string VersionDotnet => $"Used .NET compiler: v{META_DATA.DotnetVersion}";
+    private static string VersionDotnetRuntime => $"Used .NET runtime: v{META_DATA.DotnetVersion}";
     
     private static string VersionDotnetSdk => $"Used .NET SDK: v{META_DATA.DotnetSdkVersion}";
     
