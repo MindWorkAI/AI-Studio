@@ -27,21 +27,21 @@ jobs:
             dotnet_name_postfix: '-x86_64-apple-darwin'
             tauri_bundle: 'dmg updater'
 
-          - platform: 'ubuntu-22.04' # for x86-based linux
+          - platform: 'ubuntu-22.04' # for x86-based Linux
             rust_target: 'x86_64-unknown-linux-gnu'
             update_platform: 'linux-x86_64'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage deb updater'
 
-          - platform: 'windows-latest' # for x86-based windows
+          - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
             update_platform: 'windows-x86_64'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis updater'
 
-          - platform: 'windows-latest' # for ARM-based windows
+          - platform: 'windows-latest' # for ARM-based Windows
             rust_target: 'aarch64-pc-windows-msvc'
             update_platform: 'windows-aarch64'
             dotnet_runtime: 'win-arm64'
