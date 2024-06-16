@@ -441,17 +441,23 @@ jobs:
           FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
         
         run: |
+          # Export the necessary variables for xargs:
+          export GITHUB_WORKSPACE
+          export FORMATTED_VERSION
+          export platforms_json
+          
           # Here, we create the JSON object:
           platforms_json=$(jq -n '{}')
           
-          # Iterate over all signature files:
-          find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0 | while IFS= read -r -d '' sig_file; do
-            
+          # Function to process each signature file
+          process_signature() {
+            sig_file="$1"
+          
             echo "Processing signature file '$sig_file':"
-            
+          
             # Extract the platform directory. First, we start at the location of the signature file:
             platform_dir=$(dirname "$sig_file")
-            
+          
             # Iterate up the directory tree until we find the platform file.
             # When we reach the artifacts directory, we stop.
             while [[ "$platform_dir" != "$GITHUB_WORKSPACE/artifacts" ]]; do
@@ -459,31 +465,36 @@ jobs:
                 echo "   Found platform file in '$platform_dir/.updates/platform' for signature file '$sig_file'."
                 break
               fi
-               
+          
               # Go up one directory level:
               platform_dir=$(dirname "$platform_dir")
               echo "   Going up to '$platform_dir'."
             done
-            
+          
             # Ensure that we found the platform file:   
             if [[ -f "$platform_dir/.updates/platform" ]]; then
-               
+          
               # Read the platform and signature:
               platform=$(cat "$platform_dir/.updates/platform")
               signature=$(cat "$sig_file")
-               
+          
               # Extract the artifact name and create the URL:
               artifact_name=$(basename "$sig_file" .sig)
               url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$artifact_name"
-              
+          
               # Build the JSON object:
               platforms_json=$(echo "$platforms_json" | jq --arg platform "$platform" --arg signature "$signature" --arg url "$url" '.[$platform] = {"signature": $signature, "url": $url}')
-            
+          
             else
                 echo "   Error: Could not find the platform file for the signature file '$sig_file'."
             fi
-          done
+          }
           
+          # Export the function to make it available to xargs:
+          export -f process_signature
+          
+          # Iterate over all signature files using find and xargs:
+          find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0 | xargs -0 -I {} bash -c 'process_signature "$@"' _ {}
           echo "Platforms JSON: '$platforms_json'"
           
           # Write the JSON object to a temporary file:
