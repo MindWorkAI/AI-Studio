@@ -61,7 +61,7 @@ jobs:
         
       - name: Store update platform to .updates directory (Windows)
         if: matrix.platform == 'windows-latest'
-        run: Write-Output "${{ matrix.update_platform }}" | Out-File -FilePath ".updates/platform" -Encoding utf8
+        run: Write-Output "${{ matrix.update_platform }}" | Out-File -FilePath ".updates/platform" -Encoding utf8 -NoNewline
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
