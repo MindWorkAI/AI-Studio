@@ -447,6 +447,8 @@ jobs:
           # Iterate over all signature files:
           find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0 | while IFS= read -r -d '' sig_file; do
             
+            echo "Processing signature file '$sig_file':"
+            
             # Extract the platform directory. First, we start at the location of the signature file:
             platform_dir=$(dirname "$sig_file")
             
@@ -454,11 +456,13 @@ jobs:
             # When we reach the artifacts directory, we stop.
             while [[ "$platform_dir" != "$GITHUB_WORKSPACE/artifacts" ]]; do
               if [[ -f "$platform_dir/.updates/platform" ]]; then
+                echo "   Found platform file in '$platform_dir/.updates/platform' for signature file '$sig_file'."
                 break
               fi
                
               # Go up one directory level:
               platform_dir=$(dirname "$platform_dir")
+              echo "   Going up to '$platform_dir'."
             done
             
             # Ensure that we found the platform file:   
@@ -474,6 +478,9 @@ jobs:
               
               # Build the JSON object:
               platforms_json=$(echo "$platforms_json" | jq --arg platform "$platform" --arg signature "$signature" --arg url "$url" '.[$platform] = {"signature": $signature, "url": $url}')
+            
+            else
+                echo "   Error: Could not find the platform file for the signature file '$sig_file'."
             fi
           done
           
