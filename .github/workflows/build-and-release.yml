@@ -295,7 +295,7 @@ jobs:
             target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-
             
       - name: Build linux arm runner image
-        uses: pguyot/arm-runner-action@v2.6.5
+        uses: pguyot/arm-runner-action@v2
         id: build-linux-arm-runner
         if: steps.linux_arm_cache.outputs.cache-hit != 'true'
         with:
@@ -333,7 +333,7 @@ jobs:
           mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
             
       - name: Compiling the Rust runtime
-        uses: pguyot/arm-runner-action@v2.6.5
+        uses: pguyot/arm-runner-action@v2
         id: build-linux-arm
         with:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
