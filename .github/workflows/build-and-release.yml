@@ -111,27 +111,29 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           # Read the lines of the metadata file:
-          $app_version = Get-Content metadata.txt -TotalCount 1
-          $build_time = Get-Content metadata.txt -TotalCount 2 | Select-Object -Last 1
-          $build_number = Get-Content metadata.txt -TotalCount 3 | Select-Object -Last 1
+          $metadata = Get-Content metadata.txt
+          
+          $app_version = $metadata[0]
+          $build_time = $metadata[1]
+          $build_number = $metadata[2]
           
           # Next line is the .NET SDK version.
           # The format is '8.0.205 (commit 3e1383b780)'.
           # We extract only the version number, though:
-          $dotnet_sdk_version = ((Get-Content -Path 'metadata.txt')[3] -match '(\d+\.\d+\.\d+)') | Out-Null; $matches[1]
+          $dotnet_sdk_version = ($metadata[3] -match '(\d+\.\d+\.\d+)') | Out-Null; $dotnet_sdk_version = $matches[1]
           
           # Next line is the .NET runtime version.
           # The format is '8.0.5 (commit 087e15321b)'.
           # We extract only the version number, though:
-          $dotnet_runtime_version = ((Get-Content -Path 'metadata.txt')[4] -match '(\d+\.\d+\.\d+)') | Out-Null; $matches[1]
+          $dotnet_runtime_version = ($metadata[4] -match '(\d+\.\d+\.\d+)') | Out-Null; $dotnet_runtime_version = $matches[1]
           
           # Next line is the Rust version.
           # The format is '1.78.0 (commit 9b00956e5)'.
           # We extract only the version number, though:
-          $rust_version = ((Get-Content -Path 'metadata.txt')[5] -match '(\d+\.\d+\.\d+)') | Out-Null; $matches[1]
+          $rust_version = ($metadata[5] -match '(\d+\.\d+\.\d+)') | Out-Null; $rust_version = $matches[1]
           
-          $mud_blazor_version = Get-Content metadata.txt -TotalCount 7 | Select-Object -Last 1
-          $tauri_version = Get-Content metadata.txt -TotalCount 8 | Select-Object -Last 1
+          $mud_blazor_version = $metadata[6]
+          $tauri_version = $metadata[7]
 
           # Format the app version:
           $formatted_app_version = "v${app_version}"
