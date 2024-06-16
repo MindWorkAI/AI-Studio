@@ -55,8 +55,8 @@ jobs:
         with:
           lfs: false
           
-      - name: Read and format metadata
-        id: metadata
+      - name: Read and format metadata (Unix)
+        if: matrix.platform != 'windows-latest'
         run: |
           # Read the lines of the metadata file:
           app_version=$(sed -n '1p' metadata.txt)
@@ -106,6 +106,41 @@ jobs:
           echo "Rust version: '${rust_version}'"
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
+          
+      - name: Read and format metadata (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          # Read the lines of the metadata file:
+          $app_version = Get-Content metadata.txt -TotalCount 1
+          $build_time = Get-Content metadata.txt -TotalCount 2 | Select-Object -Last 1
+          $build_number = Get-Content metadata.txt -TotalCount 3 | Select-Object -Last 1
+          $dotnet_sdk_version = Get-Content metadata.txt -TotalCount 4 | Select-Object -Last 1
+          $dotnet_runtime_version = Get-Content metadata.txt -TotalCount 5 | Select-Object -Last 1
+          $rust_version = Get-Content metadata.txt -TotalCount 6 | Select-Object -Last 1
+          $mud_blazor_version = Get-Content metadata.txt -TotalCount 7 | Select-Object -Last 1
+          $tauri_version = Get-Content metadata.txt -TotalCount 8 | Select-Object -Last 1
+
+          # Format the app version:
+          $formatted_app_version = "v${app_version}"
+          
+          # Write the metadata to the environment:
+          Write-Output "FORMATTED_APP_VERSION=${formatted_app_version}" >> $env:GITHUB_ENV
+          Write-Output "BUILD_TIME=${build_time}" >> $env:GITHUB_ENV
+          Write-Output "BUILD_NUMBER=${build_number}" >> $env:GITHUB_ENV
+          Write-Output "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $env:GITHUB_ENV
+          Write-Output "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $env:GITHUB_ENV
+          Write-Output "RUST_VERSION=${rust_version}" >> $env:GITHUB_ENV
+          Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
+          
+          # Log the metadata:
+          Write-Output "App version: '${formatted_app_version}'"
+          Write-Output "Build time: '${build_time}'"
+          Write-Output "Build number: '${build_number}'"
+          Write-Output ".NET SDK version: '${dotnet_sdk_version}'"
+          Write-Output ".NET runtime version: '${dotnet_runtime_version}'"
+          Write-Output "Rust version: '${rust_version}'"
+          Write-Output "MudBlazor version: '${mud_blazor_version}'"
+          Write-Output "Tauri version: '${tauri_version}'"
           
       - name: Store update platform to .updates directory (Unix)
         if: matrix.platform != 'windows-latest'
