@@ -484,6 +484,8 @@ jobs:
             fi
           done
           
+          echo "Platforms JSON: '$platforms_json'"
+          
           # Write the JSON object to a temporary file:
           echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
 
