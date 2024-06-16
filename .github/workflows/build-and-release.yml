@@ -441,17 +441,11 @@ jobs:
           FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
         
         run: |
-          # Export the necessary variables for xargs:
-          export GITHUB_WORKSPACE
-          export FORMATTED_VERSION
-          export platforms_json
-          
           # Here, we create the JSON object:
           platforms_json=$(jq -n '{}')
           
-          # Function to process each signature file
-          process_signature() {
-            sig_file="$1"
+          # Iterate over all signature files:
+          while IFS= read -r -d '' sig_file; do
           
             echo "Processing signature file '$sig_file':"
           
@@ -488,14 +482,7 @@ jobs:
             else
                 echo "   Error: Could not find the platform file for the signature file '$sig_file'."
             fi
-          }
-          
-          # Export the function to make it available to xargs:
-          export -f process_signature
-          
-          # Iterate over all signature files using find and xargs:
-          find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0 | xargs -0 -I {} bash -c 'process_signature "$@"' _ {}
-          echo "Platforms JSON: '$platforms_json'"
+          done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
           
           # Write the JSON object to a temporary file:
           echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
