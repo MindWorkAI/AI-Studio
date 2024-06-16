@@ -119,7 +119,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
       
@@ -358,7 +357,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
           
