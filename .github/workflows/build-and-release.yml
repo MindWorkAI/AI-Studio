@@ -178,8 +178,9 @@ jobs:
             target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
             
       - name: Setup Rust (stable)
-        uses: dtolnay/rust-toolchain@${{ env.RUST_VERSION }}
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
       
       - name: Setup dependencies (Ubuntu-specific, x86)
