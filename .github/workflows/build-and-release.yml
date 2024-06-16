@@ -436,19 +436,49 @@ jobs:
       - name: Create .update directory
         run: mkdir -p $GITHUB_WORKSPACE/.updates
           
-      - name: Collect all signatures
-        id: collect_signatures
+      - name: Build platform JSON
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+        
         run: |
-          signatures=()
-          while IFS= read -r -d '' file; do
-            signatures+=("$(cat "$file")")
-          done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
+          # Here, we create the JSON object:
+          platforms_json=$(jq -n '{}')
           
-          # Convert bash array to JSON array:
-          signatures_json=$(printf '%s\n' "${signatures[@]}" | jq -R . | jq -s .)
+          # Iterate over all signature files:
+          find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0 | while IFS= read -r -d '' sig_file; do
+            
+            # Extract the platform directory. First, we start at the location of the signature file:
+            platform_dir=$(dirname "$sig_file")
+            
+            # Iterate up the directory tree until we find the platform file.
+            # When we reach the artifacts directory, we stop.
+            while [[ "$platform_dir" != "$GITHUB_WORKSPACE/artifacts" ]]; do
+              if [[ -f "$platform_dir/.updates/platform" ]]; then
+                break
+              fi
+               
+              # Go up one directory level:
+              platform_dir=$(dirname "$platform_dir")
+            done
+            
+            # Ensure that we found the platform file:   
+            if [[ -f "$platform_dir/.updates/platform" ]]; then
+               
+              # Read the platform and signature:
+              platform=$(cat "$platform_dir/.updates/platform")
+              signature=$(cat "$sig_file")
+               
+              # Extract the artifact name and create the URL:
+              artifact_name=$(basename "$sig_file" .sig)
+              url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$artifact_name"
+              
+              # Build the JSON object:
+              platforms_json=$(echo "$platforms_json" | jq --arg platform "$platform" --arg signature "$signature" --arg url "$url" '.[$platform] = {"signature": $signature, "url": $url}')
+            fi
+          done
           
-          # Write the JSON array to a temporary file
-          echo $signatures_json > $GITHUB_WORKSPACE/.updates/signatures.json
+          # Write the JSON object to a temporary file:
+          echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
 
       - name: Create latest.json
         env:
@@ -456,13 +486,19 @@ jobs:
           FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
           
         run: |
+          # Remove the latest.json file if it exists:
           rm -f $GITHUB_WORKSPACE/.updates/latest.json
-          signatures=$(cat $GITHUB_WORKSPACE/.updates/signatures.json)
+          
+          # Read the platforms JSON, which was created in the previous step:
+          platforms=$(cat $GITHUB_WORKSPACE/.updates/platforms.json)
+          
+          # Create the latest.json file:
           cat <<EOF > $GITHUB_WORKSPACE/.updates/latest.json
           {
             "version": "$FORMATTED_VERSION",
+            "notes": "Update to version $FORMATTED_VERSION.",
             "pub_date": "$FORMATTED_BUILD_TIME",
-            "signatures": $signatures
+            "platforms": $platforms
           }
           EOF
 
