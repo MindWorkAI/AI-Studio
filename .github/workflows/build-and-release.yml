@@ -55,6 +55,58 @@ jobs:
         with:
           lfs: false
           
+      - name: Read and format metadata
+        id: metadata
+        run: |
+          # Read the lines of the metadata file:
+          app_version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+          build_number=$(sed -n '3p' metadata.txt)
+          
+          # Next line is the .NET build version.
+          # The format is '8.0.205 (commit 3e1383b780)'.
+          # We extract only the version number, though:
+          dotnet_build_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          
+          # Next line is the .NET SDK version.
+          # The format is '8.0.5 (commit 087e15321b)'.
+          # We extract only the version number, though:
+          dotnet_sdk_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          
+          # Next line is the Rust version.
+          # The format is '1.78.0 (commit 9b00956e5)'.
+          # We extract only the version number, though:
+          rust_version=$(sed -n '6p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          
+          # Next line is the MudBlazor version:
+          mud_blazor_version=$(sed -n '7p' metadata.txt)
+          
+          # Next line is the Tauri version:
+          tauri_version=$(sed -n '8p' metadata.txt)
+
+          # Format the app version:
+          formatted_app_version="v${app_version}"
+          
+          # Write the metadata to the environment:
+          echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
+          echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
+          echo "DOTNET_BUILD_VERSION=${dotnet_build_version}" >> $GITHUB_ENV
+          echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
+          echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
+          echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
+
+          # Log the metadata:
+          echo "App version: '${formatted_app_version}'"
+          echo "Build time: '${build_time}'"
+          echo "Build number: '${build_number}'"
+          echo ".NET build version: '${dotnet_build_version}'"
+          echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo "Rust version: '${rust_version}'"
+          echo "MudBlazor version: '${mud_blazor_version}'"
+          echo "Tauri version: '${tauri_version}'"
+          
       - name: Store update platform to .updates directory (Unix)
         if: matrix.platform != 'windows-latest'
         run: echo ${{ matrix.update_platform }} > .updates/platform
@@ -247,6 +299,58 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: false
+          
+      - name: Read and format metadata
+        id: metadata
+        run: |
+          # Read the lines of the metadata file:
+          app_version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+          build_number=$(sed -n '3p' metadata.txt)
+
+          # Next line is the .NET build version.
+          # The format is '8.0.205 (commit 3e1383b780)'.
+          # We extract only the version number, though:
+          dotnet_build_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # Next line is the .NET SDK version.
+          # The format is '8.0.5 (commit 087e15321b)'.
+          # We extract only the version number, though:
+          dotnet_sdk_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # Next line is the Rust version.
+          # The format is '1.78.0 (commit 9b00956e5)'.
+          # We extract only the version number, though:
+          rust_version=$(sed -n '6p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # Next line is the MudBlazor version:
+          mud_blazor_version=$(sed -n '7p' metadata.txt)
+
+          # Next line is the Tauri version:
+          tauri_version=$(sed -n '8p' metadata.txt)
+
+          # Format the app version:
+          formatted_app_version="v${app_version}"
+
+          # Write the metadata to the environment:
+          echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
+          echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
+          echo "DOTNET_BUILD_VERSION=${dotnet_build_version}" >> $GITHUB_ENV
+          echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
+          echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
+          echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
+
+          # Log the metadata:
+          echo "App version: '${formatted_app_version}'"
+          echo "Build time: '${build_time}'"
+          echo "Build number: '${build_number}'"
+          echo ".NET build version: '${dotnet_build_version}'"
+          echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo "Rust version: '${rust_version}'"
+          echo "MudBlazor version: '${mud_blazor_version}'"
+          echo "Tauri version: '${tauri_version}'"
           
       - name: Store update platform to .updates directory
         run: echo "linux-aarch64" > .updates/platform
