@@ -4,24 +4,24 @@
     "net8.0": {
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
-        "requested": "[8.0.5, )",
-        "resolved": "8.0.5",
-        "contentHash": "j0zzS7NPhux2rqbCIjrSV/MW0WPNSd49Vvs+j9+ALcTGVrRR48mPmIuBVpeaNO/flTFkN2fTZCLyom403KkzNg==",
+        "requested": "[8.0.6, )",
+        "resolved": "8.0.6",
+        "contentHash": "hQlf5+YxiUbKdpaPBf/zdMGItnWF8ai9ToPjeZ6gnxT10V4RGDKvChl5MSdc838+2SRHLAC0cdJwG0+L7dqR0g==",
         "dependencies": {
           "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.5, )",
-        "resolved": "8.0.5",
-        "contentHash": "4ISW1Ndgz86FkIbu5rVlMqhhtojdy5rUlxC/N+9kPh9qbYcvHiCvYbHKzAPVIx9OPYIjT9trXt7JI42Y5Ukq6A=="
+        "requested": "[8.0.6, )",
+        "resolved": "8.0.6",
+        "contentHash": "E+lDylsTeP4ZiDmnEkiJ5wobnGaIJzFhOgZppznJCb69UZgbh6G3cfv1pnLDLLBx6JAgl0kAlnINDeT3uCuczQ=="
       },
       "MudBlazor": {
         "type": "Direct",
-        "requested": "[6.19.1, )",
-        "resolved": "6.19.1",
-        "contentHash": "1f3izX4C68n1LhxTJkJw6ulH1pGirCkbJVLXbtxNKZ6csd4GWXRLoXmvcD43taESGN6V+BTF8yoNHn9RWtuP5w==",
+        "requested": "[6.20.0, )",
+        "resolved": "6.20.0",
+        "contentHash": "2MqW/E1OLszSqDhW06rpRTN4OpIRJU0iVzeiZLPzymckrKJH1Hg09St+O3kaEnsbXRcjcdM9iE5cSKzCgxvySQ==",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.3",
           "Microsoft.AspNetCore.Components.Web": "8.0.3",
@@ -30,12 +30,12 @@
       },
       "MudBlazor.Markdown": {
         "type": "Direct",
-        "requested": "[1.0.0, )",
-        "resolved": "1.0.0",
-        "contentHash": "VsTH/iMvGP9r4yXzQ5U9IN0G6gMZgfhp3dANpRJ/d4qCY1TVpZvUJoz8AiwoAdORRdd5KBGvdoXLGG1F4TNTQg==",
+        "requested": "[1.0.2, )",
+        "resolved": "1.0.2",
+        "contentHash": "yXEuF1XTtZy0XkxDVXj9Jd8chwsNwu1IaDpb7FsbZWU8sMg1zCk+GXZdTSKH+C0blHJEDEOl5bzp3JU1S/737w==",
         "dependencies": {
           "Markdig": "0.37.0",
-          "MudBlazor": "6.19.1"
+          "MudBlazor": "6.20.0"
         }
       },
       "Markdig": {
@@ -163,6 +163,6 @@
         "contentHash": "FHNOatmUq0sqJOkTx+UF/9YK1f180cnW5FVqnQMvYUN0elp6wFzbtPSiqbo1/ru8ICp43JM1i7kKkk6GsNGHlA=="
       }
     },
-    "net8.0/osx-arm64": {}
+    "net8.0/osx-x64": {}
   }
 }
