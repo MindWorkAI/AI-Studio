@@ -340,7 +340,7 @@ jobs:
   build_linux_arm64:
     name: Build app (linux-arm64)
     runs-on: ubuntu-latest
-    if: true # disable this job for now
+    if: false # disable this job for now
     
     steps:
       - name: Checkout repository
@@ -545,6 +545,7 @@ jobs:
     outputs:
       formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
       formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
+      changelog: ${{ steps.read_changelog.outputs.changelog }}
     
     steps:
       - name: Checkout repository
@@ -569,12 +570,24 @@ jobs:
           
           # Set the outputs:
           echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
+          echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
           echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
+          
+      - name: Read changelog
+        id: read_changelog
+        run: |
+          # Read the changelog file:
+          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md")
+          
+          # Set the output:
+          echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
+          echo "${changelog}" >> "$GITHUB_OUTPUT"
+          echo "EOOOF" >> "$GITHUB_OUTPUT"
         
   create_update_file:
     name: Create Tauri update file
     runs-on: ubuntu-latest
-    needs: [build_main, read_metadata, build_linux_arm64] # TODO: build_linux_arm64
+    needs: [build_main, read_metadata] # TODO: build_linux_arm64
     steps:
       - name: Create artifact directory
         run: mkdir -p $GITHUB_WORKSPACE/artifacts
@@ -646,6 +659,7 @@ jobs:
         env:
           FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
           FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
+          CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
           
         run: |
           # Remove the latest.json file if it exists:
@@ -654,15 +668,18 @@ jobs:
           # Read the platforms JSON, which was created in the previous step:
           platforms=$(cat $GITHUB_WORKSPACE/.updates/platforms.json)
           
+          # Replace newlines in changelog with \n
+          changelog=$(echo "$CHANGELOG" | awk '{printf "%s\\n", $0}')
+          
           # Create the latest.json file:
-          cat <<EOF > $GITHUB_WORKSPACE/.updates/latest.json
+          cat <<EOOOF > $GITHUB_WORKSPACE/.updates/latest.json
           {
             "version": "$FORMATTED_VERSION",
-            "notes": "Update to version $FORMATTED_VERSION.",
+            "notes": "$changelog",
             "pub_date": "$FORMATTED_BUILD_TIME",
             "platforms": $platforms
           }
-          EOF
+          EOOOF
 
       - name: Display the content of latest.json
         run: cat $GITHUB_WORKSPACE/.updates/latest.json
