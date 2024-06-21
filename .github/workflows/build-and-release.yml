@@ -615,6 +615,11 @@ jobs:
           # Find and process files in the artifacts directory:
           find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do
           
+            # Ignore .updates/platform files:
+            if [[ "$FILE" == *".updates/platform" ]]; then
+              continue
+            fi
+          
             if [[ "$FILE" == *"x86_64-apple-darwin"* && "$FILE" == *".tar.gz" ]]; then
               TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_x64.app.tar.gz"
             elif [[ "$FILE" == *"x86_64-apple-darwin"* && "$FILE" == *".tar.gz.sig" ]]; then
