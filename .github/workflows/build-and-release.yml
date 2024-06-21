@@ -678,7 +678,7 @@ jobs:
             else
                 echo "   Error: Could not find the platform file for the signature file '$sig_file'."
             fi
-          done < <(find $GITHUB_WORKSPACE/release/assets -type f -name '*.sig' -print0)
+          done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
           
           # Write the JSON object to a temporary file:
           echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
