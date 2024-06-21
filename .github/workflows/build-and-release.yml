@@ -725,6 +725,6 @@ jobs:
           
         with:
           name: MindWork AI Studio ${{ env.FORMATTED_VERSION }}
-          path: /release/assets/
+          path: release/assets/
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_RELEASE_ASSETS }}
