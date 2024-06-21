@@ -547,6 +547,7 @@ jobs:
       formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
       formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
       changelog: ${{ steps.read_changelog.outputs.changelog }}
+      version: ${{ steps.format_metadata.outputs.version }}
     
     steps:
       - name: Checkout repository
@@ -573,6 +574,7 @@ jobs:
           echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
           echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
           echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
           
       - name: Read changelog
         id: read_changelog
