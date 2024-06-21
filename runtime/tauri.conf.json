@@ -74,7 +74,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://raw.githubusercontent.com/MindWorkAI/AI-Studio/main/.updates/latest.json"
+        "https://github.com/MindWorkAI/AI-Studio/releases/latest/download/latest.json"
       ],
       "dialog": true,
       "windows": {
