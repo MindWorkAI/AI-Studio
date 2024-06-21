@@ -584,8 +584,8 @@ jobs:
           echo "${changelog}" >> "$GITHUB_OUTPUT"
           echo "EOOOF" >> "$GITHUB_OUTPUT"
         
-  create_update_file:
-    name: Create Tauri update file
+  create_release:
+    name: Prepare and create the final release
     runs-on: ubuntu-latest
     needs: [build_main, read_metadata] # TODO: build_linux_arm64
     steps:
@@ -600,11 +600,39 @@ jobs:
           
       - name: Display structure of downloaded files
         run: ls -Rlhat $GITHUB_WORKSPACE/artifacts
+        
+      - name: Prepare release assets
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+          
+        run: |
+          RELEASE_DIR="$GITHUB_WORKSPACE/release/assets"
+          
+          # Ensure the release directory exists:
+          mkdir -p "$RELEASE_DIR"
+          
+          # Find and process files in the artifacts directory:
+          find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do
+          
+            if [[ "$FILE" == *"x86_64-apple-darwin"* && "$FILE" == *".tar.gz" ]]; then
+              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_x64.app.tar.gz"
+            elif [[ "$FILE" == *"x86_64-apple-darwin"* && "$FILE" == *".tar.gz.sig" ]]; then
+              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_x64.app.tar.gz.sig"
+            elif [[ "$FILE" == *"aarch64-apple-darwin"* && "$FILE" == *".tar.gz" ]]; then
+              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_aarch64.app.tar.gz"
+            elif [[ "$FILE" == *"aarch64-apple-darwin"* && "$FILE" == *".tar.gz.sig" ]]; then
+              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_aarch64.app.tar.gz.sig"
+            else
+              TARGET_NAME="$(basename "$FILE")"
+            fi
+          
+            cp "$FILE" "${RELEASE_DIR}/${TARGET_NAME}"
+          done
           
       - name: Create .update directory
         run: mkdir -p $GITHUB_WORKSPACE/.updates
           
-      - name: Build platform JSON
+      - name: Build platform JSON for latest.json file
         env:
           FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
         
@@ -650,7 +678,7 @@ jobs:
             else
                 echo "   Error: Could not find the platform file for the signature file '$sig_file'."
             fi
-          done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
+          done < <(find $GITHUB_WORKSPACE/release/assets -type f -name '*.sig' -print0)
           
           # Write the JSON object to a temporary file:
           echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
@@ -661,10 +689,7 @@ jobs:
           FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
           CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
           
-        run: |
-          # Remove the latest.json file if it exists:
-          rm -f $GITHUB_WORKSPACE/.updates/latest.json
-          
+        run: |          
           # Read the platforms JSON, which was created in the previous step:
           platforms=$(cat $GITHUB_WORKSPACE/.updates/platforms.json)
           
@@ -672,7 +697,7 @@ jobs:
           changelog=$(echo "$CHANGELOG" | awk '{printf "%s\\n", $0}')
           
           # Create the latest.json file:
-          cat <<EOOOF > $GITHUB_WORKSPACE/.updates/latest.json
+          cat <<EOOOF > $GITHUB_WORKSPACE/release/assets/latest.json
           {
             "version": "$FORMATTED_VERSION",
             "notes": "$changelog",
@@ -681,5 +706,8 @@ jobs:
           }
           EOOOF
 
+      - name: Show all release assets
+        run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
+
       - name: Display the content of latest.json
-        run: cat $GITHUB_WORKSPACE/.updates/latest.json
+        run: cat $GITHUB_WORKSPACE/release/assets/latest.json
