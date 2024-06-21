@@ -3,7 +3,8 @@ on:
   push
 
 env:
-  RETENTION_DAYS: 30
+  RETENTION_INTERMEDIATE_ASSETS: 1
+  RETENTION_RELEASE_ASSETS: 30
     
 jobs:
   build_main:
@@ -288,7 +289,7 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
             .updates/platform
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Windows - MSI)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
@@ -300,7 +301,7 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
             .updates/platform
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Windows - NSIS)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
@@ -312,7 +313,7 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
             .updates/platform
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Linux - Debian Package)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
@@ -323,7 +324,7 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
             .updates/platform
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Linux - AppImage)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
@@ -335,7 +336,7 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
             .updates/platform
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
   build_linux_arm64:
     name: Build app (linux-arm64)
@@ -537,7 +538,7 @@ jobs:
             result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
             .updates/platform
           if-no-files-found: warn
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
         
   read_metadata:
     name: Read metadata
@@ -585,7 +586,7 @@ jobs:
           echo "EOOOF" >> "$GITHUB_OUTPUT"
         
   create_release:
-    name: Prepare and create the final release
+    name: Prepare & create release
     runs-on: ubuntu-latest
     needs: [build_main, read_metadata] # TODO: build_linux_arm64
     steps:
@@ -711,3 +712,14 @@ jobs:
 
       - name: Display the content of latest.json
         run: cat $GITHUB_WORKSPACE/release/assets/latest.json
+        
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+          
+        with:
+          name: MindWork AI Studio ${{ env.FORMATTED_VERSION }}
+          path: $GITHUB_WORKSPACE/release/assets
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_RELEASE_ASSETS }}
