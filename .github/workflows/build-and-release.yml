@@ -606,7 +606,7 @@ jobs:
         
       - name: Prepare release assets
         env:
-          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+          VERSION: ${{ needs.read_metadata.outputs.version }}
           
         run: |
           RELEASE_DIR="$GITHUB_WORKSPACE/release/assets"
@@ -623,13 +623,13 @@ jobs:
             fi
           
             if [[ "$FILE" == *"x86_64-apple-darwin"* && "$FILE" == *".tar.gz" ]]; then
-              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_x64.app.tar.gz"
+              TARGET_NAME="MindWork AI Studio_${VERSION}_x64.app.tar.gz"
             elif [[ "$FILE" == *"x86_64-apple-darwin"* && "$FILE" == *".tar.gz.sig" ]]; then
-              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_x64.app.tar.gz.sig"
+              TARGET_NAME="MindWork AI Studio_${VERSION}_x64.app.tar.gz.sig"
             elif [[ "$FILE" == *"aarch64-apple-darwin"* && "$FILE" == *".tar.gz" ]]; then
-              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_aarch64.app.tar.gz"
+              TARGET_NAME="MindWork AI Studio_${VERSION}_aarch64.app.tar.gz"
             elif [[ "$FILE" == *"aarch64-apple-darwin"* && "$FILE" == *".tar.gz.sig" ]]; then
-              TARGET_NAME="MindWork AI Studio_${FORMATTED_VERSION}_aarch64.app.tar.gz.sig"
+              TARGET_NAME="MindWork AI Studio_${VERSION}_aarch64.app.tar.gz.sig"
             else
               TARGET_NAME="$(basename "$FILE")"
             fi
