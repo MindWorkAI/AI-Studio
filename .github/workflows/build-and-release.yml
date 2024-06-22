@@ -808,9 +808,9 @@ jobs:
 
               # Append each file and link to the changelog:
               for item in "${analysis_array[@]}"; do
-                filename=$(echo $item | cut -d'=' -f1)
-                link=$(echo $item | cut -d'=' -f2)
-                changelog="$changelog\n- [$(basename $filename)]($link)"
+                filename=$(echo $item | cut -d'=' -f1 | xargs)
+                link=$(echo $item | cut -d'=' -f2 | xargs)
+                changelog="$changelog\n- [$(basename "$filename")]($link)"
               done
               
               # Export the modified changelog (using HEREDOC syntax for multi-line support):
