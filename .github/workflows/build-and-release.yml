@@ -661,11 +661,11 @@ jobs:
               platform="darwin-aarch64"
             elif [[ "$sig_file" == *"x86_64-apple-darwin"* ]]; then
               platform="darwin-x86_64"
-            elif [[ "$sig_file" == *"x86_64-unknown-linux-" ]]; then
+            elif [[ "$sig_file" == *"x86_64-unknown-linux-"* ]]; then
               platform="linux-x86_64"
-            elif [[ "$sig_file" == *"x86_64-pc-windows-" ]]; then
+            elif [[ "$sig_file" == *"x86_64-pc-windows-"* ]]; then
               platform="windows-x86_64"
-            elif [[ "$sig_file" == *"aarch64-pc-windows-" ]]; then
+            elif [[ "$sig_file" == *"aarch64-pc-windows-"* ]]; then
               platform="windows-aarch64"
             else
               echo "Platform not recognized: '$sig_file'"
