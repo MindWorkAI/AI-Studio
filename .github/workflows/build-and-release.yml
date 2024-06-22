@@ -50,6 +50,8 @@ jobs:
           if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
               echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md' not found"
               exit 1
+          else
+              echo "Changelog file '${FORMATTED_VERSION}.md' found"
           fi
           
           # Read the changelog file:
