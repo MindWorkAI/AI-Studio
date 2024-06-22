@@ -817,8 +817,11 @@ jobs:
                 filename="${item%%=*}"
                 filename=$(echo $filename | xargs)
               
+                # Extract the base name of the file
+                base_filename=$(basename "$filename")
+              
                 # Ignore the latest.json file:
-                if [[ "$filename" == "latest.json" ]]; then
+                if [[ "$base_filename" == "latest.json" ]]; then
                   continue
                 fi
               
@@ -827,7 +830,7 @@ jobs:
                 link=$(echo $link | xargs)
               
                 # Append this scan result to the changelog:
-                echo "- [$(basename "$filename")]($link)" >> $temp_changelog
+                echo "- [$base_filename]($link)" >> $temp_changelog
               done
               
               # Export the modified changelog (using HEREDOC syntax for multi-line support):
