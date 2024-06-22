@@ -582,7 +582,7 @@ jobs:
           path: ${{ github.workspace }}/artifacts
           merge-multiple: false
           
-      - name: Display structure of downloaded files
+      - name: Display structure of previously artifacts
         run: ls -Rlhat $GITHUB_WORKSPACE/artifacts
         
       - name: Prepare release assets
