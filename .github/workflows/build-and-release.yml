@@ -800,8 +800,12 @@ jobs:
               changelog="${{ env.CHANGELOG }}"
               links="${{ steps.virus_total.outputs.analysis }}"
 
+              # Create a temporary file for the changelog:
+              temp_changelog=$(mktemp)
+
               # Add the new Markdown section:
-              changelog="$changelog\n\n## Virus scans"
+              echo -e "$changelog" > $temp_changelog
+              echo -e "\n\n## Virus scans" >> $temp_changelog
               
               # Split the analysis output by comma:
               IFS=',' read -ra analysis_array <<< "$links"
@@ -809,13 +813,13 @@ jobs:
               # Append each file and link to the changelog:
               for item in "${analysis_array[@]}"; do
                 filename=$(echo $item | cut -d'=' -f1 | xargs)
-                link=$(echo $item | cut -d'=' -f2 | xargs)
-                changelog="$changelog\n- [$(basename "$filename")]($link)"
+                link=$(echo $item | cut -d'=' -f2)
+                echo "- [$(basename "$filename")]($link)" >> $temp_changelog
               done
               
               # Export the modified changelog (using HEREDOC syntax for multi-line support):
               echo "CHANGELOG<<EOOOF" >> $GITHUB_ENV
-              echo "$changelog" >> $GITHUB_ENV
+              cat $temp_changelog >> $GITHUB_ENV
               echo "EOOOF" >> $GITHUB_ENV
             
           - name: Create release
