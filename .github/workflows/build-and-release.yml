@@ -767,9 +767,6 @@ jobs:
       name: Publish release
       runs-on: ubuntu-latest
       needs: create_release
-      env:
-        FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
-        CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
       
       steps:
           - name: Create release folder
@@ -777,6 +774,9 @@ jobs:
           
           - name: Download release assets
             uses: actions/download-artifact@v4
+            env:
+              FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+              
             with:
                 name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
                 path: $GITHUB_WORKSPACE/release/assets
@@ -786,6 +786,10 @@ jobs:
             
           - name: Create release
             uses: softprops/action-gh-release@v2
+            env:
+              FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+              CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
+              
             with:
               prerelease: true
               body: ${{ env.CHANGELOG }}
