@@ -739,7 +739,7 @@ jobs:
           FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
           
         with:
-          name: MindWork AI Studio ${{ env.FORMATTED_VERSION }}
+          name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
           path: release/assets/
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_RELEASE_ASSETS }}
