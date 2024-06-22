@@ -89,6 +89,7 @@ jobs:
           formatted_app_version="v${app_version}"
           
           # Write the metadata to the environment:
+          echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
           echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
           echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
@@ -140,6 +141,7 @@ jobs:
           $formatted_app_version = "v${app_version}"
           
           # Write the metadata to the environment:
+          Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
           Write-Output "FORMATTED_APP_VERSION=${formatted_app_version}" >> $env:GITHUB_ENV
           Write-Output "BUILD_TIME=${build_time}" >> $env:GITHUB_ENV
           Write-Output "BUILD_NUMBER=${build_number}" >> $env:GITHUB_ENV
@@ -382,6 +384,7 @@ jobs:
           formatted_app_version="v${app_version}"
 
           # Write the metadata to the environment:
+          echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
           echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
           echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
