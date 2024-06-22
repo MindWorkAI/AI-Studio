@@ -48,11 +48,11 @@ jobs:
       - name: Check tag vs. metadata version
         run: |
           # Ensure, that the tag matches the version in the metadata file:
-          if [ "${GITHUB_REF}" != "refs/tags/${env.FORMATTED_VERSION}" ]; then
-              echo "Tag '${GITHUB_REF}' does not match the version in the metadata file '${env.FORMATTED_VERSION}'"
+          if [ "${GITHUB_REF}" != "refs/tags/${FORMATTED_VERSION}" ]; then
+              echo "Tag '${GITHUB_REF}' does not match the version in the metadata file '${FORMATTED_VERSION}'"
               exit 1
           else
-              echo "Tag '${GITHUB_REF}' matches the version in the metadata file '${env.FORMATTED_VERSION}'"
+              echo "Tag '${GITHUB_REF}' matches the version in the metadata file '${FORMATTED_VERSION}'"
           fi
 
       - name: Read changelog
@@ -60,14 +60,14 @@ jobs:
         run: |
           # Ensure, that the matching changelog file for the current version exists:
           if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md" ]; then
-              echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md' not found"
+              echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md' not found"
               exit 1
           else
-              echo "Changelog file '${env.FORMATTED_VERSION}.md' found"
+              echo "Changelog file '${FORMATTED_VERSION}.md' found"
           fi
           
           # Read the changelog file:
-          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md")
+          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md")
 
           # Set the output:
           echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
