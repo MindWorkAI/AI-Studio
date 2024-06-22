@@ -678,14 +678,6 @@ jobs:
             # Extract the artifact name and create the URL:
             artifact_name=$(basename "$sig_file" .sig)
             encoded_artifact_name=$(urlencode "$artifact_name")
-            url="
-          
-            # Read the signature:
-            signature=$(cat "$sig_file")
-        
-            # Extract the artifact name and create the URL:
-            artifact_name=$(basename "$sig_file" .sig)
-            encoded_artifact_name=$(urlencode "$artifact_name")
             url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$encoded_artifact_name"
         
             # Build the JSON object:
