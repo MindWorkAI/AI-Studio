@@ -613,6 +613,9 @@ jobs:
             cp "$FILE" "${RELEASE_DIR}/${TARGET_NAME}"
           done
           
+          # Display the structure of the release directory:
+          ls -Rlhat $GITHUB_WORKSPACE/release/assets
+          
       - name: Create .update directory
         run: mkdir -p $GITHUB_WORKSPACE/.updates
           
@@ -635,6 +638,9 @@ jobs:
               esac
             done
           }
+          
+          # Display the structure of the release directory:
+          ls -Rlhat $GITHUB_WORKSPACE/release/assets
           
           # Iterate over all signature files:
           while IFS= read -r -d '' sig_file; do
