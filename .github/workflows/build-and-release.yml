@@ -647,25 +647,25 @@ jobs:
             echo "Processing signature file '$sig_file':"
           
             #
-            # Next, we determine the "update platform". We use a if/elseif construct.
+            # Next, we determine the "update platform".
             # We store the result in the $platform variable.
             # 
-            # We derive the platform from the path and the signature file name:
+            # We derive the platform from the signature file name:
             # - platform=darwin-aarch64 when path contains 'aarch64-apple-darwin'
             # - platform=darwin-x86_64 when path contains 'x86_64-apple-darwin'
             # - platform=linux-x86_64 when path contains 'x86_64-unknown-linux-'
             # - platform=windows-x86_64 when path contains 'x86_64-pc-windows-'
             # - platform=windows-aarch64 when path contains 'aarch64-pc-windows-'
             #
-            if [[ "$sig_file" == *"aarch64-apple-darwin"* ]]; then
+            if [[ "$sig_file" == *"aarch64.app"* ]]; then
               platform="darwin-aarch64"
-            elif [[ "$sig_file" == *"x86_64-apple-darwin"* ]]; then
+            elif [[ "$sig_file" == *"x64.app"* ]]; then
               platform="darwin-x86_64"
-            elif [[ "$sig_file" == *"x86_64-unknown-linux-"* ]]; then
+            elif [[ "$sig_file" == *"amd64.AppImage"* ]]; then
               platform="linux-x86_64"
-            elif [[ "$sig_file" == *"x86_64-pc-windows-"* ]]; then
+            elif [[ "$sig_file" == *"x64-setup.nsis"* ]]; then
               platform="windows-x86_64"
-            elif [[ "$sig_file" == *"aarch64-pc-windows-"* ]]; then
+            elif [[ "$sig_file" == *"arm64-setup.nsis"* ]]; then
               platform="windows-aarch64"
             else
               echo "Platform not recognized: '$sig_file'"
