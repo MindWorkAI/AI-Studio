@@ -48,26 +48,26 @@ jobs:
       - name: Check tag vs. metadata version
         run: |
           # Ensure, that the tag matches the version in the metadata file:
-          if [ "${GITHUB_REF}" != "refs/tags/${formatted_version}" ]; then
-              echo "Tag '${GITHUB_REF}' does not match the version in the metadata file '${formatted_version}'"
+          if [ "${GITHUB_REF}" != "refs/tags/${env.FORMATTED_VERSION}" ]; then
+              echo "Tag '${GITHUB_REF}' does not match the version in the metadata file '${env.FORMATTED_VERSION}'"
               exit 1
           else
-              echo "Tag '${GITHUB_REF}' matches the version in the metadata file '${formatted_version}'"
+              echo "Tag '${GITHUB_REF}' matches the version in the metadata file '${env.FORMATTED_VERSION}'"
           fi
 
       - name: Read changelog
         id: read_changelog
         run: |
           # Ensure, that the matching changelog file for the current version exists:
-          if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
-              echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md' not found"
+          if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md" ]; then
+              echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md' not found"
               exit 1
           else
-              echo "Changelog file '${FORMATTED_VERSION}.md' found"
+              echo "Changelog file '${env.FORMATTED_VERSION}.md' found"
           fi
           
           # Read the changelog file:
-          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md")
+          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md")
 
           # Set the output:
           echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
@@ -752,6 +752,7 @@ jobs:
           retention-days: ${{ env.RETENTION_RELEASE_ASSETS }}
           
   publish_release:
+      name: Publish release
       runs-on: ubuntu-latest
       needs: create_release
       env:
