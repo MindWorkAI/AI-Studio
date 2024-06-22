@@ -1,6 +1,8 @@
 name: Build and Release
 on:
-  push
+  push:
+    tags:
+      - "v*.*.*"
 
 env:
   RETENTION_INTERMEDIATE_ASSETS: 1
@@ -42,6 +44,16 @@ jobs:
           echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
           echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
+          
+      - name: Check tag vs. metadata version
+        run: |
+          # Ensure, that the tag matches the version in the metadata file:
+          if [ "${GITHUB_REF}" != "refs/tags/${formatted_version}" ]; then
+              echo "Tag '${GITHUB_REF}' does not match the version in the metadata file '${formatted_version}'"
+              exit 1
+          else
+              echo "Tag '${GITHUB_REF}' matches the version in the metadata file '${formatted_version}'"
+          fi
 
       - name: Read changelog
         id: read_changelog
@@ -382,7 +394,7 @@ jobs:
     name: Build app (linux-arm64)
     runs-on: ubuntu-latest
     needs: read_metadata
-    if: false # disable this job for now
+    if: true # allows disabling this long-running job temporarily
     
     steps:
       - name: Checkout repository
@@ -581,7 +593,7 @@ jobs:
   create_release:
     name: Prepare & create release
     runs-on: ubuntu-latest
-    needs: [build_main, read_metadata] # TODO: build_linux_arm64
+    needs: [build_main, read_metadata, build_linux_arm64]
     steps:
       - name: Create artifact directory
         run: mkdir -p $GITHUB_WORKSPACE/artifacts
@@ -738,3 +750,42 @@ jobs:
           path: release/assets/
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_RELEASE_ASSETS }}
+          
+  publish_release:
+      runs-on: ubuntu-latest
+      needs: create_release
+      env:
+        FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+        CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
+      
+      steps:
+          - name: Create release folder
+            run: mkdir -p $GIT_WORKSPACE/release/assets
+          
+          - name: Download release assets
+            uses: actions/download-artifact@v4
+            with:
+                name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
+                path: $GIT_WORKSPACE/release/assets
+                
+          - name: Display the content of the release folder
+            run: ls -Rlhat $GIT_WORKSPACE/release/assets
+            
+          - name: Create release
+            uses: softprops/action-gh-release@v2
+            with:
+              prerelease: true
+              body: ${{ env.CHANGELOG }}
+              name: "Release ${{ env.FORMATTED_VERSION }}"
+              fail_on_unmatched_files: true
+              files: |
+                $GIT_WORKSPACE/release/assets/*
+                
+          - name: Scan for threats
+            uses: crazy-max/ghaction-virustotal@v4
+            with:
+              vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
+              files: $GIT_WORKSPACE/release/assets/*
+              request_rate: 4
+              vt_monitor: false
+              update_release_body: true
