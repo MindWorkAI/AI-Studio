@@ -394,7 +394,8 @@ jobs:
     name: Build app (linux-arm64)
     runs-on: ubuntu-latest
     needs: read_metadata
-    if: true # allows disabling this long-running job temporarily
+    env:
+      SKIP: true # allows disabling this long-running job temporarily
     
     steps:
       - name: Checkout repository
@@ -403,6 +404,7 @@ jobs:
           lfs: false
           
       - name: Read and format metadata
+        if: ${{ env.SKIP != 'true' }}
         id: metadata
         run: |
           # Read the lines of the metadata file:
@@ -456,6 +458,7 @@ jobs:
           echo "Tauri version: '${tauri_version}'"
         
       - name: Setup .NET
+        if: ${{ env.SKIP != 'true' }}
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSI }}
@@ -463,22 +466,26 @@ jobs:
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
           
       - name: Build .NET project
+        if: ${{ env.SKIP != 'true' }}
         run: |
           cd "app/MindWork AI Studio"
           dotnet publish --configuration release --runtime linux-arm64 --disable-build-servers --force --output ../../publish/dotnet
           
       - name: Move & rename the .NET artifact
+        if: ${{ env.SKIP != 'true' }}
         run: |
           mkdir -p "app/MindWork AI Studio/bin/dist"
           cd publish/dotnet
           mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-aarch64-unknown-linux-gnu"
           
       - name: Create parts for the Rust cache key
+        if: ${{ env.SKIP != 'true' }}
         run: |
           cd runtime
           echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
           
       - name: Cache linux arm64 runner image
+        if: ${{ env.SKIP != 'true' }}
         uses: actions/cache@v4
         id: linux_arm_cache
         with:
@@ -499,7 +506,7 @@ jobs:
       - name: Build linux arm runner image
         uses: pguyot/arm-runner-action@v2
         id: build-linux-arm-runner
-        if: steps.linux_arm_cache.outputs.cache-hit != 'true'
+        if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
         env:
           RUST_VERSION: ${{ env.RUST_VERSION }}
           TAURI_VERSION: ${{ env.TAURI_VERSION }}
@@ -535,13 +542,15 @@ jobs:
             cargo install tauri-cli
             
       - name: Add the built runner image to the cache
-        if: steps.linux_arm_cache.outputs.cache-hit != 'true'
+        if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
         run: |
           mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
             
       - name: Build Tauri project
+        if: ${{ env.SKIP != 'true' }}
         uses: pguyot/arm-runner-action@v2
         id: build-linux-arm
+        
         with:
           base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
           cpu: cortex-a53
@@ -567,6 +576,7 @@ jobs:
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
 
       - name: Debug
+        if: ${{ env.SKIP != 'true' }}
         run: |
           echo "Current directory: $(pwd)"
           ls -lhat
@@ -578,10 +588,12 @@ jobs:
           find . -name 'mind-work-ai-studio_*.deb' -print 2>/dev/null
           
       - name: Update the runner image to cache the Rust runtime build
+        if: ${{ env.SKIP != 'true' }}
         run: |
           mv ${{ steps.build-linux-arm.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
       
       - name: Upload artifact (Linux - Debian Package)
+        if: ${{ env.SKIP != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb linux-arm64)
