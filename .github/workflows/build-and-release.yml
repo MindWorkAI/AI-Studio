@@ -16,35 +16,30 @@ jobs:
         include:
           - platform: 'macos-latest' # for ARM-based macOS (M1 and above)
             rust_target: 'aarch64-apple-darwin'
-            update_platform: 'darwin-aarch64'
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
             tauri_bundle: 'dmg updater'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
-            update_platform: 'darwin-x86_64'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
             tauri_bundle: 'dmg updater'
 
           - platform: 'ubuntu-22.04' # for x86-based Linux
             rust_target: 'x86_64-unknown-linux-gnu'
-            update_platform: 'linux-x86_64'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage deb updater'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
-            update_platform: 'windows-x86_64'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis updater'
 
           - platform: 'windows-latest' # for ARM-based Windows
             rust_target: 'aarch64-pc-windows-msvc'
-            update_platform: 'windows-aarch64'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis updater'
@@ -159,14 +154,6 @@ jobs:
           Write-Output "Rust version: '${rust_version}'"
           Write-Output "MudBlazor version: '${mud_blazor_version}'"
           Write-Output "Tauri version: '${tauri_version}'"
-          
-      - name: Store update platform to .updates directory (Unix)
-        if: matrix.platform != 'windows-latest'
-        run: echo ${{ matrix.update_platform }} > .updates/platform
-        
-      - name: Store update platform to .updates directory (Windows)
-        if: matrix.platform == 'windows-latest'
-        run: Write-Output "${{ matrix.update_platform }}" | Out-File -FilePath ".updates/platform" -Encoding utf8 -NoNewline
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -289,7 +276,6 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
             runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
-            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
@@ -301,7 +287,6 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
-            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
@@ -313,7 +298,6 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
-            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
@@ -324,7 +308,6 @@ jobs:
           name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
-            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
@@ -336,7 +319,6 @@ jobs:
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
-            .updates/platform
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
@@ -403,9 +385,6 @@ jobs:
           echo "Rust version: '${rust_version}'"
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
-          
-      - name: Store update platform to .updates directory
-        run: echo "linux-aarch64" > .updates/platform
         
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -539,7 +518,6 @@ jobs:
           name: MindWork AI Studio (Linux - deb linux-arm64)
           path: |
             result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
-            .updates/platform
           if-no-files-found: warn
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
         
@@ -668,41 +646,52 @@ jobs:
           
             echo "Processing signature file '$sig_file':"
           
-            # Extract the platform directory. First, we start at the location of the signature file:
-            platform_dir=$(dirname "$sig_file")
-          
-            # Iterate up the directory tree until we find the platform file.
-            # When we reach the artifacts directory, we stop.
-            while [[ "$platform_dir" != "$GITHUB_WORKSPACE/artifacts" ]]; do
-              if [[ -f "$platform_dir/.updates/platform" ]]; then
-                echo "   Found platform file in '$platform_dir/.updates/platform' for signature file '$sig_file'."
-                break
-              fi
-          
-              # Go up one directory level:
-              platform_dir=$(dirname "$platform_dir")
-              echo "   Going up to '$platform_dir'."
-            done
-          
-            # Ensure that we found the platform file:   
-            if [[ -f "$platform_dir/.updates/platform" ]]; then
-          
-              # Read the platform and signature:
-              platform=$(cat "$platform_dir/.updates/platform")
-              signature=$(cat "$sig_file")
-          
-              # Extract the artifact name and create the URL:
-              artifact_name=$(basename "$sig_file" .sig)
-              encoded_artifact_name=$(urlencode "$artifact_name")
-              url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$encoded_artifact_name"
-          
-              # Build the JSON object:
-              platforms_json=$(echo "$platforms_json" | jq --arg platform "$platform" --arg signature "$signature" --arg url "$url" '.[$platform] = {"signature": $signature, "url": $url}')
-          
+            #
+            # Next, we determine the "update platform". We use a if/elseif construct.
+            # We store the result in the $platform variable.
+            # 
+            # We derive the platform from the path and the signature file name:
+            # - platform=darwin-aarch64 when path contains 'aarch64-apple-darwin'
+            # - platform=darwin-x86_64 when path contains 'x86_64-apple-darwin'
+            # - platform=linux-x86_64 when path contains 'x86_64-unknown-linux-'
+            # - platform=windows-x86_64 when path contains 'x86_64-pc-windows-'
+            # - platform=windows-aarch64 when path contains 'aarch64-pc-windows-'
+            #
+            if [[ "$sig_file" == *"aarch64-apple-darwin"* ]]; then
+              platform="darwin-aarch64"
+            elif [[ "$sig_file" == *"x86_64-apple-darwin"* ]]; then
+              platform="darwin-x86_64"
+            elif [[ "$sig_file" == *"x86_64-unknown-linux-" ]]; then
+              platform="linux-x86_64"
+            elif [[ "$sig_file" == *"x86_64-pc-windows-" ]]; then
+              platform="windows-x86_64"
+            elif [[ "$sig_file" == *"aarch64-pc-windows-" ]]; then
+              platform="windows-aarch64"
             else
-                echo "   Error: Could not find the platform file for the signature file '$sig_file'."
+              echo "Platform not recognized: '$sig_file'"
+              exit 1
             fi
-          done < <(find $GITHUB_WORKSPACE/artifacts -type f -name '*.sig' -print0)
+          
+            # Read the signature:
+            signature=$(cat "$sig_file")
+        
+            # Extract the artifact name and create the URL:
+            artifact_name=$(basename "$sig_file" .sig)
+            encoded_artifact_name=$(urlencode "$artifact_name")
+            url="
+          
+            # Read the signature:
+            signature=$(cat "$sig_file")
+        
+            # Extract the artifact name and create the URL:
+            artifact_name=$(basename "$sig_file" .sig)
+            encoded_artifact_name=$(urlencode "$artifact_name")
+            url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$encoded_artifact_name"
+        
+            # Build the JSON object:
+            platforms_json=$(echo "$platforms_json" | jq --arg platform "$platform" --arg signature "$signature" --arg url "$url" '.[$platform] = {"signature": $signature, "url": $url}')
+            
+          done < <(find $GITHUB_WORKSPACE/release/assets -type f -name '*.sig' -print0)
           
           # Write the JSON object to a temporary file:
           echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
