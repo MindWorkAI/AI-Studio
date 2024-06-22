@@ -784,6 +784,40 @@ jobs:
           - name: Display the content of the release folder
             run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
             
+          - name: Scan for threats
+            id: virus_total
+            uses: crazy-max/ghaction-virustotal@v4
+            with:
+              vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
+              files: $GITHUB_WORKSPACE/release/assets/*
+              request_rate: 4
+              vt_monitor: false
+              github_token: ${{ secrets.GITHUB_TOKEN }}
+              update_release_body: true
+              
+          - name: Append scan results to changelog
+            run: |
+              changelog="${{ env.CHANGELOG }}"
+              links="${{ steps.virus_total.outputs.analysis }}"
+
+              # Add the new Markdown section:
+              changelog="$changelog\n\n## Virus scans"
+              
+              # Split the analysis output by comma:
+              IFS=',' read -ra analysis_array <<< "$links"
+
+              # Append each file and link to the changelog:
+              for item in "${analysis_array[@]}"; do
+                filename=$(echo $item | cut -d'=' -f1)
+                link=$(echo $item | cut -d'=' -f2)
+                changelog="$changelog\n- [$(basename $filename)]($link)"
+              done
+              
+              # Export the modified changelog (using HEREDOC syntax for multi-line support):
+              echo "CHANGELOG<<EOOOF" >> $GITHUB_ENV
+              echo "$changelog" >> $GITHUB_ENV
+              echo "EOOOF" >> $GITHUB_ENV
+            
           - name: Create release
             uses: softprops/action-gh-release@v2
             with:
@@ -793,12 +827,3 @@ jobs:
               fail_on_unmatched_files: true
               files: |
                 $GITHUB_WORKSPACE/release/assets/*
-                
-          - name: Scan for threats
-            uses: crazy-max/ghaction-virustotal@v4
-            with:
-              vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
-              files: $GITHUB_WORKSPACE/release/assets/*
-              request_rate: 4
-              vt_monitor: false
-              update_release_body: true
