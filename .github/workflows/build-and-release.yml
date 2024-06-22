@@ -773,16 +773,16 @@ jobs:
       
       steps:
           - name: Create release folder
-            run: mkdir -p $GIT_WORKSPACE/release/assets
+            run: mkdir -p $GITHUB_WORKSPACE/release/assets
           
           - name: Download release assets
             uses: actions/download-artifact@v4
             with:
                 name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
-                path: $GIT_WORKSPACE/release/assets
+                path: $GITHUB_WORKSPACE/release/assets
                 
           - name: Display the content of the release folder
-            run: ls -Rlhat $GIT_WORKSPACE/release/assets
+            run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
             
           - name: Create release
             uses: softprops/action-gh-release@v2
@@ -792,13 +792,13 @@ jobs:
               name: "Release ${{ env.FORMATTED_VERSION }}"
               fail_on_unmatched_files: true
               files: |
-                $GIT_WORKSPACE/release/assets/*
+                $GITHUB_WORKSPACE/release/assets/*
                 
           - name: Scan for threats
             uses: crazy-max/ghaction-virustotal@v4
             with:
               vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
-              files: $GIT_WORKSPACE/release/assets/*
+              files: $GITHUB_WORKSPACE/release/assets/*
               request_rate: 4
               vt_monitor: false
               update_release_body: true
