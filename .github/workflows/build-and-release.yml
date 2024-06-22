@@ -59,7 +59,7 @@ jobs:
         id: read_changelog
         run: |
           # Ensure, that the matching changelog file for the current version exists:
-          if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${env.FORMATTED_VERSION}.md" ]; then
+          if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
               echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md' not found"
               exit 1
           else
