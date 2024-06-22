@@ -812,8 +812,21 @@ jobs:
 
               # Append each file and link to the changelog:
               for item in "${analysis_array[@]}"; do
-                filename=$(echo $item | cut -d'=' -f1 | xargs)
-                link=$(echo $item | cut -d'=' -f2)
+                
+                # Get the part before the first '=':
+                filename="${item%%=*}"
+                filename=$(echo $filename | xargs)
+              
+                # Ignore the latest.json file:
+                if [[ "$filename" == "latest.json" ]]; then
+                  continue
+                fi
+              
+                # Get the part after the first '=':
+                link="${item#*=}"
+                link=$(echo $link | xargs)
+              
+                # Append this scan result to the changelog:
                 echo "- [$(basename "$filename")]($link)" >> $temp_changelog
               done
               
