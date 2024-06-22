@@ -7,8 +7,62 @@ env:
   RETENTION_RELEASE_ASSETS: 30
     
 jobs:
+  read_metadata:
+    name: Read metadata
+    runs-on: ubuntu-latest
+    outputs:
+      formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
+      formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
+      changelog: ${{ steps.read_changelog.outputs.changelog }}
+      version: ${{ steps.format_metadata.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read and format metadata
+        id: format_metadata
+        run: |
+          # Read the first two lines of the metadata file:
+          version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+
+          # Format the version:
+          formatted_version="v${version}"
+
+          # Format the build time according to RFC 3339:
+          formatted_build_time=$(date -d "${build_time}" --utc +'%Y-%m-%dT%H:%M:%SZ')
+
+          # Log the formatted metadata:
+          echo "Formatted version: '${formatted_version}'"
+          echo "Formatted build time: '${formatted_build_time}'"
+
+          # Set the outputs:
+          echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
+          echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
+          echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Read changelog
+        id: read_changelog
+        run: |
+          # Ensure, that the matching changelog file for the current version exists:
+          if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
+              echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md' not found"
+              exit 1
+          fi
+          
+          # Read the changelog file:
+          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md")
+
+          # Set the output:
+          echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
+          echo "${changelog}" >> "$GITHUB_OUTPUT"
+          echo "EOOOF" >> "$GITHUB_OUTPUT"
+
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})
+    needs: read_metadata
     
     strategy:
       fail-fast: true
@@ -325,6 +379,7 @@ jobs:
   build_linux_arm64:
     name: Build app (linux-arm64)
     runs-on: ubuntu-latest
+    needs: read_metadata
     if: false # disable this job for now
     
     steps:
@@ -520,53 +575,6 @@ jobs:
             result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
           if-no-files-found: warn
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
-        
-  read_metadata:
-    name: Read metadata
-    runs-on: ubuntu-latest
-    outputs:
-      formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
-      formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
-      changelog: ${{ steps.read_changelog.outputs.changelog }}
-      version: ${{ steps.format_metadata.outputs.version }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Read and format metadata
-        id: format_metadata
-        run: |
-          # Read the first two lines of the metadata file:
-          version=$(sed -n '1p' metadata.txt)
-          build_time=$(sed -n '2p' metadata.txt)
-          
-          # Format the version:
-          formatted_version="v${version}"
-          
-          # Format the build time according to RFC 3339:
-          formatted_build_time=$(date -d "${build_time}" --utc +'%Y-%m-%dT%H:%M:%SZ')
-          
-          # Log the formatted metadata:
-          echo "Formatted version: '${formatted_version}'"
-          echo "Formatted build time: '${formatted_build_time}'"
-          
-          # Set the outputs:
-          echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
-          echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
-          echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          
-      - name: Read changelog
-        id: read_changelog
-        run: |
-          # Read the changelog file:
-          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md")
-          
-          # Set the output:
-          echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
-          echo "${changelog}" >> "$GITHUB_OUTPUT"
-          echo "EOOOF" >> "$GITHUB_OUTPUT"
         
   create_release:
     name: Prepare & create release
