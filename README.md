@@ -1,4 +1,6 @@
 # MindWork AI Studio
+![MindWork AI Studio](documentation/AI%20Studio.png)
+
 MindWork AI Studio is a desktop application available for macOS, Windows, and Linux. It provides a unified chat interface for Large Language Models (LLMs). You bring your own API key for the respective LLM provider to use the models. The API keys are securely stored by the operating system.
 
 **Key advantages:**
@@ -10,7 +12,7 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 - **Flexibility**: Choose the provider and model best suited for your current task.
 - **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
-**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](https://github.com/MindWorkAI/AI-Studio/releases/latest).
+**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
 ## Support the Project
 Thank you for using MindWork AI Studio and considering supporting its development 😀. Your support helps keep the project alive and ensures continuous improvements and new features.
@@ -20,7 +22,7 @@ We offer various ways you can support the project:
 
 For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
  
-To view all available tiers and their specific perks, please visit our [GitHub Sponsors page](https://github.com/MindWorkAI/AI-Studio/blob/main/Sponsors.md).
+To view all available tiers and their specific perks, please visit our [GitHub Sponsors page](Sponsors.md).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
 
 ## Planned Features
@@ -35,19 +37,7 @@ Here's an exciting look at some of the features we're planning to add to MindWor
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
 ## Building
-You just want to use the app? Then simply [download the appropriate setup for your operating system](https://github.com/MindWorkAI/AI-Studio/releases/latest). This chapter is intended for developers who want to modify and customize the code.
-
-In order to build MindWork AI Studio from source instead of using the pre-built binaries, follow these steps:
-1. Install the .NET 8 SDK.
-2. Install the Rust compiler.
-3. Install NuShell. This shell works on all operating systems and is required because the build script is written in NuShell.
-4. Clone the repository.
-5. Open a terminal with NuShell.
-6. Navigate to the `/app/MindWork AI Studio` directory within the repository.
-7. To build the current version, run `nu build.nu publish`.
-    - This will build the app for the current operating system, for both x64 (Intel, AMD) and ARM64 (e.g., Apple Silicon, Raspberry Pi).
-    - The setup program will be located in `runtime/target/release/bundle` afterward.
-8. To prepare a new release, run `nu build.nu prepare <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
+You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
 
 ## License
 MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional source license). Here’s a simple rundown of what that means for you:
@@ -56,4 +46,4 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **No Warranties**: The software is provided "as is", without any promises from us about it working perfectly for your needs. While we strive to make it great, we can't guarantee it will be free of bugs or issues.
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
 
-For more details, refer to the [LICENSE](LICENSE) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
+For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.

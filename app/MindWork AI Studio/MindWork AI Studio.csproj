@@ -16,6 +16,7 @@
         <SelfContained>true</SelfContained> <!-- Publish as self-contained; requires no .NET runtime installed on the target machine -->
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
         <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file; needed for caching NuGet packages-->
         
         <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
         <TrimMode>partial</TrimMode> <!-- Trim unused assemblies, but keep all assemblies referenced by the project -->
@@ -44,9 +45,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.5" />
-      <PackageReference Include="MudBlazor" Version="6.19.1" />
-      <PackageReference Include="MudBlazor.Markdown" Version="1.0.0" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.6" />
+      <PackageReference Include="MudBlazor" Version="6.20.0" />
+      <PackageReference Include="MudBlazor.Markdown" Version="1.0.2" />
     </ItemGroup>
 
     <!-- Read the meta data file -->

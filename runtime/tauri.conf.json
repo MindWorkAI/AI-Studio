@@ -17,7 +17,7 @@
         "open": true,
         "scope": [
           {
-            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudio",
+            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
             "sidecar": true,
             "args": true
           }
@@ -58,7 +58,7 @@
       "targets": "all",
       "identifier": "com.github.mindwork-ai.ai-studio",
       "externalBin": [
-        "../app/MindWork AI Studio/bin/dist/mindworkAIStudio"
+        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
       ],
       "macOS": {
         "exceptionDomain": "localhost"
@@ -72,7 +72,15 @@
       ]
     },
     "updater": {
-      "active": false
+      "active": true,
+      "endpoints": [
+        "https://github.com/MindWorkAI/AI-Studio/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "windows": {
+        "installMode": "passive"
+      },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
     }
   }
 }

@@ -1,0 +1,852 @@
+name: Build and Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  RETENTION_INTERMEDIATE_ASSETS: 1
+  RETENTION_RELEASE_ASSETS: 30
+    
+jobs:
+  read_metadata:
+    name: Read metadata
+    runs-on: ubuntu-latest
+    outputs:
+      formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
+      formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
+      changelog: ${{ steps.read_changelog.outputs.changelog }}
+      version: ${{ steps.format_metadata.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read and format metadata
+        id: format_metadata
+        run: |
+          # Read the first two lines of the metadata file:
+          version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+
+          # Format the version:
+          formatted_version="v${version}"
+
+          # Format the build time according to RFC 3339:
+          formatted_build_time=$(date -d "${build_time}" --utc +'%Y-%m-%dT%H:%M:%SZ')
+
+          # Log the formatted metadata:
+          echo "Formatted version: '${formatted_version}'"
+          echo "Formatted build time: '${formatted_build_time}'"
+
+          # Set the outputs:
+          echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
+          echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
+          echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          
+      - name: Check tag vs. metadata version
+        run: |
+          # Ensure, that the tag matches the version in the metadata file:
+          if [ "${GITHUB_REF}" != "refs/tags/${FORMATTED_VERSION}" ]; then
+              echo "Tag '${GITHUB_REF}' does not match the version in the metadata file '${FORMATTED_VERSION}'"
+              exit 1
+          else
+              echo "Tag '${GITHUB_REF}' matches the version in the metadata file '${FORMATTED_VERSION}'"
+          fi
+
+      - name: Read changelog
+        id: read_changelog
+        run: |
+          # Ensure, that the matching changelog file for the current version exists:
+          if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
+              echo "Changelog file 'app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md' not found"
+              exit 1
+          else
+              echo "Changelog file '${FORMATTED_VERSION}.md' found"
+          fi
+          
+          # Read the changelog file:
+          changelog=$(cat "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md")
+
+          # Set the output:
+          echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
+          echo "${changelog}" >> "$GITHUB_OUTPUT"
+          echo "EOOOF" >> "$GITHUB_OUTPUT"
+
+  build_main:
+    name: Build app (${{ matrix.dotnet_runtime }})
+    needs: read_metadata
+    
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: 'macos-latest' # for ARM-based macOS (M1 and above)
+            rust_target: 'aarch64-apple-darwin'
+            dotnet_runtime: 'osx-arm64'
+            dotnet_name_postfix: '-aarch64-apple-darwin'
+            tauri_bundle: 'dmg updater'
+
+          - platform: 'macos-latest' # for Intel-based macOS
+            rust_target: 'x86_64-apple-darwin'
+            dotnet_runtime: 'osx-x64'
+            dotnet_name_postfix: '-x86_64-apple-darwin'
+            tauri_bundle: 'dmg updater'
+
+          - platform: 'ubuntu-22.04' # for x86-based Linux
+            rust_target: 'x86_64-unknown-linux-gnu'
+            dotnet_runtime: 'linux-x64'
+            dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
+            tauri_bundle: 'appimage deb updater'
+
+          - platform: 'windows-latest' # for x86-based Windows
+            rust_target: 'x86_64-pc-windows-msvc'
+            dotnet_runtime: 'win-x64'
+            dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
+            tauri_bundle: 'nsis updater'
+
+          - platform: 'windows-latest' # for ARM-based Windows
+            rust_target: 'aarch64-pc-windows-msvc'
+            dotnet_runtime: 'win-arm64'
+            dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
+            tauri_bundle: 'nsis updater'
+    
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          
+      - name: Read and format metadata (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          # Read the lines of the metadata file:
+          app_version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+          build_number=$(sed -n '3p' metadata.txt)
+          
+          # Next line is the .NET SDK version.
+          # The format is '8.0.205 (commit 3e1383b780)'.
+          # We extract only the version number, though:
+          dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          
+          # Next line is the .NET runtime version.
+          # The format is '8.0.5 (commit 087e15321b)'.
+          # We extract only the version number, though:
+          dotnet_runtime_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          
+          # Next line is the Rust version.
+          # The format is '1.78.0 (commit 9b00956e5)'.
+          # We extract only the version number, though:
+          rust_version=$(sed -n '6p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+          
+          # Next line is the MudBlazor version:
+          mud_blazor_version=$(sed -n '7p' metadata.txt)
+          
+          # Next line is the Tauri version:
+          tauri_version=$(sed -n '8p' metadata.txt)
+
+          # Format the app version:
+          formatted_app_version="v${app_version}"
+          
+          # Write the metadata to the environment:
+          echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
+          echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
+          echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
+          echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $GITHUB_ENV
+          echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
+          echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
+          echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
+
+          # Log the metadata:
+          echo "App version: '${formatted_app_version}'"
+          echo "Build time: '${build_time}'"
+          echo "Build number: '${build_number}'"
+          echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo ".NET runtime version: '${dotnet_runtime_version}'"
+          echo "Rust version: '${rust_version}'"
+          echo "MudBlazor version: '${mud_blazor_version}'"
+          echo "Tauri version: '${tauri_version}'"
+          
+      - name: Read and format metadata (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          # Read the lines of the metadata file:
+          $metadata = Get-Content metadata.txt
+          
+          $app_version = $metadata[0]
+          $build_time = $metadata[1]
+          $build_number = $metadata[2]
+          
+          # Next line is the .NET SDK version.
+          # The format is '8.0.205 (commit 3e1383b780)'.
+          # We extract only the version number, though:
+          $dotnet_sdk_version = ($metadata[3] -match '(\d+\.\d+\.\d+)') | Out-Null; $dotnet_sdk_version = $matches[1]
+          
+          # Next line is the .NET runtime version.
+          # The format is '8.0.5 (commit 087e15321b)'.
+          # We extract only the version number, though:
+          $dotnet_runtime_version = ($metadata[4] -match '(\d+\.\d+\.\d+)') | Out-Null; $dotnet_runtime_version = $matches[1]
+          
+          # Next line is the Rust version.
+          # The format is '1.78.0 (commit 9b00956e5)'.
+          # We extract only the version number, though:
+          $rust_version = ($metadata[5] -match '(\d+\.\d+\.\d+)') | Out-Null; $rust_version = $matches[1]
+          
+          $mud_blazor_version = $metadata[6]
+          $tauri_version = $metadata[7]
+
+          # Format the app version:
+          $formatted_app_version = "v${app_version}"
+          
+          # Write the metadata to the environment:
+          Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
+          Write-Output "FORMATTED_APP_VERSION=${formatted_app_version}" >> $env:GITHUB_ENV
+          Write-Output "BUILD_TIME=${build_time}" >> $env:GITHUB_ENV
+          Write-Output "BUILD_NUMBER=${build_number}" >> $env:GITHUB_ENV
+          Write-Output "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $env:GITHUB_ENV
+          Write-Output "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $env:GITHUB_ENV
+          Write-Output "RUST_VERSION=${rust_version}" >> $env:GITHUB_ENV
+          Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
+          
+          # Log the metadata:
+          Write-Output "App version: '${formatted_app_version}'"
+          Write-Output "Build time: '${build_time}'"
+          Write-Output "Build number: '${build_number}'"
+          Write-Output ".NET SDK version: '${dotnet_sdk_version}'"
+          Write-Output ".NET runtime version: '${dotnet_runtime_version}'"
+          Write-Output "Rust version: '${rust_version}'"
+          Write-Output "MudBlazor version: '${mud_blazor_version}'"
+          Write-Output "Tauri version: '${tauri_version}'"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          cache: true
+          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+      
+      - name: Build .NET project
+        run: |
+          cd "app/MindWork AI Studio"
+          dotnet publish --configuration release --runtime ${{ matrix.dotnet_runtime }} --disable-build-servers --force --output ../../publish/dotnet
+          
+      - name: Move & rename .NET artifact (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          mkdir -p "app/MindWork AI Studio/bin/dist"
+          cd publish/dotnet
+          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
+          
+      - name: Move & rename .NET artifact (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          New-Item -ItemType Directory -Path "app\MindWork AI Studio\bin\dist" -Force
+          cd publish/dotnet
+          mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
+          
+      - name: Create parts for the Rust cache key (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          cd runtime
+          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
+          
+      - name: Create parts for the Rust cache key (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          cd runtime
+          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $env:GITHUB_ENV
+          
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.rustup/toolchains
+            runtime/target
+            
+          # When the entire key matches, Rust might just create the bundles using the current .NET build:
+          key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+          
+          # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
+          #
+          # - No match: alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
+          #   The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
+          #   these changes to our app, we have to re-compile everything. That's the reason why it makes
+          #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
+          restore-keys: |
+            target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
+            
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: ${{ matrix.rust_target }}
+      
+      - name: Setup dependencies (Ubuntu-specific, x86)
+        if: matrix.platform == 'ubuntu-22.04' && contains(matrix.rust_target, 'x86_64')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          
+      - name: Setup Tauri (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          if ! cargo tauri --version > /dev/null 2>&1; then
+            cargo install tauri-cli
+          else
+            echo "Tauri is already installed"
+          fi
+          
+      - name: Setup Tauri (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          if (-not (cargo tauri --version 2>$null)) {
+            cargo install tauri-cli
+          } else {
+            Write-Output "Tauri is already installed"
+          }
+      
+      - name: Build Tauri project (Unix)
+        if: matrix.platform != 'windows-latest'
+        env:
+          PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
+          PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+        run: |
+          cd runtime
+          export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
+          export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          
+      - name: Build Tauri project (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
+          PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+        run: |
+          cd runtime
+          $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
+          $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+
+      - name: Upload artifact (macOS)
+        if: startsWith(matrix.platform, 'macos')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
+          path: |
+            runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
+            runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          
+      - name: Upload artifact (Windows - MSI)
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
+          path: |
+            runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
+            runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          
+      - name: Upload artifact (Windows - NSIS)
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
+          path: |
+            runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
+            runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          
+      - name: Upload artifact (Linux - Debian Package)
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
+          path: |
+            runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          
+      - name: Upload artifact (Linux - AppImage)
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
+          path: |
+            runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
+            runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          
+  build_linux_arm64:
+    name: Build app (linux-arm64)
+    runs-on: ubuntu-latest
+    needs: read_metadata
+    env:
+      SKIP: false # allows disabling this long-running job temporarily
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          
+      - name: Read and format metadata
+        if: ${{ env.SKIP != 'true' }}
+        id: metadata
+        run: |
+          # Read the lines of the metadata file:
+          app_version=$(sed -n '1p' metadata.txt)
+          build_time=$(sed -n '2p' metadata.txt)
+          build_number=$(sed -n '3p' metadata.txt)
+
+          # Next line is the .NET SDK version.
+          # The format is '8.0.205 (commit 3e1383b780)'.
+          # We extract only the version number, though:
+          dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # Next line is the .NET runtime version.
+          # The format is '8.0.5 (commit 087e15321b)'.
+          # We extract only the version number, though:
+          dotnet_runtime_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # Next line is the Rust version.
+          # The format is '1.78.0 (commit 9b00956e5)'.
+          # We extract only the version number, though:
+          rust_version=$(sed -n '6p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # Next line is the MudBlazor version:
+          mud_blazor_version=$(sed -n '7p' metadata.txt)
+
+          # Next line is the Tauri version:
+          tauri_version=$(sed -n '8p' metadata.txt)
+
+          # Format the app version:
+          formatted_app_version="v${app_version}"
+
+          # Write the metadata to the environment:
+          echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
+          echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
+          echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
+          echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $GITHUB_ENV
+          echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
+          echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
+          echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
+
+          # Log the metadata:
+          echo "App version: '${formatted_app_version}'"
+          echo "Build time: '${build_time}'"
+          echo "Build number: '${build_number}'"
+          echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo ".NET runtime version: '${dotnet_runtime_version}'"
+          echo "Rust version: '${rust_version}'"
+          echo "MudBlazor version: '${mud_blazor_version}'"
+          echo "Tauri version: '${tauri_version}'"
+        
+      - name: Setup .NET
+        if: ${{ env.SKIP != 'true' }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSI }}
+          cache: true
+          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+          
+      - name: Build .NET project
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          cd "app/MindWork AI Studio"
+          dotnet publish --configuration release --runtime linux-arm64 --disable-build-servers --force --output ../../publish/dotnet
+          
+      - name: Move & rename the .NET artifact
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          mkdir -p "app/MindWork AI Studio/bin/dist"
+          cd publish/dotnet
+          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-aarch64-unknown-linux-gnu"
+          
+      - name: Create parts for the Rust cache key
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          cd runtime
+          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
+          
+      - name: Cache linux arm64 runner image
+        if: ${{ env.SKIP != 'true' }}
+        uses: actions/cache@v4
+        id: linux_arm_cache
+        with:
+          path: $RUNNER_TEMP/linux_arm_qemu_cache.img
+          
+          # When the entire key matches, Rust might just create the bundles using the current .NET build:
+          key: target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
+
+          # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
+          #
+          # - No match: alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
+          #   The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
+          #   these changes to our app, we have to re-compile everything. That's the reason why it makes
+          #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
+          restore-keys: |
+            target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-
+            
+      - name: Build linux arm runner image
+        uses: pguyot/arm-runner-action@v2
+        id: build-linux-arm-runner
+        if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
+        env:
+          RUST_VERSION: ${{ env.RUST_VERSION }}
+          TAURI_VERSION: ${{ env.TAURI_VERSION }}
+          
+        with:
+          base_image: dietpi:rpi_armv8_bullseye
+          cpu: cortex-a53
+          image_additional_mb: 6000 # ~ 6GB
+          optimize_image: false
+          shell: /bin/bash
+          commands: |
+            # Rust complains (rightly) that $HOME doesn't match eid home:
+            export HOME=/root
+            
+            # Workaround to CI worker being stuck on Updating crates.io index:
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+            
+            # Update and upgrade the system:
+            apt-get update --yes --allow-releaseinfo-change
+            apt-get upgrade --yes
+            apt-get autoremove --yes
+            apt-get install curl wget --yes
+            
+            # Install Rust:
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain none -y
+            source "$HOME/.cargo/env"
+            rustup toolchain install $RUST_VERSION
+            
+            # Install build tools and tauri-cli requirements:
+            apt-get install --yes libwebkit2gtk-4.0-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+            
+            # Setup Tauri:
+            cargo install tauri-cli
+            
+      - name: Add the built runner image to the cache
+        if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
+        run: |
+          mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
+            
+      - name: Build Tauri project
+        if: ${{ env.SKIP != 'true' }}
+        uses: pguyot/arm-runner-action@v2
+        id: build-linux-arm
+        
+        with:
+          base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
+          cpu: cortex-a53
+          optimize_image: false
+          copy_artifact_path: runtime
+          copy_artifact_dest: result
+          
+          #
+          # We do not need to set the PRIVATE_PUBLISH_KEY and PRIVATE_PUBLISH_KEY_PASSWORD here,
+          # because we cannot produce the AppImage on arm64. Only the AppImage supports the automatic
+          # update feature. The Debian package does not support this feature.
+          #
+          #PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
+          #PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          #
+          
+          shell: /bin/bash
+          commands: |
+            export HOME=/root
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+            source "$HOME/.cargo/env"
+            cd runtime
+            cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
+
+      - name: Debug
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -lhat
+          
+          echo "Searching for linux_arm_qemu_cache.img"
+          find $RUNNER_TEMP -name 'linux_arm_qemu_cache.img' -print 2>/dev/null
+          
+          echo "Searching for mind-work-ai-studio_*.deb"
+          find . -name 'mind-work-ai-studio_*.deb' -print 2>/dev/null
+          
+      - name: Update the runner image to cache the Rust runtime build
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          mv ${{ steps.build-linux-arm.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
+      
+      - name: Upload artifact (Linux - Debian Package)
+        if: ${{ env.SKIP != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio (Linux - deb linux-arm64)
+          path: |
+            result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+          if-no-files-found: warn
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+        
+  create_release:
+    name: Prepare & create release
+    runs-on: ubuntu-latest
+    needs: [build_main, read_metadata, build_linux_arm64]
+    steps:
+      - name: Create artifact directory
+        run: mkdir -p $GITHUB_WORKSPACE/artifacts
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ github.workspace }}/artifacts
+          merge-multiple: false
+          
+      - name: Display structure of previously artifacts
+        run: ls -Rlhat $GITHUB_WORKSPACE/artifacts
+        
+      - name: Prepare release assets
+        env:
+          VERSION: ${{ needs.read_metadata.outputs.version }}
+          
+        run: |
+          RELEASE_DIR="$GITHUB_WORKSPACE/release/assets"
+          
+          # Ensure the release directory exists:
+          mkdir -p "$RELEASE_DIR"
+          
+          # Find and process files in the artifacts directory:
+          find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do
+          
+            if [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz" ]]; then
+              TARGET_NAME="MindWork AI Studio_x64.app.tar.gz"
+            elif [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz.sig" ]]; then
+              TARGET_NAME="MindWork AI Studio_x64.app.tar.gz.sig"
+            elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz" ]]; then
+              TARGET_NAME="MindWork AI Studio_aarch64.app.tar.gz"
+            elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz.sig" ]]; then
+              TARGET_NAME="MindWork AI Studio_aarch64.app.tar.gz.sig"
+            else
+              TARGET_NAME="$(basename "$FILE")"
+              TARGET_NAME=$(echo "$TARGET_NAME" | sed "s/_${VERSION}//")
+            fi
+          
+            cp "$FILE" "${RELEASE_DIR}/${TARGET_NAME}"
+          done
+          
+          # Display the structure of the release directory:
+          ls -Rlhat $GITHUB_WORKSPACE/release/assets
+          
+      - name: Create .update directory
+        run: mkdir -p $GITHUB_WORKSPACE/.updates
+          
+      - name: Build platform JSON for latest.json file
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+        
+        run: |
+          # Here, we create the JSON object:
+          platforms_json=$(jq -n '{}')
+          
+          # Define the urlencode function:
+          urlencode() {
+            local length="${#1}"
+            for (( i = 0; i < length; i++ )); do
+              local c="${1:i:1}"
+              case $c in
+                [a-zA-Z0-9.~_-]) printf "$c" ;;
+                *) printf '%%%02X' "'$c" ;;
+              esac
+            done
+          }
+          
+          # Display the structure of the release directory:
+          ls -Rlhat $GITHUB_WORKSPACE/release/assets
+          
+          # Iterate over all signature files:
+          while IFS= read -r -d '' sig_file; do
+          
+            echo "Processing signature file '$sig_file':"
+          
+            #
+            # Next, we determine the "update platform".
+            # We store the result in the $platform variable.
+            # 
+            # We derive the platform from the signature file name:
+            # - platform=darwin-aarch64 when path contains 'aarch64-apple-darwin'
+            # - platform=darwin-x86_64 when path contains 'x86_64-apple-darwin'
+            # - platform=linux-x86_64 when path contains 'x86_64-unknown-linux-'
+            # - platform=windows-x86_64 when path contains 'x86_64-pc-windows-'
+            # - platform=windows-aarch64 when path contains 'aarch64-pc-windows-'
+            #
+            if [[ "$sig_file" == *"aarch64.app"* ]]; then
+              platform="darwin-aarch64"
+            elif [[ "$sig_file" == *"x64.app"* ]]; then
+              platform="darwin-x86_64"
+            elif [[ "$sig_file" == *"amd64.AppImage"* ]]; then
+              platform="linux-x86_64"
+            elif [[ "$sig_file" == *"x64-setup.nsis"* ]]; then
+              platform="windows-x86_64"
+            elif [[ "$sig_file" == *"arm64-setup.nsis"* ]]; then
+              platform="windows-aarch64"
+            else
+              echo "Platform not recognized: '$sig_file'"
+              exit 1
+            fi
+          
+            # Read the signature:
+            signature=$(cat "$sig_file")
+        
+            # Extract the artifact name and create the URL:
+            artifact_name=$(basename "$sig_file" .sig)
+            encoded_artifact_name=$(urlencode "$artifact_name")
+            url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$encoded_artifact_name"
+        
+            # Build the JSON object:
+            platforms_json=$(echo "$platforms_json" | jq --arg platform "$platform" --arg signature "$signature" --arg url "$url" '.[$platform] = {"signature": $signature, "url": $url}')
+            
+          done < <(find $GITHUB_WORKSPACE/release/assets -type f -name '*.sig' -print0)
+          
+          # Write the JSON object to a temporary file:
+          echo "$platforms_json" > $GITHUB_WORKSPACE/.updates/platforms.json
+
+      - name: Create latest.json
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+          FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
+          CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
+          
+        run: |          
+          # Read the platforms JSON, which was created in the previous step:
+          platforms=$(cat $GITHUB_WORKSPACE/.updates/platforms.json)
+          
+          # Replace newlines in changelog with \n
+          changelog=$(echo "$CHANGELOG" | awk '{printf "%s\\n", $0}')
+          
+          # Create the latest.json file:
+          cat <<EOOOF > $GITHUB_WORKSPACE/release/assets/latest.json
+          {
+            "version": "$FORMATTED_VERSION",
+            "notes": "$changelog",
+            "pub_date": "$FORMATTED_BUILD_TIME",
+            "platforms": $platforms
+          }
+          EOOOF
+
+      - name: Show all release assets
+        run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
+
+      - name: Display the content of latest.json
+        run: cat $GITHUB_WORKSPACE/release/assets/latest.json
+        
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        env:
+          FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+          
+        with:
+          name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
+          path: release/assets/
+          if-no-files-found: error
+          retention-days: ${{ env.RETENTION_RELEASE_ASSETS }}
+          
+  publish_release:
+      name: Publish release
+      runs-on: ubuntu-latest
+      needs: [read_metadata, create_release]
+      env:
+        FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
+        CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
+      
+      steps:
+          - name: Create release folder
+            run: mkdir -p release/assets
+          
+          - name: Download release assets
+            uses: actions/download-artifact@v4  
+            with:
+                name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
+                path: release/assets
+                
+          - name: Display the content of the release folder
+            run: ls -Rlhat release/assets
+            
+          - name: Scan for threats
+            id: virus_total
+            uses: crazy-max/ghaction-virustotal@v4
+            with:
+              vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
+              files: release/assets/*
+              request_rate: 4
+              vt_monitor: false
+              github_token: ${{ secrets.GITHUB_TOKEN }}
+              update_release_body: true
+              
+          - name: Append scan results to changelog
+            run: |
+              changelog="${{ env.CHANGELOG }}"
+              links="${{ steps.virus_total.outputs.analysis }}"
+
+              # Create a temporary file for the changelog:
+              temp_changelog=$(mktemp)
+
+              # Add the new Markdown section:
+              echo -e "$changelog" > $temp_changelog
+              echo -e "\n\n## Virus scans" >> $temp_changelog
+              
+              # Split the analysis output by comma:
+              IFS=',' read -ra analysis_array <<< "$links"
+
+              # Append each file and link to the changelog:
+              for item in "${analysis_array[@]}"; do
+                
+                # Get the part before the first '=':
+                filename="${item%%=*}"
+                filename=$(echo $filename | xargs)
+              
+                # Extract the base name of the file
+                base_filename=$(basename "$filename")
+              
+                # Ignore the latest.json file:
+                if [[ "$base_filename" == "latest.json" ]]; then
+                  continue
+                fi
+              
+                # Get the part after the first '=':
+                link="${item#*=}"
+                link=$(echo $link | xargs)
+              
+                # Append this scan result to the changelog:
+                echo "- [$base_filename]($link)" >> $temp_changelog
+              done
+              
+              # Export the modified changelog (using HEREDOC syntax for multi-line support):
+              echo "CHANGELOG<<EOOOF" >> $GITHUB_ENV
+              cat $temp_changelog >> $GITHUB_ENV
+              echo "EOOOF" >> $GITHUB_ENV
+            
+          - name: Create release
+            uses: softprops/action-gh-release@v2
+            with:
+              prerelease: false
+              draft: false
+              make_latest: true
+              body: ${{ env.CHANGELOG }}
+              name: "Release ${{ env.FORMATTED_VERSION }}"
+              fail_on_unmatched_files: true
+              files: |
+                release/assets/*

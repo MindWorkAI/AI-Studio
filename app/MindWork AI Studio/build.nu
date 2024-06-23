@@ -42,7 +42,7 @@ def "main metadata" []: nothing -> nothing {
     update_mudblazor_version
     update_tauri_version
     update_project_commit_hash
-    update_license_year "../../LICENSE"
+    update_license_year "../../LICENSE.md"
     update_license_year "Components/Pages/About.razor.cs"
 }
 
@@ -96,12 +96,12 @@ def "main publish" []: nothing -> nothing {
         ^dotnet publish --configuration release --runtime $rid --disable-build-servers --force
         
         let final_filename = match $rid {
-            "win-x64" => "mindworkAIStudio-x86_64-pc-windows-msvc.exe",
-            "win-arm64" => "mindworkAIStudio-aarch64-pc-windows-msvc.exe",
-            "linux-x64" => "mindworkAIStudio-x86_64-unknown-linux-gnu",
-            "linux-arm64" => "mindworkAIStudio-aarch64-unknown-linux-gnu",
-            "osx-arm64" => "mindworkAIStudio-aarch64-apple-darwin",
-            "osx-x64" => "mindworkAIStudio-x86_64-apple-darwin",
+            "win-x64" => "mindworkAIStudioServer-x86_64-pc-windows-msvc.exe",
+            "win-arm64" => "mindworkAIStudioServer-aarch64-pc-windows-msvc.exe",
+            "linux-x64" => "mindworkAIStudioServer-x86_64-unknown-linux-gnu",
+            "linux-arm64" => "mindworkAIStudioServer-aarch64-unknown-linux-gnu",
+            "osx-arm64" => "mindworkAIStudioServer-aarch64-apple-darwin",
+            "osx-x64" => "mindworkAIStudioServer-x86_64-apple-darwin",
             
             _ => {
                 print $"Unsupported RID for final filename: ($rid)"
@@ -128,7 +128,7 @@ def "main publish" []: nothing -> nothing {
     
     cd ../../runtime
     try {
-        cargo tauri build
+        cargo tauri build --bundles none
     };
     
     cd "../app/MindWork AI Studio"
