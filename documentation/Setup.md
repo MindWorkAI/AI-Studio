@@ -20,6 +20,8 @@ When you try to install the app, you get a message regarding protection of your 
 
 ![Windows Protection 2](Windows%20Warning%202.png)
 
+Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
+
 ## macOS
 AI Studio is available for modern 64-bit macOS systems. The minimum requirement is macOS 10.13 (High Sierra). Next, we have to figure out if you have an Intel or a modern Apple Silicon (ARM) system.
 
@@ -49,7 +51,7 @@ This is because we don't have an Apple Developer account, which costs around $10
 6. The final command should be: `xattr -r -d com.apple.quarantine /Applications/MindWork\ AI\ Studio.app`. Press Enter.
 7. Now, you might close the Terminal app and the Finder.
 
-The AI Studio app should now open without any issues.
+The AI Studio app should now open without any issues. Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
 
 ## Linux
 
