@@ -779,7 +779,7 @@ jobs:
             uses: actions/download-artifact@v4  
             with:
                 name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
-                path: $GITHUB_WORKSPACE/release/assets
+                path: ${{ env.GITHUB_WORKSPACE }}/release/assets
                 
           - name: Display the content of the release folder
             run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
@@ -789,7 +789,7 @@ jobs:
             uses: crazy-max/ghaction-virustotal@v4
             with:
               vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
-              files: $GITHUB_WORKSPACE/release/assets/*
+              files: ${{ env.GITHUB_WORKSPACE }}/release/assets/*
               request_rate: 4
               vt_monitor: false
               github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -846,4 +846,4 @@ jobs:
               name: "Release ${{ env.FORMATTED_VERSION }}"
               fail_on_unmatched_files: true
               files: |
-                $GITHUB_WORKSPACE/release/assets/*
+                ${{ env.GITHUB_WORKSPACE }}/release/assets/*
