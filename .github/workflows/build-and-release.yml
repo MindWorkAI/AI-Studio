@@ -842,7 +842,9 @@ jobs:
           - name: Create release
             uses: softprops/action-gh-release@v2
             with:
-              prerelease: true
+              prerelease: false
+              draft: false
+              make_latest: true
               body: ${{ env.CHANGELOG }}
               name: "Release ${{ env.FORMATTED_VERSION }}"
               fail_on_unmatched_files: true
