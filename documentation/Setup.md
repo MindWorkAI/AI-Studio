@@ -117,5 +117,5 @@ AI Studio is available for modern 64-bit Linux systems. The app is provided as a
 1. Download the AppImage from the link above.
 2. Open a terminal and navigate to the Downloads folder: `cd Downloads`.
 3. Make the AppImage executable: `chmod +x mind-work-ai-studio_amd64.AppImage`.
-4. (Optional) Move the AppImage to a more convenient location, e.g., your home directory: `mv mind-work-ai-studio_amd64.AppImage ~/`.
+4. You might want to move the AppImage to a more convenient location, e.g., your home directory: `mv mind-work-ai-studio_amd64.AppImage ~/`.
 4. Now you can run the AppImage from your file manager (double-click) or the terminal: `./mind-work-ai-studio_amd64.AppImage`.
