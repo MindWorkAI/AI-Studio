@@ -774,23 +774,23 @@ jobs:
       
       steps:
           - name: Create release folder
-            run: mkdir -p $GITHUB_WORKSPACE/release/assets
+            run: mkdir -p release/assets
           
           - name: Download release assets
             uses: actions/download-artifact@v4  
             with:
                 name: MindWork AI Studio ${{ env.FORMATTED_VERSION }} Release
-                path: ${{ env.GITHUB_WORKSPACE }}/release/assets
+                path: release/assets
                 
           - name: Display the content of the release folder
-            run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
+            run: ls -Rlhat release/assets
             
           - name: Scan for threats
             id: virus_total
             uses: crazy-max/ghaction-virustotal@v4
             with:
               vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
-              files: ${{ env.GITHUB_WORKSPACE }}/release/assets/*
+              files: release/assets/*
               request_rate: 4
               vt_monitor: false
               github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -847,4 +847,4 @@ jobs:
               name: "Release ${{ env.FORMATTED_VERSION }}"
               fail_on_unmatched_files: true
               files: |
-                ${{ env.GITHUB_WORKSPACE }}/release/assets/*
+                release/assets/*
