@@ -395,7 +395,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: read_metadata
     env:
-      SKIP: true # allows disabling this long-running job temporarily
+      SKIP: false # allows disabling this long-running job temporarily
     
     steps:
       - name: Checkout repository
