@@ -10,7 +10,7 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 - **Flexibility**: Choose the provider and model best suited for your current task.
 - **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
-**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](https://github.com/MindWorkAI/AI-Studio/releases/latest).
+**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
 ## Support the Project
 Thank you for using MindWork AI Studio and considering supporting its development 😀. Your support helps keep the project alive and ensures continuous improvements and new features.
@@ -35,7 +35,7 @@ Here's an exciting look at some of the features we're planning to add to MindWor
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
 ## Building
-You just want to use the app? Then simply [download the appropriate setup for your operating system](https://github.com/MindWorkAI/AI-Studio/releases/latest). This chapter is intended for developers who want to modify and customize the code.
+You just want to use the app? Then simply [download the appropriate setup for your operating system](documentation/Setup.md). This chapter is intended for developers who want to modify and customize the code.
 
 In order to build MindWork AI Studio from source instead of using the pre-built binaries, follow these steps:
 1. Install the .NET 8 SDK.
