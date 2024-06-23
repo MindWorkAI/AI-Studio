@@ -12,7 +12,7 @@ In order to build MindWork AI Studio from source instead of using the pre-built 
     - This will build the app for the current operating system, for both x64 (Intel, AMD) and ARM64 (e.g., Apple Silicon, Raspberry Pi).
     - The setup program will be located in `runtime/target/release/bundle` afterward.
 8. In order to create a new release:
-   1. To prepare a new release, run `nu build.nu prepare <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
+   1. To prepare a new release, run `nu build.nu prepare <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`. In case you need to adjust the version manually, you can do so in the `metadata.txt` file at the root of the repository; the first line contains the version number.
    2. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
    3. Before finishing the PR, make sure to create a changelog file in the `/app/MindWork AI Studio/wwwroot/changelog` directory. The file should be named `vX.Y.Z.md` and contain the changes made in the release (your changes and any other changes that are part of the release).
    4. Your proposed changes will be reviewed and merged.
