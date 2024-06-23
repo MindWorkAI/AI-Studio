@@ -630,20 +630,9 @@ jobs:
           mkdir -p "$RELEASE_DIR"
           
           # Find and process files in the artifacts directory:
-          find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do
-          
-            if [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz" ]]; then
-              TARGET_NAME="MindWork AI Studio_${VERSION}_x64.app.tar.gz"
-            elif [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz.sig" ]]; then
-              TARGET_NAME="MindWork AI Studio_${VERSION}_x64.app.tar.gz.sig"
-            elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz" ]]; then
-              TARGET_NAME="MindWork AI Studio_${VERSION}_aarch64.app.tar.gz"
-            elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz.sig" ]]; then
-              TARGET_NAME="MindWork AI Studio_${VERSION}_aarch64.app.tar.gz.sig"
-            else
-              TARGET_NAME="$(basename "$FILE")"
-            fi
-          
+          find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do          
+            TARGET_NAME="$(basename "$FILE")"
+            TARGET_NAME=$(echo "$TARGET_NAME" | sed "s/_${VERSION}//")
             cp "$FILE" "${RELEASE_DIR}/${TARGET_NAME}"
           done
           
