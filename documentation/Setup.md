@@ -60,20 +60,21 @@ The AI Studio app should now open without any issues. Once the app is installed,
 ## Linux
 AI Studio is available for modern 64-bit Linux systems. The app is provided as an AppImage and a DEB package. We test our app using Ubuntu 22.04, but it should work on other distributions as well.
 
-Choosing between the AppImage and DEB package:
-- **AppImage:** This is a single file that you can run without installation. It is a bit larger than the DEB package. Main advantage is that automatic updates are supported. When a new version is available, the app will prompt you to download and install it. Unfortunately, the AppImage version is not yet supported for ARM systems.
+1. **Choosing between the AppImage and DEB package:**
+   - **AppImage:** This is a single file that you can run without installation. It is a bit larger than the DEB package. Main advantage is that automatic updates are supported. When a new version is available, the app will prompt you to download and install it. Unfortunately, the AppImage version is not yet supported for ARM systems.
 
-- **DEB package:** This is a traditional Debian package that you can install using your package manager. It is smaller than the AppImage. The main disadvantage is that you have to check for updates manually. Unfortunately, we don't have a Debian repository for automatic updates yet. That means:
-  - You won't get a notification when a new version is available.
-  - You have to download any updated DEB package from our [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest) and install it manually again.
+   - **DEB package:** This is a traditional Debian package that you can install using your package manager. It is smaller than the AppImage. The main disadvantage is that you have to check for updates manually. Unfortunately, we don't have a Debian repository for automatic updates yet. That means:
+     - You won't get a notification when a new version is available.
+     - You have to download any updated DEB package from our [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest) and install it manually again.
 
-Another issue is that the DEB package is only compatible with Debian-based distributions. For other distributions, you have to use the AppImage version.
+    Another issue is that the DEB package is only compatible with Debian-based distributions. For other distributions, you have to use the AppImage version.
 
-Next, we have to figure out if you have an Intel/AMD or a modern ARM system on your Linux machine. Open a terminal and run the command `uname -m`. When the output is `x86_64`, you have an Intel/AMD system. If the output is `aarch64`, you have an ARM system.
+2. **Choosing CPU architecture:**
+    Next, we have to figure out if you have an Intel/AMD or a modern ARM system on your Linux machine. Open a terminal and run the command `uname -m`. When the output is `x86_64`, you have an Intel/AMD system. If the output is `aarch64`, you have an ARM system.
 
-- **Intel/AMD:** [Download the AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.AppImage) (recommended) or [DEB package](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.deb) of AI Studio.
+   - **Intel/AMD:** [Download the AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.AppImage) (recommended) or [DEB package](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.deb) of AI Studio.
 
-- **ARM:** Unfortunately, the AppImage version is not yet supported for ARM systems. [Download the DEB package](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_arm64.deb) of AI Studio instead.
+   - **ARM:** Unfortunately, the AppImage version is not yet supported for ARM systems. [Download the DEB package](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_arm64.deb) of AI Studio instead.
 
 ### DEB Package Installation
 
