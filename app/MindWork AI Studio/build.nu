@@ -128,7 +128,7 @@ def "main publish" []: nothing -> nothing {
     
     cd ../../runtime
     try {
-        cargo tauri build
+        cargo tauri build --bundles none
     };
     
     cd "../app/MindWork AI Studio"
