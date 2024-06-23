@@ -56,4 +56,4 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **No Warranties**: The software is provided "as is", without any promises from us about it working perfectly for your needs. While we strive to make it great, we can't guarantee it will be free of bugs or issues.
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
 
-For more details, refer to the [LICENSE](LICENSE) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
+For more details, refer to the [LICENSE](https://github.com/MindWorkAI/AI-Studio/blob/main/LICENSE) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
