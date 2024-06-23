@@ -42,7 +42,7 @@ def "main metadata" []: nothing -> nothing {
     update_mudblazor_version
     update_tauri_version
     update_project_commit_hash
-    update_license_year "../../LICENSE"
+    update_license_year "../../LICENSE.md"
     update_license_year "Components/Pages/About.razor.cs"
 }
 
