@@ -29,7 +29,7 @@ AI Studio is available for modern 64-bit macOS systems. The minimum requirement 
 
 - **Check System Information:** On your macOS, click on the Apple logo in the top left corner, then "About This Mac." In the window that opens, you can see the processor type. When it says "Apple M1" or similar, you have an ARM system. [Download the ARM version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork%20AI%20Studio_aarch64.dmg) of AI Studio.
 
-- **Intel:** Older Macs have an Intel processor. [Download the ARM version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork%20AI%20Studio_x64.dmg) of AI Studio.
+- **Intel:** Older Macs have an Intel processor. [Download the Intel version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork%20AI%20Studio_x64.dmg) of AI Studio.
 
 After downloading the file, open the DMG file and drag the app to your Applications folder:
 
