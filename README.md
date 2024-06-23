@@ -37,19 +37,7 @@ Here's an exciting look at some of the features we're planning to add to MindWor
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
 ## Building
-You just want to use the app? Then simply [download the appropriate setup for your operating system](documentation/Setup.md). This chapter is intended for developers who want to modify and customize the code.
-
-In order to build MindWork AI Studio from source instead of using the pre-built binaries, follow these steps:
-1. Install the .NET 8 SDK.
-2. Install the Rust compiler.
-3. Install NuShell. This shell works on all operating systems and is required because the build script is written in NuShell.
-4. Clone the repository.
-5. Open a terminal with NuShell.
-6. Navigate to the `/app/MindWork AI Studio` directory within the repository.
-7. To build the current version, run `nu build.nu publish`.
-    - This will build the app for the current operating system, for both x64 (Intel, AMD) and ARM64 (e.g., Apple Silicon, Raspberry Pi).
-    - The setup program will be located in `runtime/target/release/bundle` afterward.
-8. To prepare a new release, run `nu build.nu prepare <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
+You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
 
 ## License
 MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional source license). Here’s a simple rundown of what that means for you:
