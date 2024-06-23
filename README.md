@@ -1,4 +1,6 @@
 # MindWork AI Studio
+![MindWork AI Studio](documentation/AI%20Studio.png)
+
 MindWork AI Studio is a desktop application available for macOS, Windows, and Linux. It provides a unified chat interface for Large Language Models (LLMs). You bring your own API key for the respective LLM provider to use the models. The API keys are securely stored by the operating system.
 
 **Key advantages:**
