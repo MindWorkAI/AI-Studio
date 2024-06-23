@@ -14,7 +14,8 @@ In order to build MindWork AI Studio from source instead of using the pre-built 
 8. In order to create a new release:
    1. To prepare a new release, run `nu build.nu prepare <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
    2. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
-   3. Your proposed changes will be reviewed and merged.
-   4. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.
-   5. The GitHub Workflow will then build the release and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest).
-   6. Building the release including virus scanning takes about 2 1/2 hours.
+   3. Before finishing the PR, make sure to create a changelog file in the `/app/MindWork AI Studio/wwwroot/changelog` directory. The file should be named `vX.Y.Z.md` and contain the changes made in the release (your changes and any other changes that are part of the release).
+   4. Your proposed changes will be reviewed and merged.
+   5. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.
+   6. The GitHub Workflow will then build the release and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest).
+   7. Building the release including virus scanning takes about 2 1/2 hours.
