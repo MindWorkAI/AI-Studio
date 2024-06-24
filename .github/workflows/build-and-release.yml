@@ -768,6 +768,10 @@ jobs:
       name: Publish release
       runs-on: ubuntu-latest
       needs: [read_metadata, create_release]
+      
+      permissions:
+        contents: write
+      
       env:
         FORMATTED_VERSION: ${{ needs.read_metadata.outputs.formatted_version }}
         CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
