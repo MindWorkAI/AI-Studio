@@ -163,6 +163,6 @@
         "contentHash": "FHNOatmUq0sqJOkTx+UF/9YK1f180cnW5FVqnQMvYUN0elp6wFzbtPSiqbo1/ru8ICp43JM1i7kKkk6GsNGHlA=="
       }
     },
-    "net8.0/osx-arm64": {}
+    "net8.0/osx-x64": {}
   }
 }
