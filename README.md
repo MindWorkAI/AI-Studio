@@ -16,13 +16,16 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 
 ## Support the Project
 Thank you for using MindWork AI Studio and considering supporting its development 😀. Your support helps keep the project alive and ensures continuous improvements and new features.
+
 We offer various ways you can support the project:
-- **Monthly Support**: Choose from different tiers that offer a range of benefits, including having your name or company logo featured in the app, access to exclusive content, and more.
+
+- **Monthly Support**: By contributing a monthly amount, you can significantly help us maintain and develop the project. As a token of our appreciation, we will include your name or company logo in the app. While we cannot guarantee exclusive content at this time, we are working towards offering unique perks in the future.
+
 - **One-Time Contributions**: Make a one-time donation and have your name or company logo included in the app as a gesture of our gratitude.
 
 For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
  
-To view all available tiers and their specific perks, please visit our [GitHub Sponsors page](Sponsors.md).
+To view all available tiers, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
 
 ## Planned Features
