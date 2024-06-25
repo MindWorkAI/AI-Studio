@@ -52,7 +52,7 @@ When you are confident in the app's safety, follow these steps:
 3. Find the MindWork AI Studio app.
 4. Type this command: `xattr -r -d com.apple.quarantine ` (with a space at the end).
 5. Drag the MindWork AI Studio app from the Finder into the Terminal window. The path to the app will be added to the command automatically.
-6. The final command should be: `xattr -r -d com.apple.quarantine /Applications/MindWork\ AI\ Studio.app`. Press Enter.
+6. The final command should be: `xattr -r -d com.apple.quarantine "/Applications/MindWork AI Studio.app"`. Press Enter.
 7. Now, you might close the Terminal app and the Finder.
 
 The AI Studio app should now open without any issues. Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
