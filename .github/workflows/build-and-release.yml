@@ -662,18 +662,6 @@ jobs:
           # Here, we create the JSON object:
           platforms_json=$(jq -n '{}')
           
-          # Define the urlencode function:
-          urlencode() {
-            local length="${#1}"
-            for (( i = 0; i < length; i++ )); do
-              local c="${1:i:1}"
-              case $c in
-                [a-zA-Z0-9.~_-]) printf "$c" ;;
-                *) printf '%%%02X' "'$c" ;;
-              esac
-            done
-          }
-          
           # Display the structure of the release directory:
           ls -Rlhat $GITHUB_WORKSPACE/release/assets
           
@@ -713,7 +701,11 @@ jobs:
         
             # Extract the artifact name and create the URL:
             artifact_name=$(basename "$sig_file" .sig)
-            encoded_artifact_name=$(urlencode "$artifact_name")
+            
+            # Replaces spaces by '.':
+            encoded_artifact_name=$(echo "$artifact_name" | sed 's/ /./g')
+      
+            # Create the URL:
             url="https://github.com/MindWorkAI/AI-Studio/releases/download/$FORMATTED_VERSION/$encoded_artifact_name"
         
             # Build the JSON object:
