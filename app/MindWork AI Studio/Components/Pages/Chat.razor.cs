@@ -37,9 +37,6 @@ public partial class Chat : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        // Ensure that the settings are loaded:
-        await this.SettingsManager.LoadSettings();
-        
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         
