@@ -20,10 +20,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
     private MessageBus MessageBus { get; init; } = null!;
     
     [Inject]
-    public IDialogService DialogService { get; init; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    public Rust Rust { get; init; } = null!;
+    private Rust Rust { get; init; } = null!;
+    
+    [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
 
     public string AdditionalHeight { get; private set; } = "0em";
     
@@ -56,7 +59,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE ]);
         
         // Set the js runtime for the update service:
-        UpdateService.SetJsRuntime(this.JsRuntime);
+        UpdateService.SetBlazorDependencies(this.JsRuntime, this.Snackbar);
         
         await base.OnInitializedAsync();
     }

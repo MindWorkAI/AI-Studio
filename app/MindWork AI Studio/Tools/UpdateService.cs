@@ -6,11 +6,12 @@ namespace AIStudio.Tools;
 
 public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 {
-    // We cannot inject IJSRuntime into our service. This is due to the fact that
-    // the service is not a Blaozor component. We need to pass the IJSRuntime from
+    // We cannot inject IJSRuntime into our service. This is because
+    // the service is not a Blazor component. We need to pass the IJSRuntime from
     // the MainLayout component to the service.
     private static IJSRuntime? JS_RUNTIME;
-    private static bool IS_INITALIZED;
+    private static bool IS_INITIALIZED;
+    private static ISnackbar? SNACKBAR;
     
     private readonly SettingsManager settingsManager;
     private readonly TimeSpan updateInterval;
@@ -22,7 +23,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         this.settingsManager = settingsManager;
         this.messageBus = messageBus;
         this.rust = rust;
-        
+
         this.messageBus.RegisterComponent(this);
         this.ApplyFilters([], [ Event.USER_SEARCH_FOR_UPDATE ]);
         
@@ -43,7 +44,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested && !IS_INITALIZED)
+        while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
@@ -68,7 +69,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         switch (triggeredEvent)
         {
             case Event.USER_SEARCH_FOR_UPDATE:
-                await this.CheckForUpdate();
+                await this.CheckForUpdate(notifyUserWhenNoUpdate: true);
                 break;
         }
     }
@@ -85,9 +86,9 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
     #endregion
 
-    private async Task CheckForUpdate()
+    private async Task CheckForUpdate(bool notifyUserWhenNoUpdate = false)
     {
-        if(!IS_INITALIZED)
+        if(!IS_INITIALIZED)
             return;
         
         var response = await this.rust.CheckForUpdate(JS_RUNTIME!);
@@ -95,11 +96,24 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         {
             await this.messageBus.SendMessage(null, Event.UPDATE_AVAILABLE, response);
         }
+        else
+        {
+            if (notifyUserWhenNoUpdate)
+            {
+                SNACKBAR!.Add("No update found.", Severity.Normal, config =>
+                {
+                    config.Icon = Icons.Material.Filled.Update;
+                    config.IconSize = Size.Large;
+                    config.IconColor = Color.Primary;
+                });
+            }
+        }
     }
     
-    public static void SetJsRuntime(IJSRuntime jsRuntime)
+    public static void SetBlazorDependencies(IJSRuntime jsRuntime, ISnackbar snackbar)
     {
+        SNACKBAR = snackbar;
         JS_RUNTIME = jsRuntime;
-        IS_INITALIZED = true;
+        IS_INITIALIZED = true;
     }
 }
