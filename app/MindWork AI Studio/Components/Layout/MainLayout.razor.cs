@@ -59,7 +59,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE ]);
         
         // Set the js runtime for the update service:
-        UpdateService.SetJsRuntime(this.JsRuntime);
+        UpdateService.SetBlazorDependencies(this.JsRuntime, this.Snackbar);
         
         await base.OnInitializedAsync();
     }

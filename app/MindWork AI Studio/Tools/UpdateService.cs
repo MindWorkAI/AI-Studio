@@ -23,7 +23,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         this.settingsManager = settingsManager;
         this.messageBus = messageBus;
         this.rust = rust;
-        
+
         this.messageBus.RegisterComponent(this);
         this.ApplyFilters([], [ Event.USER_SEARCH_FOR_UPDATE ]);
         
@@ -69,7 +69,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         switch (triggeredEvent)
         {
             case Event.USER_SEARCH_FOR_UPDATE:
-                await this.CheckForUpdate();
+                await this.CheckForUpdate(notifyUserWhenNoUpdate: true);
                 break;
         }
     }
@@ -86,7 +86,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
     #endregion
 
-    private async Task CheckForUpdate()
+    private async Task CheckForUpdate(bool notifyUserWhenNoUpdate = false)
     {
         if(!IS_INITIALIZED)
             return;
@@ -96,10 +96,23 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         {
             await this.messageBus.SendMessage(null, Event.UPDATE_AVAILABLE, response);
         }
+        else
+        {
+            if (notifyUserWhenNoUpdate)
+            {
+                SNACKBAR!.Add("No update found.", Severity.Normal, config =>
+                {
+                    config.Icon = Icons.Material.Filled.Update;
+                    config.IconSize = Size.Large;
+                    config.IconColor = Color.Primary;
+                });
+            }
+        }
     }
     
-    public static void SetJsRuntime(IJSRuntime jsRuntime)
+    public static void SetBlazorDependencies(IJSRuntime jsRuntime, ISnackbar snackbar)
     {
+        SNACKBAR = snackbar;
         JS_RUNTIME = jsRuntime;
         IS_INITIALIZED = true;
     }
