@@ -25,6 +25,7 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddMudMarkdownServices();
+builder.Services.AddSingleton(MessageBus.INSTANCE);
 builder.Services.AddSingleton<Rust>();
 builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
