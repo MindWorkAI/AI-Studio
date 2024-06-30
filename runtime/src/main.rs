@@ -5,6 +5,7 @@ extern crate core;
 
 use std::net::TcpListener;
 use std::sync::{Arc, Mutex};
+use once_cell::sync::Lazy;
 
 use arboard::Clipboard;
 use keyring::Entry;
@@ -15,6 +16,11 @@ use tauri::utils::config::AppUrl;
 use tokio::time;
 use flexi_logger::{AdaptiveFormat, Logger};
 use log::{debug, error, info, warn};
+use tauri::updater::UpdateResponse;
+
+static SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
+static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<UpdateResponse<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
 
 fn main() {
 
@@ -30,7 +36,14 @@ fn main() {
     let tauri_version = metadata_lines.next().unwrap();
     let app_commit_hash = metadata_lines.next().unwrap();
 
-    Logger::try_with_str("debug").expect("Cannot create logging")
+    // Set the log level according to the environment:
+    // In debug mode, the log level is set to debug, in release mode to info.
+    let log_level = match is_dev() {
+        true => "debug",
+        false => "info",
+    };
+
+    Logger::try_with_str(log_level).expect("Cannot create logging")
         .log_to_stdout()
         .adaptive_format_for_stdout(AdaptiveFormat::Detailed)
         .start().expect("Cannot start logging");
@@ -69,8 +82,7 @@ fn main() {
     info!("Try to start the .NET server on {app_url_log}...");
 
     // Arc for the server process to stop it later:
-    let server: Arc<Mutex<Option<CommandChild>>> = Arc::new(Mutex::new(None));
-    let server_spawn_clone = server.clone();
+    let server_spawn_clone = SERVER.clone();
 
     // Channel to communicate with the server process:
     let (sender, mut receiver) = tauri::async_runtime::channel(100);
@@ -114,9 +126,8 @@ fn main() {
         warn!("Running in development mode, no .NET server will be started.");
     }
 
-    let main_window: Arc<Mutex<Option<Window>>> = Arc::new(Mutex::new(None));
-    let main_window_spawn_clone = main_window.clone();
-    let server_receive_clone = server.clone();
+    let main_window_spawn_clone = &MAIN_WINDOW;
+    let server_receive_clone = SERVER.clone();
 
     // Create a thread to handle server events:
     tauri::async_runtime::spawn(async move {
@@ -181,29 +192,93 @@ fn main() {
     });
 
     info!("Starting Tauri app...");
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .setup(move |app| {
             let window = app.get_window("main").expect("Failed to get main window.");
-            *main_window.lock().unwrap() = Some(window);
+            *MAIN_WINDOW.lock().unwrap() = Some(window);
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![store_secret, get_secret, delete_secret, set_clipboard])
-        .run(tauri::generate_context!())
+        .invoke_handler(tauri::generate_handler![
+            store_secret, get_secret, delete_secret, set_clipboard,
+            check_for_update, install_update
+        ])
+        .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
+    
+    app.run(|app_handle, event| match event {
+
+        tauri::RunEvent::WindowEvent { event, label, .. } => {
+            match event {
+                tauri::WindowEvent::CloseRequested { .. } => {
+                    warn!("Window '{label}': close was requested.");
+                }
+
+                tauri::WindowEvent::Destroyed => {
+                    warn!("Window '{label}': was destroyed.");
+                }
+
+                tauri::WindowEvent::FileDrop(files) => {
+                    info!("Window '{label}': files were dropped: {files:?}");
+                }
+
+                _ => (),
+            }
+        }
+
+        tauri::RunEvent::Updater(updater_event) => {
+            match updater_event {
+
+                tauri::UpdaterEvent::UpdateAvailable { body, date, version } => {
+                    let body_len = body.len();
+                    info!("Updater: update available: body size={body_len} time={date:?} version={version}");
+                }
+
+                tauri::UpdaterEvent::Pending => {
+                    info!("Updater: update is pending!");
+                }
+
+                tauri::UpdaterEvent::DownloadProgress { chunk_length, content_length } => {
+                    info!("Updater: downloaded {} of {:?}", chunk_length, content_length);
+                }
+
+                tauri::UpdaterEvent::Downloaded => {
+                    info!("Updater: update has been downloaded!");
+                    warn!("Try to stop the .NET server now...");
+                    stop_server();
+                }
+
+                tauri::UpdaterEvent::Updated => {
+                    info!("Updater: app has been updated");
+                    warn!("Try to restart the app now...");
+                    app_handle.restart();
+                }
+
+                tauri::UpdaterEvent::AlreadyUpToDate => {
+                    info!("Updater: app is already up to date");
+                }
+
+                tauri::UpdaterEvent::Error(error) => {
+                    warn!("Updater: failed to update: {error}");
+                }
+            }
+        }
+
+        tauri::RunEvent::ExitRequested { .. } => {
+            warn!("Run event: exit was requested.");
+        }
+        
+        tauri::RunEvent::Ready => {
+            info!("Run event: Tauri app is ready.");
+        }
+
+        _ => {}
+    });
 
     info!("Tauri app was stopped.");
     if is_prod() {
         info!("Try to stop the .NET server as well...");
-        if let Some(server_process) = server.lock().unwrap().take() {
-            let server_kill_result = server_process.kill();
-            match server_kill_result {
-                Ok(_) => info!("The .NET server process was stopped."),
-                Err(e) => error!("Failed to stop the .NET server process: {e}."),
-            }
-        } else {
-            warn!("The .NET server process was not started or already stopped.");
-        }
+        stop_server();
     }
 }
 
@@ -228,6 +303,87 @@ fn get_available_port() -> Option<u16> {
     TcpListener::bind(("127.0.0.1", 0))
         .map(|listener| listener.local_addr().unwrap().port())
         .ok()
+}
+
+fn stop_server() {
+    if let Some(server_process) = SERVER.lock().unwrap().take() {
+        let server_kill_result = server_process.kill();
+        match server_kill_result {
+            Ok(_) => info!("The .NET server process was stopped."),
+            Err(e) => error!("Failed to stop the .NET server process: {e}."),
+        }
+    } else {
+        warn!("The .NET server process was not started or already stopped.");
+    }
+}
+
+#[tauri::command]
+async fn check_for_update() -> CheckUpdateResponse {
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().unwrap().app_handle();
+    tauri::async_runtime::spawn(async move {
+        let response = app_handle.updater().check().await;
+        match response {
+            Ok(update_response) => match update_response.is_update_available() {
+                true => {
+                    *CHECK_UPDATE_RESPONSE.lock().unwrap() = Some(update_response.clone());
+                    let new_version = update_response.latest_version();
+                    info!("Updater: update to version '{new_version}' is available.");
+                    let changelog = update_response.body();
+                    CheckUpdateResponse {
+                        update_is_available: true,
+                        error: false,
+                        new_version: new_version.to_string(),
+                        changelog: match changelog {
+                            Some(c) => c.to_string(),
+                            None => String::from(""),
+                        },
+                    }
+                },
+
+                false => {
+                    info!("Updater: no updates available.");
+                    CheckUpdateResponse {
+                        update_is_available: false,
+                        error: false,
+                        new_version: String::from(""),
+                        changelog: String::from(""),
+                    }
+                },
+            },
+
+            Err(e) => {
+                warn!("Failed to check updater: {e}.");
+                CheckUpdateResponse {
+                    update_is_available: false,
+                    error: true,
+                    new_version: String::from(""),
+                    changelog: String::from(""),
+                }
+            },
+        }
+    }).await.unwrap()
+}
+
+#[derive(Serialize)]
+struct CheckUpdateResponse {
+    update_is_available: bool,
+    error: bool,
+    new_version: String,
+    changelog: String,
+}
+
+#[tauri::command]
+async fn install_update() {
+    let cloned_response_option = CHECK_UPDATE_RESPONSE.lock().unwrap().clone();
+    match cloned_response_option {
+        Some(update_response) => {
+            update_response.download_and_install().await.unwrap();
+        },
+
+        None => {
+            error!("Update installer: no update available to install. Did you check for updates first?");
+        },
+    }
 }
 
 #[tauri::command]

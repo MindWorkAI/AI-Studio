@@ -2319,6 +2319,7 @@ dependencies = [
  "flexi_logger",
  "keyring",
  "log",
+ "once_cell",
  "reqwest 0.12.4",
  "serde",
  "serde_json",

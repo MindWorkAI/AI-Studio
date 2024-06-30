@@ -76,7 +76,7 @@
       "endpoints": [
         "https://github.com/MindWorkAI/AI-Studio/releases/latest/download/latest.json"
       ],
-      "dialog": true,
+      "dialog": false,
       "windows": {
         "installMode": "passive"
       },

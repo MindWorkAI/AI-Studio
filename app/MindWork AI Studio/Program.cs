@@ -30,6 +30,7 @@ builder.Services.AddSingleton<Rust>();
 builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
 builder.Services.AddSingleton<Random>();
+builder.Services.AddHostedService<UpdateService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddHubOptions(options =>

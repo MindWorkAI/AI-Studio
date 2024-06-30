@@ -1,11 +1,16 @@
 using System.Reflection;
 
+using AIStudio.Tools;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.Pages;
 
 public partial class About : ComponentBase
 {
+    [Inject]
+    private MessageBus MessageBus { get; init; } = null!;
+    
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
 
@@ -135,4 +140,9 @@ public partial class About : ComponentBase
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         """;
+    
+    private async Task CheckForUpdate()
+    {
+        await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+    }
 }

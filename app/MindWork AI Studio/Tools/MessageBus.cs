@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Components;
+// ReSharper disable RedundantRecordClassKeyword
 
 namespace AIStudio.Tools;
 
