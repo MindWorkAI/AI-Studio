@@ -3,6 +3,8 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using Microsoft.AspNetCore.Components;
 
+using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
+
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace AIStudio.Components.Pages;
@@ -18,22 +20,6 @@ public partial class Settings : ComponentBase
     [Inject]
     public IJSRuntime JsRuntime { get; init; } = null!;
 
-    private static readonly DialogOptions DIALOG_OPTIONS = new()
-    {
-        CloseOnEscapeKey = true,
-        FullWidth = true, MaxWidth = MaxWidth.Medium,
-    };
-
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        await this.SettingsManager.LoadSettings();
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
-
     #region Provider related
 
     private async Task AddProvider()
@@ -43,7 +29,7 @@ public partial class Settings : ComponentBase
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, DIALOG_OPTIONS);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult.Canceled)
             return;
@@ -67,7 +53,7 @@ public partial class Settings : ComponentBase
             { x => x.IsEditing, true },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DIALOG_OPTIONS);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult.Canceled)
             return;
@@ -90,7 +76,7 @@ public partial class Settings : ComponentBase
             { "Message", $"Are you sure you want to delete the provider '{provider.InstanceName}'?" },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Provider", dialogParameters, DIALOG_OPTIONS);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult.Canceled)
             return;

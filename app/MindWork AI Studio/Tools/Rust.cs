@@ -39,4 +39,16 @@ public sealed class Rust
             };
         });
     }
+    
+    public async Task<UpdateResponse> CheckForUpdate(IJSRuntime jsRuntime)
+    {
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(16));
+        return await jsRuntime.InvokeAsync<UpdateResponse>("window.__TAURI__.invoke", cts.Token, "check_for_update");
+    }
+    
+    public async Task InstallUpdate(IJSRuntime jsRuntime)
+    {
+        var cts = new CancellationTokenSource();
+        await jsRuntime.InvokeVoidAsync("window.__TAURI__.invoke", cts.Token, "install_update");
+    }
 }

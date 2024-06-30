@@ -6,7 +6,7 @@ namespace AIStudio.Settings;
 public sealed class Data
 {
     /// <summary>
-    /// The version of the settings file. Allows us to upgrade the settings,
+    /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
     public Version Version { get; init; } = Version.V1;
@@ -36,4 +36,9 @@ public sealed class Data
     /// Should we enable spellchecking for all input fields?
     /// </summary>
     public bool EnableSpellchecking { get; set; }
+
+    /// <summary>
+    /// If and when we should look for updates.
+    /// </summary>
+    public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.ONCE_STARTUP;
 }

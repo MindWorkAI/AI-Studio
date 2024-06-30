@@ -18,6 +18,9 @@
                 <MudListItem Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
                 <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
             </MudList>
+            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
+                Check for updates
+            </MudButton>
         </ExpansionPanel>
         
         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Changelog">

@@ -21,4 +21,13 @@ public static class ConfigurationSelectDataFactory
         yield return new("Modifier key + enter is sending the input", SendBehavior.MODIFER_ENTER_IS_SENDING);
         yield return new("Enter is sending the input", SendBehavior.ENTER_IS_SENDING);
     }
+    
+    public static IEnumerable<ConfigurationSelectData<UpdateBehavior>> GetUpdateBehaviorData()
+    {
+        yield return new("No automatic update checks", UpdateBehavior.NO_CHECK);
+        yield return new("Once at startup", UpdateBehavior.ONCE_STARTUP);
+        yield return new("Check every hour", UpdateBehavior.HOURLY);
+        yield return new("Check every day", UpdateBehavior.DAILY);
+        yield return new ("Check every week", UpdateBehavior.WEEKLY);
+    }
 }
