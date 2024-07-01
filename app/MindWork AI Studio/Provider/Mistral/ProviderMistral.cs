@@ -23,7 +23,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     public string InstanceName { get; set; } = "Mistral";
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model chatModel, ChatThread chatThread, CancellationToken token = default)
+    public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
