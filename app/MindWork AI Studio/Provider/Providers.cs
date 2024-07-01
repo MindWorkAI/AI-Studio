@@ -1,4 +1,5 @@
 using AIStudio.Provider.Anthropic;
+using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider;
@@ -11,6 +12,7 @@ public enum Providers
     NONE,
     OPEN_AI,
     ANTHROPIC,
+    MISTRAL,
 }
 
 /// <summary>
@@ -27,6 +29,7 @@ public static class ExtensionsProvider
     {
         Providers.OPEN_AI => "OpenAI",
         Providers.ANTHROPIC => "Anthropic",
+        Providers.MISTRAL => "Mistral",
         
         Providers.NONE => "No provider selected",
         _ => "Unknown",
@@ -42,6 +45,7 @@ public static class ExtensionsProvider
     {
         Providers.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName },
         Providers.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName },
+        Providers.MISTRAL => new ProviderMistral { InstanceName = instanceName },
         
         _ => new NoProvider(),
     };
