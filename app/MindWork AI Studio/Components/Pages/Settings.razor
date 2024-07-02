@@ -1,4 +1,5 @@
 @page "/settings"
+@using AIStudio.Provider
 
 <MudText Typo="Typo.h3" Class="mb-12">Settings</MudText>
 
@@ -11,7 +12,7 @@
                 <col style="width: 12em;"/>
                 <col style="width: 12em;"/>
                 <col/>
-                <col style="width: 20em;"/>
+                <col style="width: 34em;"/>
             </ColGroup>
             <HeaderContent>
                 <MudTh>#</MudTh>
@@ -26,10 +27,13 @@
                 <MudTd>@context.UsedProvider</MudTd>
                 <MudTd>@context.Model</MudTd>
                 <MudTd Style="text-align: left;">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2" OnClick="() => this.EditProvider(context)">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Class="ma-2" Href="@this.GetProviderDashboardURL(context.UsedProvider)" Target="_blank" Disabled="@(context.UsedProvider is Providers.NONE or Providers.SELF_HOSTED)">
+                        Open Dashboard
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditProvider(context)">
                         Edit
                     </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="mr-2" OnClick="() => this.DeleteProvider(context)">
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteProvider(context)">
                         Delete
                     </MudButton>
                 </MudTd>
