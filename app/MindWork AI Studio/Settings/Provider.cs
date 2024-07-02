@@ -9,8 +9,10 @@ namespace AIStudio.Settings;
 /// <param name="Id">The provider's ID.</param>
 /// <param name="InstanceName">The provider's instance name. Useful for multiple instances of the same provider, e.g., to distinguish between different OpenAI API keys.</param>
 /// <param name="UsedProvider">The provider used.</param>
+/// <param name="IsSelfHosted">Whether the provider is self-hosted.</param>
+/// <param name="Hostname">The hostname of the provider. Useful for self-hosted providers.</param>
 /// <param name="Model">The LLM model to use for chat.</param>
-public readonly record struct Provider(uint Num, string Id, string InstanceName, Providers UsedProvider, Model Model)
+public readonly record struct Provider(uint Num, string Id, string InstanceName, Providers UsedProvider, Model Model, bool IsSelfHosted = false, string Hostname = "http://localhost:1234")
 {
     #region Overrides of ValueType
 
@@ -21,6 +23,9 @@ public readonly record struct Provider(uint Num, string Id, string InstanceName,
     /// <returns>A string that represents the current provider in a human-readable format.</returns>
     public override string ToString()
     {
+        if(this.IsSelfHosted)
+            return $"{this.InstanceName} ({this.UsedProvider.ToName()}, {this.Hostname}, {this.Model})";
+
         return $"{this.InstanceName} ({this.UsedProvider.ToName()}, {this.Model})";
     }
 
