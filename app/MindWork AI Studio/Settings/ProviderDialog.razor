@@ -4,26 +4,16 @@
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
-            @* ReSharper disable once CSharpWarnings::CS8974 *@
-            <MudTextField
-                T="string"
-                @bind-Text="@this.DataInstanceName"
-                Label="Instance Name"
-                Class="mb-3"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
-                AdornmentColor="Color.Info"
-                Validation="@this.ValidatingInstanceName"
-                UserAttributes="@INSTANCE_NAME_ATTRIBUTES"
-            />
-            
-            @* ReSharper disable once CSharpWarnings::CS8974 *@
-            <MudSelect @bind-Value="@this.DataProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
-                @foreach (Providers provider in Enum.GetValues(typeof(Providers)))
-                {
-                    <MudSelectItem Value="@provider">@provider</MudSelectItem>
-                }
-            </MudSelect>
+            <MudStack Row="@true" AlignItems="AlignItems.Center">
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudSelect @bind-Value="@this.DataProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
+                    @foreach (Providers provider in Enum.GetValues(typeof(Providers)))
+                    {
+                        <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Disabled="@(this.DataProvider is Providers.NONE or Providers.SELF_HOSTED)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.GetProviderCreationURL()" Target="_blank">Create account</MudButton>
+            </MudStack>
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -47,6 +37,19 @@
                     }
                 </MudSelect>
             </MudStack>
+
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataInstanceName"
+                Label="Instance Name"
+                Class="mb-3"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidatingInstanceName"
+                UserAttributes="@INSTANCE_NAME_ATTRIBUTES"
+            />
             
         </MudForm>
 

@@ -233,4 +233,13 @@ public partial class ProviderDialog : ComponentBase
         this.availableModels.Clear();
         this.availableModels.AddRange(orderedModels);
     }
+
+    private string GetProviderCreationURL() => this.DataProvider switch
+    {
+        Providers.OPEN_AI => "https://platform.openai.com/signup",
+        Providers.MISTRAL => "https://console.mistral.ai/",
+        Providers.ANTHROPIC => "https://console.anthropic.com/dashboard",
+        
+        _ => string.Empty,
+    };
 }
