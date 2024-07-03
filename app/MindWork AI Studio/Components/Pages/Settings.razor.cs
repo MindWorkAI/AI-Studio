@@ -50,6 +50,8 @@ public partial class Settings : ComponentBase
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataProvider, provider.UsedProvider },
             { x => x.DataModel, provider.Model },
+            { x => x.DataHostname, provider.Hostname },
+            { x => x.IsSelfHosted, provider.IsSelfHosted },
             { x => x.IsEditing, true },
         };
 

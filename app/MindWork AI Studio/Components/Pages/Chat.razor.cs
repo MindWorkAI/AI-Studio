@@ -101,7 +101,7 @@ public partial class Chat : ComponentBase
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.selectedProvider.UsedProvider.CreateProvider(this.selectedProvider.InstanceName), this.JsRuntime, this.SettingsManager, this.selectedProvider.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.selectedProvider.UsedProvider.CreateProvider(this.selectedProvider.InstanceName, this.selectedProvider.Hostname), this.JsRuntime, this.SettingsManager, this.selectedProvider.Model, this.chatThread);
         
         // Disable the stream state:
         this.isStreaming = false;

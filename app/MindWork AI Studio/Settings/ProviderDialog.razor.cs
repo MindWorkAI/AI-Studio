@@ -33,6 +33,18 @@ public partial class ProviderDialog : ComponentBase
     public string DataInstanceName { get; set; } = string.Empty;
     
     /// <summary>
+    /// The chosen hostname for self-hosted providers.
+    /// </summary>
+    [Parameter]
+    public string DataHostname { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Is this provider self-hosted?
+    /// </summary>
+    [Parameter]
+    public bool IsSelfHosted { get; set; }
+    
+    /// <summary>
     /// The provider to use.
     /// </summary>
     [Parameter]
@@ -99,7 +111,8 @@ public partial class ProviderDialog : ComponentBase
                 this.dataAPIKey = requestedSecret.Secret;
                 
                 // Now, we try to load the list of available models:
-                await this.ReloadModels();
+                if(this.DataProvider is not Providers.SELF_HOSTED)
+                    await this.ReloadModels();
             }
             else
             {
@@ -142,6 +155,8 @@ public partial class ProviderDialog : ComponentBase
             InstanceName = this.DataInstanceName,
             UsedProvider = this.DataProvider,
             Model = this.DataModel,
+            IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
+            Hostname = this.DataHostname,
         };
         
         // We need to instantiate the provider to store the API key:
@@ -169,6 +184,9 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingModel(Model model)
     {
+        if(this.DataProvider is Providers.SELF_HOSTED)
+            return null;
+        
         if (model == default)
             return "Please select a model.";
         
@@ -206,6 +224,9 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingAPIKey(string apiKey)
     {
+        if(this.DataProvider is Providers.SELF_HOSTED)
+            return null;
+        
         if(!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             return this.dataAPIKeyStorageIssue;
 
@@ -215,9 +236,24 @@ public partial class ProviderDialog : ComponentBase
         return null;
     }
 
-    private void Cancel() => this.MudDialog.Cancel();
+    private string? ValidatingHostname(string hostname)
+    {
+        if(this.DataProvider != Providers.SELF_HOSTED)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(hostname))
+            return "Please enter a hostname, e.g., http://localhost:1234";
+        
+        if(!hostname.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+            return "The hostname must start with either http:// or https://";
 
-    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE;
+        if(!Uri.TryCreate(hostname, UriKind.Absolute, out _))
+            return "The hostname is not a valid HTTP(S) URL.";
+        
+        return null;
+    }
+
+    private void Cancel() => this.MudDialog.Cancel();
     
     private async Task ReloadModels()
     {
@@ -233,6 +269,12 @@ public partial class ProviderDialog : ComponentBase
         this.availableModels.Clear();
         this.availableModels.AddRange(orderedModels);
     }
+    
+    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && this.DataProvider != Providers.SELF_HOSTED;
+    
+    private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED or Providers.NONE;
+    
+    private bool IsSelfHostedOrNone => this.DataProvider is Providers.SELF_HOSTED or Providers.NONE;
 
     private string GetProviderCreationURL() => this.DataProvider switch
     {

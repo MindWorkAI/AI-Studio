@@ -12,7 +12,7 @@
                         <MudSelectItem Value="@provider">@provider</MudSelectItem>
                     }
                 </MudSelect>
-                <MudButton Disabled="@(this.DataProvider is Providers.NONE or Providers.SELF_HOSTED)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.GetProviderCreationURL()" Target="_blank">Create account</MudButton>
+                <MudButton Disabled="@this.IsSelfHostedOrNone" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.GetProviderCreationURL()" Target="_blank">Create account</MudButton>
             </MudStack>
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
@@ -20,6 +20,7 @@
                 T="string"
                 @bind-Text="@this.dataAPIKey"
                 Label="API Key"
+                Disabled="@this.IsSelfHostedOrNone"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.VpnKey"
@@ -27,10 +28,22 @@
                 InputType="InputType.Password"
                 Validation="@this.ValidatingAPIKey"
             />
+            
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataHostname"
+                Label="Hostname"
+                Disabled="@this.IsCloudProvider"
+                Class="mb-3"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Dns"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidatingHostname"
+            />
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 <MudButton Disabled="@(!this.CanLoadModels)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
-                <MudSelect @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
+                <MudSelect Disabled="@this.IsSelfHostedOrNone" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
                     @foreach (var model in this.availableModels)
                     {
                         <MudSelectItem Value="@model">@model</MudSelectItem>

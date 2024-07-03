@@ -25,7 +25,12 @@
                 <MudTd>@context.Num</MudTd>
                 <MudTd>@context.InstanceName</MudTd>
                 <MudTd>@context.UsedProvider</MudTd>
-                <MudTd>@context.Model</MudTd>
+                <MudTd>
+                    @if(context.UsedProvider is not Providers.SELF_HOSTED)
+                        @context.Model
+                    else
+                        @("as selected by provider")
+                </MudTd>
                 <MudTd Style="text-align: left;">
                     <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Class="ma-2" Href="@this.GetProviderDashboardURL(context.UsedProvider)" Target="_blank" Disabled="@(context.UsedProvider is Providers.NONE or Providers.SELF_HOSTED)">
                         Open Dashboard
