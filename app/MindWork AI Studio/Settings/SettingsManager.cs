@@ -103,7 +103,7 @@ public sealed class SettingsManager
         if(loadedConfiguration is null)
             return;
         
-        this.ConfigurationData = loadedConfiguration;
+        this.ConfigurationData = SettingsMigrations.Migrate(loadedConfiguration);
     }
 
     /// <summary>

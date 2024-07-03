@@ -50,6 +50,8 @@ public partial class Settings : ComponentBase
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataProvider, provider.UsedProvider },
             { x => x.DataModel, provider.Model },
+            { x => x.DataHostname, provider.Hostname },
+            { x => x.IsSelfHosted, provider.IsSelfHosted },
             { x => x.IsEditing, true },
         };
 
@@ -81,7 +83,7 @@ public partial class Settings : ComponentBase
         if (dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.UsedProvider.CreateProvider(provider.InstanceName);
+        var providerInstance = provider.UsedProvider.CreateProvider(provider.InstanceName, provider.Hostname);
         var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
         if(deleteSecretResponse.Success)
         {
@@ -89,6 +91,15 @@ public partial class Settings : ComponentBase
             await this.SettingsManager.StoreSettings();
         }
     }
+    
+    private string GetProviderDashboardURL(Providers provider) => provider switch
+    {
+        Providers.OPEN_AI => "https://platform.openai.com/usage",
+        Providers.MISTRAL => "https://console.mistral.ai/usage/",
+        Providers.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+        
+        _ => string.Empty,
+    };
 
     #endregion
 }

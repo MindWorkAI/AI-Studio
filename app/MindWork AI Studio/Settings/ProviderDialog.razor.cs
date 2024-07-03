@@ -33,6 +33,18 @@ public partial class ProviderDialog : ComponentBase
     public string DataInstanceName { get; set; } = string.Empty;
     
     /// <summary>
+    /// The chosen hostname for self-hosted providers.
+    /// </summary>
+    [Parameter]
+    public string DataHostname { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Is this provider self-hosted?
+    /// </summary>
+    [Parameter]
+    public bool IsSelfHosted { get; set; }
+    
+    /// <summary>
     /// The provider to use.
     /// </summary>
     [Parameter]
@@ -99,7 +111,8 @@ public partial class ProviderDialog : ComponentBase
                 this.dataAPIKey = requestedSecret.Secret;
                 
                 // Now, we try to load the list of available models:
-                await this.ReloadModels();
+                if(this.DataProvider is not Providers.SELF_HOSTED)
+                    await this.ReloadModels();
             }
             else
             {
@@ -142,6 +155,8 @@ public partial class ProviderDialog : ComponentBase
             InstanceName = this.DataInstanceName,
             UsedProvider = this.DataProvider,
             Model = this.DataModel,
+            IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
+            Hostname = this.DataHostname,
         };
         
         // We need to instantiate the provider to store the API key:
@@ -169,32 +184,48 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingModel(Model model)
     {
+        if(this.DataProvider is Providers.SELF_HOSTED)
+            return null;
+        
         if (model == default)
             return "Please select a model.";
         
         return null;
     }
     
-    [GeneratedRegex("^[a-zA-Z0-9 ]+$")]
+    [GeneratedRegex(@"^[a-zA-Z0-9\-_. ]+$")]
     private static partial Regex InstanceNameRegex();
+    
+    private static readonly string[] RESERVED_NAMES = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
     
     private string? ValidatingInstanceName(string instanceName)
     {
-        if(string.IsNullOrWhiteSpace(instanceName))
+        if (string.IsNullOrWhiteSpace(instanceName))
             return "Please enter an instance name.";
         
-        if(instanceName.StartsWith(' '))
-            return "The instance name must not start with a space.";
+        if (instanceName.StartsWith(' ') || instanceName.StartsWith('.'))
+            return "The instance name must not start with a space or a dot.";
         
-        if(instanceName.EndsWith(' '))
-            return "The instance name must not end with a space.";
+        if (instanceName.EndsWith(' ') || instanceName.EndsWith('.'))
+            return "The instance name must not end with a space or a dot.";
         
-        // The instance name must only contain letters, numbers, and spaces:
+        if (instanceName.StartsWith('-') || instanceName.StartsWith('_'))
+            return "The instance name must not start with a hyphen or an underscore.";
+        
+        if (instanceName.Length > 255)
+            return "The instance name must not exceed 255 characters.";
+        
         if (!InstanceNameRegex().IsMatch(instanceName))
-            return "The instance name must only contain letters, numbers, and spaces.";
+            return "The instance name must only contain letters, numbers, spaces, hyphens, underscores, and dots.";
         
-        if(instanceName.Contains("  "))
+        if (instanceName.Contains("  "))
             return "The instance name must not contain consecutive spaces.";
+        
+        if (RESERVED_NAMES.Contains(instanceName.ToUpperInvariant()))
+            return "This name is reserved and cannot be used.";
+        
+        if (instanceName.Any(c => Path.GetInvalidFileNameChars().Contains(c)))
+            return "The instance name contains invalid characters.";
         
         // The instance name must be unique:
         var lowerInstanceName = instanceName.ToLowerInvariant();
@@ -206,6 +237,9 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingAPIKey(string apiKey)
     {
+        if(this.DataProvider is Providers.SELF_HOSTED)
+            return null;
+        
         if(!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             return this.dataAPIKeyStorageIssue;
 
@@ -215,13 +249,28 @@ public partial class ProviderDialog : ComponentBase
         return null;
     }
 
-    private void Cancel() => this.MudDialog.Cancel();
+    private string? ValidatingHostname(string hostname)
+    {
+        if(this.DataProvider != Providers.SELF_HOSTED)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(hostname))
+            return "Please enter a hostname, e.g., http://localhost:1234";
+        
+        if(!hostname.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+            return "The hostname must start with either http:// or https://";
 
-    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && !string.IsNullOrWhiteSpace(this.DataInstanceName);
+        if(!Uri.TryCreate(hostname, UriKind.Absolute, out _))
+            return "The hostname is not a valid HTTP(S) URL.";
+        
+        return null;
+    }
+
+    private void Cancel() => this.MudDialog.Cancel();
     
     private async Task ReloadModels()
     {
-        var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
+        var provider = this.DataProvider.CreateProvider("temp");
         if(provider is NoProvider)
             return;
 
@@ -233,4 +282,19 @@ public partial class ProviderDialog : ComponentBase
         this.availableModels.Clear();
         this.availableModels.AddRange(orderedModels);
     }
+    
+    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && this.DataProvider != Providers.SELF_HOSTED;
+    
+    private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED;
+    
+    private bool IsSelfHostedOrNone => this.DataProvider is Providers.SELF_HOSTED or Providers.NONE;
+
+    private string GetProviderCreationURL() => this.DataProvider switch
+    {
+        Providers.OPEN_AI => "https://platform.openai.com/signup",
+        Providers.MISTRAL => "https://console.mistral.ai/",
+        Providers.ANTHROPIC => "https://console.anthropic.com/dashboard",
+        
+        _ => string.Empty,
+    };
 }
