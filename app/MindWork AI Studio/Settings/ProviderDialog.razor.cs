@@ -285,7 +285,7 @@ public partial class ProviderDialog : ComponentBase
     
     private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && this.DataProvider != Providers.SELF_HOSTED;
     
-    private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED or Providers.NONE;
+    private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED;
     
     private bool IsSelfHostedOrNone => this.DataProvider is Providers.SELF_HOSTED or Providers.NONE;
 
