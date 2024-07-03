@@ -193,26 +193,39 @@ public partial class ProviderDialog : ComponentBase
         return null;
     }
     
-    [GeneratedRegex("^[a-zA-Z0-9 ]+$")]
+    [GeneratedRegex(@"^[a-zA-Z0-9\-_. ]+$")]
     private static partial Regex InstanceNameRegex();
+    
+    private static readonly string[] RESERVED_NAMES = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
     
     private string? ValidatingInstanceName(string instanceName)
     {
-        if(string.IsNullOrWhiteSpace(instanceName))
+        if (string.IsNullOrWhiteSpace(instanceName))
             return "Please enter an instance name.";
         
-        if(instanceName.StartsWith(' '))
-            return "The instance name must not start with a space.";
+        if (instanceName.StartsWith(' ') || instanceName.StartsWith('.'))
+            return "The instance name must not start with a space or a dot.";
         
-        if(instanceName.EndsWith(' '))
-            return "The instance name must not end with a space.";
+        if (instanceName.EndsWith(' ') || instanceName.EndsWith('.'))
+            return "The instance name must not end with a space or a dot.";
         
-        // The instance name must only contain letters, numbers, and spaces:
+        if (instanceName.StartsWith('-') || instanceName.StartsWith('_'))
+            return "The instance name must not start with a hyphen or an underscore.";
+        
+        if (instanceName.Length > 255)
+            return "The instance name must not exceed 255 characters.";
+        
         if (!InstanceNameRegex().IsMatch(instanceName))
-            return "The instance name must only contain letters, numbers, and spaces.";
+            return "The instance name must only contain letters, numbers, spaces, hyphens, underscores, and dots.";
         
-        if(instanceName.Contains("  "))
+        if (instanceName.Contains("  "))
             return "The instance name must not contain consecutive spaces.";
+        
+        if (RESERVED_NAMES.Contains(instanceName.ToUpperInvariant()))
+            return "This name is reserved and cannot be used.";
+        
+        if (instanceName.Any(c => Path.GetInvalidFileNameChars().Contains(c)))
+            return "The instance name contains invalid characters.";
         
         // The instance name must be unique:
         var lowerInstanceName = instanceName.ToLowerInvariant();
