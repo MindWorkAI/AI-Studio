@@ -24,7 +24,7 @@ public readonly record struct Provider(uint Num, string Id, string InstanceName,
     public override string ToString()
     {
         if(this.IsSelfHosted)
-            return $"{this.InstanceName} ({this.UsedProvider.ToName()}, {this.Hostname}, {this.Model})";
+            return $"{this.InstanceName} ({this.UsedProvider.ToName()}, {this.Hostname})";
 
         return $"{this.InstanceName} ({this.UsedProvider.ToName()}, {this.Model})";
     }
