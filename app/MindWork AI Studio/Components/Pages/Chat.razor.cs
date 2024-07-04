@@ -23,7 +23,7 @@ public partial class Chat : ComponentBase
 
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
-    private AIStudio.Settings.Provider selectedProvider;
+    private AIStudio.Settings.Provider providerSettings;
     private ChatThread? chatThread;
     private bool isStreaming;
     private string userInput = string.Empty;
@@ -50,11 +50,11 @@ public partial class Chat : ComponentBase
 
     #endregion
 
-    private bool IsProviderSelected => this.selectedProvider.UsedProvider != Providers.NONE;
+    private bool IsProviderSelected => this.providerSettings.UsedProvider != Providers.NONE;
     
     private string ProviderPlaceholder => this.IsProviderSelected ? "Type your input here..." : "Select a provider first";
 
-    private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.selectedProvider.InstanceName}', provider '{this.selectedProvider.UsedProvider.ToName()}')" : "Select a provider first";
+    private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.providerSettings.InstanceName}', provider '{this.providerSettings.UsedProvider.ToName()}')" : "Select a provider first";
     
     private async Task SendMessage()
     {
@@ -101,7 +101,7 @@ public partial class Chat : ComponentBase
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.selectedProvider.UsedProvider.CreateProvider(this.selectedProvider.InstanceName, this.selectedProvider.Hostname), this.JsRuntime, this.SettingsManager, this.selectedProvider.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         // Disable the stream state:
         this.isStreaming = false;
