@@ -27,6 +27,7 @@ public partial class Chat : ComponentBase
     private ChatThread? chatThread;
     private bool isStreaming;
     private string userInput = string.Empty;
+    private bool workspacesVisible;
     
     // Unfortunately, we need the input field reference to clear it after sending a message.
     // This is necessary because we have to handle the key events ourselves. Otherwise,
@@ -131,5 +132,10 @@ public partial class Chat : ComponentBase
                     await this.SendMessage();
                 break;
         }
+    }
+    
+    private void ToggleWorkspaces()
+    {
+        this.workspacesVisible = !this.workspacesVisible;
     }
 }
