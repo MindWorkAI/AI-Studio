@@ -8,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(string hostname) : BaseProvider($"{hostname}/v1/"), IProvider
+public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}"), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -62,7 +62,7 @@ public sealed class ProviderSelfHosted(string hostname) : BaseProvider($"{hostna
         }, JSON_SERIALIZER_OPTIONS);
 
         // Build the HTTP post request:
-        var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+        var request = new HttpRequestMessage(HttpMethod.Post, provider.Host.ChatURL());
         
         // Set the content:
         request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
@@ -81,7 +81,7 @@ public sealed class ProviderSelfHosted(string hostname) : BaseProvider($"{hostna
         // Read the stream, line by line:
         while(!streamReader.EndOfStream)
         {
-            // Check if the token is cancelled:
+            // Check if the token is canceled:
             if(token.IsCancellationRequested)
                 yield break;
             

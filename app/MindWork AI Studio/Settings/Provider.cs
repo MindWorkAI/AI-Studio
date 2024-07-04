@@ -1,5 +1,8 @@
 using AIStudio.Provider;
 
+using Model = AIStudio.Provider.Model;
+using Host = AIStudio.Provider.SelfHosted.Host;
+
 namespace AIStudio.Settings;
 
 /// <summary>
@@ -12,7 +15,16 @@ namespace AIStudio.Settings;
 /// <param name="IsSelfHosted">Whether the provider is self-hosted.</param>
 /// <param name="Hostname">The hostname of the provider. Useful for self-hosted providers.</param>
 /// <param name="Model">The LLM model to use for chat.</param>
-public readonly record struct Provider(uint Num, string Id, string InstanceName, Providers UsedProvider, Model Model, bool IsSelfHosted = false, string Hostname = "http://localhost:1234")
+public readonly record struct Provider(
+    uint Num,
+    string Id,
+    string InstanceName,
+    Providers UsedProvider,
+    Model Model,
+    
+    bool IsSelfHosted = false,
+    string Hostname = "http://localhost:1234",
+    Host Host = Host.NONE)
 {
     #region Overrides of ValueType
 
