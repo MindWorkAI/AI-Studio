@@ -1,1 +1,41 @@
-﻿<MudText Typo="Typo.body1">TODO</MudText>
+﻿<MudTreeView T="ITreeItem<string>" ServerData="@this.LoadServerData" Items="@this.initialTreeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
+    <ItemTemplate Context="item">
+        @switch (item)
+        {
+            case TreeDivider<string>:
+                <li style="min-height: 1em;">
+                    <MudDivider Style="margin-top: 1em; width: 90%; border-width: 3pt;"/>
+                </li>
+                break;
+                
+            case TreeItemData<string> treeItem:
+                <MudTreeViewItem T="ITreeItem<string>" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
+                    <BodyContent>
+                        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                            <MudText Style="justify-self: start;">@treeItem.Text</MudText>
+                        
+                            @if (treeItem.Value is not "root" and not "temp")
+                            {
+                                <div style="justify-self: end;">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit"/>
+                                </div>
+                            }
+                        </div>
+                    </BodyContent>
+                </MudTreeViewItem>
+                break;
+                
+            case TreeButton<string> treeButton:
+                <li>
+                    <div class="mud-treeview-item-content" style="background-color: unset;">
+                        <div class="mud-treeview-item-arrow"></div>
+                        <MudButton StartIcon="@treeButton.Icon" Variant="Variant.Filled">
+                            @treeButton.Text
+                        </MudButton>
+                    </div>
+                </li>
+                break;
+        }
+    </ItemTemplate>
+</MudTreeView>
