@@ -49,7 +49,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         
         // Store the directories in the settings manager:
         SettingsManager.ConfigDirectory = configDir;
-        SettingsManager.DataDirectory = dataDir;
+        SettingsManager.DataDirectory = Path.Join(dataDir, "data");
+        Directory.CreateDirectory(SettingsManager.DataDirectory);
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
