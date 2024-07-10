@@ -41,4 +41,14 @@ public sealed class Data
     /// If and when we should look for updates.
     /// </summary>
     public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.ONCE_STARTUP;
+    
+    /// <summary>
+    /// The chat storage behavior.
+    /// </summary>
+    public WorkspaceStorageBehavior WorkspaceStorageBehavior { get; set; } = WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
+    
+    /// <summary>
+    /// The chat storage maintenance behavior.
+    /// </summary>
+    public WorkspaceStorageTemporaryMaintenancePolicy WorkspaceStorageTemporaryMaintenancePolicy { get; set; } = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS;
 }
