@@ -37,16 +37,19 @@
     </FooterContent>
 </InnerScrolling>
 
-<MudDrawer @bind-Open="@this.workspacesVisible" Width="40em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1">
-    <MudDrawerHeader>
-        <MudStack Row="@true" AlignItems="AlignItems.Center">
-            <MudText Typo="Typo.h6" Class="mr-3">
-                Your workspaces
-            </MudText>
-            <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspaces()"/>
-        </MudStack>
-    </MudDrawerHeader>
-    <MudDrawerContainer Class="ml-6">
-        <Workspaces/>
-    </MudDrawerContainer>
-</MudDrawer>
+@if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+{
+    <MudDrawer @bind-Open="@this.workspacesVisible" Width="40em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1">
+        <MudDrawerHeader>
+            <MudStack Row="@true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.h6" Class="mr-3">
+                    Your workspaces
+                </MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspaces()"/>
+            </MudStack>
+        </MudDrawerHeader>
+        <MudDrawerContainer Class="ml-6">
+            <Workspaces/>
+        </MudDrawerContainer>
+    </MudDrawer>
+}
