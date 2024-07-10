@@ -2,14 +2,9 @@
 @using AIStudio.Chat
 @using AIStudio.Settings
 
-<MudStack Row="@true" AlignItems="AlignItems.Center">
-    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-        Chats
-    </MudText>
-    <MudTooltip Text="Your workspaces" Placement="Placement.Bottom">
-        <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" Variant="Variant.Filled" Color="Color.Default" Size="Size.Large" OnClick="() => this.ToggleWorkspaces()"/>
-    </MudTooltip>
-</MudStack>
+<MudText Typo="Typo.h3" Class="mb-2 mr-3">
+    Chats
+</MudText>
 
 <MudSelect T="Provider" @bind-Value="@this.selectedProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-2 rounded-lg" Variant="Variant.Outlined">
     @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
@@ -31,6 +26,13 @@
     <FooterContent>
         <MudPaper Style="flex: 0 0 auto;">
             <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        </MudPaper>
+        <MudPaper Class="mt-1" Outlined="@true">
+            <MudToolBar WrapContent="true">
+                <MudTooltip Text="Your workspaces" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="() => this.ToggleWorkspaces()" Disabled="@(this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES)"/>
+                </MudTooltip>
+            </MudToolBar>
         </MudPaper>
     </FooterContent>
 </InnerScrolling>
