@@ -10,6 +10,8 @@ public class TreeItemData<T> : ITreeItem<T>
 
     public string Icon { get; init; } = string.Empty;
 
+    public bool IsChat { get; init; }
+
     public T? Value { get; init; }
 
     public bool Expandable { get; init; } = true;

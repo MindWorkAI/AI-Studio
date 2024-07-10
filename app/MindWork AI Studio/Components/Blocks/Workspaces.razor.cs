@@ -1,4 +1,8 @@
-﻿using AIStudio.Chat;
+﻿using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using AIStudio.Chat;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -12,7 +16,23 @@ public partial class Workspaces : ComponentBase
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
+    
+    [Parameter]
+    public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
 
+    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    {
+        WriteIndented = true,
+        AllowTrailingCommas = true,
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),
+        }
+    };
+    
     private readonly HashSet<ITreeItem<string>> initialTreeItems = new();
     
     #region Overrides of ComponentBase
@@ -52,7 +72,7 @@ public partial class Workspaces : ComponentBase
 
     #endregion
 
-    private Task<HashSet<ITreeItem<string>>> LoadServerData(ITreeItem<string>? parent)
+    private async Task<HashSet<ITreeItem<string>>> LoadServerData(ITreeItem<string>? parent)
     {
         switch (parent)
         {
@@ -77,11 +97,16 @@ public partial class Workspaces : ComponentBase
                             // Enumerate the workspace directories:
                             foreach (var workspaceDirPath in Directory.EnumerateDirectories(workspaceDirectories))
                             {
+                                // Read the `name` file:
+                                var workspaceNamePath = Path.Join(workspaceDirPath, "name");
+                                var workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+                                
                                 workspaceChildren.Add(new TreeItemData<string>
                                 {
+                                    IsChat = false,
                                     Depth = item.Depth + 1,
                                     Branch = WorkspaceBranch.WORKSPACES,
-                                    Text = Path.GetFileName(workspaceDirPath),
+                                    Text = workspaceName,
                                     Icon = Icons.Material.Filled.Description,
                                     Expandable = true,
                                     Value = workspaceDirPath,
@@ -99,18 +124,23 @@ public partial class Workspaces : ComponentBase
                             
                             // Get the workspace directory:
                             var workspaceDirPath = item.Value;
-                            
-                            if(workspaceDirPath is null)
-                                return Task.FromResult(new HashSet<ITreeItem<string>>());
+
+                            if (workspaceDirPath is null)
+                                return [];
                             
                             // Enumerate the workspace directory:
                             foreach (var chatPath in Directory.EnumerateDirectories(workspaceDirPath))
                             {
+                                // Read the `name` file:
+                                var chatNamePath = Path.Join(chatPath, "name");
+                                var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                                
                                 workspaceChildren.Add(new TreeItemData<string>
                                 {
+                                    IsChat = true,
                                     Depth = item.Depth + 1,
                                     Branch = WorkspaceBranch.WORKSPACES,
-                                    Text = Path.GetFileNameWithoutExtension(chatPath),
+                                    Text = chatName,
                                     Icon = Icons.Material.Filled.Chat,
                                     Expandable = false,
                                     Value = chatPath,
@@ -120,7 +150,7 @@ public partial class Workspaces : ComponentBase
                             workspaceChildren.Add(new TreeButton<string>(WorkspaceBranch.WORKSPACES, item.Depth + 1, "Add chat",Icons.Material.Filled.Add));
                         }
 
-                        return Task.FromResult(workspaceChildren);
+                        return workspaceChildren;
                     
                     case WorkspaceBranch.TEMPORARY_CHATS:
                         var tempChildren = new HashSet<ITreeItem<string>>();
@@ -138,24 +168,79 @@ public partial class Workspaces : ComponentBase
                         // Enumerate the workspace directories:
                         foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
                         {
+                            // Read the `name` file:
+                            var chatNamePath = Path.Join(tempChatDirPath, "name");
+                            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                            
                             tempChildren.Add(new TreeItemData<string>
                             {
+                                IsChat = true,
                                 Depth = item.Depth + 1,
                                 Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                                Text = Path.GetFileName(tempChatDirPath),
+                                Text = chatName,
                                 Icon = Icons.Material.Filled.Timer,
                                 Expandable = false,
                                 Value = tempChatDirPath,
                             });
                         }
                         
-                        return Task.FromResult(tempChildren);
+                        return tempChildren;
                 }
 
-                return Task.FromResult(new HashSet<ITreeItem<string>>());
+                return [];
             
             default:
-                return Task.FromResult(new HashSet<ITreeItem<string>>());
+                return [];
+        }
+    }
+
+    public async Task StoreChat(ChatThread thread)
+    {
+        string chatDirectory;
+        if (thread.WorkspaceId == Guid.Empty)
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", thread.ChatId.ToString());
+        else
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", thread.WorkspaceId.ToString(), thread.ChatId.ToString());
+        
+        // Ensure the directory exists:
+        Directory.CreateDirectory(chatDirectory);
+        
+        // Save the chat name:
+        var chatNamePath = Path.Join(chatDirectory, "name");
+        await File.WriteAllTextAsync(chatNamePath, thread.Name);
+        
+        // Save the thread as thread.json:
+        var chatPath = Path.Join(chatDirectory, "thread.json");
+        await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(thread, JSON_OPTIONS), Encoding.UTF8);
+    }
+
+    private async Task LoadChat(string? chatPath)
+    {
+        if(string.IsNullOrWhiteSpace(chatPath))
+        {
+            Console.WriteLine("Error: chat path is empty.");
+            return;
+        }
+
+        if(!Directory.Exists(chatPath))
+        {
+            Console.WriteLine($"Error: chat not found: '{chatPath}'");
+            return;
+        }
+
+        try
+        {
+            var chatData = await File.ReadAllTextAsync(Path.Join(chatPath, "thread.json"), Encoding.UTF8);
+            this.CurrentChatThread = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+
+            Console.WriteLine($"Loaded chat: {this.CurrentChatThread?.Name}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Console.WriteLine(e.StackTrace);
+            throw;
         }
     }
 }

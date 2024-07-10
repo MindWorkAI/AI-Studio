@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Components.Blocks;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -28,6 +29,7 @@ public partial class Chat : ComponentBase
     private bool isStreaming;
     private string userInput = string.Empty;
     private bool workspacesVisible;
+    private Workspaces? workspaces = null;
     
     // Unfortunately, we need the input field reference to clear it after sending a message.
     // This is necessary because we have to handle the key events ourselves. Otherwise,
@@ -41,11 +43,6 @@ public partial class Chat : ComponentBase
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         
-        // For now, we just create a new chat thread.
-        // Later we want the chats to be persisted
-        // across page loads and organize them in
-        // a chat history & workspaces.
-        this.chatThread = new("Thread 1", this.RNG.Next(), "You are a helpful assistant!", []);
         await base.OnInitializedAsync();
     }
 
@@ -57,25 +54,44 @@ public partial class Chat : ComponentBase
 
     private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.selectedProvider.InstanceName}', provider '{this.selectedProvider.UsedProvider.ToName()}')" : "Select a provider first";
     
+    private bool CanThreadBeSaved => this.IsProviderSelected && this.chatThread is not null && this.chatThread.Blocks.Count > 0;
+    
     private async Task SendMessage()
     {
         if (!this.IsProviderSelected)
             return;
         
+        // Create a new chat thread if necessary:
+        var threadName = this.ExtractThreadName(this.userInput);
+        this.chatThread ??= new()
+        {
+            WorkspaceId = Guid.Empty,
+            ChatId = Guid.NewGuid(),
+            Name = threadName,
+            Seed = this.RNG.Next(),
+            SystemPrompt = "You are a helpful assistant!",
+            Blocks = [],
+        };
+        
         //
         // Add the user message to the thread:
         //
         var time = DateTimeOffset.Now;
-        this.chatThread?.Blocks.Add(new ContentBlock(time, ContentType.TEXT, new ContentText
+        this.chatThread?.Blocks.Add(new ContentBlock
         {
-            // Text content properties:
-            Text = this.userInput,
-        })
-        {
-            // Content block properties:
+            Time = time,
+            ContentType = ContentType.TEXT,
             Role = ChatRole.USER,
+            Content = new ContentText
+            {
+                Text = this.userInput,
+            },
         });
 
+        // Save the chat:
+        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            await this.SaveThread();
+        
         //
         // Add the AI response to the thread:
         //
@@ -86,9 +102,12 @@ public partial class Chat : ComponentBase
             InitialRemoteWait = true,
         };
         
-        this.chatThread?.Blocks.Add(new ContentBlock(time, ContentType.TEXT, aiText)
+        this.chatThread?.Blocks.Add(new ContentBlock
         {
+            Time = time,
+            ContentType = ContentType.TEXT,
             Role = ChatRole.AI,
+            Content = aiText,
         });
         
         // Clear the input field:
@@ -103,6 +122,10 @@ public partial class Chat : ComponentBase
         // By awaiting this line, we wait for the entire
         // content to be streamed.
         await aiText.CreateFromProviderAsync(this.selectedProvider.UsedProvider.CreateProvider(this.selectedProvider.InstanceName, this.selectedProvider.Hostname), this.JsRuntime, this.SettingsManager, this.selectedProvider.Model, this.chatThread);
+        
+        // Save the chat:
+        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            await this.SaveThread();
         
         // Disable the stream state:
         this.isStreaming = false;
@@ -137,5 +160,32 @@ public partial class Chat : ComponentBase
     private void ToggleWorkspaces()
     {
         this.workspacesVisible = !this.workspacesVisible;
+    }
+    
+    private async Task SaveThread()
+    {
+        if(this.workspaces is null)
+            return;
+        
+        if(this.chatThread is null)
+            return;
+        
+        if (!this.CanThreadBeSaved)
+            return;
+        
+        await this.workspaces.StoreChat(this.chatThread);
+    }
+    
+    private string ExtractThreadName(string firstUserInput)
+    {
+        // We select the first 10 words of the user input:
+        var words = firstUserInput.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var threadName = string.Join(' ', words.Take(10));
+        
+        // If the thread name is empty, we use a default name:
+        if (string.IsNullOrWhiteSpace(threadName))
+            threadName = "Thread";
+        
+        return threadName;
     }
 }
