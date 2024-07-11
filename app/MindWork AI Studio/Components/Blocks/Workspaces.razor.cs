@@ -33,7 +33,7 @@ public partial class Workspaces : ComponentBase
         }
     };
     
-    private readonly HashSet<ITreeItem<string>> initialTreeItems = new();
+    private readonly HashSet<ITreeItem<string>> treeItems = new();
     
     #region Overrides of ComponentBase
 
@@ -46,7 +46,16 @@ public partial class Workspaces : ComponentBase
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
         
-        this.initialTreeItems.Add(new TreeItemData<string>
+        await this.LoadTreeItems();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
+    private async Task LoadTreeItems()
+    {
+        this.treeItems.Clear();
+        this.treeItems.Add(new TreeItemData<string>
         {
             Depth = 0,
             Branch = WorkspaceBranch.WORKSPACES,
@@ -54,10 +63,11 @@ public partial class Workspaces : ComponentBase
             Icon = Icons.Material.Filled.Folder,
             Expandable = true,
             Value = "root",
+            Children = await this.LoadWorkspaces(),
         });
 
-        this.initialTreeItems.Add(new TreeDivider<string>());
-        this.initialTreeItems.Add(new TreeItemData<string>
+        this.treeItems.Add(new TreeDivider<string>());
+        this.treeItems.Add(new TreeItemData<string>
         {
             Depth = 0,
             Branch = WorkspaceBranch.TEMPORARY_CHATS,
@@ -65,133 +75,109 @@ public partial class Workspaces : ComponentBase
             Icon = Icons.Material.Filled.Timer,
             Expandable = true,
             Value = "temp",
+            Children = await this.LoadTemporaryChats(),
         });
-        
-        await base.OnInitializedAsync();
     }
 
-    #endregion
-
-    private async Task<HashSet<ITreeItem<string>>> LoadServerData(ITreeItem<string>? parent)
+    private async Task<HashSet<ITreeItem<string>>> LoadTemporaryChats()
     {
-        switch (parent)
+        var tempChildren = new HashSet<ITreeItem<string>>();
+
+        //
+        // Search for workspace folders in the data directory:
+        //
+                        
+        // Get the workspace root directory: 
+        var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
+                        
+        // Ensure the directory exists:
+        Directory.CreateDirectory(temporaryDirectories);
+                        
+        // Enumerate the workspace directories:
+        foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
         {
-            case TreeItemData<string> item:
-                switch (item.Branch)
-                {
-                    case WorkspaceBranch.WORKSPACES:
-                        var workspaceChildren = new HashSet<ITreeItem<string>>();
-
-                        if (item.Depth == 0)
-                        {
-                            //
-                            // Search for workspace folders in the data directory:
-                            //
-
-                            // Get the workspace root directory: 
-                            var workspaceDirectories = Path.Join(SettingsManager.DataDirectory, "workspaces");
-
-                            // Ensure the directory exists:
-                            Directory.CreateDirectory(workspaceDirectories);
-
-                            // Enumerate the workspace directories:
-                            foreach (var workspaceDirPath in Directory.EnumerateDirectories(workspaceDirectories))
-                            {
-                                // Read the `name` file:
-                                var workspaceNamePath = Path.Join(workspaceDirPath, "name");
-                                var workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
-                                
-                                workspaceChildren.Add(new TreeItemData<string>
-                                {
-                                    IsChat = false,
-                                    Depth = item.Depth + 1,
-                                    Branch = WorkspaceBranch.WORKSPACES,
-                                    Text = workspaceName,
-                                    Icon = Icons.Material.Filled.Description,
-                                    Expandable = true,
-                                    Value = workspaceDirPath,
-                                });
-                            }
+            // Read the `name` file:
+            var chatNamePath = Path.Join(tempChatDirPath, "name");
+            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
                             
-                            workspaceChildren.Add(new TreeButton<string>(WorkspaceBranch.WORKSPACES, item.Depth + 1, "Add workspace",Icons.Material.Filled.Add));
-                        }
-                        
-                        else if (item.Depth == 1)
-                        {
-                            //
-                            // Search for workspace chats in the workspace directory:
-                            //
-                            
-                            // Get the workspace directory:
-                            var workspaceDirPath = item.Value;
-
-                            if (workspaceDirPath is null)
-                                return [];
-                            
-                            // Enumerate the workspace directory:
-                            foreach (var chatPath in Directory.EnumerateDirectories(workspaceDirPath))
-                            {
-                                // Read the `name` file:
-                                var chatNamePath = Path.Join(chatPath, "name");
-                                var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
-                                
-                                workspaceChildren.Add(new TreeItemData<string>
-                                {
-                                    IsChat = true,
-                                    Depth = item.Depth + 1,
-                                    Branch = WorkspaceBranch.WORKSPACES,
-                                    Text = chatName,
-                                    Icon = Icons.Material.Filled.Chat,
-                                    Expandable = false,
-                                    Value = chatPath,
-                                });
-                            }
-                            
-                            workspaceChildren.Add(new TreeButton<string>(WorkspaceBranch.WORKSPACES, item.Depth + 1, "Add chat",Icons.Material.Filled.Add));
-                        }
-
-                        return workspaceChildren;
-                    
-                    case WorkspaceBranch.TEMPORARY_CHATS:
-                        var tempChildren = new HashSet<ITreeItem<string>>();
-
-                        //
-                        // Search for workspace folders in the data directory:
-                        //
-                        
-                        // Get the workspace root directory: 
-                        var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
-                        
-                        // Ensure the directory exists:
-                        Directory.CreateDirectory(temporaryDirectories);
-                        
-                        // Enumerate the workspace directories:
-                        foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
-                        {
-                            // Read the `name` file:
-                            var chatNamePath = Path.Join(tempChatDirPath, "name");
-                            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
-                            
-                            tempChildren.Add(new TreeItemData<string>
-                            {
-                                IsChat = true,
-                                Depth = item.Depth + 1,
-                                Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                                Text = chatName,
-                                Icon = Icons.Material.Filled.Timer,
-                                Expandable = false,
-                                Value = tempChatDirPath,
-                            });
-                        }
-                        
-                        return tempChildren;
-                }
-
-                return [];
-            
-            default:
-                return [];
+            tempChildren.Add(new TreeItemData<string>
+            {
+                IsChat = true,
+                Depth = 1,
+                Branch = WorkspaceBranch.TEMPORARY_CHATS,
+                Text = chatName,
+                Icon = Icons.Material.Filled.Timer,
+                Expandable = false,
+                Value = tempChatDirPath,
+            });
         }
+                        
+        return tempChildren;
+    }
+    
+    private async Task<HashSet<ITreeItem<string>>> LoadWorkspaces()
+    {
+        var workspaces = new HashSet<ITreeItem<string>>();
+        
+        //
+        // Search for workspace folders in the data directory:
+        //
+
+        // Get the workspace root directory: 
+        var workspaceDirectories = Path.Join(SettingsManager.DataDirectory, "workspaces");
+
+        // Ensure the directory exists:
+        Directory.CreateDirectory(workspaceDirectories);
+
+        // Enumerate the workspace directories:
+        foreach (var workspaceDirPath in Directory.EnumerateDirectories(workspaceDirectories))
+        {
+            // Read the `name` file:
+            var workspaceNamePath = Path.Join(workspaceDirPath, "name");
+            var workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+                                
+            workspaces.Add(new TreeItemData<string>
+            {
+                IsChat = false,
+                Depth = 1,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = workspaceName,
+                Icon = Icons.Material.Filled.Description,
+                Expandable = true,
+                Value = workspaceDirPath,
+                Children = await this.LoadWorkspaceChats(workspaceDirPath),
+            });
+        }
+                            
+        workspaces.Add(new TreeButton<string>(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.Add));
+        return workspaces;
+    }
+
+    private async Task<HashSet<ITreeItem<string>>> LoadWorkspaceChats(string workspacePath)
+    {
+        var workspaceChats = new HashSet<ITreeItem<string>>();
+        
+        // Enumerate the workspace directory:
+        foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
+        {
+            // Read the `name` file:
+            var chatNamePath = Path.Join(chatPath, "name");
+            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                                
+            workspaceChats.Add(new TreeItemData<string>
+            {
+                IsChat = true,
+                Depth = 2,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = chatName,
+                Icon = Icons.Material.Filled.Chat,
+                Expandable = false,
+                Value = chatPath,
+            });
+        }
+                            
+        workspaceChats.Add(new TreeButton<string>(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.Add));
+        return workspaceChats;
     }
 
     public async Task StoreChat(ChatThread thread)
@@ -212,6 +198,10 @@ public partial class Workspaces : ComponentBase
         // Save the thread as thread.json:
         var chatPath = Path.Join(chatDirectory, "thread.json");
         await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(thread, JSON_OPTIONS), Encoding.UTF8);
+        
+        // Reload the tree items:
+        await this.LoadTreeItems();
+        this.StateHasChanged();
     }
 
     private async Task LoadChat(string? chatPath)

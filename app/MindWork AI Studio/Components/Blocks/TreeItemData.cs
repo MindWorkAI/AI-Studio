@@ -16,5 +16,5 @@ public class TreeItemData<T> : ITreeItem<T>
 
     public bool Expandable { get; init; } = true;
 
-    public HashSet<ITreeItem<T>> Children { get; } = [];
+    public HashSet<ITreeItem<T>> Children { get; init; } = [];
 }

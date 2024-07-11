@@ -1,4 +1,4 @@
-﻿<MudTreeView T="ITreeItem<string>" ServerData="@this.LoadServerData" Items="@this.initialTreeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
+﻿<MudTreeView T="ITreeItem<string>" Items="@this.treeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
     <ItemTemplate Context="item">
         @switch (item)
         {
