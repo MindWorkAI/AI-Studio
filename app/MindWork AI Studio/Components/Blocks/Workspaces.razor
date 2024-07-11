@@ -1,17 +1,17 @@
-﻿<MudTreeView T="ITreeItem<string>" Items="@this.treeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
+﻿<MudTreeView T="ITreeItem" Items="@this.treeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
     <ItemTemplate Context="item">
         @switch (item)
         {
-            case TreeDivider<string>:
+            case TreeDivider:
                 <li style="min-height: 1em;">
                     <MudDivider Style="margin-top: 1em; width: 90%; border-width: 3pt;"/>
                 </li>
                 break;
                 
-            case TreeItemData<string> treeItem:
+            case TreeItemData treeItem:
                 @if (treeItem.IsChat)
                 {
-                    <MudTreeViewItem T="ITreeItem<string>" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Value)">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Path, true)">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
@@ -25,7 +25,7 @@
                 }
                 else
                 {
-                    <MudTreeViewItem T="ITreeItem<string>" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
@@ -35,7 +35,7 @@
                 }
                 break;
                 
-            case TreeButton<string> treeButton:
+            case TreeButton treeButton:
                 <li>
                     <div class="mud-treeview-item-content" style="background-color: unset;">
                         <div class="mud-treeview-item-arrow"></div>

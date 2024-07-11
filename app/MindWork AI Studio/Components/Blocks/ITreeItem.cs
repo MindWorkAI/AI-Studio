@@ -1,3 +1,3 @@
 namespace AIStudio.Components.Blocks;
 
-public interface ITreeItem<out T>;
+public interface ITreeItem;

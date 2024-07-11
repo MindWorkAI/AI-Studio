@@ -1,6 +1,6 @@
 namespace AIStudio.Components.Blocks;
 
-public class TreeItemData<T> : ITreeItem<T>
+public class TreeItemData : ITreeItem
 {
     public WorkspaceBranch Branch { get; init; } = WorkspaceBranch.NONE;
     
@@ -12,9 +12,9 @@ public class TreeItemData<T> : ITreeItem<T>
 
     public bool IsChat { get; init; }
 
-    public T? Value { get; init; }
+    public string Path { get; init; } = string.Empty;
 
     public bool Expandable { get; init; } = true;
 
-    public HashSet<ITreeItem<T>> Children { get; init; } = [];
+    public HashSet<ITreeItem> Children { get; init; } = [];
 }
