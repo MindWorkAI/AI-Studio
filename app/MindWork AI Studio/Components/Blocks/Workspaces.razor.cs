@@ -3,9 +3,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Components.CommonDialogs;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
 
 namespace AIStudio.Components.Blocks;
 
@@ -13,6 +16,9 @@ public partial class Workspaces : ComponentBase
 {
     [Inject]
     private SettingsManager SettingsManager { get; set; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
@@ -115,7 +121,17 @@ public partial class Workspaces : ComponentBase
         return tempChildren;
     }
     
-    private async Task<HashSet<ITreeItem<string>>> LoadWorkspaces()
+    private async Task<string> LoadWorkspaceName(Guid workspaceId)
+    {
+        if(workspaceId == Guid.Empty)
+            return string.Empty;
+        
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        return await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+    }
+    
+    private async Task<HashSet<ITreeItem>> LoadWorkspaces()
     {
         var workspaces = new HashSet<ITreeItem>();
         
@@ -204,33 +220,69 @@ public partial class Workspaces : ComponentBase
         this.StateHasChanged();
     }
 
-    private async Task LoadChat(string? chatPath)
+    private async Task<ChatThread?> LoadChat(string? chatPath, bool switchToChat)
     {
         if(string.IsNullOrWhiteSpace(chatPath))
-        {
-            Console.WriteLine("Error: chat path is empty.");
-            return;
-        }
+            return null;
 
         if(!Directory.Exists(chatPath))
-        {
-            Console.WriteLine($"Error: chat not found: '{chatPath}'");
-            return;
-        }
+            return null;
 
         try
         {
             var chatData = await File.ReadAllTextAsync(Path.Join(chatPath, "thread.json"), Encoding.UTF8);
-            this.CurrentChatThread = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
-            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-
-            Console.WriteLine($"Loaded chat: {this.CurrentChatThread?.Name}");
+            var chat = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
+            if (switchToChat)
+            {
+                this.CurrentChatThread = chat;
+                await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+            }
+            
+            return chat;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            Console.WriteLine(e.StackTrace);
-            throw;
+        }
+        
+        return null;
+    }
+
+    private async Task DeleteChat(string? chatPath)
+    {
+        var chat = await this.LoadChat(chatPath, false);
+        if (chat is null)
+            return;
+        
+        var workspaceName = await this.LoadWorkspaceName(chat.WorkspaceId);
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", (chat.WorkspaceId == Guid.Empty) switch
+                { 
+                    true => $"Are you sure you want to delete the temporary chat '{chat.Name}'?",
+                    false => $"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?",
+                }
+            },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+        
+        string chatDirectory;
+        if (chat.WorkspaceId == Guid.Empty)
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
+        else
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+
+        Directory.Delete(chatDirectory, true);
+        await this.LoadTreeItems();
+        
+        if(this.CurrentChatThread?.ChatId == chat.ChatId)
+        {
+            this.CurrentChatThread = null;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
         }
     }
 }

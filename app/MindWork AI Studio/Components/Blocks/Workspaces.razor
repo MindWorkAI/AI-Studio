@@ -17,7 +17,7 @@
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
                                 <div style="justify-self: end;">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit"/>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.DeleteChat(treeItem.Path)"/>
                                 </div>
                             </div>
                         </BodyContent>
