@@ -28,6 +28,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
     [Inject]
     public IDialogService DialogService { get; set; } = null!;
 
+    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Bottom;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     private AIStudio.Settings.Provider selectedProvider;

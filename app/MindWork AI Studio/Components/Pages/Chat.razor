@@ -29,29 +29,27 @@
         </MudPaper>
         <MudPaper Class="mt-1" Outlined="@true">
             <MudToolBar WrapContent="true">
-                
                 @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
                 {
-                    <MudTooltip Text="Your workspaces" Placement="Placement.Bottom">
+                    <MudTooltip Text="Your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="() => this.ToggleWorkspaces()"/>
                     </MudTooltip>
                 }
 
                 @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
                 {
-                    <MudTooltip Text="Save chat" Placement="Placement.Bottom">
+                    <MudTooltip Text="Save chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="() => this.SaveThread()" Disabled="@(!this.CanThreadBeSaved)"/>
                     </MudTooltip>
                 }
 
-                <MudTooltip Text="Start new chat" Placement="Placement.Bottom">
+                <MudTooltip Text="Start new chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="() => this.StartNewChat()"/>
                 </MudTooltip>
 
-                <MudTooltip Text="Move chat to workspace" Placement="Placement.Bottom">
+                <MudTooltip Text="Move chat to workspace" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)"/>
                 </MudTooltip>
-
             </MudToolBar>
         </MudPaper>
     </FooterContent>
