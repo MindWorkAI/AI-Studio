@@ -285,4 +285,26 @@ public partial class Workspaces : ComponentBase
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
         }
     }
+
+    private async Task RenameChat(string? chatPath)
+    {
+        var chat = await this.LoadChat(chatPath, false);
+        if (chat is null)
+            return;
+        
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Please enter a new or edit the name for your chat '{chat.Name}':" },
+            { "UserInput", chat.Name },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<RenameDialog>("Rename Chat", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+
+        chat.Name = (dialogResult.Data as string)!;
+        await this.StoreChat(chat);
+        await this.LoadTreeItems();
+    }
 }

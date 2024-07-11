@@ -16,8 +16,13 @@
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
                                 <div style="justify-self: end;">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit"/>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.DeleteChat(treeItem.Path)"/>
+                                    <MudTooltip Text="Rename" Placement="Placement.Right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.RenameChat(treeItem.Path)"/>
+                                    </MudTooltip>
+
+                                    <MudTooltip Text="Delete" Placement="Placement.Right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.DeleteChat(treeItem.Path)"/>
+                                    </MudTooltip>
                                 </div>
                             </div>
                         </BodyContent>
