@@ -44,6 +44,10 @@
                     </MudTooltip>
                 }
 
+                <MudTooltip Text="Start new chat" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="() => this.StartNewChat()"/>
+                </MudTooltip>
+
                 <MudTooltip Text="Move chat to workspace" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)"/>
                 </MudTooltip>

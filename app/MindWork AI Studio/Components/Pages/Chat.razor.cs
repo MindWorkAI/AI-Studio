@@ -1,17 +1,20 @@
 using AIStudio.Chat;
 using AIStudio.Components.Blocks;
+using AIStudio.Components.CommonDialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
+using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
+
 namespace AIStudio.Components.Pages;
 
 /// <summary>
 /// The chat page.
 /// </summary>
-public partial class Chat : ComponentBase
+public partial class Chat : ComponentBase, IAsyncDisposable
 {
     [Inject]
     private SettingsManager SettingsManager { get; set; } = null!;
@@ -21,15 +24,19 @@ public partial class Chat : ComponentBase
 
     [Inject]
     public Random RNG { get; set; } = null!;
+    
+    [Inject]
+    public IDialogService DialogService { get; set; } = null!;
 
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     private AIStudio.Settings.Provider selectedProvider;
     private ChatThread? chatThread;
+    private bool hasUnsavedChanges;
     private bool isStreaming;
     private string userInput = string.Empty;
     private bool workspacesVisible;
-    private Workspaces? workspaces = null;
+    private Workspaces? workspaces;
     
     // Unfortunately, we need the input field reference to clear it after sending a message.
     // This is necessary because we have to handle the key events ourselves. Otherwise,
@@ -90,8 +97,12 @@ public partial class Chat : ComponentBase
 
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        {
             await this.SaveThread();
-        
+            this.hasUnsavedChanges = false;
+            this.StateHasChanged();
+        }
+
         //
         // Add the AI response to the thread:
         //
@@ -116,6 +127,7 @@ public partial class Chat : ComponentBase
         
         // Enable the stream state for the chat component:
         this.isStreaming = true;
+        this.hasUnsavedChanges = true;
         this.StateHasChanged();
         
         // Use the selected provider to get the AI response.
@@ -125,8 +137,11 @@ public partial class Chat : ComponentBase
         
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        {
             await this.SaveThread();
-        
+            this.hasUnsavedChanges = false;
+        }
+
         // Disable the stream state:
         this.isStreaming = false;
         this.StateHasChanged();
@@ -134,6 +149,7 @@ public partial class Chat : ComponentBase
 
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
+        this.hasUnsavedChanges = true;
         var key = keyEvent.Code.ToLowerInvariant();
         
         // Was the enter key (either enter or numpad enter) pressed?
@@ -174,6 +190,7 @@ public partial class Chat : ComponentBase
             return;
         
         await this.workspaces.StoreChat(this.chatThread);
+        this.hasUnsavedChanges = false;
     }
     
     private string ExtractThreadName(string firstUserInput)
@@ -188,4 +205,39 @@ public partial class Chat : ComponentBase
         
         return threadName;
     }
+
+    private async Task StartNewChat()
+    {
+        if (this.hasUnsavedChanges)
+        {
+            var dialogParameters = new DialogParameters
+            {
+                { "Message", "Are you sure you want to start a new chat? All unsaved changes will be lost." },
+            };
+        
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult.Canceled)
+                return;
+        }
+        
+        this.chatThread = null;
+        this.isStreaming = false;
+        this.hasUnsavedChanges = false;
+        this.userInput = string.Empty;
+        await this.inputField.Clear();
+    }
+
+    #region Implementation of IAsyncDisposable
+
+    public async ValueTask DisposeAsync()
+    {
+        if(this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        {
+            await this.SaveThread();
+            this.hasUnsavedChanges = false;
+        }
+    }
+
+    #endregion
 }
