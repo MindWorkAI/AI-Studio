@@ -165,7 +165,7 @@ public partial class Workspaces : ComponentBase
             });
         }
                             
-        workspaces.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.Add));
+        workspaces.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.Add, this.AddWorkspace));
         return workspaces;
     }
 
@@ -192,7 +192,7 @@ public partial class Workspaces : ComponentBase
             });
         }
                             
-        workspaceChats.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.Add));
+        workspaceChats.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.Add, () => this.AddChat(workspacePath)));
         return workspaceChats;
     }
 
@@ -296,9 +296,10 @@ public partial class Workspaces : ComponentBase
         {
             { "Message", $"Please enter a new or edit the name for your chat '{chat.Name}':" },
             { "UserInput", chat.Name },
+            { "ConfirmText", "Rename" },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<RenameDialog>("Rename Chat", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Chat", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult.Canceled)
             return;
@@ -306,5 +307,34 @@ public partial class Workspaces : ComponentBase
         chat.Name = (dialogResult.Data as string)!;
         await this.StoreChat(chat);
         await this.LoadTreeItems();
+    }
+
+    private async Task AddWorkspace()
+    {
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", "Please name your workspace:" },
+            { "UserInput", string.Empty },
+            { "ConfirmText", "Add workspace" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Add Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+        
+        var workspaceId = Guid.NewGuid();
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
+        Directory.CreateDirectory(workspacePath);
+        
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        await File.WriteAllTextAsync(workspaceNamePath, (dialogResult.Data as string)!, Encoding.UTF8);
+        
+        await this.LoadTreeItems();
+    }
+    
+    private async Task AddChat(string workspacePath)
+    {
+        
     }
 }

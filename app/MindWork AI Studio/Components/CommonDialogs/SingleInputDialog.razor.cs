@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.CommonDialogs;
 
-public partial class RenameDialog : ComponentBase
+public partial class SingleInputDialog : ComponentBase
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
@@ -12,6 +12,9 @@ public partial class RenameDialog : ComponentBase
     
     [Parameter]
     public string UserInput { get; set; } = string.Empty;
+    
+    [Parameter]
+    public string ConfirmText { get; set; } = "OK";
 
     private void Cancel() => this.MudDialog.Cancel();
     
