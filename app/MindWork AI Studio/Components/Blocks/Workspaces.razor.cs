@@ -108,7 +108,7 @@ public partial class Workspaces : ComponentBase
                             
             tempChildren.Add(new TreeItemData
             {
-                IsChat = true,
+                Type = TreeItemType.CHAT,
                 Depth = 1,
                 Branch = WorkspaceBranch.TEMPORARY_CHATS,
                 Text = chatName,
@@ -154,7 +154,7 @@ public partial class Workspaces : ComponentBase
                                 
             workspaces.Add(new TreeItemData
             {
-                IsChat = false,
+                Type = TreeItemType.WORKSPACE,
                 Depth = 1,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = workspaceName,
@@ -182,7 +182,7 @@ public partial class Workspaces : ComponentBase
                                 
             workspaceChats.Add(new TreeItemData
             {
-                IsChat = true,
+                Type = TreeItemType.CHAT,
                 Depth = 2,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = chatName,
@@ -308,6 +308,31 @@ public partial class Workspaces : ComponentBase
         await this.StoreChat(chat);
         await this.LoadTreeItems();
     }
+    
+    private async Task RenameWorkspace(string? workspacePath)
+    {
+        if(workspacePath is null)
+            return;
+        
+        var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
+        var workspaceName = await this.LoadWorkspaceName(workspaceId);
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Please enter a new or edit the name for your workspace '{workspaceName}':" },
+            { "UserInput", workspaceName },
+            { "ConfirmText", "Rename" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+        
+        var alteredWorkspaceName = (dialogResult.Data as string)!;
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        await File.WriteAllTextAsync(workspaceNamePath, alteredWorkspaceName, Encoding.UTF8);
+        await this.LoadTreeItems();
+    }
 
     private async Task AddWorkspace()
     {
@@ -330,6 +355,31 @@ public partial class Workspaces : ComponentBase
         var workspaceNamePath = Path.Join(workspacePath, "name");
         await File.WriteAllTextAsync(workspaceNamePath, (dialogResult.Data as string)!, Encoding.UTF8);
         
+        await this.LoadTreeItems();
+    }
+    
+    private async Task DeleteWorkspace(string? workspacePath)
+    {
+        if(workspacePath is null)
+            return;
+        
+        var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
+        var workspaceName = await this.LoadWorkspaceName(workspaceId);
+        
+        // Determine how many chats are in the workspace:
+        var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
+        
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete the workspace '{workspaceName}'? This will also delete {chatCount} chat(s) in this workspace." },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+        
+        Directory.Delete(workspacePath, true);
         await this.LoadTreeItems();
     }
     

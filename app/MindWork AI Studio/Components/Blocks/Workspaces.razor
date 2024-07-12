@@ -9,9 +9,9 @@
                 break;
                 
             case TreeItemData treeItem:
-                @if (treeItem.IsChat)
+                @if (treeItem.Type is TreeItemType.CHAT)
                 {
-                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Path, true)">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Path, true)">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
@@ -28,9 +28,28 @@
                         </BodyContent>
                     </MudTreeViewItem>
                 }
+                else if (treeItem.Type is TreeItemType.WORKSPACE)
+                {
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
+                        <BodyContent>
+                            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                <MudText Style="justify-self: start;">@treeItem.Text</MudText>
+                                <div style="justify-self: end;">
+                                    <MudTooltip Text="Rename" Placement="Placement.Right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.RenameWorkspace(treeItem.Path)"/>
+                                    </MudTooltip>
+
+                                    <MudTooltip Text="Delete" Placement="Placement.Right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.DeleteWorkspace(treeItem.Path)"/>
+                                    </MudTooltip>
+                                </div>
+                            </div>
+                        </BodyContent>
+                    </MudTreeViewItem>
+                }
                 else
                 {
-                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" LoadingIconColor="@Color.Info" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>

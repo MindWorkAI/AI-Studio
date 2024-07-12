@@ -10,7 +10,7 @@ public class TreeItemData : ITreeItem
 
     public string Icon { get; init; } = string.Empty;
 
-    public bool IsChat { get; init; }
+    public TreeItemType Type { get; init; }
 
     public string Path { get; init; } = string.Empty;
 
