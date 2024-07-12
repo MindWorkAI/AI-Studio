@@ -51,7 +51,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -350,10 +350,27 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         await this.inputField.Clear();
     }
 
+    private void ResetState()
+    {
+        this.isStreaming = false;
+        this.hasUnsavedChanges = false;
+        this.userInput = string.Empty;
+        this.currentWorkspaceId = Guid.Empty;
+        this.currentWorkspaceName = string.Empty;
+        this.chatThread = null;
+    }
+
     #region Overrides of MSGComponentBase
 
     public override Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
+        switch (triggeredEvent)
+        {
+            case Event.RESET_CHAT_STATE:
+                this.ResetState();
+                break;
+        }
+        
         return Task.CompletedTask;
     }
 

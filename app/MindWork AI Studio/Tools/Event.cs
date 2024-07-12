@@ -13,4 +13,5 @@ public enum Event
     
     // Chat events:
     HAS_CHAT_UNSAVED_CHANGES,
+    RESET_CHAT_STATE,
 }
