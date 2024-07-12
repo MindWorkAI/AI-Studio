@@ -36,6 +36,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
     private bool hasUnsavedChanges;
     private bool isStreaming;
     private string userInput = string.Empty;
+    private string currentWorkspaceName = string.Empty;
     private bool workspacesVisible;
     private Workspaces? workspaces;
     
@@ -71,15 +72,25 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         
         // Create a new chat thread if necessary:
         var threadName = this.ExtractThreadName(this.userInput);
-        this.chatThread ??= new()
+
+        if (this.chatThread is null)
         {
-            WorkspaceId = Guid.Empty,
-            ChatId = Guid.NewGuid(),
-            Name = threadName,
-            Seed = this.RNG.Next(),
-            SystemPrompt = "You are a helpful assistant!",
-            Blocks = [],
-        };
+            this.chatThread = new()
+            {
+                WorkspaceId = Guid.Empty,
+                ChatId = Guid.NewGuid(),
+                Name = threadName,
+                Seed = this.RNG.Next(),
+                SystemPrompt = "You are a helpful assistant!",
+                Blocks = [],
+            };
+        }
+        else
+        {
+            // Set the thread name if it is empty:
+            if (string.IsNullOrWhiteSpace(this.chatThread.Name))
+                this.chatThread.Name = threadName;
+        }
         
         //
         // Add the user message to the thread:
@@ -226,6 +237,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
+        this.currentWorkspaceName = string.Empty;
         await this.inputField.Clear();
     }
 
@@ -267,6 +279,21 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         
         this.chatThread!.WorkspaceId = workspaceId;
         await this.SaveThread();
+        
+        this.currentWorkspaceName = await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
+    }
+
+    private async Task LoadedChatChanged()
+    {
+        if(this.workspaces is null)
+            return;
+        
+        this.isStreaming = false;
+        this.hasUnsavedChanges = false;
+        this.userInput = string.Empty;
+        this.currentWorkspaceName = this.chatThread is null ? string.Empty : await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
+        
+        await this.inputField.Clear();
     }
 
     #region Implementation of IAsyncDisposable

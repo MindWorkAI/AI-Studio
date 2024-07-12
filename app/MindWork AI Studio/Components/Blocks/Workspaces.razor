@@ -14,7 +14,16 @@
                     <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Path, true)">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                <MudText Style="justify-self: start;">@treeItem.Text</MudText>
+                                <MudText Style="justify-self: start;">
+                                    @if (string.IsNullOrWhiteSpace(treeItem.Text))
+                                    {
+                                        @("Empty chat")
+                                    }
+                                    else
+                                    {
+                                        @treeItem.Text
+                                    }
+                                </MudText>
                                 <div style="justify-self: end;">
                                     
                                     <MudTooltip Text="Move to workspace" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">

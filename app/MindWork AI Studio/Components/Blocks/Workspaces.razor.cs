@@ -20,11 +20,17 @@ public partial class Workspaces : ComponentBase
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
     
+    [Inject]
+    public Random RNG { get; set; } = null!;
+    
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
     
     [Parameter]
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
+
+    [Parameter]
+    public Func<Task> LoadedChatWasChanged { get; set; } = () => Task.CompletedTask;
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
     
@@ -123,7 +129,7 @@ public partial class Workspaces : ComponentBase
         return tempChildren;
     }
     
-    private async Task<string> LoadWorkspaceName(Guid workspaceId)
+    public async Task<string> LoadWorkspaceName(Guid workspaceId)
     {
         if(workspaceId == Guid.Empty)
             return string.Empty;
@@ -238,6 +244,7 @@ public partial class Workspaces : ComponentBase
             {
                 this.CurrentChatThread = chat;
                 await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+                await this.LoadedChatWasChanged();
             }
             
             return chat;
@@ -289,6 +296,7 @@ public partial class Workspaces : ComponentBase
         {
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+            await this.LoadedChatWasChanged();
         }
     }
 
@@ -429,11 +437,12 @@ public partial class Workspaces : ComponentBase
         // Update the chat's workspace:
         chat.WorkspaceId = workspaceId;
         
-        // Handle the case, where the chat is the active chat:
+        // Handle the case where the chat is the active chat:
         if (this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread = chat;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+            await this.LoadedChatWasChanged();
         }
         
         await this.StoreChat(chat);
@@ -441,6 +450,21 @@ public partial class Workspaces : ComponentBase
     
     private async Task AddChat(string workspacePath)
     {
+        var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
+        var chat = new ChatThread
+        {
+            WorkspaceId = workspaceId,
+            ChatId = Guid.NewGuid(),
+            Name = string.Empty,
+            Seed = this.RNG.Next(),
+            SystemPrompt = "You are a helpful assistant!",
+            Blocks = [],
+        };
         
+        var chatPath = Path.Join(workspacePath, chat.ChatId.ToString());
+        
+        await this.StoreChat(chat);
+        await this.LoadChat(chatPath, switchToChat: true);
+        await this.LoadTreeItems();
     }
 }

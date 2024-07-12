@@ -3,7 +3,14 @@
 @using AIStudio.Settings
 
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-    Chats
+    @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
+    {
+        @($"Chat in Workspace \"{this.currentWorkspaceName}\"")
+    }
+    else
+    {
+        @("Temporary Chat")
+    }
 </MudText>
 
 <MudSelect T="Provider" @bind-Value="@this.selectedProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-2 rounded-lg" Variant="Variant.Outlined">
@@ -67,7 +74,7 @@
             </MudStack>
         </MudDrawerHeader>
         <MudDrawerContainer Class="ml-6">
-            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" LoadedChatWasChanged="this.LoadedChatChanged"/>
         </MudDrawerContainer>
     </MudDrawer>
 }
