@@ -37,6 +37,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
     private bool isStreaming;
     private string userInput = string.Empty;
     private string currentWorkspaceName = string.Empty;
+    private Guid currentWorkspaceId = Guid.Empty;
     private bool workspacesVisible;
     private Workspaces? workspaces;
     
@@ -64,6 +65,8 @@ public partial class Chat : ComponentBase, IAsyncDisposable
     private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.selectedProvider.InstanceName}', provider '{this.selectedProvider.UsedProvider.ToName()}')" : "Select a provider first";
     
     private bool CanThreadBeSaved => this.chatThread is not null && this.chatThread.Blocks.Count > 0;
+
+    private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
     
     private async Task SendMessage()
     {
@@ -77,7 +80,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         {
             this.chatThread = new()
             {
-                WorkspaceId = Guid.Empty,
+                WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = threadName,
                 Seed = this.RNG.Next(),
@@ -218,7 +221,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         return threadName;
     }
 
-    private async Task StartNewChat()
+    private async Task StartNewChat(bool useSameWorkspace = false)
     {
         if (this.hasUnsavedChanges)
         {
@@ -233,11 +236,29 @@ public partial class Chat : ComponentBase, IAsyncDisposable
                 return;
         }
         
-        this.chatThread = null;
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
-        this.currentWorkspaceName = string.Empty;
+
+        if (!useSameWorkspace)
+        {
+            this.chatThread = null;
+            this.currentWorkspaceId = Guid.Empty;
+            this.currentWorkspaceName = string.Empty;
+        }
+        else
+        {
+            this.chatThread = new()
+            {
+                WorkspaceId = this.currentWorkspaceId,
+                ChatId = Guid.NewGuid(),
+                Name = string.Empty,
+                Seed = this.RNG.Next(),
+                SystemPrompt = "You are a helpful assistant!",
+                Blocks = [],
+            };
+        }
+
         await this.inputField.Clear();
     }
 
@@ -248,6 +269,19 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         
         if(this.workspaces is null)
             return;
+        
+        if (this.hasUnsavedChanges)
+        {
+            var confirmationDialogParameters = new DialogParameters
+            {
+                { "Message", "Are you sure you want to move this chat? All unsaved changes will be lost." },
+            };
+        
+            var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
+            var confirmationDialogResult = await confirmationDialogReference.Result;
+            if (confirmationDialogResult.Canceled)
+                return;
+        }
         
         var dialogParameters = new DialogParameters
         {
@@ -280,6 +314,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         this.chatThread!.WorkspaceId = workspaceId;
         await this.SaveThread();
         
+        this.currentWorkspaceId = this.chatThread.WorkspaceId;
         this.currentWorkspaceName = await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
     }
 
@@ -291,6 +326,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
+        this.currentWorkspaceId = this.chatThread?.WorkspaceId ?? Guid.Empty;
         this.currentWorkspaceName = this.chatThread is null ? string.Empty : await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
         
         await this.inputField.Clear();
