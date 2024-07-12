@@ -1,0 +1,15 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1">@this.Message</MudText>
+        <MudList Clickable="@true" @bind-SelectedValue="@this.selectedWorkspace">
+            @foreach (var (workspaceName, workspaceId) in this.workspaces)
+            {
+                <MudListItem Text="@workspaceName" Icon="@Icons.Material.Filled.Description" Value="@workspaceId" />
+            }
+        </MudList>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info">@this.ConfirmText</MudButton>
+    </DialogActions>
+</MudDialog>

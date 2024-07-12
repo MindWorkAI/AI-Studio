@@ -48,7 +48,7 @@
                 </MudTooltip>
 
                 <MudTooltip Text="Move chat to workspace" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
                 </MudTooltip>
             </MudToolBar>
         </MudPaper>

@@ -248,28 +248,32 @@ public partial class Workspaces : ComponentBase
         return null;
     }
 
-    private async Task DeleteChat(string? chatPath)
+    public async Task DeleteChat(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
     {
         var chat = await this.LoadChat(chatPath, false);
         if (chat is null)
             return;
-        
-        var workspaceName = await this.LoadWorkspaceName(chat.WorkspaceId);
-        var dialogParameters = new DialogParameters
+
+        if (askForConfirmation)
         {
-            { "Message", (chat.WorkspaceId == Guid.Empty) switch
-                { 
-                    true => $"Are you sure you want to delete the temporary chat '{chat.Name}'?",
-                    false => $"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?",
-                }
-            },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
-            return;
-        
+            var workspaceName = await this.LoadWorkspaceName(chat.WorkspaceId);
+            var dialogParameters = new DialogParameters
+            {
+                {
+                    "Message", (chat.WorkspaceId == Guid.Empty) switch
+                    {
+                        true => $"Are you sure you want to delete the temporary chat '{chat.Name}'?",
+                        false => $"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?",
+                    }
+                },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult.Canceled)
+                return;
+        }
+
         string chatDirectory;
         if (chat.WorkspaceId == Guid.Empty)
             chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
@@ -279,7 +283,7 @@ public partial class Workspaces : ComponentBase
         Directory.Delete(chatDirectory, true);
         await this.LoadTreeItems();
         
-        if(this.CurrentChatThread?.ChatId == chat.ChatId)
+        if(unloadChat && this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);

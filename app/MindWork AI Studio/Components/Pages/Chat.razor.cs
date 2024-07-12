@@ -62,7 +62,7 @@ public partial class Chat : ComponentBase, IAsyncDisposable
 
     private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.selectedProvider.InstanceName}', provider '{this.selectedProvider.UsedProvider.ToName()}')" : "Select a provider first";
     
-    private bool CanThreadBeSaved => this.IsProviderSelected && this.chatThread is not null && this.chatThread.Blocks.Count > 0;
+    private bool CanThreadBeSaved => this.chatThread is not null && this.chatThread.Blocks.Count > 0;
     
     private async Task SendMessage()
     {
@@ -227,6 +227,46 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
         await this.inputField.Clear();
+    }
+
+    private async Task MoveChatToWorkspace()
+    {
+        if(this.chatThread is null)
+            return;
+        
+        if(this.workspaces is null)
+            return;
+        
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", "Please select the workspace where you want to move the chat to." },
+            { "SelectedWorkspace", this.chatThread?.WorkspaceId },
+            { "ConfirmText", "Move chat" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+        
+        var workspaceId = dialogResult.Data is Guid id ? id : default;
+        if (workspaceId == Guid.Empty)
+            return;
+        
+        // Delete the chat from the current workspace or the temporary storage:
+        if (this.chatThread!.WorkspaceId == Guid.Empty)
+        {
+            // Case: The chat is stored in the temporary storage:
+            await this.workspaces.DeleteChat(Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
+        }
+        else
+        {
+            // Case: The chat is stored in a workspace.
+            await this.workspaces.DeleteChat(Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
+        }
+        
+        this.chatThread!.WorkspaceId = workspaceId;
+        await this.SaveThread();
     }
 
     #region Implementation of IAsyncDisposable
