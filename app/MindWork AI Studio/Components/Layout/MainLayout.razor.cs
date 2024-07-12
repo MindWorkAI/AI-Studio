@@ -67,6 +67,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         
         // Set the js runtime for the update service:
         UpdateService.SetBlazorDependencies(this.JsRuntime, this.Snackbar);
+        TemporaryChatService.Initialize();
         
         await base.OnInitializedAsync();
     }
