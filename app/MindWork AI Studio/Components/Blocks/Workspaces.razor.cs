@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Chat;
 using AIStudio.Components.CommonDialogs;
 using AIStudio.Settings;
+using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
@@ -235,6 +236,20 @@ public partial class Workspaces : ComponentBase
 
         if(!Directory.Exists(chatPath))
             return null;
+        
+        // Check if the chat has unsaved changes:
+        if (switchToChat && await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+        {
+            var dialogParameters = new DialogParameters
+            {
+                { "Message", "Are you sure you want to load another chat? All unsaved changes will be lost." },
+            };
+        
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Load Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult.Canceled)
+                return null;
+        }
 
         try
         {
@@ -450,6 +465,20 @@ public partial class Workspaces : ComponentBase
     
     private async Task AddChat(string workspacePath)
     {
+        // Check if the chat has unsaved changes:
+        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+        {
+            var dialogParameters = new DialogParameters
+            {
+                { "Message", "Are you sure you want to create a another chat? All unsaved changes will be lost." },
+            };
+        
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Create Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult.Canceled)
+                return;
+        }
+        
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
         var chat = new ChatThread
         {

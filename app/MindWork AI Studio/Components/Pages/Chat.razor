@@ -2,6 +2,8 @@
 @using AIStudio.Chat
 @using AIStudio.Settings
 
+@inherits AIStudio.Tools.MSGComponentBase
+
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
     @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
     {

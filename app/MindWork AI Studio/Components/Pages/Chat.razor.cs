@@ -3,6 +3,7 @@ using AIStudio.Components.Blocks;
 using AIStudio.Components.CommonDialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -14,7 +15,7 @@ namespace AIStudio.Components.Pages;
 /// <summary>
 /// The chat page.
 /// </summary>
-public partial class Chat : ComponentBase, IAsyncDisposable
+public partial class Chat : MSGComponentBase, IAsyncDisposable
 {
     [Inject]
     private SettingsManager SettingsManager { get; set; } = null!;
@@ -50,6 +51,8 @@ public partial class Chat : ComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES ]);
+        
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         
@@ -331,6 +334,29 @@ public partial class Chat : ComponentBase, IAsyncDisposable
         
         await this.inputField.Clear();
     }
+
+    #region Overrides of MSGComponentBase
+
+    public override Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        return Task.CompletedTask;
+    }
+
+    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.HAS_CHAT_UNSAVED_CHANGES:
+                if(this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                    return Task.FromResult((TResult?) (object) false);
+                
+                return Task.FromResult((TResult?)(object)this.hasUnsavedChanges);
+        }
+        
+        return Task.FromResult(default(TResult));
+    }
+
+    #endregion
 
     #region Implementation of IAsyncDisposable
 
