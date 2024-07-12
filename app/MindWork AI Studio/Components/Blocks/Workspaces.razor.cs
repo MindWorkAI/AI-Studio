@@ -26,6 +26,8 @@ public partial class Workspaces : ComponentBase
     [Parameter]
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
 
+    private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
+    
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -165,7 +167,7 @@ public partial class Workspaces : ComponentBase
             });
         }
                             
-        workspaces.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.Add, this.AddWorkspace));
+        workspaces.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.LibraryAdd, this.AddWorkspace));
         return workspaces;
     }
 
@@ -192,7 +194,7 @@ public partial class Workspaces : ComponentBase
             });
         }
                             
-        workspaceChats.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.Add, () => this.AddChat(workspacePath)));
+        workspaceChats.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)));
         return workspaceChats;
     }
 
@@ -301,6 +303,7 @@ public partial class Workspaces : ComponentBase
             { "Message", $"Please enter a new or edit the name for your chat '{chat.Name}':" },
             { "UserInput", chat.Name },
             { "ConfirmText", "Rename" },
+            { "ConfirmColor", Color.Info },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Chat", dialogParameters, DialogOptions.FULLSCREEN);
@@ -325,6 +328,7 @@ public partial class Workspaces : ComponentBase
             { "Message", $"Please enter a new or edit the name for your workspace '{workspaceName}':" },
             { "UserInput", workspaceName },
             { "ConfirmText", "Rename" },
+            { "ConfirmColor", Color.Info },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Workspace", dialogParameters, DialogOptions.FULLSCREEN);
@@ -345,6 +349,7 @@ public partial class Workspaces : ComponentBase
             { "Message", "Please name your workspace:" },
             { "UserInput", string.Empty },
             { "ConfirmText", "Add workspace" },
+            { "ConfirmColor", Color.Info },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Add Workspace", dialogParameters, DialogOptions.FULLSCREEN);
@@ -385,6 +390,53 @@ public partial class Workspaces : ComponentBase
         
         Directory.Delete(workspacePath, true);
         await this.LoadTreeItems();
+    }
+    
+    private async Task MoveChat(string? chatPath)
+    {
+        var chat = await this.LoadChat(chatPath, false);
+        if (chat is null)
+            return;
+        
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", "Please select the workspace where you want to move the chat to." },
+            { "SelectedWorkspace", chat.WorkspaceId },
+            { "ConfirmText", "Move chat" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult.Canceled)
+            return;
+        
+        var workspaceId = dialogResult.Data is Guid id ? id : default;
+        if (workspaceId == Guid.Empty)
+            return;
+        
+        // Delete the chat from the current workspace or the temporary storage:
+        if (chat.WorkspaceId == Guid.Empty)
+        {
+            // Case: The chat is stored in the temporary storage:
+            await this.DeleteChat(Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
+        }
+        else
+        {
+            // Case: The chat is stored in a workspace.
+            await this.DeleteChat(Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
+        }
+        
+        // Update the chat's workspace:
+        chat.WorkspaceId = workspaceId;
+        
+        // Handle the case, where the chat is the active chat:
+        if (this.CurrentChatThread?.ChatId == chat.ChatId)
+        {
+            this.CurrentChatThread = chat;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+        }
+        
+        await this.StoreChat(chat);
     }
     
     private async Task AddChat(string workspacePath)

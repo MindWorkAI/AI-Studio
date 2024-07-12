@@ -16,11 +16,16 @@
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
                                 <div style="justify-self: end;">
-                                    <MudTooltip Text="Rename" Placement="Placement.Right">
+                                    
+                                    <MudTooltip Text="Move to workspace" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                                        <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.MoveChat(treeItem.Path)"/>
+                                    </MudTooltip>
+                                    
+                                    <MudTooltip Text="Rename" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
                                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.RenameChat(treeItem.Path)"/>
                                     </MudTooltip>
 
-                                    <MudTooltip Text="Delete" Placement="Placement.Right">
+                                    <MudTooltip Text="Delete" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
                                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.DeleteChat(treeItem.Path)"/>
                                     </MudTooltip>
                                 </div>
@@ -35,11 +40,11 @@
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
                                 <div style="justify-self: end;">
-                                    <MudTooltip Text="Rename" Placement="Placement.Right">
+                                    <MudTooltip Text="Rename" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
                                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.RenameWorkspace(treeItem.Path)"/>
                                     </MudTooltip>
 
-                                    <MudTooltip Text="Delete" Placement="Placement.Right">
+                                    <MudTooltip Text="Delete" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
                                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="() => this.DeleteWorkspace(treeItem.Path)"/>
                                     </MudTooltip>
                                 </div>
