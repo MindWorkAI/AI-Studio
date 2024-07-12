@@ -224,9 +224,9 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         return threadName;
     }
 
-    private async Task StartNewChat(bool useSameWorkspace = false)
+    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
     {
-        if (this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var dialogParameters = new DialogParameters
             {
@@ -238,7 +238,22 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             if (dialogResult.Canceled)
                 return;
         }
-        
+
+        if (this.chatThread is not null && this.workspaces is not null && deletePreviousChat)
+        {
+            string chatPath;
+            if (this.chatThread.WorkspaceId == Guid.Empty)
+            {
+                chatPath = Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString());
+            }
+            else
+            {
+                chatPath = Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString());
+            }
+            
+            await this.workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
+        }
+
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
@@ -273,7 +288,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if(this.workspaces is null)
             return;
         
-        if (this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var confirmationDialogParameters = new DialogParameters
             {

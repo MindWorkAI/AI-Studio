@@ -62,6 +62,13 @@
                         <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="() => this.StartNewChat(useSameWorkspace: true)"/>
                     </MudTooltip>
                 }
+                
+                @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                {
+                    <MudTooltip Text="Delete this chat & start a new one" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true)" Disabled="@(!this.CanThreadBeSaved)"/>
+                    </MudTooltip>
+                }
 
                 @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
                 {
