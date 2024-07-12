@@ -1,10 +1,10 @@
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.body1">@this.Message</MudText>
-        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="Chat name"/>
+        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="Chat name" AutoFocus="@true"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Error">@this.ConfirmText</MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="@this.ConfirmColor">@this.ConfirmText</MudButton>
     </DialogActions>
 </MudDialog>
