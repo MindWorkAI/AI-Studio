@@ -92,6 +92,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         }
     }
 
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
+
     #endregion
 
     private async Task DismissUpdate()

@@ -72,6 +72,11 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
                 break;
         }
     }
+    
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
 
     #endregion
 

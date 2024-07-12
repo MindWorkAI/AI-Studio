@@ -51,6 +51,11 @@ public partial class InnerScrolling : MSGComponentBase
         return Task.CompletedTask;
     }
 
+    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
+    {
+        return Task.FromResult(default(TResult));
+    }
+
     #endregion
 
     private string Height => $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight});";
