@@ -14,9 +14,10 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
     private static ISnackbar? SNACKBAR;
     
     private readonly SettingsManager settingsManager;
-    private readonly TimeSpan updateInterval;
     private readonly MessageBus messageBus;
     private readonly Rust rust;
+    
+    private TimeSpan updateInterval;
     
     public UpdateService(MessageBus messageBus, SettingsManager settingsManager, Rust rust)
     {
@@ -26,8 +27,16 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
         this.messageBus.RegisterComponent(this);
         this.ApplyFilters([], [ Event.USER_SEARCH_FOR_UPDATE ]);
-        
-        this.updateInterval = settingsManager.ConfigurationData.UpdateBehavior switch
+    }
+    
+    #region Overrides of BackgroundService
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
+            await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
+
+        this.updateInterval = this.settingsManager.ConfigurationData.UpdateBehavior switch
         {
             UpdateBehavior.NO_CHECK => Timeout.InfiniteTimeSpan,
             UpdateBehavior.ONCE_STARTUP => Timeout.InfiniteTimeSpan,
@@ -38,21 +47,11 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             
             _ => TimeSpan.FromHours(1)
         };
-    }
-    
-    #region Overrides of BackgroundService
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
-        }
-
-        await this.settingsManager.LoadSettings();
-        if(this.settingsManager.ConfigurationData.UpdateBehavior != UpdateBehavior.NO_CHECK)
-            await this.CheckForUpdate();
         
+        if(this.settingsManager.ConfigurationData.UpdateBehavior is UpdateBehavior.NO_CHECK)
+            return;
+        
+        await this.CheckForUpdate();
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(this.updateInterval, stoppingToken);
@@ -72,6 +71,11 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
                 await this.CheckForUpdate(notifyUserWhenNoUpdate: true);
                 break;
         }
+    }
+    
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
     }
 
     #endregion

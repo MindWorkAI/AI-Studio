@@ -64,4 +64,23 @@ public sealed class MessageBus
             this.sendingSemaphore.Release();
         }
     }
+    
+    public async Task<TResult?> SendMessageUseFirstResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data = default)
+    {
+        foreach (var (receiver, componentFilter) in this.componentFilters)
+        {
+            if (componentFilter.Length > 0 && sendingComponent is not null && !componentFilter.Contains(sendingComponent))
+                continue;
+
+            var eventFilter = this.componentEvents[receiver];
+            if (eventFilter.Length == 0 || eventFilter.Contains(triggeredEvent))
+            {
+                var result = await receiver.ProcessMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
+                if (result is not null)
+                    return (TResult) result;
+            }
+        }
+        
+        return default;
+    }
 }

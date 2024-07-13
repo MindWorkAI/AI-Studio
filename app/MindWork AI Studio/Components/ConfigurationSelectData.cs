@@ -30,4 +30,21 @@ public static class ConfigurationSelectDataFactory
         yield return new("Check every day", UpdateBehavior.DAILY);
         yield return new ("Check every week", UpdateBehavior.WEEKLY);
     }
+    
+    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetWorkspaceStorageBehaviorData()
+    {
+        yield return new("Disable workspaces", WorkspaceStorageBehavior.DISABLE_WORKSPACES);
+        yield return new("Store chats automatically", WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
+        yield return new("Store chats manually", WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<WorkspaceStorageTemporaryMaintenancePolicy>> GetWorkspaceStorageTemporaryMaintenancePolicyData()
+    {
+        yield return new("No automatic maintenance for temporary chats", WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE);
+        yield return new("Delete temporary chats older than 7 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS);
+        yield return new("Delete temporary chats older than 30 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
+        yield return new("Delete temporary chats older than 90 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS);
+        yield return new("Delete temporary chats older than 180 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
+        yield return new("Delete temporary chats older than 1 year", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
+    }
 }

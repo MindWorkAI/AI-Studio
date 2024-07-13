@@ -31,6 +31,7 @@ builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
 builder.Services.AddSingleton<Random>();
 builder.Services.AddHostedService<UpdateService>();
+builder.Services.AddHostedService<TemporaryChatService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddHubOptions(options =>

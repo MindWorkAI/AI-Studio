@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -6,6 +8,8 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The interface for any content in the chat.
 /// </summary>
+[JsonDerivedType(typeof(ContentText), typeDiscriminator: "text")]
+[JsonDerivedType(typeof(ContentImage), typeDiscriminator: "image")]
 public interface IContent
 {
     /// <summary>
@@ -13,22 +17,26 @@ public interface IContent
     /// Does not indicate that the stream is finished; it only indicates that we are
     /// waiting for the first response, i.e., wait for the remote to pick up the request.
     /// </summary>
+    [JsonIgnore]
     public bool InitialRemoteWait { get; set; }
 
     /// <summary>
     /// Indicates whether the content is streaming right now. False, if the content is
     /// either static or the stream has finished.
     /// </summary>
+    [JsonIgnore]
     public bool IsStreaming { get; set; }
 
     /// <summary>
     /// An action that is called when the content was changed during streaming.
     /// </summary>
+    [JsonIgnore]
     public Func<Task> StreamingEvent { get; set; }
 
     /// <summary>
     /// An action that is called when the streaming is done.
     /// </summary>
+    [JsonIgnore]
     public Func<Task> StreamingDone { get; set; }
     
     /// <summary>

@@ -81,7 +81,7 @@ public sealed class ProviderSelfHosted(string hostname) : BaseProvider($"{hostna
         // Read the stream, line by line:
         while(!streamReader.EndOfStream)
         {
-            // Check if the token is cancelled:
+            // Check if the token is canceled:
             if(token.IsCancellationRequested)
                 yield break;
             

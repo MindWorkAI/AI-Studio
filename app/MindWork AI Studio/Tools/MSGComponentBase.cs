@@ -20,6 +20,8 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     #region Implementation of IMessageBusReceiver
 
     public abstract Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data);
+    
+    public abstract Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data);
 
     #endregion
 
@@ -35,6 +37,11 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     protected async Task SendMessage<T>(Event triggeredEvent, T? data = default)
     {
         await this.MessageBus.SendMessage(this, triggeredEvent, data);
+    }
+    
+    protected async Task<TResult?> SendMessageWithResult<TPayload, TResult>(Event triggeredEvent, TPayload? data)
+    {
+        return await this.MessageBus.SendMessageUseFirstResult<TPayload, TResult>(this, triggeredEvent, data);
     }
     
     protected void ApplyFilters(ComponentBase[] components, Event[] events)

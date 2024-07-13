@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -11,15 +13,19 @@ public sealed class ContentImage : IContent
     #region Implementation of IContent
 
     /// <inheritdoc />
+    [JsonIgnore]
     public bool InitialRemoteWait { get; set; } = false;
 
     /// <inheritdoc />
+    [JsonIgnore]
     public bool IsStreaming { get; set; } = false;
 
     /// <inheritdoc />
+    [JsonIgnore]
     public Func<Task> StreamingDone { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
+    [JsonIgnore]
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />

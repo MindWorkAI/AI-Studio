@@ -13,7 +13,7 @@ public enum SendBehavior
     
     /// <summary>
     /// The user can send the input to the AI by pressing any modifier key
-    /// together with the enter key. Alternatively, the user can click the send
+    /// together with the enter key. Alternatively, the user can click the sent
     /// button. The enter key alone adds a new line.
     /// </summary>
     MODIFER_ENTER_IS_SENDING,
