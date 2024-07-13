@@ -12,7 +12,7 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 - **Flexibility**: Choose the provider and model best suited for your current task.
 - **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
-**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
+## **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
 ## Support the Project
 Thank you for using MindWork AI Studio and considering supporting its development 😀. Your support helps keep the project alive and ensures continuous improvements and new features.
