@@ -6,4 +6,4 @@
 1.79.0 (commit 129f3b996)
 6.20.0
 1.6.1
-d781e48ae66, dev debug
+d781e48ae66, release
