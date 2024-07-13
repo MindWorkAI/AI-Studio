@@ -5,14 +5,14 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
-- **Independence**: Users are not tied to any single provider. The initial version supports OpenAI models (like GPT-4o, GPT-4, GPT-4 Turbo, etc.). Future versions will support other providers such as Mistral or Google Gemini.
+- **Independence**: Users are not tied to any single provider. Instead, they can choose the provider that best suits their needs. Right now, we support OpenAI (GPT4o etc.), Mistral, Anthropic (Claude), and self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp) or [LM Studio](https://lmstudio.ai/). Support for Google Gemini, [ollama](https://github.com/ollama/ollama), [Replicate](https://replicate.com/), and [Fireworks](https://fireworks.ai/) is planned.
 - **Unrestricted usage**: Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 - **Cost-effective**: You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
 - **Privacy**: The data entered into the app is not used for training by the providers since we are using the provider's API.
 - **Flexibility**: Choose the provider and model best suited for your current task.
 - **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
-**Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
+## **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
 ## Support the Project
 Thank you for using MindWork AI Studio and considering supporting its development 😀. Your support helps keep the project alive and ensures continuous improvements and new features.
@@ -30,9 +30,7 @@ Your support, whether big or small, keeps the wheels turning and is deeply appre
 
 ## Planned Features
 Here's an exciting look at some of the features we're planning to add to MindWork AI Studio in future releases:
-- **More providers**: We plan to add support for additional LLM providers, such as Mistral and Google Gemini, giving you more options to choose from.
-- **Persistent chats**: Your chats will be stored locally, allowing you to continue conversations at any time without starting from scratch.
-- **Local LLMs**: We aim to support local LLMs, enabling you to use options like LM Studio, `ollama`, or `llama.cpp` for a more private and self-contained experience.
+- **More providers**: We plan to add support for additional LLM providers, such as Google Gemini, giving you more options to choose from.
 - **System prompts**: Integration of a system prompt library will allow you to control the behavior of the LLM with predefined prompts, ensuring consistency and efficiency.
 - **Text replacement for better privacy**: Define keywords that will be replaced in your chats before sending content to the provider, enhancing your privacy.
 - **Advanced interactions**: We're full of ideas for advanced interactions tailored for specific use cases, whether in a business context or for writers and other professionals.

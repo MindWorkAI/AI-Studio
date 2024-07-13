@@ -8,7 +8,7 @@ To get started, choose your operating system where you want to install the app:
 ## Windows
 AI Studio is only available for modern 64-bit Windows systems. When you have an older 32-bit system, you won't be able to run the app. We require an updated Windows 10 or 11 version; the app won't properly work on Windows 7 or 8. Next, we have to figure out if you have an Intel/AMD or a modern ARM system on your Windows machine.
 
-- **Copilot Plus PC:** Do you own one of the new Copilot Plus PCs? If so, you most likely have an ARM system. When your machine has a Qualcomm sticker on it, you have an ARM system for sure. [Download the ARM version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork.AI.Studio_arm64-setup.exe) of AI Studio.
+- **Copilot+ PC:** Do you own one of the new Copilot+ PCs? If so, you most likely have an ARM system. When your machine has a Qualcomm sticker on it, you have an ARM system for sure. [Download the ARM version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork.AI.Studio_arm64-setup.exe) of AI Studio.
  
 - **Windows on macOS:** Do you run Windows using Parallels on an Apple Silicon system (M1, M2, M3, M4)? Then you have an ARM system as well. [Download the ARM version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork.AI.Studio_arm64-setup.exe) of AI Studio.
 
