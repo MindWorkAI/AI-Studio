@@ -7,6 +7,8 @@ public class TreeItemData : ITreeItem
     public int Depth { get; init; }
     
     public string Text { get; init; } = string.Empty;
+    
+    public string ShortenedText => Text.Length > 30 ? this.Text[..30] + "..." : this.Text;
 
     public string Icon { get; init; } = string.Empty;
 
