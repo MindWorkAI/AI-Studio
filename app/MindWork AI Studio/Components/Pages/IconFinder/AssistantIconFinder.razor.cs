@@ -19,6 +19,15 @@ public partial class AssistantIconFinder : AssistantBaseCore
         it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.
         """;
     
+    protected override string SystemPrompt => 
+        """
+        I can search for icons using US English keywords. Please help me come up with the right search queries.
+        I don't want you to translate my requests word-for-word into US English. Instead, you should provide keywords
+        that are likely to yield suitable icons. For example, I might ask for an icon about departments, but icons
+        related to the keyword "buildings" might be the best match. Provide your keywords in a Markdown list without
+        quotation marks.
+        """;
+    
     private string? ValidatingContext(string context)
     {
         if(string.IsNullOrWhiteSpace(context))
@@ -53,13 +62,4 @@ public partial class AssistantIconFinder : AssistantBaseCore
 
         await this.AddAIResponseAsync(time);
     }
-    
-    protected override string SystemPrompt => 
-        """
-        I can search for icons using US English keywords. Please help me come up with the right search queries.
-        I don't want you to translate my requests word-for-word into US English. Instead, you should provide keywords
-        that are likely to yield suitable icons. For example, I might ask for an icon about departments, but icons
-        related to the keyword "buildings" might be the best match. Provide your keywords in a Markdown list without
-        quotation marks.
-        """;
 }
