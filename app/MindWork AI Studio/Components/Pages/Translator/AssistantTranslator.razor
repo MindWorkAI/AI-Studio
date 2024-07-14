@@ -3,13 +3,33 @@
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
-<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
+<MudField Label="Live translation" Variant="Variant.Outlined" Class="mb-3">
+    <MudSwitch T="bool" @bind-Value="@this.liveTranslation">
+        @(this.liveTranslation ? "Live translation" : "No live translation")
+    </MudSwitch>
+</MudField>
+
+@if (this.liveTranslation)
+{
+    <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="1_000" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)"/>
+}
+else
+{
+    <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" />
+}
 
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudSelect T="CommonLanguages" @bind-Value="@this.selectedTargetLanguage" AdornmentIcon="@Icons.Material.Filled.Translate" Adornment="Adornment.Start" Label="Target language" Variant="Variant.Outlined" Margin="Margin.Dense">
+    <MudSelect T="CommonLanguages" @bind-Value="@this.selectedTargetLanguage" Validation="@this.ValidatingTargetLanguage" AdornmentIcon="@Icons.Material.Filled.Translate" Adornment="Adornment.Start" Label="Target language" Variant="Variant.Outlined" Margin="Margin.Dense">
         @foreach (var targetLanguage in Enum.GetValues<CommonLanguages>())
         {
-            <MudSelectItem Value="@targetLanguage">@targetLanguage.Name()</MudSelectItem>
+            if (targetLanguage is CommonLanguages.AS_IS)
+            {
+                <MudSelectItem Value="@targetLanguage">Please select the target language</MudSelectItem>
+            }
+            else
+            {
+                <MudSelectItem Value="@targetLanguage">@targetLanguage.Name()</MudSelectItem>
+            }
         }
     </MudSelect>
     @if (this.selectedTargetLanguage is CommonLanguages.OTHER)
@@ -25,6 +45,6 @@
     }
 </MudSelect>
 
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.TranslateText()">
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.TranslateText(force: true)">
     Translate
 </MudButton>

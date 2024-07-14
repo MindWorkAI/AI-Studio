@@ -20,7 +20,9 @@ public partial class AssistantTranslator : AssistantBaseCore
         language requires, e.g., shorter sentences, you should split the text into shorter sentences.
         """;
     
+    private bool liveTranslation;
     private string inputText = string.Empty;
+    private string inputTextLastTranslation = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
     
@@ -40,6 +42,14 @@ public partial class AssistantTranslator : AssistantBaseCore
         return null;
     }
     
+    private string? ValidatingTargetLanguage(CommonLanguages language)
+    {
+        if(language == CommonLanguages.AS_IS)
+            return "Please select a target language.";
+        
+        return null;
+    }
+    
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
@@ -48,12 +58,15 @@ public partial class AssistantTranslator : AssistantBaseCore
         return null;
     }
     
-    private async Task TranslateText()
+    private async Task TranslateText(bool force)
     {
-        await this.form!.Validate();
         if (!this.inputIsValid)
             return;
         
+        if(!force && this.inputText == this.inputTextLastTranslation)
+            return;
+        
+        this.inputTextLastTranslation = this.inputText;
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
