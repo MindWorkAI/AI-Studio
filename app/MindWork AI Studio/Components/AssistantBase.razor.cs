@@ -17,9 +17,9 @@ public abstract partial class AssistantBase : ComponentBase
     [Inject]
     protected Random RNG { get; set; } = null!;
     
-    protected string Title { get; init; } = string.Empty;
+    protected abstract string Title { get; }
     
-    protected string Description { get; init; } = string.Empty;
+    protected abstract string Description { get; }
     
     protected abstract string SystemPrompt { get; }
     
