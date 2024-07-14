@@ -1,0 +1,30 @@
+@page "/assistant/translator"
+@using AIStudio.Settings
+@using AIStudio.Tools
+@inherits AssistantBaseCore
+
+<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudSelect T="CommonLanguages" @bind-Value="@this.selectedTargetLanguage" AdornmentIcon="@Icons.Material.Filled.Translate" Adornment="Adornment.Start" Label="Target language" Variant="Variant.Outlined" Margin="Margin.Dense">
+        @foreach (var targetLanguage in Enum.GetValues<CommonLanguages>())
+        {
+            <MudSelectItem Value="@targetLanguage">@targetLanguage.Name()</MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.selectedTargetLanguage is CommonLanguages.OTHER)
+    {
+        <MudTextField T="string" @bind-Text="@this.customTargetLanguage" Validation="@this.ValidateCustomLanguage" Label="Custom target language" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+    }
+</MudStack>
+
+<MudSelect T="Provider" @bind-Value="@this.selectedProvider" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
+    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+    {
+        <MudSelectItem Value="@provider"/>
+    }
+</MudSelect>
+
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.TranslateText()">
+    Translate
+</MudButton>
