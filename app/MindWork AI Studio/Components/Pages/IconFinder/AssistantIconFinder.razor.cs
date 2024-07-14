@@ -1,45 +1,26 @@
-using AIStudio.Chat;
 using AIStudio.Provider;
-using AIStudio.Settings;
-
-using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.Pages.IconFinder;
 
-public partial class AssistantIconFinder : ComponentBase
+public partial class AssistantIconFinder : AssistantBaseCore
 {
-    [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
-    
-    [Inject]
-    public IJSRuntime JsRuntime { get; init; } = null!;
-
-    [Inject]
-    public Random RNG { get; set; } = null!;
-    
-    private ChatThread? chatThread;
-    private ContentBlock? resultingContentBlock;
-    private AIStudio.Settings.Provider selectedProvider;
-    private MudForm form = null!;
-    private bool inputIsValid;
-    private string[] inputIssues = [];
     private string inputContext = string.Empty;
     private IconSources selectedIconSource;
-
-    #region Overrides of ComponentBase
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    
+    public AssistantIconFinder()
     {
-        // Reset the validation when not editing and on the first render.
-        // We don't want to show validation errors when the user opens the dialog.
-        if(firstRender)
-            this.form.ResetValidation();
-        
-        await base.OnAfterRenderAsync(firstRender);
+        this.Title = "Icon Finder";
+        this.Description =
+            """
+            Finding the right icon for a context, such as for a piece of text, is not easy. The first challenge:
+            You need to extract a concept from your context, such as from a text. Let's take an example where
+            your text contains statements about multiple departments. The sought-after concept could be "departments."
+            The next challenge is that we need to anticipate the bias of the icon designers: under the search term
+            "departments," there may be no relevant icons or only unsuitable ones. Depending on the icon source,
+            it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.
+            """;
     }
-
-    #endregion
-
+    
     private string? ValidatingContext(string context)
     {
         if(string.IsNullOrWhiteSpace(context))
@@ -58,72 +39,24 @@ public partial class AssistantIconFinder : ComponentBase
 
     private async Task FindIcon()
     {
-        await this.form.Validate();
+        await this.form!.Validate();
         if (!this.inputIsValid)
             return;
         
-        //
-        // Create a new chat thread:
-        //
-        this.chatThread = new()
-        {
-            WorkspaceId = Guid.Empty,
-            ChatId = Guid.NewGuid(),
-            Name = string.Empty,
-            Seed = this.RNG.Next(),
-            SystemPrompt = SYSTEM_PROMPT,
-            Blocks = [],
-        };
-        
-        //
-        // Add the user's request to the thread:
-        //
-        var time = DateTimeOffset.Now;
-        this.chatThread.Blocks.Add(new ContentBlock
-        {
-            Time = time,
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                Text =
-                $"""
-                   {this.selectedIconSource.Prompt()} I search for an icon for the following context:
-                   
-                   ```
-                   {this.inputContext}
-                   ```
-                """,
-            },
-        });
-        
-        //
-        // Add the AI response to the thread:
-        //
-        var aiText = new ContentText
-        {
-            // We have to wait for the remote
-            // for the content stream: 
-            InitialRemoteWait = true,
-        };
+        this.CreateChatThread();
+        var time = this.AddUserRequest(
+        $"""
+            {this.selectedIconSource.Prompt()} I search for an icon for the following context:
+            
+            ```
+            {this.inputContext}
+            ```
+         """);
 
-        this.resultingContentBlock = new ContentBlock
-        {
-            Time = time,
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.AI,
-            Content = aiText,
-        };
-        
-        this.chatThread?.Blocks.Add(this.resultingContentBlock);
-        
-        // Use the selected provider to get the AI response.
-        // By awaiting this line, we wait for the entire
-        // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.selectedProvider.UsedProvider.CreateProvider(this.selectedProvider.InstanceName, this.selectedProvider.Hostname), this.JsRuntime, this.SettingsManager, this.selectedProvider.Model, this.chatThread);
+        await this.AddAIResponseAsync(time);
     }
     
-    private const string SYSTEM_PROMPT = 
+    protected override string SystemPrompt => 
         """
         I can search for icons using US English keywords. Please help me come up with the right search queries.
         I don't want you to translate my requests word-for-word into US English. Instead, you should provide keywords
