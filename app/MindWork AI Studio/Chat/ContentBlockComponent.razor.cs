@@ -33,6 +33,12 @@ public partial class ContentBlockComponent : ComponentBase
     [Parameter]
     public DateTimeOffset Time { get; init; }
     
+    /// <summary>
+    /// Optional CSS classes.
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+    
     [Inject]
     private Rust Rust { get; init; } = null!;
     
@@ -107,4 +113,6 @@ public partial class ContentBlockComponent : ComponentBase
                 break;
         }
     }
+    
+    private string CardClasses => $"my-2 rounded-lg {this.Class}";
 }

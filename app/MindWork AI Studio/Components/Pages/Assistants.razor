@@ -1,0 +1,11 @@
+@page "/assistants"
+
+<MudText Typo="Typo.h3" Class="mb-2 mr-3">
+    Assistants
+</MudText>
+
+<MudGrid>
+    <AssistantBlock Name="Icon Finder" Description="Using a LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="/assistant/icons"/>
+    <AssistantBlock Name="Text Summarizer" Description="Using a LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="/assistant/summarizer"/>
+    <AssistantBlock Name="Translator" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="/assistant/translator"/>
+</MudGrid>

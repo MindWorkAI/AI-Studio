@@ -1,6 +1,8 @@
+using AIStudio.Tools;
+
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Tools;
+namespace AIStudio.Components;
 
 public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver
 {
