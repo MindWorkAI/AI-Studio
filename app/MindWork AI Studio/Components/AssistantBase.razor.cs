@@ -25,7 +25,7 @@ public abstract partial class AssistantBase : ComponentBase
     
     private protected virtual RenderFragment? Body => null;
 
-    protected AIStudio.Settings.Provider selectedProvider;
+    protected AIStudio.Settings.Provider providerSettings;
     protected MudForm? form;
     protected bool inputIsValid;
     
@@ -99,6 +99,6 @@ public abstract partial class AssistantBase : ComponentBase
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.selectedProvider.UsedProvider.CreateProvider(this.selectedProvider.InstanceName, this.selectedProvider.Hostname), this.JsRuntime, this.SettingsManager, this.selectedProvider.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
     }
 }

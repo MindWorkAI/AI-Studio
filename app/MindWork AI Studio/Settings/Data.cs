@@ -9,7 +9,7 @@ public sealed class Data
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V2;
+    public Version Version { get; init; } = Version.V3;
 
     /// <summary>
     /// List of configured providers.
