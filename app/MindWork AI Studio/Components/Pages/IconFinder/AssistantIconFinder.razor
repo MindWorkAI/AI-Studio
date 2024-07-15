@@ -2,7 +2,7 @@
 @using AIStudio.Settings
 @inherits AssistantBaseCore
 
-<MudTextField T="string" @bind-Text="@this.inputContext" Validation="@this.ValidatingContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="Your context" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.inputContext" Validation="@this.ValidatingContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="Your context" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudSelect T="IconSources" @bind-Value="@this.selectedIconSource" AdornmentIcon="@Icons.Material.Filled.Source" Adornment="Adornment.Start" Label="Your icon source" Variant="Variant.Outlined" Margin="Margin.Dense">
