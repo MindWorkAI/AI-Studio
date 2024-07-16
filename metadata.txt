@@ -1,9 +1,9 @@
-0.8.1
-2024-07-16 08:32:21 UTC
-163
+0.8.2
+2024-07-16 18:03:04 UTC
+164
 8.0.107 (commit 1bdaef7265)
 8.0.7 (commit 2aade6beb0)
 1.79.0 (commit 129f3b996)
 6.20.0
 1.6.1
-063fd0fcfa2, release
+c92ce49af2d, release
