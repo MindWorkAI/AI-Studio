@@ -34,14 +34,6 @@ public partial class AssistantTranslator : AssistantBaseCore
         return null;
     }
     
-    private string? ValidatingProvider(AIStudio.Settings.Provider provider)
-    {
-        if(provider.UsedProvider == Providers.NONE)
-            return "Please select a provider.";
-        
-        return null;
-    }
-    
     private string? ValidatingTargetLanguage(CommonLanguages language)
     {
         if(language == CommonLanguages.AS_IS)

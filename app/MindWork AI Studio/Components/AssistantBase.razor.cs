@@ -57,6 +57,14 @@ public abstract partial class AssistantBase : ComponentBase
 
     #endregion
     
+    protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
+    {
+        if(provider.UsedProvider == Providers.NONE)
+            return "Please select a provider.";
+        
+        return null;
+    }
+    
     protected void CreateChatThread()
     {
         this.chatThread = new()
