@@ -76,7 +76,7 @@ public partial class ProviderDialog : ComponentBase
     [Inject]
     private IJSRuntime JsRuntime { get; set; } = null!;
 
-    private static readonly Dictionary<string, object?> INSTANCE_NAME_ATTRIBUTES = new();
+    private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
@@ -111,7 +111,7 @@ public partial class ProviderDialog : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         // Configure the spellchecking for the instance name input:
-        this.SettingsManager.InjectSpellchecking(INSTANCE_NAME_ATTRIBUTES);
+        this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();

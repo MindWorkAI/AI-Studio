@@ -40,6 +40,7 @@
                 AdornmentIcon="@Icons.Material.Filled.Dns"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidatingHostname"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
             <MudSelect Disabled="@this.IsCloudProvider" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingHost">
@@ -69,7 +70,7 @@
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidatingInstanceName"
-                UserAttributes="@INSTANCE_NAME_ATTRIBUTES"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
             
         </MudForm>
