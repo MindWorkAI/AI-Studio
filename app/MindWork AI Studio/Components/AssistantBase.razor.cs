@@ -25,6 +25,8 @@ public abstract partial class AssistantBase : ComponentBase
     
     private protected virtual RenderFragment? Body => null;
 
+    protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
+    
     protected AIStudio.Settings.Provider providerSettings;
     protected MudForm? form;
     protected bool inputIsValid;
@@ -34,6 +36,14 @@ public abstract partial class AssistantBase : ComponentBase
     private string[] inputIssues = [];
     
     #region Overrides of ComponentBase
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Configure the spellchecking for the user input:
+        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
+        
+        await base.OnParametersSetAsync();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
