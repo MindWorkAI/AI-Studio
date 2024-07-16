@@ -17,7 +17,7 @@
     }
 </MudStack>
 
-<MudSelect T="Provider" @bind-Value="@this.selectedProvider" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
+<MudSelect T="Provider" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
     @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
     {
         <MudSelectItem Value="@provider"/>

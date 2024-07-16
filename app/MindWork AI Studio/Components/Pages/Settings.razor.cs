@@ -53,6 +53,7 @@ public partial class Settings : ComponentBase
             { x => x.DataHostname, provider.Hostname },
             { x => x.IsSelfHosted, provider.IsSelfHosted },
             { x => x.IsEditing, true },
+            { x => x.DataHost, provider.Host },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DialogOptions.FULLSCREEN);
@@ -83,7 +84,7 @@ public partial class Settings : ComponentBase
         if (dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.UsedProvider.CreateProvider(provider.InstanceName, provider.Hostname);
+        var providerInstance = provider.CreateProvider();
         var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
         if(deleteSecretResponse.Success)
         {

@@ -4,6 +4,8 @@ using AIStudio.Provider;
 
 using Microsoft.AspNetCore.Components;
 
+using Host = AIStudio.Provider.SelfHosted.Host;
+
 namespace AIStudio.Settings;
 
 /// <summary>
@@ -39,6 +41,12 @@ public partial class ProviderDialog : ComponentBase
     public string DataHostname { get; set; } = string.Empty;
     
     /// <summary>
+    /// The local host to use, e.g., llama.cpp.
+    /// </summary>
+    [Parameter]
+    public Host DataHost { get; set; } = Host.NONE;
+    
+    /// <summary>
     /// Is this provider self-hosted?
     /// </summary>
     [Parameter]
@@ -68,7 +76,7 @@ public partial class ProviderDialog : ComponentBase
     [Inject]
     private IJSRuntime JsRuntime { get; set; } = null!;
 
-    private static readonly Dictionary<string, object?> INSTANCE_NAME_ATTRIBUTES = new();
+    private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
@@ -85,13 +93,25 @@ public partial class ProviderDialog : ComponentBase
     private MudForm form = null!;
     
     private readonly List<Model> availableModels = new();
+    
+    private Provider CreateProviderSettings() => new()
+    {
+        Num = this.DataNum,
+        Id = this.DataId,
+        InstanceName = this.DataInstanceName,
+        UsedProvider = this.DataProvider,
+        Model = this.DataModel,
+        IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
+        Hostname = this.DataHostname,
+        Host = this.DataHost,
+    };
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         // Configure the spellchecking for the instance name input:
-        this.SettingsManager.InjectSpellchecking(INSTANCE_NAME_ATTRIBUTES);
+        this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
@@ -100,9 +120,24 @@ public partial class ProviderDialog : ComponentBase
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
-            var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
-            if(provider is NoProvider)
+            
+            //
+            // We cannot load the API key for self-hosted providers:
+            //
+            if (this.DataProvider is Providers.SELF_HOSTED)
+            {
+                await this.ReloadModels();
+                await base.OnInitializedAsync();
                 return;
+            }
+            
+            var loadedProviderSettings = this.CreateProviderSettings();
+            var provider = loadedProviderSettings.CreateProvider();
+            if(provider is NoProvider)
+            {
+                await base.OnInitializedAsync();
+                return;
+            }
             
             // Load the API key:
             var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
@@ -111,8 +146,7 @@ public partial class ProviderDialog : ComponentBase
                 this.dataAPIKey = requestedSecret.Secret;
                 
                 // Now, we try to load the list of available models:
-                if(this.DataProvider is not Providers.SELF_HOSTED)
-                    await this.ReloadModels();
+                await this.ReloadModels();
             }
             else
             {
@@ -148,30 +182,23 @@ public partial class ProviderDialog : ComponentBase
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:
-        var addedProvider = new Provider
+        var addedProviderSettings = this.CreateProviderSettings();
+        if (addedProviderSettings.UsedProvider != Providers.SELF_HOSTED)
         {
-            Num = this.DataNum,
-            Id = this.DataId,
-            InstanceName = this.DataInstanceName,
-            UsedProvider = this.DataProvider,
-            Model = this.DataModel,
-            IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
-            Hostname = this.DataHostname,
-        };
-        
-        // We need to instantiate the provider to store the API key:
-        var provider = this.DataProvider.CreateProvider(this.DataInstanceName);
+            // We need to instantiate the provider to store the API key:
+            var provider = addedProviderSettings.CreateProvider();
             
-        // Store the API key in the OS secure storage:
-        var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
-        if (!storeResponse.Success)
-        {
-            this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
-            await this.form.Validate();
-            return;
+            // Store the API key in the OS secure storage:
+            var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
+            if (!storeResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
+                await this.form.Validate();
+                return;
+            }
         }
-        
-        this.MudDialog.Close(DialogResult.Ok(addedProvider));
+
+        this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
     private string? ValidatingProvider(Providers provider)
@@ -182,9 +209,20 @@ public partial class ProviderDialog : ComponentBase
         return null;
     }
     
+    private string? ValidatingHost(Host host)
+    {
+        if(this.DataProvider is not Providers.SELF_HOSTED)
+            return null;
+
+        if (host == Host.NONE)
+            return "Please select a host.";
+
+        return null;
+    }
+    
     private string? ValidatingModel(Model model)
     {
-        if(this.DataProvider is Providers.SELF_HOSTED)
+        if(this.DataProvider is Providers.SELF_HOSTED && this.DataHost == Host.LLAMACPP)
             return null;
         
         if (model == default)
@@ -196,7 +234,7 @@ public partial class ProviderDialog : ComponentBase
     [GeneratedRegex(@"^[a-zA-Z0-9\-_. ]+$")]
     private static partial Regex InstanceNameRegex();
     
-    private static readonly string[] RESERVED_NAMES = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+    private static readonly string[] RESERVED_NAMES = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"];
     
     private string? ValidatingInstanceName(string instanceName)
     {
@@ -270,7 +308,8 @@ public partial class ProviderDialog : ComponentBase
     
     private async Task ReloadModels()
     {
-        var provider = this.DataProvider.CreateProvider("temp");
+        var currentProviderSettings = this.CreateProviderSettings();
+        var provider = currentProviderSettings.CreateProvider();
         if(provider is NoProvider)
             return;
 
@@ -283,11 +322,43 @@ public partial class ProviderDialog : ComponentBase
         this.availableModels.AddRange(orderedModels);
     }
     
-    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && this.DataProvider != Providers.SELF_HOSTED;
-    
+    private bool CanLoadModels()
+    {
+        if (this.DataProvider is Providers.SELF_HOSTED)
+        {
+            switch (this.DataHost)
+            {
+                case Host.NONE:
+                    return false;
+
+                case Host.LLAMACPP:
+                    return false;
+
+                case Host.LM_STUDIO:
+                    return true;
+
+                case Host.OLLAMA:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        if(this.DataProvider is Providers.NONE)
+            return false;
+        
+        if(string.IsNullOrWhiteSpace(this.dataAPIKey))
+            return false;
+        
+        return true;
+    }
+
     private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED;
     
     private bool IsSelfHostedOrNone => this.DataProvider is Providers.SELF_HOSTED or Providers.NONE;
+    
+    private bool IsNoneProvider => this.DataProvider is Providers.NONE;
 
     private string GetProviderCreationURL() => this.DataProvider switch
     {

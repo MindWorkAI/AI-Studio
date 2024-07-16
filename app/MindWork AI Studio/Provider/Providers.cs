@@ -45,17 +45,15 @@ public static class ExtensionsProvider
     /// <summary>
     /// Creates a new provider instance based on the provider value.
     /// </summary>
-    /// <param name="provider">The provider value.</param>
-    /// <param name="instanceName">The used instance name.</param>
-    /// <param name="hostname">The hostname of the provider.</param>
+    /// <param name="providerSettings">The provider settings.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this Providers provider, string instanceName, string hostname = "http://localhost:1234") => provider switch
+    public static IProvider CreateProvider(this Settings.Provider providerSettings) => providerSettings.UsedProvider switch
     {
-        Providers.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName },
-        Providers.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName },
-        Providers.MISTRAL => new ProviderMistral { InstanceName = instanceName },
+        Providers.OPEN_AI => new ProviderOpenAI { InstanceName = providerSettings.InstanceName },
+        Providers.ANTHROPIC => new ProviderAnthropic { InstanceName = providerSettings.InstanceName },
+        Providers.MISTRAL => new ProviderMistral { InstanceName = providerSettings.InstanceName },
         
-        Providers.SELF_HOSTED => new ProviderSelfHosted(hostname) { InstanceName = instanceName },
+        Providers.SELF_HOSTED => new ProviderSelfHosted(providerSettings) { InstanceName = providerSettings.InstanceName },
         
         _ => new NoProvider(),
     };

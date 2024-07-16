@@ -1,4 +1,5 @@
 @using AIStudio.Provider
+@using AIStudio.Provider.SelfHosted
 @using MudBlazor
 
 <MudDialog>
@@ -39,11 +40,19 @@
                 AdornmentIcon="@Icons.Material.Filled.Dns"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidatingHostname"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
+            <MudSelect Disabled="@this.IsCloudProvider" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingHost">
+                @foreach (Host host in Enum.GetValues(typeof(Host)))
+                {
+                    <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
+                }
+            </MudSelect>
+
             <MudStack Row="@true" AlignItems="AlignItems.Center">
-                <MudButton Disabled="@(!this.CanLoadModels)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
-                <MudSelect Disabled="@this.IsSelfHostedOrNone" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
+                <MudButton Disabled="@(!this.CanLoadModels())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
+                <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
                     @foreach (var model in this.availableModels)
                     {
                         <MudSelectItem Value="@model">@model</MudSelectItem>
@@ -61,7 +70,7 @@
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidatingInstanceName"
-                UserAttributes="@INSTANCE_NAME_ATTRIBUTES"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
             
         </MudForm>
