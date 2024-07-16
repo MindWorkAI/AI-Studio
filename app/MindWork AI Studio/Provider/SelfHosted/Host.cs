@@ -26,7 +26,7 @@ public static class HostExtensions
     {
         Host.LM_STUDIO => "/v1/",
         Host.LLAMACPP => "/v1/",
-        Host.OLLAMA => "/api/",
+        Host.OLLAMA => "/v1/",
 
         _ => "/v1/",
     };
@@ -35,7 +35,7 @@ public static class HostExtensions
     {
         Host.LM_STUDIO => "chat/completions",
         Host.LLAMACPP => "chat/completions",
-        Host.OLLAMA => "chat",
+        Host.OLLAMA => "chat/completions",
 
         _ => "chat/completions",
     };
