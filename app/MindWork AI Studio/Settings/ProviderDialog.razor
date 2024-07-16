@@ -51,8 +51,8 @@
             </MudSelect>
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
-                <MudButton Disabled="@(!this.CanLoadModels)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
-                <MudSelect Disabled="@this.IsSelfHostedOrNone" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
+                <MudButton Disabled="@(!this.CanLoadModels())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
+                <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
                     @foreach (var model in this.availableModels)
                     {
                         <MudSelectItem Value="@model">@model</MudSelectItem>

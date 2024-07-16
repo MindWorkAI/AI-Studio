@@ -122,10 +122,11 @@ public partial class ProviderDialog : ComponentBase
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
             //
-            // We cannot load the API key nor models for self-hosted providers:
+            // We cannot load the API key for self-hosted providers:
             //
             if (this.DataProvider is Providers.SELF_HOSTED)
             {
+                await this.ReloadModels();
                 await base.OnInitializedAsync();
                 return;
             }
@@ -182,19 +183,21 @@ public partial class ProviderDialog : ComponentBase
         // Use the data model to store the provider.
         // We just return this data to the parent component:
         var addedProviderSettings = this.CreateProviderSettings();
-        
-        // We need to instantiate the provider to store the API key:
-        var provider = addedProviderSettings.CreateProvider();
-            
-        // Store the API key in the OS secure storage:
-        var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
-        if (!storeResponse.Success)
+        if (addedProviderSettings.UsedProvider != Providers.SELF_HOSTED)
         {
-            this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
-            await this.form.Validate();
-            return;
+            // We need to instantiate the provider to store the API key:
+            var provider = addedProviderSettings.CreateProvider();
+            
+            // Store the API key in the OS secure storage:
+            var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
+            if (!storeResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
+                await this.form.Validate();
+                return;
+            }
         }
-        
+
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
@@ -219,7 +222,7 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingModel(Model model)
     {
-        if(this.DataProvider is Providers.SELF_HOSTED)
+        if(this.DataProvider is Providers.SELF_HOSTED && this.DataHost == Host.LLAMACPP)
             return null;
         
         if (model == default)
@@ -319,11 +322,43 @@ public partial class ProviderDialog : ComponentBase
         this.availableModels.AddRange(orderedModels);
     }
     
-    private bool CanLoadModels => !string.IsNullOrWhiteSpace(this.dataAPIKey) && this.DataProvider != Providers.NONE && this.DataProvider != Providers.SELF_HOSTED;
-    
+    private bool CanLoadModels()
+    {
+        if (this.DataProvider is Providers.SELF_HOSTED)
+        {
+            switch (this.DataHost)
+            {
+                case Host.NONE:
+                    return false;
+
+                case Host.LLAMACPP:
+                    return false;
+
+                case Host.LM_STUDIO:
+                    return true;
+
+                case Host.OLLAMA:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        if(this.DataProvider is Providers.NONE)
+            return false;
+        
+        if(string.IsNullOrWhiteSpace(this.dataAPIKey))
+            return false;
+        
+        return true;
+    }
+
     private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED;
     
     private bool IsSelfHostedOrNone => this.DataProvider is Providers.SELF_HOSTED or Providers.NONE;
+    
+    private bool IsNoneProvider => this.DataProvider is Providers.NONE;
 
     private string GetProviderCreationURL() => this.DataProvider switch
     {

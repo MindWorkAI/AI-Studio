@@ -33,7 +33,7 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
-            Model = (await this.GetTextModels(jsRuntime, settings, token: token)).First().Id,
+            Model = chatModel.Id,
             
             // Build the messages:
             // - First of all the system prompt
@@ -137,17 +137,33 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
 
     public async Task<IEnumerable<Provider.Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
+        try
+        {
+            switch (provider.Host)
+            {
+                case Host.LLAMACPP:
+                    // Right now, llama.cpp only supports one model.
+                    // There is no API to list the model(s).
+                    return [ new Provider.Model("as configured by llama.cpp") ];
+            
+                case Host.LM_STUDIO:
+                case Host.OLLAMA:
+                    var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
+                    var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
+                    if(!lmStudioResponse.IsSuccessStatusCode)
+                        return [];
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        if (modelResponse.Data.Length > 1)
-            Console.WriteLine("Warning: multiple models found; using the first one.");
-        
-        var firstModel = modelResponse.Data.First();
-        return [ new Provider.Model(firstModel.Id) ];
+                    var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
+                    return lmStudioModelResponse.Data.Select(n => new Provider.Model(n.Id));
+            }
+
+            return [];
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Failed to load text models from self-hosted provider: {e.Message}");
+            return [];
+        }
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
