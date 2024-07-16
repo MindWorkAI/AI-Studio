@@ -35,14 +35,6 @@ public partial class AssistantIconFinder : AssistantBaseCore
         
         return null;
     }
-    
-    private string? ValidatingProvider(AIStudio.Settings.Provider provider)
-    {
-        if(provider.UsedProvider == Providers.NONE)
-            return "Please select a provider.";
-        
-        return null;
-    }
 
     private async Task FindIcon()
     {

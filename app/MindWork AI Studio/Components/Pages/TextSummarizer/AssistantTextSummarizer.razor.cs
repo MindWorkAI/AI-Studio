@@ -38,14 +38,6 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         return null;
     }
     
-    private string? ValidatingProvider(AIStudio.Settings.Provider provider)
-    {
-        if(provider.UsedProvider == Providers.NONE)
-            return "Please select a provider.";
-        
-        return null;
-    }
-    
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
