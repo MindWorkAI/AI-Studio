@@ -7,7 +7,10 @@ namespace AIStudio.Components.Pages.Coding;
 public partial class CodingContextItem : ComponentBase
 {
     [Parameter]
-    public CodingContext CodingContext { get; set; }
+    public CodingContext CodingContext { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<CodingContext> CodingContextChanged { get; set; }
     
     [Inject]
     protected SettingsManager SettingsManager { get; set; } = null!;
@@ -25,4 +28,23 @@ public partial class CodingContextItem : ComponentBase
     }
     
     #endregion
+    
+    private string? ValidatingCode(string code)
+    {
+        if(string.IsNullOrWhiteSpace(code))
+            return $"{this.CodingContext.Id}: Please provide your input.";
+        
+        return null;
+    }
+    
+    private string? ValidatingOtherLanguage(string language)
+    {
+        if(this.CodingContext.Language != CommonCodingLanguages.OTHER)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(language))
+            return "Please specify the language.";
+        
+        return null;
+    }
 }

@@ -7,6 +7,7 @@ public static class CommonCodingLanguageExtensions
         CommonCodingLanguages.NONE => "None",
         
         CommonCodingLanguages.BASH => "Bash",
+        CommonCodingLanguages.BLAZOR => ".NET Blazor",
         CommonCodingLanguages.C => "C",
         CommonCodingLanguages.CPP => "C++",
         CommonCodingLanguages.CSHARP => "C#",

@@ -1,4 +1,39 @@
 ﻿@page "/assistant/coding"
 @using AIStudio.Settings
-@using AIStudio.Tools
 @inherits AssistantBaseCore
+
+<MudExpansionPanels Class="mb-3">
+    @for (var contextIndex = 0; contextIndex < this.codingContexts.Count; contextIndex++)
+    {
+        var codingContext = this.codingContexts[contextIndex];
+        <ExpansionPanel HeaderText="@codingContext.Id" HeaderIcon="@Icons.Material.Filled.Code">
+            <CodingContextItem @bind-CodingContext="@codingContext"/>
+        </ExpansionPanel>
+    }
+</MudExpansionPanels>
+<MudButton Variant="Variant.Filled" OnClick="() => this.AddCodingContext()" Class="mb-3">
+    Add context
+</MudButton>
+
+<MudStack Row="@false" Class="mb-3">
+    <MudSwitch T="bool" @bind-Value="@this.provideCompilerMessages">
+        @(this.provideCompilerMessages ? "Provide compiler messages" : "Provide no compiler messages")
+    </MudSwitch>
+    @if (this.provideCompilerMessages)
+    {
+        <MudTextField T="string" @bind-Text="@this.compilerMessages" Validation="@this.ValidatingCompilerMessages" AdornmentIcon="@Icons.Material.Filled.Error" Adornment="Adornment.Start" Label="Compiler messages" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+</MudStack>
+
+<MudTextField T="string" @bind-Text="@this.questions" Validation="@this.ValidateQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionMark" Adornment="Adornment.Start" Label="Your question(s)" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+<MudSelect T="Provider" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
+    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+    {
+        <MudSelectItem Value="@provider"/>
+    }
+</MudSelect>
+
+<MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="() => this.GetSupport()" Class="mb-3">
+    Get support
+</MudButton>

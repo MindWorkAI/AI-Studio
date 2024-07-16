@@ -1,1 +1,14 @@
-﻿<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+﻿<MudTextField T="string" @bind-Text="@this.CodingContext.Id" AdornmentIcon="@Icons.Material.Filled.Numbers" Adornment="Adornment.Start" Label="(Optional) Identifier" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudSelect T="CommonCodingLanguages" @bind-Value="@this.CodingContext.Language" AdornmentIcon="@Icons.Material.Filled.Code" Adornment="Adornment.Start" Label="Language" Variant="Variant.Outlined" Margin="Margin.Dense">
+        @foreach (var language in Enum.GetValues<CommonCodingLanguages>())
+        {
+            <MudSelectItem Value="@language">@language.Name()</MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.CodingContext.Language is CommonCodingLanguages.OTHER)
+    {
+        <MudTextField T="string" @bind-Text="@this.CodingContext.OtherLanguage" Validation="@this.ValidatingOtherLanguage" Label="Other language" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+</MudStack>
+<MudTextField T="string" @bind-Text="@this.CodingContext.Code" Validation="@this.ValidatingCode" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your code" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES" />

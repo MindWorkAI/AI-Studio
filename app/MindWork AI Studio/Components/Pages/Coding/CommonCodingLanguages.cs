@@ -5,6 +5,7 @@ public enum CommonCodingLanguages
     NONE,
     
     BASH,
+    BLAZOR,
     C,
     CPP,
     CSHARP,
