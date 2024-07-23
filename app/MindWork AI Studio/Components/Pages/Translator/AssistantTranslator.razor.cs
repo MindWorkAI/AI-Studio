@@ -1,4 +1,3 @@
-using AIStudio.Provider;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.Translator;

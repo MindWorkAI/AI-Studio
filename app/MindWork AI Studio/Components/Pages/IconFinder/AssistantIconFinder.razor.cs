@@ -1,5 +1,3 @@
-using AIStudio.Provider;
-
 namespace AIStudio.Components.Pages.IconFinder;
 
 public partial class AssistantIconFinder : AssistantBaseCore

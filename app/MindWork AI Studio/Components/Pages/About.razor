@@ -9,14 +9,14 @@
             <MudText>
                 The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
             </MudText>
-            <MudList Clickable="@true">
-                <MudListItem Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
-                <MudListItem Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
-                <MudListItem Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
-                <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnetRuntime"/>
-                <MudListItem Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
-                <MudListItem Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
-                <MudListItem Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
+            <MudList T="string">
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnetRuntime"/>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
             </MudList>
             <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
                 Check for updates

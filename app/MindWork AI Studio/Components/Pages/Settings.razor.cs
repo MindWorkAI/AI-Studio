@@ -31,10 +31,10 @@ public partial class Settings : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data;
+        var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
         addedProvider = addedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
         
         this.SettingsManager.ConfigurationData.Providers.Add(addedProvider);
@@ -58,10 +58,10 @@ public partial class Settings : ComponentBase
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data;
+        var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
         
         // Set the provider number if it's not set. This is important for providers
         // added before we started saving the provider number.
@@ -81,7 +81,7 @@ public partial class Settings : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var providerInstance = provider.CreateProvider();

@@ -151,7 +151,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
 
         var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         this.performingUpdate = true;
@@ -170,7 +170,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Leave Chat Page", dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
-            if (dialogResult.Canceled)
+            if (dialogResult is null || dialogResult.Canceled)
             {
                 context.PreventNavigation();
                 return;

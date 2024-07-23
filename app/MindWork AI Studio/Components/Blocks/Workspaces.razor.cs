@@ -47,8 +47,8 @@ public partial class Workspaces : ComponentBase
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),
         }
     };
-    
-    private readonly HashSet<ITreeItem> treeItems = new();
+
+    private readonly List<TreeItemData<ITreeItem>> treeItems = new();
     
     #region Overrides of ComponentBase
 
@@ -70,33 +70,46 @@ public partial class Workspaces : ComponentBase
     private async Task LoadTreeItems()
     {
         this.treeItems.Clear();
-        this.treeItems.Add(new TreeItemData
+        this.treeItems.Add(new TreeItemData<ITreeItem>
         {
-            Depth = 0,
-            Branch = WorkspaceBranch.WORKSPACES,
-            Text = "Workspaces",
-            Icon = Icons.Material.Filled.Folder,
             Expandable = true,
-            Path = "root",
-            Children = await this.LoadWorkspaces(),
+            Value = new TreeItemData
+            {
+                Depth = 0,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = "Workspaces",
+                Icon = Icons.Material.Filled.Folder,
+                Expandable = true,
+                Path = "root",
+                Children = await this.LoadWorkspaces(),
+            },
         });
 
-        this.treeItems.Add(new TreeDivider());
-        this.treeItems.Add(new TreeItemData
+        this.treeItems.Add(new TreeItemData<ITreeItem>
         {
-            Depth = 0,
-            Branch = WorkspaceBranch.TEMPORARY_CHATS,
-            Text = "Temporary chats",
-            Icon = Icons.Material.Filled.Timer,
+            Expandable = false,
+            Value = new TreeDivider(),
+        });
+        
+        this.treeItems.Add(new TreeItemData<ITreeItem>
+        {
             Expandable = true,
-            Path = "temp",
-            Children = await this.LoadTemporaryChats(),
+            Value = new TreeItemData
+            {
+                Depth = 0,
+                Branch = WorkspaceBranch.TEMPORARY_CHATS,
+                Text = "Temporary chats",
+                Icon = Icons.Material.Filled.Timer,
+                Expandable = true,
+                Path = "temp",
+                Children = await this.LoadTemporaryChats(),
+            },
         });
     }
 
-    private async Task<HashSet<ITreeItem>> LoadTemporaryChats()
+    private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadTemporaryChats()
     {
-        var tempChildren = new HashSet<ITreeItem>();
+        var tempChildren = new List<TreeItemData<ITreeItem>>();
 
         //
         // Search for workspace folders in the data directory:
@@ -115,15 +128,19 @@ public partial class Workspaces : ComponentBase
             var chatNamePath = Path.Join(tempChatDirPath, "name");
             var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
                             
-            tempChildren.Add(new TreeItemData
+            tempChildren.Add(new TreeItemData<ITreeItem>
             {
-                Type = TreeItemType.CHAT,
-                Depth = 1,
-                Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                Text = chatName,
-                Icon = Icons.Material.Filled.Timer,
                 Expandable = false,
-                Path = tempChatDirPath,
+                Value = new TreeItemData
+                {
+                    Type = TreeItemType.CHAT,
+                    Depth = 1,
+                    Branch = WorkspaceBranch.TEMPORARY_CHATS,
+                    Text = chatName,
+                    Icon = Icons.Material.Filled.Timer,
+                    Expandable = false,
+                    Path = tempChatDirPath,
+                },
             });
         }
                         
@@ -140,9 +157,9 @@ public partial class Workspaces : ComponentBase
         return await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
     }
     
-    private async Task<HashSet<ITreeItem>> LoadWorkspaces()
+    private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadWorkspaces()
     {
-        var workspaces = new HashSet<ITreeItem>();
+        var workspaces = new List<TreeItemData<ITreeItem>>();
         
         //
         // Search for workspace folders in the data directory:
@@ -161,26 +178,34 @@ public partial class Workspaces : ComponentBase
             var workspaceNamePath = Path.Join(workspaceDirPath, "name");
             var workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
                                 
-            workspaces.Add(new TreeItemData
+            workspaces.Add(new TreeItemData<ITreeItem>
             {
-                Type = TreeItemType.WORKSPACE,
-                Depth = 1,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = workspaceName,
-                Icon = Icons.Material.Filled.Description,
                 Expandable = true,
-                Path = workspaceDirPath,
-                Children = await this.LoadWorkspaceChats(workspaceDirPath),
+                Value = new TreeItemData
+                {
+                    Type = TreeItemType.WORKSPACE,
+                    Depth = 1,
+                    Branch = WorkspaceBranch.WORKSPACES,
+                    Text = workspaceName,
+                    Icon = Icons.Material.Filled.Description,
+                    Expandable = true,
+                    Path = workspaceDirPath,
+                    Children = await this.LoadWorkspaceChats(workspaceDirPath),
+                },
             });
         }
                             
-        workspaces.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.LibraryAdd, this.AddWorkspace));
+        workspaces.Add(new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.LibraryAdd, this.AddWorkspace),
+        });
         return workspaces;
     }
 
-    private async Task<HashSet<ITreeItem>> LoadWorkspaceChats(string workspacePath)
+    private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadWorkspaceChats(string workspacePath)
     {
-        var workspaceChats = new HashSet<ITreeItem>();
+        var workspaceChats = new List<TreeItemData<ITreeItem>>();
         
         // Enumerate the workspace directory:
         foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
@@ -189,19 +214,28 @@ public partial class Workspaces : ComponentBase
             var chatNamePath = Path.Join(chatPath, "name");
             var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
                                 
-            workspaceChats.Add(new TreeItemData
+            workspaceChats.Add(new TreeItemData<ITreeItem>
             {
-                Type = TreeItemType.CHAT,
-                Depth = 2,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = chatName,
-                Icon = Icons.Material.Filled.Chat,
                 Expandable = false,
-                Path = chatPath,
+                Value = new TreeItemData
+                {
+                    Type = TreeItemType.CHAT,
+                    Depth = 2,
+                    Branch = WorkspaceBranch.WORKSPACES,
+                    Text = chatName,
+                    Icon = Icons.Material.Filled.Chat,
+                    Expandable = false,
+                    Path = chatPath,
+                },
             });
         }
                             
-        workspaceChats.Add(new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)));
+        workspaceChats.Add(new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)),
+        });
+        
         return workspaceChats;
     }
 
@@ -247,7 +281,7 @@ public partial class Workspaces : ComponentBase
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Load Chat", dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
-            if (dialogResult.Canceled)
+            if (dialogResult is null || dialogResult.Canceled)
                 return null;
         }
 
@@ -294,7 +328,7 @@ public partial class Workspaces : ComponentBase
 
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
-            if (dialogResult.Canceled)
+            if (dialogResult is null || dialogResult.Canceled)
                 return;
         }
 
@@ -331,7 +365,7 @@ public partial class Workspaces : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Chat", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
 
         chat.Name = (dialogResult.Data as string)!;
@@ -356,7 +390,7 @@ public partial class Workspaces : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Workspace", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var alteredWorkspaceName = (dialogResult.Data as string)!;
@@ -377,7 +411,7 @@ public partial class Workspaces : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Add Workspace", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var workspaceId = Guid.NewGuid();
@@ -408,7 +442,7 @@ public partial class Workspaces : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Workspace", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         Directory.Delete(workspacePath, true);
@@ -430,7 +464,7 @@ public partial class Workspaces : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var workspaceId = dialogResult.Data is Guid id ? id : default;
@@ -475,7 +509,7 @@ public partial class Workspaces : ComponentBase
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Create Chat", dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
-            if (dialogResult.Canceled)
+            if (dialogResult is null || dialogResult.Canceled)
                 return;
         }
         
