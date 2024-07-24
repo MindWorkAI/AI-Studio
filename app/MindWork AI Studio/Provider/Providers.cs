@@ -47,14 +47,25 @@ public static class ExtensionsProvider
     /// </summary>
     /// <param name="providerSettings">The provider settings.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this Settings.Provider providerSettings) => providerSettings.UsedProvider switch
+    public static IProvider CreateProvider(this Settings.Provider providerSettings)
     {
-        Providers.OPEN_AI => new ProviderOpenAI { InstanceName = providerSettings.InstanceName },
-        Providers.ANTHROPIC => new ProviderAnthropic { InstanceName = providerSettings.InstanceName },
-        Providers.MISTRAL => new ProviderMistral { InstanceName = providerSettings.InstanceName },
-        
-        Providers.SELF_HOSTED => new ProviderSelfHosted(providerSettings) { InstanceName = providerSettings.InstanceName },
-        
-        _ => new NoProvider(),
-    };
+        try
+        {
+            return providerSettings.UsedProvider switch
+            {
+                Providers.OPEN_AI => new ProviderOpenAI { InstanceName = providerSettings.InstanceName },
+                Providers.ANTHROPIC => new ProviderAnthropic { InstanceName = providerSettings.InstanceName },
+                Providers.MISTRAL => new ProviderMistral { InstanceName = providerSettings.InstanceName },
+
+                Providers.SELF_HOSTED => new ProviderSelfHosted(providerSettings) { InstanceName = providerSettings.InstanceName },
+
+                _ => new NoProvider(),
+            };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to create provider: {e.Message}");
+            return new NoProvider();
+        }
+    }
 }
