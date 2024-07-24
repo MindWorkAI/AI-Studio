@@ -102,7 +102,7 @@ public partial class ProviderDialog : ComponentBase
         UsedProvider = this.DataProvider,
         Model = this.DataModel,
         IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
-        Hostname = this.DataHostname,
+        Hostname = this.DataHostname.EndsWith('/') ? this.DataHostname[..^1] : this.DataHostname,
         Host = this.DataHost,
     };
 
@@ -312,7 +312,7 @@ public partial class ProviderDialog : ComponentBase
         var provider = currentProviderSettings.CreateProvider();
         if(provider is NoProvider)
             return;
-
+        
         var models = await provider.GetTextModels(this.JsRuntime, this.SettingsManager, this.dataAPIKey);
         
         // Order descending by ID means that the newest models probably come first:

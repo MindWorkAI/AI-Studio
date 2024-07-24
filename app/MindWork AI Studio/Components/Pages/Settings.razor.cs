@@ -111,5 +111,12 @@ public partial class Settings : ComponentBase
         _ => string.Empty,
     };
 
+    private string GetProviderModelName(AIStudio.Settings.Provider provider)
+    {
+        const int MAX_LENGTH = 36;
+        var modelName = provider.Model.ToString();
+        return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
+    }
+
     #endregion
 }

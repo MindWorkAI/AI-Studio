@@ -29,11 +29,11 @@
                 <MudTd>
                     @if (context.UsedProvider is not Providers.SELF_HOSTED)
                     {
-                        @context.Model
+                        @this.GetProviderModelName(context)
                     }
                     else if (context.UsedProvider is Providers.SELF_HOSTED && context.Host is not Host.LLAMACPP)
                     {
-                        @context.Model
+                        @this.GetProviderModelName(context)
                     }
                     else
                     {
