@@ -1,4 +1,4 @@
-﻿<MudTreeView T="ITreeItem" Items="@this.treeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
+﻿<MudTreeView T="ITreeItem" Items="@this.treeItems" SelectionMode="SelectionMode.SingleSelection" Hover="@true" ExpandOnClick="@true">
     <ItemTemplate Context="item">
         @switch (item.Value)
         {
