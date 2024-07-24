@@ -235,7 +235,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
-            if (dialogResult.Canceled)
+            if (dialogResult is null || dialogResult.Canceled)
                 return;
         }
 
@@ -297,7 +297,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         
             var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
             var confirmationDialogResult = await confirmationDialogReference.Result;
-            if (confirmationDialogResult.Canceled)
+            if (confirmationDialogResult is null || confirmationDialogResult.Canceled)
                 return;
         }
         
@@ -310,7 +310,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         
         var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var workspaceId = dialogResult.Data is Guid id ? id : default;

@@ -1,6 +1,6 @@
-﻿<MudTreeView T="ITreeItem" Items="@this.treeItems" MultiSelection="@false" Hover="@true" ExpandOnClick="@true">
+﻿<MudTreeView T="ITreeItem" Items="@this.treeItems" SelectionMode="SelectionMode.SingleSelection" Hover="@true" ExpandOnClick="@true">
     <ItemTemplate Context="item">
-        @switch (item)
+        @switch (item.Value)
         {
             case TreeDivider:
                 <li style="min-height: 1em;">
@@ -11,7 +11,7 @@
             case TreeItemData treeItem:
                 @if (treeItem.Type is TreeItemType.CHAT)
                 {
-                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Path, true)">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" CanExpand="@treeItem.Expandable" Items="@treeItem.Children" OnClick="() => this.LoadChat(treeItem.Path, true)">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">
@@ -44,7 +44,7 @@
                 }
                 else if (treeItem.Type is TreeItemType.WORKSPACE)
                 {
-                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>
@@ -63,7 +63,7 @@
                 }
                 else
                 {
-                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
+                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" CanExpand="@treeItem.Expandable" Items="@treeItem.Children">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                 <MudText Style="justify-self: start;">@treeItem.Text</MudText>

@@ -30,6 +30,7 @@ public partial class ConfigurationSelect<T> : ConfigurationBase
     {
         this.SelectionUpdate(updatedValue);
         await this.SettingsManager.StoreSettings();
+        await this.InformAboutChange();
     }
     
     private static string GetClass => $"{MARGIN_CLASS} rounded-lg";

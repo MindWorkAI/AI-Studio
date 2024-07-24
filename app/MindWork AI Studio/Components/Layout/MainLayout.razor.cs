@@ -34,11 +34,29 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
 
     public string AdditionalHeight { get; private set; } = "0em";
     
+    private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
+    
+    private const int NAVBAR_COLLAPSED_WIDTH_INT = 4;
+    private const int NAVBAR_EXPANDED_WIDTH_INT = 10;
+    private static readonly string NAVBAR_COLLAPSED_WIDTH = $"{NAVBAR_COLLAPSED_WIDTH_INT}em";
+    private static readonly string NAVBAR_EXPANDED_WIDTH = $"{NAVBAR_EXPANDED_WIDTH_INT}em";
+    
+    private bool navBarOpen;
     private bool isUpdateAvailable;
     private bool performingUpdate;
     private bool userDismissedUpdate;
     private string updateToVersion = string.Empty;
     private UpdateResponse? currentUpdateResponse;
+    
+    private static readonly IReadOnlyCollection<NavBarItem> NAV_ITEMS = new List<NavBarItem>
+    {
+        new("Home", Icons.Material.Filled.Home, Color.Default, "/", true),
+        new("Chat", Icons.Material.Filled.Chat, Color.Default, "/chat", false),
+        new("Assistants", Icons.Material.Filled.Apps, Color.Default ,"/assistants", false),
+        new("Supporters", Icons.Material.Filled.Favorite, Color.Error ,"/supporters", false),
+        new("About", Icons.Material.Filled.Info, Color.Default ,"/about", false),
+        new("Settings", Icons.Material.Filled.Settings, Color.Default ,"/settings", false),
+    };
     
     #region Overrides of ComponentBase
 
@@ -63,11 +81,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE ]);
+        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED ]);
         
         // Set the js runtime for the update service:
         UpdateService.SetBlazorDependencies(this.JsRuntime, this.Snackbar);
         TemporaryChatService.Initialize();
+        
+        // Should the navigation bar be open by default?
+        if(this.SettingsManager.ConfigurationData.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
+            this.navBarOpen = true;
         
         await base.OnInitializedAsync();
     }
@@ -96,6 +118,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
                 }
                 
                 break;
+            
+            case Event.CONFIGURATION_CHANGED:
+                if(this.SettingsManager.ConfigurationData.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
+                    this.navBarOpen = true;
+                else
+                    this.navBarOpen = false;
+                
+                this.StateHasChanged();
+                break;
         }
     }
 
@@ -105,7 +136,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
     }
 
     #endregion
-
+    
     private async Task DismissUpdate()
     {
         this.userDismissedUpdate = true;
@@ -151,7 +182,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
 
         var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         this.performingUpdate = true;
@@ -170,7 +201,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Leave Chat Page", dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
-            if (dialogResult.Canceled)
+            if (dialogResult is null || dialogResult.Canceled)
             {
                 context.PreventNavigation();
                 return;

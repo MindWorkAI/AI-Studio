@@ -1,6 +1,8 @@
 using AIStudio.Components.CommonDialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools;
+
 using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
@@ -19,6 +21,9 @@ public partial class Settings : ComponentBase
     
     [Inject]
     public IJSRuntime JsRuntime { get; init; } = null!;
+    
+    [Inject]
+    protected MessageBus MessageBus { get; init; } = null!;
 
     #region Provider related
 
@@ -31,14 +36,15 @@ public partial class Settings : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data;
+        var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
         addedProvider = addedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
         
         this.SettingsManager.ConfigurationData.Providers.Add(addedProvider);
         await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task EditProvider(AIStudio.Settings.Provider provider)
@@ -58,10 +64,10 @@ public partial class Settings : ComponentBase
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data;
+        var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
         
         // Set the provider number if it's not set. This is important for providers
         // added before we started saving the provider number.
@@ -70,6 +76,7 @@ public partial class Settings : ComponentBase
         
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
         await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task DeleteProvider(AIStudio.Settings.Provider provider)
@@ -81,7 +88,7 @@ public partial class Settings : ComponentBase
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var providerInstance = provider.CreateProvider();
@@ -91,6 +98,8 @@ public partial class Settings : ComponentBase
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
+        
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
     private string GetProviderDashboardURL(Providers provider) => provider switch

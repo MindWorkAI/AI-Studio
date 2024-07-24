@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
@@ -23,7 +24,12 @@ public partial class ConfigurationBase : ComponentBase
     public string OptionHelp { get; set; } = string.Empty;
     
     [Inject]
-    public SettingsManager SettingsManager { get; init; } = null!;
+    protected SettingsManager SettingsManager { get; init; } = null!;
+    
+    [Inject]
+    protected MessageBus MessageBus { get; init; } = null!;
     
     protected const string MARGIN_CLASS = "mb-6";
+
+    protected async Task InformAboutChange() => await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 }
