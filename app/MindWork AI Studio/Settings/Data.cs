@@ -51,4 +51,9 @@ public sealed class Data
     /// The chat storage maintenance behavior.
     /// </summary>
     public WorkspaceStorageTemporaryMaintenancePolicy WorkspaceStorageTemporaryMaintenancePolicy { get; set; } = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS;
+    
+    /// <summary>
+    /// The navigation behavior.
+    /// </summary>
+    public NavBehavior NavigationBehavior { get; set; } = NavBehavior.EXPAND_ON_HOVER;
 }

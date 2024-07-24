@@ -47,4 +47,12 @@ public static class ConfigurationSelectDataFactory
         yield return new("Delete temporary chats older than 180 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
         yield return new("Delete temporary chats older than 1 year", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
     }
+    
+    public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
+    {
+        yield return new("Navigation expands on mouse hover", NavBehavior.EXPAND_ON_HOVER);
+        yield return new("Navigation never expands, but there are tooltips", NavBehavior.NEVER_EXPAND_USE_TOOLTIPS);
+        yield return new("Navigation never expands, no tooltips", NavBehavior.NEVER_EXPAND_NO_TOOLTIPS);
+        yield return new("Always expand navigation", NavBehavior.ALWAYS_EXPAND);
+    }
 }

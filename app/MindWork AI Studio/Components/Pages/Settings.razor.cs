@@ -1,6 +1,8 @@
 using AIStudio.Components.CommonDialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools;
+
 using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
@@ -19,6 +21,9 @@ public partial class Settings : ComponentBase
     
     [Inject]
     public IJSRuntime JsRuntime { get; init; } = null!;
+    
+    [Inject]
+    protected MessageBus MessageBus { get; init; } = null!;
 
     #region Provider related
 
@@ -39,6 +44,7 @@ public partial class Settings : ComponentBase
         
         this.SettingsManager.ConfigurationData.Providers.Add(addedProvider);
         await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task EditProvider(AIStudio.Settings.Provider provider)
@@ -70,6 +76,7 @@ public partial class Settings : ComponentBase
         
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
         await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task DeleteProvider(AIStudio.Settings.Provider provider)
@@ -91,6 +98,8 @@ public partial class Settings : ComponentBase
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
+        
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
     private string GetProviderDashboardURL(Providers provider) => provider switch

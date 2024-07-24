@@ -1,36 +1,32 @@
-﻿@inherits LayoutComponentBase
+﻿@using AIStudio.Settings
+@inherits LayoutComponentBase
 
 <MudPaper Height="calc(100vh);" Elevation="0">
     <MudLayout>
         @if (!this.performingUpdate)
         {
             <MudDrawerContainer Class="mud-height-full absolute">
-                <MudDrawer Elevation="0" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@true" Color="Color.Default">
+                <MudDrawer @bind-Open="@this.navBarOpen" MiniWidth="@NAVBAR_COLLAPSED_WIDTH" Width="@NAVBAR_EXPANDED_WIDTH" Elevation="1" Fixed="@true" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@(this.SettingsManager.ConfigurationData.NavigationBehavior is NavBehavior.EXPAND_ON_HOVER)" Color="Color.Default">
                     <MudNavMenu>
-                        <MudTooltip Text="Home" Placement="Placement.Right">
-                            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-                        </MudTooltip>
-                        <MudTooltip Text="Chat" Placement="Placement.Right">
-                            <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">Chat</MudNavLink>
-                        </MudTooltip>
-                        <MudTooltip Text="Assistants" Placement="Placement.Right">
-                            <MudNavLink Href="/assistants" Icon="@Icons.Material.Filled.Apps">Assistants</MudNavLink>
-                        </MudTooltip>
-                        <MudTooltip Text="Supporters" Placement="Placement.Right">
-                            <MudNavLink Href="/supporters" Icon="@Icons.Material.Filled.Favorite" IconColor="Color.Error">Supporters</MudNavLink>
-                        </MudTooltip>
-                        <MudTooltip Text="About" Placement="Placement.Right">
-                            <MudNavLink Href="/about" Icon="@Icons.Material.Filled.Info">About</MudNavLink>
-                        </MudTooltip>
-                        <MudTooltip Text="Settings" Placement="Placement.Right">
-                            <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
-                        </MudTooltip>
+                        @foreach (var navBarItem in NAV_ITEMS)
+                        {
+                            if (this.SettingsManager.ConfigurationData.NavigationBehavior is NavBehavior.NEVER_EXPAND_USE_TOOLTIPS)
+                            {
+                                <MudTooltip Text="@navBarItem.Name" Placement="Placement.Right">
+                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" IconColor="@navBarItem.IconColor">@navBarItem.Name</MudNavLink>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" IconColor="@navBarItem.IconColor">@navBarItem.Name</MudNavLink>
+                            }
+                        }
                     </MudNavMenu>
                 </MudDrawer>
             </MudDrawerContainer>
         }
 
-        <MudMainContent Class="mud-height-full pt-1">
+        <MudMainContent Class="mud-height-full pt-1" Style="@this.PaddingLeft">
             <MudContainer Fixed="@true" Class="mud-height-full" Style="margin-left: 5em; width: calc(100% - 5em);">
                 @if (!this.performingUpdate && this.IsUpdateAlertVisible)
                 {
