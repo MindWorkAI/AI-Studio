@@ -93,14 +93,4 @@
         
     </Target>
 
-    <PropertyGroup>
-        <MudAllowedAttributePattern>LowerCase</MudAllowedAttributePattern>
-        <MudIllegalParameters>V7CaseSensitive</MudIllegalParameters>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <CompilerVisibleProperty Include="MudAllowedAttributePattern" />
-        <CompilerVisibleProperty Include="MudIllegalParameters" />
-    </ItemGroup>
-
 </Project>
