@@ -35,5 +35,6 @@ public partial class ConfigurationOption : ConfigurationBase
     {
         this.StateUpdate(updatedState);
         await this.SettingsManager.StoreSettings();
+        await this.InformAboutChange();
     }
 }
