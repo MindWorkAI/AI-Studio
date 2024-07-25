@@ -6,12 +6,9 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Settings;
 
-namespace AIStudio.Provider.OpenAI;
+namespace AIStudio.Provider.Fireworks;
 
-/// <summary>
-/// The OpenAI provider.
-/// </summary>
-public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"), IProvider
+public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/inference/v1/"), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -21,10 +18,10 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public string Id => "OpenAI";
+    public string Id => "Fireworks.ai";
 
     /// <inheritdoc />
-    public string InstanceName { get; set; } = "OpenAI";
+    public string InstanceName { get; set; } = "Fireworks.ai";
 
     /// <inheritdoc />
     public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
@@ -41,8 +38,8 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             Content = chatThread.SystemPrompt,
         };
         
-        // Prepare the OpenAI HTTP chat request:
-        var openAIChatRequest = JsonSerializer.Serialize(new ChatRequest
+        // Prepare the Fireworks HTTP chat request:
+        var fireworksChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
             
@@ -66,12 +63,9 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
-            FrequencyPenalty = 0f,
         }, JSON_SERIALIZER_OPTIONS);
 
         // Build the HTTP post request:
@@ -81,7 +75,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
         
         // Set the content:
-        request.Content = new StringContent(openAIChatRequest, Encoding.UTF8, "application/json");
+        request.Content = new StringContent(fireworksChatRequest, Encoding.UTF8, "application/json");
         
         // Send the request with the ResponseHeadersRead option.
         // This allows us to read the stream as soon as the headers are received.
@@ -89,10 +83,10 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         
         // Open the response stream:
-        var openAIStream = await response.Content.ReadAsStreamAsync(token);
+        var fireworksStream = await response.Content.ReadAsStreamAsync(token);
         
         // Add a stream reader to read the stream, line by line:
-        var streamReader = new StreamReader(openAIStream);
+        var streamReader = new StreamReader(fireworksStream);
         
         // Read the stream, line by line:
         while(!streamReader.EndOfStream)
@@ -117,7 +111,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
                 yield break;
 
-            ResponseStreamLine openAIResponse;
+            ResponseStreamLine fireworksResponse;
             try
             {
                 // We know that the line starts with "data: ". Hence, we can
@@ -125,7 +119,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 var jsonData = line[6..];
                 
                 // Deserialize the JSON data:
-                openAIResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
+                fireworksResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
             }
             catch
             {
@@ -134,11 +128,11 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             }    
             
             // Skip empty responses:
-            if(openAIResponse == default || openAIResponse.Choices.Count == 0)
+            if(fireworksResponse == default || fireworksResponse.Choices.Count == 0)
                 continue;
             
             // Yield the response:
-            yield return openAIResponse.Choices[0].Delta.Content;
+            yield return fireworksResponse.Choices[0].Delta.Content;
         }
     }
 
@@ -153,40 +147,14 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(jsRuntime, settings, "gpt-", token, apiKeyProvisional);
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
 
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(jsRuntime, settings, "dall-e-", token, apiKeyProvisional);
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
 
     #endregion
-
-    private async Task<IEnumerable<Model>> LoadModels(IJSRuntime jsRuntime, SettingsManager settings, string prefix, CancellationToken token, string? apiKeyProvisional = null)
-    {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await settings.GetAPIKey(jsRuntime, this) switch
-            {
-                { Success: true } result => result.Secret,
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-        
-        var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n => n.Id.StartsWith(prefix, StringComparison.InvariantCulture));
-    }
 }

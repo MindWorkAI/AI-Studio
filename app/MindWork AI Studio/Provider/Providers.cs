@@ -1,4 +1,5 @@
 using AIStudio.Provider.Anthropic;
+using AIStudio.Provider.Fireworks;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
@@ -10,13 +11,15 @@ namespace AIStudio.Provider;
 /// </summary>
 public enum Providers
 {
-    NONE,
+    NONE = 0,
     
-    OPEN_AI,
-    ANTHROPIC,
-    MISTRAL,
+    OPEN_AI = 1,
+    ANTHROPIC = 2,
+    MISTRAL = 3,
     
-    SELF_HOSTED,
+    FIREWORKS = 5,
+    
+    SELF_HOSTED = 4,
 }
 
 /// <summary>
@@ -37,6 +40,8 @@ public static class ExtensionsProvider
         Providers.ANTHROPIC => "Anthropic",
         Providers.MISTRAL => "Mistral",
         
+        Providers.FIREWORKS => "Fireworks.ai",
+        
         Providers.SELF_HOSTED => "Self-hosted",
         
         _ => "Unknown",
@@ -56,9 +61,11 @@ public static class ExtensionsProvider
                 Providers.OPEN_AI => new ProviderOpenAI { InstanceName = providerSettings.InstanceName },
                 Providers.ANTHROPIC => new ProviderAnthropic { InstanceName = providerSettings.InstanceName },
                 Providers.MISTRAL => new ProviderMistral { InstanceName = providerSettings.InstanceName },
-
+                
+                Providers.FIREWORKS => new ProviderFireworks { InstanceName = providerSettings.InstanceName },
+                
                 Providers.SELF_HOSTED => new ProviderSelfHosted(providerSettings) { InstanceName = providerSettings.InstanceName },
-
+                
                 _ => new NoProvider(),
             };
         }

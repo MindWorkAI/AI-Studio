@@ -102,11 +102,22 @@ public partial class Settings : ComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
+    private bool HasDashboard(Providers provider) => provider switch
+    {
+        Providers.OPEN_AI => true,
+        Providers.MISTRAL => true,
+        Providers.ANTHROPIC => true,
+        Providers.FIREWORKS => true,
+        
+        _ => false,
+    };
+    
     private string GetProviderDashboardURL(Providers provider) => provider switch
     {
         Providers.OPEN_AI => "https://platform.openai.com/usage",
         Providers.MISTRAL => "https://console.mistral.ai/usage/",
         Providers.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+        Providers.FIREWORKS => "https://fireworks.ai/account/billing",
         
         _ => string.Empty,
     };

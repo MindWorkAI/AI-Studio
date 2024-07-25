@@ -86,6 +86,7 @@ public partial class ProviderDialog : ComponentBase
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
+    private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     
@@ -100,7 +101,7 @@ public partial class ProviderDialog : ComponentBase
         Id = this.DataId,
         InstanceName = this.DataInstanceName,
         UsedProvider = this.DataProvider,
-        Model = this.DataModel,
+        Model = this.DataProvider is Providers.FIREWORKS ? new Model(this.dataManuallyModel) : this.DataModel,
         IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
         Hostname = this.DataHostname.EndsWith('/') ? this.DataHostname[..^1] : this.DataHostname,
         Host = this.DataHost,
@@ -217,6 +218,14 @@ public partial class ProviderDialog : ComponentBase
         if (host == Host.NONE)
             return "Please select a host.";
 
+        return null;
+    }
+    
+    private string? ValidateManuallyModel(string manuallyModel)
+    {
+        if (this.DataProvider is Providers.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
+            return "Please enter a model name.";
+        
         return null;
     }
     
@@ -354,11 +363,52 @@ public partial class ProviderDialog : ComponentBase
         return true;
     }
 
-    private bool IsCloudProvider => this.DataProvider is not Providers.SELF_HOSTED;
+    private bool ShowRegisterButton => this.DataProvider switch
+    {
+        Providers.OPEN_AI => true,
+        Providers.MISTRAL => true,
+        Providers.ANTHROPIC => true,
+        
+        Providers.FIREWORKS => true,
+        
+        _ => false,
+    };
+
+    private bool NeedAPIKey => this.DataProvider switch
+    {
+        Providers.OPEN_AI => true,
+        Providers.MISTRAL => true,
+        Providers.ANTHROPIC => true,
+        
+        Providers.FIREWORKS => true,
+        
+        _ => false,
+    };
+
+    private bool NeedHostname => this.DataProvider switch
+    {
+        Providers.SELF_HOSTED => true,
+        _ => false,
+    };
     
-    private bool IsSelfHostedOrNone => this.DataProvider is Providers.SELF_HOSTED or Providers.NONE;
+    private bool NeedHost => this.DataProvider switch
+    {
+        Providers.SELF_HOSTED => true,
+        _ => false,
+    };
     
-    private bool IsNoneProvider => this.DataProvider is Providers.NONE;
+    private bool ProvideModelManually => this.DataProvider switch
+    {
+        Providers.FIREWORKS => true,
+        _ => false,
+    };
+    
+    private string GetModelOverviewURL() => this.DataProvider switch
+    {
+        Providers.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
+        
+        _ => string.Empty,
+    };
 
     private string GetProviderCreationURL() => this.DataProvider switch
     {
@@ -366,6 +416,10 @@ public partial class ProviderDialog : ComponentBase
         Providers.MISTRAL => "https://console.mistral.ai/",
         Providers.ANTHROPIC => "https://console.anthropic.com/dashboard",
         
+        Providers.FIREWORKS => "https://fireworks.ai/login",
+        
         _ => string.Empty,
     };
+    
+    private bool IsNoneProvider => this.DataProvider is Providers.NONE;
 }
