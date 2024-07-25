@@ -97,7 +97,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         // Read the stream, line by line:
         while(!streamReader.EndOfStream)
         {
-            // Check if the token is cancelled:
+            // Check if the token is canceled:
             if(token.IsCancellationRequested)
                 yield break;
             
