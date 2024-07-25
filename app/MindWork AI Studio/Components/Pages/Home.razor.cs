@@ -31,7 +31,7 @@ public partial class Home : ComponentBase
     private static readonly TextItem[] ITEMS_ADVANTAGES =
     [
         new TextItem("Free of charge", "The app is free to use, both for personal and commercial purposes."),
-        new TextItem("Independence", "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o etc.), Mistral, Anthropic (Claude), and self-hosted models using llama.cpp, ollama, or LM Studio. Support for Google Gemini, Replicate, and Fireworks is planned."),
+        new TextItem("Independence", "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o etc.), Mistral, Anthropic (Claude), and self-hosted models using llama.cpp, ollama, LM Studio, or Fireworks. Support for Google Gemini and Replicate is planned."),
         new TextItem("Unrestricted usage", "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."),
         new TextItem("Cost-effective", "You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit."),
         new TextItem("Privacy", "The data entered into the app is not used for training by the providers since we are using the provider's API."),
