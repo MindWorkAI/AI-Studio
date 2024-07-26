@@ -292,7 +292,7 @@ enum ServerEvent {
 }
 
 pub fn is_dev() -> bool {
-    cfg!(dev)
+    cfg!(debug_assertions)
 }
 
 pub fn is_prod() -> bool {
