@@ -1,7 +1,7 @@
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.body1">@this.Message</MudText>
-        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="Chat name" AutoFocus="@true"/>
+        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="Chat name" AutoFocus="@true" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>

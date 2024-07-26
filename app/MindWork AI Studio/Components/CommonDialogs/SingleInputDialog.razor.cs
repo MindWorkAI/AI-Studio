@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.CommonDialogs;
@@ -18,6 +20,22 @@ public partial class SingleInputDialog : ComponentBase
 
     [Parameter]
     public Color ConfirmColor { get; set; } = Color.Error;
+    
+    [Inject]
+    private SettingsManager SettingsManager { get; set; } = null!;
+    
+    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Configure the spellchecking for the user input:
+        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
 
     private void Cancel() => this.MudDialog.Cancel();
     
