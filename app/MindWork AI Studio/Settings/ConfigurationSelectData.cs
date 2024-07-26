@@ -1,6 +1,6 @@
-using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
-namespace AIStudio.Components;
+namespace AIStudio.Settings;
 
 /// <summary>
 /// A data structure to map a name to a value.

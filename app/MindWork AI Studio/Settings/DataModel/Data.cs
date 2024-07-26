@@ -1,4 +1,4 @@
-namespace AIStudio.Settings;
+namespace AIStudio.Settings.DataModel;
 
 /// <summary>
 /// The data model for the settings file.

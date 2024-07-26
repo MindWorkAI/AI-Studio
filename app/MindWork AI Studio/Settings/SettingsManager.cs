@@ -1,5 +1,6 @@
 using System.Text.Json;
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
 

@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 

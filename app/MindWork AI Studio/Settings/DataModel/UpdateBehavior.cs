@@ -1,4 +1,4 @@
-namespace AIStudio.Settings;
+namespace AIStudio.Settings.DataModel;
 
 public enum UpdateBehavior
 {
