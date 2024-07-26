@@ -2,7 +2,7 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components;
+namespace AIStudio.Components.Blocks;
 
 /// <summary>
 /// Configuration component for selecting a value from a list.
