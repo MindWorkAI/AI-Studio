@@ -8,7 +8,7 @@ namespace AIStudio.Components;
 /// <summary>
 /// A base class for configuration options.
 /// </summary>
-public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver
+public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver, IDisposable
 {
     /// <summary>
     /// The description of the option, i.e., the name. Should be
@@ -73,6 +73,15 @@ public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver
     public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
     }
 
     #endregion

@@ -11,7 +11,7 @@ using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
 
 namespace AIStudio.Components.Pages;
 
-public partial class Settings : ComponentBase, IMessageBusReceiver
+public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
     public SettingsManager SettingsManager { get; init; } = null!;
@@ -176,6 +176,15 @@ public partial class Settings : ComponentBase, IMessageBusReceiver
     public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
     }
 
     #endregion

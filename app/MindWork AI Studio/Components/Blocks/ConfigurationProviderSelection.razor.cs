@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.Blocks;
 
-public partial class ConfigurationProviderSelection : ComponentBase, IMessageBusReceiver
+public partial class ConfigurationProviderSelection : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Parameter]
     public Func<string> SelectedValue { get; set; } = () => string.Empty;
@@ -68,6 +68,15 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
     }
 
     #endregion
