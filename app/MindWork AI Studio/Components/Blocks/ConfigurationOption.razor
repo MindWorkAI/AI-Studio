@@ -1,7 +1,7 @@
 @inherits ConfigurationBase
 
 <MudField Disabled="@this.Disabled()" Label="@this.OptionDescription" Variant="Variant.Outlined" HelperText="@this.OptionHelp" Class="@MARGIN_CLASS">
-    <MudSwitch T="bool" Disabled="@this.Disabled()" Value="@this.State()" ValueChanged="@(updatedState => this.OptionChanged(updatedState))" Color="Color.Primary">
+    <MudSwitch T="bool" Disabled="@this.Disabled()" Value="@this.State()" ValueChanged="@this.OptionChanged" Color="Color.Primary">
         @(this.State() ? this.LabelOn : this.LabelOff)
     </MudSwitch>
 </MudField>
