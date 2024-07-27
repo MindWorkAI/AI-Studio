@@ -23,16 +23,13 @@ public sealed class Data
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;
 
+    #region App Settings
+    
     /// <summary>
     /// Should we save energy? When true, we will update content streamed
     /// from the server, i.e., AI, less frequently.
     /// </summary>
     public bool IsSavingEnergy { get; set; }
-
-    /// <summary>
-    /// Shortcuts to send the input to the AI.
-    /// </summary>
-    public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.MODIFER_ENTER_IS_SENDING;
     
     /// <summary>
     /// Should we enable spellchecking for all input fields?
@@ -45,6 +42,24 @@ public sealed class Data
     public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.ONCE_STARTUP;
     
     /// <summary>
+    /// The navigation behavior.
+    /// </summary>
+    public NavBehavior NavigationBehavior { get; set; } = NavBehavior.EXPAND_ON_HOVER;
+    
+    #endregion
+
+    #region Chat Settings
+
+    /// <summary>
+    /// Shortcuts to send the input to the AI.
+    /// </summary>
+    public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.MODIFER_ENTER_IS_SENDING;
+
+    #endregion
+
+    #region Workspace Settings
+    
+    /// <summary>
     /// The chat storage behavior.
     /// </summary>
     public WorkspaceStorageBehavior WorkspaceStorageBehavior { get; set; } = WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
@@ -54,11 +69,10 @@ public sealed class Data
     /// </summary>
     public WorkspaceStorageTemporaryMaintenancePolicy WorkspaceStorageTemporaryMaintenancePolicy { get; set; } = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS;
     
-    /// <summary>
-    /// The navigation behavior.
-    /// </summary>
-    public NavBehavior NavigationBehavior { get; set; } = NavBehavior.EXPAND_ON_HOVER;
+    #endregion
 
+    #region Assiatant: Icon Finder Settings
+    
     /// <summary>
     /// Do we want to preselect an icon source?
     /// </summary>
@@ -73,4 +87,6 @@ public sealed class Data
     /// The preselected icon provider.
     /// </summary>
     public string PreselectedIconProvider { get; set; } = string.Empty;
+    
+    #endregion
 }
