@@ -1,7 +1,7 @@
 @inherits ConfigurationBase
 @typeparam T
 
-<MudSelect T="T" Value="@this.SelectedValue()" Strict="@true" Margin="Margin.Dense" Label="@this.OptionDescription" Class="@GetClass" Variant="Variant.Outlined" HelperText="@this.OptionHelp" ValueChanged="selectedValue => this.OptionChanged(selectedValue)">
+<MudSelect T="T" Value="@this.SelectedValue()" Strict="@true" Disabled="@this.Disabled()" Margin="Margin.Dense" Label="@this.OptionDescription" Class="@GetClass" Variant="Variant.Outlined" HelperText="@this.OptionHelp" ValueChanged="selectedValue => this.OptionChanged(selectedValue)">
     @foreach (var data in this.Data)
     {
         <MudSelectItem Value="@data.Value">

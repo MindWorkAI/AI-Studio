@@ -16,6 +16,12 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     [Parameter]
     public IEnumerable<ConfigurationSelectData<string>> Data { get; set; } = new List<ConfigurationSelectData<string>>();
     
+    /// <summary>
+    /// Is the selection component disabled?
+    /// </summary>
+    [Parameter]
+    public Func<bool> Disabled { get; set; } = () => false;
+    
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
