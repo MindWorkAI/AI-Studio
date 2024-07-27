@@ -1,4 +1,5 @@
 using AIStudio.Components.Pages.IconFinder;
+using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -88,5 +89,39 @@ public sealed class Data
     /// </summary>
     public string PreselectedIconProvider { get; set; } = string.Empty;
     
+    #endregion
+
+    #region Assistant: Translator Settings
+
+    /// <summary>
+    /// The live translation interval for debouncing in milliseconds.
+    /// </summary>
+    public int LiveTranslationDebounceIntervalMilliseconds { get; set; } = 1_000;
+    
+    /// <summary>
+    /// Do we want to preselect any translator options?
+    /// </summary>
+    public bool PreselectTranslatorOptions { get; set; }
+
+    /// <summary>
+    /// Preselect the live translation?
+    /// </summary>
+    public bool PreselectLiveTranslation { get; set; }
+
+    /// <summary>
+    /// Preselect the target language?
+    /// </summary>
+    public CommonLanguages PreselectedTranslationTargetLanguage { get; set; } = CommonLanguages.EN_US;
+
+    /// <summary>
+    /// Preselect any other language?
+    /// </summary>
+    public string PreselectTranslationOtherLanguage { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The preselected translator provider.
+    /// </summary>
+    public string PreselectedTranslationProvider { get; set; } = string.Empty;
+
     #endregion
 }

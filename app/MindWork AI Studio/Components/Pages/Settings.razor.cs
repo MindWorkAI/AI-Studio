@@ -11,7 +11,7 @@ using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
 
 namespace AIStudio.Components.Pages;
 
-public partial class Settings : ComponentBase
+public partial class Settings : ComponentBase, IMessageBusReceiver
 {
     [Inject]
     public SettingsManager SettingsManager { get; init; } = null!;
@@ -31,6 +31,10 @@ public partial class Settings : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        // Register this component with the message bus:
+        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
+        
         this.UpdateProviders();
         await base.OnInitializedAsync();
     }
@@ -151,6 +155,27 @@ public partial class Settings : ComponentBase
         this.availableProviders.Clear();
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
             this.availableProviders.Add(new (provider.InstanceName, provider.Id));
+    }
+
+    #endregion
+    
+    #region Implementation of IMessageBusReceiver
+
+    public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+                this.StateHasChanged();
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
     }
 
     #endregion

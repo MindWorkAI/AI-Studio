@@ -1,5 +1,6 @@
 using AIStudio.Components.Pages.IconFinder;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
 
 namespace AIStudio.Settings;
 
@@ -60,6 +61,12 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
     {
         foreach (var source in Enum.GetValues<IconSources>())
-            yield return new(source.ToString(), source);
+            yield return new(source.Name(), source);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesData()
+    {
+        foreach (var language in Enum.GetValues<CommonLanguages>())
+            yield return new(language.Name(), language);
     }
 }

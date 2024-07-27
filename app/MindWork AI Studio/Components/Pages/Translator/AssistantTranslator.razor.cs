@@ -24,7 +24,24 @@ public partial class AssistantTranslator : AssistantBaseCore
     private string inputTextLastTranslation = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
-    
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)
+        {
+            this.liveTranslation = this.SettingsManager.ConfigurationData.PreselectLiveTranslation;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedTranslationProvider);
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))

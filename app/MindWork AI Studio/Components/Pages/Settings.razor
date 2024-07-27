@@ -1,6 +1,7 @@
 @page "/settings"
 @using AIStudio.Provider
 @using AIStudio.Settings
+@using AIStudio.Tools
 @using Host = AIStudio.Provider.SelfHosted.Host
 
 <MudText Typo="Typo.h3" Class="mb-12">Settings</MudText>
@@ -78,11 +79,25 @@
         <ConfigurationSelect OptionDescription="Workspace maintenance" SelectedValue="@(() => this.SettingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageTemporaryMaintenancePolicyData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy = selectedValue)" OptionHelp="If and when should we delete your temporary chats?"/>
 
         <MudText Typo="Typo.h4" Class="mb-3">Assistants Options</MudText>
+        
         <MudText Typo="Typo.h5" Class="mb-3">Icon Finder Options</MudText>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
             <ConfigurationOption OptionDescription="Preselect icon options?" LabelOn="Icon options are preselected" LabelOff="No icon options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectIconOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectIconOptions = updatedState)" OptionHelp="When enabled, you can preselect the icon options. This is might be useful when you prefer a specific icon source or LLM model."/>
             <ConfigurationSelect OptionDescription="Preselected icon source" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectIconOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedIconSource)" Data="@ConfigurationSelectDataFactory.GetIconSourcesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedIconSource = selectedValue)" OptionHelp="Which icon source should be preselected?"/>
             <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectIconOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedIconProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedIconProvider = selectedValue)"/>
+        </MudPaper>
+
+        <MudText Typo="Typo.h5" Class="mb-3">Translator Options</MudText>
+        <ConfigurationSlider T="int" OptionDescription="How fast should the live translation react?" Min="500" Max="3_000" Step="100" Unit="milliseconds" Value="@(() => this.SettingsManager.ConfigurationData.LiveTranslationDebounceIntervalMilliseconds)" ValueUpdate="@(updatedValue => this.SettingsManager.ConfigurationData.LiveTranslationDebounceIntervalMilliseconds = updatedValue)"/>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect translator options?" LabelOn="Translator options are preselected" LabelOff="No translator options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectTranslatorOptions = updatedState)" OptionHelp="When enabled, you can preselect the translator options. This is might be useful when you prefer a specific target language or LLM model."/>
+            <ConfigurationOption OptionDescription="Preselect live translation?" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)" LabelOn="Live translation is preselected" LabelOff="Live translation is not preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectLiveTranslation)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectLiveTranslation = updatedState)" />
+            <ConfigurationSelect OptionDescription="Preselected target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselected other target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTranslationProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTranslationProvider = selectedValue)"/>
         </MudPaper>
     </MudPaper>
 </InnerScrolling>
