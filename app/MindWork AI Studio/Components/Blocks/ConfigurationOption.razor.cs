@@ -7,7 +7,7 @@ namespace AIStudio.Components.Blocks;
 /// <summary>
 /// Configuration component for any boolean option.
 /// </summary>
-public partial class ConfigurationOption : ConfigurationBase, IMessageBusReceiver
+public partial class ConfigurationOption : ConfigurationBase
 {
     /// <summary>
     /// Text to display when the option is true.
@@ -32,25 +32,6 @@ public partial class ConfigurationOption : ConfigurationBase, IMessageBusReceive
     /// </summary>
     [Parameter]
     public Action<bool> StateUpdate { get; set; } = _ => { };
-
-    /// <summary>
-    /// Is the option disabled?
-    /// </summary>
-    [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
-    
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Register this component with the message bus:
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
-        
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
     
     private async Task OptionChanged(bool updatedState)
     {
@@ -58,25 +39,4 @@ public partial class ConfigurationOption : ConfigurationBase, IMessageBusReceive
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }
-    
-    #region Implementation of IMessageBusReceiver
-
-    public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
-    {
-        switch (triggeredEvent)
-        {
-            case Event.CONFIGURATION_CHANGED:
-                this.StateHasChanged();
-                break;
-        }
-
-        return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
 }

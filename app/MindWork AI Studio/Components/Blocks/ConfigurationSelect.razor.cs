@@ -9,7 +9,7 @@ namespace AIStudio.Components.Blocks;
 /// Configuration component for selecting a value from a list.
 /// </summary>
 /// <typeparam name="T">The type of the value to select.</typeparam>
-public partial class ConfigurationSelect<T> : ConfigurationBase, IMessageBusReceiver
+public partial class ConfigurationSelect<T> : ConfigurationBase
 {
     /// <summary>
     /// The data to select from.
@@ -29,25 +29,6 @@ public partial class ConfigurationSelect<T> : ConfigurationBase, IMessageBusRece
     [Parameter]
     public Action<T> SelectionUpdate { get; set; } = _ => { };
     
-    /// <summary>
-    /// Is the selection component disabled?
-    /// </summary>
-    [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
-
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Register this component with the message bus:
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
-        
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
-
     private async Task OptionChanged(T updatedValue)
     {
         this.SelectionUpdate(updatedValue);
@@ -56,25 +37,4 @@ public partial class ConfigurationSelect<T> : ConfigurationBase, IMessageBusRece
     }
     
     private static string GetClass => $"{MARGIN_CLASS} rounded-lg";
-    
-    #region Implementation of IMessageBusReceiver
-
-    public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
-    {
-        switch (triggeredEvent)
-        {
-            case Event.CONFIGURATION_CHANGED:
-                this.StateHasChanged();
-                break;
-        }
-
-        return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
 }
