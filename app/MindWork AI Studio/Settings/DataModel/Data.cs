@@ -74,7 +74,7 @@ public sealed class Data
     #region Assiatant: Icon Finder Settings
     
     /// <summary>
-    /// Do we want to preselect an icon source?
+    /// Do we want to preselect any icon options?
     /// </summary>
     public bool PreselectIconOptions { get; set; }
     
