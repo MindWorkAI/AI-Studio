@@ -1,0 +1,8 @@
+@typeparam T
+@inherits ConfigurationBase
+
+<MudField Label="@this.OptionDescription" Variant="Variant.Outlined" Class="mb-3">
+    <MudSlider @ref="@this.slider" T="@T" Size="Size.Medium" Value="@this.Value()" ValueChanged="@this.OptionChanged" Min="@this.Min" Max="@this.Max" Step="@this.Step" Immediate="@true">
+        @this.Value() @this.Unit
+    </MudSlider>
+</MudField>
