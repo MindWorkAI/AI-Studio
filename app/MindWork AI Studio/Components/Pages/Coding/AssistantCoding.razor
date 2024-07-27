@@ -16,7 +16,7 @@
 </MudButton>
 
 <MudStack Row="@false" Class="mb-3">
-    <MudSwitch T="bool" @bind-Value="@this.provideCompilerMessages">
+    <MudSwitch T="bool" @bind-Value="@this.provideCompilerMessages" Color="Color.Primary">
         @(this.provideCompilerMessages ? "Provide compiler messages" : "Provide no compiler messages")
     </MudSwitch>
     @if (this.provideCompilerMessages)
