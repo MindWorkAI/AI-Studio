@@ -1,3 +1,4 @@
+using AIStudio.Components.Pages.IconFinder;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Settings;
@@ -54,5 +55,11 @@ public static class ConfigurationSelectDataFactory
         yield return new("Navigation never expands, but there are tooltips", NavBehavior.NEVER_EXPAND_USE_TOOLTIPS);
         yield return new("Navigation never expands, no tooltips", NavBehavior.NEVER_EXPAND_NO_TOOLTIPS);
         yield return new("Always expand navigation", NavBehavior.ALWAYS_EXPAND);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
+    {
+        foreach (var source in Enum.GetValues<IconSources>())
+            yield return new(source.ToString(), source);
     }
 }

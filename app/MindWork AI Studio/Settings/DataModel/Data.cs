@@ -1,3 +1,5 @@
+using AIStudio.Components.Pages.IconFinder;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
@@ -56,4 +58,19 @@ public sealed class Data
     /// The navigation behavior.
     /// </summary>
     public NavBehavior NavigationBehavior { get; set; } = NavBehavior.EXPAND_ON_HOVER;
+
+    /// <summary>
+    /// Do we want to preselect an icon source?
+    /// </summary>
+    public bool PreselectIconOptions { get; set; }
+    
+    /// <summary>
+    /// The preselected icon source.
+    /// </summary>
+    public IconSources PreselectedIconSource { get; set; }
+
+    /// <summary>
+    /// The preselected icon provider.
+    /// </summary>
+    public string PreselectedIconProvider { get; set; } = string.Empty;
 }

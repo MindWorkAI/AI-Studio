@@ -60,10 +60,7 @@
             <MudText Typo="Typo.h6" Class="mt-3">No providers configured yet.</MudText>
         }
 
-        <MudButton
-            Variant="Variant.Filled" Color="@Color.Primary"
-            StartIcon="@Icons.Material.Filled.AddRoad"
-            Class="mt-3 mb-6" OnClick="@this.AddProvider">
+        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddProvider">
             Add Provider
         </MudButton>
 
@@ -79,5 +76,11 @@
         <MudText Typo="Typo.h4" Class="mb-3">Workspace Options</MudText>
         <ConfigurationSelect OptionDescription="Workspace behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior = selectedValue)" OptionHelp="Should we store your chats?"/>
         <ConfigurationSelect OptionDescription="Workspace maintenance" SelectedValue="@(() => this.SettingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageTemporaryMaintenancePolicyData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy = selectedValue)" OptionHelp="If and when should we delete your temporary chats?"/>
+
+        <MudText Typo="Typo.h4" Class="mb-3">Assistants Options</MudText>
+        <MudText Typo="Typo.h5" Class="mb-3">Icon Finder Options</MudText>
+        <ConfigurationOption OptionDescription="Preselection icon options?" LabelOn="Icon options are preselected" LabelOff="No icon options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectIconOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectIconOptions = updatedState)" OptionHelp="When enabled, you can preselect the icon options. This is might be useful when you prefer a specific icon source or LLM model."/>
+        <ConfigurationSelect OptionDescription="Preselected icon source" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedIconSource)" Data="@ConfigurationSelectDataFactory.GetIconSourcesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedIconSource = selectedValue)" OptionHelp="Which icon source should be preselected?"/>
+        <ConfigurationProviderSelection Data="@this.availableProviders" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedIconProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedIconProvider = selectedValue)"/>
     </MudPaper>
 </InnerScrolling>

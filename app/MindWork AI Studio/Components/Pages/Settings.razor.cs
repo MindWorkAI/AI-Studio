@@ -24,6 +24,18 @@ public partial class Settings : ComponentBase
     
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
+    
+    private readonly List<ConfigurationSelectData<string>> availableProviders = new();
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.UpdateProviders();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
 
     #region Provider related
 
@@ -43,6 +55,8 @@ public partial class Settings : ComponentBase
         addedProvider = addedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
         
         this.SettingsManager.ConfigurationData.Providers.Add(addedProvider);
+        this.UpdateProviders();
+        
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
@@ -75,6 +89,8 @@ public partial class Settings : ComponentBase
             editedProvider = editedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
         
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
+        this.UpdateProviders();
+        
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
@@ -99,6 +115,7 @@ public partial class Settings : ComponentBase
             await this.SettingsManager.StoreSettings();
         }
         
+        this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -127,6 +144,13 @@ public partial class Settings : ComponentBase
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
+    }
+    
+    private void UpdateProviders()
+    {
+        this.availableProviders.Clear();
+        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+            this.availableProviders.Add(new (provider.InstanceName, provider.Id));
     }
 
     #endregion
