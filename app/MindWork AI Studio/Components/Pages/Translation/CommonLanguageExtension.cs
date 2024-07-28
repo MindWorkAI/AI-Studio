@@ -1,6 +1,6 @@
 using AIStudio.Tools;
 
-namespace AIStudio.Components.Pages.Translator;
+namespace AIStudio.Components.Pages.Translation;
 
 public static class CommonLanguageExtension
 {

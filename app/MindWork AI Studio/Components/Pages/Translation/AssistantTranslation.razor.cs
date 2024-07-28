@@ -1,10 +1,10 @@
 using AIStudio.Tools;
 
-namespace AIStudio.Components.Pages.Translator;
+namespace AIStudio.Components.Pages.Translation;
 
-public partial class AssistantTranslator : AssistantBaseCore
+public partial class AssistantTranslation : AssistantBaseCore
 {
-    protected override string Title => "Translator";
+    protected override string Title => "Translation";
     
     protected override string Description =>
         """
