@@ -21,7 +21,7 @@ public partial class WorkspaceSelectionDialog : ComponentBase
     public string ConfirmText { get; set; } = "OK";
     
     private readonly Dictionary<string, Guid> workspaces = new();
-    private object? selectedWorkspace;
+    private Guid selectedWorkspace;
 
     #region Overrides of ComponentBase
 
@@ -56,5 +56,5 @@ public partial class WorkspaceSelectionDialog : ComponentBase
 
     private void Cancel() => this.MudDialog.Cancel();
     
-    private void Confirm() => this.MudDialog.Close(DialogResult.Ok(this.selectedWorkspace is Guid workspaceId ? workspaceId : default));
+    private void Confirm() => this.MudDialog.Close(DialogResult.Ok(this.selectedWorkspace));
 }
