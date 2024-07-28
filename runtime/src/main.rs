@@ -15,6 +15,7 @@ use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tauri::utils::config::AppUrl;
 use tokio::time;
 use flexi_logger::{AdaptiveFormat, Logger};
+use keyring::error::Error::NoEntry;
 use log::{debug, error, info, warn};
 use tauri::updater::UpdateResponse;
 
@@ -454,19 +455,31 @@ fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse
     let service = format!("mindwork-ai-studio::{}", destination);
     let entry = Entry::new(service.as_str(), user_name.as_str()).unwrap();
     let result = entry.delete_password();
+
     match result {
         Ok(_) => {
             warn!("Secret for {service} and user {user_name} was deleted successfully.");
             DeleteSecretResponse {
                 success: true,
+                was_entry_found: true,
                 issue: String::from(""),
             }
         },
+
+        Err(NoEntry) => {
+            warn!("No secret for {service} and user {user_name} was found.");
+            DeleteSecretResponse {
+                success: true,
+                was_entry_found: false,
+                issue: String::from(""),
+            }
+        }
         
         Err(e) => {
             error!("Failed to delete secret for {service} and user {user_name}: {e}.");
             DeleteSecretResponse {
                 success: false,
+                was_entry_found: false,
                 issue: e.to_string(),
             }
         },
@@ -476,6 +489,7 @@ fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse
 #[derive(Serialize)]
 struct DeleteSecretResponse {
     success: bool,
+    was_entry_found: bool,
     issue: String,
 }
 
