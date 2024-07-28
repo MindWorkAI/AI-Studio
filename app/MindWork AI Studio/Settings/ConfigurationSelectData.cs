@@ -1,3 +1,4 @@
+using AIStudio.Components.Pages.Coding;
 using AIStudio.Components.Pages.IconFinder;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
@@ -67,6 +68,12 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesData()
     {
         foreach (var language in Enum.GetValues<CommonLanguages>())
+            yield return new(language.Name(), language);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<CommonCodingLanguages>> GetCommonCodingLanguagesData()
+    {
+        foreach (var language in Enum.GetValues<CommonCodingLanguages>())
             yield return new(language.Name(), language);
     }
 }

@@ -1,4 +1,5 @@
 @page "/settings"
+@using AIStudio.Components.Pages.Coding
 @using AIStudio.Provider
 @using AIStudio.Settings
 @using AIStudio.Tools
@@ -98,6 +99,18 @@
                 <ConfigurationText OptionDescription="Preselected other target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage = updatedText)"/>
             }
             <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTranslationProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTranslationProvider = selectedValue)"/>
+        </MudPaper>
+        
+        <MudText Typo="Typo.h5" Class="mb-3">Coding Options</MudText>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect coding options?" LabelOn="Coding options are preselected" LabelOff="No coding options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectCodingOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectCodingOptions = updatedState)" OptionHelp="When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model."/>
+            <ConfigurationOption OptionDescription="Preselect compiler messages?" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" LabelOn="Compiler messages are preselected" LabelOff="Compiler messages are not preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectCodingCompilerMessages)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectCodingCompilerMessages = updatedState)" />
+            <ConfigurationSelect OptionDescription="Preselected programming language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonCodingLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedCodingLanguage = selectedValue)" OptionHelp="Which programming language should be preselected for added contexts?"/>
+            @if (this.SettingsManager.ConfigurationData.PreselectedCodingLanguage is CommonCodingLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselected other programming language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" Icon="@Icons.Material.Filled.Code" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedCodingProvider = selectedValue)"/>
         </MudPaper>
     </MudPaper>
 </InnerScrolling>

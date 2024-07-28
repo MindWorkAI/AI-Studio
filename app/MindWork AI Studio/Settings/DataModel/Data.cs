@@ -1,3 +1,4 @@
+using AIStudio.Components.Pages.Coding;
 using AIStudio.Components.Pages.IconFinder;
 using AIStudio.Tools;
 
@@ -122,6 +123,35 @@ public sealed class Data
     /// The preselected translator provider.
     /// </summary>
     public string PreselectedTranslationProvider { get; set; } = string.Empty;
+
+    #endregion
+
+    #region Assistant: Coding Settings
+
+    /// <summary>
+    /// Preselect any coding options?
+    /// </summary>
+    public bool PreselectCodingOptions { get; set; }
+
+    /// <summary>
+    /// Preselect the compiler messages?
+    /// </summary>
+    public bool PreselectCodingCompilerMessages { get; set; }
+
+    /// <summary>
+    /// Preselect the coding language for new contexts?
+    /// </summary>
+    public CommonCodingLanguages PreselectedCodingLanguage { get; set; }
+
+    /// <summary>
+    /// Do you want to preselect any other language?
+    /// </summary>
+    public string PreselectedCodingOtherLanguage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Which coding provider should be preselected?
+    /// </summary>
+    public string PreselectedCodingProvider { get; set; } = string.Empty;
 
     #endregion
 }
