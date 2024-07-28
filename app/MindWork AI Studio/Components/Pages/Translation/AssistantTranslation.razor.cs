@@ -29,7 +29,7 @@ public partial class AssistantTranslation : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.PreselectTranslatorOptions)
+        if (this.SettingsManager.ConfigurationData.PreselectTranslationOptions)
         {
             this.liveTranslation = this.SettingsManager.ConfigurationData.PreselectLiveTranslation;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage;

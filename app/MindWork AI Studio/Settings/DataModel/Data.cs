@@ -91,7 +91,7 @@ public sealed class Data
     
     #endregion
 
-    #region Assistant: Translator Settings
+    #region Assistant: Translation Settings
 
     /// <summary>
     /// The live translation interval for debouncing in milliseconds.
@@ -101,7 +101,7 @@ public sealed class Data
     /// <summary>
     /// Do we want to preselect any translator options?
     /// </summary>
-    public bool PreselectTranslatorOptions { get; set; }
+    public bool PreselectTranslationOptions { get; set; }
 
     /// <summary>
     /// Preselect the live translation?
