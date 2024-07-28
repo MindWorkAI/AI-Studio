@@ -5,6 +5,21 @@ public partial class AssistantIconFinder : AssistantBaseCore
     private string inputContext = string.Empty;
     private IconSources selectedIconSource;
 
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (this.SettingsManager.ConfigurationData.PreselectIconOptions)
+        {
+            this.selectedIconSource = this.SettingsManager.ConfigurationData.PreselectedIconSource;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedIconProvider);
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     protected override string Title => "Icon Finder";
     
     protected override string Description =>

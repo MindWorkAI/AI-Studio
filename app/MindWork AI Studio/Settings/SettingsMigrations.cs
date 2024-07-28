@@ -1,3 +1,5 @@
+using AIStudio.Settings.DataModel;
+
 using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Settings;

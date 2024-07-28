@@ -11,7 +11,7 @@ using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
 
 namespace AIStudio.Components.Pages;
 
-public partial class Settings : ComponentBase
+public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
     public SettingsManager SettingsManager { get; init; } = null!;
@@ -24,6 +24,22 @@ public partial class Settings : ComponentBase
     
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
+    
+    private readonly List<ConfigurationSelectData<string>> availableProviders = new();
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Register this component with the message bus:
+        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
+        
+        this.UpdateProviders();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
 
     #region Provider related
 
@@ -43,6 +59,8 @@ public partial class Settings : ComponentBase
         addedProvider = addedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
         
         this.SettingsManager.ConfigurationData.Providers.Add(addedProvider);
+        this.UpdateProviders();
+        
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
@@ -75,6 +93,8 @@ public partial class Settings : ComponentBase
             editedProvider = editedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
         
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
+        this.UpdateProviders();
+        
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
@@ -99,6 +119,7 @@ public partial class Settings : ComponentBase
             await this.SettingsManager.StoreSettings();
         }
         
+        this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -127,6 +148,43 @@ public partial class Settings : ComponentBase
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
+    }
+    
+    private void UpdateProviders()
+    {
+        this.availableProviders.Clear();
+        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+            this.availableProviders.Add(new (provider.InstanceName, provider.Id));
+    }
+
+    #endregion
+    
+    #region Implementation of IMessageBusReceiver
+
+    public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+                this.StateHasChanged();
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
     }
 
     #endregion

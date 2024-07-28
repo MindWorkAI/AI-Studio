@@ -1,4 +1,4 @@
-namespace AIStudio.Settings;
+namespace AIStudio.Settings.DataModel;
 
 /// <summary>
 /// Possible behaviors for sending the input to the AI.

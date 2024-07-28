@@ -1,6 +1,10 @@
-using AIStudio.Settings;
+using AIStudio.Components.Pages.Coding;
+using AIStudio.Components.Pages.IconFinder;
+using AIStudio.Components.Pages.TextSummarizer;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
 
-namespace AIStudio.Components;
+namespace AIStudio.Settings;
 
 /// <summary>
 /// A data structure to map a name to a value.
@@ -54,5 +58,29 @@ public static class ConfigurationSelectDataFactory
         yield return new("Navigation never expands, but there are tooltips", NavBehavior.NEVER_EXPAND_USE_TOOLTIPS);
         yield return new("Navigation never expands, no tooltips", NavBehavior.NEVER_EXPAND_NO_TOOLTIPS);
         yield return new("Always expand navigation", NavBehavior.ALWAYS_EXPAND);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
+    {
+        foreach (var source in Enum.GetValues<IconSources>())
+            yield return new(source.Name(), source);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesData()
+    {
+        foreach (var language in Enum.GetValues<CommonLanguages>())
+            yield return new(language.Name(), language);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<CommonCodingLanguages>> GetCommonCodingLanguagesData()
+    {
+        foreach (var language in Enum.GetValues<CommonCodingLanguages>())
+            yield return new(language.Name(), language);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<Complexity>> GetComplexityData()
+    {
+        foreach (var complexity in Enum.GetValues<Complexity>())
+            yield return new(complexity.Name(), complexity);
     }
 }

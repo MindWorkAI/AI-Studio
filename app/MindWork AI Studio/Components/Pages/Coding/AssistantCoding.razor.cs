@@ -28,7 +28,22 @@ public partial class AssistantCoding : AssistantBaseCore
     private bool provideCompilerMessages;
     private string compilerMessages = string.Empty;
     private string questions = string.Empty;
-    
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (this.SettingsManager.ConfigurationData.PreselectCodingOptions)
+        {
+            this.provideCompilerMessages = this.SettingsManager.ConfigurationData.PreselectCodingCompilerMessages;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedCodingProvider);
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private string? ValidatingCompilerMessages(string checkCompilerMessages)
     {
         if(!this.provideCompilerMessages)
@@ -53,6 +68,8 @@ public partial class AssistantCoding : AssistantBaseCore
         this.codingContexts.Add(new()
         {
             Id = $"Context {this.codingContexts.Count + 1}",
+            Language = this.SettingsManager.ConfigurationData.PreselectCodingOptions ? this.SettingsManager.ConfigurationData.PreselectedCodingLanguage : default,
+            OtherLanguage = this.SettingsManager.ConfigurationData.PreselectCodingOptions ? this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage : string.Empty,
         });
     }
 

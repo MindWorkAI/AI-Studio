@@ -1,0 +1,18 @@
+@inherits ConfigurationBase
+
+<MudTextField
+    T="string"
+    Text="@this.Text()"
+    TextChanged="@this.OptionChanged"
+    Label="@this.OptionDescription"
+    Disabled="@this.Disabled()"
+    Class="mb-3"
+    Adornment="Adornment.Start"
+    AdornmentIcon="@this.Icon"
+    AdornmentColor="@this.IconColor"
+    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+    Lines="1"
+    Immediate="@false"
+    DebounceInterval="500"
+    Variant="Variant.Outlined"
+/>

@@ -1,10 +1,10 @@
-@page "/assistant/translator"
+@page "/assistant/translation"
 @using AIStudio.Settings
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
 <MudField Label="Live translation" Variant="Variant.Outlined" Class="mb-3">
-    <MudSwitch T="bool" @bind-Value="@this.liveTranslation">
+    <MudSwitch T="bool" @bind-Value="@this.liveTranslation" Color="Color.Primary">
         @(this.liveTranslation ? "Live translation" : "No live translation")
     </MudSwitch>
 </MudField>

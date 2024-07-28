@@ -1,5 +1,6 @@
 using AIStudio.Components.CommonDialogs;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
@@ -9,7 +10,7 @@ using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
 
 namespace AIStudio.Components.Layout;
 
-public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
+public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
@@ -211,4 +212,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver
             await MessageBus.INSTANCE.SendMessage<bool>(this, Event.RESET_CHAT_STATE);
         }
     }
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
+    }
+
+    #endregion
 }

@@ -1,5 +1,9 @@
 @page "/settings"
+@using AIStudio.Components.Pages.Coding
+@using AIStudio.Components.Pages.TextSummarizer
 @using AIStudio.Provider
+@using AIStudio.Settings
+@using AIStudio.Tools
 @using Host = AIStudio.Provider.SelfHosted.Host
 
 <MudText Typo="Typo.h3" Class="mb-12">Settings</MudText>
@@ -59,20 +63,71 @@
             <MudText Typo="Typo.h6" Class="mt-3">No providers configured yet.</MudText>
         }
 
-        <MudButton
-            Variant="Variant.Filled" Color="@Color.Primary"
-            StartIcon="@Icons.Material.Filled.AddRoad"
-            Class="mt-3 mb-6" OnClick="@this.AddProvider">
+        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddProvider">
             Add Provider
         </MudButton>
 
-        <MudText Typo="Typo.h4" Class="mb-3">Options</MudText>
+        <MudText Typo="Typo.h4" Class="mb-3">App Options</MudText>
         <ConfigurationOption OptionDescription="Save energy?" LabelOn="Energy saving is enabled" LabelOff="Energy saving is disabled" State="@(() => this.SettingsManager.ConfigurationData.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IsSavingEnergy = updatedState)" OptionHelp="When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."/>
         <ConfigurationOption OptionDescription="Enable spellchecking?" LabelOn="Spellchecking is enabled" LabelOff="Spellchecking is disabled" State="@(() => this.SettingsManager.ConfigurationData.EnableSpellchecking)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.EnableSpellchecking = updatedState)" OptionHelp="When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections." />
-        <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
         <ConfigurationSelect OptionDescription="Check for updates" SelectedValue="@(() => this.SettingsManager.ConfigurationData.UpdateBehavior)" Data="@ConfigurationSelectDataFactory.GetUpdateBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.UpdateBehavior = selectedValue)" OptionHelp="How often should we check for app updates?"/>
+        <ConfigurationSelect OptionDescription="Navigation bar behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.NavigationBehavior)" Data="@ConfigurationSelectDataFactory.GetNavBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.NavigationBehavior = selectedValue)" OptionHelp="Select the desired behavior for the navigation bar."/>
+
+        <MudText Typo="Typo.h4" Class="mb-3">Chat Options</MudText>
+        <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
+        
+        <MudText Typo="Typo.h4" Class="mb-3">Workspace Options</MudText>
         <ConfigurationSelect OptionDescription="Workspace behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior = selectedValue)" OptionHelp="Should we store your chats?"/>
         <ConfigurationSelect OptionDescription="Workspace maintenance" SelectedValue="@(() => this.SettingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageTemporaryMaintenancePolicyData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy = selectedValue)" OptionHelp="If and when should we delete your temporary chats?"/>
-        <ConfigurationSelect OptionDescription="Navigation bar behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.NavigationBehavior)" Data="@ConfigurationSelectDataFactory.GetNavBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.NavigationBehavior = selectedValue)" OptionHelp="Select the desired behavior for the navigation bar."/>
+
+        <MudText Typo="Typo.h4" Class="mb-3">Assistants Options</MudText>
+        
+        <MudText Typo="Typo.h5" Class="mb-3">Icon Finder Options</MudText>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect icon options?" LabelOn="Icon options are preselected" LabelOff="No icon options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectIconOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectIconOptions = updatedState)" OptionHelp="When enabled, you can preselect the icon options. This is might be useful when you prefer a specific icon source or LLM model."/>
+            <ConfigurationSelect OptionDescription="Preselect the icon source" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectIconOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedIconSource)" Data="@ConfigurationSelectDataFactory.GetIconSourcesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedIconSource = selectedValue)" OptionHelp="Which icon source should be preselected?"/>
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectIconOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedIconProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedIconProvider = selectedValue)"/>
+        </MudPaper>
+
+        <MudText Typo="Typo.h5" Class="mb-3">Translator Options</MudText>
+        <ConfigurationSlider T="int" OptionDescription="How fast should the live translation react?" Min="500" Max="3_000" Step="100" Unit="milliseconds" Value="@(() => this.SettingsManager.ConfigurationData.LiveTranslationDebounceIntervalMilliseconds)" ValueUpdate="@(updatedValue => this.SettingsManager.ConfigurationData.LiveTranslationDebounceIntervalMilliseconds = updatedValue)"/>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect translator options?" LabelOn="Translator options are preselected" LabelOff="No translator options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectTranslationOptions = updatedState)" OptionHelp="When enabled, you can preselect the translator options. This is might be useful when you prefer a specific target language or LLM model."/>
+            <ConfigurationOption OptionDescription="Preselect live translation?" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" LabelOn="Live translation is preselected" LabelOff="Live translation is not preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectLiveTranslation)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectLiveTranslation = updatedState)" />
+            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTranslationOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTranslationProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTranslationProvider = selectedValue)"/>
+        </MudPaper>
+        
+        <MudText Typo="Typo.h5" Class="mb-3">Coding Options</MudText>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect coding options?" LabelOn="Coding options are preselected" LabelOff="No coding options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectCodingOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectCodingOptions = updatedState)" OptionHelp="When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model."/>
+            <ConfigurationOption OptionDescription="Preselect compiler messages?" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" LabelOn="Compiler messages are preselected" LabelOff="Compiler messages are not preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectCodingCompilerMessages)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectCodingCompilerMessages = updatedState)" />
+            <ConfigurationSelect OptionDescription="Preselect a programming language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonCodingLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedCodingLanguage = selectedValue)" OptionHelp="Which programming language should be preselected for added contexts?"/>
+            @if (this.SettingsManager.ConfigurationData.PreselectedCodingLanguage is CommonCodingLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another programming language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" Icon="@Icons.Material.Filled.Code" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedCodingProvider = selectedValue)"/>
+        </MudPaper>
+        
+        <MudText Typo="Typo.h5" Class="mb-3">Text Summarizer Options</MudText>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect summarizer options?" LabelOn="Summarizer options are preselected" LabelOff="No summarizer options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions = updatedState)" OptionHelp="When enabled, you can preselect the text summarizer options. This is might be useful when you prefer a specific language, complexity, or LLM."/>
+            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationSelect OptionDescription="Preselect the summarizer complexity" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity)" Data="@ConfigurationSelectDataFactory.GetComplexityData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity = selectedValue)" OptionHelp="Which summarizer complexity should be preselected?"/>
+            @if(this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity is Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS)
+            {
+                <ConfigurationText OptionDescription="Preselect your expertise" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" Icon="@Icons.Material.Filled.Person" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerExpertInField)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerExpertInField = updatedText)"/>
+            }
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerProvider = selectedValue)"/>
+        </MudPaper>
     </MudPaper>
 </InnerScrolling>

@@ -3,6 +3,7 @@ using AIStudio.Components.Blocks;
 using AIStudio.Components.CommonDialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;

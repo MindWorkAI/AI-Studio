@@ -29,6 +29,24 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
     private Complexity selectedComplexity;
     private string expertInField = string.Empty;
 
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)
+        {
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerOtherLanguage;
+            this.selectedComplexity = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity;
+            this.expertInField = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerExpertInField;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedTextSummarizerProvider);
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))

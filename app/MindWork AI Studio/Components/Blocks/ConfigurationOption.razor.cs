@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components;
+namespace AIStudio.Components.Blocks;
 
 /// <summary>
 /// Configuration component for any boolean option.
