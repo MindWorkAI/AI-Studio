@@ -98,7 +98,7 @@ public sealed class Data
     /// <summary>
     /// The live translation interval for debouncing in milliseconds.
     /// </summary>
-    public int LiveTranslationDebounceIntervalMilliseconds { get; set; } = 1_000;
+    public int LiveTranslationDebounceIntervalMilliseconds { get; set; } = 1_500;
     
     /// <summary>
     /// Do we want to preselect any translator options?
