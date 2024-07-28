@@ -15,22 +15,8 @@
                 @this.Body
             }
         </MudForm>
-
-        @if (this.inputIssues.Any())
-        {
-            <MudPaper Class="pr-2 mt-3" Outlined="@true">
-                <MudText Typo="Typo.h6">Issues</MudText>
-                <MudList T="string">
-                    @foreach (var issue in this.inputIssues)
-                    {
-                        <MudListItem Icon="@Icons.Material.Filled.Error" IconColor="Color.Error">
-                            @issue
-                        </MudListItem>
-                    }
-                </MudList>
-            </MudPaper>
-        }
-
+        <Issues IssuesData="@this.inputIssues"/>
+        
         @if (this.resultingContentBlock is not null)
         {
             <ContentBlockComponent Role="@this.resultingContentBlock.Role" Type="@this.resultingContentBlock.ContentType" Time="@this.resultingContentBlock.Time" Content="@this.resultingContentBlock.Content" Class="mr-2"/>
