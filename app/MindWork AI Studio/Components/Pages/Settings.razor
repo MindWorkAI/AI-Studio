@@ -1,5 +1,6 @@
 @page "/settings"
 @using AIStudio.Components.Pages.Coding
+@using AIStudio.Components.Pages.TextSummarizer
 @using AIStudio.Provider
 @using AIStudio.Settings
 @using AIStudio.Tools
@@ -111,6 +112,22 @@
                 <ConfigurationText OptionDescription="Preselect another programming language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" Icon="@Icons.Material.Filled.Code" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage = updatedText)"/>
             }
             <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectCodingOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedCodingProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedCodingProvider = selectedValue)"/>
+        </MudPaper>
+        
+        <MudText Typo="Typo.h5" Class="mb-3">Text Summarizer Options</MudText>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect summarizer options?" LabelOn="Summarizer options are preselected" LabelOff="No summarizer options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions = updatedState)" OptionHelp="When enabled, you can preselect the text summarizer options. This is might be useful when you prefer a specific language, complexity, or LLM."/>
+            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationSelect OptionDescription="Preselect the summarizer complexity" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity)" Data="@ConfigurationSelectDataFactory.GetComplexityData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity = selectedValue)" OptionHelp="Which summarizer complexity should be preselected?"/>
+            @if(this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity is Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS)
+            {
+                <ConfigurationText OptionDescription="Preselect your expertise" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" Icon="@Icons.Material.Filled.Person" Text="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerExpertInField)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerExpertInField = updatedText)"/>
+            }
+            <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedTextSummarizerProvider = selectedValue)"/>
         </MudPaper>
     </MudPaper>
 </InnerScrolling>

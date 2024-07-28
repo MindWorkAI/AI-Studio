@@ -1,5 +1,6 @@
 using AIStudio.Components.Pages.Coding;
 using AIStudio.Components.Pages.IconFinder;
+using AIStudio.Components.Pages.TextSummarizer;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 
@@ -75,5 +76,11 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var language in Enum.GetValues<CommonCodingLanguages>())
             yield return new(language.Name(), language);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<Complexity>> GetComplexityData()
+    {
+        foreach (var complexity in Enum.GetValues<Complexity>())
+            yield return new(complexity.Name(), complexity);
     }
 }

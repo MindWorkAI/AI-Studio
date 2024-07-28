@@ -1,5 +1,6 @@
 using AIStudio.Components.Pages.Coding;
 using AIStudio.Components.Pages.IconFinder;
+using AIStudio.Components.Pages.TextSummarizer;
 using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;
@@ -152,6 +153,40 @@ public sealed class Data
     /// Which coding provider should be preselected?
     /// </summary>
     public string PreselectedCodingProvider { get; set; } = string.Empty;
+
+    #endregion
+
+    #region Assistant: Text Summarizer Settings
+
+    /// <summary>
+    /// Preselect any text summarizer options?
+    /// </summary>
+    public bool PreselectTextSummarizerOptions { get; set; }
+
+    /// <summary>
+    /// Preselect the target language?
+    /// </summary>
+    public CommonLanguages PreselectedTextSummarizerTargetLanguage { get; set; }
+
+    /// <summary>
+    /// Preselect any other language?
+    /// </summary>
+    public string PreselectedTextSummarizerOtherLanguage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Preselect the complexity?
+    /// </summary>
+    public Complexity PreselectedTextSummarizerComplexity { get; set; }
+    
+    /// <summary>
+    /// Preselect any expertise in a field?
+    /// </summary>
+    public string PreselectedTextSummarizerExpertInField { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Preselect a text summarizer provider?
+    /// </summary>
+    public string PreselectedTextSummarizerProvider { get; set; } = string.Empty;
 
     #endregion
 }
