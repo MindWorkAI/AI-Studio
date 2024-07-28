@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 
@@ -12,6 +14,12 @@ namespace AIStudio.Settings;
 public sealed class SettingsManager
 {
     private const string SETTINGS_FILENAME = "settings.json";
+    
+    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
     
     /// <summary>
     /// The directory where the configuration files are stored.
@@ -101,7 +109,7 @@ public sealed class SettingsManager
             return;
         
         var settingsJson = await File.ReadAllTextAsync(settingsPath);
-        var loadedConfiguration = JsonSerializer.Deserialize<Data>(settingsJson);
+        var loadedConfiguration = JsonSerializer.Deserialize<Data>(settingsJson, JSON_OPTIONS);
         if(loadedConfiguration is null)
             return;
         
@@ -120,7 +128,7 @@ public sealed class SettingsManager
         if(!Directory.Exists(ConfigDirectory))
             Directory.CreateDirectory(ConfigDirectory!);
         
-        var settingsJson = JsonSerializer.Serialize(this.ConfigurationData);
+        var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
         await File.WriteAllTextAsync(settingsPath, settingsJson);
     }
     
