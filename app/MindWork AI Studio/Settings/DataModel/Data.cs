@@ -58,6 +58,16 @@ public sealed class Data
     /// </summary>
     public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.MODIFER_ENTER_IS_SENDING;
 
+    /// <summary>
+    /// Preselect any chat options?
+    /// </summary>
+    public bool PreselectChatOptions { get; set; }
+
+    /// <summary>
+    /// Should we preselect a provider for the chat?
+    /// </summary>
+    public string PreselectedChatProvider { get; set; } = string.Empty;
+
     #endregion
 
     #region Workspace Settings

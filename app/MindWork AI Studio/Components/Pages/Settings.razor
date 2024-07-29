@@ -75,6 +75,8 @@
 
         <MudText Typo="Typo.h4" Class="mb-3">Chat Options</MudText>
         <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
+        <ConfigurationOption OptionDescription="Preselect chat options?" LabelOn="Chat options are preselected" LabelOff="No chat options are preselected" State="@(() => this.SettingsManager.ConfigurationData.PreselectChatOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PreselectChatOptions = updatedState)" OptionHelp="When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."/>
+        <ConfigurationProviderSelection Data="@this.availableProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PreselectChatOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PreselectedChatProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PreselectedChatProvider = selectedValue)"/>
         
         <MudText Typo="Typo.h4" Class="mb-3">Workspace Options</MudText>
         <ConfigurationSelect OptionDescription="Workspace behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior = selectedValue)" OptionHelp="Should we store your chats?"/>
