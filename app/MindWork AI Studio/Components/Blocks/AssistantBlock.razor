@@ -1,26 +1,24 @@
-<MudItem xs="3">
-    <MudCard Outlined="@true" Style="border-width: 2px; border-color: #0d47a1; border-radius: 12px; border-style: solid;">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudStack AlignItems="AlignItems.Center" Row="@true">
-                    <MudIcon Icon="@this.Icon" Size="Size.Large" Color="Color.Primary"/>
-                    <MudText Typo="Typo.h6">
-                        @this.Name
-                    </MudText>
-                </MudStack>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudStack>
-                <MudText>
-                    @this.Description
+<MudCard Outlined="@true" Style="border-width: 2px; border-color: #0d47a1; border-radius: 12px; border-style: solid; max-width: 20em;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudStack AlignItems="AlignItems.Center" Row="@true">
+                <MudIcon Icon="@this.Icon" Size="Size.Large" Color="Color.Primary"/>
+                <MudText Typo="Typo.h6">
+                    @this.Name
                 </MudText>
             </MudStack>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link">
-                @this.ButtonText
-            </MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudItem>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudStack>
+            <MudText>
+                @this.Description
+            </MudText>
+        </MudStack>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link">
+            @this.ButtonText
+        </MudButton>
+    </MudCardActions>
+</MudCard>
