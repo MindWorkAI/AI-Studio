@@ -1,4 +1,5 @@
 using AIStudio;
+using AIStudio.Agents;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Tools;
@@ -30,6 +31,7 @@ builder.Services.AddSingleton<Rust>();
 builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
 builder.Services.AddSingleton<ThreadSafeRandom>();
+builder.Services.AddTransient<AgentTextContentCleaner>();
 builder.Services.AddHostedService<UpdateService>();
 builder.Services.AddHostedService<TemporaryChatService>();
 builder.Services.AddRazorComponents()

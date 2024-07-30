@@ -41,6 +41,7 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
                 {
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
+                    ChatRole.AGENT => "assistant",
 
                     _ => "user",
                 },
