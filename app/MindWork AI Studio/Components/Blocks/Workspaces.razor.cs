@@ -22,7 +22,7 @@ public partial class Workspaces : ComponentBase
     private IDialogService DialogService { get; set; } = null!;
     
     [Inject]
-    public Random RNG { get; set; } = null!;
+    private ThreadSafeRandom RNG { get; init; } = null!;
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }

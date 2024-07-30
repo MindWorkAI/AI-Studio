@@ -29,7 +29,7 @@ builder.Services.AddSingleton(MessageBus.INSTANCE);
 builder.Services.AddSingleton<Rust>();
 builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
-builder.Services.AddSingleton<Random>();
+builder.Services.AddSingleton<ThreadSafeRandom>();
 builder.Services.AddHostedService<UpdateService>();
 builder.Services.AddHostedService<TemporaryChatService>();
 builder.Services.AddRazorComponents()
