@@ -199,4 +199,18 @@ public sealed class Data
     public string PreselectedTextSummarizerProvider { get; set; } = string.Empty;
 
     #endregion
+
+    #region Agent: Text Content Cleaner Settings
+
+    /// <summary>
+    /// Preselect any text content cleaner options?
+    /// </summary>
+    public bool PreselectAgentTextContentCleanerOptions { get; set; }
+    
+    /// <summary>
+    /// Preselect a text content cleaner provider?
+    /// </summary>
+    public string PreselectedAgentTextContentCleanerProvider { get; set; } = string.Empty;
+
+    #endregion
 }

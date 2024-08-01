@@ -2,6 +2,12 @@
   "version": 1,
   "dependencies": {
     "net8.0": {
+      "HtmlAgilityPack": {
+        "type": "Direct",
+        "requested": "[1.11.62, )",
+        "resolved": "1.11.62",
+        "contentHash": "KS4h7ZjWsO6YixRfQgYdR+PZMbTaZod1LBPi+1Ph7dJCARzQm7DOKe5HPhP/o0EWX5l7QCgAZHa4VOa4pQa8JQ=="
+      },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
         "requested": "[8.0.7, )",
@@ -36,6 +42,15 @@
         "dependencies": {
           "Markdig": "0.37.0",
           "MudBlazor": "6.20.0"
+        }
+      },
+      "ReverseMarkdown": {
+        "type": "Direct",
+        "requested": "[4.6.0, )",
+        "resolved": "4.6.0",
+        "contentHash": "ehNpMz3yQwd7P/vHpwi4KyDlT8UtVmtiL+NTb6mFEPzbLqJXbRIGF4OxEA5tuBA5Cfwhzf537TX1UIB6dUpo7A==",
+        "dependencies": {
+          "HtmlAgilityPack": "1.11.61"
         }
       },
       "Markdig": {
@@ -163,6 +178,6 @@
         "contentHash": "FHNOatmUq0sqJOkTx+UF/9YK1f180cnW5FVqnQMvYUN0elp6wFzbtPSiqbo1/ru8ICp43JM1i7kKkk6GsNGHlA=="
       }
     },
-    "net8.0/osx-x64": {}
+    "net8.0/osx-arm64": {}
   }
 }
