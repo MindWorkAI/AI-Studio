@@ -121,6 +121,21 @@ public sealed class Data
     public bool PreselectLiveTranslation { get; set; }
 
     /// <summary>
+    /// Hide the web content reader?
+    /// </summary>
+    public bool HideWebContentReaderForTranslation { get; set; }
+
+    /// <summary>
+    /// Preselect the web content reader?
+    /// </summary>
+    public bool PreselectWebContentReaderForTranslation { get; set; }
+
+    /// <summary>
+    /// Preselect the content cleaner agent?
+    /// </summary>
+    public bool PreselectContentCleanerAgentForTranslation { get; set; }
+
+    /// <summary>
     /// Preselect the target language?
     /// </summary>
     public CommonLanguages PreselectedTranslationTargetLanguage { get; set; } = CommonLanguages.EN_US;
@@ -173,6 +188,22 @@ public sealed class Data
     /// </summary>
     public bool PreselectTextSummarizerOptions { get; set; }
 
+    
+    /// <summary>
+    /// Hide the web content reader?
+    /// </summary>
+    public bool HideWebContentReaderForTextSummarizer { get; set; }
+
+    /// <summary>
+    /// Preselect the web content reader?
+    /// </summary>
+    public bool PreselectWebContentReaderForTextSummarizer { get; set; }
+
+    /// <summary>
+    /// Preselect the content cleaner agent?
+    /// </summary>
+    public bool PreselectContentCleanerAgentForTextSummarizer { get; set; }
+    
     /// <summary>
     /// Preselect the target language?
     /// </summary>

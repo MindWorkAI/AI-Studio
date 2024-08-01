@@ -3,6 +3,11 @@
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
+@if (!this.SettingsManager.ConfigurationData.HideWebContentReaderForTranslation)
+{
+    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.PreselectTranslationOptions && this.SettingsManager.ConfigurationData.PreselectWebContentReaderForTranslation)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.PreselectTranslationOptions && this.SettingsManager.ConfigurationData.PreselectContentCleanerAgentForTranslation)"/>
+}
+
 <MudField Label="Live translation" Variant="Variant.Outlined" Class="mb-3">
     <MudSwitch T="bool" @bind-Value="@this.liveTranslation" Color="Color.Primary">
         @(this.liveTranslation ? "Live translation" : "No live translation")
@@ -11,11 +16,11 @@
 
 @if (this.liveTranslation)
 {
-    <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="1_000" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="1_000" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 }
 else
 {
-    <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 }
 
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
@@ -38,13 +43,13 @@ else
     }
 </MudStack>
 
-<MudSelect T="Provider" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
+<MudSelect T="Provider" @bind-Value="@this.providerSettings" Disabled="@this.isAgentRunning" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
     @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
     {
         <MudSelectItem Value="@provider"/>
     }
 </MudSelect>
 
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.TranslateText(force: true)">
+<MudButton Disabled="@this.isAgentRunning" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.TranslateText(force: true)">
     Translate
 </MudButton>
