@@ -55,6 +55,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 {
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
+                    ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",

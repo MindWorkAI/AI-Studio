@@ -3,7 +3,12 @@
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
-<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+@if (!this.SettingsManager.ConfigurationData.HideWebContentReaderForTextSummarizer)
+{
+    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions && this.SettingsManager.ConfigurationData.PreselectWebContentReaderForTextSummarizer)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions && this.SettingsManager.ConfigurationData.PreselectContentCleanerAgentForTextSummarizer)"/>
+}
+
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudSelect T="CommonLanguages" @bind-Value="@this.selectedTargetLanguage" AdornmentIcon="@Icons.Material.Filled.Translate" Adornment="Adornment.Start" Label="Target language" Variant="Variant.Outlined" Margin="Margin.Dense">
@@ -31,13 +36,13 @@
     }
 </MudStack>
 
-<MudSelect T="Provider" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
+<MudSelect T="Provider" Disabled="@this.isAgentRunning" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
     @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
     {
         <MudSelectItem Value="@provider"/>
     }
 </MudSelect>
 
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SummarizeText()">
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SummarizeText()" Disabled="@this.isAgentRunning">
     Summarize
 </MudButton>

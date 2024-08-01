@@ -44,6 +44,7 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
                 {
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
+                    ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",

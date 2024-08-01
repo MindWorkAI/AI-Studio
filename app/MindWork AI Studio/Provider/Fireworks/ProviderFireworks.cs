@@ -52,6 +52,7 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
                 {
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
+                    ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",

@@ -24,6 +24,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         """;
     
     private string inputText = string.Empty;
+    private bool isAgentRunning;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
     private Complexity selectedComplexity;

@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,7 +16,7 @@ public abstract partial class AssistantBase : ComponentBase
     protected IJSRuntime JsRuntime { get; init; } = null!;
 
     [Inject]
-    protected Random RNG { get; set; } = null!;
+    protected ThreadSafeRandom RNG { get; init; } = null!;
     
     protected abstract string Title { get; }
     

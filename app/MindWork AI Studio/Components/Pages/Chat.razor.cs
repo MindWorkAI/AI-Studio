@@ -25,7 +25,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     public IJSRuntime JsRuntime { get; init; } = null!;
 
     [Inject]
-    public Random RNG { get; set; } = null!;
+    private ThreadSafeRandom RNG { get; init; } = null!;
     
     [Inject]
     public IDialogService DialogService { get; set; } = null!;

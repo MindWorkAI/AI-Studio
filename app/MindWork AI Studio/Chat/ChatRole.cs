@@ -11,6 +11,7 @@ public enum ChatRole
     SYSTEM,
     USER,
     AI,
+    AGENT,
 }
 
 /// <summary>

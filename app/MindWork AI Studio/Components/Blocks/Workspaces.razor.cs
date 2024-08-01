@@ -16,13 +16,13 @@ namespace AIStudio.Components.Blocks;
 public partial class Workspaces : ComponentBase
 {
     [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
+    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
-    private IDialogService DialogService { get; set; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    public Random RNG { get; set; } = null!;
+    private ThreadSafeRandom RNG { get; init; } = null!;
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }

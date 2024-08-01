@@ -20,6 +20,7 @@ public partial class AssistantTranslation : AssistantBaseCore
         """;
     
     private bool liveTranslation;
+    private bool isAgentRunning;
     private string inputText = string.Empty;
     private string inputTextLastTranslation = string.Empty;
     private CommonLanguages selectedTargetLanguage;

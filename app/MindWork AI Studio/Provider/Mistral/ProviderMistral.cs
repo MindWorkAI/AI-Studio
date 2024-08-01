@@ -51,6 +51,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
                 {
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
+                    ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",
