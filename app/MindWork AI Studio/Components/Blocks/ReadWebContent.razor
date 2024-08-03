@@ -1,17 +1,8 @@
 <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
-    <MudField Label="Read content from web?" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.AgentIsRunning">
-        <MudSwitch T="bool" @bind-Value="@this.showWebContentReader" Color="Color.Primary" Disabled="@this.AgentIsRunning">
-            @(this.showWebContentReader ? "Show web content options" : "Hide web content options")
-        </MudSwitch>
-    </MudField>
-
+    <MudTextSwitch Label="Read content from web?" Disabled="@this.AgentIsRunning" @bind-Value="@this.showWebContentReader" LabelOn="Show web content options" LabelOff="Hide web content options" />
     @if (this.showWebContentReader)
     {
-        <MudField Label="Cleanup content by using a LLM agent?" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.AgentIsRunning">
-            <MudSwitch T="bool" @bind-Value="@this.useContentCleanerAgent" Color="Color.Primary" Validation="@this.ValidateProvider" Disabled="@this.AgentIsRunning">
-                @(this.useContentCleanerAgent ? "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used." : "No content cleaning")
-            </MudSwitch>
-        </MudField>
+        <MudTextSwitch Label="Cleanup content by using a LLM agent?" @bind-Value="@this.useContentCleanerAgent" Validation="@this.ValidateProvider" Disabled="@this.AgentIsRunning" LabelOn="The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used." LabelOff="No content cleaning" />
         <MudStack Row="@true" AlignItems="@AlignItems.Baseline" Class="mb-3">
             <MudTextField T="string" Label="URL from which to load the content" @bind-Value="@this.providedURL" Validation="@this.ValidateURL" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Link" Placeholder="https://..." HelperText="Loads the content from your URL. Does not work when the content is hidden behind a paywall." Variant="Variant.Outlined" Immediate="@true" Disabled="@this.AgentIsRunning"/>
             <MudButton Disabled="@(!this.IsReady || this.AgentIsRunning)" Variant="Variant.Filled" Size="Size.Large" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="() => this.LoadFromWeb()">

@@ -16,9 +16,7 @@
 </MudButton>
 
 <MudStack Row="@false" Class="mb-3">
-    <MudSwitch T="bool" @bind-Value="@this.provideCompilerMessages" Color="Color.Primary">
-        @(this.provideCompilerMessages ? "Provide compiler messages" : "Provide no compiler messages")
-    </MudSwitch>
+    <MudTextSwitch Label="Do you want to provide compiler messages?" @bind-Value="@this.provideCompilerMessages" LabelOn="Yes, provide compiler messages" LabelOff="No, there are no compiler messages" />
     @if (this.provideCompilerMessages)
     {
         <MudTextField T="string" @bind-Text="@this.compilerMessages" Validation="@this.ValidatingCompilerMessages" AdornmentIcon="@Icons.Material.Filled.Error" Adornment="Adornment.Start" Label="Compiler messages" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
