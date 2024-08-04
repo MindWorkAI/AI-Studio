@@ -1,0 +1,11 @@
+@typeparam T
+
+@if (this.ShowProgressAnimation)
+{
+    <div class="pa-1">
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    </div>
+}
+<div class="pa-6">
+    <MudSlider T="int" Disabled="@true" Value="@this.StepValue" Min="@this.process.Min" Max="@this.process.Max" TickMarks="@true" Size="Size.Large" Variant="Variant.Filled" TickMarkLabels="@this.process.Labels" Class="mb-12"/>
+</div>
