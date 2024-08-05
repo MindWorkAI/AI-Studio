@@ -117,7 +117,38 @@ public partial class AssistantAgenda : AssistantBaseCore
     private string inputWhoIsPresenting = string.Empty;
     
     private readonly List<string> contentLines = [];
-    
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (this.SettingsManager.ConfigurationData.Agenda.PreselectOptions)
+        {
+            this.inputTopic = this.SettingsManager.ConfigurationData.Agenda.PreselectTopic;
+            this.inputName = this.SettingsManager.ConfigurationData.Agenda.PreselectName;
+            this.inputDuration = this.SettingsManager.ConfigurationData.Agenda.PreselectDuration;
+            this.inputStartTime = this.SettingsManager.ConfigurationData.Agenda.PreselectStartTime;
+            this.inputObjective = this.SettingsManager.ConfigurationData.Agenda.PreselectObjective;
+            this.inputModerator = this.SettingsManager.ConfigurationData.Agenda.PreselectModerator;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Agenda.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Agenda.PreselectedOtherLanguage;
+            this.introduceParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectIntroduceParticipants;
+            this.isMeetingVirtual = this.SettingsManager.ConfigurationData.Agenda.PreselectIsMeetingVirtual;
+            this.inputLocation = this.SettingsManager.ConfigurationData.Agenda.PreselectLocation;
+            this.goingToDinner = this.SettingsManager.ConfigurationData.Agenda.PreselectJointDinner;
+            this.doingSocialActivity = this.SettingsManager.ConfigurationData.Agenda.PreselectSocialActivity;
+            this.needToArriveAndDepart = this.SettingsManager.ConfigurationData.Agenda.PreselectArriveAndDepart;
+            this.durationLunchBreak = this.SettingsManager.ConfigurationData.Agenda.PreselectLunchTime;
+            this.durationBreaks = this.SettingsManager.ConfigurationData.Agenda.PreselectBreakTime;
+            this.activeParticipation = this.SettingsManager.ConfigurationData.Agenda.PreselectActiveParticipation;
+            this.numberParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectNumberParticipants;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Agenda.PreselectedProvider);
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
 
     private void OnContentChanged(string content)
     {

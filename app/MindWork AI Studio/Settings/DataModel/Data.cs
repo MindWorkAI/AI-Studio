@@ -36,4 +36,6 @@ public sealed class Data
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
+    
+    public DataAgenda Agenda { get; init; } = new();
 }
