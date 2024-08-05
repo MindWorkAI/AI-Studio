@@ -9,33 +9,8 @@
 }
 
 <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-
-<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudSelect T="CommonLanguages" @bind-Value="@this.selectedTargetLanguage" AdornmentIcon="@Icons.Material.Filled.Translate" Adornment="Adornment.Start" Label="Target language" Variant="Variant.Outlined" Margin="Margin.Dense">
-        @foreach (var targetLanguage in Enum.GetValues<CommonLanguages>())
-        {
-            <MudSelectItem Value="@targetLanguage">@targetLanguage.Name()</MudSelectItem>
-        }
-    </MudSelect>
-    @if (this.selectedTargetLanguage is CommonLanguages.OTHER)
-    {
-        <MudTextField T="string" @bind-Text="@this.customTargetLanguage" Validation="@this.ValidateCustomLanguage" Label="Custom target language" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    }
-</MudStack>
-
-<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudSelect T="Complexity" @bind-Value="@this.selectedComplexity" AdornmentIcon="@Icons.Material.Filled.Layers" Adornment="Adornment.Start" Label="Target complexity" Variant="Variant.Outlined" Margin="Margin.Dense">
-        @foreach (var targetComplexity in Enum.GetValues<Complexity>())
-        {
-            <MudSelectItem Value="@targetComplexity">@targetComplexity.Name()</MudSelectItem>
-        }
-    </MudSelect>
-    @if (this.selectedComplexity is Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS)
-    {
-        <MudTextField T="string" @bind-Text="@this.expertInField" Validation="@this.ValidateExpertInField" Label="Your expertise" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    }
-</MudStack>
-
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="Custom target language" ValidateOther="@this.ValidateCustomLanguage" />
+<EnumSelection T="Complexity" NameFunc="@(complexity => complexity.Name())" @bind-Value="@this.selectedComplexity" Icon="@Icons.Material.Filled.Layers" Label="Target complexity" AllowOther="@true" @bind-OtherInput="@this.expertInField" OtherValue="Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS" LabelOther="Your expertise" ValidateOther="@this.ValidateExpertInField" />
 <MudSelect T="Provider" Disabled="@this.isAgentRunning" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
     @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
     {

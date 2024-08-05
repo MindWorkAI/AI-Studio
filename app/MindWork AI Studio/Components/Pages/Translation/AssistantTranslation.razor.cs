@@ -67,6 +67,12 @@ public partial class AssistantTranslation : AssistantBaseCore
         return null;
     }
     
+    private string GetDisplayName(CommonLanguages language) => language switch
+    {
+        CommonLanguages.AS_IS => "Please select the target language",
+        _ => language.Name()
+    };
+
     private async Task TranslateText(bool force)
     {
         if (!this.inputIsValid)

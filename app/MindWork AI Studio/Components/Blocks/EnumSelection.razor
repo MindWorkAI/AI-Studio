@@ -1,0 +1,17 @@
+@typeparam T
+@inherits EnumSelectionBase
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudSelect T="@T" Value="@this.Value" ValueChanged="@this.SelectionChanged" AdornmentIcon="@this.Icon" Adornment="Adornment.Start" Label="@this.Label" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateSelection">
+        @foreach (var value in Enum.GetValues<T>())
+        {
+            <MudSelectItem Value="@value">
+                @this.NameFunc(value)
+            </MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.AllowOther && this.Value.Equals(this.OtherValue))
+    {
+        <MudTextField T="string" Text="@this.OtherInput" TextChanged="this.OtherInputChanged" Validation="@this.ValidateOther" Label="@this.LabelOther" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Immediate="@true"/>
+    }
+</MudStack>
