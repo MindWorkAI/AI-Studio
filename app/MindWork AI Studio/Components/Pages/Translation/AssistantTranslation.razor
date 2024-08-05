@@ -11,7 +11,7 @@
 <MudTextSwitch Label="Live translation" @bind-Value="@this.liveTranslation" LabelOn="Live translation" LabelOff="No live translation"/>
 @if (this.liveTranslation)
 {
-    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="1_000" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="@this.SettingsManager.ConfigurationData.LiveTranslationDebounceIntervalMilliseconds" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 }
 else
 {
