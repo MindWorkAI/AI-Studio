@@ -2,9 +2,9 @@
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
-@if (!this.SettingsManager.ConfigurationData.HideWebContentReaderForTextSummarizer)
+@if (!this.SettingsManager.ConfigurationData.TextSummarizer.HideWebContentReader)
 {
-    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions && this.SettingsManager.ConfigurationData.PreselectWebContentReaderForTextSummarizer)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions && this.SettingsManager.ConfigurationData.PreselectContentCleanerAgentForTextSummarizer)"/>
+    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions && this.SettingsManager.ConfigurationData.TextSummarizer.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions && this.SettingsManager.ConfigurationData.TextSummarizer.PreselectContentCleanerAgent)"/>
 }
 
 <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>

@@ -17,10 +17,7 @@ public partial class ReadWebContent : ComponentBase
     
     [Inject]
     protected SettingsManager SettingsManager { get; set; } = null!;
-    
-    [Inject]
-    protected IJSRuntime JsRuntime { get; init; } = null!;
-    
+
     [Parameter]
     public string Content { get; set; } = string.Empty;
     
@@ -63,8 +60,8 @@ public partial class ReadWebContent : ComponentBase
         if(this.PreselectContentCleanerAgent)
             this.useContentCleanerAgent = true;
         
-        if (this.SettingsManager.ConfigurationData.PreselectAgentTextContentCleanerOptions)
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedAgentTextContentCleanerProvider);
+        if (this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider);
         else
             this.providerSettings = this.ProviderSettings;
 
@@ -73,7 +70,7 @@ public partial class ReadWebContent : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!this.SettingsManager.ConfigurationData.PreselectAgentTextContentCleanerOptions)
+        if (!this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)
             this.providerSettings = this.ProviderSettings;
         
         await base.OnParametersSetAsync();

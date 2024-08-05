@@ -2,15 +2,15 @@
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
-@if (!this.SettingsManager.ConfigurationData.HideWebContentReaderForTranslation)
+@if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
 {
-    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.PreselectTranslationOptions && this.SettingsManager.ConfigurationData.PreselectWebContentReaderForTranslation)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.PreselectTranslationOptions && this.SettingsManager.ConfigurationData.PreselectContentCleanerAgentForTranslation)"/>
+    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent)"/>
 }
 
 <MudTextSwitch Label="Live translation" @bind-Value="@this.liveTranslation" LabelOn="Live translation" LabelOff="No live translation"/>
 @if (this.liveTranslation)
 {
-    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="@this.SettingsManager.ConfigurationData.LiveTranslationDebounceIntervalMilliseconds" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" Immediate="@true" DebounceInterval="@this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds" OnDebounceIntervalElapsed="() => this.TranslateText(force: false)" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 }
 else
 {

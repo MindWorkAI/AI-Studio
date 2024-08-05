@@ -70,7 +70,7 @@ public sealed class ContentText : IContent
                 // Notify the UI that the content has changed,
                 // depending on the energy saving mode:
                 var now = DateTimeOffset.Now;
-                switch (settings.ConfigurationData.IsSavingEnergy)
+                switch (settings.ConfigurationData.App.IsSavingEnergy)
                 {
                     // Energy saving mode is off. We notify the UI
                     // as fast as possible -- no matter the odds:

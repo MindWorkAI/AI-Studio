@@ -57,9 +57,9 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
 
-        if (this.SettingsManager.ConfigurationData.PreselectChatOptions)
+        if (this.SettingsManager.ConfigurationData.Chat.PreselectOptions)
         {
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedChatProvider);
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Chat.PreselectedProvider);
         }
         
         await base.OnInitializedAsync();
@@ -120,7 +120,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         });
 
         // Save the chat:
-        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();
             this.hasUnsavedChanges = false;
@@ -160,7 +160,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         // Save the chat:
-        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();
             this.hasUnsavedChanges = false;
@@ -183,7 +183,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         var isModifier = keyEvent.AltKey || keyEvent.CtrlKey || keyEvent.MetaKey || keyEvent.ShiftKey;
         
         // Depending on the user's settings, might react to shortcuts:
-        switch (this.SettingsManager.ConfigurationData.ShortcutSendBehavior)
+        switch (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)
         {
             case SendBehavior.ENTER_IS_SENDING:
                 if (!isModifier && isEnter)
@@ -232,7 +232,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
     {
-        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var dialogParameters = new DialogParameters
             {
@@ -294,7 +294,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if(this.workspaces is null)
             return;
         
-        if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var confirmationDialogParameters = new DialogParameters
             {
@@ -385,7 +385,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         switch (triggeredEvent)
         {
             case Event.HAS_CHAT_UNSAVED_CHANGES:
-                if(this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                     return Task.FromResult((TResult?) (object) false);
                 
                 return Task.FromResult((TResult?)(object)this.hasUnsavedChanges);
@@ -400,7 +400,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if(this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();
             this.hasUnsavedChanges = false;
