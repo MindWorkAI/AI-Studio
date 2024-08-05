@@ -1,6 +1,5 @@
 @page "/chat"
 @using AIStudio.Chat
-@using AIStudio.Settings
 @using AIStudio.Settings.DataModel
 
 @inherits MSGComponentBase
@@ -16,13 +15,7 @@
     }
 </MudText>
 
-<MudSelect T="Provider" @bind-Value="@this.providerSettings" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-2 rounded-lg" Variant="Variant.Outlined">
-    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-    {
-        <MudSelectItem Value="@provider"/>
-    }
-</MudSelect>
-
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
 <InnerScrolling HeaderHeight="12.3em">
     <ChildContent>
         @if (this.chatThread is not null)

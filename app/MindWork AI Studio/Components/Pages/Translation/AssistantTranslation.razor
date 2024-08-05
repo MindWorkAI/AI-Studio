@@ -1,5 +1,4 @@
 @page "/assistant/translation"
-@using AIStudio.Settings
 @using AIStudio.Tools
 @inherits AssistantBaseCore
 
@@ -19,12 +18,7 @@ else
 }
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
-<MudSelect T="Provider" @bind-Value="@this.providerSettings" Disabled="@this.isAgentRunning" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
-    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-    {
-        <MudSelectItem Value="@provider"/>
-    }
-</MudSelect>
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
 
 <MudButton Disabled="@this.isAgentRunning" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.TranslateText(force: true)">
     Translate

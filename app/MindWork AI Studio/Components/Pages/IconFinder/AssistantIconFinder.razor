@@ -1,5 +1,4 @@
 @page "/assistant/icons"
-@using AIStudio.Settings
 @inherits AssistantBaseCore
 
 <MudTextField T="string" @bind-Text="@this.inputContext" Validation="@this.ValidatingContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="Your context" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
@@ -16,13 +15,7 @@
         <MudButton Href="@this.selectedIconSource.URL()" Target="_blank" Variant="Variant.Filled" Size="Size.Medium">Open website</MudButton>
     }
 </MudStack>
-
-<MudSelect T="Provider" @bind-Value="@this.providerSettings" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
-    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-    {
-        <MudSelectItem Value="@provider"/>
-    }
-</MudSelect>
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
 
 <MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.FindIcon()">
     Find icon
