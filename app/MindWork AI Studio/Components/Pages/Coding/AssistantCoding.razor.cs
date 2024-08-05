@@ -33,10 +33,10 @@ public partial class AssistantCoding : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.PreselectCodingOptions)
+        if (this.SettingsManager.ConfigurationData.Coding.PreselectOptions)
         {
-            this.provideCompilerMessages = this.SettingsManager.ConfigurationData.PreselectCodingCompilerMessages;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedCodingProvider);
+            this.provideCompilerMessages = this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Coding.PreselectedProvider);
         }
         
         await base.OnInitializedAsync();
@@ -68,8 +68,8 @@ public partial class AssistantCoding : AssistantBaseCore
         this.codingContexts.Add(new()
         {
             Id = $"Context {this.codingContexts.Count + 1}",
-            Language = this.SettingsManager.ConfigurationData.PreselectCodingOptions ? this.SettingsManager.ConfigurationData.PreselectedCodingLanguage : default,
-            OtherLanguage = this.SettingsManager.ConfigurationData.PreselectCodingOptions ? this.SettingsManager.ConfigurationData.PreselectedCodingOtherLanguage : string.Empty,
+            Language = this.SettingsManager.ConfigurationData.Coding.PreselectOptions ? this.SettingsManager.ConfigurationData.Coding.PreselectedProgrammingLanguage : default,
+            OtherLanguage = this.SettingsManager.ConfigurationData.Coding.PreselectOptions ? this.SettingsManager.ConfigurationData.Coding.PreselectedOtherProgrammingLanguage : string.Empty,
         });
     }
 

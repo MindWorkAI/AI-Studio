@@ -1,6 +1,5 @@
 @page "/chat"
 @using AIStudio.Chat
-@using AIStudio.Settings
 @using AIStudio.Settings.DataModel
 
 @inherits MSGComponentBase
@@ -16,13 +15,7 @@
     }
 </MudText>
 
-<MudSelect T="Provider" @bind-Value="@this.providerSettings" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-2 rounded-lg" Variant="Variant.Outlined">
-    @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-    {
-        <MudSelectItem Value="@provider"/>
-    }
-</MudSelect>
-
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
 <InnerScrolling HeaderHeight="12.3em">
     <ChildContent>
         @if (this.chatThread is not null)
@@ -39,14 +32,14 @@
         </MudPaper>
         <MudPaper Class="mt-1" Outlined="@true">
             <MudToolBar WrapContent="true">
-                @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
                 {
                     <MudTooltip Text="Your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="() => this.ToggleWorkspaces()"/>
                     </MudTooltip>
                 }
 
-                @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
+                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
                 {
                     <MudTooltip Text="Save chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="() => this.SaveThread()" Disabled="@(!this.CanThreadBeSaved)"/>
@@ -64,14 +57,14 @@
                     </MudTooltip>
                 }
                 
-                @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                 {
                     <MudTooltip Text="Delete this chat & start a new one" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true)" Disabled="@(!this.CanThreadBeSaved)"/>
                     </MudTooltip>
                 }
 
-                @if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
                 {
                     <MudTooltip Text="Move the chat to a workspace, or to another if it is already in one." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
@@ -82,7 +75,7 @@
     </FooterContent>
 </InnerScrolling>
 
-@if (this.SettingsManager.ConfigurationData.WorkspaceStorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+@if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES)
 {
     <MudDrawer @bind-Open="@this.workspacesVisible" Width="40em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1">
         <MudDrawerHeader>

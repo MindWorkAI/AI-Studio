@@ -1,0 +1,56 @@
+@page "/assistant/agenda"
+@using AIStudio.Tools
+@inherits AssistantBaseCore
+
+<MudTextField T="string" @bind-Text="@this.inputName" Validation="@this.ValidateName" Label="Meeting Name" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Tag" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Name the meeting, seminar, etc." Placeholder="Weekly jour fixe" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.inputTopic" Validation="@this.ValidateTopic" Label="Topic" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.EventNote" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?" Placeholder="Project meeting" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidateContent" Label="Content list" Variant="Variant.Outlined" Lines="6" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Bullet list the content of the meeting, seminar, etc. roughly. Use dashes (-) to separate the items." Placeholder="@PLACEHOLDER_CONTENT" Class="mb-3" Immediate="@false" DebounceInterval="1_000" OnDebounceIntervalElapsed="@this.OnContentChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt"/>
+<MudSelect T="string" Label="(Optional) What topics should be the focus?" MultiSelection="@true" @bind-SelectedValues="@this.selectedFoci" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt">
+    @foreach (var contentLine in this.contentLines)
+    {
+        @if(!this.justBriefly.Contains(contentLine))
+        {
+            <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+        }
+    }
+</MudSelect>
+
+<MudSelect T="string" Label="(Optional) What topics should only be briefly addressed?" MultiSelection="@true" @bind-SelectedValues="@this.justBriefly" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt">
+    @foreach (var contentLine in this.contentLines)
+    {
+        @if(!this.selectedFoci.Contains(contentLine))
+        {
+            <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+        }
+    }
+</MudSelect>
+
+<MudTextField T="string" @bind-Text="@this.inputObjective" Validation="@this.ValidateObjective" Label="Objective" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Flag" Variant="Variant.Outlined" Lines="3" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Describe the objective(s) of the meeting, seminar, etc. What should be achieved?" Placeholder="Discuss the current project status and plan the next steps." Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.inputModerator" Validation="@this.ValidateModerator" Label="Moderator" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person3" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Who will moderate the meeting, seminar, etc.?" Placeholder="Jane Doe" Class="mb-3" />
+<MudTextField T="string" @bind-Text="@this.inputDuration" Validation="@this.ValidateDuration" Label="Duration" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Schedule" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="How long will the meeting, seminar, etc. last? E.g., '2 hours', or '2 days (first day 8 hours, then 4 hours)', etc." Placeholder="2 hours" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.inputStartTime" Validation="@this.ValidateStartTime" Label="Start time" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Schedule" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="When will the meeting, seminar, etc. start? E.g., '9:00 AM', or '9:00 AM (CET)', etc. When the meeting is a multi-day event, specify the start time for each day." Placeholder="9:00 AM" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.inputWhoIsPresenting" Label="(Optional) Who is presenting?" Variant="Variant.Outlined" Lines="6" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="(Optional) List the persons who will present at the meeting, seminar, etc. Use dashes (-) to separate the items." Placeholder="@PLACEHOLDER_WHO_IS_PRESENTING" Class="mb-3"/>
+<MudTextSwitch Label="Do the participants need to get to know each other first?" @bind-Value="@this.introduceParticipants" LabelOn="Yes, introduce participants" LabelOff="No, participants know each other" />
+<EnumSelection T="NumberParticipants" @bind-Value="@this.numberParticipants" NameFunc="@(participants => participants.Name())" Icon="@Icons.Material.Filled.Group" Label="Number of participants" ValidateSelection="@this.ValidateNumberParticipants"/>
+<MudTextSwitch Label="Should the participants be involved passively or actively?" @bind-Value="@this.activeParticipation" LabelOn="Active participation, like world café, discussions, etc." LabelOff="Passive participation, like presentations, lectures, etc." />
+<MudTextSwitch Label="Is this a virtual event, e.g., a call or webinar?" @bind-Value="@this.isMeetingVirtual" LabelOn="Yes, this is a virtual event" LabelOff="No, this is a physical event" />
+@if (!this.isMeetingVirtual)
+{
+    <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+        <MudTextField T="string" @bind-Text="@this.inputLocation" Validation="@this.ValidateLocation" Label="Location" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.MyLocation" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Where will the meeting, seminar, etc. take place?" Placeholder="Hamburg, Germany" Class="mb-3"/>
+        <MudTextSwitch Label="Should there be a joint dinner?" @bind-Value="@this.goingToDinner" LabelOn="Yes, there should be a joint dinner" LabelOff="No, there should be no joint dinner" />
+        <MudTextSwitch Label="Should there be a social activity?" @bind-Value="@this.doingSocialActivity" LabelOn="Yes, there should be a social activity" LabelOff="No, there should be no social activity" />
+        <MudTextSwitch Label="Do participants need to arrive and depart?" @bind-Value="@this.needToArriveAndDepart" LabelOn="Yes, participants need to arrive and depart" LabelOff="No, participants do not need to arrive and depart" />
+        <MudStack Row="@true" Wrap="Wrap.Wrap">
+            <MudTextSlider T="int" Label="Approx. duration of the lunch break" @bind-Value="@this.durationLunchBreak" Min="30" Max="120" Step="5" Unit="minutes"/>
+            <MudTextSlider T="int" Label="Approx. duration of the coffee or tea breaks" @bind-Value="@this.durationBreaks" Min="10" Max="60" Step="5" Unit="minutes"/>
+        </MudStack>
+    </MudPaper>
+}
+
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.CreateAgenda()">
+    Create agenda
+</MudButton>

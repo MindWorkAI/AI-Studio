@@ -30,12 +30,12 @@ public partial class AssistantTranslation : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.PreselectTranslationOptions)
+        if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
         {
-            this.liveTranslation = this.SettingsManager.ConfigurationData.PreselectLiveTranslation;
-            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTranslationTargetLanguage;
-            this.customTargetLanguage = this.SettingsManager.ConfigurationData.PreselectTranslationOtherLanguage;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedTranslationProvider);
+            this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
         }
         
         await base.OnInitializedAsync();
@@ -66,7 +66,7 @@ public partial class AssistantTranslation : AssistantBaseCore
         
         return null;
     }
-    
+
     private async Task TranslateText(bool force)
     {
         if (!this.inputIsValid)
@@ -79,7 +79,7 @@ public partial class AssistantTranslation : AssistantBaseCore
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.selectedTargetLanguage.Prompt(this.customTargetLanguage)}
+                {this.selectedTargetLanguage.PromptTranslation(this.customTargetLanguage)}
                 
                 The given text is:
                 

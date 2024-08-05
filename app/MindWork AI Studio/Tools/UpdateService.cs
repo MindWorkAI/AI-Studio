@@ -37,7 +37,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
             await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
 
-        this.updateInterval = this.settingsManager.ConfigurationData.UpdateBehavior switch
+        this.updateInterval = this.settingsManager.ConfigurationData.App.UpdateBehavior switch
         {
             UpdateBehavior.NO_CHECK => Timeout.InfiniteTimeSpan,
             UpdateBehavior.ONCE_STARTUP => Timeout.InfiniteTimeSpan,
@@ -49,7 +49,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             _ => TimeSpan.FromHours(1)
         };
         
-        if(this.settingsManager.ConfigurationData.UpdateBehavior is UpdateBehavior.NO_CHECK)
+        if(this.settingsManager.ConfigurationData.App.UpdateBehavior is UpdateBehavior.NO_CHECK)
             return;
         
         await this.CheckForUpdate();

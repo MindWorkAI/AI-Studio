@@ -34,13 +34,13 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if(this.SettingsManager.ConfigurationData.PreselectTextSummarizerOptions)
+        if(this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)
         {
-            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerTargetLanguage;
-            this.customTargetLanguage = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerOtherLanguage;
-            this.selectedComplexity = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerComplexity;
-            this.expertInField = this.SettingsManager.ConfigurationData.PreselectedTextSummarizerExpertInField;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedTextSummarizerProvider);
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
+            this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
+            this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider);
         }
         
         await base.OnInitializedAsync();
@@ -81,7 +81,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.selectedTargetLanguage.Prompt(this.customTargetLanguage)}
+                {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
                 {this.selectedComplexity.Prompt(this.expertInField)}
                 
                 Please summarize the following text:

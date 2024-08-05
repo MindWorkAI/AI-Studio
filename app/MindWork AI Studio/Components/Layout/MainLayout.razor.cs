@@ -89,7 +89,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
-        if(this.SettingsManager.ConfigurationData.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
+        if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
             this.navBarOpen = true;
         
         await base.OnInitializedAsync();
@@ -121,7 +121,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                 break;
             
             case Event.CONFIGURATION_CHANGED:
-                if(this.SettingsManager.ConfigurationData.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
+                if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
                     this.navBarOpen = true;
                 else
                     this.navBarOpen = false;

@@ -16,7 +16,7 @@ public class TemporaryChatService(SettingsManager settingsManager) : BackgroundS
             await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
 
         await settingsManager.LoadSettings();
-        if(settingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy is WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE)
+        if(settingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy is WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE)
         {
             Console.WriteLine("Automatic maintenance of temporary chat storage is disabled. Exiting maintenance service.");
             return;
@@ -46,7 +46,7 @@ public class TemporaryChatService(SettingsManager settingsManager) : BackgroundS
                 continue;
 
             var lastWriteTime = chatMetadata.LastWriteTimeUtc;
-            var deleteChat = settingsManager.ConfigurationData.WorkspaceStorageTemporaryMaintenancePolicy switch
+            var deleteChat = settingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy switch
             {
                 WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS => DateTime.UtcNow - lastWriteTime > TimeSpan.FromDays(7),
                 WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS => DateTime.UtcNow - lastWriteTime > TimeSpan.FromDays(30),

@@ -107,13 +107,33 @@ public sealed class SettingsManager
         var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
         if(!File.Exists(settingsPath))
             return;
-        
-        var settingsJson = await File.ReadAllTextAsync(settingsPath);
-        var loadedConfiguration = JsonSerializer.Deserialize<Data>(settingsJson, JSON_OPTIONS);
-        if(loadedConfiguration is null)
+     
+        // We read the `"Version": "V3"` line to determine the version of the settings file:
+        await foreach (var line in File.ReadLinesAsync(settingsPath))
+        {
+            if (!line.Contains("""
+                               "Version":
+                               """))
+                continue;
+
+            // Extract the version from the line:
+            var settingsVersionText = line.Split('"')[3];
+                
+            // Parse the version:
+            Enum.TryParse(settingsVersionText, out Version settingsVersion);
+            if(settingsVersion is Version.UNKNOWN)
+            {
+                Console.WriteLine("Error: Unknown version of the settings file.");
+                this.ConfigurationData = new();
+                return;
+            }
+                
+            this.ConfigurationData = SettingsMigrations.Migrate(settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
             return;
+        }
         
-        this.ConfigurationData = SettingsMigrations.Migrate(loadedConfiguration);
+        Console.WriteLine("Error: Failed to read the version of the settings file.");
+        this.ConfigurationData = new();
     }
 
     /// <summary>
@@ -132,5 +152,5 @@ public sealed class SettingsManager
         await File.WriteAllTextAsync(settingsPath, settingsJson);
     }
     
-    public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.EnableSpellchecking ? "true" : "false";
+    public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
 }

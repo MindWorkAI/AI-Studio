@@ -1,0 +1,7 @@
+@typeparam T
+
+<MudField Label="@this.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.Disabled()">
+    <MudSlider T="@T" Size="Size.Medium" Value="@this.Value" ValueChanged="@this.ValueUpdated" Min="@this.Min" Max="@this.Max" Step="@this.Step" Immediate="@true" Disabled="@this.Disabled()">
+        @this.Value @this.Unit
+    </MudSlider>
+</MudField>

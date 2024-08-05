@@ -1,3 +1,4 @@
+using AIStudio.Components.Pages.Agenda;
 using AIStudio.Components.Pages.Coding;
 using AIStudio.Components.Pages.IconFinder;
 using AIStudio.Components.Pages.TextSummarizer;
@@ -72,6 +73,15 @@ public static class ConfigurationSelectDataFactory
             yield return new(language.Name(), language);
     }
     
+    public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesTranslationData()
+    {
+        foreach (var language in Enum.GetValues<CommonLanguages>())
+            if(language is CommonLanguages.AS_IS)
+                yield return new("Not yet specified", language);
+            else
+                yield return new(language.Name(), language);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<CommonCodingLanguages>> GetCommonCodingLanguagesData()
     {
         foreach (var language in Enum.GetValues<CommonCodingLanguages>())
@@ -82,5 +92,11 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var complexity in Enum.GetValues<Complexity>())
             yield return new(complexity.Name(), complexity);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<NumberParticipants>> GetNumberParticipantsData()
+    {
+        foreach (var number in Enum.GetValues<NumberParticipants>())
+            yield return new(number.Name(), number);
     }
 }

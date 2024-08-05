@@ -9,10 +9,10 @@ public partial class AssistantIconFinder : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.PreselectIconOptions)
+        if (this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)
         {
-            this.selectedIconSource = this.SettingsManager.ConfigurationData.PreselectedIconSource;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.PreselectedIconProvider);
+            this.selectedIconSource = this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider);
         }
 
         await base.OnInitializedAsync();

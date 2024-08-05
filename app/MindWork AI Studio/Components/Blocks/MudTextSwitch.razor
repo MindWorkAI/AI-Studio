@@ -1,0 +1,5 @@
+<MudField Label="@this.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.Disabled">
+    <MudSwitch T="bool" Value="@this.Value" ValueChanged="@this.ValueChanged" Color="@this.Color" Validation="@this.Validation" Disabled="@this.Disabled">
+        @(this.Value ? this.LabelOn : this.LabelOff)
+    </MudSwitch>
+</MudField>
