@@ -66,12 +66,6 @@ public partial class AssistantTranslation : AssistantBaseCore
         
         return null;
     }
-    
-    private string GetDisplayName(CommonLanguages language) => language switch
-    {
-        CommonLanguages.AS_IS => "Please select the target language",
-        _ => language.Name()
-    };
 
     private async Task TranslateText(bool force)
     {
@@ -85,7 +79,7 @@ public partial class AssistantTranslation : AssistantBaseCore
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.selectedTargetLanguage.Prompt(this.customTargetLanguage)}
+                {this.selectedTargetLanguage.PromptTranslation(this.customTargetLanguage)}
                 
                 The given text is:
                 

@@ -19,4 +19,27 @@ public static class CommonLanguageExtensions
             
         _ => "Other",
     };
+    
+    public static string PromptSummarizing(this CommonLanguages language, string customLanguage) => language switch
+    {
+        CommonLanguages.AS_IS => "Do not change the language of the text.",
+        CommonLanguages.OTHER => $"Output your summary in {customLanguage}.",
+
+        _ => $"Output your summary in {language.Name()} ({language}).",
+    };
+    
+    public static string PromptTranslation(this CommonLanguages language, string customLanguage) => language switch
+    {
+        CommonLanguages.OTHER => $"Translate the text in {customLanguage}.",
+
+        _ => $"Translate the given text in {language.Name()} ({language}).",
+    };
+
+    public static string NameSelecting(this CommonLanguages language)
+    {
+        if(language is CommonLanguages.AS_IS)
+            return "Please select the target language";
+        
+        return language.Name();
+    }
 }

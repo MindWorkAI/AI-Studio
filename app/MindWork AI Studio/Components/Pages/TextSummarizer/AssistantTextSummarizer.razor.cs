@@ -81,7 +81,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.selectedTargetLanguage.Prompt(this.customTargetLanguage)}
+                {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
                 {this.selectedComplexity.Prompt(this.expertInField)}
                 
                 Please summarize the following text:

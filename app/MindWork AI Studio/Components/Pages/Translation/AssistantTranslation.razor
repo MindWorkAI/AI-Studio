@@ -18,7 +18,7 @@ else
     <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 }
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => this.GetDisplayName(language))" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
 <MudSelect T="Provider" @bind-Value="@this.providerSettings" Disabled="@this.isAgentRunning" Validation="@this.ValidatingProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" Variant="Variant.Outlined">
     @foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
     {
