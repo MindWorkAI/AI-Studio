@@ -42,10 +42,35 @@ public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct
     [Parameter]
     public Action<T> ValueUpdate { get; set; } = _ => { };
     
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.EnsureMinMax();
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await this.EnsureMinMax();
+        await base.OnParametersSetAsync();
+    }
+
+    #endregion
+    
     private async Task OptionChanged(T updatedValue)
     {
         this.ValueUpdate(updatedValue);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
+    }
+    
+    private async Task EnsureMinMax()
+    {
+        if (this.Value() < this.Min)
+            await this.OptionChanged(this.Min);
+
+        else if(this.Value() > this.Max)
+            await this.OptionChanged(this.Max);
     }
 }
