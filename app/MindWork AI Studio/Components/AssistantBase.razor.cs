@@ -26,6 +26,8 @@ public abstract partial class AssistantBase : ComponentBase
     
     private protected virtual RenderFragment? Body => null;
 
+    protected virtual bool ShowResult => true;
+
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     protected AIStudio.Settings.Provider providerSettings;

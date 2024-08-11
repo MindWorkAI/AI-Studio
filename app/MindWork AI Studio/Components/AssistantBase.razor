@@ -17,7 +17,7 @@
         </MudForm>
         <Issues IssuesData="@this.inputIssues"/>
         
-        @if (this.resultingContentBlock is not null)
+        @if (this.ShowResult && this.resultingContentBlock is not null)
         {
             <ContentBlockComponent Role="@this.resultingContentBlock.Role" Type="@this.resultingContentBlock.ContentType" Time="@this.resultingContentBlock.Time" Content="@this.resultingContentBlock.Content" Class="mr-2"/>
         }
