@@ -47,7 +47,7 @@
     <ItemGroup>
       <PackageReference Include="HtmlAgilityPack" Version="1.11.62" />
       <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.7" />
-      <PackageReference Include="MudBlazor" Version="7.5.0" />
+      <PackageReference Include="MudBlazor" Version="7.6.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="1.0.2" />
       <PackageReference Include="ReverseMarkdown" Version="4.6.0" />
     </ItemGroup>
