@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Rendering;
 namespace AIStudio.Components;
 
 //
-// See https://stackoverflow.com/a/77300384/2258393 for why this class is needed
+// See https://stackoverflow.com/a/77300384/2258393 for why this class is necessary
 //
 
 public abstract class AssistantBaseCore : AssistantBase
