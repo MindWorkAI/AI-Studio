@@ -18,6 +18,9 @@ public abstract partial class AssistantBase : ComponentBase
     [Inject]
     protected ThreadSafeRandom RNG { get; init; } = null!;
     
+    internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
+    internal const string ASSISTANT_RESULT_DIV_ID = "assistantResult";
+    
     protected abstract string Title { get; }
     
     protected abstract string Description { get; }
@@ -131,5 +134,12 @@ public abstract partial class AssistantBase : ComponentBase
         // Return the AI response:
         return aiText.Text;
     }
+    
+    private static string? GetButtonIcon(string icon)
+    {
+        if(string.IsNullOrWhiteSpace(icon))
+            return null;
+        
+        return icon;
     }
 }
