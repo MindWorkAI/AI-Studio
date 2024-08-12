@@ -13,9 +13,12 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
     
     protected override string SystemPrompt => 
         $"""
-        You get a text as input. The user wants you to check the grammar and spelling of the text.
-        Correct any spelling or grammar mistakes. Do not add any information. Do not ask for additional information.
-        Do not improve the text. Do not mirror the user's language. Do not mirror your task.{this.SystemPromptLanguage()}
+        You are an expert in languages and their rules. For example, you know how US and UK English or German in
+        Germany and German in Austria differ. You receive text as input. You check the spelling and grammar of
+        this text according to the rules of {this.SystemPromptLanguage()}. You never add information. You
+        never ask the user for additional information. You do not attempt to improve the wording of the text.
+        Your response includes only the corrected text. Do not explain your changes. If no changes are needed,
+        you return the text unchanged.
         """;
 
     protected override bool ShowResult => true;
@@ -45,19 +48,16 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
     {
         var lang = this.selectedTargetLanguage switch
         {
-            CommonLanguages.AS_IS => string.Empty,
+            CommonLanguages.AS_IS => "the source language",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => this.selectedTargetLanguage.Name(),
+            _ => $"{this.selectedTargetLanguage.Name()}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))
-            return string.Empty;
-        
-        return
-            $"""
-             The text is written in {lang}.
-            """;
+            return "the source language";
+
+        return lang;
     }
 
     private async Task ProofreadText()
