@@ -99,7 +99,7 @@ public abstract partial class AssistantBase : ComponentBase
         return time;
     }
 
-    protected async Task AddAIResponseAsync(DateTimeOffset time)
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time)
     {
         var aiText = new ContentText
         {
@@ -127,5 +127,9 @@ public abstract partial class AssistantBase : ComponentBase
         
         this.isProcessing = false;
         this.StateHasChanged();
+        
+        // Return the AI response:
+        return aiText.Text;
+    }
     }
 }
