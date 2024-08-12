@@ -31,6 +31,8 @@ public abstract partial class AssistantBase : ComponentBase
 
     protected virtual bool ShowResult => true;
 
+    protected virtual IReadOnlyList<ButtonData> FooterButtons => [];
+
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     protected AIStudio.Settings.Provider providerSettings;
