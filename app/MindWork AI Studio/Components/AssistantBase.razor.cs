@@ -37,6 +37,7 @@ public abstract partial class AssistantBase : ComponentBase
     private ChatThread? chatThread;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
+    private bool isProcessing;
     
     #region Overrides of ComponentBase
 
@@ -116,10 +117,15 @@ public abstract partial class AssistantBase : ComponentBase
         };
         
         this.chatThread?.Blocks.Add(this.resultingContentBlock);
+        this.isProcessing = true;
+        this.StateHasChanged();
         
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
         await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        
+        this.isProcessing = false;
+        this.StateHasChanged();
     }
 }
