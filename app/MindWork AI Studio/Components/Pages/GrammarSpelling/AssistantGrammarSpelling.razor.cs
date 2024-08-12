@@ -21,12 +21,17 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         you return the text unchanged.
         """;
 
-    protected override bool ShowResult => true;
+    protected override bool ShowResult => false;
+    
+    protected override IReadOnlyList<ButtonData> FooterButtons => new[]
+    {
+        new ButtonData("Copy corrected text", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, this.CopyToClipboard),
+    };
 
-    private string originalText = string.Empty;
     private string inputText = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
+    private string correctedText = string.Empty;
 
     private string? ValidateText(string text)
     {
@@ -68,6 +73,12 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         this.CreateChatThread();
         var time = this.AddUserRequest(this.inputText);
         
-        await this.AddAIResponseAsync(time);
+        this.correctedText = await this.AddAIResponseAsync(time);
+        await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);
+    }
+    
+    private async Task CopyToClipboard()
+    {
+        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, this.correctedText);
     }
 }
