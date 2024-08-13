@@ -69,6 +69,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
 
     private async Task ProofreadText()
     {
+        await this.form!.Validate();
         if (!this.inputIsValid)
             return;
         

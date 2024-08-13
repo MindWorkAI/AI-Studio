@@ -75,6 +75,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     
     private async Task RewriteText()
     {
+        await this.form!.Validate();
         if (!this.inputIsValid)
             return;
         
