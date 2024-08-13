@@ -69,6 +69,7 @@ public partial class AssistantTranslation : AssistantBaseCore
 
     private async Task TranslateText(bool force)
     {
+        await this.form!.Validate();
         if (!this.inputIsValid)
             return;
         
