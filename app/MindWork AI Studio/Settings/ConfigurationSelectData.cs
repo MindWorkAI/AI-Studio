@@ -1,6 +1,7 @@
 using AIStudio.Components.Pages.Agenda;
 using AIStudio.Components.Pages.Coding;
 using AIStudio.Components.Pages.IconFinder;
+using AIStudio.Components.Pages.RewriteImprove;
 using AIStudio.Components.Pages.TextSummarizer;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
@@ -98,5 +99,11 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var number in Enum.GetValues<NumberParticipants>())
             yield return new(number.Name(), number);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<WritingStyles>> GetWritingStylesData()
+    {
+        foreach (var style in Enum.GetValues<WritingStyles>())
+            yield return new(style.Name(), style);
     }
 }

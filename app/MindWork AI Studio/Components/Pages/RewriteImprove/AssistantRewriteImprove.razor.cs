@@ -35,6 +35,23 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText)),
     };
     
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)
+        {
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider);
+            this.selectedWritingStyle = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle;
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+    
     private string inputText = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
