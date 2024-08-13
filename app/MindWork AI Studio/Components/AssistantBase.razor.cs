@@ -18,6 +18,15 @@ public abstract partial class AssistantBase : ComponentBase
     [Inject]
     protected ThreadSafeRandom RNG { get; init; } = null!;
     
+    [Inject]
+    protected ISnackbar Snackbar { get; init; } = null!;
+    
+    [Inject]
+    protected Rust Rust { get; init; } = null!;
+    
+    internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
+    internal const string ASSISTANT_RESULT_DIV_ID = "assistantResult";
+    
     protected abstract string Title { get; }
     
     protected abstract string Description { get; }
@@ -25,6 +34,10 @@ public abstract partial class AssistantBase : ComponentBase
     protected abstract string SystemPrompt { get; }
     
     private protected virtual RenderFragment? Body => null;
+
+    protected virtual bool ShowResult => true;
+
+    protected virtual IReadOnlyList<ButtonData> FooterButtons => [];
 
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
@@ -35,6 +48,7 @@ public abstract partial class AssistantBase : ComponentBase
     private ChatThread? chatThread;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
+    private bool isProcessing;
     
     #region Overrides of ComponentBase
 
@@ -96,7 +110,7 @@ public abstract partial class AssistantBase : ComponentBase
         return time;
     }
 
-    protected async Task AddAIResponseAsync(DateTimeOffset time)
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time)
     {
         var aiText = new ContentText
         {
@@ -114,10 +128,26 @@ public abstract partial class AssistantBase : ComponentBase
         };
         
         this.chatThread?.Blocks.Add(this.resultingContentBlock);
+        this.isProcessing = true;
+        this.StateHasChanged();
         
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
         await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        
+        this.isProcessing = false;
+        this.StateHasChanged();
+        
+        // Return the AI response:
+        return aiText.Text;
+    }
+    
+    private static string? GetButtonIcon(string icon)
+    {
+        if(string.IsNullOrWhiteSpace(icon))
+            return null;
+        
+        return icon;
     }
 }

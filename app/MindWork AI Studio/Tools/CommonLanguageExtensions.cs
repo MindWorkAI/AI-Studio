@@ -42,4 +42,12 @@ public static class CommonLanguageExtensions
         
         return language.Name();
     }
+    
+    public static string NameSelectingOptional(this CommonLanguages language)
+    {
+        if(language is CommonLanguages.AS_IS)
+            return "Do not specify the language";
+        
+        return language.Name();
+    }
 }
