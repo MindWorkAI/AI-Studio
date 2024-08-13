@@ -4,7 +4,7 @@ namespace AIStudio.Components.Pages.GrammarSpelling;
 
 public partial class AssistantGrammarSpelling : AssistantBaseCore
 {
-    protected override string Title => "Grammar and Spelling Checker";
+    protected override string Title => "Grammar & Spelling Checker";
     
     protected override string Description =>
         """
@@ -23,9 +23,11 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
 
     protected override bool ShowResult => false;
     
+    protected override bool ShowDedicatedProgress => true;
+    
     protected override IReadOnlyList<ButtonData> FooterButtons => new[]
     {
-        new ButtonData("Copy corrected text", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, this.CopyToClipboard),
+        new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.correctedText)),
     };
 
     private string inputText = string.Empty;
@@ -75,10 +77,5 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         
         this.correctedText = await this.AddAIResponseAsync(time);
         await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);
-    }
-    
-    private async Task CopyToClipboard()
-    {
-        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, this.correctedText);
     }
 }

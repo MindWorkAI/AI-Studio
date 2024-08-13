@@ -36,6 +36,8 @@ public abstract partial class AssistantBase : ComponentBase
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;
+    
+    protected virtual bool ShowDedicatedProgress => false;
 
     protected virtual IReadOnlyList<ButtonData> FooterButtons => [];
 
@@ -141,6 +143,11 @@ public abstract partial class AssistantBase : ComponentBase
         
         // Return the AI response:
         return aiText.Text;
+    }
+    
+    protected async Task CopyToClipboard(string text)
+    {
+        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, text);
     }
     
     private static string? GetButtonIcon(string icon)
