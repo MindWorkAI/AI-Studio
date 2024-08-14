@@ -10,18 +10,18 @@
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
-        "requested": "[8.0.7, )",
-        "resolved": "8.0.7",
-        "contentHash": "ABsn0T09b5lzVNbOcuRc10+kNZkO+RGtZWfzqVay0Ah+/ouhEvG7JrXc+9+7zFgoPuH4E4N6+uWfTp+pJqMeGw==",
+        "requested": "[8.0.8, )",
+        "resolved": "8.0.8",
+        "contentHash": "fefQMlaOIQnc7cn7R/GWCwnA6X0tv5pB9ZKIR6I1JZPmYcoCNY7HtLt0bJPMj+F0StrMkwTk2cPtMGtr9zhkoA==",
         "dependencies": {
           "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.7, )",
-        "resolved": "8.0.7",
-        "contentHash": "iI52ptEKby2ymQ6B7h4TWbFmm85T4VvLgc/HvS45Yr3lgi4IIFbQtjON3bQbX/Vc94jXNSLvrDOp5Kh7SJyFYQ=="
+        "requested": "[8.0.8, )",
+        "resolved": "8.0.8",
+        "contentHash": "P8wR6MUWwYXIjPJuBaZgo5zlI/GWI6QEAo6NyVIbPefa9CCkohYu7dP2rD/mrqnjEqfRHyl+h9VZrDoGpELqYg=="
       },
       "MudBlazor": {
         "type": "Direct",
