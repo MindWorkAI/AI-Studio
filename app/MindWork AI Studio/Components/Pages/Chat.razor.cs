@@ -93,7 +93,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 Name = threadName,
                 Seed = this.RNG.Next(),
-                SystemPrompt = "You are a helpful assistant!",
+                SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks = [],
             };
         }
