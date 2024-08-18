@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.Agenda;
@@ -100,7 +101,12 @@ public partial class AssistantAgenda : AssistantBaseCore
             Self = SendTo.AGENDA_ASSISTANT,
         },
     ];
-    
+
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
+
     private string inputTopic = string.Empty;
     private string inputName = string.Empty;
     private string inputContent = string.Empty;

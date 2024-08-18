@@ -62,6 +62,24 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Chat.PreselectedProvider);
         }
         
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
+        if (deferredContent is not null)
+        {
+            this.chatThread = deferredContent;
+            if (this.chatThread is not null)
+            {
+                var firstUserBlock = this.chatThread.Blocks.FirstOrDefault(x => x.Role == ChatRole.USER);
+                if (firstUserBlock is not null)
+                {
+                    this.chatThread.Name = firstUserBlock.Content switch
+                    {
+                        ContentText textBlock => this.ExtractThreadName(textBlock.Text),
+                        _ => "Thread"
+                    };
+                }
+            }
+        }
+
         await base.OnInitializedAsync();
     }
 

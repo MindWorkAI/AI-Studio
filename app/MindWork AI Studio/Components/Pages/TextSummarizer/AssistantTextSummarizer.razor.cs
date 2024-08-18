@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.TextSummarizer;
@@ -30,6 +31,11 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
             Self = SendTo.TEXT_SUMMARIZER_ASSISTANT,
         },
     ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
     
     private string inputText = string.Empty;
     private bool isAgentRunning;

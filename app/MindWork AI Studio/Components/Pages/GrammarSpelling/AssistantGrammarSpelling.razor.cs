@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.GrammarSpelling;
@@ -35,6 +36,11 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
             GetText = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },
     ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
 
     #region Overrides of ComponentBase
 

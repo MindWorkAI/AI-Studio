@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.RewriteImprove;
@@ -36,6 +37,11 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
             GetText = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
         },
     ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
 
     #region Overrides of ComponentBase
 

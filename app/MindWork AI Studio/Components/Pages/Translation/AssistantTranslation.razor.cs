@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.Translation;
@@ -26,6 +27,11 @@ public partial class AssistantTranslation : AssistantBaseCore
             Self = SendTo.TRANSLATION_ASSISTANT,
         },
     ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
     
     private bool liveTranslation;
     private bool isAgentRunning;

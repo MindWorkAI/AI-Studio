@@ -14,6 +14,8 @@ public static class SendToExtensions
             SendTo.AGENDA_ASSISTANT => "Agenda Assistant",
             SendTo.CODING_ASSISTANT => "Coding Assistant",
             
+            SendTo.CHAT => "New Chat",
+            
             _ => "Send to ...",
         };
     }

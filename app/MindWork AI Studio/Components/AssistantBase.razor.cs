@@ -45,6 +45,8 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected virtual bool ShowDedicatedProgress => false;
 
+    protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
+
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -53,7 +55,7 @@ public abstract partial class AssistantBase : ComponentBase
     protected MudForm? form;
     protected bool inputIsValid;
     
-    private ChatThread? chatThread;
+    protected ChatThread? chatThread;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -164,7 +166,7 @@ public abstract partial class AssistantBase : ComponentBase
         return icon;
     }
     
-    private Task SendToAssistant(SendTo assistant, SendToButton sendToButton)
+    private Task SendToAssistant(SendTo destination, SendToButton sendToButton)
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
@@ -176,7 +178,7 @@ public abstract partial class AssistantBase : ComponentBase
             },
         };
 
-        var (eventItem, path) = assistant switch
+        var (eventItem, path) = destination switch
         {
             SendTo.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Path.ASSISTANT_AGENDA),
             SendTo.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Path.ASSISTANT_CODING),
@@ -186,10 +188,22 @@ public abstract partial class AssistantBase : ComponentBase
             SendTo.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Path.ASSISTANT_GRAMMAR_SPELLING),
             SendTo.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Path.ASSISTANT_SUMMARIZER),
             
+            SendTo.CHAT => (Event.SEND_TO_CHAT, Path.CHAT),
+            
             _ => (Event.NONE, Path.ASSISTANTS),
         };
-        
-        MessageBus.INSTANCE.DeferMessage(this, eventItem, contentToSend);
+
+        switch (destination)
+        {
+            case SendTo.CHAT:
+                MessageBus.INSTANCE.DeferMessage(this, eventItem, this.ConvertToChatThread);
+                break;
+            
+            default:
+                MessageBus.INSTANCE.DeferMessage(this, eventItem, contentToSend);
+                break;
+        }
+
         this.NavigationManager.NavigateTo(path);
         return Task.CompletedTask;
     }

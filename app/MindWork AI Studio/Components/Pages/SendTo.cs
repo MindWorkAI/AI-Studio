@@ -11,4 +11,6 @@ public enum SendTo
     AGENDA_ASSISTANT,
     CODING_ASSISTANT,
     TEXT_SUMMARIZER_ASSISTANT,
+    
+    CHAT,
 }
