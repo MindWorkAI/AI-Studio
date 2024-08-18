@@ -11,6 +11,7 @@ public sealed class MessageBus
     
     private readonly ConcurrentDictionary<IMessageBusReceiver, ComponentBase[]> componentFilters = new();
     private readonly ConcurrentDictionary<IMessageBusReceiver, Event[]> componentEvents = new();
+    private readonly ConcurrentDictionary<Event, ConcurrentQueue<Message>> deferredMessages = new();
     private readonly ConcurrentQueue<Message> messageQueue = new();
     private readonly SemaphoreSlim sendingSemaphore = new(1, 1);
 
@@ -63,6 +64,24 @@ public sealed class MessageBus
         {
             this.sendingSemaphore.Release();
         }
+    }
+    
+    public void DeferMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data = default)
+    {
+        if (this.deferredMessages.TryGetValue(triggeredEvent, out var queue))
+            queue.Enqueue(new Message(sendingComponent, triggeredEvent, data));
+        else
+        {
+            this.deferredMessages[triggeredEvent] = new();
+            this.deferredMessages[triggeredEvent].Enqueue(new Message(sendingComponent, triggeredEvent, data));
+        }
+    }
+    
+    public IEnumerable<T?> CheckDeferredMessages<T>(Event triggeredEvent)
+    {
+        if (this.deferredMessages.TryGetValue(triggeredEvent, out var queue))
+            while (queue.TryDequeue(out var message))
+                yield return message.Data is T data ? data : default;
     }
     
     public async Task<TResult?> SendMessageUseFirstResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data = default)

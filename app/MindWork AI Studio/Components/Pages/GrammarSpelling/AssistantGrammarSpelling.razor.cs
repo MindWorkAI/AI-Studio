@@ -25,11 +25,17 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
     
     protected override bool ShowDedicatedProgress => true;
     
-    protected override IReadOnlyList<ButtonData> FooterButtons => new[]
-    {
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
         new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.correctedText)),
-    };
-    
+        new SendToButton
+        {
+            Self = SendToAssistant.GRAMMAR_SPELLING_ASSISTANT,
+            UseResultingContentBlockData = false,
+            GetData = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
+        },
+    ];
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -40,6 +46,10 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider);
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputText = deferredContent;
         
         await base.OnInitializedAsync();
     }

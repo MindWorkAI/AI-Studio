@@ -1,0 +1,24 @@
+@typeparam T
+
+<MudButtonGroup Color="@this.Color" Variant="Variant.Filled">
+    @if (string.IsNullOrWhiteSpace(this.Icon))
+    {
+        <MudButton OnClick="() => this.OnClick(this.selectedValue)">
+            @this.SelectedValueName()
+        </MudButton>
+    }
+    else
+    {
+        <MudButton StartIcon="@this.Icon" OnClick="() => this.OnClick(this.selectedValue)">
+            @this.SelectedValueName()
+        </MudButton>
+    }
+    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+        @foreach(var item in this.Items)
+        {
+            <MudMenuItem OnClick="() => this.SelectItem(item)">
+                @this.NameFunc(item)
+            </MudMenuItem>
+        }
+    </MudMenu>
+</MudButtonGroup>

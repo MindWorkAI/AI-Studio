@@ -1,9 +1,12 @@
 using AIStudio.Chat;
+using AIStudio.Components.Pages;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
+
+using Path = AIStudio.Components.Pages.Path;
 
 namespace AIStudio.Components;
 
@@ -24,6 +27,9 @@ public abstract partial class AssistantBase : ComponentBase
     [Inject]
     protected Rust Rust { get; init; } = null!;
     
+    [Inject]
+    protected NavigationManager NavigationManager { get; init; } = null!;
+    
     internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     internal const string ASSISTANT_RESULT_DIV_ID = "assistantResult";
     
@@ -39,7 +45,7 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected virtual bool ShowDedicatedProgress => false;
 
-    protected virtual IReadOnlyList<ButtonData> FooterButtons => [];
+    protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
@@ -156,5 +162,35 @@ public abstract partial class AssistantBase : ComponentBase
             return null;
         
         return icon;
+    }
+    
+    private Task SendToAssistant(SendToAssistant assistant, SendToButton sendToButton)
+    {
+        var contentToSend = sendToButton.UseResultingContentBlockData switch
+        {
+            false => sendToButton.GetData(),
+            true => this.resultingContentBlock?.Content switch
+            {
+                ContentText textBlock => textBlock.Text,
+                _ => string.Empty,
+            },
+        };
+
+        var (eventItem, path) = assistant switch
+        {
+            Pages.SendToAssistant.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Path.ASSISTANT_AGENDA),
+            Pages.SendToAssistant.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Path.ASSISTANT_CODING),
+            Pages.SendToAssistant.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Path.ASSISTANT_REWRITE),
+            Pages.SendToAssistant.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Path.ASSISTANT_TRANSLATION),
+            Pages.SendToAssistant.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Path.ASSISTANT_ICON_FINDER),
+            Pages.SendToAssistant.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Path.ASSISTANT_GRAMMAR_SPELLING),
+            Pages.SendToAssistant.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Path.ASSISTANT_SUMMARIZER),
+            
+            _ => (Event.NONE, Path.ASSISTANTS),
+        };
+        
+        MessageBus.INSTANCE.DeferMessage(this, eventItem, contentToSend);
+        this.NavigationManager.NavigateTo(path);
+        return Task.CompletedTask;
     }
 }

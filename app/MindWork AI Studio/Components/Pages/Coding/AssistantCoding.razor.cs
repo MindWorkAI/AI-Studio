@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+using AIStudio.Tools;
+
 namespace AIStudio.Components.Pages.Coding;
 
 public partial class AssistantCoding : AssistantBaseCore
@@ -24,6 +26,14 @@ public partial class AssistantCoding : AssistantBaseCore
         When the user asks in a different language than English, you answer in the same language!
         """;
     
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new SendToButton
+        {
+            Self = SendToAssistant.CODING_ASSISTANT,
+        },
+    ];
+    
     private readonly List<CodingContext> codingContexts = new();
     private bool provideCompilerMessages;
     private string compilerMessages = string.Empty;
@@ -38,6 +48,10 @@ public partial class AssistantCoding : AssistantBaseCore
             this.provideCompilerMessages = this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Coding.PreselectedProvider);
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CODING_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.questions = deferredContent;
         
         await base.OnInitializedAsync();
     }

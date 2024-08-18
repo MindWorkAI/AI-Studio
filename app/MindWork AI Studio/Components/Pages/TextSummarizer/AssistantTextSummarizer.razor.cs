@@ -23,6 +23,14 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         a summary with the requested complexity. In any case, do not add any information.
         """;
     
+    protected override IReadOnlyList<IButtonData> FooterButtons => 
+    [
+        new SendToButton
+        {
+            Self = SendToAssistant.TEXT_SUMMARIZER_ASSISTANT,
+        },
+    ];
+    
     private string inputText = string.Empty;
     private bool isAgentRunning;
     private CommonLanguages selectedTargetLanguage;
@@ -42,6 +50,10 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
             this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider);
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputText = deferredContent;
         
         await base.OnInitializedAsync();
     }
