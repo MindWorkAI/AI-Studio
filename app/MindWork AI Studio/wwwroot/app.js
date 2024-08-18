@@ -17,3 +17,8 @@ window.generateDiff = function (text1, text2, divDiff, divLegend) {
     </div>
     `;
 }
+
+window.clearDiv = function (divName) {
+    let targetDiv = document.getElementById(divName);
+    targetDiv.innerHTML = '';
+}

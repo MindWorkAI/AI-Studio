@@ -3,7 +3,7 @@ namespace AIStudio.Chat;
 /// <summary>
 /// Data structure for a chat thread.
 /// </summary>
-public sealed class ChatThread
+public sealed record ChatThread
 {
     /// <summary>
     /// The unique identifier of the chat thread.

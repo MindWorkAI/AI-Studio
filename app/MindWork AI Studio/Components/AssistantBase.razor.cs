@@ -38,12 +38,18 @@ public abstract partial class AssistantBase : ComponentBase
     protected abstract string Description { get; }
     
     protected abstract string SystemPrompt { get; }
+
+    protected abstract void ResetFrom();
+
+    protected abstract bool MightPreselectValues();
     
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;
     
     protected virtual bool ShowDedicatedProgress => false;
+
+    protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
@@ -53,7 +59,7 @@ public abstract partial class AssistantBase : ComponentBase
     protected MudForm? form;
     protected bool inputIsValid;
     
-    private ChatThread? chatThread;
+    protected ChatThread? chatThread;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -164,11 +170,11 @@ public abstract partial class AssistantBase : ComponentBase
         return icon;
     }
     
-    private Task SendToAssistant(SendToAssistant assistant, SendToButton sendToButton)
+    private Task SendToAssistant(SendTo destination, SendToButton sendToButton)
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
-            false => sendToButton.GetData(),
+            false => sendToButton.GetText(),
             true => this.resultingContentBlock?.Content switch
             {
                 ContentText textBlock => textBlock.Text,
@@ -176,21 +182,51 @@ public abstract partial class AssistantBase : ComponentBase
             },
         };
 
-        var (eventItem, path) = assistant switch
+        var (eventItem, path) = destination switch
         {
-            Pages.SendToAssistant.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Path.ASSISTANT_AGENDA),
-            Pages.SendToAssistant.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Path.ASSISTANT_CODING),
-            Pages.SendToAssistant.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Path.ASSISTANT_REWRITE),
-            Pages.SendToAssistant.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Path.ASSISTANT_TRANSLATION),
-            Pages.SendToAssistant.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Path.ASSISTANT_ICON_FINDER),
-            Pages.SendToAssistant.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Path.ASSISTANT_GRAMMAR_SPELLING),
-            Pages.SendToAssistant.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Path.ASSISTANT_SUMMARIZER),
+            SendTo.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Path.ASSISTANT_AGENDA),
+            SendTo.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Path.ASSISTANT_CODING),
+            SendTo.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Path.ASSISTANT_REWRITE),
+            SendTo.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Path.ASSISTANT_TRANSLATION),
+            SendTo.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Path.ASSISTANT_ICON_FINDER),
+            SendTo.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Path.ASSISTANT_GRAMMAR_SPELLING),
+            SendTo.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Path.ASSISTANT_SUMMARIZER),
+            
+            SendTo.CHAT => (Event.SEND_TO_CHAT, Path.CHAT),
             
             _ => (Event.NONE, Path.ASSISTANTS),
         };
-        
-        MessageBus.INSTANCE.DeferMessage(this, eventItem, contentToSend);
+
+        switch (destination)
+        {
+            case SendTo.CHAT:
+                MessageBus.INSTANCE.DeferMessage(this, eventItem, this.ConvertToChatThread);
+                break;
+            
+            default:
+                MessageBus.INSTANCE.DeferMessage(this, eventItem, contentToSend);
+                break;
+        }
+
         this.NavigationManager.NavigateTo(path);
         return Task.CompletedTask;
+    }
+    
+    private async Task InnerResetForm()
+    {
+        this.resultingContentBlock = null;
+        this.providerSettings = default;
+        
+        await this.JsRuntime.ClearDiv(ASSISTANT_RESULT_DIV_ID);
+        await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
+        
+        this.ResetFrom();
+        
+        this.inputIsValid = false;
+        this.inputIssues = [];
+        
+        this.form?.ResetValidation();
+        this.StateHasChanged();
+        this.form?.ResetValidation();
     }
 }

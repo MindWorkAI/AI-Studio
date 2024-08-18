@@ -8,4 +8,9 @@ public static class JsRuntimeExtensions
     {
         await jsRuntime.InvokeVoidAsync("generateDiff", text1, text2, AssistantBase.ASSISTANT_RESULT_DIV_ID, AssistantBase.AFTER_RESULT_DIV_ID);
     }
+    
+    public static async Task ClearDiv(this IJSRuntime jsRuntime, string divId)
+    {
+        await jsRuntime.InvokeVoidAsync("clearDiv", divId);
+    }
 }

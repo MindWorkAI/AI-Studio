@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.GrammarSpelling;
@@ -30,23 +31,46 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.correctedText)),
         new SendToButton
         {
-            Self = SendToAssistant.GRAMMAR_SPELLING_ASSISTANT,
+            Self = SendTo.GRAMMAR_SPELLING_ASSISTANT,
             UseResultingContentBlockData = false,
-            GetData = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
+            GetText = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },
     ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
+    
+    protected override void ResetFrom()
+    {
+        this.inputText = string.Empty;
+        this.correctedText = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+        }
+    }
 
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
+    protected override bool MightPreselectValues()
     {
         if (this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)
         {
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider);
+            return true;
         }
         
+        return false;
+    }
+    
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

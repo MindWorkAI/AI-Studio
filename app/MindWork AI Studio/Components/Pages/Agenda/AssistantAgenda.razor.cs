@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.Agenda;
@@ -97,9 +98,73 @@ public partial class AssistantAgenda : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendToAssistant.AGENDA_ASSISTANT,
+            Self = SendTo.AGENDA_ASSISTANT,
         },
     ];
+
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
+    
+    protected override void ResetFrom()
+    {
+        this.inputContent = string.Empty;
+        this.contentLines.Clear();
+        this.selectedFoci = [];
+        this.justBriefly = [];
+        this.inputWhoIsPresenting = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.inputTopic = string.Empty;
+            this.inputName = string.Empty;
+            this.inputDuration = string.Empty;
+            this.inputStartTime = string.Empty;
+            this.inputObjective = string.Empty;
+            this.inputModerator = string.Empty;
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+            this.introduceParticipants = false;
+            this.isMeetingVirtual = true;
+            this.inputLocation = string.Empty;
+            this.goingToDinner = false;
+            this.doingSocialActivity = false;
+            this.needToArriveAndDepart = false;
+            this.durationLunchBreak = 0;
+            this.durationBreaks = 0;
+            this.activeParticipation = false;
+            this.numberParticipants = NumberParticipants.NOT_SPECIFIED;
+        }
+    }
+
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.Agenda.PreselectOptions)
+        {
+            this.inputTopic = this.SettingsManager.ConfigurationData.Agenda.PreselectTopic;
+            this.inputName = this.SettingsManager.ConfigurationData.Agenda.PreselectName;
+            this.inputDuration = this.SettingsManager.ConfigurationData.Agenda.PreselectDuration;
+            this.inputStartTime = this.SettingsManager.ConfigurationData.Agenda.PreselectStartTime;
+            this.inputObjective = this.SettingsManager.ConfigurationData.Agenda.PreselectObjective;
+            this.inputModerator = this.SettingsManager.ConfigurationData.Agenda.PreselectModerator;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Agenda.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Agenda.PreselectedOtherLanguage;
+            this.introduceParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectIntroduceParticipants;
+            this.isMeetingVirtual = this.SettingsManager.ConfigurationData.Agenda.PreselectIsMeetingVirtual;
+            this.inputLocation = this.SettingsManager.ConfigurationData.Agenda.PreselectLocation;
+            this.goingToDinner = this.SettingsManager.ConfigurationData.Agenda.PreselectJointDinner;
+            this.doingSocialActivity = this.SettingsManager.ConfigurationData.Agenda.PreselectSocialActivity;
+            this.needToArriveAndDepart = this.SettingsManager.ConfigurationData.Agenda.PreselectArriveAndDepart;
+            this.durationLunchBreak = this.SettingsManager.ConfigurationData.Agenda.PreselectLunchTime;
+            this.durationBreaks = this.SettingsManager.ConfigurationData.Agenda.PreselectBreakTime;
+            this.activeParticipation = this.SettingsManager.ConfigurationData.Agenda.PreselectActiveParticipation;
+            this.numberParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectNumberParticipants;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Agenda.PreselectedProvider);
+            return true;
+        }
+        
+        return false;
+    }
     
     private string inputTopic = string.Empty;
     private string inputName = string.Empty;
@@ -130,29 +195,7 @@ public partial class AssistantAgenda : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.Agenda.PreselectOptions)
-        {
-            this.inputTopic = this.SettingsManager.ConfigurationData.Agenda.PreselectTopic;
-            this.inputName = this.SettingsManager.ConfigurationData.Agenda.PreselectName;
-            this.inputDuration = this.SettingsManager.ConfigurationData.Agenda.PreselectDuration;
-            this.inputStartTime = this.SettingsManager.ConfigurationData.Agenda.PreselectStartTime;
-            this.inputObjective = this.SettingsManager.ConfigurationData.Agenda.PreselectObjective;
-            this.inputModerator = this.SettingsManager.ConfigurationData.Agenda.PreselectModerator;
-            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Agenda.PreselectedTargetLanguage;
-            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Agenda.PreselectedOtherLanguage;
-            this.introduceParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectIntroduceParticipants;
-            this.isMeetingVirtual = this.SettingsManager.ConfigurationData.Agenda.PreselectIsMeetingVirtual;
-            this.inputLocation = this.SettingsManager.ConfigurationData.Agenda.PreselectLocation;
-            this.goingToDinner = this.SettingsManager.ConfigurationData.Agenda.PreselectJointDinner;
-            this.doingSocialActivity = this.SettingsManager.ConfigurationData.Agenda.PreselectSocialActivity;
-            this.needToArriveAndDepart = this.SettingsManager.ConfigurationData.Agenda.PreselectArriveAndDepart;
-            this.durationLunchBreak = this.SettingsManager.ConfigurationData.Agenda.PreselectLunchTime;
-            this.durationBreaks = this.SettingsManager.ConfigurationData.Agenda.PreselectBreakTime;
-            this.activeParticipation = this.SettingsManager.ConfigurationData.Agenda.PreselectActiveParticipation;
-            this.numberParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectNumberParticipants;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Agenda.PreselectedProvider);
-        }
-        
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_AGENDA_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputContent = deferredContent;

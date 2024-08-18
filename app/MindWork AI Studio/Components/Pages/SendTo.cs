@@ -1,6 +1,6 @@
 namespace AIStudio.Components.Pages;
 
-public enum SendToAssistant
+public enum SendTo
 {
     NONE = 0,
     
@@ -11,4 +11,6 @@ public enum SendToAssistant
     AGENDA_ASSISTANT,
     CODING_ASSISTANT,
     TEXT_SUMMARIZER_ASSISTANT,
+    
+    CHAT,
 }

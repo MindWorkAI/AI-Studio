@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Tools;
 
 namespace AIStudio.Components.Pages.Translation;
@@ -23,9 +24,40 @@ public partial class AssistantTranslation : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendToAssistant.TRANSLATION_ASSISTANT,
+            Self = SendTo.TRANSLATION_ASSISTANT,
         },
     ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
+    
+    protected override void ResetFrom()
+    {
+        this.inputText = string.Empty;
+        this.inputTextLastTranslation = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.liveTranslation = false;
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+        }
+    }
+    
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
+        {
+            this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
+            return true;
+        }
+        
+        return false;
+    }
     
     private bool liveTranslation;
     private bool isAgentRunning;
@@ -38,14 +70,7 @@ public partial class AssistantTranslation : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
-        {
-            this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
-            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
-            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
-        }
-        
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TRANSLATION_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;
