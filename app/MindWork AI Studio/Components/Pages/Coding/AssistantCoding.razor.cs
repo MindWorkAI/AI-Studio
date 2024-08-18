@@ -30,7 +30,7 @@ public partial class AssistantCoding : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendToAssistant.CODING_ASSISTANT,
+            Self = SendTo.CODING_ASSISTANT,
         },
     ];
     

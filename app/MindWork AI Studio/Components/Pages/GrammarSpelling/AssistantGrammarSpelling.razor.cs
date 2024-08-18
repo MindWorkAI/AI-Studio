@@ -30,7 +30,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.correctedText)),
         new SendToButton
         {
-            Self = SendToAssistant.GRAMMAR_SPELLING_ASSISTANT,
+            Self = SendTo.GRAMMAR_SPELLING_ASSISTANT,
             UseResultingContentBlockData = false,
             GetData = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },

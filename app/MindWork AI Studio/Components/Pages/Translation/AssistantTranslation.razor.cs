@@ -23,7 +23,7 @@ public partial class AssistantTranslation : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendToAssistant.TRANSLATION_ASSISTANT,
+            Self = SendTo.TRANSLATION_ASSISTANT,
         },
     ];
     

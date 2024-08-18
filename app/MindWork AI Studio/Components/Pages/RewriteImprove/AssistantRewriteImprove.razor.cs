@@ -31,7 +31,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText)),
         new SendToButton
         {
-            Self = SendToAssistant.REWRITE_ASSISTANT,
+            Self = SendTo.REWRITE_ASSISTANT,
             UseResultingContentBlockData = false,
             GetData = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
         },

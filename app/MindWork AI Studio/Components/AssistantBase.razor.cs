@@ -164,7 +164,7 @@ public abstract partial class AssistantBase : ComponentBase
         return icon;
     }
     
-    private Task SendToAssistant(SendToAssistant assistant, SendToButton sendToButton)
+    private Task SendToAssistant(SendTo assistant, SendToButton sendToButton)
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
@@ -178,13 +178,13 @@ public abstract partial class AssistantBase : ComponentBase
 
         var (eventItem, path) = assistant switch
         {
-            Pages.SendToAssistant.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Path.ASSISTANT_AGENDA),
-            Pages.SendToAssistant.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Path.ASSISTANT_CODING),
-            Pages.SendToAssistant.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Path.ASSISTANT_REWRITE),
-            Pages.SendToAssistant.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Path.ASSISTANT_TRANSLATION),
-            Pages.SendToAssistant.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Path.ASSISTANT_ICON_FINDER),
-            Pages.SendToAssistant.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Path.ASSISTANT_GRAMMAR_SPELLING),
-            Pages.SendToAssistant.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Path.ASSISTANT_SUMMARIZER),
+            Pages.SendTo.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Path.ASSISTANT_AGENDA),
+            Pages.SendTo.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Path.ASSISTANT_CODING),
+            Pages.SendTo.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Path.ASSISTANT_REWRITE),
+            Pages.SendTo.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Path.ASSISTANT_TRANSLATION),
+            Pages.SendTo.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Path.ASSISTANT_ICON_FINDER),
+            Pages.SendTo.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Path.ASSISTANT_GRAMMAR_SPELLING),
+            Pages.SendTo.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Path.ASSISTANT_SUMMARIZER),
             
             _ => (Event.NONE, Path.ASSISTANTS),
         };

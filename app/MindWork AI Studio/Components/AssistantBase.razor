@@ -56,9 +56,9 @@
                             
                         case SendToButton sendToButton:
                             <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
-                                @foreach (var assistant in Enum.GetValues<SendToAssistant>().OrderBy(n => n.Name().Length))
+                                @foreach (var assistant in Enum.GetValues<SendTo>().OrderBy(n => n.Name().Length))
                                 {
-                                    if(assistant is Pages.SendToAssistant.NONE || sendToButton.Self == assistant)
+                                    if(assistant is Pages.SendTo.NONE || sendToButton.Self == assistant)
                                         continue;
                                     
                                     <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">

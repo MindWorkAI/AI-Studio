@@ -32,7 +32,7 @@ public partial class AssistantIconFinder : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendToAssistant.ICON_FINDER_ASSISTANT,
+            Self = SendTo.ICON_FINDER_ASSISTANT,
         },
     ];
     
