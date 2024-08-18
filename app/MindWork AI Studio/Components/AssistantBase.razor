@@ -34,11 +34,11 @@
         @if (this.FooterButtons.Count > 0)
         {
             <MudStack Row="@true" Wrap="Wrap.Wrap" Class="mt-3 mr-2">
-                @foreach (var buttonData in this.FooterButtons)
+                @foreach (var button in this.FooterButtons)
                 {
-                    switch (buttonData)
+                    switch (button)
                     {
-                        case var _ when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
+                        case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
                             <MudTooltip Text="@buttonData.Tooltip">
                                 <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                     @buttonData.Text
@@ -46,7 +46,7 @@
                             </MudTooltip>
                             break;
 
-                        default:
+                        case ButtonData buttonData:
                             <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                 @buttonData.Text
                             </MudButton>

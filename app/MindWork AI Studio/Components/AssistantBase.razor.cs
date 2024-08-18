@@ -39,7 +39,7 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected virtual bool ShowDedicatedProgress => false;
 
-    protected virtual IReadOnlyList<ButtonData> FooterButtons => [];
+    protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     

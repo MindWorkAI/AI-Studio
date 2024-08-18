@@ -25,8 +25,8 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
     
     protected override bool ShowDedicatedProgress => true;
     
-    protected override IReadOnlyList<ButtonData> FooterButtons => new[]
-    {
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
         new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.correctedText)),
     };
     

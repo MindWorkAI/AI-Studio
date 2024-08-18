@@ -24,17 +24,13 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     
     protected override bool ShowResult => false;
 
-    #region Overrides of AssistantBase
-
     protected override bool ShowDedicatedProgress => true;
 
-    #endregion
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText))
+    ];
 
-    protected override IReadOnlyList<ButtonData> FooterButtons => new[]
-    {
-        new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText)),
-    };
-    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
