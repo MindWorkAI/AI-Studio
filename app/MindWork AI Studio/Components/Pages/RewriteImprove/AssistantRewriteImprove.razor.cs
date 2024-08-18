@@ -28,7 +28,13 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
-        new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText))
+        new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText)),
+        new SendToButton
+        {
+            Self = SendToAssistant.REWRITE_ASSISTANT,
+            UseResultingContentBlockData = false,
+            GetData = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
+        },
     ];
 
     #region Overrides of ComponentBase
@@ -42,6 +48,10 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider);
             this.selectedWritingStyle = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle;
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputText = deferredContent;
         
         await base.OnInitializedAsync();
     }

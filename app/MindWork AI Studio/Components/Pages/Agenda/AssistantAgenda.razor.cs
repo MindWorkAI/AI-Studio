@@ -93,6 +93,14 @@ public partial class AssistantAgenda : AssistantBaseCore
                                                          - Mary Jane: Work package 3
                                                          """;
     
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new SendToButton
+        {
+            Self = SendToAssistant.AGENDA_ASSISTANT,
+        },
+    ];
+    
     private string inputTopic = string.Empty;
     private string inputName = string.Empty;
     private string inputContent = string.Empty;
@@ -144,6 +152,10 @@ public partial class AssistantAgenda : AssistantBaseCore
             this.numberParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectNumberParticipants;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Agenda.PreselectedProvider);
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_AGENDA_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputContent = deferredContent;
         
         await base.OnInitializedAsync();
     }

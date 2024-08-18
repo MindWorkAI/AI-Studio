@@ -1,4 +1,6 @@
 @using AIStudio.Chat
+@using AIStudio.Components.Pages
+@using AIStudio.Tools
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
     @this.Title
 </MudText>
@@ -50,6 +52,20 @@
                             <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                 @buttonData.Text
                             </MudButton>
+                            break;
+                            
+                        case SendToButton sendToButton:
+                            <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
+                                @foreach (var assistant in Enum.GetValues<SendToAssistant>().OrderBy(n => n.Name().Length))
+                                {
+                                    if(assistant is Pages.SendToAssistant.NONE || sendToButton.Self == assistant)
+                                        continue;
+                                    
+                                    <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
+                                        @assistant.Name()
+                                    </MudMenuItem>
+                                }
+                            </MudMenu>
                             break;
                     }
                 }

@@ -19,6 +19,14 @@ public partial class AssistantTranslation : AssistantBaseCore
         language requires, e.g., shorter sentences, you should split the text into shorter sentences.
         """;
     
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new SendToButton
+        {
+            Self = SendToAssistant.TRANSLATION_ASSISTANT,
+        },
+    ];
+    
     private bool liveTranslation;
     private bool isAgentRunning;
     private string inputText = string.Empty;
@@ -37,6 +45,10 @@ public partial class AssistantTranslation : AssistantBaseCore
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TRANSLATION_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputText = deferredContent;
         
         await base.OnInitializedAsync();
     }

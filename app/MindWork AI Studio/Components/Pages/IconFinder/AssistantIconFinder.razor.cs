@@ -1,24 +1,11 @@
+using AIStudio.Tools;
+
 namespace AIStudio.Components.Pages.IconFinder;
 
 public partial class AssistantIconFinder : AssistantBaseCore
 {
     private string inputContext = string.Empty;
     private IconSources selectedIconSource;
-
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)
-        {
-            this.selectedIconSource = this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider);
-        }
-
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
 
     protected override string Title => "Icon Finder";
     
@@ -40,7 +27,34 @@ public partial class AssistantIconFinder : AssistantBaseCore
         related to the keyword "buildings" might be the best match. Provide your keywords in a Markdown list without
         quotation marks.
         """;
+
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new SendToButton
+        {
+            Self = SendToAssistant.ICON_FINDER_ASSISTANT,
+        },
+    ];
     
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)
+        {
+            this.selectedIconSource = this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider);
+        }
+
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_ICON_FINDER_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputContext = deferredContent;
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private string? ValidatingContext(string context)
     {
         if(string.IsNullOrWhiteSpace(context))
