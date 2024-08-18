@@ -101,9 +101,13 @@ public partial class AssistantCoding : AssistantBaseCore
             foreach (var codingContext in this.codingContexts)
             {
                 sbContext.AppendLine($"ID: {codingContext.Id}");
-                sbContext.AppendLine($"Language: {codingContext.Language.Name()}");
-                sbContext.AppendLine($"Other Language: {codingContext.OtherLanguage}");
-                sbContext.AppendLine($"Content:");
+                
+                if(codingContext.Language is not CommonCodingLanguages.OTHER)
+                    sbContext.AppendLine($"Language: {codingContext.Language.Name()}");
+                else
+                    sbContext.AppendLine($"Language: {codingContext.OtherLanguage}");
+                
+                sbContext.AppendLine("Content:");
                 sbContext.AppendLine("```");
                 sbContext.AppendLine(codingContext.Code);
                 sbContext.AppendLine("```");
