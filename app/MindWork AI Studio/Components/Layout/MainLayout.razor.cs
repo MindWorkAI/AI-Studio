@@ -51,12 +51,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     
     private static readonly IReadOnlyCollection<NavBarItem> NAV_ITEMS = new List<NavBarItem>
     {
-        new("Home", Icons.Material.Filled.Home, Color.Default, "/", true),
-        new("Chat", Icons.Material.Filled.Chat, Color.Default, "/chat", false),
-        new("Assistants", Icons.Material.Filled.Apps, Color.Default ,"/assistants", false),
-        new("Supporters", Icons.Material.Filled.Favorite, Color.Error ,"/supporters", false),
-        new("About", Icons.Material.Filled.Info, Color.Default ,"/about", false),
-        new("Settings", Icons.Material.Filled.Settings, Color.Default ,"/settings", false),
+        new("Home", Icons.Material.Filled.Home, Color.Default, Pages.Path.HOME, true),
+        new("Chat", Icons.Material.Filled.Chat, Color.Default, Pages.Path.CHAT, false),
+        new("Assistants", Icons.Material.Filled.Apps, Color.Default, Pages.Path.ASSISTANTS, false),
+        new("Supporters", Icons.Material.Filled.Favorite, Color.Error, Pages.Path.SUPPORTERS, false),
+        new("About", Icons.Material.Filled.Info, Color.Default, Pages.Path.ABOUT, false),
+        new("Settings", Icons.Material.Filled.Settings, Color.Default, Pages.Path.SETTINGS, false),
     };
     
     #region Overrides of ComponentBase
