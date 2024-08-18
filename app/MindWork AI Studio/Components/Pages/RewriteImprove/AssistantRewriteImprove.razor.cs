@@ -33,7 +33,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         {
             Self = SendTo.REWRITE_ASSISTANT,
             UseResultingContentBlockData = false,
-            GetData = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
+            GetText = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
         },
     ];
 

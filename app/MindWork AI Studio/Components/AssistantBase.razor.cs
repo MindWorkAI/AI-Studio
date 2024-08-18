@@ -168,7 +168,7 @@ public abstract partial class AssistantBase : ComponentBase
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
-            false => sendToButton.GetData(),
+            false => sendToButton.GetText(),
             true => this.resultingContentBlock?.Content switch
             {
                 ContentText textBlock => textBlock.Text,

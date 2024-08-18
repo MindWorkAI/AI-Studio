@@ -32,7 +32,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         {
             Self = SendTo.GRAMMAR_SPELLING_ASSISTANT,
             UseResultingContentBlockData = false,
-            GetData = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
+            GetText = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },
     ];
 
