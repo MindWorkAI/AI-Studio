@@ -24,6 +24,9 @@ public abstract partial class AssistantBase : ComponentBase
     [Inject]
     protected Rust Rust { get; init; } = null!;
     
+    [Inject]
+    protected NavigationManager NavigationManager { get; init; } = null!;
+    
     internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     internal const string ASSISTANT_RESULT_DIV_ID = "assistantResult";
     
