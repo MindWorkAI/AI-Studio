@@ -43,9 +43,19 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
 
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
+    protected override void ResetFrom()
+    {
+        this.inputText = string.Empty;
+        this.rewrittenText = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+            this.selectedWritingStyle = WritingStyles.NOT_SPECIFIED;
+        }
+    }
+    
+    protected override bool MightPreselectValues()
     {
         if (this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)
         {
@@ -53,8 +63,17 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider);
             this.selectedWritingStyle = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle;
+            return true;
         }
         
+        return false;
+    }
+    
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

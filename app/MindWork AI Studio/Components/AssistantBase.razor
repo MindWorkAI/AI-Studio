@@ -2,22 +2,22 @@
 @using AIStudio.Components.Pages
 @using AIStudio.Tools
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-    @this.Title
+    @(this.Title)
 </MudText>
 
 <InnerScrolling HeaderHeight="12.3em">
     <ChildContent>
-        <MudForm @ref="@this.form" @bind-IsValid="@this.inputIsValid" @bind-Errors="@this.inputIssues" Class="pr-2">
+        <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" Class="pr-2">
             <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
-                @this.Description
+                @(this.Description)
             </MudText>
 
             @if (this.Body is not null)
             {
-                @this.Body
+                @(this.Body)
             }
         </MudForm>
-        <Issues IssuesData="@this.inputIssues"/>
+        <Issues IssuesData="@(this.inputIssues)"/>
 
         @if (this.ShowDedicatedProgress && this.isProcessing)
         {
@@ -26,7 +26,7 @@
         <div id="@ASSISTANT_RESULT_DIV_ID" class="mr-2 mt-3">
             @if (this.ShowResult && this.resultingContentBlock is not null)
             {
-                <ContentBlockComponent Role="@this.resultingContentBlock.Role" Type="@this.resultingContentBlock.ContentType" Time="@this.resultingContentBlock.Time" Content="@this.resultingContentBlock.Content"/>
+                <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@(this.resultingContentBlock.Content)"/>
             }
         </div>
         
@@ -58,7 +58,7 @@
                             <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
                                 @foreach (var assistant in Enum.GetValues<SendTo>().OrderBy(n => n.Name().Length))
                                 {
-                                    if(assistant is Pages.SendTo.NONE || sendToButton.Self == assistant)
+                                    if(assistant is SendTo.NONE || sendToButton.Self == assistant)
                                         continue;
                                     
                                     <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
@@ -69,6 +69,9 @@
                             break;
                     }
                 }
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
+                    Reset
+                </MudButton>
             </MudStack>
         }
     </ChildContent>

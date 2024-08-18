@@ -37,6 +37,33 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
+    protected override void ResetFrom()
+    {
+        this.inputText = string.Empty;
+        if(!this.MightPreselectValues())
+        {
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+            this.selectedComplexity = Complexity.NO_CHANGE;
+            this.expertInField = string.Empty;
+        }
+    }
+    
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)
+        {
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
+            this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
+            this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider);
+            return true;
+        }
+        
+        return false;
+    }
+    
     private string inputText = string.Empty;
     private bool isAgentRunning;
     private CommonLanguages selectedTargetLanguage;
@@ -48,15 +75,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if(this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)
-        {
-            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedTargetLanguage;
-            this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
-            this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
-            this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider);
-        }
-        
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

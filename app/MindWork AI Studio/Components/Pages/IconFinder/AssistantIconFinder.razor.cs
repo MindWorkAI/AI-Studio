@@ -36,16 +36,32 @@ public partial class AssistantIconFinder : AssistantBaseCore
         },
     ];
     
-    #region Overrides of ComponentBase
+    protected override void ResetFrom()
+    {
+        this.inputContext = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.selectedIconSource = IconSources.GENERIC;
+        }
+    }
 
-    protected override async Task OnInitializedAsync()
+    protected override bool MightPreselectValues()
     {
         if (this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)
         {
             this.selectedIconSource = this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider);
+            return true;
         }
+        
+        return false;
+    }
+    
+    #region Overrides of ComponentBase
 
+    protected override async Task OnInitializedAsync()
+    {
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_ICON_FINDER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputContext = deferredContent;

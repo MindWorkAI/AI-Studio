@@ -34,6 +34,29 @@ public partial class AssistantCoding : AssistantBaseCore
         },
     ];
     
+    protected override void ResetFrom()
+    {
+        this.codingContexts.Clear();
+        this.compilerMessages = string.Empty;
+        this.questions = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.provideCompilerMessages = false;
+        }
+    }
+
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.Coding.PreselectOptions)
+        {
+            this.provideCompilerMessages = this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Coding.PreselectedProvider);
+            return true;
+        }
+        
+        return false;
+    }
+    
     private readonly List<CodingContext> codingContexts = new();
     private bool provideCompilerMessages;
     private string compilerMessages = string.Empty;
@@ -43,12 +66,7 @@ public partial class AssistantCoding : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        if (this.SettingsManager.ConfigurationData.Coding.PreselectOptions)
-        {
-            this.provideCompilerMessages = this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Coding.PreselectedProvider);
-        }
-        
+        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CODING_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.questions = deferredContent;

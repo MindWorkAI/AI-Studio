@@ -38,6 +38,10 @@ public abstract partial class AssistantBase : ComponentBase
     protected abstract string Description { get; }
     
     protected abstract string SystemPrompt { get; }
+
+    protected abstract void ResetFrom();
+
+    protected abstract bool MightPreselectValues();
     
     private protected virtual RenderFragment? Body => null;
 
@@ -206,5 +210,23 @@ public abstract partial class AssistantBase : ComponentBase
 
         this.NavigationManager.NavigateTo(path);
         return Task.CompletedTask;
+    }
+    
+    private async Task InnerResetForm()
+    {
+        this.resultingContentBlock = null;
+        this.providerSettings = default;
+        
+        await this.JsRuntime.ClearDiv(ASSISTANT_RESULT_DIV_ID);
+        await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
+        
+        this.ResetFrom();
+        
+        this.inputIsValid = false;
+        this.inputIssues = [];
+        
+        this.form?.ResetValidation();
+        this.StateHasChanged();
+        this.form?.ResetValidation();
     }
 }
