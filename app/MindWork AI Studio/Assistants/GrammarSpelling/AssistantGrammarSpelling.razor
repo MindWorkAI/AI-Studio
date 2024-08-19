@@ -1,0 +1,10 @@
+@attribute [Route(PagePath.ASSISTANT_GRAMMAR_SPELLING)]
+@inherits AssistantBaseCore
+
+<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidateText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input to check" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom language" />
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.ProofreadText()">
+    Proofread
+</MudButton>

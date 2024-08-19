@@ -1,4 +1,4 @@
-using AIStudio.Components.Pages.Agenda;
+using AIStudio.Assistants.Agenda;
 using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;

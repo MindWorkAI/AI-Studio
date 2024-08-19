@@ -1,6 +1,6 @@
-using AIStudio.Components.Pages.Coding;
-using AIStudio.Components.Pages.IconFinder;
-using AIStudio.Components.Pages.TextSummarizer;
+using AIStudio.Assistants.Coding;
+using AIStudio.Assistants.IconFinder;
+using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel.PreviousModels;

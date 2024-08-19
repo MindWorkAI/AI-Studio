@@ -1,0 +1,22 @@
+@attribute [Route(PagePath.ASSISTANT_ICON_FINDER)]
+@inherits AssistantBaseCore
+
+<MudTextField T="string" @bind-Text="@this.inputContext" Validation="@this.ValidatingContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="Your context" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudSelect T="IconSources" @bind-Value="@this.selectedIconSource" AdornmentIcon="@Icons.Material.Filled.Source" Adornment="Adornment.Start" Label="Your icon source" Variant="Variant.Outlined" Margin="Margin.Dense">
+        @foreach (var source in Enum.GetValues<IconSources>())
+        {
+            <MudSelectItem Value="@source">@source.Name()</MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.selectedIconSource is not IconSources.GENERIC)
+    {
+        <MudButton Href="@this.selectedIconSource.URL()" Target="_blank" Variant="Variant.Filled" Size="Size.Medium">Open website</MudButton>
+    }
+</MudStack>
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.FindIcon()">
+    Find icon
+</MudButton>

@@ -1,4 +1,4 @@
-using AIStudio.Components.Pages.Coding;
+using AIStudio.Assistants.Coding;
 
 namespace AIStudio.Settings.DataModel;
 

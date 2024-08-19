@@ -1,4 +1,4 @@
-using AIStudio.Components.Pages.IconFinder;
+using AIStudio.Assistants.IconFinder;
 
 namespace AIStudio.Settings.DataModel;
 

@@ -1,8 +1,8 @@
-using AIStudio.Components.Pages.Agenda;
-using AIStudio.Components.Pages.Coding;
-using AIStudio.Components.Pages.IconFinder;
-using AIStudio.Components.Pages.RewriteImprove;
-using AIStudio.Components.Pages.TextSummarizer;
+using AIStudio.Assistants.Agenda;
+using AIStudio.Assistants.Coding;
+using AIStudio.Assistants.IconFinder;
+using AIStudio.Assistants.RewriteImprove;
+using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 

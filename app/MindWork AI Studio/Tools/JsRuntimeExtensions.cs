@@ -1,4 +1,4 @@
-using AIStudio.Components;
+using AIStudio.Assistants;
 
 namespace AIStudio.Tools;
 
