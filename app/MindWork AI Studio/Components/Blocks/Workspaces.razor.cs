@@ -109,42 +109,44 @@ public partial class Workspaces : ComponentBase
 
     private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadTemporaryChats()
     {
-        var tempChildren = new List<TreeItemData<ITreeItem>>();
-
-        //
-        // Search for workspace folders in the data directory:
-        //
-                        
-        // Get the workspace root directory: 
+        var tempChildren = new List<TreeItemData>();
+        
+        // Get the temp root directory: 
         var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
                         
         // Ensure the directory exists:
         Directory.CreateDirectory(temporaryDirectories);
                         
-        // Enumerate the workspace directories:
+        // Enumerate the chat directories:
         foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
         {
             // Read the `name` file:
             var chatNamePath = Path.Join(tempChatDirPath, "name");
             var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
-                            
-            tempChildren.Add(new TreeItemData<ITreeItem>
+            
+            // Read the last change time of the chat:
+            var chatThreadPath = Path.Join(tempChatDirPath, "thread.json");
+            var lastEditTime = File.GetLastWriteTimeUtc(chatThreadPath);
+            
+            tempChildren.Add(new TreeItemData
             {
+                Type = TreeItemType.CHAT,
+                Depth = 1,
+                Branch = WorkspaceBranch.TEMPORARY_CHATS,
+                Text = chatName,
+                Icon = Icons.Material.Filled.Timer,
                 Expandable = false,
-                Value = new TreeItemData
-                {
-                    Type = TreeItemType.CHAT,
-                    Depth = 1,
-                    Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                    Text = chatName,
-                    Icon = Icons.Material.Filled.Timer,
-                    Expandable = false,
-                    Path = tempChatDirPath,
-                },
+                Path = tempChatDirPath,
+                LastEditTime = lastEditTime,
             });
         }
-                        
-        return tempChildren;
+        
+        var result = new List<TreeItemData<ITreeItem>>(tempChildren.OrderByDescending(n => n.LastEditTime).Select(n => new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = n,
+        }));
+        return result;
     }
     
     public async Task<string> LoadWorkspaceName(Guid workspaceId)
@@ -205,7 +207,7 @@ public partial class Workspaces : ComponentBase
 
     private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadWorkspaceChats(string workspacePath)
     {
-        var workspaceChats = new List<TreeItemData<ITreeItem>>();
+        var workspaceChats = new List<TreeItemData>();
         
         // Enumerate the workspace directory:
         foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
@@ -213,30 +215,37 @@ public partial class Workspaces : ComponentBase
             // Read the `name` file:
             var chatNamePath = Path.Join(chatPath, "name");
             var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+            
+            // Read the last change time of the chat:
+            var chatThreadPath = Path.Join(chatPath, "thread.json");
+            var lastEditTime = File.GetLastWriteTimeUtc(chatThreadPath);
                                 
-            workspaceChats.Add(new TreeItemData<ITreeItem>
+            workspaceChats.Add(new TreeItemData
             {
+                Type = TreeItemType.CHAT,
+                Depth = 2,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = chatName,
+                Icon = Icons.Material.Filled.Chat,
                 Expandable = false,
-                Value = new TreeItemData
-                {
-                    Type = TreeItemType.CHAT,
-                    Depth = 2,
-                    Branch = WorkspaceBranch.WORKSPACES,
-                    Text = chatName,
-                    Icon = Icons.Material.Filled.Chat,
-                    Expandable = false,
-                    Path = chatPath,
-                },
+                Path = chatPath,
+                LastEditTime = lastEditTime,
             });
         }
-                            
-        workspaceChats.Add(new TreeItemData<ITreeItem>
+        
+        var result = new List<TreeItemData<ITreeItem>>(workspaceChats.OrderByDescending(n => n.LastEditTime).Select(n => new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = n,
+        }));
+        
+        result.Add(new()
         {
             Expandable = false,
             Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)),
         });
         
-        return workspaceChats;
+        return result;
     }
 
     public async Task StoreChat(ChatThread chat)
