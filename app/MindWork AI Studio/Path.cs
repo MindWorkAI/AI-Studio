@@ -1,6 +1,6 @@
-namespace AIStudio.Components.Pages;
+namespace AIStudio;
 
-public static class Path
+public static class PagePath
 {
     public const string HOME = "/";
     public const string CHAT = "/chat";
