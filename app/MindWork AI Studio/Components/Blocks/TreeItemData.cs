@@ -18,5 +18,7 @@ public class TreeItemData : ITreeItem
 
     public bool Expandable { get; init; } = true;
 
+    public DateTimeOffset LastEditTime { get; init; }
+
     public IReadOnlyCollection<TreeItemData<ITreeItem>> Children { get; init; } = [];
 }
