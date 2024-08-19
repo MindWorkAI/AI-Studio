@@ -1,4 +1,4 @@
-namespace AIStudio.Components.Pages;
+namespace AIStudio.Tools;
 
 public enum SendTo
 {

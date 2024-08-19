@@ -9,7 +9,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 // ReSharper disable ClassNeverInstantiated.Global
 
-namespace AIStudio.Components.Pages;
+namespace AIStudio.Pages;
 
 public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 {

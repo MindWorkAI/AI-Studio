@@ -2,7 +2,7 @@ using AIStudio.Components.Blocks;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.Pages;
+namespace AIStudio.Pages;
 
 public partial class Home : ComponentBase
 {

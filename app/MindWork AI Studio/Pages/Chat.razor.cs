@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Components;
 using AIStudio.Components.Blocks;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Components.Web;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
-namespace AIStudio.Components.Pages;
+namespace AIStudio.Pages;
 
 /// <summary>
 /// The chat page.
