@@ -268,11 +268,11 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             string chatPath;
             if (this.chatThread.WorkspaceId == Guid.Empty)
             {
-                chatPath = System.IO.Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString());
+                chatPath = Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString());
             }
             else
             {
-                chatPath = System.IO.Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString());
+                chatPath = Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString());
             }
             
             await this.workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
@@ -345,12 +345,12 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if (this.chatThread!.WorkspaceId == Guid.Empty)
         {
             // Case: The chat is stored in the temporary storage:
-            await this.workspaces.DeleteChat(System.IO.Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
+            await this.workspaces.DeleteChat(Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
         }
         else
         {
             // Case: The chat is stored in a workspace.
-            await this.workspaces.DeleteChat(System.IO.Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
+            await this.workspaces.DeleteChat(Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
         }
         
         this.chatThread!.WorkspaceId = workspaceId;
