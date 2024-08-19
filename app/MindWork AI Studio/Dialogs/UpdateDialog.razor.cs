@@ -4,7 +4,7 @@ using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.CommonDialogs;
+namespace AIStudio.Dialogs;
 
 /// <summary>
 /// The update dialog that is used to inform the user about an available update.

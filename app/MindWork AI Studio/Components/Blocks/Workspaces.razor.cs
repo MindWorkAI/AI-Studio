@@ -3,13 +3,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
-using AIStudio.Components.CommonDialogs;
+using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
-using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Blocks;
 

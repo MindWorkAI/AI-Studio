@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.CommonDialogs;
+namespace AIStudio.Dialogs;
 
 /// <summary>
 /// A confirmation dialog that can be used to ask the user for confirmation.

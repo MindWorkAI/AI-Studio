@@ -1,4 +1,4 @@
-namespace AIStudio.Components.CommonDialogs;
+namespace AIStudio.Dialogs;
 
 public static class DialogOptions
 {

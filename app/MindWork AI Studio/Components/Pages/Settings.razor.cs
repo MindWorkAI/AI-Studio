@@ -1,11 +1,11 @@
-using AIStudio.Components.CommonDialogs;
+using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
-using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 // ReSharper disable ClassNeverInstantiated.Global
 

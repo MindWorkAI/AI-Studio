@@ -1,6 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Components.Blocks;
-using AIStudio.Components.CommonDialogs;
+using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -9,7 +9,7 @@ using AIStudio.Tools;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
-using DialogOptions = AIStudio.Components.CommonDialogs.DialogOptions;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Pages;
 

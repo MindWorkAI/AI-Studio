@@ -2,7 +2,7 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.CommonDialogs;
+namespace AIStudio.Dialogs;
 
 public partial class SingleInputDialog : ComponentBase
 {
