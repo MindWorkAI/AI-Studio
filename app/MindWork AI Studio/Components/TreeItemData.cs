@@ -1,4 +1,4 @@
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
 public class TreeItemData : ITreeItem
 {
@@ -8,7 +8,7 @@ public class TreeItemData : ITreeItem
     
     public string Text { get; init; } = string.Empty;
     
-    public string ShortenedText => Text.Length > 30 ? this.Text[..30] + "..." : this.Text;
+    public string ShortenedText => this.Text.Length > 30 ? this.Text[..30] + "..." : this.Text;
 
     public string Icon { get; init; } = string.Empty;
 

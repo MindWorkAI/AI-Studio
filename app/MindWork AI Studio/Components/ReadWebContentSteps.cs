@@ -1,4 +1,4 @@
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
 public enum ReadWebContentSteps
 {

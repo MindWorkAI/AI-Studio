@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
 public abstract class EnumSelectionBase : ComponentBase
 {

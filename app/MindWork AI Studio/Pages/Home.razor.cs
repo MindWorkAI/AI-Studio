@@ -1,6 +1,8 @@
-using AIStudio.Components.Blocks;
+using AIStudio.Components;
 
 using Microsoft.AspNetCore.Components;
+
+using Changelog = AIStudio.Components.Changelog;
 
 namespace AIStudio.Pages;
 

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
 public partial class Workspaces : ComponentBase
 {

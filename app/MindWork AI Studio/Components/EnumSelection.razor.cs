@@ -2,7 +2,7 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
 public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
 {

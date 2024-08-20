@@ -2,9 +2,9 @@ using System.Numerics;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
-public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct, INumber<T>
+public partial class MudTextSlider<T> : ComponentBase where T : struct, INumber<T>
 {
     /// <summary>
     /// The minimum value for the slider.
@@ -30,18 +30,21 @@ public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct
     [Parameter]
     public string Unit { get; set; } = string.Empty;
     
-    /// <summary>
-    /// The value used for the slider.
-    /// </summary>
     [Parameter]
-    public Func<T> Value { get; set; } = () => T.Zero;
+    public T Value { get; set; }
+    
+    [Parameter]
+    public EventCallback<T> ValueChanged { get; set; }
     
     /// <summary>
-    /// An action which is called when the option is changed.
+    /// The label to display above the slider.
     /// </summary>
     [Parameter]
-    public Action<T> ValueUpdate { get; set; } = _ => { };
+    public string Label { get; set; } = string.Empty;
     
+    [Parameter]
+    public Func<bool> Disabled { get; set; } = () => false;
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -58,19 +61,18 @@ public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct
 
     #endregion
     
-    private async Task OptionChanged(T updatedValue)
-    {
-        this.ValueUpdate(updatedValue);
-        await this.SettingsManager.StoreSettings();
-        await this.InformAboutChange();
-    }
-    
     private async Task EnsureMinMax()
     {
-        if (this.Value() < this.Min)
-            await this.OptionChanged(this.Min);
+        if (this.Value < this.Min)
+            await this.ValueUpdated(this.Min);
 
-        else if(this.Value() > this.Max)
-            await this.OptionChanged(this.Max);
+        else if(this.Value > this.Max)
+            await this.ValueUpdated(this.Max);
+    }
+
+    private async Task ValueUpdated(T value)
+    {
+        this.Value = value;
+        await this.ValueChanged.InvokeAsync(this.Value);
     }
 }

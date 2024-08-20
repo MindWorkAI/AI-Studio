@@ -370,11 +370,11 @@ def update_changelog []: nothing -> nothing {
     let code = ($"LOGS = \n($tab)[\n($code_rows)\n($tab)];")
     
     # Next, update the Changelog.Logs.cs file:
-    let changelog_logs_source_file = open --raw "Components/Blocks/Changelog.Logs.cs"
+    let changelog_logs_source_file = open --raw "Components/Changelog.Logs.cs"
     let result = $changelog_logs_source_file | str replace --regex '(?ms)LOGS =\s+\[[\w\s".,-:()?]+\];' $code
     
     # Save the updated file:
-    $result | save --raw --force "Components/Blocks/Changelog.Logs.cs"
+    $result | save --raw --force "Components/Changelog.Logs.cs"
     
     let number_change_logs = $table | length
     print $"Updated Changelog.Logs.cs with ($number_change_logs) change logs."

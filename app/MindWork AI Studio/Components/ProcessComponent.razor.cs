@@ -2,7 +2,7 @@ using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
 public partial class ProcessComponent<T> : ComponentBase where T : struct, Enum
 {

@@ -2,9 +2,9 @@ using System.Numerics;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Components.Blocks;
+namespace AIStudio.Components;
 
-public partial class MudTextSlider<T> : ComponentBase where T : struct, INumber<T>
+public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct, INumber<T>
 {
     /// <summary>
     /// The minimum value for the slider.
@@ -30,21 +30,18 @@ public partial class MudTextSlider<T> : ComponentBase where T : struct, INumber<
     [Parameter]
     public string Unit { get; set; } = string.Empty;
     
-    [Parameter]
-    public T Value { get; set; }
-    
-    [Parameter]
-    public EventCallback<T> ValueChanged { get; set; }
-    
     /// <summary>
-    /// The label to display above the slider.
+    /// The value used for the slider.
     /// </summary>
     [Parameter]
-    public string Label { get; set; } = string.Empty;
+    public Func<T> Value { get; set; } = () => T.Zero;
     
+    /// <summary>
+    /// An action which is called when the option is changed.
+    /// </summary>
     [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
-
+    public Action<T> ValueUpdate { get; set; } = _ => { };
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -61,18 +58,19 @@ public partial class MudTextSlider<T> : ComponentBase where T : struct, INumber<
 
     #endregion
     
+    private async Task OptionChanged(T updatedValue)
+    {
+        this.ValueUpdate(updatedValue);
+        await this.SettingsManager.StoreSettings();
+        await this.InformAboutChange();
+    }
+    
     private async Task EnsureMinMax()
     {
-        if (this.Value < this.Min)
-            await this.ValueUpdated(this.Min);
+        if (this.Value() < this.Min)
+            await this.OptionChanged(this.Min);
 
-        else if(this.Value > this.Max)
-            await this.ValueUpdated(this.Max);
-    }
-
-    private async Task ValueUpdated(T value)
-    {
-        this.Value = value;
-        await this.ValueChanged.InvokeAsync(this.Value);
+        else if(this.Value() > this.Max)
+            await this.OptionChanged(this.Max);
     }
 }
