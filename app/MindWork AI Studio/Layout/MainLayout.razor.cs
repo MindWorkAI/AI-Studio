@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
-namespace AIStudio.Components.Layout;
+namespace AIStudio.Layout;
 
 public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDisposable
 {

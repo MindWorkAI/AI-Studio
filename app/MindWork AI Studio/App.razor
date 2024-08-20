@@ -1,0 +1,30 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+
+@* ReSharper disable Html.PathError *@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>MindWork AI Studio</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <base href="/"/>
+        
+        <link rel="icon" type="image/png" href="favicon.png"/>
+        <link href="system/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+        <link href="system/MudBlazor.Markdown/MudBlazor.Markdown.min.css" rel="stylesheet" />
+        <link href="app.css" rel="stylesheet" />
+        <HeadOutlet/>
+        <script src="diff.js"></script>
+    </head>
+
+    <body style="overflow: hidden;">
+        <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)"/>
+        <script src="_framework/blazor.web.js" autostart="false"></script>
+        <script src="boot.js"></script>
+        <script src="system/MudBlazor/MudBlazor.min.js"></script>
+        <script src="system/MudBlazor.Markdown/MudBlazor.Markdown.min.js"></script>
+        <script src="app.js"></script>
+    </body>
+
+</html>
