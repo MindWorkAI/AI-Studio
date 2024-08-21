@@ -1,0 +1,13 @@
+namespace AIStudio.Assistants.TextSummarizer;
+
+public enum Complexity
+{
+    NO_CHANGE,
+    
+    SIMPLE_LANGUAGE,
+    TEEN_LANGUAGE,
+    EVERYDAY_LANGUAGE,
+    POPULAR_SCIENCE_LANGUAGE,
+    SCIENTIFIC_LANGUAGE_FIELD_EXPERTS,
+    SCIENTIFIC_LANGUAGE_OTHER_EXPERTS,
+}

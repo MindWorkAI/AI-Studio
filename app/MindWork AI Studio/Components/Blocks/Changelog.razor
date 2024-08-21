@@ -1,9 +1,0 @@
-@using AIStudio.Tools
-<MudSelect T="Log" @bind-Value="@this.SelectedLog" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Schedule" Margin="Margin.Dense" Label="Changelog" Class="mb-2 rounded-lg" Variant="Variant.Outlined" SelectedValuesChanged="() => this.ReadLogAsync()" OnKeyUp="() => this.ReadLogAsync()">
-    @foreach (var log in LOGS)
-    {
-        <MudSelectItem Value="@log"/>
-    }
-</MudSelect>
-
-<MudMarkdown Value="@this.LogContent" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>

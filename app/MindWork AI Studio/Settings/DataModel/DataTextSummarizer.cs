@@ -1,4 +1,4 @@
-using AIStudio.Components.Pages.TextSummarizer;
+using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;
