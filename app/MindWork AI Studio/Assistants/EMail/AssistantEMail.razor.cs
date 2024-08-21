@@ -1,0 +1,250 @@
+using System.Text;
+
+using AIStudio.Chat;
+using AIStudio.Tools;
+
+namespace AIStudio.Assistants.EMail;
+
+public partial class AssistantEMail : AssistantBaseCore
+{
+    protected override string Title => "E-Mail";
+    
+    protected override string Description =>
+        """
+        Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
+        """;
+    
+    protected override string SystemPrompt => 
+        $"""
+        You are an automated system that writes emails. {this.SystemPromptHistory()} The user provides you with bullet points on what
+        he want to address in the response. Regarding the writing style of the email: {this.selectedWritingStyle.Prompt()}
+        {this.SystemPromptGreeting()} {this.SystemPromptName()} You write the email in the following language: {this.SystemPromptLanguage()}.
+        """;
+    
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new SendToButton
+        {
+            Self = SendTo.EMAIL_ASSISTANT,
+        },
+    ];
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
+    
+    protected override void ResetFrom()
+    {
+        this.inputBulletPoints = string.Empty;
+        this.bulletPointsLines.Clear();
+        this.selectedFoci = [];
+        this.provideHistory = false;
+        this.inputHistory = string.Empty;
+        if (!this.MightPreselectValues())
+        {
+            this.inputName = string.Empty;
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+            this.selectedWritingStyle = WritingStyles.NONE;
+            this.inputSalutation = string.Empty;
+        }
+    }
+    
+    protected override bool MightPreselectValues()
+    {
+        // if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
+        // {
+        //     this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
+        //     this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
+        //     this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
+        //     this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
+        //     return true;
+        // }
+        
+        return false;
+    }
+    
+    private const string PLACEHOLDER_BULLET_POINTS = """
+                                               - The last meeting was good
+                                               - Thank you for feedback
+                                               - Next is milestone 3
+                                               - I need your input by next Wednesday
+                                               """;
+    
+    private WritingStyles selectedWritingStyle = WritingStyles.NONE;
+    private string inputSalutation = string.Empty;
+    private string inputBulletPoints = string.Empty;
+    private readonly List<string> bulletPointsLines = [];
+    private IEnumerable<string> selectedFoci = new HashSet<string>();
+    private string inputName = string.Empty;
+    private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
+    private string customTargetLanguage = string.Empty;
+    private bool provideHistory;
+    private string inputHistory = string.Empty;
+    
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.MightPreselectValues();
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_EMAIL_ASSISTANT).FirstOrDefault();
+        if (deferredContent is not null)
+            this.inputBulletPoints = deferredContent;
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+    
+    private string? ValidateBulletPoints(string content)
+    {
+        if(string.IsNullOrWhiteSpace(content))
+            return "Please provide some content for the e-mail.";
+
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+            if(!line.TrimStart().StartsWith('-'))
+                return "Please start each line of your content list with a dash (-) to create a bullet point list.";
+        
+        return null;
+    }
+    
+    private string? ValidateTargetLanguage(CommonLanguages language)
+    {
+        if(language is CommonLanguages.AS_IS)
+            return "Please select a target language for the e-mail.";
+        
+        return null;
+    }
+    
+    private string? ValidateCustomLanguage(string language)
+    {
+        if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
+            return "Please provide a custom language.";
+        
+        return null;
+    }
+    
+    private string? ValidateWritingStyle(WritingStyles style)
+    {
+        if(style == WritingStyles.NONE)
+            return "Please select a writing style for the e-mail.";
+        
+        return null;
+    }
+    
+    private string? ValidateHistory(string history)
+    {
+        if(this.provideHistory && string.IsNullOrWhiteSpace(history))
+            return "Please provide some history for the e-mail.";
+        
+        return null;
+    }
+    
+    private void OnContentChanged(string content)
+    {
+        this.bulletPointsLines.Clear();
+        var previousSelectedFoci = new HashSet<string>();
+        foreach (var line in content.AsSpan().EnumerateLines())
+        {
+            var trimmedLine = line.Trim();
+            if (trimmedLine.StartsWith("-"))
+                trimmedLine = trimmedLine[1..].Trim();
+            
+            if (trimmedLine.Length == 0)
+                continue;
+            
+            var finalLine = trimmedLine.ToString();
+            if(this.selectedFoci.Any(x => x.StartsWith(finalLine, StringComparison.InvariantCultureIgnoreCase)))
+                previousSelectedFoci.Add(finalLine);
+            
+            this.bulletPointsLines.Add(finalLine);
+        }
+
+        this.selectedFoci = previousSelectedFoci;
+    }
+
+    private string SystemPromptHistory()
+    {
+        if (this.provideHistory)
+            return "You receive the previous conversation as context.";
+        
+        return string.Empty;
+    }
+
+    private string SystemPromptGreeting()
+    {
+        if(!string.IsNullOrWhiteSpace(this.inputSalutation))
+            return $"Your greeting should consider the following formulation: {this.inputSalutation}.";
+        
+        return string.Empty;
+    }
+
+    private string SystemPromptName()
+    {
+        if(!string.IsNullOrWhiteSpace(this.inputName))
+            return $"For the closing phrase of the email, please use the following name: {this.inputName}.";
+        
+        return string.Empty;
+    }
+
+    private string SystemPromptLanguage()
+    {
+        if(this.selectedTargetLanguage is CommonLanguages.AS_IS)
+            return "Use the same language as the input";
+        
+        if(this.selectedTargetLanguage is CommonLanguages.OTHER)
+            return this.customTargetLanguage;
+        
+        return this.selectedTargetLanguage.Name();
+    }
+    
+    private string PromptFoci()
+    {
+        if(!this.selectedFoci.Any())
+            return string.Empty;
+        
+        var sb = new StringBuilder();
+        sb.AppendLine("I want to amplify the following points:");
+        foreach (var focus in this.selectedFoci)
+            sb.AppendLine($"- {focus}");
+        
+        return sb.ToString();
+    }
+    
+    private string PromptHistory()
+    {
+        if(!this.provideHistory)
+            return string.Empty;
+        
+        return $"""
+               The previous conversation was:
+               
+               ```
+               {this.inputHistory}
+               ```
+               """;
+    }
+
+    private async Task CreateMail()
+    {
+        await this.form!.Validate();
+        if (!this.inputIsValid)
+            return;
+
+        this.CreateChatThread();
+        var time = this.AddUserRequest(
+            $"""
+            {this.PromptHistory()}
+            
+            My bullet points for the e-mail are:
+            
+            {this.inputBulletPoints}
+            
+            {this.PromptFoci()}
+            """);
+
+        await this.AddAIResponseAsync(time);
+    }
+}
