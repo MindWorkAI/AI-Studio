@@ -1,7 +1,7 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Services;
 
 public class TemporaryChatService(SettingsManager settingsManager) : BackgroundService
 {

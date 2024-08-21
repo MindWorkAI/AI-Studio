@@ -1,11 +1,9 @@
-using AIStudio.Tools;
-
 // ReSharper disable ClassNeverInstantiated.Global
 
-namespace AIStudio;
+namespace AIStudio.Tools.Services;
 
 /// <summary>
-/// Wire up the clipboard service to copy markdown to the clipboard.
+/// Wire up the clipboard service to copy Markdown to the clipboard.
 /// We use our own Rust-based clipboard service for this.
 /// </summary>
 public sealed class MarkdownClipboardService(Rust rust, IJSRuntime jsRuntime, ISnackbar snackbar) : IMudMarkdownClipboardService

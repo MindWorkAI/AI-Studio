@@ -3,7 +3,7 @@ using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Services;
 
 public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 {

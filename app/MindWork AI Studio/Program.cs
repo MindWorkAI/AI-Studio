@@ -2,6 +2,7 @@ using AIStudio;
 using AIStudio.Agents;
 using AIStudio.Settings;
 using AIStudio.Tools;
+using AIStudio.Tools.Services;
 
 using MudBlazor.Services;
 
