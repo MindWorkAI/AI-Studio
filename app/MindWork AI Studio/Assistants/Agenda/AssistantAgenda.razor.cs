@@ -303,7 +303,7 @@ public partial class AssistantAgenda : AssistantBaseCore
         if(string.IsNullOrWhiteSpace(content))
             return "Please provide some content for the agenda. What are the main points of the meeting or the seminar?";
 
-        var lines = content.Split('\n');
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
             if(!line.TrimStart().StartsWith('-'))
                 return "Please start each line of your content list with a dash (-) to create a bullet point list.";
