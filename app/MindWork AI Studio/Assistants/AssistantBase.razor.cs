@@ -181,17 +181,17 @@ public abstract partial class AssistantBase : ComponentBase
 
         var (eventItem, path) = destination switch
         {
-            SendTo.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, PagePath.ASSISTANT_AGENDA),
-            SendTo.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, PagePath.ASSISTANT_CODING),
-            SendTo.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, PagePath.ASSISTANT_REWRITE),
-            SendTo.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, PagePath.ASSISTANT_TRANSLATION),
-            SendTo.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, PagePath.ASSISTANT_ICON_FINDER),
-            SendTo.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, PagePath.ASSISTANT_GRAMMAR_SPELLING),
-            SendTo.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, PagePath.ASSISTANT_SUMMARIZER),
+            SendTo.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Routes.ASSISTANT_AGENDA),
+            SendTo.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Routes.ASSISTANT_CODING),
+            SendTo.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Routes.ASSISTANT_REWRITE),
+            SendTo.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Routes.ASSISTANT_TRANSLATION),
+            SendTo.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Routes.ASSISTANT_ICON_FINDER),
+            SendTo.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Routes.ASSISTANT_GRAMMAR_SPELLING),
+            SendTo.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Routes.ASSISTANT_SUMMARIZER),
             
-            SendTo.CHAT => (Event.SEND_TO_CHAT, PagePath.CHAT),
+            SendTo.CHAT => (Event.SEND_TO_CHAT, Routes.CHAT),
             
-            _ => (Event.NONE, PagePath.ASSISTANTS),
+            _ => (Event.NONE, Routes.ASSISTANTS),
         };
 
         switch (destination)
@@ -214,7 +214,7 @@ public abstract partial class AssistantBase : ComponentBase
         this.resultingContentBlock = null;
         this.providerSettings = default;
         
-        await this.JsRuntime.ClearDiv(ASSISTANT_RESULT_DIV_ID);
+        await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
         this.ResetFrom();

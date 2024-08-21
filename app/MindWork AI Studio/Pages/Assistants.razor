@@ -1,4 +1,4 @@
-@attribute [Route(PagePath.ASSISTANTS)]
+@attribute [Route(Routes.ASSISTANTS)]
 
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
     Assistants
@@ -10,25 +10,25 @@
         General
     </MudText>
     <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="Text Summarizer" Description="Using a LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@PagePath.ASSISTANT_SUMMARIZER"/>
-        <AssistantBlock Name="Translation" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="@PagePath.ASSISTANT_TRANSLATION"/>
-        <AssistantBlock Name="Grammar & Spelling" Description="Check grammar and spelling of a given text." Icon="@Icons.Material.Filled.Edit" Link="@PagePath.ASSISTANT_GRAMMAR_SPELLING"/>
-        <AssistantBlock Name="Rewrite & Improve" Description="Rewrite and improve a given text for a chosen style." Icon="@Icons.Material.Filled.Edit" Link="@PagePath.ASSISTANT_REWRITE"/>
+        <AssistantBlock Name="Text Summarizer" Description="Using a LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
+        <AssistantBlock Name="Translation" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
+        <AssistantBlock Name="Grammar & Spelling" Description="Check grammar and spelling of a given text." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
+        <AssistantBlock Name="Rewrite & Improve" Description="Rewrite and improve a given text for a chosen style." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
     </MudStack>
 
     <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
         Business
     </MudText>
     <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="Agenda Planner" Description="Generate an agenda for a given meeting, seminar, etc." Icon="@Icons.Material.Filled.CalendarToday" Link="@PagePath.ASSISTANT_AGENDA"/>
-        <AssistantBlock Name="Icon Finder" Description="Using a LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@PagePath.ASSISTANT_ICON_FINDER"/>
+        <AssistantBlock Name="Agenda Planner" Description="Generate an agenda for a given meeting, seminar, etc." Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
+        <AssistantBlock Name="Icon Finder" Description="Using a LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
     </MudStack>
 
     <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
         Software Engineering
     </MudText>
     <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="Coding" Description="Get coding and debugging support from a LLM." Icon="@Icons.Material.Filled.Code" Link="@PagePath.ASSISTANT_CODING"/>
+        <AssistantBlock Name="Coding" Description="Get coding and debugging support from a LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
     </MudStack>
     
 </InnerScrolling>
