@@ -22,7 +22,7 @@
         {
             <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
         }
-        <div id="@ASSISTANT_RESULT_DIV_ID" class="mr-2 mt-3">
+        <div id="@RESULT_DIV_ID" class="mr-2 mt-3">
             @if (this.ShowResult && this.resultingContentBlock is not null)
             {
                 <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@(this.resultingContentBlock.Content)"/>

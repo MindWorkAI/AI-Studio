@@ -28,7 +28,7 @@ public abstract partial class AssistantBase : ComponentBase
     protected NavigationManager NavigationManager { get; init; } = null!;
     
     internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
-    internal const string ASSISTANT_RESULT_DIV_ID = "assistantResult";
+    internal const string RESULT_DIV_ID = "assistantResult";
     
     protected abstract string Title { get; }
     
