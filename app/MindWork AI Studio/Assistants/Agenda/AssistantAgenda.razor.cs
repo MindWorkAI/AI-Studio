@@ -363,6 +363,9 @@ public partial class AssistantAgenda : AssistantBaseCore
 
     private string PromptLanguage()
     {
+        if(this.selectedTargetLanguage is CommonLanguages.AS_IS)
+            return "Use the same language as the input.";
+        
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
