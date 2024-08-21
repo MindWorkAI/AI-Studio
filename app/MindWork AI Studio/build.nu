@@ -43,7 +43,7 @@ def "main metadata" []: nothing -> nothing {
     update_tauri_version
     update_project_commit_hash
     update_license_year "../../LICENSE.md"
-    update_license_year "Components/Pages/About.razor.cs"
+    update_license_year "Pages/About.razor.cs"
 }
 
 def "main fix_web_assets" []: nothing -> nothing {
