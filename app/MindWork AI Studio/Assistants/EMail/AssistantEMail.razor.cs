@@ -47,7 +47,7 @@ public partial class AssistantEMail : AssistantBaseCore
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.selectedWritingStyle = WritingStyles.NONE;
-            this.inputSalutation = string.Empty;
+            this.inputGreeting = string.Empty;
         }
     }
     
@@ -73,7 +73,7 @@ public partial class AssistantEMail : AssistantBaseCore
                                                """;
     
     private WritingStyles selectedWritingStyle = WritingStyles.NONE;
-    private string inputSalutation = string.Empty;
+    private string inputGreeting = string.Empty;
     private string inputBulletPoints = string.Empty;
     private readonly List<string> bulletPointsLines = [];
     private IEnumerable<string> selectedFoci = new HashSet<string>();
@@ -175,8 +175,8 @@ public partial class AssistantEMail : AssistantBaseCore
 
     private string SystemPromptGreeting()
     {
-        if(!string.IsNullOrWhiteSpace(this.inputSalutation))
-            return $"Your greeting should consider the following formulation: {this.inputSalutation}.";
+        if(!string.IsNullOrWhiteSpace(this.inputGreeting))
+            return $"Your greeting should consider the following formulation: {this.inputGreeting}.";
         
         return string.Empty;
     }
