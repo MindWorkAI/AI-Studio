@@ -179,34 +179,19 @@ public abstract partial class AssistantBase : ComponentBase
             },
         };
 
-        var (eventItem, path) = destination switch
-        {
-            SendTo.AGENDA_ASSISTANT => (Event.SEND_TO_AGENDA_ASSISTANT, Routes.ASSISTANT_AGENDA),
-            SendTo.CODING_ASSISTANT => (Event.SEND_TO_CODING_ASSISTANT, Routes.ASSISTANT_CODING),
-            SendTo.REWRITE_ASSISTANT => (Event.SEND_TO_REWRITE_ASSISTANT, Routes.ASSISTANT_REWRITE),
-            SendTo.EMAIL_ASSISTANT => (Event.SEND_TO_EMAIL_ASSISTANT, Routes.ASSISTANT_EMAIL),
-            SendTo.TRANSLATION_ASSISTANT => (Event.SEND_TO_TRANSLATION_ASSISTANT, Routes.ASSISTANT_TRANSLATION),
-            SendTo.ICON_FINDER_ASSISTANT => (Event.SEND_TO_ICON_FINDER_ASSISTANT, Routes.ASSISTANT_ICON_FINDER),
-            SendTo.GRAMMAR_SPELLING_ASSISTANT => (Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Routes.ASSISTANT_GRAMMAR_SPELLING),
-            SendTo.TEXT_SUMMARIZER_ASSISTANT => (Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Routes.ASSISTANT_SUMMARIZER),
-            
-            SendTo.CHAT => (Event.SEND_TO_CHAT, Routes.CHAT),
-            
-            _ => (Event.NONE, Routes.ASSISTANTS),
-        };
-
+        var sendToData = destination.GetData();
         switch (destination)
         {
             case SendTo.CHAT:
-                MessageBus.INSTANCE.DeferMessage(this, eventItem, this.ConvertToChatThread);
+                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, this.ConvertToChatThread);
                 break;
             
             default:
-                MessageBus.INSTANCE.DeferMessage(this, eventItem, contentToSend);
+                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, contentToSend);
                 break;
         }
 
-        this.NavigationManager.NavigateTo(path);
+        this.NavigationManager.NavigateTo(sendToData.Route);
         return Task.CompletedTask;
     }
     
