@@ -53,14 +53,16 @@ public partial class AssistantEMail : AssistantBaseCore
     
     protected override bool MightPreselectValues()
     {
-        // if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
-        // {
-        //     this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
-        //     this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
-        //     this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
-        //     this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
-        //     return true;
-        // }
+        if (this.SettingsManager.ConfigurationData.EMail.PreselectOptions)
+        {
+            this.inputName = this.SettingsManager.ConfigurationData.EMail.SenderName;
+            this.inputGreeting = this.SettingsManager.ConfigurationData.EMail.Greeting;
+            this.selectedWritingStyle = this.SettingsManager.ConfigurationData.EMail.PreselectedWritingStyle;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.EMail.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.EMail.PreselectOtherLanguage;
+            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.EMail.PreselectedProvider);
+            return true;
+        }
         
         return false;
     }
