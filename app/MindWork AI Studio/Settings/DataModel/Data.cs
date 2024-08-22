@@ -42,4 +42,6 @@ public sealed class Data
     public DataGrammarSpelling GrammarSpelling { get; init; } = new();
     
     public DataRewriteImprove RewriteImprove { get; init; } = new();
+
+    public DataEMail EMail { get; set; } = new();
 }

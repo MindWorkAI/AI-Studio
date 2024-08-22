@@ -3,8 +3,12 @@ using AIStudio.Assistants.Coding;
 using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.RewriteImprove;
 using AIStudio.Assistants.TextSummarizer;
+using AIStudio.Assistants.EMail;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
+
+using WritingStylesRewrite = AIStudio.Assistants.RewriteImprove.WritingStyles;
+using WritingStylesEMail = AIStudio.Assistants.EMail.WritingStyles;
 
 namespace AIStudio.Settings;
 
@@ -101,9 +105,15 @@ public static class ConfigurationSelectDataFactory
             yield return new(number.Name(), number);
     }
     
-    public static IEnumerable<ConfigurationSelectData<WritingStyles>> GetWritingStylesData()
+    public static IEnumerable<ConfigurationSelectData<WritingStylesRewrite>> GetWritingStyles4RewriteData()
     {
-        foreach (var style in Enum.GetValues<WritingStyles>())
+        foreach (var style in Enum.GetValues<WritingStylesRewrite>())
+            yield return new(style.Name(), style);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<WritingStylesEMail>> GetWritingStyles4EMailData()
+    {
+        foreach (var style in Enum.GetValues<WritingStylesEMail>())
             yield return new(style.Name(), style);
     }
 }

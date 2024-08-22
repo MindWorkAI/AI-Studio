@@ -13,6 +13,7 @@ public static class SendToExtensions
             SendTo.REWRITE_ASSISTANT => "Rewrite Assistant",
             SendTo.AGENDA_ASSISTANT => "Agenda Assistant",
             SendTo.CODING_ASSISTANT => "Coding Assistant",
+            SendTo.EMAIL_ASSISTANT => "E-Mail Assistant",
             
             SendTo.CHAT => "New Chat",
             
