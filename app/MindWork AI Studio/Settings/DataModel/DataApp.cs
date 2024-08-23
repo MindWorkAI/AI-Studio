@@ -16,10 +16,10 @@ public sealed class DataApp
     /// <summary>
     /// If and when we should look for updates.
     /// </summary>
-    public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.ONCE_STARTUP;
+    public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.HOURLY;
     
     /// <summary>
     /// The navigation behavior.
     /// </summary>
-    public NavBehavior NavigationBehavior { get; set; } = NavBehavior.EXPAND_ON_HOVER;
+    public NavBehavior NavigationBehavior { get; set; } = NavBehavior.NEVER_EXPAND_USE_TOOLTIPS;
 }
