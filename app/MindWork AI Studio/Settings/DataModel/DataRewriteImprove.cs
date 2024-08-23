@@ -24,6 +24,11 @@ public sealed class DataRewriteImprove
     /// Preselect any writing style?
     /// </summary>
     public WritingStyles PreselectedWritingStyle { get; set; }
+
+    /// <summary>
+    /// Preselect any voice style?
+    /// </summary>
+    public SentenceStructure PreselectedSentenceStructure { get; set; }
     
     /// <summary>
     /// Preselect a provider?

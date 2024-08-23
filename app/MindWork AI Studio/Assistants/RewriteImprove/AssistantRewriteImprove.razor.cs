@@ -19,8 +19,8 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         text. You can also correct spelling and grammar issues. You never add additional information. You never
         ask the user for additional information. Your response only contains the improved text. You do not explain
         your changes. If no changes are needed, you return the text unchanged.
-        The style of the text: {this.selectedWritingStyle.Prompt()}. You follow the rules according
-        to {this.SystemPromptLanguage()} in all your changes.
+        The style of the text: {this.selectedWritingStyle.Prompt()}.{this.selectedSentenceStructure.Prompt()}
+        You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
         """;
     
     protected override bool ShowResult => false;
@@ -53,6 +53,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.selectedWritingStyle = WritingStyles.NOT_SPECIFIED;
+            this.selectedSentenceStructure = SentenceStructure.NOT_SPECIFIED;
         }
     }
     
@@ -64,6 +65,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage;
             this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider);
             this.selectedWritingStyle = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle;
+            this.selectedSentenceStructure = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedSentenceStructure;
             return true;
         }
         
@@ -89,6 +91,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     private string customTargetLanguage = string.Empty;
     private string rewrittenText = string.Empty;
     private WritingStyles selectedWritingStyle;
+    private SentenceStructure selectedSentenceStructure;
     
     private string? ValidateText(string text)
     {
