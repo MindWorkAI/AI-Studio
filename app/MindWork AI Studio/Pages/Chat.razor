@@ -16,7 +16,7 @@
 </MudText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
-<InnerScrolling HeaderHeight="12.3em">
+<InnerScrolling @ref="@this.scrollingArea" HeaderHeight="12.3em">
     <ChildContent>
         @if (this.chatThread is not null)
         {

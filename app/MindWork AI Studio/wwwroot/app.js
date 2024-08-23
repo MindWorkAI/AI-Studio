@@ -22,3 +22,7 @@ window.clearDiv = function (divName) {
     let targetDiv = document.getElementById(divName);
     targetDiv.innerHTML = '';
 }
+
+window.scrollToBottom = function(element) {
+    element.scrollIntoView();
+}

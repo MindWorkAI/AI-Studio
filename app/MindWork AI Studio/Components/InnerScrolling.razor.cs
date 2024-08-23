@@ -26,6 +26,11 @@ public partial class InnerScrolling : MSGComponentBase
     
     [CascadingParameter]
     private MainLayout MainLayout { get; set; } = null!;
+    
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+    
+    private ElementReference AnchorAfterChildContent { get; set; }
 
     #region Overrides of ComponentBase
 
@@ -59,4 +64,9 @@ public partial class InnerScrolling : MSGComponentBase
     #endregion
 
     private string Height => $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight});";
+    
+    public async Task ScrollToBottom()
+    {
+        await this.AnchorAfterChildContent.ScrollIntoViewAsync(this.JsRuntime);
+    }
 }
