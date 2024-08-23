@@ -21,4 +21,19 @@ public partial class ExpansionPanel : ComponentBase
 
     [Parameter]
     public bool IsExpanded { get; set; }
+    
+    [Parameter]
+    public bool ShowEndButton { get; set; }
+    
+    [Parameter]
+    public Func<ValueTask> EndButtonClickAsync { get; set; } = () => ValueTask.CompletedTask;
+    
+    [Parameter]
+    public string EndButtonIcon { get; set; } = Icons.Material.Filled.Delete;
+
+    [Parameter]
+    public Color EndButtonColor { get; set; } = Color.Error;
+
+    [Parameter]
+    public string EndButtonTooltip { get; set; } = string.Empty;
 }
