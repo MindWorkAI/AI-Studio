@@ -4,7 +4,7 @@
     @(this.Title)
 </MudText>
 
-<InnerScrolling HeaderHeight="12.3em">
+<InnerScrolling HeaderHeight="6em">
     <ChildContent>
         <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" Class="pr-2">
             <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
@@ -33,10 +33,11 @@
         
         <div id="@AFTER_RESULT_DIV_ID" class="mt-3">
         </div>
-        
+    </ChildContent>
+    <FooterContent>
         @if (this.FooterButtons.Count > 0)
         {
-            <MudStack Row="@true" Wrap="Wrap.Wrap" Class="mt-3 mr-2">
+            <MudStack Row="@true" Wrap="Wrap.Wrap" Class="ma-1">
                 @foreach (var button in this.FooterButtons)
                 {
                     switch (button)
@@ -54,14 +55,14 @@
                                 @buttonData.Text
                             </MudButton>
                             break;
-                            
+
                         case SendToButton sendToButton:
                             <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
                                 @foreach (var assistant in Enum.GetValues<SendTo>().OrderBy(n => n.Name().Length))
                                 {
                                     if(assistant is SendTo.NONE || sendToButton.Self == assistant)
                                         continue;
-                                    
+
                                     <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
                                         @assistant.Name()
                                     </MudMenuItem>
@@ -78,5 +79,5 @@
                 </MudButton>
             </MudStack>
         }
-    </ChildContent>
+    </FooterContent>
 </InnerScrolling>
