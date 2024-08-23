@@ -1,9 +1,9 @@
-0.8.11
-2024-08-21 07:03:02 UTC
-173
+0.8.12
+2024-08-23 16:15:09 UTC
+174
 8.0.108 (commit 665a05cea7)
 8.0.8 (commit 08338fcaa5)
 1.80.1 (commit 3f5fd8dd4)
 7.6.0
 1.7.1
-83fe126c9f1, dev debug
+bcdbf7dcbd5, release
