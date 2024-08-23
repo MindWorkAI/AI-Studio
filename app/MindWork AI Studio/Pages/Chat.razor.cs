@@ -29,6 +29,8 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     public IDialogService DialogService { get; set; } = null!;
+    
+    private InnerScrolling scrollingArea = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Bottom;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -42,6 +44,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private Guid currentWorkspaceId = Guid.Empty;
     private bool workspacesVisible;
     private Workspaces? workspaces;
+    private bool mustScrollToBottomAfterRender;
     
     // Unfortunately, we need the input field reference to clear it after sending a message.
     // This is necessary because we have to handle the key events ourselves. Otherwise,
@@ -81,6 +84,17 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         }
 
         await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(this.mustScrollToBottomAfterRender)
+        {
+            await this.scrollingArea.ScrollToBottom();
+            this.mustScrollToBottomAfterRender = false;
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     #endregion
@@ -372,6 +386,11 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.currentWorkspaceName = this.chatThread is null ? string.Empty : await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
         
         await this.inputField.Clear();
+        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
+        {
+            this.mustScrollToBottomAfterRender = true;
+            this.StateHasChanged();
+        }
     }
 
     private void ResetState()
