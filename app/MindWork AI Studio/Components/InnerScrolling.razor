@@ -8,6 +8,11 @@
             &nbsp;
         </div>
     </div>
-    
-    @this.FooterContent
+
+    @if (this.FooterContent is not null)
+    {
+        <MudPaper Class="pa-3 border-solid border rounded-lg">
+            @this.FooterContent
+        </MudPaper>
+    }
 </div>
