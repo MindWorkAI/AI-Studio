@@ -44,4 +44,6 @@ public sealed class Data
     public DataRewriteImprove RewriteImprove { get; init; } = new();
 
     public DataEMail EMail { get; set; } = new();
+    
+    public DataLegalCheck LegalCheck { get; set; } = new();
 }
