@@ -116,4 +116,10 @@ public static class ConfigurationSelectDataFactory
         foreach (var style in Enum.GetValues<WritingStylesEMail>())
             yield return new(style.Name(), style);
     }
+    
+    public static IEnumerable<ConfigurationSelectData<SentenceStructure>> GetSentenceStructureData()
+    {
+        foreach (var voice in Enum.GetValues<SentenceStructure>())
+            yield return new(voice.Name(), voice);
+    }
 }
