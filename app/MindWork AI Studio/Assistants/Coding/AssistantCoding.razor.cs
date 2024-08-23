@@ -105,6 +105,18 @@ public partial class AssistantCoding : AssistantBaseCore
         });
     }
 
+    private ValueTask DeleteContext(int index)
+    {
+        if(this.codingContexts.Count < index + 1)
+            return ValueTask.CompletedTask;
+
+        this.codingContexts.RemoveAt(index);
+        this.form?.ResetValidation();
+
+        this.StateHasChanged();
+        return ValueTask.CompletedTask;
+    }
+
     private async Task GetSupport()
     {
         await this.form!.Validate();

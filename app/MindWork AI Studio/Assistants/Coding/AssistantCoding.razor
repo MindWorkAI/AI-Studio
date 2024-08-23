@@ -5,7 +5,8 @@
     @for (var contextIndex = 0; contextIndex < this.codingContexts.Count; contextIndex++)
     {
         var codingContext = this.codingContexts[contextIndex];
-        <ExpansionPanel HeaderText="@codingContext.Id" HeaderIcon="@Icons.Material.Filled.Code">
+        var index = contextIndex;
+        <ExpansionPanel HeaderText="@codingContext.Id" HeaderIcon="@Icons.Material.Filled.Code" ShowEndButton="@true" EndButtonColor="Color.Error" EndButtonIcon="@Icons.Material.Filled.Delete" EndButtonTooltip="Delete context" EndButtonClickAsync="@(() => this.DeleteContext(index))">
             <CodingContextItem @bind-CodingContext="@codingContext"/>
         </ExpansionPanel>
     }
