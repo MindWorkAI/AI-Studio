@@ -12,6 +12,7 @@ public static class SendToExtensions
         SendTo.AGENDA_ASSISTANT => "Agenda Assistant",
         SendTo.CODING_ASSISTANT => "Coding Assistant",
         SendTo.EMAIL_ASSISTANT => "E-Mail Assistant",
+        SendTo.LEGAL_CHECK_ASSISTANT => "Legal Check Assistant",
         
         SendTo.CHAT => "New Chat",
         
@@ -28,6 +29,7 @@ public static class SendToExtensions
         SendTo.ICON_FINDER_ASSISTANT => new(Event.SEND_TO_ICON_FINDER_ASSISTANT, Routes.ASSISTANT_ICON_FINDER),
         SendTo.GRAMMAR_SPELLING_ASSISTANT => new(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Routes.ASSISTANT_GRAMMAR_SPELLING),
         SendTo.TEXT_SUMMARIZER_ASSISTANT => new(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Routes.ASSISTANT_SUMMARIZER),
+        SendTo.LEGAL_CHECK_ASSISTANT => new(Event.SEND_TO_LEGAL_CHECK_ASSISTANT, Routes.ASSISTANT_LEGAL_CHECK),
             
         SendTo.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
             

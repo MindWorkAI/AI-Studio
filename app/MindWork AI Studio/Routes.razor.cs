@@ -18,5 +18,6 @@ public sealed partial class Routes
     public const string ASSISTANT_CODING = "/assistant/coding";
     public const string ASSISTANT_AGENDA = "/assistant/agenda";
     public const string ASSISTANT_EMAIL = "/assistant/email";
+    public const string ASSISTANT_LEGAL_CHECK = "/assistant/legal-check";
     // ReSharper restore InconsistentNaming
 }

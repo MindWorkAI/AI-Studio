@@ -1,0 +1,15 @@
+@attribute [Route(Routes.ASSISTANT_LEGAL_CHECK)]
+@inherits AssistantBaseCore
+
+@if (!this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)
+{
+    <ReadWebContent @bind-Content="@this.inputLegalDocument" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions && this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions && this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent)"/>
+}
+
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputLegalDocument" Validation="@this.ValidatingLegalDocument" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Legal document" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputQuestions" Validation="@this.ValidatingQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionAnswer" Adornment="Adornment.Start" Label="Your questions" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudButton Disabled="@this.isAgentRunning" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.AksQuestions()">
+    Ask your questions
+</MudButton>
