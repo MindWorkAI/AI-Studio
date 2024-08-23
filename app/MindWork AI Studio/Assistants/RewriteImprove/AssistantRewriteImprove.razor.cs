@@ -26,10 +26,11 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     protected override bool ShowResult => false;
 
     protected override bool ShowDedicatedProgress => true;
+    
+    protected override Func<string> Result2Copy => () => this.rewrittenText;
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
-        new ButtonData("Copy result", Icons.Material.Filled.ContentCopy, Color.Default, string.Empty, () => this.CopyToClipboard(this.rewrittenText)),
         new SendToButton
         {
             Self = SendTo.REWRITE_ASSISTANT,

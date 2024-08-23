@@ -70,6 +70,9 @@
                             break;
                     }
                 }
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
+                    Copy result
+                </MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
                     Reset
                 </MudButton>

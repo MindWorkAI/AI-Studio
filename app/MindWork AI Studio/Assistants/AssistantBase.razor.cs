@@ -35,6 +35,12 @@ public abstract partial class AssistantBase : ComponentBase
     protected abstract string Description { get; }
     
     protected abstract string SystemPrompt { get; }
+    
+    protected virtual Func<string> Result2Copy => () => this.resultingContentBlock is null ? string.Empty : this.resultingContentBlock.Content switch
+    {
+        ContentText textBlock => textBlock.Text,
+        _ => string.Empty,
+    };
 
     protected abstract void ResetFrom();
 
@@ -154,9 +160,9 @@ public abstract partial class AssistantBase : ComponentBase
         return aiText.Text;
     }
     
-    protected async Task CopyToClipboard(string text)
+    protected async Task CopyToClipboard()
     {
-        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, text);
+        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, this.Result2Copy());
     }
     
     private static string? GetButtonIcon(string icon)
