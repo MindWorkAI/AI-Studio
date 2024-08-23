@@ -5,7 +5,7 @@ public sealed class DataChat
     /// <summary>
     /// Shortcuts to send the input to the AI.
     /// </summary>
-    public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.MODIFER_ENTER_IS_SENDING;
+    public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.ENTER_IS_SENDING;
 
     /// <summary>
     /// Preselect any chat options?
