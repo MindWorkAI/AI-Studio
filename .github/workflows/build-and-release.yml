@@ -794,7 +794,11 @@ jobs:
               
           - name: Append scan results to changelog
             run: |
-              changelog="${{ env.CHANGELOG }}"
+              changelog=$(cat <<'EOOOOOOOF'
+              ${{ env.CHANGELOG }}
+              EOOOOOOOF
+              )
+              
               links="${{ steps.virus_total.outputs.analysis }}"
 
               # Create a temporary file for the changelog:
