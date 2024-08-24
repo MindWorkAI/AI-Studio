@@ -454,7 +454,7 @@ struct RequestedSecret {
 fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse {
     let service = format!("mindwork-ai-studio::{}", destination);
     let entry = Entry::new(service.as_str(), user_name.as_str()).unwrap();
-    let result = entry.delete_password();
+    let result = entry.delete_credential();
 
     match result {
         Ok(_) => {
