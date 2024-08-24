@@ -729,6 +729,9 @@ jobs:
           # Replace newlines in changelog with \n
           changelog=$(echo "$CHANGELOG" | awk '{printf "%s\\n", $0}')
           
+          # Escape double quotes in changelog:
+          changelog=$(echo "$changelog" | sed 's/"/\\"/g')
+          
           # Create the latest.json file:
           cat <<EOOOF > $GITHUB_WORKSPACE/release/assets/latest.json
           {
