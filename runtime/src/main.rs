@@ -32,10 +32,6 @@ static DOTNET_SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc:
 // do not start the server in the development environment.
 static DOTNET_SERVER_PORT: Lazy<u16> = Lazy::new(|| get_available_port().unwrap());
 
-// Our runtime API server. We need it as a static variable because we need to
-// shut it down when the app is closed.
-static API_SERVER: Lazy<Arc<Mutex<Option<rocket::Rocket<rocket::Ignite>>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
-
 // The port used for the runtime API server. In the development environment, we use a fixed
 // port, in the production environment we use the next available port. This differentiation
 // is necessary because we cannot communicate the port to the .NET server in the development
@@ -132,46 +128,85 @@ async fn main() {
     // Start the runtime API server in a separate thread. This is necessary
     // because the server is blocking, and we need to run the Tauri app in
     // parallel:
-    let api_server_spawn_clone = API_SERVER.clone();
+    //
     tauri::async_runtime::spawn(async move {
-        let api_server = rocket::custom(figment)
+        _ = rocket::custom(figment)
             .mount("/", routes![dotnet_port, dotnet_ready])
             .ignite().await.unwrap()
             .launch().await.unwrap();
 
-        // We need to save the server to shut it down later:
-        *api_server_spawn_clone.lock().unwrap() = Some(api_server);
+    //
+    // Generate a secret key for the AES encryption for the IPC channel:
+    //
+    let mut secret_key = [0u8; 512]; // 512 bytes = 4096 bits
+
+    // We use a cryptographically secure pseudo-random number generator
+    // to generate the secret key. ChaCha20Rng is the algorithm of our choice:
+    let mut rng = rand_chacha::ChaChaRng::from_entropy();
+
+    // Fill the secret key with random bytes:
+    rng.fill_bytes(&mut secret_key);
+
+    // Convert the secret key to a hexadecimal string:
+    let secret_key = secret_key.iter().fold(String::new(), |mut out, b| {
+        _ = write!(out, "{b:02X}");
+        out
     });
-
-    // Arc for the server process to stop it later:
+    info!("Secret key for the IPC channel was generated successfully.");
+    info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
+    tauri::async_runtime::spawn(async move {
+        let api_port = *API_SERVER_PORT;
 
-    // Channel to communicate with the server process:
-    let (sender, mut receiver) = tauri::async_runtime::channel(100);
+        let (mut rx, child) = match is_dev() {
+            true => {
+                // We are in the development environment, so we try to start a process
+                // with `dotnet run` in the `../app/MindWork AI Studio` directory. But
+                // we cannot issue a sidecar, because we cannot use any command for the
+                // sidecar (see Tauri configuration). Thus, we use a standard Rust process:
+                warn!(Source = "Bootloader .NET"; "Development environment detected; start .NET server using 'dotnet run'.");
+                Command::new("dotnet")
 
-    if is_prod() {
-        info!("Try to start the .NET server...");
-        tauri::async_runtime::spawn(async move {
-            let api_port = *API_SERVER_PORT;
-            let (mut rx, child) = Command::new_sidecar("mindworkAIStudioServer")
-                .expect("Failed to create sidecar")
-                .args([format!("{api_port}").as_str()])
-                .spawn()
-                .expect("Failed to spawn .NET server process.");
+                    // Start the .NET server in the `../app/MindWork AI Studio` directory.
+                    // We provide the runtime API server port to the .NET server:
+                    .args(["run", "--project", "../app/MindWork AI Studio", "--", format!("{api_port}").as_str()])
 
-            let server_pid = child.pid();
-            info!(".NET server process started with PID={server_pid}.");
+                    // Provide the secret key for the IPC channel to the .NET server by using
+                    // an environment variable. We must use a HashMap for this:
+                    .envs(HashMap::from_iter(once((
+                        String::from("AI_STUDIO_SECRET_KEY"),
+                        secret_key
+                    ))))
+                    .spawn()
+                    .expect("Failed to spawn .NET server process.")
+            }
 
-            // Save the server process to stop it later:
-            *server_spawn_clone.lock().unwrap() = Some(child);
+            false => {
+                Command::new_sidecar("mindworkAIStudioServer")
+                    .expect("Failed to create sidecar")
 
-            // TODO: Migrate to runtime API server:
-            while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
-                let line_lower = line.to_lowercase();
-                let line_cleared = line_lower.trim();
-                match line_cleared
-                {
-                    "rust/tauri server started" => _ = sender.send(ServerEvent::Started).await,
+                    // Provide the runtime API server port to the .NET server:
+                    .args([format!("{api_port}").as_str()])
+
+                    // Provide the secret key for the IPC channel to the .NET server by using
+                    // an environment variable. We must use a HashMap for this:
+                    .envs(HashMap::from_iter(once((
+                        String::from("AI_STUDIO_SECRET_KEY"),
+                        secret_key
+                    ))))
+                    .spawn()
+                    .expect("Failed to spawn .NET server process.")
+            }
+        };
+
+        let server_pid = child.pid();
+        info!(Source = "Bootloader .NET"; "The .NET server process started with PID={server_pid}.");
+
+        // Save the server process to stop it later:
+        *server_spawn_clone.lock().unwrap() = Some(child);
+
+        // Log the output of the .NET server:
+        while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
 
                     _ if line_cleared.contains("fail") || line_cleared.contains("error") || line_cleared.contains("exception") => _ = sender.send(ServerEvent::Error(line)).await,
                     _ if line_cleared.contains("warn") => _ = sender.send(ServerEvent::Warning(line)).await,
@@ -399,12 +434,6 @@ fn stop_servers() {
         }
     } else {
         warn!("The .NET server process was not started or is already stopped.");
-    }
-
-    if let Some(api_server) = API_SERVER.lock().unwrap().take() {
-        _ = api_server.shutdown();
-    } else {
-        warn!("The API server was not started or is already stopped.");
     }
 }
 

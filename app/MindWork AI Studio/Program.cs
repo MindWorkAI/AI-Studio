@@ -11,12 +11,26 @@ using System.Reflection;
 using Microsoft.Extensions.FileProviders;
 #endif
 
-var rustApiPort = args.Length > 0 ? args[0] : "5000";
+if(args.Length == 0)
+{
+    Console.WriteLine("Please provide the port of the runtime API.");
+    return;
+}
+
+var rustApiPort = args[0];
 using var rust = new Rust(rustApiPort);
 var appPort = await rust.GetAppPort();
 if(appPort == 0)
 {
     Console.WriteLine("Failed to get the app port from Rust.");
+    return;
+}
+
+// Read the secret key for the IPC from the AI_STUDIO_SECRET_KEY environment variable:
+var secretKey = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_KEY");
+if(string.IsNullOrWhiteSpace(secretKey))
+{
+    Console.WriteLine("The AI_STUDIO_SECRET_KEY environment variable is not set.");
     return;
 }
 
