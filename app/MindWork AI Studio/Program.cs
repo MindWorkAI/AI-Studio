@@ -11,7 +11,15 @@ using System.Reflection;
 using Microsoft.Extensions.FileProviders;
 #endif
 
-var port = args.Length > 0 ? args[0] : "5000";
+var rustApiPort = args.Length > 0 ? args[0] : "5000";
+using var rust = new Rust(rustApiPort);
+var appPort = await rust.GetAppPort();
+if(appPort == 0)
+{
+    Console.WriteLine("Failed to get the app port from Rust.");
+    return;
+}
+
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddMudServices(config =>
 {
@@ -27,7 +35,7 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddMudMarkdownServices();
 builder.Services.AddSingleton(MessageBus.INSTANCE);
-builder.Services.AddSingleton<Rust>();
+builder.Services.AddSingleton(rust);
 builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
 builder.Services.AddSingleton<SettingsManager>();
 builder.Services.AddSingleton<ThreadSafeRandom>();
@@ -46,10 +54,10 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSingleton(new HttpClient
 {
-    BaseAddress = new Uri($"http://localhost:{port}")
+    BaseAddress = new Uri($"http://localhost:{appPort}")
 });
 
-builder.WebHost.UseUrls($"http://localhost:{port}");
+builder.WebHost.UseUrls($"http://localhost:{appPort}");
 
 #if DEBUG
 builder.WebHost.UseWebRoot("wwwroot");
@@ -79,5 +87,5 @@ app.MapRazorComponents<App>()
 
 var serverTask = app.RunAsync();
 
-Console.WriteLine("RUST/TAURI SERVER STARTED");
+await rust.AppIsReady();
 await serverTask;

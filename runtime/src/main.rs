@@ -1,8 +1,10 @@
 // Prevents an additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+extern crate rocket;
 extern crate core;
 
+use std::collections::HashSet;
 use std::net::TcpListener;
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
@@ -10,20 +12,50 @@ use once_cell::sync::Lazy;
 use arboard::Clipboard;
 use keyring::Entry;
 use serde::Serialize;
-use tauri::{Manager, Url, Window, WindowUrl};
+use tauri::{Manager, Url, Window};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
-use tauri::utils::config::AppUrl;
 use tokio::time;
 use flexi_logger::{AdaptiveFormat, Logger};
 use keyring::error::Error::NoEntry;
 use log::{debug, error, info, warn};
+use rocket::figment::Figment;
+use rocket::{get, post, routes};
+use rocket::config::Shutdown;
 use tauri::updater::UpdateResponse;
 
-static SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+// The .NET server is started in a separate process and communicates with this
+// runtime process via IPC. However, we do net start the .NET server in
+// the development environment.
+static DOTNET_SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+
+// The .NET server port is relevant for the production environment only, sine we
+// do not start the server in the development environment.
+static DOTNET_SERVER_PORT: Lazy<u16> = Lazy::new(|| get_available_port().unwrap());
+
+// Our runtime API server. We need it as a static variable because we need to
+// shut it down when the app is closed.
+static API_SERVER: Lazy<Arc<Mutex<Option<rocket::Rocket<rocket::Ignite>>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+
+// The port used for the runtime API server. In the development environment, we use a fixed
+// port, in the production environment we use the next available port. This differentiation
+// is necessary because we cannot communicate the port to the .NET server in the development
+// environment.
+static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
+    if is_dev() {
+        5000
+    } else {
+        get_available_port().unwrap()
+    }
+});
+
+// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
+
+// The update response coming from the Tauri updater.
 static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<UpdateResponse<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
 
-fn main() {
+#[tokio::main]
+async fn main() {
 
     let metadata = include_str!("../../metadata.txt");
     let mut metadata_lines = metadata.lines();
@@ -64,45 +96,76 @@ fn main() {
         info!("Running in production mode.");
     }
 
-    let port = match is_dev() {
-        true => 5000,
-        false => get_available_port().unwrap(),
-    };
+    let api_port = *API_SERVER_PORT;
+    info!("Try to start the API server on 'http://localhost:{api_port}'...");
+    let figment = Figment::from(rocket::Config::release_default())
 
-    let url = match Url::parse(format!("http://localhost:{port}").as_str())
-    {
-        Ok(url) => url,
-        Err(msg) => {
-            error!("Error while parsing URL: {msg}");
-            return;
-        }
-    };
+        // We use the next available port which was determined before:
+        .merge(("port", api_port))
 
-    let app_url = AppUrl::Url(WindowUrl::External(url.clone()));
-    let app_url_log = app_url.clone();
-    info!("Try to start the .NET server on {app_url_log}...");
+        // The runtime API server should be accessible only from the local machine:
+        .merge(("address", "127.0.0.1"))
+
+        // We do not want to use the Ctrl+C signal to stop the server:
+        .merge(("ctrlc", false))
+
+        // Set a name for the server:
+        .merge(("ident", "AI Studio Runtime API"))
+
+        // Set the maximum number of workers and blocking threads:
+        .merge(("workers", 3))
+        .merge(("max_blocking", 12))
+
+        // Set the shutdown configuration:
+        .merge(("shutdown", Shutdown {
+
+            // Again, we do not want to use the Ctrl+C signal to stop the server:
+            ctrlc: false,
+
+            // We do not want to use the termination signal to stop the server:
+            signals: HashSet::new(),
+
+            // Everything else is set to default:
+            ..Shutdown::default()
+        }));
+
+    // Start the runtime API server in a separate thread. This is necessary
+    // because the server is blocking, and we need to run the Tauri app in
+    // parallel:
+    let api_server_spawn_clone = API_SERVER.clone();
+    tauri::async_runtime::spawn(async move {
+        let api_server = rocket::custom(figment)
+            .mount("/", routes![dotnet_port, dotnet_ready])
+            .ignite().await.unwrap()
+            .launch().await.unwrap();
+
+        // We need to save the server to shut it down later:
+        *api_server_spawn_clone.lock().unwrap() = Some(api_server);
+    });
 
     // Arc for the server process to stop it later:
-    let server_spawn_clone = SERVER.clone();
+    let server_spawn_clone = DOTNET_SERVER.clone();
 
     // Channel to communicate with the server process:
     let (sender, mut receiver) = tauri::async_runtime::channel(100);
 
     if is_prod() {
+        info!("Try to start the .NET server...");
         tauri::async_runtime::spawn(async move {
+            let api_port = *API_SERVER_PORT;
             let (mut rx, child) = Command::new_sidecar("mindworkAIStudioServer")
                 .expect("Failed to create sidecar")
-                .args([format!("{port}").as_str()])
+                .args([format!("{api_port}").as_str()])
                 .spawn()
                 .expect("Failed to spawn .NET server process.");
 
             let server_pid = child.pid();
-            debug!(".NET server process started with PID={server_pid}.");
+            info!(".NET server process started with PID={server_pid}.");
 
             // Save the server process to stop it later:
             *server_spawn_clone.lock().unwrap() = Some(child);
-            
-            info!("Waiting for .NET server to boot...");
+
+            // TODO: Migrate to runtime API server:
             while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
                 let line_lower = line.to_lowercase();
                 let line_cleared = line_lower.trim();
@@ -127,8 +190,8 @@ fn main() {
         warn!("Running in development mode, no .NET server will be started.");
     }
 
-    let main_window_spawn_clone = &MAIN_WINDOW;
-    let server_receive_clone = SERVER.clone();
+    // TODO: Migrate logging to runtime API server:
+    let server_receive_clone = DOTNET_SERVER.clone();
 
     // Create a thread to handle server events:
     tauri::async_runtime::spawn(async move {
@@ -136,35 +199,7 @@ fn main() {
         loop {
             match receiver.recv().await {
                 Some(ServerEvent::Started) => {
-                    info!("The .NET server was booted successfully.");
-
-                    // Try to get the main window. If it is not available yet, wait for it:
-                    let mut main_window_ready = false;
-                    let mut main_window_status_reported = false;
-                    while !main_window_ready
-                    {
-                        main_window_ready = {
-                            let main_window = main_window_spawn_clone.lock().unwrap();
-                            main_window.is_some()
-                        };
-
-                        if !main_window_ready {
-                            if !main_window_status_reported {
-                                info!("Waiting for main window to be ready, because .NET was faster than Tauri.");
-                                main_window_status_reported = true;
-                            }
-
-                            time::sleep(time::Duration::from_millis(100)).await;
-                        }
-                    }
-
-                    let main_window = main_window_spawn_clone.lock().unwrap();
-                    let js_location_change = format!("window.location = '{url}';");
-                    let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
-                    match location_change_result {
-                        Ok(_) => info!("Location was changed to {url}."),
-                        Err(e) => error!("Failed to change location to {url}: {e}."),
-                    }
+                    info!("The .NET server was started.");
                 },
 
                 Some(ServerEvent::NotFound(line)) => {
@@ -246,7 +281,7 @@ fn main() {
                 tauri::UpdaterEvent::Downloaded => {
                     info!("Updater: update has been downloaded!");
                     warn!("Try to stop the .NET server now...");
-                    stop_server();
+                    stop_servers();
                 }
 
                 tauri::UpdaterEvent::Updated => {
@@ -278,8 +313,57 @@ fn main() {
 
     info!("Tauri app was stopped.");
     if is_prod() {
-        info!("Try to stop the .NET server as well...");
-        stop_server();
+        info!("Try to stop the .NET & runtime API servers as well...");
+        stop_servers();
+    }
+}
+
+#[get("/system/dotnet/port")]
+fn dotnet_port() -> String {
+    let dotnet_server_port = *DOTNET_SERVER_PORT;
+    format!("{dotnet_server_port}")
+}
+
+#[post("/system/dotnet/ready")]
+async fn dotnet_ready() {
+    let main_window_spawn_clone = &MAIN_WINDOW;
+    let dotnet_server_port = *DOTNET_SERVER_PORT;
+    let url = match Url::parse(format!("http://localhost:{dotnet_server_port}").as_str())
+    {
+        Ok(url) => url,
+        Err(msg) => {
+            error!("Error while parsing URL: {msg}");
+            return;
+        }
+    };
+    info!("The .NET server was booted successfully.");
+
+    // Try to get the main window. If it is not available yet, wait for it:
+    let mut main_window_ready = false;
+    let mut main_window_status_reported = false;
+    while !main_window_ready
+    {
+        main_window_ready = {
+            let main_window = main_window_spawn_clone.lock().unwrap();
+            main_window.is_some()
+        };
+
+        if !main_window_ready {
+            if !main_window_status_reported {
+                info!("Waiting for main window to be ready, because .NET was faster than Tauri.");
+                main_window_status_reported = true;
+            }
+
+            time::sleep(time::Duration::from_millis(100)).await;
+        }
+    }
+
+    let main_window = main_window_spawn_clone.lock().unwrap();
+    let js_location_change = format!("window.location = '{url}';");
+    let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
+    match location_change_result {
+        Ok(_) => info!("Location was changed to {url}."),
+        Err(e) => error!("Failed to change location to {url}: {e}."),
     }
 }
 
@@ -306,15 +390,21 @@ fn get_available_port() -> Option<u16> {
         .ok()
 }
 
-fn stop_server() {
-    if let Some(server_process) = SERVER.lock().unwrap().take() {
+fn stop_servers() {
+    if let Some(server_process) = DOTNET_SERVER.lock().unwrap().take() {
         let server_kill_result = server_process.kill();
         match server_kill_result {
             Ok(_) => info!("The .NET server process was stopped."),
             Err(e) => error!("Failed to stop the .NET server process: {e}."),
         }
     } else {
-        warn!("The .NET server process was not started or already stopped.");
+        warn!("The .NET server process was not started or is already stopped.");
+    }
+
+    if let Some(api_server) = API_SERVER.lock().unwrap().take() {
+        _ = api_server.shutdown();
+    } else {
+        warn!("The API server was not started or is already stopped.");
     }
 }
 
