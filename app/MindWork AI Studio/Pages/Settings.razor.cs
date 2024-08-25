@@ -14,16 +14,19 @@ namespace AIStudio.Pages;
 public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
-    public SettingsManager SettingsManager { get; init; } = null!;
+    private SettingsManager SettingsManager { get; init; } = null!;
 
     [Inject]
-    public IDialogService DialogService { get; init; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    public IJSRuntime JsRuntime { get; init; } = null!;
+    private IJSRuntime JsRuntime { get; init; } = null!;
     
     [Inject]
-    protected MessageBus MessageBus { get; init; } = null!;
+    private MessageBus MessageBus { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<Settings> Logger { get; init; } = null!;
     
     private readonly List<ConfigurationSelectData<string>> availableProviders = new();
 
@@ -111,7 +114,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.CreateProvider();
+        var providerInstance = provider.CreateProvider(this.Logger);
         var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
         if(deleteSecretResponse.Success)
         {

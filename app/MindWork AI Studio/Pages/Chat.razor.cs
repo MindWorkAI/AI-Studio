@@ -19,7 +19,7 @@ namespace AIStudio.Pages;
 public partial class Chat : MSGComponentBase, IAsyncDisposable
 {
     [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
+    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     public IJSRuntime JsRuntime { get; init; } = null!;
@@ -28,7 +28,10 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private ThreadSafeRandom RNG { get; init; } = null!;
     
     [Inject]
-    public IDialogService DialogService { get; set; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<Chat> Logger { get; init; } = null!;
     
     private InnerScrolling scrollingArea = null!;
 
@@ -189,7 +192,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)

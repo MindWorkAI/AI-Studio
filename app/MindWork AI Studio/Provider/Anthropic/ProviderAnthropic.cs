@@ -8,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
-public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.com/v1/"), IProvider
+public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://api.anthropic.com/v1/", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {

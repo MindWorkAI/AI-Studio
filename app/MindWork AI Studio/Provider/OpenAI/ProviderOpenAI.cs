@@ -11,7 +11,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <summary>
 /// The OpenAI provider.
 /// </summary>
-public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"), IProvider
+public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.openai.com/v1/", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {

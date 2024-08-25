@@ -71,10 +71,13 @@ public partial class ProviderDialog : ComponentBase
     public bool IsEditing { get; init; }
     
     [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
+    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
-    private IJSRuntime JsRuntime { get; set; } = null!;
+    private IJSRuntime JsRuntime { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<ProviderDialog> Logger { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -133,7 +136,7 @@ public partial class ProviderDialog : ComponentBase
             }
             
             var loadedProviderSettings = this.CreateProviderSettings();
-            var provider = loadedProviderSettings.CreateProvider();
+            var provider = loadedProviderSettings.CreateProvider(this.Logger);
             if(provider is NoProvider)
             {
                 await base.OnInitializedAsync();
@@ -187,7 +190,7 @@ public partial class ProviderDialog : ComponentBase
         if (addedProviderSettings.UsedProvider != Providers.SELF_HOSTED)
         {
             // We need to instantiate the provider to store the API key:
-            var provider = addedProviderSettings.CreateProvider();
+            var provider = addedProviderSettings.CreateProvider(this.Logger);
             
             // Store the API key in the OS secure storage:
             var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
@@ -318,7 +321,7 @@ public partial class ProviderDialog : ComponentBase
     private async Task ReloadModels()
     {
         var currentProviderSettings = this.CreateProviderSettings();
-        var provider = currentProviderSettings.CreateProvider();
+        var provider = currentProviderSettings.CreateProvider(this.Logger);
         if(provider is NoProvider)
             return;
         

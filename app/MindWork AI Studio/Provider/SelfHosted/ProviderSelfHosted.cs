@@ -8,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}"), IProvider
+public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -162,7 +162,7 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
         }
         catch(Exception e)
         {
-            Console.WriteLine($"Failed to load text models from self-hosted provider: {e.Message}");
+            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
         }
     }

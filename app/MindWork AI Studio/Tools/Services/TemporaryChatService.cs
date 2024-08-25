@@ -3,11 +3,13 @@ using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.Services;
 
-public class TemporaryChatService(SettingsManager settingsManager) : BackgroundService
+public class TemporaryChatService(ILogger<TemporaryChatService> logger, SettingsManager settingsManager) : BackgroundService
 {
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromDays(1);
     private static bool IS_INITIALIZED;
 
+    private readonly ILogger<TemporaryChatService> logger = logger;
+    
     #region Overrides of BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -15,10 +17,12 @@ public class TemporaryChatService(SettingsManager settingsManager) : BackgroundS
         while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
             await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
 
+        this.logger.LogInformation("The temporary chat maintenance service was initialized.");
+        
         await settingsManager.LoadSettings();
         if(settingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy is WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE)
         {
-            Console.WriteLine("Automatic maintenance of temporary chat storage is disabled. Exiting maintenance service.");
+            this.logger.LogWarning("Automatic maintenance of temporary chat storage is disabled. Exiting maintenance service.");
             return;
         }
 
@@ -34,10 +38,14 @@ public class TemporaryChatService(SettingsManager settingsManager) : BackgroundS
 
     private Task StartMaintenance()
     {
+        this.logger.LogInformation("Starting maintenance of temporary chat storage.");
         var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
         if(!Directory.Exists(temporaryDirectories))
+        {
+            this.logger.LogWarning("Temporary chat storage directory does not exist. End maintenance.");
             return Task.CompletedTask;
-        
+        }
+
         foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
         {
             var chatPath = Path.Join(tempChatDirPath, "thread.json");
@@ -59,9 +67,13 @@ public class TemporaryChatService(SettingsManager settingsManager) : BackgroundS
             };
             
             if(deleteChat)
+            {
+                this.logger.LogInformation($"Deleting temporary chat storage directory '{tempChatDirPath}' due to maintenance policy.");
                 Directory.Delete(tempChatDirPath, true);
+            }
         }
 
+        this.logger.LogInformation("Finished maintenance of temporary chat storage.");
         return Task.CompletedTask;
     }
     

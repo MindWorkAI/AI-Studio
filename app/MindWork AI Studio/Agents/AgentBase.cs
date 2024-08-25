@@ -7,13 +7,15 @@ using AIStudio.Tools;
 
 namespace AIStudio.Agents;
 
-public abstract class AgentBase(SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : IAgent
+public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : IAgent
 {
     protected SettingsManager SettingsManager { get; init; } = settingsManager;
 
     protected IJSRuntime JsRuntime { get; init; } = jsRuntime;
 
     protected ThreadSafeRandom RNG { get; init; } = rng;
+    
+    protected ILogger<AgentBase> Logger { get; init; } = logger;
 
     /// <summary>
     /// Represents the type or category of this agent.
@@ -104,6 +106,6 @@ public abstract class AgentBase(SettingsManager settingsManager, IJSRuntime jsRu
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, providerSettings.Model, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.JsRuntime, this.SettingsManager, providerSettings.Model, thread);
     }
 }

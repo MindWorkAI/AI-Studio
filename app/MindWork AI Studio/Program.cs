@@ -4,6 +4,8 @@ using AIStudio.Settings;
 using AIStudio.Tools;
 using AIStudio.Tools.Services;
 
+using Microsoft.Extensions.Logging.Console;
+
 using MudBlazor.Services;
 
 #if !DEBUG
@@ -35,6 +37,18 @@ if(string.IsNullOrWhiteSpace(secretKey))
 }
 
 var builder = WebApplication.CreateBuilder();
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddFilter("Microsoft", LogLevel.Information);
+builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.AspNetCore.Routing.EndpointMiddleware", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.AspNetCore.StaticFiles", LogLevel.Warning);
+builder.Logging.AddFilter("MudBlazor", LogLevel.Information);
+builder.Logging.AddConsole(options =>
+{
+    options.FormatterName = TerminalLogger.FORMATTER_NAME;
+}).AddConsoleFormatter<TerminalLogger, ConsoleFormatterOptions>();
+
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
@@ -100,6 +114,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 var serverTask = app.RunAsync();
+
+var rustLogger = app.Services.GetRequiredService<ILogger<Rust>>();
+rust.SetLogger(rustLogger);
 
 await rust.AppIsReady();
 await serverTask;

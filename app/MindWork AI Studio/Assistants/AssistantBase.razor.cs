@@ -10,7 +10,7 @@ namespace AIStudio.Assistants;
 public abstract partial class AssistantBase : ComponentBase
 {
     [Inject]
-    protected SettingsManager SettingsManager { get; set; } = null!;
+    protected SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
@@ -26,6 +26,9 @@ public abstract partial class AssistantBase : ComponentBase
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
+    
+    [Inject]
+    protected ILogger<AssistantBase> Logger { get; init; } = null!;
     
     internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     internal const string RESULT_DIV_ID = "assistantResult";
@@ -151,7 +154,7 @@ public abstract partial class AssistantBase : ComponentBase
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();

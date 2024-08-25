@@ -4,7 +4,7 @@ using AIStudio.Tools;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentTextContentCleaner(SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : AgentBase(settingsManager, jsRuntime, rng)
+public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, jsRuntime, rng)
 {
     private static readonly ContentBlock EMPTY_BLOCK = new()
     {

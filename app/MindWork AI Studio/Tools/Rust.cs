@@ -9,6 +9,13 @@ public sealed class Rust(string apiPort) : IDisposable
     {
         BaseAddress = new Uri($"http://127.0.0.1:{apiPort}"),
     };
+
+    private ILogger<Rust>? logger;
+    
+    public void SetLogger(ILogger<Rust> logService)
+    {
+        this.logger = logService;
+    }
     
     public async Task<int> GetAppPort()
     {
@@ -36,14 +43,14 @@ public sealed class Rust(string apiPort) : IDisposable
             var response = await initialHttp.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"   Try {tris}/{MAX_TRIES}");
+                Console.WriteLine($"Try {tris}/{MAX_TRIES} to get the app port from Rust runtime");
                 await Task.Delay(wait4Try);
                 continue;
             }
             
             var appPortContent = await response.Content.ReadAsStringAsync();
             var appPort = int.Parse(appPortContent);
-            Console.WriteLine($"   Received app port from Rust runtime: '{appPort}'");
+            Console.WriteLine($"Received app port from Rust runtime: '{appPort}'");
             return appPort;
         }
 
@@ -54,11 +61,11 @@ public sealed class Rust(string apiPort) : IDisposable
     public async Task AppIsReady()
     {
         const string URL = "/system/dotnet/ready";
-        Console.WriteLine($"Notifying Rust runtime that the app is ready.");
+        this.logger!.LogInformation("Notifying Rust runtime that the app is ready.");
         var response = await this.http.PostAsync(URL, new StringContent(string.Empty));
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($"Failed to notify Rust runtime that the app is ready: '{response.StatusCode}'");
+             this.logger!.LogError($"Failed to notify Rust runtime that the app is ready: '{response.StatusCode}'");
         }
     }
     

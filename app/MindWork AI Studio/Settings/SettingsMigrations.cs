@@ -9,7 +9,7 @@ namespace AIStudio.Settings;
 
 public static class SettingsMigrations
 {
-    public static Data Migrate(Version previousVersion, string configData, JsonSerializerOptions jsonOptions)
+    public static Data Migrate(ILogger<SettingsManager> logger, Version previousVersion, string configData, JsonSerializerOptions jsonOptions)
     {
         switch (previousVersion)
         {
@@ -17,41 +17,41 @@ public static class SettingsMigrations
                 var configV1 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
                 if (configV1 is null)
                 {
-                    Console.WriteLine("Error: failed to parse the configuration. Using default values.");
+                    logger.LogError("Failed to parse the v1 configuration. Using default values.");
                     return new();
                 }
 
-                configV1 = MigrateV1ToV2(configV1);
-                configV1 = MigrateV2ToV3(configV1);
-                return MigrateV3ToV4(configV1);
+                configV1 = MigrateV1ToV2(logger, configV1);
+                configV1 = MigrateV2ToV3(logger, configV1);
+                return MigrateV3ToV4(logger, configV1);
 
             case Version.V2:
                 var configV2 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
                 if (configV2 is null)
                 {
-                    Console.WriteLine("Error: failed to parse the configuration. Using default values.");
+                    logger.LogError("Failed to parse the v2 configuration. Using default values.");
                     return new();
                 }
 
-                configV2 = MigrateV2ToV3(configV2);
-                return MigrateV3ToV4(configV2);
+                configV2 = MigrateV2ToV3(logger, configV2);
+                return MigrateV3ToV4(logger, configV2);
 
             case Version.V3:
                 var configV3 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
                 if (configV3 is null)
                 {
-                    Console.WriteLine("Error: failed to parse the configuration. Using default values.");
+                    logger.LogError("Failed to parse the v3 configuration. Using default values.");
                     return new();
                 }
 
-                return MigrateV3ToV4(configV3);
+                return MigrateV3ToV4(logger, configV3);
 
             default:
-                Console.WriteLine("No configuration migration needed.");
+                logger.LogInformation("No configuration migration is needed.");
                 var configV4 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
                 if (configV4 is null)
                 {
-                    Console.WriteLine("Error: failed to parse the configuration. Using default values.");
+                    logger.LogError("Failed to parse the v4 configuration. Using default values.");
                     return new();
                 }
 
@@ -59,14 +59,14 @@ public static class SettingsMigrations
         }
     }
 
-    private static DataV1V3 MigrateV1ToV2(DataV1V3 previousData)
+    private static DataV1V3 MigrateV1ToV2(ILogger<SettingsManager> logger, DataV1V3 previousData)
     {
         //
         // Summary:
         // In v1 we had no self-hosted providers. Thus, we had no hostnames.
         //
 
-        Console.WriteLine("Migrating from v1 to v2...");
+        logger.LogInformation("Migrating from v1 to v2...");
         return new()
         {
             Version = Version.V2,
@@ -81,14 +81,14 @@ public static class SettingsMigrations
         };
     }
     
-    private static DataV1V3 MigrateV2ToV3(DataV1V3 previousData)
+    private static DataV1V3 MigrateV2ToV3(ILogger<SettingsManager> logger, DataV1V3 previousData)
     {
         //
         // Summary:
         // In v2, self-hosted providers had no host (LM Studio, llama.cpp, ollama, etc.)
         //
 
-        Console.WriteLine("Migrating from v2 to v3...");
+        logger.LogInformation("Migrating from v2 to v3...");
         return new()
         {
             Version = Version.V3,
@@ -110,14 +110,14 @@ public static class SettingsMigrations
         };
     }
 
-    private static Data MigrateV3ToV4(DataV1V3 previousConfig)
+    private static Data MigrateV3ToV4(ILogger<SettingsManager> logger, DataV1V3 previousConfig)
     {
         //
         // Summary:
         // We grouped the settings into different categories.
         //
         
-        Console.WriteLine("Migrating from v3 to v4...");
+        logger.LogInformation("Migrating from v3 to v4...");
         return new()
         {
             Version = Version.V4,

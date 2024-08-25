@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/"), IProvider
+public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {

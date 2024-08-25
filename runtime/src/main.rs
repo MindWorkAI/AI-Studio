@@ -4,9 +4,11 @@
 extern crate rocket;
 extern crate core;
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::iter::once;
 use std::net::TcpListener;
 use std::sync::{Arc, Mutex};
+use std::fmt::Write;
 use once_cell::sync::Lazy;
 
 use arboard::Clipboard;
@@ -15,9 +17,12 @@ use serde::Serialize;
 use tauri::{Manager, Url, Window};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time;
-use flexi_logger::{AdaptiveFormat, Logger};
+use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger};
+use flexi_logger::writers::FileLogWriter;
 use keyring::error::Error::NoEntry;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, kv, warn};
+use log::kv::{Key, Value, VisitSource};
+use rand::{RngCore, SeedableRng};
 use rocket::figment::Figment;
 use rocket::{get, post, routes};
 use rocket::config::Shutdown;
@@ -65,16 +70,36 @@ async fn main() {
     let tauri_version = metadata_lines.next().unwrap();
     let app_commit_hash = metadata_lines.next().unwrap();
 
-    // Set the log level according to the environment:
-    // In debug mode, the log level is set to debug, in release mode to info.
-    let log_level = match is_dev() {
-        true => "debug",
-        false => "info",
+    //
+    // Configure the logger:
+    //
+    let mut log_config = String::new();
+
+    // Set the log level depending on the environment:
+    match is_dev() {
+        true => log_config.push_str("debug, "),
+        false => log_config.push_str("info, "),
     };
 
-    Logger::try_with_str(log_level).expect("Cannot create logging")
-        .log_to_stdout()
-        .adaptive_format_for_stdout(AdaptiveFormat::Detailed)
+    // Set the log level for the Rocket library:
+    log_config.push_str("rocket=info, ");
+
+    // Set the log level for the Rocket server:
+    log_config.push_str("rocket::server=warn, ");
+
+    // Set the log level for the Reqwest library:
+    log_config.push_str("reqwest::async_impl::client=info");
+
+    let logger = Logger::try_with_str(log_config).expect("Cannot create logging")
+        .log_to_file(FileSpec::default()
+            .basename("AI Studio Events")
+            .suppress_timestamp()
+            .suffix("log"))
+        .duplicate_to_stdout(Duplicate::All)
+        .use_utc()
+        .format_for_files(file_logger_format)
+        .format_for_stderr(terminal_colored_logger_format)
+        .format_for_stdout(terminal_colored_logger_format)
         .start().expect("Cannot start logging");
 
     info!("Starting MindWork AI Studio:");
@@ -94,6 +119,8 @@ async fn main() {
 
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
+
+    // Configure the runtime API server:
     let figment = Figment::from(rocket::Config::release_default())
 
         // We use the next available port which was determined before:
@@ -112,6 +139,9 @@ async fn main() {
         .merge(("workers", 3))
         .merge(("max_blocking", 12))
 
+        // No colors and emojis in the log output:
+        .merge(("cli_colors", false))
+
         // Set the shutdown configuration:
         .merge(("shutdown", Shutdown {
 
@@ -125,6 +155,7 @@ async fn main() {
             ..Shutdown::default()
         }));
 
+    //
     // Start the runtime API server in a separate thread. This is necessary
     // because the server is blocking, and we need to run the Tauri app in
     // parallel:
@@ -134,6 +165,7 @@ async fn main() {
             .mount("/", routes![dotnet_port, dotnet_ready])
             .ignite().await.unwrap()
             .launch().await.unwrap();
+    });
 
     //
     // Generate a secret key for the AES encryption for the IPC channel:
@@ -208,56 +240,33 @@ async fn main() {
         // Log the output of the .NET server:
         while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
 
-                    _ if line_cleared.contains("fail") || line_cleared.contains("error") || line_cleared.contains("exception") => _ = sender.send(ServerEvent::Error(line)).await,
-                    _ if line_cleared.contains("warn") => _ = sender.send(ServerEvent::Warning(line)).await,
-                    _ if line_cleared.contains("404") => _ = sender.send(ServerEvent::NotFound(line)).await,
-                    _ => (),
+            // Remove newline characters from the end:
+            let line = line.trim_end();
+
+            // Starts the line with '=>'?
+            if line.starts_with("=>") {
+                // Yes. This means that the line is a log message from the .NET server.
+                // The format is: '<YYYY-MM-dd HH:mm:ss.fff> [<log level>] <source>: <message>'.
+                // We try to parse this line and log it with the correct log level:
+                let line = line.trim_start_matches("=>").trim();
+                let parts = line.split_once(": ").unwrap();
+                let left_part = parts.0.trim();
+                let message = parts.1.trim();
+                let parts = left_part.split_once("] ").unwrap();
+                let level = parts.0.split_once("[").unwrap().1.trim();
+                let source = parts.1.trim();
+                match level {
+                    "Trace" => debug!(Source = ".NET Server", Comp = source; "{message}"),
+                    "Debug" => debug!(Source = ".NET Server", Comp = source; "{message}"),
+                    "Information" => info!(Source = ".NET Server", Comp = source; "{message}"),
+                    "Warning" => warn!(Source = ".NET Server", Comp = source; "{message}"),
+                    "Error" => error!(Source = ".NET Server", Comp = source; "{message}"),
+                    "Critical" => error!(Source = ".NET Server", Comp = source; "{message}"),
+
+                    _ => error!(Source = ".NET Server", Comp = source; "{message} (unknown log level '{level}')"),
                 }
-            }
-
-            let sending_stop_result = sender.send(ServerEvent::Stopped).await;
-            match sending_stop_result {
-                Ok(_) => (),
-                Err(e) => error!("Was not able to send the server stop message: {e}."),
-            }
-        });
-    } else {
-        warn!("Running in development mode, no .NET server will be started.");
-    }
-
-    // TODO: Migrate logging to runtime API server:
-    let server_receive_clone = DOTNET_SERVER.clone();
-
-    // Create a thread to handle server events:
-    tauri::async_runtime::spawn(async move {
-        info!("Start listening for server events...");
-        loop {
-            match receiver.recv().await {
-                Some(ServerEvent::Started) => {
-                    info!("The .NET server was started.");
-                },
-
-                Some(ServerEvent::NotFound(line)) => {
-                    warn!("The .NET server issued a 404 error: {line}.");
-                },
-
-                Some(ServerEvent::Warning(line)) => {
-                    warn!("The .NET server issued a warning: {line}.");
-                },
-
-                Some(ServerEvent::Error(line)) => {
-                    error!("The .NET server issued an error: {line}.");
-                },
-
-                Some(ServerEvent::Stopped) => {
-                    warn!("The .NET server was stopped.");
-                    *server_receive_clone.lock().unwrap() = None;
-                },
-
-                None => {
-                    debug!("Server event channel was closed.");
-                    break;
-                },
+            } else {
+                info!(Source = ".NET Server"; "{line}");
             }
         }
     });
@@ -267,6 +276,19 @@ async fn main() {
         .setup(move |app| {
             let window = app.get_window("main").expect("Failed to get main window.");
             *MAIN_WINDOW.lock().unwrap() = Some(window);
+
+            info!(Source = "Bootloader Tauri"; "Setup is running.");
+            let logger_path = app.path_resolver().app_local_data_dir().unwrap();
+            let logger_path = logger_path.join("data");
+
+            info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {logger_path:?}");
+            logger.reset_flw(&FileLogWriter::builder(
+                FileSpec::default()
+                .directory(logger_path)
+                .basename("events")
+                .suppress_timestamp()
+                .suffix("log")))?;
+
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -282,15 +304,15 @@ async fn main() {
         tauri::RunEvent::WindowEvent { event, label, .. } => {
             match event {
                 tauri::WindowEvent::CloseRequested { .. } => {
-                    warn!("Window '{label}': close was requested.");
+                    warn!(Source = "Tauri"; "Window '{label}': close was requested.");
                 }
 
                 tauri::WindowEvent::Destroyed => {
-                    warn!("Window '{label}': was destroyed.");
+                    warn!(Source = "Tauri"; "Window '{label}': was destroyed.");
                 }
 
                 tauri::WindowEvent::FileDrop(files) => {
-                    info!("Window '{label}': files were dropped: {files:?}");
+                    info!(Source = "Tauri"; "Window '{label}': files were dropped: {files:?}");
                 }
 
                 _ => (),
@@ -302,55 +324,134 @@ async fn main() {
 
                 tauri::UpdaterEvent::UpdateAvailable { body, date, version } => {
                     let body_len = body.len();
-                    info!("Updater: update available: body size={body_len} time={date:?} version={version}");
+                    info!(Source = "Tauri"; "Updater: update available: body size={body_len} time={date:?} version={version}");
                 }
 
                 tauri::UpdaterEvent::Pending => {
-                    info!("Updater: update is pending!");
+                    info!(Source = "Tauri"; "Updater: update is pending!");
                 }
 
                 tauri::UpdaterEvent::DownloadProgress { chunk_length, content_length } => {
-                    info!("Updater: downloaded {} of {:?}", chunk_length, content_length);
+                    info!(Source = "Tauri"; "Updater: downloaded {} of {:?}", chunk_length, content_length);
                 }
 
                 tauri::UpdaterEvent::Downloaded => {
-                    info!("Updater: update has been downloaded!");
-                    warn!("Try to stop the .NET server now...");
+                    info!(Source = "Tauri"; "Updater: update has been downloaded!");
+                    warn!(Source = "Tauri"; "Try to stop the .NET server now...");
                     stop_servers();
                 }
 
                 tauri::UpdaterEvent::Updated => {
-                    info!("Updater: app has been updated");
-                    warn!("Try to restart the app now...");
+                    info!(Source = "Tauri"; "Updater: app has been updated");
+                    warn!(Source = "Tauri"; "Try to restart the app now...");
                     app_handle.restart();
                 }
 
                 tauri::UpdaterEvent::AlreadyUpToDate => {
-                    info!("Updater: app is already up to date");
+                    info!(Source = "Tauri"; "Updater: app is already up to date");
                 }
 
                 tauri::UpdaterEvent::Error(error) => {
-                    warn!("Updater: failed to update: {error}");
+                    warn!(Source = "Tauri"; "Updater: failed to update: {error}");
                 }
             }
         }
 
         tauri::RunEvent::ExitRequested { .. } => {
-            warn!("Run event: exit was requested.");
+            warn!(Source = "Tauri"; "Run event: exit was requested.");
         }
         
         tauri::RunEvent::Ready => {
-            info!("Run event: Tauri app is ready.");
+            info!(Source = "Tauri"; "Run event: Tauri app is ready.");
         }
 
         _ => {}
     });
 
-    info!("Tauri app was stopped.");
+    warn!(Source = "Tauri"; "Tauri app was stopped.");
     if is_prod() {
-        info!("Try to stop the .NET & runtime API servers as well...");
+        warn!("Try to stop the .NET server as well...");
         stop_servers();
     }
+}
+
+//
+// Data structure for iterating over key-value pairs of log messages.
+//
+struct LogKVCollect<'kvs>(BTreeMap<Key<'kvs>, Value<'kvs>>);
+
+impl<'kvs> VisitSource<'kvs> for LogKVCollect<'kvs> {
+    fn visit_pair(&mut self, key: Key<'kvs>, value: Value<'kvs>) -> Result<(), kv::Error> {
+        self.0.insert(key, value);
+        Ok(())
+    }
+}
+
+pub fn write_kv_pairs(w: &mut dyn std::io::Write, record: &log::Record) -> Result<(), std::io::Error> {
+    if record.key_values().count() > 0 {
+        let mut visitor = LogKVCollect(BTreeMap::new());
+        record.key_values().visit(&mut visitor).unwrap();
+        write!(w, "[")?;
+        let mut index = 0;
+        for (key, value) in visitor.0 {
+            index += 1;
+            if index > 1 {
+                write!(w, ", ")?;
+            }
+
+            write!(w, "{} = {}", key, value)?;
+        }
+        write!(w, "] ")?;
+    }
+
+    Ok(())
+}
+
+// Custom logger format for the terminal:
+pub fn terminal_colored_logger_format(
+    w: &mut dyn std::io::Write,
+    now: &mut DeferredNow,
+    record: &log::Record,
+) -> Result<(), std::io::Error> {
+    let level = record.level();
+
+    // Write the timestamp, log level, and module path:
+    write!(
+        w,
+        "[{}] {} [{}] ",
+        flexi_logger::style(level).paint(now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).to_string()),
+        flexi_logger::style(level).paint(record.level().to_string()),
+        record.module_path().unwrap_or("<unnamed>"),
+    )?;
+
+    // Write all key-value pairs:
+    write_kv_pairs(w, record)?;
+
+    // Write the log message:
+    write!(w, "{}", flexi_logger::style(level).paint(record.args().to_string()))
+}
+
+// Custom logger format for the log files:
+pub fn file_logger_format(
+    w: &mut dyn std::io::Write,
+    now: &mut DeferredNow,
+    record: &log::Record,
+) -> Result<(), std::io::Error> {
+
+    // Write the timestamp, log level, and module path:
+    write!(
+        w,
+        "[{}] {} [{}] ",
+        now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK),
+        record.level(),
+        record.module_path().unwrap_or("<unnamed>"),
+    )?;
+
+    // Write all key-value pairs:
+    write_kv_pairs(w, record)?;
+
+    // Write the log message:
+    write!(w, "{}", &record.args())
 }
 
 #[get("/system/dotnet/port")]
@@ -367,10 +468,11 @@ async fn dotnet_ready() {
     {
         Ok(url) => url,
         Err(msg) => {
-            error!("Error while parsing URL: {msg}");
+            error!("Error while parsing URL for navigating to the app: {msg}");
             return;
         }
     };
+
     info!("The .NET server was booted successfully.");
 
     // Try to get the main window. If it is not available yet, wait for it:
@@ -397,18 +499,9 @@ async fn dotnet_ready() {
     let js_location_change = format!("window.location = '{url}';");
     let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
     match location_change_result {
-        Ok(_) => info!("Location was changed to {url}."),
-        Err(e) => error!("Failed to change location to {url}: {e}."),
+        Ok(_) => info!("The app location was changed to {url}."),
+        Err(e) => error!("Failed to change the app location to {url}: {e}."),
     }
-}
-
-// Enum for server events:
-enum ServerEvent {
-    Started,
-    NotFound(String),
-    Warning(String),
-    Error(String),
-    Stopped,
 }
 
 pub fn is_dev() -> bool {
@@ -447,7 +540,7 @@ async fn check_for_update() -> CheckUpdateResponse {
                 true => {
                     *CHECK_UPDATE_RESPONSE.lock().unwrap() = Some(update_response.clone());
                     let new_version = update_response.latest_version();
-                    info!("Updater: update to version '{new_version}' is available.");
+                    info!(Source = "Updater"; "An update to version '{new_version}' is available.");
                     let changelog = update_response.body();
                     CheckUpdateResponse {
                         update_is_available: true,
@@ -461,7 +554,7 @@ async fn check_for_update() -> CheckUpdateResponse {
                 },
 
                 false => {
-                    info!("Updater: no updates available.");
+                    info!(Source = "Updater"; "No updates are available.");
                     CheckUpdateResponse {
                         update_is_available: false,
                         error: false,
@@ -472,7 +565,7 @@ async fn check_for_update() -> CheckUpdateResponse {
             },
 
             Err(e) => {
-                warn!("Failed to check updater: {e}.");
+                warn!(Source = "Updater"; "Failed to check for updates: {e}.");
                 CheckUpdateResponse {
                     update_is_available: false,
                     error: true,
@@ -501,7 +594,7 @@ async fn install_update() {
         },
 
         None => {
-            error!("Update installer: no update available to install. Did you check for updates first?");
+            error!(Source = "Updater"; "No update available to install. Did you check for updates first?");
         },
     }
 }
@@ -513,7 +606,7 @@ fn store_secret(destination: String, user_name: String, secret: String) -> Store
     let result = entry.set_password(secret.as_str());
     match result {
         Ok(_) => {
-            info!("Secret for {service} and user {user_name} was stored successfully.");
+            info!(Source = "Secret Store"; "Secret for {service} and user {user_name} was stored successfully.");
             StoreSecretResponse {
                 success: true,
                 issue: String::from(""),
@@ -521,7 +614,7 @@ fn store_secret(destination: String, user_name: String, secret: String) -> Store
         },
         
         Err(e) => {
-            error!("Failed to store secret for {service} and user {user_name}: {e}.");
+            error!(Source = "Secret Store"; "Failed to store secret for {service} and user {user_name}: {e}.");
             StoreSecretResponse {
                 success: false,
                 issue: e.to_string(),
@@ -543,7 +636,7 @@ fn get_secret(destination: String, user_name: String) -> RequestedSecret {
     let secret = entry.get_password();
     match secret {
         Ok(s) => {
-            info!("Secret for {service} and user {user_name} was retrieved successfully.");
+            info!(Source = "Secret Store"; "Secret for {service} and user {user_name} was retrieved successfully.");
             RequestedSecret {
                 success: true,
                 secret: s,
@@ -552,7 +645,7 @@ fn get_secret(destination: String, user_name: String) -> RequestedSecret {
         },
 
         Err(e) => {
-            error!("Failed to retrieve secret for {service} and user {user_name}: {e}.");
+            error!(Source = "Secret Store"; "Failed to retrieve secret for {service} and user {user_name}: {e}.");
             RequestedSecret {
                 success: false,
                 secret: String::from(""),
@@ -577,7 +670,7 @@ fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse
 
     match result {
         Ok(_) => {
-            warn!("Secret for {service} and user {user_name} was deleted successfully.");
+            warn!(Source = "Secret Store"; "Secret for {service} and user {user_name} was deleted successfully.");
             DeleteSecretResponse {
                 success: true,
                 was_entry_found: true,
@@ -586,7 +679,7 @@ fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse
         },
 
         Err(NoEntry) => {
-            warn!("No secret for {service} and user {user_name} was found.");
+            warn!(Source = "Secret Store"; "No secret for {service} and user {user_name} was found.");
             DeleteSecretResponse {
                 success: true,
                 was_entry_found: false,
@@ -595,7 +688,7 @@ fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse
         }
         
         Err(e) => {
-            error!("Failed to delete secret for {service} and user {user_name}: {e}.");
+            error!(Source = "Secret Store"; "Failed to delete secret for {service} and user {user_name}: {e}.");
             DeleteSecretResponse {
                 success: false,
                 was_entry_found: false,
@@ -618,7 +711,7 @@ fn set_clipboard(text: String) -> SetClipboardResponse {
     let mut clipboard = match clipboard_result {
         Ok(clipboard) => clipboard,
         Err(e) => {
-            error!("Failed to get the clipboard instance: {e}.");
+            error!(Source = "Clipboard"; "Failed to get the clipboard instance: {e}.");
             return SetClipboardResponse {
                 success: false,
                 issue: e.to_string(),
@@ -629,7 +722,7 @@ fn set_clipboard(text: String) -> SetClipboardResponse {
     let set_text_result = clipboard.set_text(text);
     match set_text_result {
         Ok(_) => {
-            debug!("Text was set to the clipboard successfully.");
+            debug!(Source = "Clipboard"; "Text was set to the clipboard successfully.");
             SetClipboardResponse {
                 success: true,
                 issue: String::from(""),
@@ -637,7 +730,7 @@ fn set_clipboard(text: String) -> SetClipboardResponse {
         },
         
         Err(e) => {
-            error!("Failed to set text to the clipboard: {e}.");
+            error!(Source = "Clipboard"; "Failed to set text to the clipboard: {e}.");
             SetClipboardResponse {
                 success: false,
                 issue: e.to_string(),

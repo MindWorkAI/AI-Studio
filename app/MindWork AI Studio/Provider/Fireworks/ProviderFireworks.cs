@@ -8,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
 
-public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/inference/v1/"), IProvider
+public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.fireworks.ai/inference/v1/", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
