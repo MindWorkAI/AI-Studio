@@ -165,7 +165,7 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected async Task CopyToClipboard()
     {
-        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, this.Result2Copy());
+        await this.Rust.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
     }
     
     private static string? GetButtonIcon(string icon)

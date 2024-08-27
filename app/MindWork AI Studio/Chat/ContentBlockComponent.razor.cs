@@ -100,7 +100,7 @@ public partial class ContentBlockComponent : ComponentBase
         {
             case ContentType.TEXT:
                 var textContent = (ContentText) this.Content;
-                await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, textContent.Text);
+                await this.Rust.CopyText2Clipboard(this.Snackbar, textContent.Text);
                 break;
             
             default:

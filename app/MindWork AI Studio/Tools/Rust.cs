@@ -78,36 +78,44 @@ public sealed class Rust(string apiPort) : IDisposable
     /// <summary>
     /// Tries to copy the given text to the clipboard.
     /// </summary>
-    /// <param name="jsRuntime">The JS runtime to access the Rust code.</param>
     /// <param name="snackbar">The snackbar to show the result.</param>
     /// <param name="text">The text to copy to the clipboard.</param>
-    public async Task CopyText2Clipboard(IJSRuntime jsRuntime, ISnackbar snackbar, string text)
+    public async Task CopyText2Clipboard(ISnackbar snackbar, string text)
     {
-        var response = await jsRuntime.InvokeAsync<SetClipboardResponse>("window.__TAURI__.invoke", "set_clipboard", new SetClipboardText(text));
-        var msg = response.Success switch
+        var message = "Successfully copied the text to your clipboard";
+        var iconColor = Color.Error;
+        var severity = Severity.Error;
+        try
         {
-            true => "Successfully copied text to clipboard!",
-            false => $"Failed to copy text to clipboard: {response.Issue}",
-        };
-                
-        var severity = response.Success switch
-        {
-            true => Severity.Success,
-            false => Severity.Error,
-        };
-                
-        snackbar.Add(msg, severity, config =>
-        {
-            config.Icon = Icons.Material.Filled.ContentCopy;
-            config.IconSize = Size.Large;
-            config.IconColor = severity switch
+            var response = await this.http.PostAsync("/clipboard/set", new StringContent(await text.Encrypt(this.encryptor!)));
+            if (!response.IsSuccessStatusCode)
             {
-                Severity.Success => Color.Success,
-                Severity.Error => Color.Error,
-                        
-                _ => Color.Default,
-            };
-        });
+                this.logger!.LogError($"Failed to copy the text to the clipboard due to an network error: '{response.StatusCode}'");
+                message = "Failed to copy the text to your clipboard.";
+                return;
+            }
+
+            var state = await response.Content.ReadFromJsonAsync<SetClipboardResponse>();
+            if (!state.Success)
+            {
+                this.logger!.LogError("Failed to copy the text to the clipboard.");
+                message = "Failed to copy the text to your clipboard.";
+                return;
+            }
+            
+            iconColor = Color.Success;
+            severity = Severity.Success;
+            this.logger!.LogDebug("Successfully copied the text to the clipboard.");
+        }
+        finally
+        {
+            snackbar.Add(message, severity, config =>
+            {
+                config.Icon = Icons.Material.Filled.ContentCopy;
+                config.IconSize = Size.Large;
+                config.IconColor = iconColor;
+            });
+        }
     }
     
     public async Task<UpdateResponse> CheckForUpdate(IJSRuntime jsRuntime)

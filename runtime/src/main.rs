@@ -194,7 +194,7 @@ async fn main() {
     //
     tauri::async_runtime::spawn(async move {
         _ = rocket::custom(figment)
-            .mount("/", routes![dotnet_port, dotnet_ready])
+            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard])
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
@@ -312,7 +312,7 @@ async fn main() {
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            store_secret, get_secret, delete_secret, set_clipboard,
+            store_secret, get_secret, delete_secret,
             check_for_update, install_update
         ])
         .build(tauri::generate_context!())
@@ -848,36 +848,49 @@ struct DeleteSecretResponse {
     issue: String,
 }
 
-#[tauri::command]
-fn set_clipboard(text: String) -> SetClipboardResponse {
+#[post("/clipboard/set", data = "<encrypted_text>")]
+fn set_clipboard(encrypted_text: EncryptedText) -> Json<SetClipboardResponse> {
+
+    // Decrypt this text first:
+    let decrypted_text = match ENCRYPTION.decrypt(&encrypted_text) {
+        Ok(text) => text,
+        Err(e) => {
+            error!(Source = "Clipboard"; "Failed to decrypt the text: {e}.");
+            return Json(SetClipboardResponse {
+                success: false,
+                issue: e,
+            })
+        },
+    };
+
     let clipboard_result = Clipboard::new();
     let mut clipboard = match clipboard_result {
         Ok(clipboard) => clipboard,
         Err(e) => {
             error!(Source = "Clipboard"; "Failed to get the clipboard instance: {e}.");
-            return SetClipboardResponse {
+            return Json(SetClipboardResponse {
                 success: false,
                 issue: e.to_string(),
-            }
+            })
         },
     };
     
-    let set_text_result = clipboard.set_text(text);
+    let set_text_result = clipboard.set_text(decrypted_text);
     match set_text_result {
         Ok(_) => {
             debug!(Source = "Clipboard"; "Text was set to the clipboard successfully.");
-            SetClipboardResponse {
+            Json(SetClipboardResponse {
                 success: true,
                 issue: String::from(""),
-            }
+            })
         },
         
         Err(e) => {
             error!(Source = "Clipboard"; "Failed to set text to the clipboard: {e}.");
-            SetClipboardResponse {
+            Json(SetClipboardResponse {
                 success: false,
                 issue: e.to_string(),
-            }
+            })
         },
     }
 }
