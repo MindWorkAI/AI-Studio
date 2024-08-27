@@ -9,12 +9,18 @@ public sealed class Rust(string apiPort) : IDisposable
     {
         BaseAddress = new Uri($"http://127.0.0.1:{apiPort}"),
     };
-
-    private ILogger<Rust>? logger;
     
+    private ILogger<Rust>? logger;
+    private Encryption? encryptor;
+
     public void SetLogger(ILogger<Rust> logService)
     {
         this.logger = logService;
+    }
+    
+    public void SetEncryptor(Encryption encryptionService)
+    {
+        this.encryptor = encryptionService;
     }
     
     public async Task<int> GetAppPort()

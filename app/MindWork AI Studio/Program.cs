@@ -29,12 +29,22 @@ if(appPort == 0)
 }
 
 // Read the secret key for the IPC from the AI_STUDIO_SECRET_KEY environment variable:
-var secretKey = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_KEY");
-if(string.IsNullOrWhiteSpace(secretKey))
+var secretPasswordEncoded = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_PASSWORD");
+if(string.IsNullOrWhiteSpace(secretPasswordEncoded))
 {
-    Console.WriteLine("The AI_STUDIO_SECRET_KEY environment variable is not set.");
+    Console.WriteLine("The AI_STUDIO_SECRET_PASSWORD environment variable is not set.");
     return;
 }
+
+var secretPassword = Convert.FromBase64String(secretPasswordEncoded);
+var secretKeySaltEncoded = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_KEY_SALT");
+if(string.IsNullOrWhiteSpace(secretKeySaltEncoded))
+{
+    Console.WriteLine("The AI_STUDIO_SECRET_KEY_SALT environment variable is not set.");
+    return;
+}
+
+var secretKeySalt = Convert.FromBase64String(secretKeySaltEncoded);
 
 var builder = WebApplication.CreateBuilder();
 builder.Logging.ClearProviders();
@@ -92,7 +102,19 @@ builder.WebHost.UseWebRoot("wwwroot");
 builder.WebHost.UseStaticWebAssets();
 #endif
 
+// Execute the builder to get the app:
 var app = builder.Build();
+
+// Initialize the encryption service:
+var encryptionLogger = app.Services.GetRequiredService<ILogger<Encryption>>();
+var encryption = new Encryption(encryptionLogger, secretPassword, secretKeySalt);
+var encryptionInitializer = encryption.Initialize();
+
+// Set the logger for the Rust service:
+var rustLogger = app.Services.GetRequiredService<ILogger<Rust>>();
+rust.SetLogger(rustLogger);
+rust.SetEncryptor(encryption);
+
 app.Use(Redirect.HandlerContentAsync);
 
 #if DEBUG
@@ -115,8 +137,6 @@ app.MapRazorComponents<App>()
 
 var serverTask = app.RunAsync();
 
-var rustLogger = app.Services.GetRequiredService<ILogger<Rust>>();
-rust.SetLogger(rustLogger);
-
+await encryptionInitializer;
 await rust.AppIsReady();
 await serverTask;
