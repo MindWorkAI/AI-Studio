@@ -16,7 +16,7 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use keyring::Entry;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use tauri::{Manager, Url, Window};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time;
@@ -285,7 +285,14 @@ async fn main() {
                     _ => error!(Source = ".NET Server", Comp = source; "{message} (unknown log level '{level}')"),
                 }
             } else {
-                info!(Source = ".NET Server"; "{line}");
+                let lower_line = line.to_lowercase();
+                if lower_line.contains("error") {
+                    error!(Source = ".NET Server"; "{line}");
+                } else if lower_line.contains("warning") {
+                    warn!(Source = ".NET Server"; "{line}");
+                } else {
+                    info!(Source = ".NET Server"; "{line}");
+                }
             }
         }
     });
