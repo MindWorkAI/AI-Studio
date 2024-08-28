@@ -8,6 +8,4 @@ public readonly record struct EncryptedText(string EncryptedData)
     {
         throw new SecurityException("Please provide the encrypted data.");
     }
-    
-    public static implicit operator string(EncryptedText encryptedText) => encryptedText.EncryptedData;
 }
