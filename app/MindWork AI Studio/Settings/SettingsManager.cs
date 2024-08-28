@@ -41,24 +41,6 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     private bool IsSetUp => !string.IsNullOrWhiteSpace(ConfigDirectory) && !string.IsNullOrWhiteSpace(DataDirectory);
 
     #region API Key Handling
-    
-    private readonly record struct GetSecretRequest(string Destination, string UserName);
-
-    /// <summary>
-    /// Data structure for any requested secret.
-    /// </summary>
-    /// <param name="Success">True, when the secret was successfully retrieved.</param>
-    /// <param name="Secret">The secret, e.g., API key.</param>
-    /// <param name="Issue">The issue, when the secret could not be retrieved.</param>
-    public readonly record struct RequestedSecret(bool Success, string Secret, string Issue);
-    
-    /// <summary>
-    /// Try to get the API key for the given provider.
-    /// </summary>
-    /// <param name="jsRuntime">The JS runtime to access the Rust code.</param>
-    /// <param name="provider">The provider to get the API key for.</param>
-    /// <returns>The requested secret.</returns>
-    public async Task<RequestedSecret> GetAPIKey(IJSRuntime jsRuntime, IProvider provider) => await jsRuntime.InvokeAsync<RequestedSecret>("window.__TAURI__.invoke", "get_secret", new GetSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName));
 
     private readonly record struct StoreSecretRequest(string Destination, string UserName, string Secret);
     

@@ -1,5 +1,4 @@
 using AIStudio.Assistants.Agenda;
-using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;
 

@@ -5,6 +5,7 @@ using AIStudio.Provider;
 using Microsoft.AspNetCore.Components;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Settings;
 
@@ -78,6 +79,12 @@ public partial class ProviderDialog : ComponentBase
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
+    
+    [Inject]
+    private Encryption Encryption { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -136,7 +143,7 @@ public partial class ProviderDialog : ComponentBase
             }
             
             var loadedProviderSettings = this.CreateProviderSettings();
-            var provider = loadedProviderSettings.CreateProvider(this.Logger);
+            var provider = loadedProviderSettings.CreateProvider(this.Logger, this.RustService);
             if(provider is NoProvider)
             {
                 await base.OnInitializedAsync();
@@ -144,10 +151,10 @@ public partial class ProviderDialog : ComponentBase
             }
             
             // Load the API key:
-            var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
+            var requestedSecret = await this.RustService.GetAPIKey(provider);
             if(requestedSecret.Success)
             {
-                this.dataAPIKey = requestedSecret.Secret;
+                this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.Encryption);
                 
                 // Now, we try to load the list of available models:
                 await this.ReloadModels();
@@ -190,7 +197,7 @@ public partial class ProviderDialog : ComponentBase
         if (addedProviderSettings.UsedProvider != Providers.SELF_HOSTED)
         {
             // We need to instantiate the provider to store the API key:
-            var provider = addedProviderSettings.CreateProvider(this.Logger);
+            var provider = addedProviderSettings.CreateProvider(this.Logger, this.RustService);
             
             // Store the API key in the OS secure storage:
             var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
@@ -321,7 +328,7 @@ public partial class ProviderDialog : ComponentBase
     private async Task ReloadModels()
     {
         var currentProviderSettings = this.CreateProviderSettings();
-        var provider = currentProviderSettings.CreateProvider(this.Logger);
+        var provider = currentProviderSettings.CreateProvider(this.Logger, this.RustService);
         if(provider is NoProvider)
             return;
         

@@ -1,5 +1,4 @@
 using AIStudio.Assistants.RewriteImprove;
-using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;
 

@@ -93,20 +93,21 @@ public sealed class Encryption(ILogger<Encryption> logger, byte[] secretPassword
     public async Task<string> Decrypt(EncryptedText encryptedData)
     {
         // Build a memory stream to access the given base64 encoded data:
-        await using var encodedEncryptedStream = new MemoryStream(Encoding.ASCII.GetBytes(encryptedData));
+        await using var encodedEncryptedStream = new MemoryStream(Encoding.ASCII.GetBytes(encryptedData.EncryptedData));
 
         // Wrap around the base64 decoder stream:
         await using var base64Stream = new CryptoStream(encodedEncryptedStream, new FromBase64Transform(), CryptoStreamMode.Read);
 
         // A buffer for the salt's bytes:
         var readSaltBytes = new byte[16]; // 16 bytes = Guid
-
+        
         // Read the salt's bytes out of the stream:
-        var readBytes = await base64Stream.ReadAsync(readSaltBytes);
-        if(readBytes != 16)
+        var readBytes = 0;
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        while(readBytes < readSaltBytes.Length && !cts.Token.IsCancellationRequested)
         {
-            logger.LogError($"Read {readBytes} bytes instead of 16 bytes for the salt.");
-            throw new CryptographicException("Failed to read the salt bytes.");
+            readBytes += await base64Stream.ReadAsync(readSaltBytes, readBytes, readSaltBytes.Length - readBytes, cts.Token);
+            await Task.Delay(TimeSpan.FromMilliseconds(60), cts.Token);
         }
         
         // Check the salt bytes:

@@ -1,6 +1,6 @@
-using AIStudio.Tools;
-
 using Microsoft.AspNetCore.Components;
+
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Chat;
 
@@ -40,7 +40,7 @@ public partial class ContentBlockComponent : ComponentBase
     public string Class { get; set; } = string.Empty;
     
     [Inject]
-    private Rust Rust { get; init; } = null!;
+    private RustService RustService { get; init; } = null!;
     
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
@@ -100,7 +100,7 @@ public partial class ContentBlockComponent : ComponentBase
         {
             case ContentType.TEXT:
                 var textContent = (ContentText) this.Content;
-                await this.Rust.CopyText2Clipboard(this.Snackbar, textContent.Text);
+                await this.RustService.CopyText2Clipboard(this.Snackbar, textContent.Text);
                 break;
             
             default:

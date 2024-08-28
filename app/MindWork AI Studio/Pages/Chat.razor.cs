@@ -4,12 +4,12 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Pages;
 
@@ -32,6 +32,9 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private InnerScrolling scrollingArea = null!;
 
@@ -192,7 +195,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger, this.RustService), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)

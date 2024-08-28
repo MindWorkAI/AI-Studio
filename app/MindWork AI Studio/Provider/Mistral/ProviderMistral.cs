@@ -26,7 +26,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
 
@@ -75,7 +75,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
         
         // Set the authorization header:
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         
         // Set the content:
         request.Content = new StringContent(mistralChatRequest, Encoding.UTF8, "application/json");
@@ -153,9 +153,9 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await settings.GetAPIKey(jsRuntime, this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this) switch
             {
-                { Success: true } result => result.Secret,
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,
             }
         };

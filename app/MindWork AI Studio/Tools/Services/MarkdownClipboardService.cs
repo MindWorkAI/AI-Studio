@@ -6,11 +6,11 @@ namespace AIStudio.Tools.Services;
 /// Wire up the clipboard service to copy Markdown to the clipboard.
 /// We use our own Rust-based clipboard service for this.
 /// </summary>
-public sealed class MarkdownClipboardService(Rust rust, ISnackbar snackbar) : IMudMarkdownClipboardService
+public sealed class MarkdownClipboardService(RustService rust, ISnackbar snackbar) : IMudMarkdownClipboardService
 {
     private ISnackbar Snackbar { get; } = snackbar;
     
-    private Rust Rust { get; } = rust;
+    private RustService Rust { get; } = rust;
 
     /// <summary>
     /// Gets called when the user wants to copy the Markdown to the clipboard.

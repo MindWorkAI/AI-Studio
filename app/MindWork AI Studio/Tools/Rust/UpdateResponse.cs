@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Rust;
 
 /// <summary>
 /// The response of the update check.

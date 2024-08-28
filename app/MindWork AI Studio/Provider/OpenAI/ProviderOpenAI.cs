@@ -30,7 +30,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
 
@@ -79,7 +79,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
         var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
         
         // Set the authorization header:
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         
         // Set the content:
         request.Content = new StringContent(openAIChatRequest, Encoding.UTF8, "application/json");
@@ -154,25 +154,25 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(jsRuntime, settings, "gpt-", token, apiKeyProvisional);
+        return this.LoadModels("gpt-", token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(jsRuntime, settings, "dall-e-", token, apiKeyProvisional);
+        return this.LoadModels("dall-e-", token, apiKeyProvisional);
     }
 
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(IJSRuntime jsRuntime, SettingsManager settings, string prefix, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(string prefix, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await settings.GetAPIKey(jsRuntime, this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this) switch
             {
-                { Success: true } result => result.Secret,
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,
             }
         };

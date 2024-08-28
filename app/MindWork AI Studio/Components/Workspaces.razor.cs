@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Settings;
-using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 

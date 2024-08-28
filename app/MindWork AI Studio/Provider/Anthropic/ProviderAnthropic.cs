@@ -25,7 +25,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
 
@@ -64,7 +64,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
         var request = new HttpRequestMessage(HttpMethod.Post, "messages");
         
         // Set the authorization header:
-        request.Headers.Add("x-api-key", requestedSecret.Secret);
+        request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         
         // Set the Anthropic version:
         request.Headers.Add("anthropic-version", "2023-06-01");

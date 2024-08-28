@@ -1,13 +1,14 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Layout;
 
@@ -26,7 +27,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    private Rust Rust { get; init; } = null!;
+    private RustService RustService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -189,7 +190,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         
         this.performingUpdate = true;
         this.StateHasChanged();
-        await this.Rust.InstallUpdate(this.JsRuntime);
+        await this.RustService.InstallUpdate();
     }
     
     private async ValueTask OnLocationChanging(LocationChangingContext context)

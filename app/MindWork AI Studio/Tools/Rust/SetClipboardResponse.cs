@@ -1,4 +1,4 @@
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Rust;
 
 /// <summary>
 /// The response from the set clipboard operation.

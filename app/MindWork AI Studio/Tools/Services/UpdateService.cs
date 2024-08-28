@@ -12,11 +12,11 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
     
     private readonly SettingsManager settingsManager;
     private readonly MessageBus messageBus;
-    private readonly Rust rust;
+    private readonly RustService rust;
     
     private TimeSpan updateInterval;
     
-    public UpdateService(MessageBus messageBus, SettingsManager settingsManager, Rust rust)
+    public UpdateService(MessageBus messageBus, SettingsManager settingsManager, RustService rust)
     {
         this.settingsManager = settingsManager;
         this.messageBus = messageBus;

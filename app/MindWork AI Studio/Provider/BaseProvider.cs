@@ -1,3 +1,5 @@
+using RustService = AIStudio.Tools.RustService;
+
 namespace AIStudio.Provider;
 
 /// <summary>
@@ -14,6 +16,16 @@ public abstract class BaseProvider
     /// The logger to use.
     /// </summary>
     protected readonly ILogger logger;
+
+    static BaseProvider()
+    {
+        RUST_SERVICE = Program.RUST_SERVICE;
+        ENCRYPTION = Program.ENCRYPTION;
+    }
+
+    protected static readonly RustService RUST_SERVICE;
+    
+    protected static readonly Encryption ENCRYPTION;
 
     /// <summary>
     /// Constructor for the base provider.

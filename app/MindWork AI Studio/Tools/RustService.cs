@@ -1,19 +1,24 @@
+using AIStudio.Provider;
+using AIStudio.Tools.Rust;
+
+// ReSharper disable NotAccessedPositionalProperty.Local
+
 namespace AIStudio.Tools;
 
 /// <summary>
 /// Calling Rust functions.
 /// </summary>
-public sealed class Rust(string apiPort) : IDisposable
+public sealed class RustService(string apiPort) : IDisposable
 {
     private readonly HttpClient http = new()
     {
         BaseAddress = new Uri($"http://127.0.0.1:{apiPort}"),
     };
     
-    private ILogger<Rust>? logger;
+    private ILogger<RustService>? logger;
     private Encryption? encryptor;
 
-    public void SetLogger(ILogger<Rust> logService)
+    public void SetLogger(ILogger<RustService> logService)
     {
         this.logger = logService;
     }
@@ -87,7 +92,8 @@ public sealed class Rust(string apiPort) : IDisposable
         var severity = Severity.Error;
         try
         {
-            var response = await this.http.PostAsync("/clipboard/set", new StringContent(await text.Encrypt(this.encryptor!)));
+            var encryptedText = await text.Encrypt(this.encryptor!);
+            var response = await this.http.PostAsync("/clipboard/set", new StringContent(encryptedText.EncryptedData));
             if (!response.IsSuccessStatusCode)
             {
                 this.logger!.LogError($"Failed to copy the text to the clipboard due to an network error: '{response.StatusCode}'");
@@ -136,7 +142,7 @@ public sealed class Rust(string apiPort) : IDisposable
         }
     }
     
-    public async Task InstallUpdate(IJSRuntime jsRuntime)
+    public async Task InstallUpdate()
     {
         try
         {
@@ -148,6 +154,28 @@ public sealed class Rust(string apiPort) : IDisposable
             Console.WriteLine(e);
             throw;
         }
+    }
+    
+    /// <summary>
+    /// Try to get the API key for the given provider.
+    /// </summary>
+    /// <param name="provider">The provider to get the API key for.</param>
+    /// <returns>The requested secret.</returns>
+    public async Task<RequestedSecret> GetAPIKey(IProvider provider)
+    {
+        var secretRequest = new GetSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
+        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest);
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}' due to an API issue: '{result.StatusCode}'");
+            return new RequestedSecret(false, new EncryptedText(string.Empty), "Failed to get the API key due to an API issue.");
+        }
+        
+        var secret = await result.Content.ReadFromJsonAsync<RequestedSecret>();
+        if (!secret.Success)
+            this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}': '{secret.Issue}'");
+        
+        return secret;
     }
 
     #region IDisposable

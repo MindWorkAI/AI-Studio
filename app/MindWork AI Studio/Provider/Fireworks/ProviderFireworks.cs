@@ -27,7 +27,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
     public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
 
@@ -73,7 +73,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
         var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
         
         // Set the authorization header:
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         
         // Set the content:
         request.Content = new StringContent(fireworksChatRequest, Encoding.UTF8, "application/json");

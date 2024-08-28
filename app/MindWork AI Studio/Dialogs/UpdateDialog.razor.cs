@@ -1,6 +1,6 @@
 using System.Reflection;
 
-using AIStudio.Tools;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 

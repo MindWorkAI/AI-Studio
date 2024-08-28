@@ -5,7 +5,6 @@ using AIStudio.Assistants.RewriteImprove;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools;
 
 using WritingStylesRewrite = AIStudio.Assistants.RewriteImprove.WritingStyles;
 using WritingStylesEMail = AIStudio.Assistants.EMail.WritingStyles;

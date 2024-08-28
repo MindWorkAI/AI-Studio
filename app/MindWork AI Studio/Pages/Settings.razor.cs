@@ -1,11 +1,11 @@
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using RustService = AIStudio.Tools.RustService;
 
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -27,6 +27,9 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     [Inject]
     private ILogger<Settings> Logger { get; init; } = null!;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private readonly List<ConfigurationSelectData<string>> availableProviders = new();
 
@@ -114,7 +117,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.CreateProvider(this.Logger);
+        var providerInstance = provider.CreateProvider(this.Logger, this.RustService);
         var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
         if(deleteSecretResponse.Success)
         {

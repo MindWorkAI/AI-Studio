@@ -194,7 +194,7 @@ async fn main() {
     //
     tauri::async_runtime::spawn(async move {
         _ = rocket::custom(figment)
-            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update])
+            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update, get_secret])
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
@@ -319,7 +319,7 @@ async fn main() {
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            store_secret, get_secret, delete_secret
+            store_secret, delete_secret
         ])
         .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
@@ -776,36 +776,57 @@ struct StoreSecretResponse {
     issue: String,
 }
 
-#[tauri::command]
-fn get_secret(destination: String, user_name: String) -> RequestedSecret {
-    let service = format!("mindwork-ai-studio::{}", destination);
-    let entry = Entry::new(service.as_str(), user_name.as_str()).unwrap();
+#[post("/secrets/get", data = "<request>")]
+fn get_secret(request: Json<RequestSecret>) -> Json<RequestedSecret> {
+    let user_name = request.user_name.as_str();
+    let service = format!("mindwork-ai-studio::{}", request.destination);
+    let entry = Entry::new(service.as_str(), user_name).unwrap();
     let secret = entry.get_password();
     match secret {
         Ok(s) => {
-            info!(Source = "Secret Store"; "Secret for {service} and user {user_name} was retrieved successfully.");
-            RequestedSecret {
+            info!(Source = "Secret Store"; "Secret for '{service}' and user '{user_name}' was retrieved successfully.");
+
+            // Encrypt the secret:
+            let encrypted_secret = match ENCRYPTION.encrypt(s.as_str()) {
+                Ok(e) => e,
+                Err(e) => {
+                    error!(Source = "Secret Store"; "Failed to encrypt the secret: {e}.");
+                    return Json(RequestedSecret {
+                        success: false,
+                        secret: EncryptedText::new(String::from("")),
+                        issue: format!("Failed to encrypt the secret: {e}"),
+                    });
+                },
+            };
+
+            Json(RequestedSecret {
                 success: true,
-                secret: s,
+                secret: encrypted_secret,
                 issue: String::from(""),
-            }
+            })
         },
 
         Err(e) => {
-            error!(Source = "Secret Store"; "Failed to retrieve secret for {service} and user {user_name}: {e}.");
-            RequestedSecret {
+            error!(Source = "Secret Store"; "Failed to retrieve secret for '{service}' and user '{user_name}': {e}.");
+            Json(RequestedSecret {
                 success: false,
-                secret: String::from(""),
-                issue: e.to_string(),
-            }
+                secret: EncryptedText::new(String::from("")),
+                issue: format!("Failed to retrieve secret for '{service}' and user '{user_name}': {e}"),
+            })
         },
     }
+}
+
+#[derive(Deserialize)]
+struct RequestSecret {
+    destination: String,
+    user_name: String,
 }
 
 #[derive(Serialize)]
 struct RequestedSecret {
     success: bool,
-    secret: String,
+    secret: EncryptedText,
     issue: String,
 }
 

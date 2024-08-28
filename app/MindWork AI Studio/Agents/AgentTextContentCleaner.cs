@@ -1,10 +1,11 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
-using AIStudio.Tools;
+
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, jsRuntime, rng)
+public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, RustService rustService, SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : AgentBase(logger, rustService, settingsManager, jsRuntime, rng)
 {
     private static readonly ContentBlock EMPTY_BLOCK = new()
     {

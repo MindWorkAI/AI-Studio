@@ -1,7 +1,5 @@
 ﻿using System.Text;
 
-using AIStudio.Tools;
-
 namespace AIStudio.Assistants.Coding;
 
 public partial class AssistantCoding : AssistantBaseCore
