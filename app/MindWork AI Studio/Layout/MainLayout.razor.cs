@@ -85,8 +85,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         this.MessageBus.RegisterComponent(this);
         this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED ]);
         
-        // Set the js runtime for the update service:
-        UpdateService.SetBlazorDependencies(this.JsRuntime, this.Snackbar);
+        // Set the snackbar for the update service:
+        UpdateService.SetBlazorDependencies(this.Snackbar);
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?

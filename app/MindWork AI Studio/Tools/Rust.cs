@@ -118,10 +118,22 @@ public sealed class Rust(string apiPort) : IDisposable
         }
     }
     
-    public async Task<UpdateResponse> CheckForUpdate(IJSRuntime jsRuntime)
+    public async Task<UpdateResponse> CheckForUpdate()
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(16));
-        return await jsRuntime.InvokeAsync<UpdateResponse>("window.__TAURI__.invoke", cts.Token, "check_for_update");
+        try
+        {
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(16));
+            return await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", cts.Token);
+        }
+        catch (Exception e)
+        {
+            this.logger!.LogError(e, "Failed to check for an update.");
+            return new UpdateResponse
+            {
+                Error = true,
+                UpdateIsAvailable = false,
+            };
+        }
     }
     
     public async Task InstallUpdate(IJSRuntime jsRuntime)

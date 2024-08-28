@@ -7,10 +7,6 @@ namespace AIStudio.Tools.Services;
 
 public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 {
-    // We cannot inject IJSRuntime into our service. This is because
-    // the service is not a Blazor component. We need to pass the IJSRuntime from
-    // the MainLayout component to the service.
-    private static IJSRuntime? JS_RUNTIME;
     private static bool IS_INITIALIZED;
     private static ISnackbar? SNACKBAR;
     
@@ -96,7 +92,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         if(!IS_INITIALIZED)
             return;
         
-        var response = await this.rust.CheckForUpdate(JS_RUNTIME!);
+        var response = await this.rust.CheckForUpdate();
         if (response.UpdateIsAvailable)
         {
             await this.messageBus.SendMessage(null, Event.UPDATE_AVAILABLE, response);
@@ -115,10 +111,9 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         }
     }
     
-    public static void SetBlazorDependencies(IJSRuntime jsRuntime, ISnackbar snackbar)
+    public static void SetBlazorDependencies(ISnackbar snackbar)
     {
         SNACKBAR = snackbar;
-        JS_RUNTIME = jsRuntime;
         IS_INITIALIZED = true;
     }
 }

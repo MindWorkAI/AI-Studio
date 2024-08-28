@@ -194,7 +194,7 @@ async fn main() {
     //
     tauri::async_runtime::spawn(async move {
         _ = rocket::custom(figment)
-            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard])
+            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update])
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
@@ -312,8 +312,7 @@ async fn main() {
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            store_secret, get_secret, delete_secret,
-            check_for_update, install_update
+            store_secret, get_secret, delete_secret, install_update
         ])
         .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
@@ -673,51 +672,49 @@ fn stop_servers() {
     }
 }
 
-#[tauri::command]
-async fn check_for_update() -> CheckUpdateResponse {
+#[get("/updates/check")]
+async fn check_for_update() -> Json<CheckUpdateResponse> {
     let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().unwrap().app_handle();
-    tauri::async_runtime::spawn(async move {
-        let response = app_handle.updater().check().await;
-        match response {
-            Ok(update_response) => match update_response.is_update_available() {
-                true => {
-                    *CHECK_UPDATE_RESPONSE.lock().unwrap() = Some(update_response.clone());
-                    let new_version = update_response.latest_version();
-                    info!(Source = "Updater"; "An update to version '{new_version}' is available.");
-                    let changelog = update_response.body();
-                    CheckUpdateResponse {
-                        update_is_available: true,
-                        error: false,
-                        new_version: new_version.to_string(),
-                        changelog: match changelog {
-                            Some(c) => c.to_string(),
-                            None => String::from(""),
-                        },
-                    }
-                },
-
-                false => {
-                    info!(Source = "Updater"; "No updates are available.");
-                    CheckUpdateResponse {
-                        update_is_available: false,
-                        error: false,
-                        new_version: String::from(""),
-                        changelog: String::from(""),
-                    }
-                },
+    let response = app_handle.updater().check().await;
+    match response {
+        Ok(update_response) => match update_response.is_update_available() {
+            true => {
+                *CHECK_UPDATE_RESPONSE.lock().unwrap() = Some(update_response.clone());
+                let new_version = update_response.latest_version();
+                info!(Source = "Updater"; "An update to version '{new_version}' is available.");
+                let changelog = update_response.body();
+                Json(CheckUpdateResponse {
+                    update_is_available: true,
+                    error: false,
+                    new_version: new_version.to_string(),
+                    changelog: match changelog {
+                        Some(c) => c.to_string(),
+                        None => String::from(""),
+                    },
+                })
             },
 
-            Err(e) => {
-                warn!(Source = "Updater"; "Failed to check for updates: {e}.");
-                CheckUpdateResponse {
+            false => {
+                info!(Source = "Updater"; "No updates are available.");
+                Json(CheckUpdateResponse {
                     update_is_available: false,
-                    error: true,
+                    error: false,
                     new_version: String::from(""),
                     changelog: String::from(""),
-                }
+                })
             },
-        }
-    }).await.unwrap()
+        },
+
+        Err(e) => {
+            warn!(Source = "Updater"; "Failed to check for updates: {e}.");
+            Json(CheckUpdateResponse {
+                update_is_available: false,
+                error: true,
+                new_version: String::from(""),
+                changelog: String::from(""),
+            })
+        },
+    }
 }
 
 #[derive(Serialize)]
