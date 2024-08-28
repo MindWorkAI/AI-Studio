@@ -138,8 +138,16 @@ public sealed class Rust(string apiPort) : IDisposable
     
     public async Task InstallUpdate(IJSRuntime jsRuntime)
     {
-        var cts = new CancellationTokenSource();
-        await jsRuntime.InvokeVoidAsync("window.__TAURI__.invoke", cts.Token, "install_update");
+        try
+        {
+            var cts = new CancellationTokenSource();
+            await this.http.GetAsync("/updates/install", cts.Token);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     #region IDisposable

@@ -194,7 +194,7 @@ async fn main() {
     //
     tauri::async_runtime::spawn(async move {
         _ = rocket::custom(figment)
-            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update])
+            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update])
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
@@ -319,7 +319,7 @@ async fn main() {
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            store_secret, get_secret, delete_secret, install_update
+            store_secret, get_secret, delete_secret
         ])
         .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
@@ -732,7 +732,7 @@ struct CheckUpdateResponse {
     changelog: String,
 }
 
-#[tauri::command]
+#[get("/updates/install")]
 async fn install_update() {
     let cloned_response_option = CHECK_UPDATE_RESPONSE.lock().unwrap().clone();
     match cloned_response_option {
