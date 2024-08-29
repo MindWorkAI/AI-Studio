@@ -4,8 +4,6 @@ using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 
-using RustService = AIStudio.Tools.RustService;
-
 namespace AIStudio.Provider;
 
 public static class ProvidersExtensions
@@ -35,9 +33,8 @@ public static class ProvidersExtensions
     /// </summary>
     /// <param name="providerSettings">The provider settings.</param>
     /// <param name="logger">The logger to use.</param>
-    /// <param name="rustService">The Rust instance to use.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this Settings.Provider providerSettings, ILogger logger, RustService rustService)
+    public static IProvider CreateProvider(this Settings.Provider providerSettings, ILogger logger)
     {
         try
         {

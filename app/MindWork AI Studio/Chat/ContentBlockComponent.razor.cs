@@ -43,9 +43,6 @@ public partial class ContentBlockComponent : ComponentBase
     private RustService RustService { get; init; } = null!;
     
     [Inject]
-    private IJSRuntime JsRuntime { get; init; } = null!;
-    
-    [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
 
     private bool HideContent { get; set; }

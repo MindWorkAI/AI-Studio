@@ -20,9 +20,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    private IJSRuntime JsRuntime { get; init; } = null!;
-    
-    [Inject]
     private MessageBus MessageBus { get; init; } = null!;
     
     [Inject]
@@ -117,8 +114,8 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.CreateProvider(this.Logger, this.RustService);
-        var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
+        var providerInstance = provider.CreateProvider(this.Logger);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(providerInstance);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);

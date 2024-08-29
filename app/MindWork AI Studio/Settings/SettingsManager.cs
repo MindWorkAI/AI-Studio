@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
@@ -39,28 +38,6 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     public Data ConfigurationData { get; private set; } = new();
 
     private bool IsSetUp => !string.IsNullOrWhiteSpace(ConfigDirectory) && !string.IsNullOrWhiteSpace(DataDirectory);
-
-    #region API Key Handling
-    
-    private readonly record struct DeleteSecretRequest(string Destination, string UserName);
-    
-    /// <summary>
-    /// Data structure for deleting a secret response.
-    /// </summary>
-    /// <param name="Success">True, when the secret was successfully deleted or not found.</param>
-    /// <param name="Issue">The issue, when the secret could not be deleted.</param>
-    /// <param name="WasEntryFound">True, when the entry was found and deleted.</param>
-    public readonly record struct DeleteSecretResponse(bool Success, string Issue, bool WasEntryFound);
-    
-    /// <summary>
-    /// Tries to delete the API key for the given provider.
-    /// </summary>
-    /// <param name="jsRuntime">The JS runtime to access the Rust code.</param>
-    /// <param name="provider">The provider to delete the API key for.</param>
-    /// <returns>The delete secret response.</returns>
-    public async Task<DeleteSecretResponse> DeleteAPIKey(IJSRuntime jsRuntime, IProvider provider) => await jsRuntime.InvokeAsync<DeleteSecretResponse>("window.__TAURI__.invoke", "delete_secret", new DeleteSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName));
-
-    #endregion
     
     /// <summary>
     /// Loads the settings from the file system.

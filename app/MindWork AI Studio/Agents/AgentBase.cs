@@ -2,23 +2,17 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
-using RustService = AIStudio.Tools.RustService;
-
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace AIStudio.Agents;
 
-public abstract class AgentBase(ILogger<AgentBase> logger, RustService rustService, SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : IAgent
+public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, ThreadSafeRandom rng) : IAgent
 {
     protected SettingsManager SettingsManager { get; init; } = settingsManager;
-
-    protected IJSRuntime JsRuntime { get; init; } = jsRuntime;
 
     protected ThreadSafeRandom RNG { get; init; } = rng;
     
     protected ILogger<AgentBase> Logger { get; init; } = logger;
-
-    protected RustService RustService { get; init; } = rustService;
 
     /// <summary>
     /// Represents the type or category of this agent.
@@ -109,6 +103,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, RustService rustServi
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger, this.RustService), this.JsRuntime, this.SettingsManager, providerSettings.Model, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, providerSettings.Model, thread);
     }
 }

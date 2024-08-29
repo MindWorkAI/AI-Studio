@@ -155,7 +155,7 @@ public abstract partial class AssistantBase : ComponentBase
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger, this.RustService), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();

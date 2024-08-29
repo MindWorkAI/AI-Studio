@@ -170,7 +170,7 @@ public sealed class RustService(string apiPort) : IDisposable
     /// <returns>The requested secret.</returns>
     public async Task<RequestedSecret> GetAPIKey(IProvider provider)
     {
-        var secretRequest = new GetSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
+        var secretRequest = new SelectSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
         var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
         {
@@ -208,7 +208,28 @@ public sealed class RustService(string apiPort) : IDisposable
         
         return state;
     }
-
+    
+    /// <summary>
+    /// Tries to delete the API key for the given provider.
+    /// </summary>
+    /// <param name="provider">The provider to delete the API key for.</param>
+    /// <returns>The delete secret response.</returns>
+    public async Task<DeleteSecretResponse> DeleteAPIKey(IProvider provider)
+    {
+        var request = new SelectSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
+        var result = await this.http.PostAsJsonAsync("/secrets/delete", request, this.jsonRustSerializerOptions);
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to delete the API key for provider '{provider.Id}' due to an API issue: '{result.StatusCode}'");
+            return new DeleteSecretResponse{Success = false, WasEntryFound = false, Issue = "Failed to delete the API key due to an API issue."};
+        }
+        
+        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>();
+        if (!state.Success)
+            this.logger!.LogError($"Failed to delete the API key for provider '{provider.Id}': '{state.Issue}'");
+        
+        return state;
+    }
 
     #region IDisposable
 

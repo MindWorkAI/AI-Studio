@@ -194,7 +194,10 @@ async fn main() {
     //
     tauri::async_runtime::spawn(async move {
         _ = rocket::custom(figment)
-            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update, get_secret, store_secret])
+            .mount("/", routes![
+                dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update,
+                get_secret, store_secret, delete_secret
+            ])
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
@@ -318,9 +321,6 @@ async fn main() {
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![
-            delete_secret
-        ])
         .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
     
@@ -849,38 +849,39 @@ struct RequestedSecret {
     issue: String,
 }
 
-#[tauri::command]
-fn delete_secret(destination: String, user_name: String) -> DeleteSecretResponse {
-    let service = format!("mindwork-ai-studio::{}", destination);
-    let entry = Entry::new(service.as_str(), user_name.as_str()).unwrap();
+#[post("/secrets/delete", data = "<request>")]
+fn delete_secret(request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
+    let user_name = request.user_name.as_str();
+    let service = format!("mindwork-ai-studio::{}", request.destination);
+    let entry = Entry::new(service.as_str(), user_name).unwrap();
     let result = entry.delete_credential();
 
     match result {
         Ok(_) => {
             warn!(Source = "Secret Store"; "Secret for {service} and user {user_name} was deleted successfully.");
-            DeleteSecretResponse {
+            Json(DeleteSecretResponse {
                 success: true,
                 was_entry_found: true,
                 issue: String::from(""),
-            }
+            })
         },
 
         Err(NoEntry) => {
             warn!(Source = "Secret Store"; "No secret for {service} and user {user_name} was found.");
-            DeleteSecretResponse {
+            Json(DeleteSecretResponse {
                 success: true,
                 was_entry_found: false,
                 issue: String::from(""),
-            }
+            })
         }
         
         Err(e) => {
             error!(Source = "Secret Store"; "Failed to delete secret for {service} and user {user_name}: {e}.");
-            DeleteSecretResponse {
+            Json(DeleteSecretResponse {
                 success: false,
                 was_entry_found: false,
                 issue: e.to_string(),
-            }
+            })
         },
     }
 }
