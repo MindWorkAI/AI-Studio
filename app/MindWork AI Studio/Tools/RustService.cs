@@ -80,7 +80,7 @@ public sealed class RustService(string apiPort) : IDisposable
     {
         const string URL = "/system/dotnet/ready";
         this.logger!.LogInformation("Notifying Rust runtime that the app is ready.");
-        var response = await this.http.PostAsync(URL, new StringContent(string.Empty));
+        var response = await this.http.GetAsync(URL);
         if (!response.IsSuccessStatusCode)
         {
              this.logger!.LogError($"Failed to notify Rust runtime that the app is ready: '{response.StatusCode}'");

@@ -609,7 +609,7 @@ fn dotnet_port() -> String {
     format!("{dotnet_server_port}")
 }
 
-#[post("/system/dotnet/ready")]
+#[get("/system/dotnet/ready")]
 async fn dotnet_ready() {
     let main_window_spawn_clone = &MAIN_WINDOW;
     let dotnet_server_port = *DOTNET_SERVER_PORT;
