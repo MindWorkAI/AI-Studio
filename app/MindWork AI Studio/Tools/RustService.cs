@@ -87,6 +87,30 @@ public sealed class RustService(string apiPort) : IDisposable
         }
     }
     
+    public async Task<string> GetConfigDirectory()
+    {
+        var response = await this.http.GetAsync("/system/directories/config");
+        if (!response.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to get the config directory from Rust: '{response.StatusCode}'");
+            return string.Empty;
+        }
+        
+        return await response.Content.ReadAsStringAsync();
+    }
+    
+    public async Task<string> GetDataDirectory()
+    {
+        var response = await this.http.GetAsync("/system/directories/data");
+        if (!response.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to get the data directory from Rust: '{response.StatusCode}'");
+            return string.Empty;
+        }
+        
+        return await response.Content.ReadAsStringAsync();
+    }
+    
     /// <summary>
     /// Tries to copy the given text to the clipboard.
     /// </summary>

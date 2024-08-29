@@ -15,9 +15,6 @@ namespace AIStudio.Layout;
 public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
-    private IJSRuntime JsRuntime { get; init; } = null!;
-    
-    [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
@@ -34,6 +31,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<MainLayout> Logger { get; init; } = null!;
 
     public string AdditionalHeight { get; private set; } = "0em";
     
@@ -71,12 +71,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // We use the Tauri API (Rust) to get the data and config directories
         // for this app.
         //
-        var dataDir = await this.JsRuntime.InvokeAsync<string>("window.__TAURI__.path.appLocalDataDir");
-        var configDir = await this.JsRuntime.InvokeAsync<string>("window.__TAURI__.path.appConfigDir");
+        var dataDir = await this.RustService.GetDataDirectory();
+        var configDir = await this.RustService.GetConfigDirectory();
+        
+        this.Logger.LogInformation($"The data directory is: '{dataDir}'");
+        this.Logger.LogInformation($"The config directory is: '{configDir}'");
         
         // Store the directories in the settings manager:
         SettingsManager.ConfigDirectory = configDir;
-        SettingsManager.DataDirectory = Path.Join(dataDir, "data");
+        SettingsManager.DataDirectory = dataDir;
         Directory.CreateDirectory(SettingsManager.DataDirectory);
         
         // Ensure that all settings are loaded:

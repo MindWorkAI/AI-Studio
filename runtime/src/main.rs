@@ -7,7 +7,7 @@ extern crate core;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt;
 use std::net::TcpListener;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use once_cell::sync::Lazy;
 
@@ -86,6 +86,10 @@ static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
 
     Encryption::new(&secret_key, &secret_key_salt).unwrap()
 });
+
+static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
+
+static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
@@ -196,7 +200,7 @@ async fn main() {
         _ = rocket::custom(figment)
             .mount("/", routes![
                 dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update,
-                get_secret, store_secret, delete_secret
+                get_secret, store_secret, delete_secret, get_data_directory, get_config_directory,
             ])
             .ignite().await.unwrap()
             .launch().await.unwrap();
@@ -309,6 +313,9 @@ async fn main() {
             info!(Source = "Bootloader Tauri"; "Setup is running.");
             let logger_path = app.path_resolver().app_local_data_dir().unwrap();
             let logger_path = logger_path.join("data");
+
+            DATA_DIRECTORY.set(logger_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not abe to set the data directory.")).unwrap();
+            CONFIG_DIRECTORY.set(app.path_resolver().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {logger_path:?}");
             logger.reset_flw(&FileLogWriter::builder(
@@ -609,6 +616,22 @@ fn dotnet_port() -> String {
     format!("{dotnet_server_port}")
 }
 
+#[get("/system/directories/data")]
+fn get_data_directory() -> String {
+    match DATA_DIRECTORY.get() {
+        Some(data_directory) => data_directory.clone(),
+        None => String::from(""),
+    }
+}
+
+#[get("/system/directories/config")]
+fn get_config_directory() -> String {
+    match CONFIG_DIRECTORY.get() {
+        Some(config_directory) => config_directory.clone(),
+        None => String::from(""),
+    }
+}
+
 #[get("/system/dotnet/ready")]
 async fn dotnet_ready() {
     let main_window_spawn_clone = &MAIN_WINDOW;
@@ -759,7 +782,7 @@ fn store_secret(request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
             })
         },
     };
-    
+
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = Entry::new(service.as_str(), user_name).unwrap();
     let result = entry.set_password(decrypted_text.as_str());
