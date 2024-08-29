@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace AIStudio.Tools.Rust;
 
 /// <summary>
@@ -9,8 +7,8 @@ namespace AIStudio.Tools.Rust;
 /// <param name="NewVersion">The new version, when available.</param>
 /// <param name="Changelog">The changelog of the new version, when available.</param>
 public readonly record struct UpdateResponse(
-    [property:JsonPropertyName("update_is_available")] bool UpdateIsAvailable, 
-    [property:JsonPropertyName("error")] bool Error, 
-    [property:JsonPropertyName("new_version")] string NewVersion, 
+    bool UpdateIsAvailable, 
+    bool Error, 
+    string NewVersion, 
     string Changelog
 );
