@@ -1,13 +1,14 @@
 using System.Text.RegularExpressions;
 
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 using RustService = AIStudio.Tools.RustService;
 
-namespace AIStudio.Settings;
+namespace AIStudio.Dialogs;
 
 /// <summary>
 /// The provider settings dialog.
@@ -82,9 +83,6 @@ public partial class ProviderDialog : ComponentBase
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    private Encryption Encryption { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -104,8 +102,9 @@ public partial class ProviderDialog : ComponentBase
     private MudForm form = null!;
     
     private readonly List<Model> availableModels = new();
-    
-    private Provider CreateProviderSettings() => new()
+    private readonly Encryption encryption = Program.ENCRYPTION;
+
+    private Settings.Provider CreateProviderSettings() => new()
     {
         Num = this.DataNum,
         Id = this.DataId,
@@ -154,7 +153,7 @@ public partial class ProviderDialog : ComponentBase
             var requestedSecret = await this.RustService.GetAPIKey(provider);
             if(requestedSecret.Success)
             {
-                this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.Encryption);
+                this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
                 
                 // Now, we try to load the list of available models:
                 await this.ReloadModels();
@@ -200,7 +199,7 @@ public partial class ProviderDialog : ComponentBase
             var provider = addedProviderSettings.CreateProvider(this.Logger, this.RustService);
             
             // Store the API key in the OS secure storage:
-            var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
+            var storeResponse = await this.RustService.SetAPIKey(provider, this.dataAPIKey);
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";

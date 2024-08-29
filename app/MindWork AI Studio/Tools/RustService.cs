@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using AIStudio.Provider;
 using AIStudio.Tools.Rust;
 
@@ -13,6 +15,11 @@ public sealed class RustService(string apiPort) : IDisposable
     private readonly HttpClient http = new()
     {
         BaseAddress = new Uri($"http://127.0.0.1:{apiPort}"),
+    };
+
+    private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
     };
     
     private ILogger<RustService>? logger;
@@ -164,7 +171,7 @@ public sealed class RustService(string apiPort) : IDisposable
     public async Task<RequestedSecret> GetAPIKey(IProvider provider)
     {
         var secretRequest = new GetSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
-        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest);
+        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}' due to an API issue: '{result.StatusCode}'");
@@ -177,6 +184,31 @@ public sealed class RustService(string apiPort) : IDisposable
         
         return secret;
     }
+    
+    /// <summary>
+    /// Try to store the API key for the given provider.
+    /// </summary>
+    /// <param name="provider">The provider to store the API key for.</param>
+    /// <param name="key">The API key to store.</param>
+    /// <returns>The store secret response.</returns>
+    public async Task<StoreSecretResponse> SetAPIKey(IProvider provider, string key)
+    {
+        var encryptedKey = await this.encryptor!.Encrypt(key);
+        var request = new StoreSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName, encryptedKey);
+        var result = await this.http.PostAsJsonAsync("/secrets/store", request, this.jsonRustSerializerOptions);
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to store the API key for provider '{provider.Id}' due to an API issue: '{result.StatusCode}'");
+            return new StoreSecretResponse(false, "Failed to get the API key due to an API issue.");
+        }
+        
+        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>();
+        if (!state.Success)
+            this.logger!.LogError($"Failed to store the API key for provider '{provider.Id}': '{state.Issue}'");
+        
+        return state;
+    }
+
 
     #region IDisposable
 

@@ -194,7 +194,7 @@ async fn main() {
     //
     tauri::async_runtime::spawn(async move {
         _ = rocket::custom(figment)
-            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update, get_secret])
+            .mount("/", routes![dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update, get_secret, store_secret])
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
@@ -319,7 +319,7 @@ async fn main() {
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            store_secret, delete_secret
+            delete_secret
         ])
         .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
@@ -746,28 +746,47 @@ async fn install_update() {
     }
 }
 
-#[tauri::command]
-fn store_secret(destination: String, user_name: String, secret: String) -> StoreSecretResponse {
-    let service = format!("mindwork-ai-studio::{}", destination);
-    let entry = Entry::new(service.as_str(), user_name.as_str()).unwrap();
-    let result = entry.set_password(secret.as_str());
+#[post("/secrets/store", data = "<request>")]
+fn store_secret(request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
+    let user_name = request.user_name.as_str();
+    let decrypted_text = match ENCRYPTION.decrypt(&request.secret) {
+        Ok(text) => text,
+        Err(e) => {
+            error!(Source = "Secret Store"; "Failed to decrypt the text: {e}.");
+            return Json(StoreSecretResponse {
+                success: false,
+                issue: format!("Failed to decrypt the text: {e}"),
+            })
+        },
+    };
+    
+    let service = format!("mindwork-ai-studio::{}", request.destination);
+    let entry = Entry::new(service.as_str(), user_name).unwrap();
+    let result = entry.set_password(decrypted_text.as_str());
     match result {
         Ok(_) => {
             info!(Source = "Secret Store"; "Secret for {service} and user {user_name} was stored successfully.");
-            StoreSecretResponse {
+            Json(StoreSecretResponse {
                 success: true,
                 issue: String::from(""),
-            }
+            })
         },
         
         Err(e) => {
             error!(Source = "Secret Store"; "Failed to store secret for {service} and user {user_name}: {e}.");
-            StoreSecretResponse {
+            Json(StoreSecretResponse {
                 success: false,
                 issue: e.to_string(),
-            }
+            })
         },
     }
+}
+
+#[derive(Deserialize)]
+struct StoreSecret {
+    destination: String,
+    user_name: String,
+    secret: EncryptedText,
 }
 
 #[derive(Serialize)]
