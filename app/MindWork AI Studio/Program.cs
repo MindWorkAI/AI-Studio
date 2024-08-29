@@ -2,6 +2,7 @@ using AIStudio.Agents;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
 using MudBlazor.Services;
@@ -52,8 +53,21 @@ internal sealed class Program
         }
 
         var secretKeySalt = Convert.FromBase64String(secretKeySaltEncoded);
-
+        
         var builder = WebApplication.CreateBuilder();
+        
+        builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
+        {
+            kestrelServerOptions.ConfigureEndpointDefaults(listenOptions =>
+            {
+                listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
+            });
+            
+            kestrelServerOptions.ConfigureHttpsDefaults(adapterOptions =>
+            {
+            });
+        });
+        
         builder.Logging.ClearProviders();
         builder.Logging.SetMinimumLevel(LogLevel.Debug);
         builder.Logging.AddFilter("Microsoft", LogLevel.Information);
