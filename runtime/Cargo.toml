@@ -16,10 +16,10 @@ serde_json = "1.0"
 keyring = { version = "3.2", features = ["apple-native", "windows-native", "sync-secret-service"] }
 arboard = "3.4.0"
 tokio = { version = "1.39", features = ["rt", "rt-multi-thread", "macros"] }
-flexi_logger = "0.28"
+flexi_logger = "0.29"
 log = { version = "0.4", features = ["kv"] }
 once_cell = "1.19.0"
-rocket = { version = "0.5", features = ["json"] }
+rocket = { version = "0.5", features = ["json", "tls"] }
 rand = "0.8"
 rand_chacha = "0.3.1"
 base64 = "0.22.1"
@@ -29,6 +29,7 @@ cbc = "0.1.2"
 pbkdf2 = "0.12.2"
 hmac = "0.12.1"
 sha2 = "0.10.8"
+rcgen = { version = "0.13.1", features = ["pem"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # See issue https://github.com/tauri-apps/tauri/issues/4470

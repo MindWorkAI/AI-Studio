@@ -23,16 +23,7 @@ internal sealed class Program
     {
         if(args.Length == 0)
         {
-            Console.WriteLine("Please provide the port of the runtime API.");
-            return;
-        }
-
-        var rustApiPort = args[0];
-        using var rust = new RustService(rustApiPort);
-        var appPort = await rust.GetAppPort();
-        if(appPort == 0)
-        {
-            Console.WriteLine("Failed to get the app port from Rust.");
+            Console.WriteLine("Error: Please provide the port of the runtime API.");
             return;
         }
 
@@ -40,7 +31,7 @@ internal sealed class Program
         var secretPasswordEncoded = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_PASSWORD");
         if(string.IsNullOrWhiteSpace(secretPasswordEncoded))
         {
-            Console.WriteLine("The AI_STUDIO_SECRET_PASSWORD environment variable is not set.");
+            Console.WriteLine("Error: The AI_STUDIO_SECRET_PASSWORD environment variable is not set.");
             return;
         }
 
@@ -48,11 +39,27 @@ internal sealed class Program
         var secretKeySaltEncoded = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_KEY_SALT");
         if(string.IsNullOrWhiteSpace(secretKeySaltEncoded))
         {
-            Console.WriteLine("The AI_STUDIO_SECRET_KEY_SALT environment variable is not set.");
+            Console.WriteLine("Error: The AI_STUDIO_SECRET_KEY_SALT environment variable is not set.");
             return;
         }
 
         var secretKeySalt = Convert.FromBase64String(secretKeySaltEncoded);
+        
+        var certificateFingerprint = Environment.GetEnvironmentVariable("AI_STUDIO_CERTIFICATE_FINGERPRINT");
+        if(string.IsNullOrWhiteSpace(certificateFingerprint))
+        {
+            Console.WriteLine("Error: The AI_STUDIO_CERTIFICATE_FINGERPRINT environment variable is not set.");
+            return;
+        }
+        
+        var rustApiPort = args[0];
+        using var rust = new RustService(rustApiPort, certificateFingerprint);
+        var appPort = await rust.GetAppPort();
+        if(appPort == 0)
+        {
+            Console.WriteLine("Error: Failed to get the app port from Rust.");
+            return;
+        }
         
         var builder = WebApplication.CreateBuilder();
         
@@ -61,10 +68,6 @@ internal sealed class Program
             kestrelServerOptions.ConfigureEndpointDefaults(listenOptions =>
             {
                 listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
-            });
-            
-            kestrelServerOptions.ConfigureHttpsDefaults(adapterOptions =>
-            {
             });
         });
         

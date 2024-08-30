@@ -28,13 +28,14 @@ use log::{debug, error, info, kv, warn};
 use log::kv::{Key, Value, VisitSource};
 use pbkdf2::pbkdf2;
 use rand::{RngCore, SeedableRng};
+use rcgen::generate_simple_self_signed;
 use rocket::figment::Figment;
 use rocket::{data, get, post, routes, Data, Request};
-use rocket::config::Shutdown;
+use rocket::config::{Shutdown};
 use rocket::data::{Outcome, ToByteUnit};
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use sha2::Sha512;
+use sha2::{Sha256, Sha512, Digest};
 use tauri::updater::UpdateResponse;
 use tokio::io::AsyncReadExt;
 
@@ -153,6 +154,20 @@ async fn main() {
         info!("Running in production mode.");
     }
 
+    info!("Try to generate a TLS certificate for the runtime API server...");
+
+    let subject_alt_names = vec!["localhost".to_string()];
+    let certificate_data = generate_simple_self_signed(subject_alt_names).unwrap();
+    let certificate_binary_data = certificate_data.cert.der().to_vec();
+    let certificate_fingerprint = Sha256::digest(certificate_binary_data).to_vec();
+    let certificate_fingerprint = certificate_fingerprint.iter().fold(String::new(), |mut result, byte| {
+        result.push_str(&format!("{:02x}", byte));
+        result
+    });
+    let certificate_fingerprint = certificate_fingerprint.to_uppercase();
+    info!("Certificate fingerprint: '{certificate_fingerprint}'.");
+    info!("Done generating certificate for the runtime API server.");
+
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
 
@@ -177,6 +192,10 @@ async fn main() {
 
         // No colors and emojis in the log output:
         .merge(("cli_colors", false))
+
+        // Read the TLS certificate and key from the generated certificate data in-memory:
+        .merge(("tls.certs", certificate_data.cert.pem().as_bytes()))
+        .merge(("tls.key", certificate_data.key_pair.serialize_pem().as_bytes()))
 
         // Set the shutdown configuration:
         .merge(("shutdown", Shutdown {
@@ -234,6 +253,7 @@ async fn main() {
                     .envs(HashMap::from_iter([
                         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
                         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
+                        (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), certificate_fingerprint),
                     ]))
                     .spawn()
                     .expect("Failed to spawn .NET server process.")
@@ -251,6 +271,7 @@ async fn main() {
                     .envs(HashMap::from_iter([
                         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
                         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
+                        (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), certificate_fingerprint),
                     ]))
                     .spawn()
                     .expect("Failed to spawn .NET server process.")

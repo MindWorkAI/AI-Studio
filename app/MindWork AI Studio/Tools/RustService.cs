@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 
 using AIStudio.Provider;
@@ -10,12 +11,9 @@ namespace AIStudio.Tools;
 /// <summary>
 /// Calling Rust functions.
 /// </summary>
-public sealed class RustService(string apiPort) : IDisposable
+public sealed class RustService : IDisposable
 {
-    private readonly HttpClient http = new()
-    {
-        BaseAddress = new Uri($"http://127.0.0.1:{apiPort}"),
-    };
+    private readonly HttpClient http;
 
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
@@ -24,6 +22,33 @@ public sealed class RustService(string apiPort) : IDisposable
     
     private ILogger<RustService>? logger;
     private Encryption? encryptor;
+    
+    private readonly string apiPort;
+    private readonly string certificateFingerprint;
+    
+    public RustService(string apiPort, string certificateFingerprint)
+    {
+        this.apiPort = apiPort;
+        this.certificateFingerprint = certificateFingerprint;
+        var certificateValidationHandler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, certificate, _, _) =>
+            {
+                if(certificate is null)
+                    return false;
+                
+                var currentCertificateFingerprint = certificate.GetCertHashString(HashAlgorithmName.SHA256);
+                return currentCertificateFingerprint == certificateFingerprint;
+            },
+        };
+        
+        this.http = new HttpClient(certificateValidationHandler)
+        {
+            BaseAddress = new Uri($"https://127.0.0.1:{apiPort}"),
+            DefaultRequestVersion = Version.Parse("2.0"),
+            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
+        };
+    }
 
     public void SetLogger(ILogger<RustService> logService)
     {
@@ -48,7 +73,7 @@ public sealed class RustService(string apiPort) : IDisposable
         const int MAX_TRIES = 160;
         var tris = 0;
         var wait4Try = TimeSpan.FromMilliseconds(250);
-        var url = new Uri($"http://127.0.0.1:{apiPort}/system/dotnet/port");
+        var url = new Uri($"https://127.0.0.1:{this.apiPort}/system/dotnet/port");
         while (tris++ < MAX_TRIES)
         {
             //
@@ -57,19 +82,47 @@ public sealed class RustService(string apiPort) : IDisposable
             // instance, we would always get the same result (403 forbidden),
             // without even trying to connect to the Rust server.
             //
-            using var initialHttp = new HttpClient();
-            var response = await initialHttp.GetAsync(url);
-            if (!response.IsSuccessStatusCode)
+
+            using var initialHttp = new HttpClient(new HttpClientHandler
             {
-                Console.WriteLine($"Try {tris}/{MAX_TRIES} to get the app port from Rust runtime");
-                await Task.Delay(wait4Try);
-                continue;
-            }
+                //
+                // Note III: We have to create also a new HttpClientHandler instance
+                // for each try to avoid .NET is caching the result. This is necessary
+                // because it gets disposed when the HttpClient instance gets disposed.
+                //
+                ServerCertificateCustomValidationCallback = (_, certificate, _, _) =>
+                {
+                    if(certificate is null)
+                        return false;
             
-            var appPortContent = await response.Content.ReadAsStringAsync();
-            var appPort = int.Parse(appPortContent);
-            Console.WriteLine($"Received app port from Rust runtime: '{appPort}'");
-            return appPort;
+                    var currentCertificateFingerprint = certificate.GetCertHashString(HashAlgorithmName.SHA256);
+                    return currentCertificateFingerprint == this.certificateFingerprint;
+                }
+            });
+            initialHttp.DefaultRequestVersion = Version.Parse("2.0");
+            initialHttp.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
+            
+            try
+            {
+                var response = await initialHttp.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Try {tris}/{MAX_TRIES} to get the app port from Rust runtime");
+                    await Task.Delay(wait4Try);
+                    continue;
+                }
+
+                var appPortContent = await response.Content.ReadAsStringAsync();
+                var appPort = int.Parse(appPortContent);
+                Console.WriteLine($"Received app port from Rust runtime: '{appPort}'");
+                return appPort;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error: Was not able to get the app port from Rust runtime: '{e.Message}'");
+                Console.WriteLine(e.InnerException);
+                throw;
+            }
         }
 
         Console.WriteLine("Failed to receive the app port from Rust runtime.");
@@ -80,10 +133,18 @@ public sealed class RustService(string apiPort) : IDisposable
     {
         const string URL = "/system/dotnet/ready";
         this.logger!.LogInformation("Notifying Rust runtime that the app is ready.");
-        var response = await this.http.GetAsync(URL);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-             this.logger!.LogError($"Failed to notify Rust runtime that the app is ready: '{response.StatusCode}'");
+            var response = await this.http.GetAsync(URL);
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger!.LogError($"Failed to notify Rust runtime that the app is ready: '{response.StatusCode}'");
+            }
+        }
+        catch (Exception e)
+        {
+            this.logger!.LogError(e, "Failed to notify the Rust runtime that the app is ready.");
+            throw;
         }
     }
     
