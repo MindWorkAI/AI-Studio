@@ -158,14 +158,12 @@ internal sealed class Program
         app.UseStaticFiles();
         app.UseDeveloperExceptionPage();
 #else
-
-var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = fileProvider,
-    RequestPath = string.Empty,
-});
-
+        var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = fileProvider,
+            RequestPath = string.Empty,
+        });
 #endif
 
         app.UseAntiforgery();
