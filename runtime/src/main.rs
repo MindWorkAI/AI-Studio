@@ -186,6 +186,22 @@ async fn main() {
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
 
+    // The shutdown configuration for the runtime API server:
+    let mut shutdown = Shutdown {
+        // We do not want to use the Ctrl+C signal to stop the server:
+        ctrlc: false,
+        
+        // Everything else is set to default for now:
+        ..Shutdown::default()
+    };
+
+    #[cfg(unix)]
+    {
+        // We do not want to use the termination signal to stop the server.
+        // This option, however, is only available on Unix systems:
+        shutdown.signals = HashSet::new();
+    }
+
     // Configure the runtime API server:
     let figment = Figment::from(rocket::Config::release_default())
 
@@ -213,17 +229,7 @@ async fn main() {
         .merge(("tls.key", certificate_data.key_pair.serialize_pem().as_bytes()))
 
         // Set the shutdown configuration:
-        .merge(("shutdown", Shutdown {
-
-            // Again, we do not want to use the Ctrl+C signal to stop the server:
-            ctrlc: false,
-
-            // We do not want to use the termination signal to stop the server:
-            signals: HashSet::new(),
-
-            // Everything else is set to default:
-            ..Shutdown::default()
-        }));
+        .merge(("shutdown", shutdown));
 
     //
     // Start the runtime API server in a separate thread. This is necessary
