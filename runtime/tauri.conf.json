@@ -2,7 +2,7 @@
   "build": {
     "devPath": "ui/",
     "distDir": "ui/",
-    "withGlobalTauri": true
+    "withGlobalTauri": false
   },
   "package": {
     "productName": "MindWork AI Studio",
@@ -22,16 +22,6 @@
             "args": true
           }
         ]
-      },
-      "path": {
-        "all": true
-      },
-      "http" : {
-        "all": true,
-        "request": true,
-        "scope": [
-          "http://localhost"
-        ]
       }
     },
     "windows": [
@@ -43,16 +33,6 @@
         "height": 1080
       }
     ],
-    "security": {
-      "csp": null,
-      "dangerousRemoteDomainIpcAccess": [
-        {
-            "domain": "localhost",
-            "windows": ["main"],
-            "enableTauriAPI": true
-        }
-      ]
-    },
     "bundle": {
       "active": true,
       "targets": "all",
