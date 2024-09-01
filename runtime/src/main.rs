@@ -105,6 +105,8 @@ static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
 
 static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 
+static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+
 #[tokio::main]
 async fn main() {
 
@@ -719,22 +721,25 @@ fn get_config_directory(_token: APIToken) -> String {
 
 #[get("/system/dotnet/ready")]
 async fn dotnet_ready(_token: APIToken) {
-    let main_window_spawn_clone = &MAIN_WINDOW;
-    let dotnet_server_port = *DOTNET_SERVER_PORT;
-    let url = match Url::parse(format!("http://localhost:{dotnet_server_port}").as_str())
+    
+    // We create a manual scope for the lock to be released as soon as possible.
+    // This is necessary because we cannot await any function while the lock is
+    // held.
     {
-        Ok(url) => url,
-        Err(msg) => {
-            error!("Error while parsing URL for navigating to the app: {msg}");
+        let mut initialized = DOTNET_INITIALIZED.lock().unwrap();
+        if *initialized {
+            error!("Anyone tried to initialize the runtime twice. This is not intended.");
             return;
         }
-    };
 
-    info!("The .NET server was booted successfully.");
+        info!("The .NET server was booted successfully.");
+        *initialized = true;
+    }
 
     // Try to get the main window. If it is not available yet, wait for it:
     let mut main_window_ready = false;
     let mut main_window_status_reported = false;
+    let main_window_spawn_clone = &MAIN_WINDOW;
     while !main_window_ready
     {
         main_window_ready = {
@@ -751,8 +756,18 @@ async fn dotnet_ready(_token: APIToken) {
             time::sleep(Duration::from_millis(100)).await;
         }
     }
-
+    
     let main_window = main_window_spawn_clone.lock().unwrap();
+    let dotnet_server_port = *DOTNET_SERVER_PORT;
+    let url = match Url::parse(format!("http://localhost:{dotnet_server_port}").as_str())
+    {
+        Ok(url) => url,
+        Err(msg) => {
+            error!("Error while parsing URL for navigating to the app: {msg}");
+            return;
+        }
+    };
+    
     let js_location_change = format!("window.location = '{url}';");
     let location_change_result = main_window.as_ref().unwrap().eval(js_location_change.as_str());
     match location_change_result {
