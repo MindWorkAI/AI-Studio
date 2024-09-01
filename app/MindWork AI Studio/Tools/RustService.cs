@@ -48,6 +48,8 @@ public sealed class RustService : IDisposable
             DefaultRequestVersion = Version.Parse("2.0"),
             DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
         };
+        
+        this.http.DefaultRequestHeaders.AddApiToken();
     }
 
     public void SetLogger(ILogger<RustService> logService)
@@ -99,8 +101,10 @@ public sealed class RustService : IDisposable
                     return currentCertificateFingerprint == this.certificateFingerprint;
                 }
             });
+            
             initialHttp.DefaultRequestVersion = Version.Parse("2.0");
             initialHttp.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
+            initialHttp.DefaultRequestHeaders.AddApiToken();
             
             try
             {

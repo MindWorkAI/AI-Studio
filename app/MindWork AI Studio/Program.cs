@@ -18,6 +18,7 @@ internal sealed class Program
 {
     public static RustService RUST_SERVICE = null!;
     public static Encryption ENCRYPTION = null!;
+    public static string API_TOKEN = null!;
     
     public static async Task Main(string[] args)
     {
@@ -51,6 +52,15 @@ internal sealed class Program
             Console.WriteLine("Error: The AI_STUDIO_CERTIFICATE_FINGERPRINT environment variable is not set.");
             return;
         }
+        
+        var apiToken = Environment.GetEnvironmentVariable("AI_STUDIO_API_TOKEN");
+        if(string.IsNullOrWhiteSpace(apiToken))
+        {
+            Console.WriteLine("Error: The AI_STUDIO_API_TOKEN environment variable is not set.");
+            return;
+        }
+        
+        API_TOKEN = apiToken;
         
         var rustApiPort = args[0];
         using var rust = new RustService(rustApiPort, certificateFingerprint);
