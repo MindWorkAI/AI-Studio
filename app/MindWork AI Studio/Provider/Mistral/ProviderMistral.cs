@@ -5,11 +5,10 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
-using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/"), IProvider
+public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -23,10 +22,10 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     public string InstanceName { get; set; } = "Mistral";
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await settings.GetAPIKey(jsRuntime, this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
 
@@ -75,7 +74,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
         var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
         
         // Set the authorization header:
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", requestedSecret.Secret);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         
         // Set the content:
         request.Content = new StringContent(mistralChatRequest, Encoding.UTF8, "application/json");
@@ -141,21 +140,21 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
+    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await settings.GetAPIKey(jsRuntime, this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this) switch
             {
-                { Success: true } result => result.Secret,
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,
             }
         };
@@ -179,7 +178,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
+    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }

@@ -4,11 +4,10 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
-using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}"), IProvider
+public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -21,7 +20,8 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
     
     public string InstanceName { get; set; } = "Self-hosted";
     
-    public async IAsyncEnumerable<string> StreamChatCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    /// <inheritdoc />
+    public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Prepare the system prompt:
         var systemPrompt = new Message
@@ -129,14 +129,14 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(IJSRuntime jsRuntime, SettingsManager settings, Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
 
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
+    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
@@ -162,14 +162,14 @@ public sealed class ProviderSelfHosted(Settings.Provider provider) : BaseProvide
         }
         catch(Exception e)
         {
-            Console.WriteLine($"Failed to load text models from self-hosted provider: {e.Message}");
+            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
         }
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(IJSRuntime jsRuntime, SettingsManager settings, string? apiKeyProvisional = null, CancellationToken token = default)
+    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }

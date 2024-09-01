@@ -1,5 +1,4 @@
 using AIStudio.Assistants.EMail;
-using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel;
 

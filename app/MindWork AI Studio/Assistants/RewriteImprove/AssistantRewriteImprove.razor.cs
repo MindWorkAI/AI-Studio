@@ -1,5 +1,4 @@
 using AIStudio.Chat;
-using AIStudio.Tools;
 
 namespace AIStudio.Assistants.RewriteImprove;
 

@@ -1,5 +1,3 @@
-using AIStudio.Tools;
-
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataTranslation

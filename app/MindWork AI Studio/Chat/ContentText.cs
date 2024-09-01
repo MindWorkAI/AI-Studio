@@ -35,18 +35,18 @@ public sealed class ContentText : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public async Task CreateFromProviderAsync(IProvider provider, IJSRuntime jsRuntime, SettingsManager settings, Model chatModel, ChatThread? chatThread, CancellationToken token = default)
+    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return;
 
-        // Store the last time we got a response. We use this later,
+        // Store the last time we got a response. We use this ater
         // to determine whether we should notify the UI about the
         // new content or not. Depends on the energy saving mode
         // the user chose.
         var last = DateTimeOffset.Now;
 
-        // Start another thread by using a task, to uncouple
+        // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
         await Task.Run(async () =>
         {
@@ -54,7 +54,7 @@ public sealed class ContentText : IContent
             this.InitialRemoteWait = true;
             
             // Iterate over the responses from the AI:
-            await foreach (var deltaText in provider.StreamChatCompletion(jsRuntime, settings, chatModel, chatThread, token))
+            await foreach (var deltaText in provider.StreamChatCompletion(chatModel, chatThread, token))
             {
                 // When the user cancels the request, we stop the loop:
                 if (token.IsCancellationRequested)
@@ -89,7 +89,7 @@ public sealed class ContentText : IContent
             }
 
             // Stop the waiting animation (in case the loop
-            // was stopped or no content was received):
+            // was stopped, or no content was received):
             this.InitialRemoteWait = false;
             this.IsStreaming = false;
         }, token);

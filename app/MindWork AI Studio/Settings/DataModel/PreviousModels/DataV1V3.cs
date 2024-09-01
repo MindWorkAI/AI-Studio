@@ -1,7 +1,6 @@
 using AIStudio.Assistants.Coding;
 using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.TextSummarizer;
-using AIStudio.Tools;
 
 namespace AIStudio.Settings.DataModel.PreviousModels;
 

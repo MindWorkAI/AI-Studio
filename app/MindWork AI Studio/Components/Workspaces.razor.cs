@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Settings;
-using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
@@ -23,6 +22,9 @@ public partial class Workspaces : ComponentBase
     
     [Inject]
     private ThreadSafeRandom RNG { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<Workspaces> Logger { get; init; } = null!;
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
@@ -309,7 +311,7 @@ public partial class Workspaces : ComponentBase
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            this.Logger.LogError($"Failed to load chat from '{chatPath}': {e.Message}");
         }
         
         return null;

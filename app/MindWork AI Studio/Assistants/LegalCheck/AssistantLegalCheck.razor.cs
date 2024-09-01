@@ -1,5 +1,3 @@
-using AIStudio.Tools;
-
 namespace AIStudio.Assistants.LegalCheck;
 
 public partial class AssistantLegalCheck : AssistantBaseCore

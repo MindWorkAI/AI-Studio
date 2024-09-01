@@ -1,10 +1,9 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
-using AIStudio.Tools;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentTextContentCleaner(SettingsManager settingsManager, IJSRuntime jsRuntime, ThreadSafeRandom rng) : AgentBase(settingsManager, jsRuntime, rng)
+public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, rng)
 {
     private static readonly ContentBlock EMPTY_BLOCK = new()
     {

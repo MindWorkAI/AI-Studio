@@ -1,16 +1,17 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
+
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Assistants;
 
 public abstract partial class AssistantBase : ComponentBase
 {
     [Inject]
-    protected SettingsManager SettingsManager { get; set; } = null!;
+    protected SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
@@ -22,10 +23,13 @@ public abstract partial class AssistantBase : ComponentBase
     protected ISnackbar Snackbar { get; init; } = null!;
     
     [Inject]
-    protected Rust Rust { get; init; } = null!;
+    protected RustService RustService { get; init; } = null!;
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
+    
+    [Inject]
+    protected ILogger<AssistantBase> Logger { get; init; } = null!;
     
     internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     internal const string RESULT_DIV_ID = "assistantResult";
@@ -151,7 +155,7 @@ public abstract partial class AssistantBase : ComponentBase
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.JsRuntime, this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();
@@ -162,7 +166,7 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected async Task CopyToClipboard()
     {
-        await this.Rust.CopyText2Clipboard(this.JsRuntime, this.Snackbar, this.Result2Copy());
+        await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
     }
     
     private static string? GetButtonIcon(string icon)

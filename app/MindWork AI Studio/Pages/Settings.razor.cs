@@ -1,11 +1,11 @@
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using RustService = AIStudio.Tools.RustService;
 
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -14,16 +14,19 @@ namespace AIStudio.Pages;
 public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
-    public SettingsManager SettingsManager { get; init; } = null!;
+    private SettingsManager SettingsManager { get; init; } = null!;
 
     [Inject]
-    public IDialogService DialogService { get; init; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    public IJSRuntime JsRuntime { get; init; } = null!;
+    private MessageBus MessageBus { get; init; } = null!;
     
     [Inject]
-    protected MessageBus MessageBus { get; init; } = null!;
+    private ILogger<Settings> Logger { get; init; } = null!;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private readonly List<ConfigurationSelectData<string>> availableProviders = new();
 
@@ -111,8 +114,8 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.CreateProvider();
-        var deleteSecretResponse = await this.SettingsManager.DeleteAPIKey(this.JsRuntime, providerInstance);
+        var providerInstance = provider.CreateProvider(this.Logger);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(providerInstance);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);

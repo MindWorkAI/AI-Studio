@@ -1,12 +1,14 @@
 using System.Text.RegularExpressions;
 
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
+using RustService = AIStudio.Tools.RustService;
 
-namespace AIStudio.Settings;
+namespace AIStudio.Dialogs;
 
 /// <summary>
 /// The provider settings dialog.
@@ -71,10 +73,13 @@ public partial class ProviderDialog : ComponentBase
     public bool IsEditing { get; init; }
     
     [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
+    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
-    private IJSRuntime JsRuntime { get; set; } = null!;
+    private ILogger<ProviderDialog> Logger { get; init; } = null!;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -94,8 +99,9 @@ public partial class ProviderDialog : ComponentBase
     private MudForm form = null!;
     
     private readonly List<Model> availableModels = new();
-    
-    private Provider CreateProviderSettings() => new()
+    private readonly Encryption encryption = Program.ENCRYPTION;
+
+    private Settings.Provider CreateProviderSettings() => new()
     {
         Num = this.DataNum,
         Id = this.DataId,
@@ -133,7 +139,7 @@ public partial class ProviderDialog : ComponentBase
             }
             
             var loadedProviderSettings = this.CreateProviderSettings();
-            var provider = loadedProviderSettings.CreateProvider();
+            var provider = loadedProviderSettings.CreateProvider(this.Logger);
             if(provider is NoProvider)
             {
                 await base.OnInitializedAsync();
@@ -141,10 +147,10 @@ public partial class ProviderDialog : ComponentBase
             }
             
             // Load the API key:
-            var requestedSecret = await this.SettingsManager.GetAPIKey(this.JsRuntime, provider);
+            var requestedSecret = await this.RustService.GetAPIKey(provider);
             if(requestedSecret.Success)
             {
-                this.dataAPIKey = requestedSecret.Secret;
+                this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
                 
                 // Now, we try to load the list of available models:
                 await this.ReloadModels();
@@ -187,10 +193,10 @@ public partial class ProviderDialog : ComponentBase
         if (addedProviderSettings.UsedProvider != Providers.SELF_HOSTED)
         {
             // We need to instantiate the provider to store the API key:
-            var provider = addedProviderSettings.CreateProvider();
+            var provider = addedProviderSettings.CreateProvider(this.Logger);
             
             // Store the API key in the OS secure storage:
-            var storeResponse = await this.SettingsManager.SetAPIKey(this.JsRuntime, provider, this.dataAPIKey);
+            var storeResponse = await this.RustService.SetAPIKey(provider, this.dataAPIKey);
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
@@ -318,11 +324,11 @@ public partial class ProviderDialog : ComponentBase
     private async Task ReloadModels()
     {
         var currentProviderSettings = this.CreateProviderSettings();
-        var provider = currentProviderSettings.CreateProvider();
+        var provider = currentProviderSettings.CreateProvider(this.Logger);
         if(provider is NoProvider)
             return;
         
-        var models = await provider.GetTextModels(this.JsRuntime, this.SettingsManager, this.dataAPIKey);
+        var models = await provider.GetTextModels(this.dataAPIKey);
         
         // Order descending by ID means that the newest models probably come first:
         var orderedModels = models.OrderByDescending(n => n.Id);

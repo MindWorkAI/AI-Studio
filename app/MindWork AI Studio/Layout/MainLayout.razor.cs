@@ -1,21 +1,19 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Layout;
 
 public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDisposable
 {
-    [Inject]
-    private IJSRuntime JsRuntime { get; init; } = null!;
-    
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
@@ -26,13 +24,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    private Rust Rust { get; init; } = null!;
+    private RustService RustService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
     
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<MainLayout> Logger { get; init; } = null!;
 
     public string AdditionalHeight { get; private set; } = "0em";
     
@@ -70,12 +71,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // We use the Tauri API (Rust) to get the data and config directories
         // for this app.
         //
-        var dataDir = await this.JsRuntime.InvokeAsync<string>("window.__TAURI__.path.appLocalDataDir");
-        var configDir = await this.JsRuntime.InvokeAsync<string>("window.__TAURI__.path.appConfigDir");
+        var dataDir = await this.RustService.GetDataDirectory();
+        var configDir = await this.RustService.GetConfigDirectory();
+        
+        this.Logger.LogInformation($"The data directory is: '{dataDir}'");
+        this.Logger.LogInformation($"The config directory is: '{configDir}'");
         
         // Store the directories in the settings manager:
         SettingsManager.ConfigDirectory = configDir;
-        SettingsManager.DataDirectory = Path.Join(dataDir, "data");
+        SettingsManager.DataDirectory = dataDir;
         Directory.CreateDirectory(SettingsManager.DataDirectory);
         
         // Ensure that all settings are loaded:
@@ -85,8 +89,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         this.MessageBus.RegisterComponent(this);
         this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED ]);
         
-        // Set the js runtime for the update service:
-        UpdateService.SetBlazorDependencies(this.JsRuntime, this.Snackbar);
+        // Set the snackbar for the update service:
+        UpdateService.SetBlazorDependencies(this.Snackbar);
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
@@ -189,7 +193,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         
         this.performingUpdate = true;
         this.StateHasChanged();
-        await this.Rust.InstallUpdate(this.JsRuntime);
+        await this.RustService.InstallUpdate();
     }
     
     private async ValueTask OnLocationChanging(LocationChangingContext context)

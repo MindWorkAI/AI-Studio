@@ -1,5 +1,3 @@
-using AIStudio.Tools;
-
 namespace AIStudio.Assistants.IconFinder;
 
 public partial class AssistantIconFinder : AssistantBaseCore
