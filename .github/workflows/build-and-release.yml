@@ -489,7 +489,7 @@ jobs:
         uses: actions/cache@v4
         id: linux_arm_cache
         with:
-          path: $RUNNER_TEMP/linux_arm_qemu_cache.img
+          path: ${{ runner.temp }}/linux_arm_qemu_cache.img
           
           # When the entire key matches, Rust might just create the bundles using the current .NET build:
           key: target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
@@ -544,7 +544,7 @@ jobs:
       - name: Add the built runner image to the cache
         if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
         run: |
-          mv ${{ steps.build-linux-arm-runner.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
+          mv ${{ steps.build-linux-arm-runner.outputs.image }} ${{ runner.temp }}/linux_arm_qemu_cache.img
             
       - name: Build Tauri project
         if: ${{ env.SKIP != 'true' }}
@@ -552,7 +552,7 @@ jobs:
         id: build-linux-arm
         
         with:
-          base_image: file://$RUNNER_TEMP/linux_arm_qemu_cache.img
+          base_image: file://${{ runner.temp }}/linux_arm_qemu_cache.img
           cpu: cortex-a53
           optimize_image: false
           copy_artifact_path: runtime
