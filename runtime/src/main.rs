@@ -142,9 +142,17 @@ async fn main() {
     // Set the log level for the Reqwest library:
     log_config.push_str("reqwest::async_impl::client=info");
 
+    // Configure the initial filename. On Unix systems, the file should start
+    // with a dot to be hidden.
+    let log_basename = match cfg!(unix)
+    {
+        true => ".AI Studio Events",
+        false => "AI Studio Events",
+    };
+    
     let logger = Logger::try_with_str(log_config).expect("Cannot create logging")
         .log_to_file(FileSpec::default()
-            .basename("AI Studio Events")
+            .basename(log_basename)
             .suppress_timestamp()
             .suffix("log"))
         .duplicate_to_stdout(Duplicate::All)
@@ -190,7 +198,7 @@ async fn main() {
     let mut shutdown = Shutdown {
         // We do not want to use the Ctrl+C signal to stop the server:
         ctrlc: false,
-        
+
         // Everything else is set to default for now:
         ..Shutdown::default()
     };
