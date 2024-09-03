@@ -4,8 +4,10 @@ You just want to use the app? Then simply [download the appropriate setup for yo
 ## Prerequisites
 1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
-3. [Install NuShell](https://www.nushell.sh/) when you want to prepare a release or build a local binary. NuShell works on all operating systems and is required because the build script is written in NuShell.
-4. Clone the repository.
+3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
+4. Install the Tauri CLI by running `cargo install tauri-cli`.
+5. [Install NuShell](https://www.nushell.sh/) when you want to prepare a release or build a local binary. NuShell works on all operating systems and is required because the build script is written in NuShell.
+6. Clone the repository.
 
 ## Build instructions
 In order to build MindWork AI Studio from source instead of using the pre-built binaries, follow these steps:
