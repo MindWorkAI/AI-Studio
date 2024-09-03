@@ -163,6 +163,9 @@ async fn main() {
         .start().expect("Cannot start logging");
 
     info!("Starting MindWork AI Studio:");
+    let working_directory = std::env::current_dir().unwrap();
+    info!(".. The working directory is: '{working_directory:?}'");
+    
     info!(".. Version: v{app_version} (commit {app_commit_hash}, build {build_number})");
     info!(".. Build time: {build_time}");
     info!(".. .NET SDK: v{dotnet_sdk_version}");
