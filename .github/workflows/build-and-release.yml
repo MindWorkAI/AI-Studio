@@ -846,7 +846,7 @@ jobs:
             uses: softprops/action-gh-release@v2
             with:
               prerelease: true
-              draft: true
+              draft: false
               make_latest: true
               body: ${{ env.CHANGELOG }}
               name: "Release ${{ env.FORMATTED_VERSION }}"
