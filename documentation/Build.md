@@ -4,18 +4,18 @@ You just want to use the app? Then simply [download the appropriate setup for yo
 ## Prerequisites
 1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
-3. [Install NuShell](https://www.nushell.sh/), when you want to prepare a release or build a local binary. NuShell works on all operating systems and is required because the build script is written in NuShell.
+3. [Install NuShell](https://www.nushell.sh/) when you want to prepare a release or build a local binary. NuShell works on all operating systems and is required because the build script is written in NuShell.
 4. Clone the repository.
 
 ## Build instructions
 In order to build MindWork AI Studio from source instead of using the pre-built binaries, follow these steps:
 1. Ensure you have met all the prerequisites.
 2. Open a terminal with NuShell.
-2. Navigate to the `/app/MindWork AI Studio` directory within the repository.
-3. To build the current version, run `nu build.nu publish`.
+3. Navigate to the `/app/MindWork AI Studio` directory within the repository.
+4. To build the current version, run `nu build.nu publish`.
     - This will build the app for the current operating system, for both x64 (Intel, AMD) and ARM64 (e.g., Apple Silicon, Raspberry Pi).
     - The setup program will be located in `runtime/target/release/bundle` afterward.
-4. In order to create a new release:
+5. In order to create a new release:
    1. Before finishing the PR, make sure to create a changelog file in the `/app/MindWork AI Studio/wwwroot/changelog` directory. The file should be named `vX.Y.Z.md` and contain the changes made in the release (your changes and any other changes that are part of the release).
    2. To prepare a new release, run `nu build.nu prepare <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
    3. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
