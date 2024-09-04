@@ -21,6 +21,9 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     [Parameter]
     public Func<bool> Disabled { get; set; } = () => false;
     
+    [Parameter]
+    public Func<string> HelpText { get; set; } = () => "Select a provider that is preselected.";
+    
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     

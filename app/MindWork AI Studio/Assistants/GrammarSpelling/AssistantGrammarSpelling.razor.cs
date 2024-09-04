@@ -4,6 +4,8 @@ namespace AIStudio.Assistants.GrammarSpelling;
 
 public partial class AssistantGrammarSpelling : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.GRAMMAR_SPELLING_ASSISTANT;
+    
     protected override string Title => "Grammar & Spelling Checker";
     
     protected override string Description =>
@@ -31,7 +33,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.GRAMMAR_SPELLING_ASSISTANT,
+            Self = Tools.Components.GRAMMAR_SPELLING_ASSISTANT,
             UseResultingContentBlockData = false,
             GetText = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },
@@ -59,7 +61,6 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         {
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider);
             return true;
         }
         
@@ -70,7 +71,6 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

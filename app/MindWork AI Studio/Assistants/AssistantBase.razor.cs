@@ -40,6 +40,8 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected abstract string SystemPrompt { get; }
     
+    protected abstract Tools.Components Component { get; }
+    
     protected virtual Func<string> Result2Copy => () => this.resultingContentBlock is null ? string.Empty : this.resultingContentBlock.Content switch
     {
         ContentText textBlock => textBlock.Text,
@@ -72,6 +74,13 @@ public abstract partial class AssistantBase : ComponentBase
     private bool isProcessing;
     
     #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.MightPreselectValues();
+        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        await base.OnInitializedAsync();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -177,7 +186,7 @@ public abstract partial class AssistantBase : ComponentBase
         return icon;
     }
     
-    private Task SendToAssistant(SendTo destination, SendToButton sendToButton)
+    private Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
@@ -192,7 +201,7 @@ public abstract partial class AssistantBase : ComponentBase
         var sendToData = destination.GetData();
         switch (destination)
         {
-            case SendTo.CHAT:
+            case Tools.Components.CHAT:
                 MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, this.ConvertToChatThread);
                 break;
             
@@ -214,6 +223,7 @@ public abstract partial class AssistantBase : ComponentBase
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
         this.ResetFrom();
+        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         
         this.inputIsValid = false;
         this.inputIssues = [];

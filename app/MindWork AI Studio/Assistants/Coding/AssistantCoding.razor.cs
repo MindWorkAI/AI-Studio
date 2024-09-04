@@ -4,6 +4,8 @@ namespace AIStudio.Assistants.Coding;
 
 public partial class AssistantCoding : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.CODING_ASSISTANT;
+    
     protected override string Title => "Coding Assistant";
     
     protected override string Description =>
@@ -24,13 +26,7 @@ public partial class AssistantCoding : AssistantBaseCore
         When the user asks in a different language than English, you answer in the same language!
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = SendTo.CODING_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override void ResetFrom()
     {
@@ -48,7 +44,6 @@ public partial class AssistantCoding : AssistantBaseCore
         if (this.SettingsManager.ConfigurationData.Coding.PreselectOptions)
         {
             this.provideCompilerMessages = this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Coding.PreselectedProvider);
             return true;
         }
         
@@ -64,7 +59,6 @@ public partial class AssistantCoding : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CODING_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.questions = deferredContent;

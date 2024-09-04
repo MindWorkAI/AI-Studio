@@ -4,6 +4,8 @@ namespace AIStudio.Assistants.TextSummarizer;
 
 public partial class AssistantTextSummarizer : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.TEXT_SUMMARIZER_ASSISTANT;
+    
     protected override string Title => "Text Summarizer";
     
     protected override string Description =>
@@ -23,13 +25,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         a summary with the requested complexity. In any case, do not add any information.
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons => 
-    [
-        new SendToButton
-        {
-            Self = SendTo.TEXT_SUMMARIZER_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
@@ -56,7 +52,6 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
             this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
             this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider);
             return true;
         }
         
@@ -74,7 +69,6 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

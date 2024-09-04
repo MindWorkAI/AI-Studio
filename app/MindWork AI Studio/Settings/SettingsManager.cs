@@ -110,4 +110,31 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     }
     
     public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
+
+    public Provider GetPreselectedProvider(Tools.Components component)
+    {
+        if(this.ConfigurationData.Providers.Count == 1)
+            return this.ConfigurationData.Providers[0];
+        
+        var preselection = component switch
+        {
+            Tools.Components.CHAT => this.ConfigurationData.Chat.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Chat.PreselectedProvider) : default,
+            Tools.Components.GRAMMAR_SPELLING_ASSISTANT => this.ConfigurationData.GrammarSpelling.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.GrammarSpelling.PreselectedProvider) : default,
+            Tools.Components.ICON_FINDER_ASSISTANT => this.ConfigurationData.IconFinder.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.IconFinder.PreselectedProvider) : default,
+            Tools.Components.REWRITE_ASSISTANT => this.ConfigurationData.RewriteImprove.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.RewriteImprove.PreselectedProvider) : default,
+            Tools.Components.TRANSLATION_ASSISTANT => this.ConfigurationData.Translation.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Translation.PreselectedProvider) : default,
+            Tools.Components.AGENDA_ASSISTANT => this.ConfigurationData.Agenda.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Agenda.PreselectedProvider) : default,
+            Tools.Components.CODING_ASSISTANT => this.ConfigurationData.Coding.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Coding.PreselectedProvider) : default,
+            Tools.Components.TEXT_SUMMARIZER_ASSISTANT => this.ConfigurationData.TextSummarizer.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.TextSummarizer.PreselectedProvider) : default,
+            Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProvider) : default,
+            Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProvider) : default,
+            
+            _ => default,
+        };
+
+        if (preselection != default)
+            return preselection;
+
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider);
+    }
 }

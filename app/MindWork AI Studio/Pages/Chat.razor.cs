@@ -59,11 +59,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
 
-        if (this.SettingsManager.ConfigurationData.Chat.PreselectOptions)
-        {
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Chat.PreselectedProvider);
-        }
-        
+        this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)
         {

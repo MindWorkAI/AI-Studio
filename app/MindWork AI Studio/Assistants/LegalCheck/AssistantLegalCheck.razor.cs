@@ -2,6 +2,8 @@ namespace AIStudio.Assistants.LegalCheck;
 
 public partial class AssistantLegalCheck : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
+    
     protected override string Title => "Legal Check";
     
     protected override string Description =>
@@ -20,13 +22,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore
         Never invent facts!
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = SendTo.LEGAL_CHECK_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override void ResetFrom()
     {
@@ -35,17 +31,8 @@ public partial class AssistantLegalCheck : AssistantBaseCore
         this.MightPreselectValues();
     }
     
-    protected override bool MightPreselectValues()
-    {
-        if (this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)
-        {
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.LegalCheck.PreselectedProvider);
-            return true;
-        }
-        
-        return false;
-    }
-    
+    protected override bool MightPreselectValues() => false;
+
     private bool isAgentRunning;
     private string inputLegalDocument = string.Empty;
     private string inputQuestions = string.Empty;
@@ -54,7 +41,6 @@ public partial class AssistantLegalCheck : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_LEGAL_CHECK_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputQuestions = deferredContent;

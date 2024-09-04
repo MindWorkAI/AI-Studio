@@ -1,6 +1,6 @@
 namespace AIStudio.Tools;
 
-public enum SendTo
+public enum Components
 {
     NONE = 0,
     

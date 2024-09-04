@@ -4,6 +4,8 @@ namespace AIStudio.Assistants.Translation;
 
 public partial class AssistantTranslation : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.TRANSLATION_ASSISTANT;
+    
     protected override string Title => "Translation";
     
     protected override string Description =>
@@ -19,13 +21,7 @@ public partial class AssistantTranslation : AssistantBaseCore
         language requires, e.g., shorter sentences, you should split the text into shorter sentences.
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = SendTo.TRANSLATION_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
@@ -51,7 +47,6 @@ public partial class AssistantTranslation : AssistantBaseCore
             this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Translation.PreselectedProvider);
             return true;
         }
         
@@ -69,7 +64,6 @@ public partial class AssistantTranslation : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TRANSLATION_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

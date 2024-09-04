@@ -8,6 +8,6 @@ public readonly record struct SendToButton() : IButtonData
     
     public bool UseResultingContentBlockData { get; init; } = true;
     
-    public SendTo Self { get; init; } = SendTo.NONE;
+    public Components Self { get; init; } = Components.NONE;
 
 }

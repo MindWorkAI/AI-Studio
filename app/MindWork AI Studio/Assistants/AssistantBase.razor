@@ -35,49 +35,64 @@
         </div>
     </ChildContent>
     <FooterContent>
-        @if (this.FooterButtons.Count > 0)
-        {
-            <MudStack Row="@true" Wrap="Wrap.Wrap" Class="ma-1">
-                @foreach (var button in this.FooterButtons)
-                {
-                    switch (button)
+        <MudStack Row="@true" Wrap="Wrap.Wrap" Class="ma-1">
+            
+            @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
+            {
+                <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
+                    @foreach (var assistant in Enum.GetValues<Components>().OrderBy(n => n.Name().Length))
                     {
-                        case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
-                            <MudTooltip Text="@buttonData.Tooltip">
-                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
-                                    @buttonData.Text
-                                </MudButton>
-                            </MudTooltip>
-                            break;
+                        if (assistant is Components.NONE || this.Component == assistant)
+                            continue;
 
-                        case ButtonData buttonData:
+                        <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
+                            @assistant.Name()
+                        </MudMenuItem>
+                    }
+                </MudMenu>
+            }
+
+            @foreach (var button in this.FooterButtons)
+            {
+                switch (button)
+                {
+                    case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
+                        <MudTooltip Text="@buttonData.Tooltip">
                             <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                 @buttonData.Text
                             </MudButton>
-                            break;
+                        </MudTooltip>
+                        break;
 
-                        case SendToButton sendToButton:
-                            <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
-                                @foreach (var assistant in Enum.GetValues<SendTo>().OrderBy(n => n.Name().Length))
-                                {
-                                    if(assistant is SendTo.NONE || sendToButton.Self == assistant)
-                                        continue;
+                    case ButtonData buttonData:
+                        <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                            @buttonData.Text
+                        </MudButton>
+                        break;
 
-                                    <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
-                                        @assistant.Name()
-                                    </MudMenuItem>
-                                }
-                            </MudMenu>
-                            break;
-                    }
+                    case SendToButton sendToButton:
+                        <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
+                            @foreach (var assistant in Enum.GetValues<Components>().OrderBy(n => n.Name().Length))
+                            {
+                                if(assistant is Components.NONE || sendToButton.Self == assistant)
+                                    continue;
+
+                                <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
+                                    @assistant.Name()
+                                </MudMenuItem>
+                            }
+                        </MudMenu>
+                        break;
                 }
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
-                    Copy result
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
-                    Reset
-                </MudButton>
-            </MudStack>
-        }
+            }
+            
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
+                Copy result
+            </MudButton>
+            
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
+                Reset
+            </MudButton>
+        </MudStack>
     </FooterContent>
 </InnerScrolling>

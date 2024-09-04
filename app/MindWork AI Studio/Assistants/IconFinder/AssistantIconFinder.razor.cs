@@ -2,8 +2,7 @@ namespace AIStudio.Assistants.IconFinder;
 
 public partial class AssistantIconFinder : AssistantBaseCore
 {
-    private string inputContext = string.Empty;
-    private IconSources selectedIconSource;
+    protected override Tools.Components Component => Tools.Components.ICON_FINDER_ASSISTANT;
 
     protected override string Title => "Icon Finder";
     
@@ -26,13 +25,7 @@ public partial class AssistantIconFinder : AssistantBaseCore
         quotation marks.
         """;
 
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = SendTo.ICON_FINDER_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override void ResetFrom()
     {
@@ -48,18 +41,19 @@ public partial class AssistantIconFinder : AssistantBaseCore
         if (this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)
         {
             this.selectedIconSource = this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider);
             return true;
         }
         
         return false;
     }
     
+    private string inputContext = string.Empty;
+    private IconSources selectedIconSource;
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_ICON_FINDER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputContext = deferredContent;
