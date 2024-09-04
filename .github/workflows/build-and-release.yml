@@ -584,7 +584,7 @@ jobs:
             
             # Save the built libraries for the next job:
             rm -fr /rust-cache/target
-            mv target /rust-cache
+            cp -Rp target /rust-cache
 
       - name: Debug
         if: ${{ env.SKIP != 'true' }}
