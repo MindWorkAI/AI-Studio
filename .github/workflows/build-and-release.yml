@@ -574,7 +574,16 @@ jobs:
             export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
             source "$HOME/.cargo/env"
             cd runtime
+            
+            # Try to restore the Rust cache from previous build:
+            mkdir -p /rust-cache
+            rm -fr target
+            mv /rust-cache/target target
+            
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
+            
+            # Save the built libraries for the next job:
+            mv target /rust-cache/target
 
       - name: Debug
         if: ${{ env.SKIP != 'true' }}
