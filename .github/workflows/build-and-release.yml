@@ -557,6 +557,7 @@ jobs:
           optimize_image: false
           copy_artifact_path: runtime
           copy_artifact_dest: result
+          bind_mount_repository: true
           
           #
           # We do not need to set the PRIVATE_PUBLISH_KEY and PRIVATE_PUBLISH_KEY_PASSWORD here,
