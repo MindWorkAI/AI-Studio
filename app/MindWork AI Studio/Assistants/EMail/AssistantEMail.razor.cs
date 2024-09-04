@@ -6,6 +6,8 @@ namespace AIStudio.Assistants.EMail;
 
 public partial class AssistantEMail : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.EMAIL_ASSISTANT;
+    
     protected override string Title => "E-Mail";
     
     protected override string Description =>
@@ -59,7 +61,6 @@ public partial class AssistantEMail : AssistantBaseCore
             this.selectedWritingStyle = this.SettingsManager.ConfigurationData.EMail.PreselectedWritingStyle;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.EMail.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.EMail.PreselectOtherLanguage;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.EMail.PreselectedProvider);
             return true;
         }
         
@@ -88,7 +89,6 @@ public partial class AssistantEMail : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_EMAIL_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputBulletPoints = deferredContent;

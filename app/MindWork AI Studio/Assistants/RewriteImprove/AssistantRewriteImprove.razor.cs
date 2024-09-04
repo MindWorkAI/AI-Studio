@@ -4,6 +4,8 @@ namespace AIStudio.Assistants.RewriteImprove;
 
 public partial class AssistantRewriteImprove : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.REWRITE_ASSISTANT;
+    
     protected override string Title => "Rewrite & Improve Text";
     
     protected override string Description =>
@@ -62,7 +64,6 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         {
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider);
             this.selectedWritingStyle = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle;
             this.selectedSentenceStructure = this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedSentenceStructure;
             return true;
@@ -75,7 +76,6 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;

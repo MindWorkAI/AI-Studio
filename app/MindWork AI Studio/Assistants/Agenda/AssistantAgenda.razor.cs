@@ -6,6 +6,8 @@ namespace AIStudio.Assistants.Agenda;
 
 public partial class AssistantAgenda : AssistantBaseCore
 {
+    protected override Tools.Components Component => Tools.Components.AGENDA_ASSISTANT;
+    
     protected override string Title => "Agenda Planner";
     
     protected override string Description =>
@@ -158,7 +160,6 @@ public partial class AssistantAgenda : AssistantBaseCore
             this.durationBreaks = this.SettingsManager.ConfigurationData.Agenda.PreselectBreakTime;
             this.activeParticipation = this.SettingsManager.ConfigurationData.Agenda.PreselectActiveParticipation;
             this.numberParticipants = this.SettingsManager.ConfigurationData.Agenda.PreselectNumberParticipants;
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.Agenda.PreselectedProvider);
             return true;
         }
         
@@ -194,7 +195,6 @@ public partial class AssistantAgenda : AssistantBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.MightPreselectValues();
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_AGENDA_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputContent = deferredContent;

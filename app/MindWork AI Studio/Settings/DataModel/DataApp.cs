@@ -22,4 +22,9 @@ public sealed class DataApp
     /// The navigation behavior.
     /// </summary>
     public NavBehavior NavigationBehavior { get; set; } = NavBehavior.NEVER_EXPAND_USE_TOOLTIPS;
+    
+    /// <summary>
+    /// Should we preselect a provider for the entire app?
+    /// </summary>
+    public string PreselectedProvider { get; set; } = string.Empty;
 }
