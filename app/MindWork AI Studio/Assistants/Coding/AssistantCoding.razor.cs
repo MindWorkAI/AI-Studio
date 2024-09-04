@@ -26,13 +26,7 @@ public partial class AssistantCoding : AssistantBaseCore
         When the user asks in a different language than English, you answer in the same language!
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = Tools.Components.CODING_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override void ResetFrom()
     {

@@ -22,13 +22,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore
         Never invent facts!
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = Tools.Components.LEGAL_CHECK_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override void ResetFrom()
     {

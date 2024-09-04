@@ -95,13 +95,7 @@ public partial class AssistantAgenda : AssistantBaseCore
                                                          - Mary Jane: Work package 3
                                                          """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = Tools.Components.AGENDA_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {

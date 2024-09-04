@@ -25,13 +25,7 @@ public partial class AssistantIconFinder : AssistantBaseCore
         quotation marks.
         """;
 
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = Tools.Components.ICON_FINDER_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override void ResetFrom()
     {

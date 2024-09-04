@@ -22,13 +22,7 @@ public partial class AssistantEMail : AssistantBaseCore
         {this.SystemPromptGreeting()} {this.SystemPromptName()} You write the email in the following language: {this.SystemPromptLanguage()}.
         """;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new SendToButton
-        {
-            Self = Tools.Components.EMAIL_ASSISTANT,
-        },
-    ];
+    protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
