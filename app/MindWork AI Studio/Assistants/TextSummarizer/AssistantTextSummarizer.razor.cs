@@ -27,7 +27,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.TEXT_SUMMARIZER_ASSISTANT,
+            Self = Tools.Components.TEXT_SUMMARIZER_ASSISTANT,
         },
     ];
     

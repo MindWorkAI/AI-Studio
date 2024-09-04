@@ -24,7 +24,7 @@ public partial class AssistantEMail : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.EMAIL_ASSISTANT,
+            Self = Tools.Components.EMAIL_ASSISTANT,
         },
     ];
     

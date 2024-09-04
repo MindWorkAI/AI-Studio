@@ -28,7 +28,7 @@ public partial class AssistantCoding : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.CODING_ASSISTANT,
+            Self = Tools.Components.CODING_ASSISTANT,
         },
     ];
     

@@ -30,7 +30,7 @@ public partial class AssistantIconFinder : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.ICON_FINDER_ASSISTANT,
+            Self = Tools.Components.ICON_FINDER_ASSISTANT,
         },
     ];
     

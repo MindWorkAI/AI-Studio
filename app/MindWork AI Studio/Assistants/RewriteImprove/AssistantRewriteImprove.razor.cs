@@ -32,7 +32,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.REWRITE_ASSISTANT,
+            Self = Tools.Components.REWRITE_ASSISTANT,
             UseResultingContentBlockData = false,
             GetText = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
         },

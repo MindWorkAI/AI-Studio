@@ -97,7 +97,7 @@ public partial class AssistantAgenda : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.AGENDA_ASSISTANT,
+            Self = Tools.Components.AGENDA_ASSISTANT,
         },
     ];
 

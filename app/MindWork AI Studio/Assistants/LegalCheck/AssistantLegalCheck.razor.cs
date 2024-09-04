@@ -24,7 +24,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore
     [
         new SendToButton
         {
-            Self = SendTo.LEGAL_CHECK_ASSISTANT,
+            Self = Tools.Components.LEGAL_CHECK_ASSISTANT,
         },
     ];
     

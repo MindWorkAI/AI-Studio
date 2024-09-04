@@ -177,7 +177,7 @@ public abstract partial class AssistantBase : ComponentBase
         return icon;
     }
     
-    private Task SendToAssistant(SendTo destination, SendToButton sendToButton)
+    private Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
@@ -192,7 +192,7 @@ public abstract partial class AssistantBase : ComponentBase
         var sendToData = destination.GetData();
         switch (destination)
         {
-            case SendTo.CHAT:
+            case Tools.Components.CHAT:
                 MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, this.ConvertToChatThread);
                 break;
             
