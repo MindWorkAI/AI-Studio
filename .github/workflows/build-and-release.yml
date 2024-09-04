@@ -576,14 +576,15 @@ jobs:
             cd runtime
             
             # Try to restore the Rust cache from previous build:
-            mkdir -p /rust-cache
+            mkdir -p /rust-cache/target
             rm -fr target
-            mv /rust-cache/target target
+            cp -Rp /rust-cache/target target
             
             cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
             
             # Save the built libraries for the next job:
-            mv target /rust-cache/target
+            rm -fr /rust-cache/target
+            mv target /rust-cache
 
       - name: Debug
         if: ${{ env.SKIP != 'true' }}
