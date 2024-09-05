@@ -44,6 +44,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private bool workspacesVisible;
     private Workspaces? workspaces;
     private bool mustScrollToBottomAfterRender;
+    private byte scrollRenderCountdown;
     
     // Unfortunately, we need the input field reference to clear it after sending a message.
     // This is necessary because we have to handle the key events ourselves. Otherwise,
@@ -76,6 +77,13 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                     };
                 }
             }
+            
+            if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
+            {
+                this.mustScrollToBottomAfterRender = true;
+                this.scrollRenderCountdown = 2;
+                this.StateHasChanged();
+            }
         }
 
         await base.OnInitializedAsync();
@@ -85,8 +93,15 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     {
         if(this.mustScrollToBottomAfterRender)
         {
-            await this.scrollingArea.ScrollToBottom();
-            this.mustScrollToBottomAfterRender = false;
+            if (--this.scrollRenderCountdown == 0)
+            {
+                await this.scrollingArea.ScrollToBottom();
+                this.mustScrollToBottomAfterRender = false;
+            }
+            else
+            {
+                this.StateHasChanged();
+            }
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -384,6 +399,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
+            this.scrollRenderCountdown = 2;
             this.StateHasChanged();
         }
     }
