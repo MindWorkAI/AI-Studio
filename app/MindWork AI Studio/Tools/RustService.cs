@@ -197,7 +197,7 @@ public sealed class RustService : IDisposable
                 return;
             }
 
-            var state = await response.Content.ReadFromJsonAsync<SetClipboardResponse>();
+            var state = await response.Content.ReadFromJsonAsync<SetClipboardResponse>(this.jsonRustSerializerOptions);
             if (!state.Success)
             {
                 this.logger!.LogError("Failed to copy the text to the clipboard.");
@@ -225,7 +225,9 @@ public sealed class RustService : IDisposable
         try
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(16));
-            return await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", cts.Token);
+            var response = await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", this.jsonRustSerializerOptions, cts.Token);
+            this.logger!.LogInformation($"Checked for an update: update available='{response.UpdateIsAvailable}'; error='{response.Error}'; next version='{response.NewVersion}'; changelog len='{response.Changelog.Length}'");
+            return response;
         }
         catch (Exception e)
         {
@@ -267,7 +269,7 @@ public sealed class RustService : IDisposable
             return new RequestedSecret(false, new EncryptedText(string.Empty), "Failed to get the API key due to an API issue.");
         }
         
-        var secret = await result.Content.ReadFromJsonAsync<RequestedSecret>();
+        var secret = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
         if (!secret.Success)
             this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}': '{secret.Issue}'");
         
@@ -291,7 +293,7 @@ public sealed class RustService : IDisposable
             return new StoreSecretResponse(false, "Failed to get the API key due to an API issue.");
         }
         
-        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>();
+        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>(this.jsonRustSerializerOptions);
         if (!state.Success)
             this.logger!.LogError($"Failed to store the API key for provider '{provider.Id}': '{state.Issue}'");
         
@@ -313,7 +315,7 @@ public sealed class RustService : IDisposable
             return new DeleteSecretResponse{Success = false, WasEntryFound = false, Issue = "Failed to delete the API key due to an API issue."};
         }
         
-        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>();
+        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>(this.jsonRustSerializerOptions);
         if (!state.Success)
             this.logger!.LogError($"Failed to delete the API key for provider '{provider.Id}': '{state.Issue}'");
         
