@@ -24,5 +24,5 @@ window.clearDiv = function (divName) {
 }
 
 window.scrollToBottom = function(element) {
-    element.scrollIntoView();
+    element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
