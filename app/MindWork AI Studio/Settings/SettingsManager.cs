@@ -128,6 +128,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
             Tools.Components.TEXT_SUMMARIZER_ASSISTANT => this.ConfigurationData.TextSummarizer.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.TextSummarizer.PreselectedProvider) : default,
             Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProvider) : default,
             Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProvider) : default,
+            Tools.Components.SYNONYMS_ASSISTANT => this.ConfigurationData.Synonyms.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Synonyms.PreselectedProvider) : default,
             
             _ => default,
         };

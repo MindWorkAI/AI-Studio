@@ -86,6 +86,15 @@ public static class ConfigurationSelectDataFactory
                 yield return new(language.Name(), language);
     }
     
+    public static IEnumerable<ConfigurationSelectData<CommonLanguages>> GetCommonLanguagesOptionalData()
+    {
+        foreach (var language in Enum.GetValues<CommonLanguages>())
+            if(language is CommonLanguages.AS_IS)
+                yield return new("Do not specify the language", language);
+            else
+                yield return new(language.Name(), language);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<CommonCodingLanguages>> GetCommonCodingLanguagesData()
     {
         foreach (var language in Enum.GetValues<CommonCodingLanguages>())
