@@ -1,0 +1,12 @@
+@attribute [Route(Routes.ASSISTANT_SYNONYMS)]
+@inherits AssistantBaseCore
+
+<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.Spellcheck" Adornment="Adornment.Start" Label="Your word or phrase" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Lines="2" AutoGrow="@false" Label="(Optional) The context for the given word or phrase" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedLanguage" Icon="@Icons.Material.Filled.Translate" Label="Language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.FindSynonyms()">
+    Get synonyms
+</MudButton>

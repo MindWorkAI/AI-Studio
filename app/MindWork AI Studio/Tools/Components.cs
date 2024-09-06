@@ -13,6 +13,7 @@ public enum Components
     TEXT_SUMMARIZER_ASSISTANT,
     EMAIL_ASSISTANT,
     LEGAL_CHECK_ASSISTANT,
+    SYNONYMS_ASSISTANT,
     
     CHAT,
 }

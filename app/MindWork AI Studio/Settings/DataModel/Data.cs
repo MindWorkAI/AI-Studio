@@ -46,4 +46,6 @@ public sealed class Data
     public DataEMail EMail { get; set; } = new();
     
     public DataLegalCheck LegalCheck { get; set; } = new();
+    
+    public DataSynonyms Synonyms { get; set; } = new();
 }
