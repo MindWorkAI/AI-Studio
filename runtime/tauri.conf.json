@@ -46,7 +46,7 @@
         {
           "domain": "localhost",
           "windows": ["main"],
-          "enableTauriAPI": false
+          "enableTauriAPI": true
         }
       ]
     },
