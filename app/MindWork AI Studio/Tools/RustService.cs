@@ -224,7 +224,7 @@ public sealed class RustService : IDisposable
     {
         try
         {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(16));
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
             var response = await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", this.jsonRustSerializerOptions, cts.Token);
             this.logger!.LogInformation($"Checked for an update: update available='{response.UpdateIsAvailable}'; error='{response.Error}'; next version='{response.NewVersion}'; changelog len='{response.Changelog.Length}'");
             return response;
