@@ -35,6 +35,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     private AIStudio.Settings.Provider providerSettings;
+    private Profile currentProfile = Profile.NO_PROFILE;
     private ChatThread? chatThread;
     private bool hasUnsavedChanges;
     private bool isStreaming;
@@ -118,6 +119,22 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private bool CanThreadBeSaved => this.chatThread is not null && this.chatThread.Blocks.Count > 0;
 
     private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
+
+    private void ProfileWasChanged(Profile profile)
+    {
+        this.currentProfile = profile;
+        if(this.chatThread is null)
+            return;
+
+        this.chatThread = this.chatThread with
+        {
+            SystemPrompt = $"""
+                            {SystemPrompts.DEFAULT}
+
+                            {this.currentProfile.ToSystemPrompt()}
+                            """
+        };
+    }
     
     private async Task SendMessage()
     {
@@ -135,7 +152,11 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 Name = threadName,
                 Seed = this.RNG.Next(),
-                SystemPrompt = SystemPrompts.DEFAULT,
+                SystemPrompt = $"""
+                                {SystemPrompts.DEFAULT}
+
+                                {this.currentProfile.ToSystemPrompt()}
+                                """,
                 Blocks = [],
             };
         }
@@ -320,7 +341,11 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
                 Seed = this.RNG.Next(),
-                SystemPrompt = "You are a helpful assistant!",
+                SystemPrompt = $"""
+                                {SystemPrompts.DEFAULT}
+
+                                {this.currentProfile.ToSystemPrompt()}
+                                """,
                 Blocks = [],
             };
         }

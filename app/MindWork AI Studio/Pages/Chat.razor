@@ -69,6 +69,8 @@
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
                 </MudTooltip>
             }
+
+            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" />
         </MudToolBar>
     </FooterContent>
 </InnerScrolling>

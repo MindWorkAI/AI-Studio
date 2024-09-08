@@ -1,0 +1,8 @@
+<MudMenu StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass">
+    @foreach (var profile in this.Profiles())
+    {
+        <MudMenuItem OnClick="() => this.SelectionChanged(profile)">
+            @profile.Name
+        </MudMenuItem>
+    }
+</MudMenu>

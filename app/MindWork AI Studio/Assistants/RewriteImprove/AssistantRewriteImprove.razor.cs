@@ -24,6 +24,8 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
         """;
     
+    protected override bool AllowProfiles => false;
+    
     protected override bool ShowResult => false;
 
     protected override bool ShowDedicatedProgress => true;

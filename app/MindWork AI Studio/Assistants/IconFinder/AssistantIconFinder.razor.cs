@@ -24,6 +24,8 @@ public partial class AssistantIconFinder : AssistantBaseCore
         related to the keyword "buildings" might be the best match. Provide your keywords in a Markdown list without
         quotation marks.
         """;
+    
+    protected override bool AllowProfiles => false;
 
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     

@@ -93,6 +93,11 @@
             <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
                 Reset
             </MudButton>
+            
+            @if (this.AllowProfiles)
+            {
+                <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
+            }
         </MudStack>
     </FooterContent>
 </InnerScrolling>
