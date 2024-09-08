@@ -216,6 +216,13 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Enable the stream state for the chat component:
         this.isStreaming = true;
         this.hasUnsavedChanges = true;
+        
+        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
+        {
+            this.mustScrollToBottomAfterRender = true;
+            this.scrollRenderCountdown = 2;
+        }
+        
         this.StateHasChanged();
         
         // Use the selected provider to get the AI response.
