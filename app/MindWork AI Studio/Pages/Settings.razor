@@ -11,6 +11,12 @@
     <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="Configure Providers">
             <MudText Typo="Typo.h4" Class="mb-3">Configured Providers</MudText>
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-4o.
+                You can configure as many providers as you want. This way, you can use the appropriate model for each
+                task. As an LLM provider, you can also choose local providers. However, to use this app, you must
+                configure at least one provider.
+            </MudJustifiedText>
             <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Class="border-dashed border rounded-lg">
                 <ColGroup>
                     <col style="width: 3em;"/>
