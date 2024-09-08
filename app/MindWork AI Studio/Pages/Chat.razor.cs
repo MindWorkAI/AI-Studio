@@ -47,9 +47,8 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private bool mustScrollToBottomAfterRender;
     private byte scrollRenderCountdown;
     
-    // Unfortunately, we need the input field reference to clear it after sending a message.
-    // This is necessary because we have to handle the key events ourselves. Otherwise,
-    // the clearing would be done automatically.
+    // Unfortunately, we need the input field reference to blur the focus away. Without
+    // this, we cannot clear the input field.
     private MudTextField<string> inputField = null!;
 
     #region Overrides of ComponentBase
@@ -142,6 +141,10 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if (!this.IsProviderSelected)
             return;
         
+        // We need to blur the focus away from the input field
+        // to be able to clear the field:
+        await this.inputField.BlurAsync();
+        
         // Create a new chat thread if necessary:
         var threadName = this.ExtractThreadName(this.userInput);
 
@@ -210,7 +213,6 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         });
         
         // Clear the input field:
-        await this.inputField.Clear();
         this.userInput = string.Empty;
         
         // Enable the stream state for the chat component:
@@ -358,7 +360,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             };
         }
 
-        await this.inputField.Clear();
+        this.userInput = string.Empty;
     }
 
     private async Task MoveChatToWorkspace()
@@ -427,8 +429,8 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.userInput = string.Empty;
         this.currentWorkspaceId = this.chatThread?.WorkspaceId ?? Guid.Empty;
         this.currentWorkspaceName = this.chatThread is null ? string.Empty : await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
-        
-        await this.inputField.Clear();
+
+        this.userInput = string.Empty;
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
