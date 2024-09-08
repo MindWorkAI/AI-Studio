@@ -15,11 +15,21 @@ public sealed class Data
     /// List of configured providers.
     /// </summary>
     public List<Provider> Providers { get; init; } = [];
+    
+    /// <summary>
+    /// List of configured profiles.
+    /// </summary>
+    public List<Profile> Profiles { get; init; } = [];
 
     /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;
+
+    /// <summary>
+    /// The next profile number to use.
+    /// </summary>
+    public uint NextProfileNum { get; set; } = 1;
 
     public DataApp App { get; init; } = new();
 
