@@ -13,10 +13,11 @@ public static class SendToExtensions
         Components.CODING_ASSISTANT => "Coding Assistant",
         Components.EMAIL_ASSISTANT => "E-Mail Assistant",
         Components.LEGAL_CHECK_ASSISTANT => "Legal Check Assistant",
+        Components.SYNONYMS_ASSISTANT => "Synonym Assistant",
         
         Components.CHAT => "New Chat",
         
-        _ => "Send to ...",
+        _ => Enum.GetName(typeof(Components), assistant)!,
     };
 
     public static SendToData GetData(this Components destination) => destination switch
@@ -30,9 +31,10 @@ public static class SendToExtensions
         Components.GRAMMAR_SPELLING_ASSISTANT => new(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT, Routes.ASSISTANT_GRAMMAR_SPELLING),
         Components.TEXT_SUMMARIZER_ASSISTANT => new(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Routes.ASSISTANT_SUMMARIZER),
         Components.LEGAL_CHECK_ASSISTANT => new(Event.SEND_TO_LEGAL_CHECK_ASSISTANT, Routes.ASSISTANT_LEGAL_CHECK),
-            
+        Components.SYNONYMS_ASSISTANT => new(Event.SEND_TO_SYNONYMS_ASSISTANT, Routes.ASSISTANT_SYNONYMS),
+        
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
-            
+        
         _ => new(Event.NONE, Routes.ASSISTANTS),
     };
 }
