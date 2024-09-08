@@ -126,6 +126,10 @@ public partial class ProviderDialog : ComponentBase
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
+            // When using Fireworks, we must copy the model name:
+            if (this.DataProvider is Providers.FIREWORKS)
+                this.dataManuallyModel = this.DataModel.Id;
+            
             //
             // We cannot load the API key for self-hosted providers:
             //
