@@ -62,6 +62,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
 
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)
         {

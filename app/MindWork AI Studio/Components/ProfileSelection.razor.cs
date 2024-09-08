@@ -25,11 +25,4 @@ public partial class ProfileSelection : ComponentBase
         this.CurrentProfile = profile;
         await this.CurrentProfileChanged.InvokeAsync(profile);
     }
-
-    private IEnumerable<Profile> Profiles()
-    {
-        yield return Profile.NO_PROFILE;
-        foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
-            yield return profile;
-    }
 }

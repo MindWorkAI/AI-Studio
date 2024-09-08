@@ -82,6 +82,7 @@ public abstract partial class AssistantBase : ComponentBase
     {
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         await base.OnInitializedAsync();
     }
 

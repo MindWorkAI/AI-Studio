@@ -28,4 +28,9 @@ public sealed class DataCoding
     /// Which coding provider should be preselected?
     /// </summary>
     public string PreselectedProvider { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Preselect a profile?
+    /// </summary>
+    public string PreselectedProfile { get; set; } = string.Empty;
 }

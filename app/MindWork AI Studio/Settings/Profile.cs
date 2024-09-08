@@ -20,7 +20,7 @@ public readonly record struct Profile(uint Num, string Id, string Name, string N
     public override string ToString() => this.Name;
 
     #endregion
-
+    
     public string ToSystemPrompt()
     {
         if(this.Num == uint.MaxValue)
