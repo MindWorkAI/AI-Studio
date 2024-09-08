@@ -138,4 +138,24 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
 
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider);
     }
+
+    public Profile GetPreselectedProfile(Tools.Components component)
+    {
+        var preselection = component switch
+        {
+            Tools.Components.CHAT => this.ConfigurationData.Chat.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Chat.PreselectedProfile) : default,
+            Tools.Components.AGENDA_ASSISTANT => this.ConfigurationData.Agenda.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Agenda.PreselectedProfile) : default,
+            Tools.Components.CODING_ASSISTANT => this.ConfigurationData.Coding.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Coding.PreselectedProfile) : default,
+            Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProfile) : default,
+            Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProfile) : default,
+
+            _ => default,
+        };
+        
+        if (preselection != default)
+            return preselection;
+        
+        preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProfile);
+        return preselection != default ? preselection : Profile.NO_PROFILE;
+    }
 }

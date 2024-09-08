@@ -2,7 +2,7 @@
     @foreach(var item in this.Items)
     {
         <MudListItem T="string" Icon="@this.Icon" Style="display: flex; align-items: flex-start;">
-            <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;"><b>@item.Header:</b> @item.Text</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Justify" Style="hyphens: auto; word-break: auto-phrase;"><b>@item.Header:</b> @item.Text</MudText>
         </MudListItem>
     }
 </MudList>

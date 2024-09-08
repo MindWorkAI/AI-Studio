@@ -55,6 +55,8 @@ public abstract partial class AssistantBase : ComponentBase
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;
+
+    protected virtual bool AllowProfiles => true;
     
     protected virtual bool ShowDedicatedProgress => false;
 
@@ -72,6 +74,7 @@ public abstract partial class AssistantBase : ComponentBase
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
+    private Profile currentProfile = Profile.NO_PROFILE;
     
     #region Overrides of ComponentBase
 
@@ -79,6 +82,7 @@ public abstract partial class AssistantBase : ComponentBase
     {
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         await base.OnInitializedAsync();
     }
 
@@ -118,7 +122,12 @@ public abstract partial class AssistantBase : ComponentBase
             ChatId = Guid.NewGuid(),
             Name = string.Empty,
             Seed = this.RNG.Next(),
-            SystemPrompt = this.SystemPrompt,
+            SystemPrompt = !this.AllowProfiles ? this.SystemPrompt :
+                $"""
+                {this.SystemPrompt}
+                
+                {this.currentProfile.ToSystemPrompt()}
+                """,
             Blocks = [],
         };
     }

@@ -22,6 +22,8 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         Your response includes only the corrected text. Do not explain your changes. If no changes are needed,
         you return the text unchanged.
         """;
+    
+    protected override bool AllowProfiles => false;
 
     protected override bool ShowResult => false;
     

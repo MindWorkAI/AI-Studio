@@ -16,6 +16,11 @@ public sealed class DataChat
     /// Should we preselect a provider for the chat?
     /// </summary>
     public string PreselectedProvider { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Preselect a profile?
+    /// </summary>
+    public string PreselectedProfile { get; set; } = string.Empty;
 
     /// <summary>
     /// Should we show the latest message after loading? When false, we show the first (aka oldest) message.

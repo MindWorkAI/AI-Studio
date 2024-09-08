@@ -1,0 +1,93 @@
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            Store personal data about yourself in various profiles so that the AIs know your personal context.
+            This saves you from having to explain your context each time, for example, in every chat. When you
+            have different roles, you can create a profile for each role.
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            Are you a project manager in a research facility? You might want to create a profile for your project
+            management activities, one for your scientific work, and a profile for when you need to write program
+            code. In these profiles, you can record how much experience you have or which methods you like or
+            dislike using. Later, you can choose when and where you want to use each profile.
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            The name of the profile is mandatory. Each profile must have a unique name. Whether you provide
+            information about yourself or only fill out the actions is up to you. Only one of these pieces
+            is required.
+        </MudJustifiedText>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataName"
+                Label="Profile Name"
+                Class="mb-3"
+                Immediate="@true"
+                MaxLength="40"
+                Counter="40"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Badge"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateName"
+                Variant="Variant.Outlined"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataNeedToKnow"
+                Validation="@this.ValidateNeedToKnow"
+                AdornmentIcon="@Icons.Material.Filled.ListAlt"
+                Adornment="Adornment.Start"
+                Immediate="@true"
+                Label="What should the AI know about you?"
+                Variant="Variant.Outlined"
+                Lines="6"
+                AutoGrow="@true"
+                MaxLines="12"
+                MaxLength="444"
+                Counter="444"
+                Class="mb-3"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                HelperText="Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?"
+            />
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataActions"
+                Validation="@this.ValidateActions"
+                AdornmentIcon="@Icons.Material.Filled.ListAlt"
+                Adornment="Adornment.Start"
+                Immediate="@true"
+                Label="What should the AI do for you?"
+                Variant="Variant.Outlined"
+                Lines="6"
+                AutoGrow="@true"
+                MaxLines="12"
+                MaxLength="256"
+                Counter="256"
+                Class="mb-3"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                HelperText="Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
+            />
+
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+            @if(this.IsEditing)
+            {
+                @:Update
+            }
+            else
+            {
+                @:Add
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

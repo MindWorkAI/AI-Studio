@@ -21,6 +21,8 @@ public partial class AssistantTranslation : AssistantBaseCore
         language requires, e.g., shorter sentences, you should split the text into shorter sentences.
         """;
     
+    protected override bool AllowProfiles => false;
+    
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

@@ -130,4 +130,10 @@ public static class ConfigurationSelectDataFactory
         foreach (var voice in Enum.GetValues<SentenceStructure>())
             yield return new(voice.Name(), voice);
     }
+    
+    public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)
+    {
+        foreach (var profile in profiles.GetAllProfiles())
+            yield return new(profile.Name, profile.Id);
+    }
 }

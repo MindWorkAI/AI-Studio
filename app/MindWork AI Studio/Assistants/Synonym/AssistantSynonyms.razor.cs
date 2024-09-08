@@ -47,6 +47,8 @@ public partial class AssistantSynonyms : AssistantBaseCore
         the {this.SystemPromptLanguage()} language.
         """;
     
+    protected override bool AllowProfiles => false;
+    
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

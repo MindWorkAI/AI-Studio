@@ -26,4 +26,9 @@ public class DataLegalCheck
     /// The preselected translator provider.
     /// </summary>
     public string PreselectedProvider { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Preselect a profile?
+    /// </summary>
+    public string PreselectedProfile { get; set; } = string.Empty;
 }

@@ -25,6 +25,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
         a summary with the requested complexity. In any case, do not add any information.
         """;
     
+    protected override bool AllowProfiles => false;
+    
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
