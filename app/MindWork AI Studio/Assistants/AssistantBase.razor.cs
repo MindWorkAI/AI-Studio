@@ -57,6 +57,8 @@ public abstract partial class AssistantBase : ComponentBase
     protected virtual bool ShowResult => true;
 
     protected virtual bool AllowProfiles => true;
+
+    protected virtual bool ShowProfileSelection => true;
     
     protected virtual bool ShowDedicatedProgress => false;
 
@@ -69,12 +71,12 @@ public abstract partial class AssistantBase : ComponentBase
     protected AIStudio.Settings.Provider providerSettings;
     protected MudForm? form;
     protected bool inputIsValid;
+    protected Profile currentProfile = Profile.NO_PROFILE;
     
     protected ChatThread? chatThread;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
-    private Profile currentProfile = Profile.NO_PROFILE;
     
     #region Overrides of ComponentBase
 

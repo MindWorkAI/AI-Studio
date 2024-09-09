@@ -14,6 +14,7 @@ public static class SendToExtensions
         Components.EMAIL_ASSISTANT => "E-Mail Assistant",
         Components.LEGAL_CHECK_ASSISTANT => "Legal Check Assistant",
         Components.SYNONYMS_ASSISTANT => "Synonym Assistant",
+        Components.MY_TASKS_ASSISTANT => "My Tasks Assistant",
         
         Components.CHAT => "New Chat",
         
@@ -32,6 +33,7 @@ public static class SendToExtensions
         Components.TEXT_SUMMARIZER_ASSISTANT => new(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT, Routes.ASSISTANT_SUMMARIZER),
         Components.LEGAL_CHECK_ASSISTANT => new(Event.SEND_TO_LEGAL_CHECK_ASSISTANT, Routes.ASSISTANT_LEGAL_CHECK),
         Components.SYNONYMS_ASSISTANT => new(Event.SEND_TO_SYNONYMS_ASSISTANT, Routes.ASSISTANT_SYNONYMS),
+        Components.MY_TASKS_ASSISTANT => new(Event.SEND_TO_MY_TASKS_ASSISTANT, Routes.ASSISTANT_MY_TASKS),
         
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
         

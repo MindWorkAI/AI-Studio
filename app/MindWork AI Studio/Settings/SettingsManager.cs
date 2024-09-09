@@ -129,6 +129,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
             Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProvider) : default,
             Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProvider) : default,
             Tools.Components.SYNONYMS_ASSISTANT => this.ConfigurationData.Synonyms.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Synonyms.PreselectedProvider) : default,
+            Tools.Components.MY_TASKS_ASSISTANT => this.ConfigurationData.MyTasks.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.MyTasks.PreselectedProvider) : default,
             
             _ => default,
         };
@@ -148,6 +149,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
             Tools.Components.CODING_ASSISTANT => this.ConfigurationData.Coding.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Coding.PreselectedProfile) : default,
             Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProfile) : default,
             Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProfile) : default,
+            Tools.Components.MY_TASKS_ASSISTANT => this.ConfigurationData.MyTasks.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.MyTasks.PreselectedProfile) : default,
 
             _ => default,
         };

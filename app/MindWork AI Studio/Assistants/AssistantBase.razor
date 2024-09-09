@@ -94,7 +94,7 @@
                 Reset
             </MudButton>
             
-            @if (this.AllowProfiles)
+            @if (this.AllowProfiles && this.ShowProfileSelection)
             {
                 <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
             }

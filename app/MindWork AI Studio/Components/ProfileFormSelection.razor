@@ -1,0 +1,10 @@
+@using AIStudio.Settings
+
+<MudSelect T="Profile" Strict="@true" Value="@this.Profile" ValueChanged="@this.SelectionChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person4" Margin="Margin.Dense" Label="Select one of your profiles" Variant="Variant.Outlined" Class="mb-3" Validation="@this.Validation">
+    @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
+    {
+        <MudSelectItem Value="profile">
+            @profile.Name
+        </MudSelectItem>
+    }
+</MudSelect>
