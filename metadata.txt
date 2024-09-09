@@ -6,4 +6,4 @@
 1.81.0 (commit eeb90cda1)
 7.8.0
 1.7.1
-09f5b83e664, dev debug
+09f5b83e664, release
