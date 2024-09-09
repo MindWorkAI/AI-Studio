@@ -249,18 +249,6 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio.exe "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}"
           
-      - name: Create parts for the Rust cache key (Unix)
-        if: matrix.platform != 'windows-latest'
-        run: |
-          cd runtime
-          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
-          
-      - name: Create parts for the Rust cache key (Windows)
-        if: matrix.platform == 'windows-latest'
-        run: |
-          cd runtime
-          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $env:GITHUB_ENV
-          
       - name: Cache Rust
         uses: actions/cache@v4
         with:
@@ -272,17 +260,7 @@ jobs:
             ~/.rustup/toolchains
             runtime/target
             
-          # When the entire key matches, Rust might just create the bundles using the current .NET build:
-          key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
-          
-          # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
-          #
-          # - No match: alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
-          #   The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
-          #   these changes to our app, we have to re-compile everything. That's the reason why it makes
-          #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
-          restore-keys: |
-            target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}-dependencies-
+          key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}
             
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@master
@@ -478,30 +456,13 @@ jobs:
           cd publish/dotnet
           mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-aarch64-unknown-linux-gnu"
           
-      - name: Create parts for the Rust cache key
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          cd runtime
-          echo "CARGO_LOCK_HASH=${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_ENV
-          
       - name: Cache linux arm64 runner image
         if: ${{ env.SKIP != 'true' }}
         uses: actions/cache@v4
         id: linux_arm_cache
         with:
           path: ${{ runner.temp }}/linux_arm_qemu_cache.img
-          
-          # When the entire key matches, Rust might just create the bundles using the current .NET build:
-          key: target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-${{ env.CARGO_LOCK_HASH }}
-
-          # - 1st key: the Rust runtime dependencies changed. Anyway, we might be able to re-use many previously built packages.
-          #
-          # - No match: alright, a new Rust version was released. Sadly, we cannot re-use anything now. Why?
-          #   The updated Rust compiler might mitigate some bugs or vulnerabilities. In order to apply
-          #   these changes to our app, we have to re-compile everything. That's the reason why it makes
-          #   no sense to use more parts for the cache key, like Tauri or Tauri build versions.
-          restore-keys: |
-            target-linux-arm64-rust-${{ env.RUST_VERSION }}-dependencies-
+          key: target-linux-arm64-rust-${{ env.RUST_VERSION }}
             
       - name: Build linux arm runner image
         uses: pguyot/arm-runner-action@v2
@@ -585,18 +546,6 @@ jobs:
             # Save the built libraries for the next job:
             rm -fr /rust-cache/target
             cp -Rp target /rust-cache
-
-      - name: Debug
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -lhat
-          
-          echo "Searching for linux_arm_qemu_cache.img"
-          find $RUNNER_TEMP -name 'linux_arm_qemu_cache.img' -print 2>/dev/null
-          
-          echo "Searching for mind-work-ai-studio_*.deb"
-          find . -name 'mind-work-ai-studio_*.deb' -print 2>/dev/null
           
       - name: Update the runner image to cache the Rust runtime build
         if: ${{ env.SKIP != 'true' }}
