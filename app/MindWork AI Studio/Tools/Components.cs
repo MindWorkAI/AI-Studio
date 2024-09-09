@@ -14,6 +14,7 @@ public enum Components
     EMAIL_ASSISTANT,
     LEGAL_CHECK_ASSISTANT,
     SYNONYMS_ASSISTANT,
+    MY_TASKS_ASSISTANT,
     
     CHAT,
 }

@@ -58,4 +58,6 @@ public sealed class Data
     public DataLegalCheck LegalCheck { get; set; } = new();
     
     public DataSynonyms Synonyms { get; set; } = new();
+
+    public DataMyTasks MyTasks { get; set; } = new();
 }
