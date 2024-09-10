@@ -5,7 +5,3 @@
 <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Text or email" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.AnalyzeText()">
-    Analyze text
-</MudButton>

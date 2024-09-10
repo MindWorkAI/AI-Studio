@@ -51,6 +51,10 @@ public partial class AssistantSynonyms : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Find synonyms";
+
+    protected override Func<Task> SubmitAction => this.FindSynonyms;
+    
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

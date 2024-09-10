@@ -24,6 +24,12 @@ public partial class AssistantLegalCheck : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Ask your questions";
+
+    protected override Func<Task> SubmitAction => this.AksQuestions;
+    
+    protected override bool SubmitDisabled => this.isAgentRunning;
+    
     protected override void ResetFrom()
     {
         this.inputLegalDocument = string.Empty;

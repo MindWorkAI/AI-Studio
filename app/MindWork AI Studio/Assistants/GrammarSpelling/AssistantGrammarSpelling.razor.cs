@@ -41,6 +41,10 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         },
     ];
     
+    protected override string SubmitText => "Proofread";
+
+    protected override Func<Task> SubmitAction => this.ProofreadText;
+    
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

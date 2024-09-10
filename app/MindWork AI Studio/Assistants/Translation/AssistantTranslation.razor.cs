@@ -25,6 +25,12 @@ public partial class AssistantTranslation : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Translate";
+
+    protected override Func<Task> SubmitAction => () => this.TranslateText(true);
+    
+    protected override bool SubmitDisabled => this.isAgentRunning;
+    
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

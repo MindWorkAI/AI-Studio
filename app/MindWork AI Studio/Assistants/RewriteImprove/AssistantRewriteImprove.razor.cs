@@ -42,6 +42,10 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
         },
     ];
     
+    protected override string SubmitText => "Improve";
+
+    protected override Func<Task> SubmitAction => this.RewriteText;
+    
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

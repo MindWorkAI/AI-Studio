@@ -49,7 +49,3 @@
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.CreateAgenda()">
-    Create agenda
-</MudButton>

@@ -28,6 +28,10 @@ public partial class AssistantMyTasks : AssistantBaseCore
         """;
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
+    
+    protected override string SubmitText => "Analyze text";
+
+    protected override Func<Task> SubmitAction => this.AnalyzeText;
 
     protected override bool ShowProfileSelection => false;
 

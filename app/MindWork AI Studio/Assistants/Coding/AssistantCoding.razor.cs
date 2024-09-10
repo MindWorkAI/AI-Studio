@@ -28,6 +28,10 @@ public partial class AssistantCoding : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Get Support";
+
+    protected override Func<Task> SubmitAction => this.GetSupport;
+    
     protected override void ResetFrom()
     {
         this.codingContexts.Clear();

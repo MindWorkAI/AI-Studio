@@ -52,6 +52,12 @@ public abstract partial class AssistantBase : ComponentBase
 
     protected abstract bool MightPreselectValues();
     
+    protected abstract string SubmitText { get; }
+    
+    protected abstract Func<Task> SubmitAction { get; }
+
+    protected virtual bool SubmitDisabled => false;
+    
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;

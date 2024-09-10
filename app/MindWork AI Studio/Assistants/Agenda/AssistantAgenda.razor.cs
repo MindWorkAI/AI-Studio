@@ -97,6 +97,10 @@ public partial class AssistantAgenda : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
 
+    protected override string SubmitText => "Create Agenda";
+
+    protected override Func<Task> SubmitAction => this.CreateAgenda;
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

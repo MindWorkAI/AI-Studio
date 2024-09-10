@@ -29,6 +29,12 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Summarize";
+
+    protected override Func<Task> SubmitAction => this.SummarizeText;
+    
+    protected override bool SubmitDisabled => this.isAgentRunning;
+    
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,
