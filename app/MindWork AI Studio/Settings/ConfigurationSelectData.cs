@@ -136,4 +136,10 @@ public static class ConfigurationSelectDataFactory
         foreach (var profile in profiles.GetAllProfiles())
             yield return new(profile.Name, profile.Id);
     }
+    
+    public static IEnumerable<ConfigurationSelectData<ConfidenceSchemes>> GetConfidenceSchemesData()
+    {
+        foreach (var scheme in Enum.GetValues<ConfidenceSchemes>())
+            yield return new(scheme.GetListDescription(), scheme);
+    }
 }

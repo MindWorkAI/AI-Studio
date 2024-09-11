@@ -8,12 +8,16 @@
     <ChildContent>
         <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" Class="pr-2">
             <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
-                @(this.Description)
+                @this.Description
             </MudText>
 
             @if (this.Body is not null)
             {
-                @(this.Body)
+                @this.Body
+                
+                <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                    @this.SubmitText
+                </MudButton>
             }
         </MudForm>
         <Issues IssuesData="@(this.inputIssues)"/>
@@ -93,7 +97,12 @@
             <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
                 Reset
             </MudButton>
-            
+
+            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+            {
+                <ConfidenceInfo Mode="ConfidenceInfoMode.BUTTON" Provider="@this.providerSettings.UsedProvider"/>
+            }
+
             @if (this.AllowProfiles && this.ShowProfileSelection)
             {
                 <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>

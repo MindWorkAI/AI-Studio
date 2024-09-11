@@ -24,6 +24,10 @@ public partial class AssistantEMail : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Create email";
+
+    protected override Func<Task> SubmitAction => this.CreateMail;
+    
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

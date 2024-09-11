@@ -25,7 +25,3 @@
 
 <MudTextField T="string" @bind-Text="@this.questions" Validation="@this.ValidateQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionMark" Adornment="Adornment.Start" Label="Your question(s)" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-
-<MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="() => this.GetSupport()" Class="mb-3">
-    Get support
-</MudButton>

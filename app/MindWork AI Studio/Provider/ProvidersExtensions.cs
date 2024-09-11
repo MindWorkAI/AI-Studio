@@ -3,6 +3,7 @@ using AIStudio.Provider.Fireworks;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider;
 
@@ -26,6 +27,33 @@ public static class ProvidersExtensions
         Providers.SELF_HOSTED => "Self-hosted",
         
         _ => "Unknown",
+    };
+    
+    /// <summary>
+    /// Get a provider's confidence.
+    /// </summary>
+    /// <param name="provider">The provider.</param>
+    /// <param name="settingsManager">The settings manager.</param>
+    /// <returns>The confidence of the provider.</returns>
+    public static Confidence GetConfidence(this Providers provider, SettingsManager settingsManager) => provider switch
+    {
+        Providers.NONE => Confidence.NONE,
+        
+        Providers.FIREWORKS => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+        
+        Providers.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
+            "https://openai.com/policies/terms-of-use/",
+            "https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance",
+            "https://openai.com/enterprise-privacy/"
+        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+        
+        Providers.ANTHROPIC => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.anthropic.com/legal/commercial-terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+        
+        Providers.MISTRAL => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, France").WithSources("https://mistral.ai/terms/#terms-of-service-la-plateforme").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+        
+        Providers.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
+        
+        _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
     };
 
     /// <summary>

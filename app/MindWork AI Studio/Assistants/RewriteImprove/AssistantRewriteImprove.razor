@@ -6,7 +6,3 @@
 <EnumSelection T="WritingStyles" NameFunc="@(style => style.Name())" @bind-Value="@this.selectedWritingStyle" Icon="@Icons.Material.Filled.Edit" Label="Writing style" AllowOther="@false" />
 <EnumSelection T="SentenceStructure" NameFunc="@(voice => voice.Name())" @bind-Value="@this.selectedSentenceStructure" Icon="@Icons.Material.Filled.Person4" Label="Sentence structure" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.RewriteText()">
-    Improve
-</MudButton>

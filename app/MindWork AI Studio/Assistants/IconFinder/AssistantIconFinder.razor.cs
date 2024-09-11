@@ -29,6 +29,10 @@ public partial class AssistantIconFinder : AssistantBaseCore
 
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override string SubmitText => "Find Icon";
+
+    protected override Func<Task> SubmitAction => this.FindIcon;
+    
     protected override void ResetFrom()
     {
         this.inputContext = string.Empty;

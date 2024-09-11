@@ -10,7 +10,3 @@
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="Custom target language" ValidateOther="@this.ValidateCustomLanguage" />
 <EnumSelection T="Complexity" NameFunc="@(complexity => complexity.Name())" @bind-Value="@this.selectedComplexity" Icon="@Icons.Material.Filled.Layers" Label="Target complexity" AllowOther="@true" @bind-OtherInput="@this.expertInField" OtherValue="Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS" LabelOther="Your expertise" ValidateOther="@this.ValidateExpertInField" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-
-<MudButton Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SummarizeText()" Disabled="@this.isAgentRunning">
-    Summarize
-</MudButton>

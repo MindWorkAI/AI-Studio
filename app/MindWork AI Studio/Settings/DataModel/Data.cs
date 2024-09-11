@@ -17,6 +17,11 @@ public sealed class Data
     public List<Provider> Providers { get; init; } = [];
     
     /// <summary>
+    /// Settings concerning the LLM providers.
+    /// </summary>
+    public DataLLMProviders LLMProviders { get; init; } = new();
+    
+    /// <summary>
     /// List of configured profiles.
     /// </summary>
     public List<Profile> Profiles { get; init; } = [];

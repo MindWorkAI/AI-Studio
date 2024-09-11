@@ -52,6 +52,12 @@ public abstract partial class AssistantBase : ComponentBase
 
     protected abstract bool MightPreselectValues();
     
+    protected abstract string SubmitText { get; }
+    
+    protected abstract Func<Task> SubmitAction { get; }
+
+    protected virtual bool SubmitDisabled => false;
+    
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;
@@ -107,6 +113,8 @@ public abstract partial class AssistantBase : ComponentBase
     }
 
     #endregion
+
+    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedProvider.GetConfidence(this.SettingsManager).StyleBorder() : string.Empty;
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
