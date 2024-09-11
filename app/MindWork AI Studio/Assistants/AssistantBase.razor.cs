@@ -113,6 +113,8 @@ public abstract partial class AssistantBase : ComponentBase
     }
 
     #endregion
+
+    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedProvider.GetConfidence(this.SettingsManager).StyleBorder() : string.Empty;
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {

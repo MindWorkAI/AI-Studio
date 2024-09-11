@@ -120,6 +120,10 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
 
+    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedProvider.GetConfidence(this.SettingsManager).SetColorStyle() : string.Empty;
+    
+    private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
+
     private void ProfileWasChanged(Profile profile)
     {
         this.currentProfile = profile;

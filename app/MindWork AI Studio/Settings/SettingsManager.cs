@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
@@ -159,5 +160,58 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         
         preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProfile);
         return preselection != default ? preselection : Profile.NO_PROFILE;
+    }
+
+    public ConfidenceLevel GetConfiguredConfidenceLevel(Providers provider)
+    {
+        if(provider is Providers.NONE)
+            return ConfidenceLevel.NONE;
+        
+        switch (this.ConfigurationData.LLMProviders.ConfidenceScheme)
+        {
+            case ConfidenceSchemes.TRUST_USA_EUROPE:
+                return provider switch
+                {
+                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    
+                    _ => ConfidenceLevel.MEDIUM,   
+                };
+            
+            case ConfidenceSchemes.TRUST_USA:
+                return provider switch
+                {
+                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    Providers.MISTRAL => ConfidenceLevel.LOW,
+                    
+                    _ => ConfidenceLevel.MEDIUM,
+                };
+            
+            case ConfidenceSchemes.TRUST_EUROPE:
+                return provider switch
+                {
+                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    Providers.MISTRAL => ConfidenceLevel.MEDIUM,
+                    
+                    _ => ConfidenceLevel.LOW,
+                };
+            
+            case ConfidenceSchemes.LOCAL_TRUST_ONLY:
+                return provider switch
+                {
+                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    
+                    _ => ConfidenceLevel.VERY_LOW,   
+                };
+
+            case ConfidenceSchemes.CUSTOM:
+                return this.ConfigurationData.LLMProviders.CustomConfidenceScheme.GetValueOrDefault(provider, ConfidenceLevel.UNKNOWN);
+
+            default:
+                return ConfidenceLevel.UNKNOWN;
+        }
     }
 }

@@ -34,3 +34,16 @@
 .mud-text-list .mud-list-item-icon {
     margin-top: 4px;
 }
+
+:root {
+    --confidence-color: #000000;
+}
+
+.confidence-icon {
+    color: var(--confidence-color);
+}
+
+.confidence-border > .mud-input-control-input-container > .mud-input > .mud-input-outlined-border {
+    border-width: 2px;
+    border-color: var(--confidence-color) !important;
+}

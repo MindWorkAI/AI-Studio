@@ -160,6 +160,28 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
             this.availableProviders.Add(new (provider.InstanceName, provider.Id));
     }
 
+    private string GetCurrentConfidenceLevelName(Providers provider)
+    {
+        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(provider, out var level))
+            return level.GetName();
+
+        return "Not yet configured";
+    }
+    
+    private string SetCurrentConfidenceLevelColorStyle(Providers provider)
+    {
+        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(provider, out var level))
+            return $"background-color: {level.GetColor()};";
+
+        return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor()};";
+    }
+
+    private async Task ChangeCustomConfidenceLevel(Providers provider, ConfidenceLevel level)
+    {
+        this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[provider] = level;
+        await this.SettingsManager.StoreSettings();
+    }
+
     #endregion
 
     #region Profile related

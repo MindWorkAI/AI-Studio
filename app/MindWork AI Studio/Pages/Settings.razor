@@ -17,7 +17,7 @@
                 task. As an LLM provider, you can also choose local providers. However, to use this app, you must
                 configure at least one provider.
             </MudJustifiedText>
-            <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Class="border-dashed border rounded-lg">
+            <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Hover="@true" Class="border-dashed border rounded-lg">
                 <ColGroup>
                     <col style="width: 3em;"/>
                     <col style="width: 12em;"/>
@@ -72,6 +72,56 @@
             <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddProvider">
                 Add Provider
             </MudButton>
+            
+            <MudText Typo="Typo.h4" Class="mb-3">LLM Provider Confidence</MudText>
+            <MudJustifiedText Class="mb-3">
+                Do you want to always be able to recognize how trustworthy your LLM providers are? This way,
+                you keep control over which provider you send your data to. You have two options for this:
+                Either you choose a common schema, or you configure the trust levels for each LLM provider yourself.
+            </MudJustifiedText>
+            
+            <ConfigurationOption OptionDescription="Show provider's confidence level?" LabelOn="Yes, show me the confidence level" LabelOff="No, please hide the confidence level" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence = updatedState)" OptionHelp="When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc."/>
+            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+            {
+                <ConfigurationSelect OptionDescription="Select a confidence scheme" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme)" Data="@ConfigurationSelectDataFactory.GetConfidenceSchemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme = selectedValue)" OptionHelp="Choose the scheme that best suits you and your life. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider yourself."/>
+                @if (this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme is ConfidenceSchemes.CUSTOM)
+                {
+                    <MudTable Items="@(Enum.GetValues<Providers>().Where(x => x is not Providers.NONE))" Hover="@true" Class="border-dashed border rounded-lg">
+                        <ColGroup>
+                            <col style="width: 12em;"/>
+                            <col/>
+                            <col style="width: 22em;"/>
+                        </ColGroup>
+                        <HeaderContent>
+                            <MudTh>LLM Provider</MudTh>
+                            <MudTh>Description</MudTh>
+                            <MudTh>Confidence Level</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd Style="vertical-align: top;">
+                                @context.ToName()
+                            </MudTd>
+                            <MudTd>
+                                <MudMarkdown Value="@context.GetConfidence(this.SettingsManager).Description"/>
+                            </MudTd>
+                            <MudTd Style="vertical-align: top;">
+                                <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)">
+                                    @foreach (var confidenceLevel in Enum.GetValues<ConfidenceLevel>().OrderBy(n => n))
+                                    {
+                                        if(confidenceLevel is ConfidenceLevel.NONE or ConfidenceLevel.UNKNOWN)
+                                            continue;
+
+                                        <MudMenuItem OnClick="@(async () => await this.ChangeCustomConfidenceLevel(context, confidenceLevel))">
+                                            @confidenceLevel.GetName()
+                                        </MudMenuItem>
+                                    }
+                                </MudMenu>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            }
+
         </ExpansionPanel>
 
         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Person4" HeaderText="Configure Profiles">
@@ -88,7 +138,7 @@
                 code. In these profiles, you can record how much experience you have or which methods you like or
                 dislike using. Later, you can choose when and where you want to use each profile.
             </MudJustifiedText>
-            <MudTable Items="@this.SettingsManager.ConfigurationData.Profiles" Class="border-dashed border rounded-lg">
+            <MudTable Items="@this.SettingsManager.ConfigurationData.Profiles" Hover="@true" Class="border-dashed border rounded-lg">
                 <ColGroup>
                     <col style="width: 3em;"/>
                     <col/>

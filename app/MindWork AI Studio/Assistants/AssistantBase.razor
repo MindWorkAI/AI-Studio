@@ -97,7 +97,12 @@
             <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
                 Reset
             </MudButton>
-            
+
+            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+            {
+                <ConfidenceInfo Mode="ConfidenceInfoMode.BUTTON" Provider="@this.providerSettings.UsedProvider"/>
+            }
+
             @if (this.AllowProfiles && this.ShowProfileSelection)
             {
                 <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
