@@ -42,6 +42,7 @@ public static class ProvidersExtensions
         Providers.FIREWORKS => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(provider)),
         
         Providers.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
+            "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint",
             "https://openai.com/policies/terms-of-use/",
             "https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance",
             "https://openai.com/enterprise-privacy/"

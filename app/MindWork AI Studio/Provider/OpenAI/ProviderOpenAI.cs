@@ -153,18 +153,18 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels("gpt-", token, apiKeyProvisional);
+        return this.LoadModels(["gpt-", "o1-"], token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
     public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels("dall-e-", token, apiKeyProvisional);
+        return this.LoadModels(["dall-e-"], token, apiKeyProvisional);
     }
 
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(string prefix, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
@@ -187,6 +187,6 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
             return [];
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n => n.Id.StartsWith(prefix, StringComparison.InvariantCulture));
+        return modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture)));
     }
 }
