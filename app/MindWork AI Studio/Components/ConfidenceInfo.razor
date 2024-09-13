@@ -1,56 +1,58 @@
 @using AIStudio.Provider
 <div class="d-flex">
-@if (this.Mode is ConfidenceInfoMode.ICON)
-{
-    <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.Provider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())"/>
-}
-else
-{
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.Provider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())">
-        Confidence
-    </MudButton>
-}
-
-<MudPopover Open="@this.showConfidence" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Style="@this.GetPopoverStyle()" DropShadow="@true" Class="border-solid border-4 rounded-lg">
-    <MudCard>
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h5">Confidence Card</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudText Typo="Typo.h6">Description</MudText>
-            <MudMarkdown Value="@this.currentConfidence.Description"/>
-            
-            @if (this.currentConfidence.Sources.Count > 0)
-            {
-                <MudText Typo="Typo.h6">Sources</MudText>
-                <MudList T="@string">
-                    @foreach (var sourceTuple in this.GetConfidenceSources())
-                    {
-                        <MudListItem Icon="@Icons.Material.Filled.Link" Href="@sourceTuple.Source" Target="_blank" Text="@sourceTuple.Index"/>
-                    }
-                </MudList>
-            }
-
-            @if (!string.IsNullOrWhiteSpace(this.currentConfidence.Region))
-            {
-                <MudText Typo="Typo.h6">Region</MudText>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    <b>@this.currentConfidence.Region</b>
-                </MudText>
-            }
-
-            <MudText Typo="Typo.h6">Confidence Level</MudText>
-            <MudText Typo="Typo.body1" Style="@this.GetCurrentConfidenceColor()">
-                <b>@this.currentConfidence.Level.GetName()</b>
-            </MudText>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" OnClick="@(() => this.HideConfidence())">
-                Close
+    <MudTooltip Text="Shows and hides the confidence card with information about the selected LLM provider.">
+        @if (this.Mode is ConfidenceInfoMode.ICON)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.Provider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())"/>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.Provider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())">
+                Confidence
             </MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudPopover>
+        }
+    </MudTooltip>
+
+    <MudPopover Open="@this.showConfidence" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Style="@this.GetPopoverStyle()" DropShadow="@true" Class="border-solid border-4 rounded-lg">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">Confidence Card</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Description</MudText>
+                <MudMarkdown Value="@this.currentConfidence.Description"/>
+
+                @if (this.currentConfidence.Sources.Count > 0)
+                {
+                    <MudText Typo="Typo.h6">Sources</MudText>
+                    <MudList T="@string">
+                        @foreach (var sourceTuple in this.GetConfidenceSources())
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Link" Href="@sourceTuple.Source" Target="_blank" Text="@sourceTuple.Index"/>
+                        }
+                    </MudList>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(this.currentConfidence.Region))
+                {
+                    <MudText Typo="Typo.h6">Region</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-3">
+                        <b>@this.currentConfidence.Region</b>
+                    </MudText>
+                }
+
+                <MudText Typo="Typo.h6">Confidence Level</MudText>
+                <MudText Typo="Typo.body1" Style="@this.GetCurrentConfidenceColor()">
+                    <b>@this.currentConfidence.Level.GetName()</b>
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" OnClick="@(() => this.HideConfidence())">
+                    Close
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudPopover>
 </div>
