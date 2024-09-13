@@ -1,3 +1,4 @@
+using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -42,6 +43,25 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     }
 
     #endregion
+    
+    private IEnumerable<ConfigurationSelectData<string>> FilteredData()
+    {
+        if (this.SettingsManager.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN })
+        {
+            var minimumLevel = this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+            foreach (var providerId in this.Data)
+            {
+                var provider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId.Value);
+                if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+                    yield return providerId;
+            }
+        }
+        else
+        {
+            foreach (var provider in this.Data)
+                yield return provider;
+        }
+    }
     
     #region Implementation of IMessageBusReceiver
 

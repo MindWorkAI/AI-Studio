@@ -4,6 +4,7 @@ using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.RewriteImprove;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
+using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 
 using WritingStylesRewrite = AIStudio.Assistants.RewriteImprove.WritingStyles;
@@ -141,5 +142,25 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var scheme in Enum.GetValues<ConfidenceSchemes>())
             yield return new(scheme.GetListDescription(), scheme);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetConfidenceLevelsData()
+    {
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+        {
+            switch (level)
+            {
+                case ConfidenceLevel.UNKNOWN:
+                    continue;
+                
+                case ConfidenceLevel.NONE:
+                    yield return new("No minimum confidence level chosen", level);
+                    break;
+                
+                default:
+                    yield return new(level.GetName(), level);
+                    break;
+            }
+        }
     }
 }

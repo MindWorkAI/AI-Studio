@@ -114,7 +114,9 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
 
     public Provider GetPreselectedProvider(Tools.Components component)
     {
-        if(this.ConfigurationData.Providers.Count == 1)
+        var minimumLevel = this.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence ? this.ConfigurationData.LLMProviders.GlobalMinimumConfidence : ConfidenceLevel.NONE;
+
+        if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             return this.ConfigurationData.Providers[0];
         
         var preselection = component switch
@@ -135,10 +137,10 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
             _ => default,
         };
 
-        if (preselection != default)
+        if(preselection != default && preselection.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             return preselection;
 
-        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider);
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel);
     }
 
     public Profile GetPreselectedProfile(Tools.Components component)
