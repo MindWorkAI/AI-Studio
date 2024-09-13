@@ -23,7 +23,8 @@ public static class SettingsMigrations
 
                 configV1 = MigrateV1ToV2(logger, configV1);
                 configV1 = MigrateV2ToV3(logger, configV1);
-                return MigrateV3ToV4(logger, configV1);
+                var configV14 = MigrateV3ToV4(logger, configV1);
+                return MigrateV4ToV5(logger, configV14);
 
             case Version.V2:
                 var configV2 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
@@ -34,7 +35,8 @@ public static class SettingsMigrations
                 }
 
                 configV2 = MigrateV2ToV3(logger, configV2);
-                return MigrateV3ToV4(logger, configV2);
+                var configV24 = MigrateV3ToV4(logger, configV2);
+                return MigrateV4ToV5(logger, configV24);
 
             case Version.V3:
                 var configV3 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
@@ -44,18 +46,29 @@ public static class SettingsMigrations
                     return new();
                 }
 
-                return MigrateV3ToV4(logger, configV3);
-
-            default:
-                logger.LogInformation("No configuration migration is needed.");
-                var configV4 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
+                var configV34 = MigrateV3ToV4(logger, configV3);
+                return MigrateV4ToV5(logger, configV34);
+            
+            case Version.V4:
+                var configV4 = JsonSerializer.Deserialize<DataV4>(configData, jsonOptions);
                 if (configV4 is null)
                 {
                     logger.LogError("Failed to parse the v4 configuration. Using default values.");
                     return new();
                 }
 
-                return configV4;
+                return MigrateV4ToV5(logger, configV4);
+
+            default:
+                logger.LogInformation("No configuration migration is needed.");
+                var configV5 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
+                if (configV5 is null)
+                {
+                    logger.LogError("Failed to parse the v4 configuration. Using default values.");
+                    return new();
+                }
+
+                return configV5;
         }
     }
 
@@ -110,7 +123,7 @@ public static class SettingsMigrations
         };
     }
 
-    private static Data MigrateV3ToV4(ILogger<SettingsManager> logger, DataV1V3 previousConfig)
+    private static DataV4 MigrateV3ToV4(ILogger<SettingsManager> logger, DataV1V3 previousConfig)
     {
         //
         // Summary:
@@ -192,6 +205,40 @@ public static class SettingsMigrations
                 PreselectAgentOptions = previousConfig.PreselectAgentTextContentCleanerOptions,
                 PreselectedAgentProvider = previousConfig.PreselectedAgentTextContentCleanerProvider,
             },
+        };
+    }
+    
+    private static Data MigrateV4ToV5(ILogger<SettingsManager> logger, DataV4 previousConfig)
+    {
+        //
+        // Summary:
+        // We renamed the LLM provider enum.
+        //
+        
+        logger.LogInformation("Migrating from v4 to v5...");
+        return new()
+        {
+            Version = Version.V5,
+            Providers = previousConfig.Providers.MigrateFromV4ToV5(),
+            LLMProviders = previousConfig.LLMProviders,
+            Profiles = previousConfig.Profiles,
+            NextProviderNum = previousConfig.NextProviderNum,
+            NextProfileNum = previousConfig.NextProfileNum,
+            App = previousConfig.App,
+            Chat = previousConfig.Chat,
+            Workspace = previousConfig.Workspace,
+            IconFinder = previousConfig.IconFinder,
+            Translation = previousConfig.Translation,
+            Coding = previousConfig.Coding,
+            TextSummarizer = previousConfig.TextSummarizer,
+            TextContentCleaner = previousConfig.TextContentCleaner,
+            Agenda = previousConfig.Agenda,
+            GrammarSpelling = previousConfig.GrammarSpelling,
+            RewriteImprove = previousConfig.RewriteImprove,
+            EMail = previousConfig.EMail,
+            LegalCheck = previousConfig.LegalCheck,
+            Synonyms = previousConfig.Synonyms,
+            MyTasks = previousConfig.MyTasks,
         };
     }
 }
