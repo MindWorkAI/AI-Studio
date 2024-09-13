@@ -162,53 +162,53 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         return preselection != default ? preselection : Profile.NO_PROFILE;
     }
 
-    public ConfidenceLevel GetConfiguredConfidenceLevel(Providers provider)
+    public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
     {
-        if(provider is Providers.NONE)
+        if(llmProvider is LLMProviders.NONE)
             return ConfidenceLevel.NONE;
         
         switch (this.ConfigurationData.LLMProviders.ConfidenceScheme)
         {
             case ConfidenceSchemes.TRUST_USA_EUROPE:
-                return provider switch
+                return llmProvider switch
                 {
-                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
                     
                     _ => ConfidenceLevel.MEDIUM,   
                 };
             
             case ConfidenceSchemes.TRUST_USA:
-                return provider switch
+                return llmProvider switch
                 {
-                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
-                    Providers.MISTRAL => ConfidenceLevel.LOW,
+                    LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    LLMProviders.MISTRAL => ConfidenceLevel.LOW,
                     
                     _ => ConfidenceLevel.MEDIUM,
                 };
             
             case ConfidenceSchemes.TRUST_EUROPE:
-                return provider switch
+                return llmProvider switch
                 {
-                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
-                    Providers.MISTRAL => ConfidenceLevel.MEDIUM,
+                    LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    LLMProviders.MISTRAL => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };
             
             case ConfidenceSchemes.LOCAL_TRUST_ONLY:
-                return provider switch
+                return llmProvider switch
                 {
-                    Providers.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    Providers.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
                     
                     _ => ConfidenceLevel.VERY_LOW,   
                 };
 
             case ConfidenceSchemes.CUSTOM:
-                return this.ConfigurationData.LLMProviders.CustomConfidenceScheme.GetValueOrDefault(provider, ConfidenceLevel.UNKNOWN);
+                return this.ConfigurationData.LLMProviders.CustomConfidenceScheme.GetValueOrDefault(llmProvider, ConfidenceLevel.UNKNOWN);
 
             default:
                 return ConfidenceLevel.UNKNOWN;

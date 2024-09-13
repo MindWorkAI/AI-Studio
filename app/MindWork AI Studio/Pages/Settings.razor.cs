@@ -75,7 +75,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
             { x => x.DataNum, provider.Num },
             { x => x.DataId, provider.Id },
             { x => x.DataInstanceName, provider.InstanceName },
-            { x => x.DataProvider, provider.UsedProvider },
+            { x => x.DataLLMProvider, provider.UsedLLMProvider },
             { x => x.DataModel, provider.Model },
             { x => x.DataHostname, provider.Hostname },
             { x => x.IsSelfHosted, provider.IsSelfHosted },
@@ -126,22 +126,22 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
-    private bool HasDashboard(Providers provider) => provider switch
+    private bool HasDashboard(LLMProviders llmProvider) => llmProvider switch
     {
-        Providers.OPEN_AI => true,
-        Providers.MISTRAL => true,
-        Providers.ANTHROPIC => true,
-        Providers.FIREWORKS => true,
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.ANTHROPIC => true,
+        LLMProviders.FIREWORKS => true,
         
         _ => false,
     };
     
-    private string GetProviderDashboardURL(Providers provider) => provider switch
+    private string GetProviderDashboardURL(LLMProviders llmProvider) => llmProvider switch
     {
-        Providers.OPEN_AI => "https://platform.openai.com/usage",
-        Providers.MISTRAL => "https://console.mistral.ai/usage/",
-        Providers.ANTHROPIC => "https://console.anthropic.com/settings/plans",
-        Providers.FIREWORKS => "https://fireworks.ai/account/billing",
+        LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
+        LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
+        LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+        LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
         
         _ => string.Empty,
     };
@@ -160,25 +160,25 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
             this.availableProviders.Add(new (provider.InstanceName, provider.Id));
     }
 
-    private string GetCurrentConfidenceLevelName(Providers provider)
+    private string GetCurrentConfidenceLevelName(LLMProviders llmProvider)
     {
-        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(provider, out var level))
+        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
             return level.GetName();
 
         return "Not yet configured";
     }
     
-    private string SetCurrentConfidenceLevelColorStyle(Providers provider)
+    private string SetCurrentConfidenceLevelColorStyle(LLMProviders llmProvider)
     {
-        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(provider, out var level))
+        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
             return $"background-color: {level.GetColor()};";
 
         return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor()};";
     }
 
-    private async Task ChangeCustomConfidenceLevel(Providers provider, ConfidenceLevel level)
+    private async Task ChangeCustomConfidenceLevel(LLMProviders llmProvider, ConfidenceLevel level)
     {
-        this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[provider] = level;
+        this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
         await this.SettingsManager.StoreSettings();
     }
 

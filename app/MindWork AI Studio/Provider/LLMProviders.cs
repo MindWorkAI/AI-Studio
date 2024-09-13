@@ -3,7 +3,7 @@ namespace AIStudio.Provider;
 /// <summary>
 /// Enum for all available providers.
 /// </summary>
-public enum Providers
+public enum LLMProviders
 {
     NONE = 0,
     

@@ -110,17 +110,17 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     #endregion
 
-    private bool IsProviderSelected => this.providerSettings.UsedProvider != Providers.NONE;
+    private bool IsProviderSelected => this.providerSettings.UsedLLMProvider != LLMProviders.NONE;
     
     private string ProviderPlaceholder => this.IsProviderSelected ? "Type your input here..." : "Select a provider first";
 
-    private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.providerSettings.InstanceName}', provider '{this.providerSettings.UsedProvider.ToName()}')" : "Select a provider first";
+    private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.providerSettings.InstanceName}', provider '{this.providerSettings.UsedLLMProvider.ToName()}')" : "Select a provider first";
     
     private bool CanThreadBeSaved => this.chatThread is not null && this.chatThread.Blocks.Count > 0;
 
     private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
 
-    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedProvider.GetConfidence(this.SettingsManager).SetColorStyle() : string.Empty;
+    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle() : string.Empty;
     
     private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
 

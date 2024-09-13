@@ -3,11 +3,11 @@
     <MudTooltip Text="Shows and hides the confidence card with information about the selected LLM provider.">
         @if (this.Mode is ConfidenceInfoMode.ICON)
         {
-            <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.Provider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())"/>
         }
         else
         {
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.Provider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())">
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle()" OnClick="@(() => this.ToggleConfidence())">
                 Confidence
             </MudButton>
         }

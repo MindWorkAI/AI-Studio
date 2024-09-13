@@ -72,7 +72,7 @@
 
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" Provider="@this.providerSettings.UsedProvider"/>
+                <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.providerSettings.UsedLLMProvider"/>
             }
 
             <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" />
