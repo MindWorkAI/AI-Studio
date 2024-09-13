@@ -11,7 +11,7 @@ public partial class ConfidenceInfo : ComponentBase
     public ConfidenceInfoMode Mode { get; set; } = ConfidenceInfoMode.BUTTON;
     
     [Parameter]
-    public Providers Provider { get; set; }
+    public LLMProviders LLMProvider { get; set; }
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
@@ -21,14 +21,14 @@ public partial class ConfidenceInfo : ComponentBase
 
     public ConfidenceInfo()
     {
-        this.currentConfidence = Providers.NONE.GetConfidence(this.SettingsManager);
+        this.currentConfidence = LLMProviders.NONE.GetConfidence(this.SettingsManager);
     }
 
     #region Overrides of ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        this.currentConfidence = this.Provider.GetConfidence(this.SettingsManager);
+        this.currentConfidence = this.LLMProvider.GetConfidence(this.SettingsManager);
         await base.OnParametersSetAsync();
     }
 

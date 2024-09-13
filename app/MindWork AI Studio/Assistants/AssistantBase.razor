@@ -100,7 +100,7 @@
 
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="ConfidenceInfoMode.BUTTON" Provider="@this.providerSettings.UsedProvider"/>
+                <ConfidenceInfo Mode="ConfidenceInfoMode.BUTTON" LLMProvider="@this.providerSettings.UsedLLMProvider"/>
             }
 
             @if (this.AllowProfiles && this.ShowProfileSelection)

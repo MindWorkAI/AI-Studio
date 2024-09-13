@@ -56,7 +56,7 @@ public partial class ProviderDialog : ComponentBase
     /// The provider to use.
     /// </summary>
     [Parameter]
-    public Providers DataProvider { get; set; } = Providers.NONE;
+    public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
     
     /// <summary>
     /// The LLM model to use, e.g., GPT-4o.
@@ -104,9 +104,9 @@ public partial class ProviderDialog : ComponentBase
         Num = this.DataNum,
         Id = this.DataId,
         InstanceName = this.DataInstanceName,
-        UsedProvider = this.DataProvider,
-        Model = this.DataProvider is Providers.FIREWORKS ? new Model(this.dataManuallyModel) : this.DataModel,
-        IsSelfHosted = this.DataProvider is Providers.SELF_HOSTED,
+        UsedLLMProvider = this.DataLLMProvider,
+        Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel) : this.DataModel,
+        IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
         Hostname = this.DataHostname.EndsWith('/') ? this.DataHostname[..^1] : this.DataHostname,
         Host = this.DataHost,
     };
@@ -127,13 +127,13 @@ public partial class ProviderDialog : ComponentBase
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
             // When using Fireworks, we must copy the model name:
-            if (this.DataProvider is Providers.FIREWORKS)
+            if (this.DataLLMProvider is LLMProviders.FIREWORKS)
                 this.dataManuallyModel = this.DataModel.Id;
             
             //
             // We cannot load the API key for self-hosted providers:
             //
-            if (this.DataProvider is Providers.SELF_HOSTED)
+            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
             {
                 await this.ReloadModels();
                 await base.OnInitializedAsync();
@@ -192,7 +192,7 @@ public partial class ProviderDialog : ComponentBase
         // Use the data model to store the provider.
         // We just return this data to the parent component:
         var addedProviderSettings = this.CreateProviderSettings();
-        if (addedProviderSettings.UsedProvider != Providers.SELF_HOSTED)
+        if (addedProviderSettings.UsedLLMProvider != LLMProviders.SELF_HOSTED)
         {
             // We need to instantiate the provider to store the API key:
             var provider = addedProviderSettings.CreateProvider(this.Logger);
@@ -210,9 +210,9 @@ public partial class ProviderDialog : ComponentBase
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
-    private string? ValidatingProvider(Providers provider)
+    private string? ValidatingProvider(LLMProviders llmProvider)
     {
-        if (provider == Providers.NONE)
+        if (llmProvider == LLMProviders.NONE)
             return "Please select a provider.";
         
         return null;
@@ -220,7 +220,7 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingHost(Host host)
     {
-        if(this.DataProvider is not Providers.SELF_HOSTED)
+        if(this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
             return null;
 
         if (host == Host.NONE)
@@ -231,7 +231,7 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if (this.DataProvider is Providers.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
+        if (this.DataLLMProvider is LLMProviders.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
             return "Please enter a model name.";
         
         return null;
@@ -239,7 +239,7 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingModel(Model model)
     {
-        if(this.DataProvider is Providers.SELF_HOSTED && this.DataHost == Host.LLAMACPP)
+        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost == Host.LLAMACPP)
             return null;
         
         if (model == default)
@@ -266,7 +266,7 @@ public partial class ProviderDialog : ComponentBase
     
     private string? ValidatingAPIKey(string apiKey)
     {
-        if(this.DataProvider is Providers.SELF_HOSTED)
+        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
             return null;
         
         if(!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
@@ -280,7 +280,7 @@ public partial class ProviderDialog : ComponentBase
 
     private string? ValidatingHostname(string hostname)
     {
-        if(this.DataProvider != Providers.SELF_HOSTED)
+        if(this.DataLLMProvider != LLMProviders.SELF_HOSTED)
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
@@ -315,7 +315,7 @@ public partial class ProviderDialog : ComponentBase
     
     private bool CanLoadModels()
     {
-        if (this.DataProvider is Providers.SELF_HOSTED)
+        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
         {
             switch (this.DataHost)
             {
@@ -336,7 +336,7 @@ public partial class ProviderDialog : ComponentBase
             }
         }
 
-        if(this.DataProvider is Providers.NONE)
+        if(this.DataLLMProvider is LLMProviders.NONE)
             return false;
         
         if(string.IsNullOrWhiteSpace(this.dataAPIKey))
@@ -345,63 +345,63 @@ public partial class ProviderDialog : ComponentBase
         return true;
     }
 
-    private bool ShowRegisterButton => this.DataProvider switch
+    private bool ShowRegisterButton => this.DataLLMProvider switch
     {
-        Providers.OPEN_AI => true,
-        Providers.MISTRAL => true,
-        Providers.ANTHROPIC => true,
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.ANTHROPIC => true,
         
-        Providers.FIREWORKS => true,
-        
-        _ => false,
-    };
-
-    private bool NeedAPIKey => this.DataProvider switch
-    {
-        Providers.OPEN_AI => true,
-        Providers.MISTRAL => true,
-        Providers.ANTHROPIC => true,
-        
-        Providers.FIREWORKS => true,
+        LLMProviders.FIREWORKS => true,
         
         _ => false,
     };
 
-    private bool NeedHostname => this.DataProvider switch
+    private bool NeedAPIKey => this.DataLLMProvider switch
     {
-        Providers.SELF_HOSTED => true,
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.ANTHROPIC => true,
+        
+        LLMProviders.FIREWORKS => true,
+        
+        _ => false,
+    };
+
+    private bool NeedHostname => this.DataLLMProvider switch
+    {
+        LLMProviders.SELF_HOSTED => true,
         _ => false,
     };
     
-    private bool NeedHost => this.DataProvider switch
+    private bool NeedHost => this.DataLLMProvider switch
     {
-        Providers.SELF_HOSTED => true,
+        LLMProviders.SELF_HOSTED => true,
         _ => false,
     };
     
-    private bool ProvideModelManually => this.DataProvider switch
+    private bool ProvideModelManually => this.DataLLMProvider switch
     {
-        Providers.FIREWORKS => true,
+        LLMProviders.FIREWORKS => true,
         _ => false,
     };
     
-    private string GetModelOverviewURL() => this.DataProvider switch
+    private string GetModelOverviewURL() => this.DataLLMProvider switch
     {
-        Providers.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
+        LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
         
         _ => string.Empty,
     };
 
-    private string GetProviderCreationURL() => this.DataProvider switch
+    private string GetProviderCreationURL() => this.DataLLMProvider switch
     {
-        Providers.OPEN_AI => "https://platform.openai.com/signup",
-        Providers.MISTRAL => "https://console.mistral.ai/",
-        Providers.ANTHROPIC => "https://console.anthropic.com/dashboard",
+        LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
+        LLMProviders.MISTRAL => "https://console.mistral.ai/",
+        LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
         
-        Providers.FIREWORKS => "https://fireworks.ai/login",
+        LLMProviders.FIREWORKS => "https://fireworks.ai/login",
         
         _ => string.Empty,
     };
     
-    private bool IsNoneProvider => this.DataProvider is Providers.NONE;
+    private bool IsNoneProvider => this.DataLLMProvider is LLMProviders.NONE;
 }

@@ -35,13 +35,13 @@
                 <RowTemplate>
                     <MudTd>@context.Num</MudTd>
                     <MudTd>@context.InstanceName</MudTd>
-                    <MudTd>@context.UsedProvider</MudTd>
+                    <MudTd>@context.UsedLLMProvider</MudTd>
                     <MudTd>
-                        @if (context.UsedProvider is not Providers.SELF_HOSTED)
+                        @if (context.UsedLLMProvider is not LLMProviders.SELF_HOSTED)
                         {
                             @this.GetProviderModelName(context)
                         }
-                        else if (context.UsedProvider is Providers.SELF_HOSTED && context.Host is not Host.LLAMACPP)
+                        else if (context.UsedLLMProvider is LLMProviders.SELF_HOSTED && context.Host is not Host.LLAMACPP)
                         {
                             @this.GetProviderModelName(context)
                         }
@@ -51,7 +51,7 @@
                         }
                     </MudTd>
                     <MudTd Style="text-align: left;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Class="ma-2" Href="@this.GetProviderDashboardURL(context.UsedProvider)" Target="_blank" Disabled="@(!this.HasDashboard(context.UsedProvider))">
+                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Class="ma-2" Href="@this.GetProviderDashboardURL(context.UsedLLMProvider)" Target="_blank" Disabled="@(!this.HasDashboard(context.UsedLLMProvider))">
                             Open Dashboard
                         </MudButton>
                         <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditProvider(context)">
@@ -86,7 +86,7 @@
                 <ConfigurationSelect OptionDescription="Select a confidence scheme" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme)" Data="@ConfigurationSelectDataFactory.GetConfidenceSchemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme = selectedValue)" OptionHelp="Choose the scheme that best suits you and your life. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider yourself."/>
                 @if (this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme is ConfidenceSchemes.CUSTOM)
                 {
-                    <MudTable Items="@(Enum.GetValues<Providers>().Where(x => x is not Providers.NONE))" Hover="@true" Class="border-dashed border rounded-lg">
+                    <MudTable Items="@(Enum.GetValues<LLMProviders>().Where(x => x is not LLMProviders.NONE))" Hover="@true" Class="border-dashed border rounded-lg">
                         <ColGroup>
                             <col style="width: 12em;"/>
                             <col/>

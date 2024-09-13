@@ -17,5 +17,5 @@ public sealed class DataLLMProviders
     /// <summary>
     /// Provide custom confidence levels for each LLM provider.
     /// </summary>
-    public Dictionary<Providers, ConfidenceLevel> CustomConfidenceScheme { get; set; } = new();
+    public Dictionary<LLMProviders, ConfidenceLevel> CustomConfidenceScheme { get; set; } = new();
 }
