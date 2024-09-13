@@ -1,15 +1,12 @@
-namespace AIStudio.Settings.DataModel;
+namespace AIStudio.Settings.DataModel.PreviousModels;
 
-/// <summary>
-/// The data model for the settings file.
-/// </summary>
-public sealed class Data
+public sealed class DataV4
 {
     /// <summary>
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V5;
+    public Version Version { get; init; }
 
     /// <summary>
     /// List of configured providers.

@@ -80,6 +80,12 @@
                 Either you choose a common schema, or you configure the trust levels for each LLM provider yourself.
             </MudJustifiedText>
             
+            <ConfigurationOption OptionDescription="Do you want to enforce an app-wide minimum confidence level?" LabelOn="Yes, enforce a minimum confidence level" LabelOff="No, do not enforce a minimum confidence level" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence = updatedState)" OptionHelp="When enabled, you can enforce a minimum confidence level for all LLM providers. This way, you can ensure that only trustworthy providers are used."/>
+            @if(this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence)
+            {
+                <ConfigurationSelect OptionDescription="Select a minimum confidence level" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence)" Data="@ConfigurationSelectDataFactory.GetConfidenceLevelsData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence = selectedValue)" OptionHelp="Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level."/>
+            }
+            
             <ConfigurationOption OptionDescription="Show provider's confidence level?" LabelOn="Yes, show me the confidence level" LabelOff="No, please hide the confidence level" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence = updatedState)" OptionHelp="When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc."/>
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
