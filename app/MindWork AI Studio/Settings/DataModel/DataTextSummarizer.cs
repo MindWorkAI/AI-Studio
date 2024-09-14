@@ -1,4 +1,5 @@
 using AIStudio.Assistants.TextSummarizer;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -44,6 +45,11 @@ public sealed class DataTextSummarizer
     /// Preselect any expertise in a field?
     /// </summary>
     public string PreselectedExpertInField { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
     
     /// <summary>
     /// Preselect a text summarizer provider?

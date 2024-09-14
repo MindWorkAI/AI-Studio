@@ -1,4 +1,5 @@
 using AIStudio.Assistants.Coding;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -24,6 +25,11 @@ public sealed class DataCoding
     /// </summary>
     public string PreselectedOtherProgrammingLanguage { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
+    
     /// <summary>
     /// Which coding provider should be preselected?
     /// </summary>

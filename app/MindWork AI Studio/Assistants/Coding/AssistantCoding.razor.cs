@@ -4,7 +4,7 @@ namespace AIStudio.Assistants.Coding;
 
 public partial class AssistantCoding : AssistantBaseCore
 {
-    protected override Tools.Components Component => Tools.Components.CODING_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.CODING_ASSISTANT;
     
     protected override string Title => "Coding Assistant";
     

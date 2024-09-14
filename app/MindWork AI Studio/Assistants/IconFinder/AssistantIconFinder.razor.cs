@@ -2,7 +2,7 @@ namespace AIStudio.Assistants.IconFinder;
 
 public partial class AssistantIconFinder : AssistantBaseCore
 {
-    protected override Tools.Components Component => Tools.Components.ICON_FINDER_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.ICON_FINDER_ASSISTANT;
 
     protected override string Title => "Icon Finder";
     

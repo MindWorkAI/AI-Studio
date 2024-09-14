@@ -4,7 +4,7 @@ namespace AIStudio.Assistants.MyTasks;
 
 public partial class AssistantMyTasks : AssistantBaseCore
 {
-    protected override Tools.Components Component => Tools.Components.MY_TASKS_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.MY_TASKS_ASSISTANT;
     
     protected override string Title => "My Tasks";
     

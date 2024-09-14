@@ -1,3 +1,4 @@
+using AIStudio.Assistants;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -7,6 +8,9 @@ namespace AIStudio.Components;
 
 public partial class ProviderSelection : ComponentBase
 {
+    [CascadingParameter]
+    public AssistantBase? AssistantBase { get; set; }
+    
     [Parameter]
     public Settings.Provider ProviderSettings { get; set; }
     
@@ -27,17 +31,9 @@ public partial class ProviderSelection : ComponentBase
     
     private IEnumerable<Settings.Provider> GetAvailableProviders()
     {
-        if (this.SettingsManager.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN })
-        {
-            var minimumLevel = this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
-            foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-                if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
-                    yield return provider;
-        }
-        else
-        {
-            foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.AssistantBase?.Component ?? Tools.Components.NONE);
+        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
                 yield return provider;
-        }
     }
 }

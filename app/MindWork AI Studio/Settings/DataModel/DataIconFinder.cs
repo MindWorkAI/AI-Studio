@@ -1,4 +1,5 @@
 using AIStudio.Assistants.IconFinder;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -13,6 +14,11 @@ public sealed class DataIconFinder
     /// The preselected icon source.
     /// </summary>
     public IconSources PreselectedSource { get; set; }
+
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
 
     /// <summary>
     /// The preselected icon provider.

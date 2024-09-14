@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataMyTasks
@@ -16,6 +18,11 @@ public sealed class DataMyTasks
     /// Preselect any other language?
     /// </summary>
     public string PreselectOtherLanguage { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
     
     /// <summary>
     /// The preselected provider.

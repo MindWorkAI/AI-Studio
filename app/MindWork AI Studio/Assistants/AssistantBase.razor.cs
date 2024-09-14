@@ -40,7 +40,7 @@ public abstract partial class AssistantBase : ComponentBase
     
     protected abstract string SystemPrompt { get; }
     
-    protected abstract Tools.Components Component { get; }
+    public abstract Tools.Components Component { get; }
     
     protected virtual Func<string> Result2Copy => () => this.resultingContentBlock is null ? string.Empty : this.resultingContentBlock.Content switch
     {

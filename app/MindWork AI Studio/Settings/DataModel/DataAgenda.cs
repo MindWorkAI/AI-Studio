@@ -1,4 +1,5 @@
 using AIStudio.Assistants.Agenda;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -50,6 +51,11 @@ public sealed class DataAgenda
     /// Preselect any other language?
     /// </summary>
     public string PreselectedOtherLanguage { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
     
     /// <summary>
     /// Preselect a agenda provider?
