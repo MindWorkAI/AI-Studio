@@ -1,4 +1,5 @@
 using AIStudio.Assistants.RewriteImprove;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -28,6 +29,11 @@ public sealed class DataRewriteImprove
     /// Preselect any voice style?
     /// </summary>
     public SentenceStructure PreselectedSentenceStructure { get; set; }
+    
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
     
     /// <summary>
     /// Preselect a provider?

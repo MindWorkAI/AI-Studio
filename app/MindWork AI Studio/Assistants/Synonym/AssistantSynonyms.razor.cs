@@ -4,7 +4,7 @@ namespace AIStudio.Assistants.Synonym;
 
 public partial class AssistantSynonyms : AssistantBaseCore
 {
-    protected override Tools.Components Component => Tools.Components.SYNONYMS_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.SYNONYMS_ASSISTANT;
     
     protected override string Title => "Synonyms";
     

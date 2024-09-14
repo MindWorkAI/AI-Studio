@@ -13,7 +13,9 @@
 
             @if (this.Body is not null)
             {
-                @this.Body
+                <CascadingValue Value="@this">
+                    @this.Body
+                </CascadingValue>
                 
                 <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
                     @this.SubmitText

@@ -144,18 +144,25 @@ public static class ConfigurationSelectDataFactory
             yield return new(scheme.GetListDescription(), scheme);
     }
     
-    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetConfidenceLevelsData()
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetConfidenceLevelsData(SettingsManager settingsManager, bool restrictToGlobalMinimum = false)
     {
+        var minimumLevel = ConfidenceLevel.NONE;
+        if(restrictToGlobalMinimum && settingsManager.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN })
+            minimumLevel = settingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+        
         foreach (var level in Enum.GetValues<ConfidenceLevel>())
         {
+            if(level is ConfidenceLevel.NONE)
+                yield return new("No minimum confidence level chosen", level);
+            
+            if(level < minimumLevel)
+                continue;
+            
             switch (level)
             {
+                case ConfidenceLevel.NONE:
                 case ConfidenceLevel.UNKNOWN:
                     continue;
-                
-                case ConfidenceLevel.NONE:
-                    yield return new("No minimum confidence level chosen", level);
-                    break;
                 
                 default:
                     yield return new(level.GetName(), level);

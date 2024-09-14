@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataTranslation
@@ -41,6 +43,11 @@ public sealed class DataTranslation
     /// Preselect any other language?
     /// </summary>
     public string PreselectOtherLanguage { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
     
     /// <summary>
     /// The preselected translator provider.

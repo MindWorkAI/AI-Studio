@@ -6,7 +6,7 @@ namespace AIStudio.Assistants.EMail;
 
 public partial class AssistantEMail : AssistantBaseCore
 {
-    protected override Tools.Components Component => Tools.Components.EMAIL_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.EMAIL_ASSISTANT;
     
     protected override string Title => "E-Mail";
     

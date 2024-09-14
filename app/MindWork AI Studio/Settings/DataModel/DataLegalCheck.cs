@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+
 namespace AIStudio.Settings.DataModel;
 
 public class DataLegalCheck
@@ -21,6 +23,11 @@ public class DataLegalCheck
     /// Preselect the content cleaner agent?
     /// </summary>
     public bool PreselectContentCleanerAgent { get; set; }
+    
+    /// <summary>
+    /// The minimum confidence level required for a provider to be considered.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
     
     /// <summary>
     /// The preselected translator provider.

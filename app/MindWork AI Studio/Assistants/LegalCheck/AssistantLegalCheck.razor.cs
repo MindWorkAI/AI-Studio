@@ -2,7 +2,7 @@ namespace AIStudio.Assistants.LegalCheck;
 
 public partial class AssistantLegalCheck : AssistantBaseCore
 {
-    protected override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
     
     protected override string Title => "Legal Check";
     

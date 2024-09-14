@@ -24,6 +24,9 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     
     [Parameter]
     public Func<string> HelpText { get; set; } = () => "Select a provider that is preselected.";
+
+    [Parameter]
+    public Tools.Components Component { get; set; } = Tools.Components.NONE;
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
@@ -46,20 +49,12 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
-        if (this.SettingsManager.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN })
+        var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
+        foreach (var providerId in this.Data)
         {
-            var minimumLevel = this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
-            foreach (var providerId in this.Data)
-            {
-                var provider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId.Value);
-                if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
-                    yield return providerId;
-            }
-        }
-        else
-        {
-            foreach (var provider in this.Data)
-                yield return provider;
+            var provider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId.Value);
+            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+                yield return providerId;
         }
     }
     

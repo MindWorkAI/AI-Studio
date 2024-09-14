@@ -112,51 +112,40 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     
     public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
 
+    public ConfidenceLevel GetMinimumConfidenceLevel(Tools.Components component)
+    {
+        var minimumLevel = ConfidenceLevel.NONE;
+        var enforceGlobalMinimumConfidence = this.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
+        if (enforceGlobalMinimumConfidence)
+            minimumLevel = this.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+        
+        var componentMinimumLevel = component.MinimumConfidence(this);
+        if (componentMinimumLevel > minimumLevel)
+            minimumLevel = componentMinimumLevel;
+        
+        return minimumLevel;
+    }
+    
     public Provider GetPreselectedProvider(Tools.Components component)
     {
-        var minimumLevel = this.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence ? this.ConfigurationData.LLMProviders.GlobalMinimumConfidence : ConfidenceLevel.NONE;
-
+        var minimumLevel = this.GetMinimumConfidenceLevel(component);
+        
+        // When there is only one provider, and it has a confidence level that is high enough, we return it:
         if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             return this.ConfigurationData.Providers[0];
-        
-        var preselection = component switch
-        {
-            Tools.Components.CHAT => this.ConfigurationData.Chat.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Chat.PreselectedProvider) : default,
-            Tools.Components.GRAMMAR_SPELLING_ASSISTANT => this.ConfigurationData.GrammarSpelling.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.GrammarSpelling.PreselectedProvider) : default,
-            Tools.Components.ICON_FINDER_ASSISTANT => this.ConfigurationData.IconFinder.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.IconFinder.PreselectedProvider) : default,
-            Tools.Components.REWRITE_ASSISTANT => this.ConfigurationData.RewriteImprove.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.RewriteImprove.PreselectedProvider) : default,
-            Tools.Components.TRANSLATION_ASSISTANT => this.ConfigurationData.Translation.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Translation.PreselectedProvider) : default,
-            Tools.Components.AGENDA_ASSISTANT => this.ConfigurationData.Agenda.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Agenda.PreselectedProvider) : default,
-            Tools.Components.CODING_ASSISTANT => this.ConfigurationData.Coding.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Coding.PreselectedProvider) : default,
-            Tools.Components.TEXT_SUMMARIZER_ASSISTANT => this.ConfigurationData.TextSummarizer.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.TextSummarizer.PreselectedProvider) : default,
-            Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProvider) : default,
-            Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProvider) : default,
-            Tools.Components.SYNONYMS_ASSISTANT => this.ConfigurationData.Synonyms.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.Synonyms.PreselectedProvider) : default,
-            Tools.Components.MY_TASKS_ASSISTANT => this.ConfigurationData.MyTasks.PreselectOptions ? this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.MyTasks.PreselectedProvider) : default,
-            
-            _ => default,
-        };
 
-        if(preselection != default && preselection.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
-            return preselection;
+        // When there is a component-preselected provider, and it has a confidence level that is high enough, we return it:
+        var preselectedProvider = component.PreselectedProvider(this);
+        if(preselectedProvider != default && preselectedProvider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            return preselectedProvider;
 
+        // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel);
     }
 
     public Profile GetPreselectedProfile(Tools.Components component)
     {
-        var preselection = component switch
-        {
-            Tools.Components.CHAT => this.ConfigurationData.Chat.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Chat.PreselectedProfile) : default,
-            Tools.Components.AGENDA_ASSISTANT => this.ConfigurationData.Agenda.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Agenda.PreselectedProfile) : default,
-            Tools.Components.CODING_ASSISTANT => this.ConfigurationData.Coding.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.Coding.PreselectedProfile) : default,
-            Tools.Components.EMAIL_ASSISTANT => this.ConfigurationData.EMail.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.EMail.PreselectedProfile) : default,
-            Tools.Components.LEGAL_CHECK_ASSISTANT => this.ConfigurationData.LegalCheck.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.LegalCheck.PreselectedProfile) : default,
-            Tools.Components.MY_TASKS_ASSISTANT => this.ConfigurationData.MyTasks.PreselectOptions ? this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.MyTasks.PreselectedProfile) : default,
-
-            _ => default,
-        };
-        
+        var preselection = component.PreselectedProfile(this);
         if (preselection != default)
             return preselection;
         
