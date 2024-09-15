@@ -171,9 +171,9 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private string SetCurrentConfidenceLevelColorStyle(LLMProviders llmProvider)
     {
         if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
-            return $"background-color: {level.GetColor()};";
+            return $"background-color: {level.GetColor(this.SettingsManager)};";
 
-        return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor()};";
+        return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor(this.SettingsManager)};";
     }
 
     private async Task ChangeCustomConfidenceLevel(LLMProviders llmProvider, ConfidenceLevel level)

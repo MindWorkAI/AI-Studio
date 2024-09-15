@@ -11,17 +11,17 @@
             <MudDrawerContainer Class="mud-height-full absolute">
                 <MudDrawer @bind-Open="@this.navBarOpen" MiniWidth="@NAVBAR_COLLAPSED_WIDTH" Width="@NAVBAR_EXPANDED_WIDTH" Elevation="1" Fixed="@true" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.EXPAND_ON_HOVER)" Color="Color.Default">
                     <MudNavMenu>
-                        @foreach (var navBarItem in NAV_ITEMS)
+                        @foreach (var navBarItem in this.navItems)
                         {
                             if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.NEVER_EXPAND_USE_TOOLTIPS)
                             {
                                 <MudTooltip Text="@navBarItem.Name" Placement="Placement.Right">
-                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" IconColor="@navBarItem.IconColor">@navBarItem.Name</MudNavLink>
+                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">@navBarItem.Name</MudNavLink>
                                 </MudTooltip>
                             }
                             else
                             {
-                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" IconColor="@navBarItem.IconColor">@navBarItem.Name</MudNavLink>
+                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">@navBarItem.Name</MudNavLink>
                             }
                         }
                     </MudNavMenu>
@@ -59,3 +59,5 @@
         </MudMainContent>
     </MudLayout>
 </MudPaper>
+
+<MudThemeProvider @ref="@this.themeProvider" Theme="@this.ColorTheme" IsDarkMode="@this.useDarkMode" />

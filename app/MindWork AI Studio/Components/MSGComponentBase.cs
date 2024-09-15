@@ -19,7 +19,22 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
 
     #region Implementation of IMessageBusReceiver
 
-    public abstract Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data);
+    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.COLOR_THEME_CHANGED:
+                this.StateHasChanged();
+                break;
+            
+            default:
+                return this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+        }
+        
+        return Task.CompletedTask;
+    }
+    
+    public abstract Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data);
     
     public abstract Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data);
 
@@ -46,6 +61,12 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     
     protected void ApplyFilters(ComponentBase[] components, Event[] events)
     {
-        this.MessageBus.ApplyFilters(this, components, events);
+        // Append the color theme changed event to the list of events:
+        var eventsList = new List<Event>(events)
+        {
+            Event.COLOR_THEME_CHANGED
+        };
+        
+        this.MessageBus.ApplyFilters(this, components, eventsList.ToArray());
     }
 }

@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 namespace AIStudio.Provider;
 
 public static class ConfidenceLevelExtensions
@@ -16,19 +18,31 @@ public static class ConfidenceLevelExtensions
         _ => "Unknown confidence level",
     };
     
-    public static string GetColor(this ConfidenceLevel level) => level switch
+    public static string GetColor(this ConfidenceLevel level, SettingsManager settingsManager) => (level, settingsManager.IsDarkMode) switch
     {
-        ConfidenceLevel.NONE => "#cccccc",
+        (ConfidenceLevel.NONE, _) => "#cccccc",
         
-        ConfidenceLevel.UNTRUSTED => "#ff0000",
-        ConfidenceLevel.VERY_LOW => "#ff6600",
-        ConfidenceLevel.LOW => "#ffcc00",
-        ConfidenceLevel.MODERATE => "#99cc00",
-        ConfidenceLevel.MEDIUM => "#86b300",
-        ConfidenceLevel.HIGH => "#009933",
+        (ConfidenceLevel.UNTRUSTED, false) => "#ff0000",
+        (ConfidenceLevel.UNTRUSTED, true) => "#800000",
         
-        _ => "#cc6600",
+        (ConfidenceLevel.VERY_LOW, false) => "#ff6600",
+        (ConfidenceLevel.VERY_LOW, true) => "#803300",
+        
+        (ConfidenceLevel.LOW, false) => "#ffcc00",
+        (ConfidenceLevel.LOW, true) => "#806600",
+        
+        (ConfidenceLevel.MODERATE, false) => "#99cc00",
+        (ConfidenceLevel.MODERATE, true) => "#4d6600",
+        
+        (ConfidenceLevel.MEDIUM, false) => "#86b300",
+        (ConfidenceLevel.MEDIUM, true) => "#394d00",
+        
+        (ConfidenceLevel.HIGH, false) => "#009933",
+        (ConfidenceLevel.HIGH, true) => "#004d1a",
+        
+        (_, false) => "#cc6600",
+        (_, true) => "#663300",
     };
     
-    public static string SetColorStyle(this ConfidenceLevel level) => $"--confidence-color: {level.GetColor()};";
+    public static string SetColorStyle(this ConfidenceLevel level, SettingsManager settingsManager) => $"--confidence-color: {level.GetColor(settingsManager)};";
 }

@@ -7,6 +7,7 @@ public enum Event
     // Common events:
     STATE_HAS_CHANGED,
     CONFIGURATION_CHANGED,
+    COLOR_THEME_CHANGED,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,

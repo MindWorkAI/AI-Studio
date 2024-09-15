@@ -47,3 +47,11 @@
     border-width: 2px;
     border-color: var(--confidence-color) !important;
 }
+
+:root {
+    --custom-icon-color: #000000;
+}
+
+.custom-icon-color > a > svg {
+    color: var(--custom-icon-color) !important;
+}

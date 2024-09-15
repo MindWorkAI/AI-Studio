@@ -34,6 +34,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     
     [Inject]
     private ILogger<MainLayout> Logger { get; init; } = null!;
+    
+    [Inject]
+    private MudTheme ColorTheme { get; init; } = null!;
 
     public string AdditionalHeight { get; private set; } = "0em";
     
@@ -50,16 +53,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     private bool userDismissedUpdate;
     private string updateToVersion = string.Empty;
     private UpdateResponse? currentUpdateResponse;
-    
-    private static readonly IReadOnlyCollection<NavBarItem> NAV_ITEMS = new List<NavBarItem>
-    {
-        new("Home", Icons.Material.Filled.Home, Color.Default, Routes.HOME, true),
-        new("Chat", Icons.Material.Filled.Chat, Color.Default, Routes.CHAT, false),
-        new("Assistants", Icons.Material.Filled.Apps, Color.Default, Routes.ASSISTANTS, false),
-        new("Supporters", Icons.Material.Filled.Favorite, Color.Error, Routes.SUPPORTERS, false),
-        new("About", Icons.Material.Filled.Info, Color.Default, Routes.ABOUT, false),
-        new("Settings", Icons.Material.Filled.Settings, Color.Default, Routes.SETTINGS, false),
-    };
+    private MudThemeProvider themeProvider = null!;
+    private bool useDarkMode;
+
+    private IReadOnlyCollection<NavBarItem> navItems = [];
     
     #region Overrides of ComponentBase
 
@@ -87,7 +84,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED ]);
+        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED ]);
         
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
@@ -96,6 +93,20 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // Should the navigation bar be open by default?
         if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
             this.navBarOpen = true;
+
+        await this.themeProvider.WatchSystemPreference(this.SystemeThemeChanged);
+        await this.UpdateThemeConfiguration();
+        
+        var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
+        this.navItems = new List<NavBarItem>
+        {
+            new("Home", Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true),
+            new("Chat", Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false),
+            new("Assistants", Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false),
+            new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false),
+            new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false),
+            new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false),
+        };
         
         await base.OnInitializedAsync();
     }
@@ -131,6 +142,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                 else
                     this.navBarOpen = false;
                 
+                await this.UpdateThemeConfiguration();
+                this.StateHasChanged();
+                break;
+            
+            case Event.COLOR_THEME_CHANGED:
                 this.StateHasChanged();
                 break;
         }
@@ -216,6 +232,24 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
             // User accepted to leave the chat page, reset the chat state:
             await MessageBus.INSTANCE.SendMessage<bool>(this, Event.RESET_CHAT_STATE);
         }
+    }
+    
+    private async Task SystemeThemeChanged(bool isDark)
+    {
+        this.Logger.LogInformation($"The system theme changed to {(isDark ? "dark" : "light")}.");
+        await this.UpdateThemeConfiguration();
+    }
+
+    private async Task UpdateThemeConfiguration()
+    {
+        if (this.SettingsManager.ConfigurationData.App.PreferredTheme is Themes.SYSTEM)
+            this.useDarkMode = await this.themeProvider.GetSystemPreference();
+        else
+            this.useDarkMode = this.SettingsManager.ConfigurationData.App.PreferredTheme == Themes.DARK;
+
+        this.SettingsManager.IsDarkMode = this.useDarkMode;
+        await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
+        this.StateHasChanged();
     }
 
     #region Implementation of IDisposable

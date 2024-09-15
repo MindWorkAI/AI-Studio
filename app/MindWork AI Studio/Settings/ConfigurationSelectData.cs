@@ -170,4 +170,10 @@ public static class ConfigurationSelectDataFactory
             }
         }
     }
+    
+    public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
+    {
+        foreach (var theme in Enum.GetValues<Themes>())
+            yield return new(theme.GetName(), theme);
+    }
 }

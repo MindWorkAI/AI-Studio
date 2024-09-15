@@ -21,7 +21,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         Converters = { new JsonStringEnumConverter() },
     };
 
-    private ILogger<SettingsManager> logger = logger;
+    private readonly ILogger<SettingsManager> logger = logger;
     
     /// <summary>
     /// The directory where the configuration files are stored.
@@ -32,6 +32,11 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     /// The directory where the data files are stored.
     /// </summary>
     public static string? DataDirectory { get; set; }
+
+    /// <summary>
+    /// Whether the app is in dark mode.
+    /// </summary>
+    public bool IsDarkMode { get; set; }
 
     /// <summary>
     /// The configuration data.

@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 namespace AIStudio.Provider;
 
 public sealed record Confidence
@@ -20,9 +22,9 @@ public sealed record Confidence
     
     public Confidence WithLevel(ConfidenceLevel level) => this with { Level = level };
     
-    public string StyleBorder() => $"border: 2px solid {this.Level.GetColor()}; border-radius: 6px;";
+    public string StyleBorder(SettingsManager settingsManager) => $"border: 2px solid {this.Level.GetColor(settingsManager)}; border-radius: 6px;";
     
-    public string SetColorStyle() => $"--confidence-color: {this.Level.GetColor()};";
+    public string SetColorStyle(SettingsManager settingsManager) => $"--confidence-color: {this.Level.GetColor(settingsManager)};";
 
     public static readonly Confidence NONE = new()
     {

@@ -1,8 +1,10 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class AssistantBlock : ComponentBase
+public partial class AssistantBlock : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Parameter]
     public string Name { get; set; } = string.Empty;
@@ -18,4 +20,63 @@ public partial class AssistantBlock : ComponentBase
     
     [Parameter]
     public string Link { get; set; } = string.Empty;
+    
+    [Inject]
+    private MudTheme ColorTheme { get; init; } = null!;
+    
+    [Inject]
+    private SettingsManager SettingsManager { get; init; } = null!;
+    
+    [Inject]
+    private MessageBus MessageBus { get; init; } = null!;
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED ]);
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+    
+    #region Implementation of IMessageBusReceiver
+
+    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.COLOR_THEME_CHANGED:
+                this.StateHasChanged();
+                break;
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    private string BorderColor => this.SettingsManager.IsDarkMode switch
+    {
+        true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayLight,
+        false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).Primary.Value,
+    };
+
+    private string BlockStyle => $"border-width: 2px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
+    
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
+    }
+
+    #endregion
 }
