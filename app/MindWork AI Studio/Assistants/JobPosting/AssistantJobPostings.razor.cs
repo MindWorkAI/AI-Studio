@@ -1,3 +1,5 @@
+using AIStudio.Chat;
+
 namespace AIStudio.Assistants.JobPosting;
 
 public partial class AssistantJobPostings : AssistantBaseCore
@@ -50,7 +52,12 @@ public partial class AssistantJobPostings : AssistantBaseCore
 
     protected override bool SubmitDisabled => false;
 
-    protected override bool AllowProfiles => false; 
+    protected override bool AllowProfiles => false;
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
 
     protected override void ResetFrom()
     {
