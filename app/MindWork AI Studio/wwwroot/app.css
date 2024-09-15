@@ -55,3 +55,7 @@
 .custom-icon-color > a > svg {
     color: var(--custom-icon-color) !important;
 }
+
+.improvedDiff .wikEdDiffFragment {
+    background-color: initial !important;
+}
