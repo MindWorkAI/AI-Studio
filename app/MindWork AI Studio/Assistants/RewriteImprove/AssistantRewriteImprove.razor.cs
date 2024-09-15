@@ -26,8 +26,6 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     
     protected override bool AllowProfiles => false;
     
-    protected override bool ShowResult => false;
-
     protected override bool ShowDedicatedProgress => true;
     
     protected override Func<string> Result2Copy => () => this.rewrittenText;

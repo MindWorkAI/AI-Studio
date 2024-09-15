@@ -37,8 +37,9 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     [Inject]
     private MessageBus MessageBus { get; init; } = null!;
     
-    internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     internal const string RESULT_DIV_ID = "assistantResult";
+    internal const string BEFORE_RESULT_DIV_ID = "beforeAssistantResult";
+    internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     
     protected abstract string Title { get; }
     
