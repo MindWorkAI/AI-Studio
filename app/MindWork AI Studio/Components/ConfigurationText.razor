@@ -3,7 +3,7 @@
 <MudTextField
     T="string"
     Text="@this.Text()"
-    TextChanged="@this.OptionChanged"
+    TextChanged="@this.InternalUpdate"
     Label="@this.OptionDescription"
     Disabled="@this.Disabled()"
     Class="mb-3"
@@ -11,8 +11,9 @@
     AdornmentIcon="@this.Icon"
     AdornmentColor="@this.IconColor"
     UserAttributes="@SPELLCHECK_ATTRIBUTES"
-    Lines="1"
-    Immediate="@false"
-    DebounceInterval="500"
+    Lines="@this.NumLines"
+    AutoGrow="@this.AutoGrow"
+    MaxLines="@this.GetMaxLines"
+    Immediate="@true"
     Variant="Variant.Outlined"
 />
