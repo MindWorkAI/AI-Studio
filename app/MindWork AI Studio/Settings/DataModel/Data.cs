@@ -58,11 +58,13 @@ public sealed class Data
     
     public DataRewriteImprove RewriteImprove { get; init; } = new();
 
-    public DataEMail EMail { get; set; } = new();
+    public DataEMail EMail { get; init; } = new();
     
-    public DataLegalCheck LegalCheck { get; set; } = new();
+    public DataLegalCheck LegalCheck { get; init; } = new();
     
-    public DataSynonyms Synonyms { get; set; } = new();
+    public DataSynonyms Synonyms { get; init; } = new();
 
-    public DataMyTasks MyTasks { get; set; } = new();
+    public DataMyTasks MyTasks { get; init; } = new();
+    
+    public DataJobPostings JobPostings { get; init; } = new();
 }

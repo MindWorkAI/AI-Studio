@@ -7,7 +7,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider;
 
-public static class ProvidersExtensions
+public static class LLMProvidersExtensions
 {
     /// <summary>
     /// Returns the human-readable name of the provider.
