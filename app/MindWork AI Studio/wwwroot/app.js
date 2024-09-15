@@ -2,7 +2,7 @@ window.generateDiff = function (text1, text2, divDiff, divLegend) {
     let wikEdDiff = new WikEdDiff();
     let targetDiv = document.getElementById(divDiff)
     targetDiv.innerHTML = wikEdDiff.diff(text1, text2);
-    targetDiv.classList.add('mud-typography-body1');
+    targetDiv.classList.add('mud-typography-body1', 'improvedDiff');
     
     let legend = document.getElementById(divLegend);
     legend.innerHTML = `
