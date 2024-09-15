@@ -3,6 +3,11 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataApp
 {
     /// <summary>
+    /// The preferred theme to use.
+    /// </summary>
+    public Themes PreferredTheme { get; set; } = Themes.SYSTEM;
+    
+    /// <summary>
     /// Should we save energy? When true, we will update content streamed
     /// from the server, i.e., AI, less frequently.
     /// </summary>

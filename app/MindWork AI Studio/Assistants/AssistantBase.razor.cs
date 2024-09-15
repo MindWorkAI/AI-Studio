@@ -8,7 +8,7 @@ using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Assistants;
 
-public abstract partial class AssistantBase : ComponentBase
+public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
@@ -30,6 +30,12 @@ public abstract partial class AssistantBase : ComponentBase
     
     [Inject]
     protected ILogger<AssistantBase> Logger { get; init; } = null!;
+    
+    [Inject]
+    private MudTheme ColorTheme { get; init; } = null!;
+    
+    [Inject]
+    private MessageBus MessageBus { get; init; } = null!;
     
     internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     internal const string RESULT_DIV_ID = "assistantResult";
@@ -91,6 +97,10 @@ public abstract partial class AssistantBase : ComponentBase
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        
+        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED ]);
+        
         await base.OnInitializedAsync();
     }
 
@@ -113,8 +123,29 @@ public abstract partial class AssistantBase : ComponentBase
     }
 
     #endregion
+    
+    #region Implementation of IMessageBusReceiver
 
-    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder() : string.Empty;
+    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.COLOR_THEME_CHANGED:
+                this.StateHasChanged();
+                break;
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
@@ -251,4 +282,25 @@ public abstract partial class AssistantBase : ComponentBase
         this.StateHasChanged();
         this.form?.ResetValidation();
     }
+
+    private string GetResetColor() => this.SettingsManager.IsDarkMode switch
+    {
+        true => $"background-color: #804000",
+        false => $"background-color: {this.ColorTheme.GetCurrentPalette(this.SettingsManager).Warning.Value}",
+    };
+    
+    private string GetSendToColor() => this.SettingsManager.IsDarkMode switch
+    {
+        true => $"background-color: #004080",
+        false => $"background-color: {this.ColorTheme.GetCurrentPalette(this.SettingsManager).InfoLighten}",
+    };
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
+    }
+
+    #endregion
 }

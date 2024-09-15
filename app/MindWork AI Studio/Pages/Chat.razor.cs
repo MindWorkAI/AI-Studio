@@ -120,7 +120,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
 
-    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle() : string.Empty;
+    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
     
     private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
 
@@ -455,7 +455,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     #region Overrides of MSGComponentBase
 
-    public override Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {

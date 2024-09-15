@@ -45,7 +45,7 @@
             
             @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
             {
-                <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
+                <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                     @foreach (var assistant in Enum.GetValues<Components>().OrderBy(n => n.Name().Length))
                     {
                         if (assistant is Components.NONE || this.Component == assistant)
@@ -77,7 +77,7 @@
                         break;
 
                     case SendToButton sendToButton:
-                        <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Color="Color.Info">
+                        <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                             @foreach (var assistant in Enum.GetValues<Components>().OrderBy(n => n.Name().Length))
                             {
                                 if(assistant is Components.NONE || sendToButton.Self == assistant)
@@ -96,7 +96,7 @@
                 Copy result
             </MudButton>
             
-            <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
+            <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
                 Reset
             </MudButton>
 

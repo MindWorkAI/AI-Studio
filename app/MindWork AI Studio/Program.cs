@@ -106,6 +106,7 @@ internal sealed class Program
         });
 
         builder.Services.AddMudMarkdownServices();
+        builder.Services.AddSingleton(new MudTheme());
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
