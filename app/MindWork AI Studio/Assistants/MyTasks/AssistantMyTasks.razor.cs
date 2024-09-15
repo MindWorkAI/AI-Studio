@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Settings;
 
 namespace AIStudio.Assistants.MyTasks;
@@ -34,6 +35,11 @@ public partial class AssistantMyTasks : AssistantBaseCore
     protected override Func<Task> SubmitAction => this.AnalyzeText;
 
     protected override bool ShowProfileSelection => false;
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
 
     protected override void ResetFrom()
     {

@@ -1,3 +1,5 @@
+using AIStudio.Chat;
+
 namespace AIStudio.Assistants.LegalCheck;
 
 public partial class AssistantLegalCheck : AssistantBaseCore
@@ -29,6 +31,11 @@ public partial class AssistantLegalCheck : AssistantBaseCore
     protected override Func<Task> SubmitAction => this.AksQuestions;
     
     protected override bool SubmitDisabled => this.isAgentRunning;
+    
+    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
     
     protected override void ResetFrom()
     {
