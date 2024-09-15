@@ -24,8 +24,6 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         """;
     
     protected override bool AllowProfiles => false;
-
-    protected override bool ShowResult => false;
     
     protected override bool ShowDedicatedProgress => true;
     
