@@ -278,7 +278,7 @@ jobs:
         if: matrix.platform != 'windows-latest'
         run: |
           if ! cargo tauri --version > /dev/null 2>&1; then
-            cargo install tauri-cli
+            cargo install --version 1.6.2 tauri-cli
           else
             echo "Tauri is already installed"
           fi
@@ -287,7 +287,7 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           if (-not (cargo tauri --version 2>$null)) {
-            cargo install tauri-cli
+            cargo install --version 1.6.2 tauri-cli
           } else {
             Write-Output "Tauri is already installed"
           }
@@ -500,7 +500,7 @@ jobs:
             apt-get install --yes libwebkit2gtk-4.0-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
             
             # Setup Tauri:
-            cargo install tauri-cli
+            cargo install --version 1.6.2 tauri-cli
             
       - name: Add the built runner image to the cache
         if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
