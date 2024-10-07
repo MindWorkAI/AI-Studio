@@ -1,1 +1,4 @@
 *.woff2 filter=lfs diff=lfs merge=lfs -text
+*.afpub filter=lfs diff=lfs merge=lfs -text
+*.afdesign filter=lfs diff=lfs merge=lfs -text
+*.afphoto filter=lfs diff=lfs merge=lfs -text
