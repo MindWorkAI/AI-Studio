@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -23,6 +24,9 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
     /// <inheritdoc />
     public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
+        // Get the API key:
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
+        
         // Prepare the system prompt:
         var systemPrompt = new Message
         {
@@ -62,68 +66,83 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
             MaxTokens = -1,
         }, JSON_SERIALIZER_OPTIONS);
 
-        // Build the HTTP post request:
-        var request = new HttpRequestMessage(HttpMethod.Post, provider.Host.ChatURL());
-        
-        // Set the content:
-        request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
-        
-        // Send the request with the ResponseHeadersRead option.
-        // This allows us to read the stream as soon as the headers are received.
-        // This is important because we want to stream the responses.
-        var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
-        
-        // Open the response stream:
-        var providerStream = await response.Content.ReadAsStreamAsync(token);
-        
-        // Add a stream reader to read the stream, line by line:
-        var streamReader = new StreamReader(providerStream);
-        
-        // Read the stream, line by line:
-        while(!streamReader.EndOfStream)
+        StreamReader? streamReader = default;
+        try
         {
-            // Check if the token is canceled:
-            if(token.IsCancellationRequested)
-                yield break;
-            
-            // Read the next line:
-            var line = await streamReader.ReadLineAsync(token);
-            
-            // Skip empty lines:
-            if(string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            // Skip lines that do not start with "data: ". Regard
-            // to the specification, we only want to read the data lines:
-            if(!line.StartsWith("data: ", StringComparison.InvariantCulture))
-                continue;
+            // Build the HTTP post request:
+            var request = new HttpRequestMessage(HttpMethod.Post, provider.Host.ChatURL());
 
-            // Check if the line is the end of the stream:
-            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
-                yield break;
+            // Set the authorization header:
+            if (requestedSecret.Success)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
-            ResponseStreamLine providerResponse;
-            try
+            // Set the content:
+            request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
+
+            // Send the request with the ResponseHeadersRead option.
+            // This allows us to read the stream as soon as the headers are received.
+            // This is important because we want to stream the responses.
+            var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+
+            // Open the response stream:
+            var providerStream = await response.Content.ReadAsStreamAsync(token);
+
+            // Add a stream reader to read the stream, line by line:
+            streamReader = new StreamReader(providerStream);
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError($"Failed to stream chat completion from self-hosted provider '{this.InstanceName}': {e.Message}");
+        }
+
+        if (streamReader is not null)
+        {
+            // Read the stream, line by line:
+            while (!streamReader.EndOfStream)
             {
-                // We know that the line starts with "data: ". Hence, we can
-                // skip the first 6 characters to get the JSON data after that.
-                var jsonData = line[6..];
-                
-                // Deserialize the JSON data:
-                providerResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
+                // Check if the token is canceled:
+                if (token.IsCancellationRequested)
+                    yield break;
+
+                // Read the next line:
+                var line = await streamReader.ReadLineAsync(token);
+
+                // Skip empty lines:
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                // Skip lines that do not start with "data: ". Regard
+                // to the specification, we only want to read the data lines:
+                if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+                    continue;
+
+                // Check if the line is the end of the stream:
+                if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
+                    yield break;
+
+                ResponseStreamLine providerResponse;
+                try
+                {
+                    // We know that the line starts with "data: ". Hence, we can
+                    // skip the first 6 characters to get the JSON data after that.
+                    var jsonData = line[6..];
+
+                    // Deserialize the JSON data:
+                    providerResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
+                }
+                catch
+                {
+                    // Skip invalid JSON data:
+                    continue;
+                }
+
+                // Skip empty responses:
+                if (providerResponse == default || providerResponse.Choices.Count == 0)
+                    continue;
+
+                // Yield the response:
+                yield return providerResponse.Choices[0].Delta.Content;
             }
-            catch
-            {
-                // Skip invalid JSON data:
-                continue;
-            }    
-            
-            // Skip empty responses:
-            if(providerResponse == default || providerResponse.Choices.Count == 0)
-                continue;
-            
-            // Yield the response:
-            yield return providerResponse.Choices[0].Delta.Content;
         }
     }
 
@@ -149,7 +168,21 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
+                    
+                    var secretKey = apiKeyProvisional switch
+                    {
+                        not null => apiKeyProvisional,
+                        _ => await RUST_SERVICE.GetAPIKey(this, isTrying: true) switch
+                        {
+                            { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+                            _ => null,
+                        }
+                    };
+                    
                     var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
+                    if(secretKey is not null)
+                        lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
+                    
                     var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
                     if(!lmStudioResponse.IsSuccessStatusCode)
                         return [];

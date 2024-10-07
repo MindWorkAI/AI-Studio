@@ -253,24 +253,26 @@ public sealed class RustService : IDisposable
             throw;
         }
     }
-    
+
     /// <summary>
     /// Try to get the API key for the given provider.
     /// </summary>
     /// <param name="provider">The provider to get the API key for.</param>
+    /// <param name="isTrying">Indicates if we are trying to get the API key. In that case, we don't log errors.</param>
     /// <returns>The requested secret.</returns>
-    public async Task<RequestedSecret> GetAPIKey(IProvider provider)
+    public async Task<RequestedSecret> GetAPIKey(IProvider provider, bool isTrying = false)
     {
-        var secretRequest = new SelectSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
+        var secretRequest = new SelectSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName, isTrying);
         var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
         {
-            this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}' due to an API issue: '{result.StatusCode}'");
+            if(!isTrying)
+                this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}' due to an API issue: '{result.StatusCode}'");
             return new RequestedSecret(false, new EncryptedText(string.Empty), "Failed to get the API key due to an API issue.");
         }
         
         var secret = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
-        if (!secret.Success)
+        if (!secret.Success && !isTrying)
             this.logger!.LogError($"Failed to get the API key for provider '{provider.Id}': '{secret.Issue}'");
         
         return secret;
@@ -307,7 +309,7 @@ public sealed class RustService : IDisposable
     /// <returns>The delete secret response.</returns>
     public async Task<DeleteSecretResponse> DeleteAPIKey(IProvider provider)
     {
-        var request = new SelectSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName);
+        var request = new SelectSecretRequest($"provider::{provider.Id}::{provider.InstanceName}::api_key", Environment.UserName, false);
         var result = await this.http.PostAsJsonAsync("/secrets/delete", request, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
         {

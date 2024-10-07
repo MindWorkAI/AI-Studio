@@ -133,7 +133,7 @@ public partial class ProviderDialog : ComponentBase
             //
             // We cannot load the API key for self-hosted providers:
             //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
+            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA)
             {
                 await this.ReloadModels();
                 await base.OnInitializedAsync();
@@ -149,7 +149,7 @@ public partial class ProviderDialog : ComponentBase
             }
             
             // Load the API key:
-            var requestedSecret = await this.RustService.GetAPIKey(provider);
+            var requestedSecret = await this.RustService.GetAPIKey(provider, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if(requestedSecret.Success)
             {
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
@@ -159,8 +159,15 @@ public partial class ProviderDialog : ComponentBase
             }
             else
             {
-                this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
-                await this.form.Validate();
+                this.dataAPIKey = string.Empty;
+                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
+                {
+                    this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
+                    await this.form.Validate();
+                }
+
+                // We still try to load the models. Some local hosts don't need an API key:
+                await this.ReloadModels();
             }
         }
         
@@ -192,7 +199,7 @@ public partial class ProviderDialog : ComponentBase
         // Use the data model to store the provider.
         // We just return this data to the parent component:
         var addedProviderSettings = this.CreateProviderSettings();
-        if (addedProviderSettings.UsedLLMProvider != LLMProviders.SELF_HOSTED)
+        if (!string.IsNullOrWhiteSpace(this.dataAPIKey))
         {
             // We need to instantiate the provider to store the API key:
             var provider = addedProviderSettings.CreateProvider(this.Logger);
@@ -363,8 +370,15 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.ANTHROPIC => true,
         
         LLMProviders.FIREWORKS => true,
+        LLMProviders.SELF_HOSTED => this.DataHost is Host.OLLAMA,
         
         _ => false,
+    };
+    
+    private string APIKeyText => this.DataLLMProvider switch
+    {
+        LLMProviders.SELF_HOSTED => "(Optional) API Key",
+        _ => "API Key",
     };
 
     private bool NeedHostname => this.DataLLMProvider switch
