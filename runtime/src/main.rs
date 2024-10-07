@@ -966,7 +966,10 @@ fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedS
         },
 
         Err(e) => {
-            error!(Source = "Secret Store"; "Failed to retrieve secret for '{service}' and user '{user_name}': {e}.");
+            if !request.is_trying {
+                error!(Source = "Secret Store"; "Failed to retrieve secret for '{service}' and user '{user_name}': {e}.");
+            }
+            
             Json(RequestedSecret {
                 success: false,
                 secret: EncryptedText::new(String::from("")),
@@ -980,6 +983,7 @@ fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedS
 struct RequestSecret {
     destination: String,
     user_name: String,
+    is_trying: bool,
 }
 
 #[derive(Serialize)]
