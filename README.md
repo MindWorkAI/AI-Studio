@@ -8,6 +8,15 @@ Things we are currently working on:
 
 - Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found.
 
+
+Other News:
+
+- October 2024: We have our first financial supporter: Thank you @richard-stanton for financially supporting AI Studio. The supporter page in the app will be updated accordingly with the next update.
+
+
+- October 2024: The German Aerospace Center (DLR) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
+
+
 ## What is AI Studio?
 
 ![MindWork AI Studio - Home](documentation/AI%20Studio%20Home.png)
