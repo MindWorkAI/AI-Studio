@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Dev" type="CompoundRunConfigurationType">
-    <toRun name="AI Studio" type="DotNetProject" />
-    <toRun name="Tauri Dev" type="ShConfigurationType" />
-    <method v="2" />
-  </configuration>
-</component>
