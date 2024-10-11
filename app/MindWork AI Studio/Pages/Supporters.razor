@@ -17,7 +17,7 @@
         </MudButton>
     </div>
         
-    <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="align-center ma-0">
+    <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
         <MudItem Class="pa-0 pr-2" xs="6">
             <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                 <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
@@ -28,6 +28,20 @@
                 <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Target="_blank">
                     Become a contributor
                 </MudButton>
+                
+                <MudText Typo="Typo.h6" Class="mt-8">
+                    The first 10 supporters who make a monthly contribution:
+                </MudText>
+                <MudList T="string">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                        <MudLink Href="https://github.com/richard-stanton" Target="_blank">
+                            richard-stanton
+                        </MudLink>
+                        <MudText Typo="Typo.body1" Class="ml-3" Inline="@true">
+                            Thank you, Richard, for being the first.
+                        </MudText>
+                    </MudListItem>
+                </MudList>
             </MudPaper>
         </MudItem>
 
