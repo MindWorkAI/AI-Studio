@@ -5,7 +5,7 @@ You just want to use the app? Then simply [download the appropriate setup for yo
 1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
 3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
-4. Install the Tauri CLI by running `cargo install tauri-cli`.
+4. Install the Tauri CLI by running `cargo install --version 1.6.2 tauri-cli`.
 5. [Install NuShell](https://www.nushell.sh/) when you want to prepare a release or build a local binary. NuShell works on all operating systems and is required because the build script is written in NuShell.
 6. Clone the repository.
 
@@ -29,8 +29,9 @@ In order to build MindWork AI Studio from source instead of using the pre-built 
 ## Run the app locally with all your changes
 Do you want to test your changes before creating a PR? Follow these steps:
 1. Ensure you have met all the prerequisites.
-2. Open a terminal (in this case, it doesn't have to be NuShell).
-3. Navigate to the `runtime` directory within the repository, e.g. `cd repos/mindwork-ai-studio/runtime`.
-4. Run `cargo run`.
+2. At least once, you have to run the `nu build.nu publish` command (see above, "Build instructions"). This is necessary because the Tauri framework checks whether the .NET app as so-called "sidecar" is available. Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development.
+3. Open a terminal (in this case, it doesn't have to be NuShell).
+4. Navigate to the `runtime` directory within the repository, e.g. `cd repos/mindwork-ai-studio/runtime`.
+5. Run `cargo run`.
 
 Cargo will compile the Rust code and start the runtime. The runtime will then start the .NET compiler. When the .NET source code is compiled, the app will start. You can now test your changes.
