@@ -14,7 +14,7 @@ Other News:
 - October 2024: We have our first financial supporter: Thank you @richard-stanton for financially supporting AI Studio. The supporter page in the app will be updated accordingly with the next update.
 
 
-- October 2024: The German Aerospace Center (DLR) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
+- October 2024: The [German Aerospace Center (DLR)](https://en.wikipedia.org/wiki/German_Aerospace_Center) ([Website](https://www.dlr.de/en)) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
 
 
 ## What is AI Studio?
