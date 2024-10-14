@@ -3,10 +3,10 @@
 ## News
 Things we are currently working on:
 
-- Since September 2024: Work on the first personal assistant. The first personal assistant is a specialist in cognitive bias. It should be able to explain to you what biases exist. We do not want to rely on the training data of the LLM. Instead, AI Studio will bring a large catalog of bias descriptions in the future. This requires a lot of editorial work because we need to collect and revise the information.
+- Since September 2024: Work on the first personal assistant. The first personal assistant is a specialist in cognitive bias. It should be able to explain to you what biases exist. We do not want to rely on the training data of the LLM. Instead, AI Studio will bring a large catalog of bias descriptions in the future. This requires a lot of editorial work because we need to collect and revise the information. Related PR: [#166](https://github.com/MindWorkAI/AI-Studio/pull/166).
 
 
-- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found.
+- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. Related PR: [#167](https://github.com/MindWorkAI/AI-Studio/pull/167).
 
 
 Other News:
@@ -14,7 +14,7 @@ Other News:
 - October 2024: We have our first financial supporter: Thank you @richard-stanton for financially supporting AI Studio. The supporter page in the app will be updated accordingly with the next update.
 
 
-- October 2024: The German Aerospace Center (DLR) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
+- October 2024: The [German Aerospace Center (DLR)](https://en.wikipedia.org/wiki/German_Aerospace_Center) ([Website](https://www.dlr.de/en)) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
 
 
 ## What is AI Studio?
