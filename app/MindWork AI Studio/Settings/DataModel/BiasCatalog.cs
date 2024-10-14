@@ -4344,10 +4344,182 @@ public static class BiasCatalog
         ],
     };
 
+    private static readonly Bias STATUS_QUO_BIAS = new()
+    {
+        Id = new Guid("b9e05a25-ac09-407d-8aee-f54a04decf0b"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Status Quo Bias
+            A status quo bias or default bias is a cognitive bias which results from a preference for the maintenance
+            of one's existing state of affairs. The current baseline (or status quo) is taken as a reference point,
+            and any change from that baseline is perceived as a loss or gain. Corresponding to different alternatives,
+            this current baseline or default option is perceived and evaluated by individuals as a positive.
+            
+            Status quo bias should be distinguished from a rational preference for the status quo ante, as when the
+            current state of affairs is objectively superior to the available alternatives, or when imperfect information
+            is a significant problem. A large body of evidence, however, shows that status quo bias frequently affects
+            human decision-making. Status quo bias should also be distinguished from psychological inertia, which refers
+            to a lack of intervention in the current course of affairs.
+            
+            The bias intersects with other non-rational cognitive processes such as loss aversion, in which losses
+            comparative to gains are weighed to a greater extent. Further non-rational cognitive processes include
+            existence bias, endowment effect, longevity, mere exposure, and regret avoidance. Experimental evidence
+            for the detection of status quo bias is seen through the use of the reversal test. A vast amount of
+            experimental and field examples exist. Behaviour in regard to economics, retirement plans, health, and
+            ethical choices show evidence of the status quo bias.
+            """,
+
+        Related = [
+            new Guid("b81482f8-b2cf-4b86-a5a4-fcd29aee4e69"), // ENDOWMENT_EFFECT
+            new Guid("ad32d669-fc79-44c9-a570-609e1ccdc799"), // OMISSION_BIAS
+            new Guid("ad3ed908-c56e-411b-a130-8af8574ff67b"), // LOSS_AVERSION
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Status_quo_bias",
+        ],
+    };
+
+    private static readonly Bias SOCIAL_COMPARISON_BIAS = new()
+    {
+        Id = new Guid("09527928-6417-4eea-9719-d8ed4748691f"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Social Comparison Bias
+            Social comparison bias is the tendency to have feelings of dislike and competitiveness with someone seen as
+            physically, socially, or mentally better than oneself. Social comparison bias or social comparison theory is
+            the idea that individuals determine their own worth based on how they compare to others. The theory was
+            developed in 1954 by psychologist Leon Festinger. This can be compared to social comparison, which is
+            believed to be central to achievement motivation, feelings of injustice, depression, jealousy, and people's
+            willingness to remain in relationships or jobs. The basis of the theory is that people are believed to
+            compete for the best outcome in relation to their peers. For example, one might make a comparison between the
+            low-end department stores they go to frequently and the designer stores of their peers. Such comparisons may
+            evoke feelings of resentment, anger, and envy with their peers. This bias revolves mostly around wealth and
+            social status; it is unconscious and people who make these are largely unaware of them. In most cases, people
+            try to compare themselves to those in their peer group or with whom they are similar.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Social_comparison_bias",
+        ],
+    };
+
+    private static readonly Bias DECOY_EFFECT = new()
+    {
+        Id = new Guid("c8a532e9-5958-4894-aa0d-29ed6412780f"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Decoy Effect
+            In marketing, the decoy effect (or attraction effect or asymmetric dominance effect) is the phenomenon
+            whereby consumers will tend to have a specific change in preference between two options when also presented
+            with a third option that is asymmetrically dominated. An option is asymmetrically dominated when it is
+            inferior in all respects to one option; but, in comparison to the other option, it is inferior in some
+            respects and superior in others. In other words, in terms of specific attributes determining preferences,
+            it is completely dominated by (i.e., inferior to) one option and only partially dominated by the other.
+            When the asymmetrically dominated option is present, a higher percentage of consumers will prefer the
+            dominating option than when the asymmetrically dominated option is absent. The asymmetrically dominated
+            option is therefore a decoy serving to increase preference for the dominating option. The decoy effect
+            is also an example of the violation of the independence of irrelevant alternatives axiom of decision
+            theory. More simply, when deciding between two options, an unattractive third option can change the
+            perceived preference between the other two.
+            
+            The decoy effect is considered particularly important in choice theory because it is a violation of the
+            assumption of "regularity" present in all axiomatic choice models, for example in a Luce model of choice.
+            Regularity means that it should not be possible for the market share of any alternative to increase when
+            another alternative is added to the choice set. The new alternative should reduce, or at best leave unchanged,
+            the choice share of existing alternatives. Regularity is violated in the example shown below where a new
+            alternative C not only changes the relative shares of A and B but actually increases the share of A in
+            absolute terms. Similarly, the introduction of a new alternative D increases the share of B in absolute
+            terms.
+            
+            ## Example
+            Suppose there is a consideration set (options to choose from in a menu) that involves smartphones. Consumers
+            will generally see higher storage capacity (number of GB) and lower price as positive attributes; while some
+            consumers may want a device that can store more photos, music, etc., other consumers will want a device that
+            costs less. In Consideration Set 1, two devices are available:
+            
+            Consideration Set 1:
+            - A: $400, 300GB
+            - B: $300, 200GB
+            
+            In this case, some consumers will prefer A for its greater storage capacity, while others will prefer B for
+            its lower price.
+            
+            Now suppose that a new player, C, the "decoy", is added to the market; it is more expensive than both A, the
+            "target", and B, the "competitor", and has more storage than B but less than A:
+            
+            Consideration Set 2:
+            - A (target): $400, 300GB
+            - B (competitor): $300, 200GB
+            - C (decoy): $450, 250GB
+            
+            The addition of decoy C — which consumers would presumably avoid, given that a lower price can be paid for a
+            model with more storage—causes A, the dominating option, to be chosen more often than if only the two choices
+            in Consideration Set 1 existed; C affects consumer preferences by acting as a basis of comparison for A and B.
+            Because A is better than C in both respects, while B is only partially better than C, more consumers will
+            prefer A now than did before. C is therefore a decoy whose sole purpose is to increase sales of A.
+            
+            Conversely, suppose that instead of C, a player D is introduced that has less storage than both A and B, and
+            that is more expensive than B but not as expensive as A:
+            
+            Consideration Set 3:
+            - A (competitor): $400, 300GB
+            - B (target): $300, 200GB
+            - D (decoy): $350, 150GB
+            
+            The result here is similar: consumers will not prefer D, because it is not as good as B in any respect. However,
+            whereas C increased preference for A, D has the opposite effect, increasing preference for B.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Decoy_effect",
+        ],
+    };
+
+    private static readonly Bias REACTANCE = new()
+    {
+        Id = new Guid("d3c2cb4b-ec29-4cf3-a485-9a98e9f1f223"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Reactance
+            In psychology, reactance is an unpleasant motivational reaction to offers, persons, rules, regulations, advice, or
+            recommendations that are perceived to threaten or eliminate specific behavioral freedoms. Reactance occurs when an
+            individual feels that an agent is attempting to limit one's choice of response and/or range of alternatives.
+            
+            Reactance can occur when someone is heavily pressured into accepting a certain view or attitude. Reactance can
+            encourage an individual to adopt or strengthen a view or attitude which is indeed contrary to that which was
+            intended — which is to say, to a response of noncompliance — and can also increase resistance to persuasion.
+            Some individuals might employ reverse psychology in a bid to exploit reactance for their benefit, in an attempt
+            to influence someone to choose the opposite of what is being requested. Reactance can occur when an individual
+            senses that someone is trying to compel them to do something; often the individual will offer resistance and
+            attempt to extricate themselves from the situation.
+            
+            Some individuals are naturally high in reactance, a personality characteristic called trait reactance.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Reactance_(psychology)",
+        ],
+    };
+    
     #endregion
     
     public static readonly IReadOnlyDictionary<Guid, Bias> ALL_BIAS = new Dictionary<Guid, Bias>
     {
+        { REACTANCE.Id, REACTANCE },
+        { DECOY_EFFECT.Id, DECOY_EFFECT },
+        { SOCIAL_COMPARISON_BIAS.Id, SOCIAL_COMPARISON_BIAS },
+        { STATUS_QUO_BIAS.Id, STATUS_QUO_BIAS },
         { AMBIGUITY_EFFECT.Id, AMBIGUITY_EFFECT },
         { INFORMATION_BIAS.Id, INFORMATION_BIAS },
         { BELIEF_BIAS.Id, BELIEF_BIAS },
