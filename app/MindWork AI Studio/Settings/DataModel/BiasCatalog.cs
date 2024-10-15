@@ -4505,10 +4505,530 @@ public static class BiasCatalog
             Some individuals are naturally high in reactance, a personality characteristic called trait reactance.
             """,
 
-        Related = [],
+        Related = [
+            new Guid("a9c7faa7-2368-4be5-9eda-a37ffd8f7ab1"), // REVERSE_PSYCHOLOGY
+        ],
         Links =
         [
             "https://en.wikipedia.org/wiki/Reactance_(psychology)",
+        ],
+    };
+
+    private static readonly Bias REVERSE_PSYCHOLOGY = new()
+    {
+        Id = new Guid("a9c7faa7-2368-4be5-9eda-a37ffd8f7ab1"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Reverse Psychology
+            Reverse psychology is a technique involving the assertion of a belief or behavior that is opposite to the one desired, with the expectation
+            that this approach will encourage the subject of the persuasion to do what is actually desired. This technique relies on the psychological
+            phenomenon of reactance, in which a person has a negative emotional reaction to being persuaded, and thus chooses the option which is being
+            advocated against. This may work especially well on a person who is resistant by nature, while direct requests work best for people who are
+            compliant. The one being manipulated is usually unaware of what is really going on.
+            """,
+
+        Related = [
+            new Guid("d3c2cb4b-ec29-4cf3-a485-9a98e9f1f223"), // REACTANCE
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Reverse_psychology",
+        ],
+    };
+
+    private static readonly Bias SYSTEM_JUSTIFICATION = new()
+    {
+        Id = new Guid("755c8f9e-b172-4ff7-9797-9cc130bf4939"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # System Justification
+            System justification theory is a theory within social psychology that system-justifying beliefs serve a psychologically
+            palliative function. It proposes that people have several underlying needs, which vary from individual to individual,
+            that can be satisfied by the defense and justification of the status quo, even when the system may be disadvantageous
+            to certain people. People have epistemic, existential, and relational needs that are met by and manifest as ideological
+            support for the prevailing structure of social, economic, and political norms. Need for order and stability, and thus
+            resistance to change or alternatives, for example, can be a motivator for individuals to see the status quo as good,
+            legitimate, and even desirable.
+            
+            According to system justification theory, people desire not only to hold favorable attitudes about themselves
+            (ego-justification) and the groups to which they belong (group-justification), but also to hold positive attitudes
+            about the overarching social structure in which they are entwined and find themselves obligated to (system-justification).
+            This system-justifying motive sometimes produces the phenomenon known as out-group favoritism, an acceptance of inferiority
+            among low-status groups and a positive image of relatively higher status groups. Thus, the notion that individuals are
+            simultaneously supporters and victims of the system-instilled norms is a central idea in system justification theory.
+            Additionally, the passive ease of supporting the current structure, when compared to the potential price (material,
+            social, psychological) of acting out against the status quo, leads to a shared environment in which the existing social,
+            economic, and political arrangements tend to be preferred. Alternatives to the status quo tend to be disparaged, and
+            inequality tends to perpetuate.
+            """,
+
+        Related = [
+            new Guid("b9e05a25-ac09-407d-8aee-f54a04decf0b"), // STATUS_QUO_BIAS
+            new Guid("b1cc861b-f445-450b-9bdf-e9d222abdb4e"), // IN_GROUP_FAVORITISM
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/System_justification",
+        ],
+    };
+
+    private static readonly Bias BELIEF_PERSEVERANCE = new()
+    {
+        Id = new Guid("bf8f304d-2e8e-4a90-a9c5-7bd56f6058a6"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Belief Perseverance
+            Belief perseverance (also known as conceptual conservatism) is maintaining a belief despite new information that
+            firmly contradicts it. Since rationality involves conceptual flexibility, belief perseverance is consistent with
+            the view that human beings act at times in an irrational manner. Philosopher F.C.S. Schiller holds that belief
+            perseverance "deserves to rank among the fundamental 'laws' of nature".
+            
+            If beliefs are strengthened after others attempt to present evidence debunking them, this is known as a backfire
+            effect. There are psychological mechanisms by which backfire effects could potentially occur, but the evidence on
+            this topic is mixed, and backfire effects are very rare in practice. A 2020 review of the scientific literature on
+            backfire effects found that there have been widespread failures to replicate their existence, even under conditions
+            that would be theoretically favorable to observing them.[8] Due to the lack of reproducibility, as of 2020 most
+            researchers believe that backfire effects are either unlikely to occur on the broader population level, or they
+            only occur in very specific circumstances, or they do not exist. For most people, corrections and fact-checking
+            are very unlikely to have a negative impact, and there is no specific group of people in which backfire effects
+            have been consistently observed.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Belief_perseverance",
+        ],
+    };
+
+    private static readonly Bias ENDOWMENT_EFFECT = new()
+    {
+        Id = new Guid("b81482f8-b2cf-4b86-a5a4-fcd29aee4e69"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Endowment Effect
+            In psychology and behavioral economics, the endowment effect, also known as divestiture aversion, is the finding
+            that people are more likely to retain an object they own than acquire that same object when they do not own it.
+            The endowment theory can be defined as "an application of prospect theory positing that loss aversion associated
+            with ownership explains observed exchange asymmetries."
+            
+            This is typically illustrated in two ways. In a valuation paradigm, people's maximum willingness to pay (WTP) to
+            acquire an object is typically lower than the least amount they are willing to accept (WTA) to give up that same
+            object when they own it—even when there is no cause for attachment, or even if the item was only obtained minutes
+            ago. In an exchange paradigm, people given a good are reluctant to trade it for another good of similar value.
+            For example, participants first given a pen of equal expected value to that of a coffee mug were generally unwilling
+            to trade, whilst participants first given the coffee mug were also unwilling to trade it for the pen.
+            """,
+
+        Related = [
+            new Guid("ad3ed908-c56e-411b-a130-8af8574ff67b"), // LOSS_AVERSION
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Endowment_effect",
+        ],
+    };
+
+    private static readonly Bias PROCESSING_DIFFICULTY_EFFECT = new()
+    {
+        Id = new Guid("4f61b9fa-146a-4b6e-b075-f0ba2ee0d9d0"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Processing Difficulty Effect
+            That information that takes longer to read and is thought about more (processed with more difficulty) is more easily remembered.
+            """,
+
+        Related = [
+            new Guid("a4027640-1f52-4ff1-ae13-bd14a30d5b8d"), // LEVELS_OF_PROCESSING_EFFECT
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/List_of_cognitive_biases#Other_memory_biases",
+        ],
+    };
+
+    private static readonly Bias PSEUDOCERTAINTY_EFFECT = new()
+    {
+        Id = new Guid("656c78c9-d75a-4c07-a80d-f3a5026f859c"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Pseudocertainty Effect
+            In prospect theory, the pseudocertainty effect is the tendency for people to perceive an outcome as certain while it is
+            actually uncertain in multi-stage decision making. The evaluation of the certainty of the outcome in a previous stage of
+            decisions is disregarded when selecting an option in subsequent stages. Not to be confused with certainty effect, the
+            pseudocertainty effect was discovered from an attempt at providing a normative use of decision theory for the certainty
+            effect by relaxing the cancellation rule.
+            """,
+
+        Related = [
+            new Guid("ad3ed908-c56e-411b-a130-8af8574ff67b"), // LOSS_AVERSION
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Pseudocertainty_effect",
+        ],
+    };
+
+    private static readonly Bias CERTAINTY_EFFECT = new()
+    {
+        Id = new Guid("ac7d745c-d66e-4886-87d7-ddaba349d4e8"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Certainty Effect
+            The certainty effect is the psychological effect resulting from the reduction of probability from certain to probable
+            (Tversky & Kahneman 1986). It is an idea introduced in prospect theory. Normally a reduction in the probability of
+            winning a reward (e.g., a reduction from 80% to 20% in the chance of winning a reward) creates a psychological effect
+            such as displeasure to individuals, which leads to the perception of loss from the original probability thus favoring
+            a risk-averse decision. However, the same reduction results in a larger psychological effect when it is done from
+            certainty than from uncertainty.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Certainty_effect",
+        ],
+    };
+
+    private static readonly Bias DISPOSITION_EFFECT = new()
+    {
+        Id = new Guid("4ecb0187-b2e2-446f-87e2-1e32f269e497"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Disposition Effect
+            The disposition effect is an anomaly discovered in behavioral finance. It relates to the tendency of investors to sell
+            assets that have increased in value, while keeping assets that have dropped in value. Hersh Shefrin and Meir Statman
+            identified and named the effect in their 1985 paper, which found that people dislike losing significantly more than they
+            enjoy winning. The disposition effect has been described as one of the foremost vigorous actualities around individual
+            investors because investors will hold stocks that have lost value yet sell stocks that have gained value.
+            
+            In 1979, Daniel Kahneman and Amos Tversky traced the cause of the disposition effect to the so-called "prospect theory".
+            The prospect theory proposes that when an individual is presented with two equal choices, one having possible gains and
+            the other with possible losses, the individual is more likely to opt for the former choice even though both would yield
+            the same economic result.
+            
+            The disposition effect can be minimized by means of a mental approach called "hedonic framing". For example, individuals
+            can try to force themselves to think of a single large gain as a number of smaller gains, to think of a number of smaller
+            losses as a single large loss, to think of the combination of a major gain and a minor loss as a net minor gain, and, in
+            the case of a combined major loss and minor gain, to think of the two separately. In a similar manner, investors show a
+            reversed disposition effect when they are framed to think of their investment as progress towards a specific investment
+            goal rather than a generic investment.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Disposition_effect",
+        ],
+    };
+
+    private static readonly Bias ZERO_RISK_BIAS = new()
+    {
+        Id = new Guid("77553998-bfa7-450e-acd9-586a55064302"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Zero-Risk Bias
+            Zero-risk bias is a tendency to prefer the complete elimination of risk in a sub-part over alternatives with greater
+            overall risk reduction. It often manifests in cases where decision makers address problems concerning health, safety,
+            and the environment. Its effect on decision making has been observed in surveys presenting hypothetical scenarios.
+            
+            Zero-risk bias is based on the way people feel better if a risk is eliminated instead of being merely mitigated.
+            Scientists identified a zero-risk bias in responses to a questionnaire about a hypothetical cleanup scenario involving
+            two hazardous sites X and Y, with X causing 8 cases of cancer annually and Y causing 4 cases annually. The respondents
+            ranked three cleanup approaches: two options each reduced the total number of cancer cases by 6, while the third reduced
+            the number by 5 and eliminated the cases at site Y. While the latter option featured the worst reduction overall, 42% of
+            the respondents ranked it better than at least one of the other options. This conclusion resembled one from an earlier
+            economics study that found people were willing to pay high costs to eliminate a risk. It has a normative justification
+            since once risk is eliminated, people would have less to worry about and such removal of worry also has utility. It is
+            also driven by our preference for winning much more than losing as well as the old instead of the new way, all of which
+            cloud the way the world is viewed.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Zero-risk_bias",
+        ],
+    };
+
+    private static readonly Bias UNIT_BIAS = new()
+    {
+        Id = new Guid("ff43a9e2-7dde-47ca-a3ef-5a9c2d3117c9"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Unit Bias
+            The standard suggested amount of consumption (e.g., food serving size) is perceived to be appropriate, and a person would
+            consume it all even if it is too much for this particular person.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/List_of_cognitive_biases#Other",
+        ],
+    };
+
+    private static readonly Bias IKEA_EFFECT = new()
+    {
+        Id = new Guid("565616dc-ed84-42af-b9cc-6fa666cc5d66"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # IKEA Effect
+            The IKEA effect is a cognitive bias in which consumers place a disproportionately high value on products they
+            partially created. The name refers to Swedish manufacturer and furniture retailer IKEA, which sells many items
+            of furniture that require assembly. A 2011 study found that subjects were willing to pay 63% more for furniture
+            they had assembled themselves than for equivalent pre-assembled items.
+            """,
+
+        Related = [
+            new Guid("b9c06da1-d2eb-4871-8159-a2a6d25e9eff"), // DUNNING_KRUGER_EFFECT
+            new Guid("30deb7d6-4019-4fef-9823-8d8126e54f0a"), // ESCALATION_OF_COMMITMENT
+            new Guid("ad32d669-fc79-44c9-a570-609e1ccdc799"), // OMISSION_BIAS
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/IKEA_effect",
+        ],
+    };
+
+    private static readonly Bias LOSS_AVERSION = new()
+    {
+        Id = new Guid("ad3ed908-c56e-411b-a130-8af8574ff67b"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Loss Aversion
+            In cognitive science and behavioral economics, loss aversion refers to a cognitive bias in which the same situation
+            is perceived as worse if it is framed as a loss, rather than a gain. It should not be confused with risk aversion,
+            which describes the rational behavior of valuing an uncertain outcome at less than its expected value.
+            
+            ## Application
+            In marketing, the use of trial periods and rebates tries to take advantage of the buyer's tendency to value the good
+            more after the buyer incorporates it in the status quo. In past behavioral economics studies, users participate up
+            until the threat of loss equals any incurred gains. Methods established by Botond Kőszegi and Matthew Rabin in
+            experimental economics illustrates the role of expectation, wherein an individual's belief about an outcome can
+            create an instance of loss aversion, whether or not a tangible change of state has occurred.
+            
+            Whether a transaction is framed as a loss or as a gain is important to this calculation. The same change in price
+            framed differently, for example as a $5 discount or as a $5 surcharge avoided, has a significant effect on
+            consumer behavior. Although traditional economists consider this "endowment effect", and all other effects of
+            loss aversion, to be completely irrational, it is important to the fields of marketing and behavioral finance.
+            Users in behavioral and experimental economics studies decided to cease participation in iterative money-making
+            games when the threat of loss was close to the expenditure of effort, even when the user stood to further their
+            gains. Loss aversion coupled with myopia has been shown to explain macroeconomic phenomena, such as the equity
+            premium puzzle. Loss aversion to kinship is an explanation for aversion to inheritance tax.
+            """,
+
+        Related = [
+            new Guid("b81482f8-b2cf-4b86-a5a4-fcd29aee4e69"), // ENDOWMENT_EFFECT
+            new Guid("ef521fbb-c20b-47c9-87f8-a571a06a03eb"), // NEGATIVITY_BIAS
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Loss_aversion",
+        ],
+    };
+
+    private static readonly Bias GENERATION_EFFECT = new()
+    {
+        Id = new Guid("af442ab1-ffc5-404c-9ee8-3497fe6992ec"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Generation Effect
+            The generation effect is a phenomenon whereby information is better remembered if it is generated from one's own
+            mind rather than simply read. Researchers have struggled to fully explain why generated information is better
+            recalled than read information, as no single explanation has been comprehensive.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Generation_effect",
+        ],
+    };
+
+    private static readonly Bias ESCALATION_OF_COMMITMENT = new()
+    {
+        Id = new Guid("30deb7d6-4019-4fef-9823-8d8126e54f0a"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Escalation of Commitment
+            Escalation of commitment is a human behavior pattern in which an individual or group facing increasingly negative
+            outcomes from a decision, action, or investment nevertheless continue the behavior instead of altering course.
+            The actor maintains behaviors that are irrational, but align with previous decisions and actions.
+            
+            Economists and behavioral scientists use a related term, sunk-cost fallacy, to describe the justification of
+            increased investment of money or effort in a decision, based on the cumulative prior investment ("sunk cost")
+            despite new evidence suggesting that the future cost of continuing the behavior outweighs the expected benefit.
+            
+            In sociology, irrational escalation of commitment or commitment bias describe similar behaviors. The phenomenon
+            and the sentiment underlying them are reflected in such proverbial images as "throwing good money after bad",
+            or "In for a penny, in for a pound", or "It's never the wrong time to make the right decision", or "If you find
+            yourself in a hole, stop digging."
+            """,
+
+        Related = [
+            new Guid("9a2d58f5-bbf1-4b34-8e1b-f9bcd8814f05"), // SUNK_COST_FALLACY
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Escalation_of_commitment",
+        ],
+    };
+
+    private static readonly Bias SUNK_COST_FALLACY = new()
+    {
+        Id = new Guid("9a2d58f5-bbf1-4b34-8e1b-f9bcd8814f05"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Sunk Cost Fallacy
+            The Misconception: You make rational decisions based on the future value of objects, investments and experiences.
+            The Truth: Your decisions are tainted by the emotional investments you accumulate, and the more you invest in
+            something the harder it becomes to abandon it.
+            
+            Example: R&D costs. Once spent, such costs are sunk and should have no effect on future pricing decisions. So a
+            pharmaceutical company's attempt to justify high prices because of the need to recoup R&D expenses is fallacious.
+            The company will charge market prices whether R&D had cost one dollar or one million dollars. However, R&D costs,
+            and the ability to recoup those costs, are a factor in deciding whether to spend the money on R&D. It’s important
+            to distinguish that while justifying high prices on past R&D is a fallacy, raising prices in order to finance
+            future R&D is not.
+            
+            Counterpoint: It is sometimes not that simple. In a broad range of situations, it is rational for people to condition
+            behavior on sunk costs, because of informational content, reputational concerns, or financial and time constraints.
+            """,
+
+        Related = [
+            new Guid("30deb7d6-4019-4fef-9823-8d8126e54f0a"), // ESCALATION_OF_COMMITMENT
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Sunk_cost#Fallacy_effect",
+        ],
+    };
+
+    private static readonly Bias IDENTIFIABLE_VICTIM_EFFECT = new()
+    {
+        Id = new Guid("0c18a8bd-5e5f-4cf0-a90e-47dd7a421035"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Identifiable Victim Effect
+            The identifiable victim effect is the tendency of individuals to offer greater aid when a specific, identifiable
+            person ("victim") is observed under hardship, as compared to a large, vaguely defined group with the same need.
+            
+            The identifiable victim effect has two components. People are more inclined to help an identified victim than an
+            unidentified one, and people are more inclined to help a single identified victim than a group of identified victims.
+            Although helping an identified victim may be commendable, the identifiable victim effect is considered a cognitive
+            bias. From a consequentialist point of view, the cognitive error is the failure to offer N times as much help to N
+            unidentified victims.
+            
+            The identifiable victim effect has a mirror image that is sometimes called the identifiable perpetrator effect.
+            Research has shown that individuals are more inclined to mete out punishment, even at their own expense, when they
+            are punishing a specific, identified perpetrator.
+            
+            The conceptualization of the identifiable victim effect as it is known today is commonly attributed to American
+            economist Thomas Schelling. He wrote that harm to a particular person invokes "anxiety and sentiment, guilt and awe,
+            responsibility and religion, [but]…most of this awesomeness disappears when we deal with statistical death".
+            
+            Historical figures from Joseph Stalin to Mother Teresa are credited with statements that epitomize the identifiable
+            victim effect. The remark "One death is a tragedy; a million deaths is a statistic" is widely, although probably
+            incorrectly, attributed to Stalin. The remark "If I look at the mass I will never act. If I look at the one, I
+            will," is attributed to Mother Teresa.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Identifiable_victim_effect",
+        ],
+    };
+
+    private static readonly Bias APPEAL_TO_NOVELTY = new()
+    {
+        Id = new Guid("2d57f4d6-e599-4738-812a-c12cef877779"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Appeal to Novelty
+            The appeal to novelty (also called appeal to modernity or argumentum ad novitatem) is a fallacy in which one
+            prematurely claims that an idea or proposal is correct or superior, exclusively because it is new and modern.
+            In a controversy between status quo and new inventions, an appeal to novelty argument is not in itself a valid
+            argument. The fallacy may take two forms: overestimating the new and modern, prematurely and without investigation
+            assuming it to be best-case, or underestimating status quo, prematurely and without investigation assuming it to
+            be worst-case.
+            
+            Investigation may prove these claims to be true, but it is a fallacy to prematurely conclude this only from the
+            general claim that all novelty is good.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Appeal_to_novelty",
+        ],
+    };
+
+    private static readonly Bias HYPERBOLIC_DISCOUNTING = new()
+    {
+        Id = new Guid("19a483d0-2c8f-486f-bf9e-619d0df4c916"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Hyperbolic Discounting
+            Given two similar rewards, humans show a preference for one that arrives in a more prompt timeframe. Humans are said
+            to discount the value of the later reward, by a factor that increases with the length of the delay. In the financial
+            world, this process is normally modeled in the form of exponential discounting, a time-consistent model of discounting.
+            Many psychological studies have since demonstrated deviations in instinctive preference from the constant discount rate
+            assumed in exponential discounting. Hyperbolic discounting is an alternative mathematical model that agrees more closely
+            with these findings.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Hyperbolic_discounting",
+        ],
+    };
+
+    private static readonly Bias RISK_COMPENSATION = new()
+    {
+        Id = new Guid("10fcc295-02b6-4dbf-b655-f5bcff3c1ca7"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Risk Compensation
+            Risk compensation is a theory which suggests that people typically adjust their behavior in response to perceived
+            levels of risk, becoming more careful where they sense greater risk and less careful if they feel more protected.
+            Although usually small in comparison to the fundamental benefits of safety interventions, it may result in a lower
+            net benefit than expected or even higher risks.
+            
+            By way of example, it has been observed that motorists drove closer to the vehicle in front when the vehicles were
+            fitted with anti-lock brakes. There is also evidence that the risk compensation phenomenon could explain the failure
+            of condom distribution programs to reverse HIV prevalence and that condoms may foster disinhibition, with people
+            engaging in risky sex both with and without condoms.
+            
+            By contrast, shared space is an urban street design method which consciously aims to increase the level of perceived
+            risk and uncertainty, thereby slowing traffic and reducing the number and seriousness of injuries.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Risk_compensation",
         ],
     };
     
@@ -4516,6 +5036,25 @@ public static class BiasCatalog
     
     public static readonly IReadOnlyDictionary<Guid, Bias> ALL_BIAS = new Dictionary<Guid, Bias>
     {
+        { RISK_COMPENSATION.Id, RISK_COMPENSATION },
+        { HYPERBOLIC_DISCOUNTING.Id, HYPERBOLIC_DISCOUNTING },
+        { APPEAL_TO_NOVELTY.Id, APPEAL_TO_NOVELTY },
+        { IDENTIFIABLE_VICTIM_EFFECT.Id, IDENTIFIABLE_VICTIM_EFFECT },
+        { SUNK_COST_FALLACY.Id, SUNK_COST_FALLACY },
+        { ESCALATION_OF_COMMITMENT.Id, ESCALATION_OF_COMMITMENT },
+        { GENERATION_EFFECT.Id, GENERATION_EFFECT },
+        { LOSS_AVERSION.Id, LOSS_AVERSION },
+        { IKEA_EFFECT.Id, IKEA_EFFECT },
+        { UNIT_BIAS.Id, UNIT_BIAS },
+        { ZERO_RISK_BIAS.Id, ZERO_RISK_BIAS },
+        { DISPOSITION_EFFECT.Id, DISPOSITION_EFFECT },
+        { CERTAINTY_EFFECT.Id, CERTAINTY_EFFECT },
+        { PSEUDOCERTAINTY_EFFECT.Id, PSEUDOCERTAINTY_EFFECT },
+        { PROCESSING_DIFFICULTY_EFFECT.Id, PROCESSING_DIFFICULTY_EFFECT },
+        { ENDOWMENT_EFFECT.Id, ENDOWMENT_EFFECT },
+        { BELIEF_PERSEVERANCE.Id, BELIEF_PERSEVERANCE },
+        { SYSTEM_JUSTIFICATION.Id, SYSTEM_JUSTIFICATION },
+        { REVERSE_PSYCHOLOGY.Id, REVERSE_PSYCHOLOGY },
         { REACTANCE.Id, REACTANCE },
         { DECOY_EFFECT.Id, DECOY_EFFECT },
         { SOCIAL_COMPARISON_BIAS.Id, SOCIAL_COMPARISON_BIAS },
