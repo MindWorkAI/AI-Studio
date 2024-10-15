@@ -18,9 +18,6 @@ namespace AIStudio.Pages;
 public partial class Chat : MSGComponentBase, IAsyncDisposable
 {
     [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
-
-    [Inject]
     private ThreadSafeRandom RNG { get; init; } = null!;
     
     [Inject]
