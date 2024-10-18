@@ -248,7 +248,7 @@ async fn main() {
     // parallel:
     //
     tauri::async_runtime::spawn(async move {
-        _ = rocket::custom(figment)
+        rocket::custom(figment)
             .mount("/", routes![
                 dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update,
                 get_secret, store_secret, delete_secret, get_data_directory, get_config_directory,
