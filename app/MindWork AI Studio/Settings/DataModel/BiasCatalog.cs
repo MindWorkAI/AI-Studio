@@ -12,6 +12,10 @@ namespace AIStudio.Settings.DataModel;
 /// Benson's work, which was then supplemented with definitions
 /// by Brian Rene Morrissette.
 ///
+/// All texts were checked by Thorsten Sommer against the 2024
+/// version of Wikipedia. Most texts were replaced with the latest
+/// versions, and long texts were shortened to the essentials.
+/// 
 /// The texts were revised and, when necessary, supplemented by
 /// Thorsten Sommer for integration into AI Studio. Sources and
 /// additional links were also researched by Thorsten Sommer.
