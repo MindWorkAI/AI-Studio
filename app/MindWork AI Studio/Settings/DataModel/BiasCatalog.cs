@@ -5031,11 +5031,543 @@ public static class BiasCatalog
             "https://en.wikipedia.org/wiki/Risk_compensation",
         ],
     };
+
+    private static readonly Bias EFFORT_JUSTIFICATION = new()
+    {
+        Id = new Guid("cff2c74d-a160-4a90-b0b2-10f145b804cb"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Effort Justification
+            Effort justification is an idea and paradigm in social psychology stemming from Leon Festinger's theory of cognitive
+            dissonance. Effort justification is a person's tendency to attribute the value of an outcome they put effort into
+            achieving as greater than the objective value of the outcome.
+            
+            Cognitive dissonance theory explains changes in people's attitudes or beliefs as the result of an attempt to reduce a
+            dissonance (discrepancy) between contradicting ideas or cognitions. In the case of effort justification, there is a
+            dissonance between the amount of effort exerted into achieving a goal or completing a task (high effort equalling high
+            "cost") and the subjective reward for that effort (lower than was expected for such an effort). By adjusting and increasing
+            one's attitude or subjective value of the goal, this dissonance is resolved.
+            
+            One of the first and most classic examples of effort justification is Aronson and Mills's study. A group of young women
+            who volunteered to join a discussion group on the topic of the psychology of sex were asked to do a small reading test
+            to make sure they were not too embarrassed to talk about sexual-related topics with others. The mild-embarrassment
+            condition subjects were asked to read aloud a list of sex-related words such as prostitute or virgin. The
+            severe-embarrassment condition subjects were asked to read aloud a list of highly sexual words (e.g. fuck, cock) and
+            to read two vivid descriptions of sexual activity taken from contemporary novels. All subjects then listened to a
+            recording of a discussion about sexual behavior in animals which was dull and unappealing. When asked to rate the
+            group and its members, control and mild-embarrassment groups did not differ, but the severe-embarrassment group's
+            ratings were significantly higher. This group, whose initiation process was more difficult (embarrassment equalling
+            effort), had to increase their subjective value of the discussion group to resolve the dissonance.
+            """,
+
+        Related = [
+            new Guid("565616dc-ed84-42af-b9cc-6fa666cc5d66"), // IKEA_EFFECT
+            new Guid("ad32d669-fc79-44c9-a570-609e1ccdc799"), // OMISSION_BIAS
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Effort_justification",
+        ],
+    };
+
+    private static readonly Bias TRAIT_ASCRIPTION_BIAS = new()
+    {
+        Id = new Guid("4727839d-64c5-4ba4-b044-6b09f14d5a34"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Trait Ascription Bias
+            Trait ascription bias is the tendency for people to view themselves as relatively variable in terms of personality,
+            behavior and mood while viewing others as much more predictable in their personal traits across different situations.
+            More specifically, it is a tendency to describe one's own behaviour in terms of situational factors while preferring
+            to describe another's behaviour by ascribing fixed dispositions to their personality. This may occur because peoples'
+            own internal states are more readily observable and available to them than those of others.
+            
+            This attributional bias intuitively plays a role in the formation and maintenance of stereotypes and prejudice,
+            combined with the negativity effect. However, trait ascription and trait-based models of personality remain
+            contentious in modern psychology and social science research. Trait ascription bias refers to the situational
+            and dispositional evaluation and description of personality traits on a personal level. A similar bias on the
+            group level is called the outgroup homogeneity bias. 
+            """,
+
+        Related = [
+            new Guid("ef521fbb-c20b-47c9-87f8-a571a06a03eb"), // NEGATIVITY_BIAS
+            new Guid("2cb8514a-c4a2-4cf6-aed7-72d7870ace84"), // BARNUM_EFFECT
+            new Guid("f1570784-f8ec-46fd-8bb8-763aef31a04a"), // FUNDAMENTAL_ATTRIBUTION_ERROR
+            new Guid("a44a6bcf-b2b8-47f1-84e0-d740af56aa1e"), // ILLUSION_OF_ASYMMETRIC_INSIGHT
+            new Guid("f8fd4635-69b3-47be-8243-8c7c6749cae2"), // ILLUSORY_SUPERIORITY
+            new Guid("80f9b496-798a-4a1e-a426-815f23b8698e"), // INTROSPECTION_ILLUSION
+            new Guid("5ae6f7ec-3be2-47ad-ad75-0ed114f97fe0"), // NAÏVE_CYNICISM
+            new Guid("ca2d4f1f-924f-44ae-886b-19240cf2c8c0"), // ULTIMATE_ATTRIBUTION_ERROR
+            
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Trait_ascription_bias",
+        ],
+    };
+
+    private static readonly Bias DEFENSIVE_ATTRIBUTION_HYPOTHESIS = new()
+    {
+        Id = new Guid("5a973490-c19a-43c7-8a01-a26e0d05f275"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Defensive Attribution Hypothesis
+            The defensive attribution hypothesis (or bias, theory, or simply defensive attribution) is a social
+            psychological term where an observer attributes the causes for a mishap to minimize their fear of
+            being a victim or a cause in a similar situation. The attributions of blame are negatively correlated
+            to similarities between the observer and the people involved in the mishap, i.e. more responsibility
+            is attributed to the people involved who are dissimilar to the observer. Assigning responsibility
+            allows the observer to believe that the mishap was controllable and thus preventable.
+            
+            A defensive attribution may also be used to protect the person's self-esteem if, despite everything,
+            the mishap does occur, because blame can be assigned to the "other" (person or situation). The use of
+            defensive attributions is considered a cognitive bias because an individual will change their beliefs
+            about a situation based upon their motivations or desires rather than the factual characteristics of
+            the situation.
+            
+            ## Sexual assault
+            Researchers examining sexual assault have consistently found that male participants blamed rapists less
+            than female participants did, and that male participants blamed the rape victims more than female
+            participants did. These findings support Shaver's similarity-responsibility hypothesis: male participants,
+            who are personally similar to (male) rapists, blame rapists less than female participants who are dissimilar
+            to rapists. On the other hand, female participants, who are personally similar to (female) rape victims,
+            blame the victims less than male participants.
+            """,
+
+        Related = [
+            new Guid("efceb4b1-e19f-4997-9f96-1657bb269b2d"), // ATTRIBUTION_BIAS
+            new Guid("ad32d669-fc79-44c9-a570-609e1ccdc799"), // OMISSION_BIAS
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Defensive_attribution_hypothesis",
+        ],
+    };
+
+    private static readonly Bias FUNDAMENTAL_ATTRIBUTION_ERROR = new()
+    {
+        Id = new Guid("f1570784-f8ec-46fd-8bb8-763aef31a04a"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Fundamental Attribution Error
+            In social psychology, the fundamental attribution error (FAE) [a] is a cognitive attribution bias in which
+            observers underemphasize situational and environmental factors for the behavior of an actor while overemphasizing
+            dispositional or personality factors. In other words, observers tend to overattribute the behaviors of others to
+            their personality (e.g., he is late because he's selfish) and underattribute them to the situation or context
+            (e.g., he is late because he got stuck in traffic). Although personality traits and predispositions are considered
+            to be observable facts in psychology, the fundamental attribution error is an error because it misinterprets their
+            effects.
+            
+            The group attribution error (GAE) is identical to the fundamental attribution error, where the bias is shown between
+            members of different groups rather than different individuals. The ultimate attribution error is a derivative of the
+            FAE and GAE relating to the actions of groups, with an additional layer of self-justification relating to whether
+            the action of an individual is representative of the wider group.
+            """,
+
+        Related = [
+            new Guid("ca2d4f1f-924f-44ae-886b-19240cf2c8c0"), // ULTIMATE_ATTRIBUTION_ERROR
+            new Guid("577e79e5-0a53-4c4c-a2ea-d039870bfbb9"), // GROUP_ATTRIBUTION_ERROR
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Fundamental_attribution_error",
+        ],
+    };
+
+    private static readonly Bias ILLUSION_OF_CONTROL = new()
+    {
+        Id = new Guid("7fce783e-2120-4aad-9805-2c2a2b937b7d"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Illusion of Control
+            The illusion of control is the tendency for people to overestimate their ability to control events. It was named
+            by U.S. psychologist Ellen Langer and is thought to influence gambling behavior and belief in the paranormal.
+            
+            It is the tendency for people to overestimate their ability to control events, for example, when someone feels a
+            sense of control over outcomes that they demonstrably do not influence. The illusion might arise because a person
+            lacks direct introspective insight into whether they are in control of events. This has been called the introspection
+            illusion. Instead, they may judge their degree of control by a process which is often unreliable. As a result, they see
+            themselves as responsible for events to which there is little or no causal link. For example, in one study, college
+            students were in a virtual reality setting to treat a fear of heights using an elevator. Those who were told that they
+            had control, yet had none, felt as though they had as much control as those who actually did have control over the
+            elevator. Those who were led to believe they did not have control said they felt as though they had little control.
+            
+            The illusion is more common in familiar situations, and in situations where the person knows the desired outcome.
+            Feedback that emphasizes success rather than failure can increase the effect, while feedback that emphasizes failure
+            can decrease or reverse the effect. The illusion is weaker for depressed individuals and is stronger when individuals
+            have an emotional need to control the outcome. The illusion is strengthened by stressful and competitive situations,
+            including financial trading. Although people are likely to overestimate their control when the situations are heavily
+            chance-determined, they also tend to underestimate their control when they actually have it, which runs contrary to
+            some theories of the illusion and its adaptiveness. People also showed a higher illusion of control when they were
+            allowed to become familiar with a task through practice trials, make their choice before the event happens like
+            with throwing dice, and when they can make their choice rather than have it made for them with the same odds.
+            People are more likely to show control when they have more answers right at the beginning than at the end,
+            even when the people had the same number of correct answers.
+            
+            Being in a position of power enhances the illusion of control, which may lead to overreach in risk taking.
+            """,
+
+        Related = [
+            new Guid("80f9b496-798a-4a1e-a426-815f23b8698e"), // INTROSPECTION_ILLUSION
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Illusion_of_control",
+        ],
+    };
+
+    private static readonly Bias ACTOR_OBSERVER_BIAS = new()
+    {
+        Id = new Guid("5da6dcf4-ed01-4e14-99b0-7a624b16cf17"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Actor-Observer Bias
+            Actor–observer asymmetry (also actor–observer bias) is a bias one makes when forming attributions about the behavior
+            of others or themselves. When people judge their own behavior, they are more likely to attribute their actions to the
+            particular situation than to their personality. However, when an observer is explaining the behavior of another person,
+            they are more likely to attribute this behavior to the actors' personality rather than to situational factors.
+            
+            Sometimes the actor–observer asymmetry is defined as the fundamental attribution error, which is when people tend to
+            explain behavior on the internal, personal characteristics rather than the external factors or situational influences.
+            
+            The specific hypothesis of an actor–observer asymmetry in attribution was originally proposed by Edward Jones and
+            Richard Nisbett, where they said that "actors tend to attribute the causes of their behavior to stimuli inherent
+            in the situation, while observers tend to attribute behavior to stable dispositions of the actor". Supported by
+            initial evidence, the hypothesis was long held as firmly established. However, a meta-analysis of all the published
+            tests of the hypothesis between 1971 and 2004 found that there was no actor–observer asymmetry of the sort that had
+            been previously proposed. The author of the study interpreted this result not so much as proof that actors and observers
+            explained behavior exactly the same way but as evidence that the original hypothesis was fundamentally flawed in the way
+            it framed people's explanations of behavior as attributions to either stable dispositions or the situation.
+            
+            Considerations of actor–observer differences can be found in other disciplines as well, such as philosophy (e.g.
+            privileged access, incorrigibility), management studies, artificial intelligence, semiotics, anthropology, and
+            political science.
+            """,
+
+        Related = [
+            new Guid("ca2d4f1f-924f-44ae-886b-19240cf2c8c0"), // ULTIMATE_ATTRIBUTION_ERROR
+            new Guid("f1570784-f8ec-46fd-8bb8-763aef31a04a"), // FUNDAMENTAL_ATTRIBUTION_ERROR
+            new Guid("b57a862b-b490-4d61-96b8-29d548c2eee4"), // POSITIVITY_EFFECT
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Actor%E2%80%93observer_asymmetry",
+        ],
+    };
+
+    private static readonly Bias SELF_SERVING_BIAS = new()
+    {
+        Id = new Guid("923ee6c0-2f9c-47fc-a570-339190c1a250"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Self-Serving Bias
+            A self-serving bias is any cognitive or perceptual process that is distorted by the need to maintain and enhance
+            self-esteem, or the tendency to perceive oneself in an overly favorable manner. It is the belief that individuals
+            tend to ascribe success to their own abilities and efforts, but ascribe failure to external factors. When individuals
+            reject the validity of negative feedback, focus on their strengths and achievements but overlook their faults and
+            failures, or take more credit for their group's work than they give to other members, they are protecting their
+            self-esteem from threat and injury. These cognitive and perceptual tendencies perpetuate illusions and error, but
+            they also serve the self's need for esteem. For example, a student who attributes earning a good grade on an exam
+            to their own intelligence and preparation but attributes earning a poor grade to the teacher's poor teaching ability
+            or unfair test questions might be exhibiting a self-serving bias. Studies have shown that similar attributions are
+            made in various situations, such as the workplace, interpersonal relationships, sports, and consumer decisions.
+            
+            Both motivational processes (i.e. self-enhancement, self-presentation) and cognitive processes (i.e. locus of control,
+            self-esteem) influence the self-serving bias. There are both cross-cultural (i.e. individualistic and collectivistic
+            culture differences) and special clinical population (i.e. depression) considerations within the bias. Much of the
+            research on the self-serving bias has used participant self-reports of attribution based on experimental manipulation
+            of task outcomes or in naturalistic situations. Some more modern research, however, has shifted focus to physiological
+            manipulations, such as emotional inducement and neural activation, in an attempt to better understand the biological
+            mechanisms that contribute to the self-serving bias.
+            """,
+
+        Related = [
+            new Guid("b9c06da1-d2eb-4871-8159-a2a6d25e9eff"), // DUNNING_KRUGER_EFFECT
+            new Guid("f1570784-f8ec-46fd-8bb8-763aef31a04a"), // FUNDAMENTAL_ATTRIBUTION_ERROR
+            new Guid("f8fd4635-69b3-47be-8243-8c7c6749cae2"), // ILLUSORY_SUPERIORITY
+            new Guid("ad32d669-fc79-44c9-a570-609e1ccdc799"), // OMISSION_BIAS
+            new Guid("7bf44f8f-a4b0-404c-8f15-8ca6e3322d32"), // OPTIMISM_BIAS
+            new Guid("b821d449-64e5-4c0a-9d5a-3fda609a9b86"), // OVERCONFIDENCE_EFFECT
+            new Guid("e36f82b7-43dd-4073-99d9-c33073007185"), // MORAL_CREDENTIAL_EFFECT
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Self-serving_bias",
+        ],
+    };
+
+    private static readonly Bias OPTIMISM_BIAS = new()
+    {
+        Id = new Guid("7bf44f8f-a4b0-404c-8f15-8ca6e3322d32"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Optimism Bias
+            Optimism bias or optimistic bias is a cognitive bias that causes someone to believe that they themselves
+            are less likely to experience a negative event. It is also known as unrealistic optimism or comparative optimism.
+            
+            Optimism bias is common and transcends gender, ethnicity, nationality, and age. However, autistic people are less
+            susceptible to this kind of biases. Optimistic biases have also reported in other animals, such as rats and birds.
+            
+            Four factors can cause a person to be optimistically biased: their desired end state, their cognitive mechanisms,
+            the information they have about themselves versus others, and overall mood. The optimistic bias is seen in a number
+            of situations. For example: people believing that they are less at risk of being a crime victim, smokers believing
+            that they are less likely to contract lung cancer or disease than other smokers, first-time bungee jumpers believing
+            that they are less at risk of an injury than other jumpers, or traders who think they are less exposed to potential
+            losses in the markets.
+            
+            Although the optimism bias occurs for both positive events (such as believing oneself to be more financially successful
+            than others) and negative events (such as being less likely to have a drinking problem), there is more research and
+            evidence suggesting that the bias is stronger for negative events (the valence effect). Different consequences result
+            from these two types of events: positive events often lead to feelings of well being and self-esteem, while negative
+            events lead to consequences involving more risk, such as engaging in risky behaviors and not taking precautionary
+            measures for safety.
+            """,
+
+        Related = [
+            new Guid("67041978-ac8e-4254-ae2c-509e7301619f"), // PESSIMISM_BIAS
+            new Guid("7fce783e-2120-4aad-9805-2c2a2b937b7d"), // ILLUSION_OF_CONTROL
+            new Guid("f8fd4635-69b3-47be-8243-8c7c6749cae2"), // ILLUSORY_SUPERIORITY
+            new Guid("ef521fbb-c20b-47c9-87f8-a571a06a03eb"), // NEGATIVITY_BIAS
+            new Guid("b57a862b-b490-4d61-96b8-29d548c2eee4"), // POSITIVITY_EFFECT
+            new Guid("923ee6c0-2f9c-47fc-a570-339190c1a250"), // SELF_SERVING_BIAS
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Optimism_bias",
+        ],
+    };
+
+    private static readonly Bias EGOCENTRIC_BIAS = new()
+    {
+        Id = new Guid("953746dc-ce10-4e3b-8f9e-9246de63f531"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Egocentric Bias
+            Egocentric bias is the tendency to rely too heavily on one's own perspective and/or have a higher opinion of
+            oneself than reality. It appears to be the result of the psychological need to satisfy one's ego and to be
+            advantageous for memory consolidation. Research has shown that experiences, ideas, and beliefs are more easily
+            recalled when they match one's own, causing an egocentric outlook. Michael Ross and Fiore Sicoly first identified
+            this cognitive bias in their 1979 paper, "Egocentric Biases in Availability and Attribution". Egocentric bias is
+            referred to by most psychologists as a general umbrella term under which other related phenomena fall.
+            
+            The effects of egocentric bias can differ based on personal characteristics, such as age and the number of
+            languages one speaks. Thus far, there have been many studies focusing on specific implications of egocentric
+            bias in different contexts. Research on collaborative group tasks have emphasized that people view their own
+            contributions differently than they view that of others. Other areas of research have been aimed at studying
+            how mental health patients display egocentric bias, and at the relationship between egocentric bias and voter
+            distribution. These types of studies surrounding egocentric bias usually involve written or verbal questionnaires,
+            based on the subject's personal life or their decision in various hypothetical scenarios. 
+            """,
+
+        Related = [
+            new Guid("923ee6c0-2f9c-47fc-a570-339190c1a250"), // SELF_SERVING_BIAS
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Egocentric_bias",
+        ],
+    };
+
+    private static readonly Bias DUNNING_KRUGER_EFFECT = new()
+    {
+        Id = new Guid("b9c06da1-d2eb-4871-8159-a2a6d25e9eff"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Dunning-Kruger Effect
+            The Dunning–Kruger effect is a cognitive bias in which people with limited competence in a particular domain overestimate
+            their abilities. It was first described by Justin Kruger and David Dunning in 1999. Some researchers also include the
+            opposite effect for high performers: their tendency to underestimate their skills. In popular culture, the Dunning–Kruger
+            effect is often misunderstood as a claim about general overconfidence of people with low intelligence instead of specific
+            overconfidence of people unskilled at a particular task.
+            """,
+
+        Related = [
+            new Guid("f8fd4635-69b3-47be-8243-8c7c6749cae2"), // ILLUSORY_SUPERIORITY
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect",
+        ],
+    };
+
+    private static readonly Bias HARD_EASY_EFFECT = new()
+    {
+        Id = new Guid("07f0c252-1d97-4207-8000-8e4d8800fb42"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Hard-Easy Effect
+            The hard–easy effect is a cognitive bias that manifests itself as a tendency to overestimate the probability of
+            one's success at a task perceived as hard, and to underestimate the likelihood of one's success at a task perceived
+            as easy. The hard-easy effect takes place, for example, when individuals exhibit a degree of underconfidence in
+            answering relatively easy questions and a degree of overconfidence in answering relatively difficult questions.
+            "Hard tasks tend to produce overconfidence but worse-than-average perceptions," reported Katherine A. Burson,
+            Richard P. Larrick, and Jack B. Soll in a 2005 study, "whereas easy tasks tend to produce underconfidence and
+            better-than-average effects."
+            
+            The hard-easy effect falls under the umbrella of "social comparison theory", which was originally formulated by
+            Leon Festinger in 1954. Festinger argued that individuals are driven to evaluate their own opinions and abilities
+            accurately, and social comparison theory explains how individuals carry out those evaluations by comparing themselves
+            to others.
+            """,
+
+        Related = [
+            new Guid("b821d449-64e5-4c0a-9d5a-3fda609a9b86"), // OVERCONFIDENCE_EFFECT
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Hard%E2%80%93easy_effect",
+        ],
+    };
+
+    private static readonly Bias FALSE_CONSENSUS_EFFECT = new()
+    {
+        Id = new Guid("bc0dc6d3-5115-4def-91ae-a38aebed185e"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # False Consensus Effect
+            In psychology, the false consensus effect, also known as consensus bias, is a pervasive cognitive bias that causes
+            people to "see their own behavioral choices and judgments as relatively common and appropriate to existing
+            circumstances". In other words, they assume that their personal qualities, characteristics, beliefs, and actions
+            are relatively widespread through the general population.
+            
+            This false consensus is significant because it increases self-esteem (overconfidence effect). It can be derived from
+            a desire to conform and be liked by others in a social environment. This bias is especially prevalent in group
+            settings where one thinks the collective opinion of their own group matches that of the larger population. Since
+            the members of a group reach a consensus and rarely encounter those who dispute it, they tend to believe that
+            everybody thinks the same way. The false-consensus effect is not restricted to cases where people believe that
+            their values are shared by the majority, but it still manifests as an overestimate of the extent of their belief.
+            
+            Additionally, when confronted with evidence that a consensus does not exist, people often assume that those who
+            do not agree with them are defective in some way. There is no single cause for this cognitive bias; the
+            availability heuristic, self-serving bias, and naïve realism have been suggested as at least partial underlying
+            factors. The bias may also result, at least in part, from non-social stimulus-reward associations. Maintenance
+            of this cognitive bias may be related to the tendency to make decisions with relatively little information.
+            When faced with uncertainty and a limited sample from which to make decisions, people often "project"
+            themselves onto the situation. When this personal knowledge is used as input to make generalizations,
+            it often results in the false sense of being part of the majority.
+            """,
+
+        Related = [
+            new Guid("b821d449-64e5-4c0a-9d5a-3fda609a9b86"), // OVERCONFIDENCE_EFFECT
+            new Guid("d749ce96-32f3-4c3d-86f7-26ff4edabe4a"), // AVAILABILITY_HEURISTIC
+            new Guid("923ee6c0-2f9c-47fc-a570-339190c1a250"), // SELF_SERVING_BIAS
+            new Guid("f0ad095e-8e9c-4bfb-855e-11fb5dd58cea"), // NAÏVE_REALISM
+        ],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/False_consensus_effect",
+        ],
+    };
+
+    private static readonly Bias THIRD_PERSON_EFFECT = new()
+    {
+        Id = new Guid("b9186d75-3362-4dd4-a3ec-4345a04161c9"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Third-Person Effect
+            The third-person effect hypothesis predicts that people tend to perceive that mass media messages have a greater
+            effect on others than on themselves, based on personal biases. The third-person effect manifests itself through
+            an individual's overestimation of the effect of a mass communicated message on the generalized other, or an
+            underestimation of the effect of a mass communicated message on themselves.
+            
+            These types of perceptions stem from a self-motivated social desirability (not feeling influenced by mass messages
+            promotes self-esteem), a social-distance corollary (choosing to dissociate oneself from the others who may be
+            influenced), and a perceived exposure to a message (others choose to be influenced by persuasive communication).
+            Other names for the effect are "Third-person perception" and "Web Third-person effect". From 2015, the effect is
+            named "Web Third-person effect" when it is verified in social media, media websites, blogs and in websites in general.
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Third-person_effect",
+        ],
+    };
+
+    private static readonly Bias SOCIAL_DESIRABILITY_BIAS = new()
+    {
+        Id = new Guid("a378b725-8bf9-4213-a875-326426d5c759"),
+        Category = BiasCategory.NEED_TO_ACT_FAST,
+        Description =
+            """
+            # Social-Desirability Bias
+            In social science research, social-desirability bias is a type of response bias that is the tendency of survey
+            respondents to answer questions in a manner that will be viewed favorably by others. It can take the form of
+            over-reporting "good behavior" or under-reporting "bad", or undesirable behavior. The tendency poses a serious
+            problem with conducting research with self-reports. This bias interferes with the interpretation of average
+            tendencies as well as individual differences.
+            
+            Topics where socially desirable responding (SDR) is of special concern are self-reports of abilities, personality,
+            sexual behavior, and drug use. When confronted with the question "How often do you masturbate?," for example,
+            respondents may be pressured by a social taboo against masturbation, and either under-report the frequency or
+            avoid answering the question. Therefore, the mean rates of masturbation derived from self-report surveys are
+            likely to be severely underestimated.
+            
+            When confronted with the question, "Do you use drugs/illicit substances?" the respondent may be influenced by
+            the fact that controlled substances, including the more commonly used marijuana, are generally illegal.
+            Respondents may feel pressured to deny any drug use or rationalize it, e.g. "I only smoke marijuana when my
+            friends are around." The bias can also influence reports of number of sexual partners. In fact, the bias
+            may operate in opposite directions for different subgroups: Whereas men tend to inflate the numbers, women
+            tend to underestimate theirs. In either case, the mean reports from both groups are likely to be distorted
+            by social desirability bias.
+            
+            Other topics that are sensitive to social-desirability bias include:
+            
+            - Self-reported personality traits will correlate strongly with social desirability bias[2]
+            - Personal income and earnings, often inflated when low and deflated when high
+            - Feelings of low self-worth and/or powerlessness, often denied
+            - Excretory functions, often approached uncomfortably, if discussed at all
+            - Compliance with medicinal-dosing schedules, often inflated
+            - Family planning, including use of contraceptives and abortion[3][4]
+            - Religion, often either avoided or uncomfortably approached[5]
+            - Patriotism, either inflated or, if denied, done so with a fear of other party's judgment
+            - Bigotry and intolerance, often denied, even if it exists within the responder
+            - Intellectual achievements, often inflated
+            - Physical appearance, either inflated or deflated
+            - Acts of real or imagined physical violence, often denied
+            - Indicators of charity or "benevolence," often inflated
+            - Illegal acts, often denied
+            - Voter turnout
+            """,
+
+        Related = [],
+        Links =
+        [
+            "https://en.wikipedia.org/wiki/Social-desirability_bias",
+        ],
+    };
     
     #endregion
     
     public static readonly IReadOnlyDictionary<Guid, Bias> ALL_BIAS = new Dictionary<Guid, Bias>
     {
+        { SOCIAL_DESIRABILITY_BIAS.Id, SOCIAL_DESIRABILITY_BIAS },
+        { THIRD_PERSON_EFFECT.Id, THIRD_PERSON_EFFECT },
+        { FALSE_CONSENSUS_EFFECT.Id, FALSE_CONSENSUS_EFFECT },
+        { HARD_EASY_EFFECT.Id, HARD_EASY_EFFECT },
+        { DUNNING_KRUGER_EFFECT.Id, DUNNING_KRUGER_EFFECT },
+        { EGOCENTRIC_BIAS.Id, EGOCENTRIC_BIAS },
+        { OPTIMISM_BIAS.Id, OPTIMISM_BIAS },
+        { SELF_SERVING_BIAS.Id, SELF_SERVING_BIAS },
+        { ACTOR_OBSERVER_BIAS.Id, ACTOR_OBSERVER_BIAS }, 
+        { ILLUSION_OF_CONTROL.Id, ILLUSION_OF_CONTROL },
+        { FUNDAMENTAL_ATTRIBUTION_ERROR.Id, FUNDAMENTAL_ATTRIBUTION_ERROR }, 
+        { DEFENSIVE_ATTRIBUTION_HYPOTHESIS.Id, DEFENSIVE_ATTRIBUTION_HYPOTHESIS },
+        { TRAIT_ASCRIPTION_BIAS.Id, TRAIT_ASCRIPTION_BIAS }, 
+        { EFFORT_JUSTIFICATION.Id, EFFORT_JUSTIFICATION },
         { RISK_COMPENSATION.Id, RISK_COMPENSATION },
         { HYPERBOLIC_DISCOUNTING.Id, HYPERBOLIC_DISCOUNTING },
         { APPEAL_TO_NOVELTY.Id, APPEAL_TO_NOVELTY },
