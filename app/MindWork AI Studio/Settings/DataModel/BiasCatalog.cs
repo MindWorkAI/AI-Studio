@@ -28,6 +28,7 @@ public static class BiasCatalog
     {
         Id = new Guid("dd45c762-0599-4c6d-82e0-d10f7ee85bb1"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Misattribution of Memory",
         Description = 
             """
             # Misattribution of Memory
@@ -68,6 +69,7 @@ public static class BiasCatalog
     {
         Id = new Guid("688bba31-0b8e-49c5-8693-aecb37018a08"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "List Length Effect",
         Description =
             """
             # List Length Effect
@@ -85,6 +87,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2b69b071-6587-4ea1-a4f5-aee4e2fef43c"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Misinformation Effect",
         Description =
             """
             # Misinformation Effect
@@ -110,6 +113,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d1ed47f9-2415-4fa3-8ca3-151e9e4ee3ca"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Leveling and Sharpening",
         Description =
             """
             # Leveling and Sharpening
@@ -128,6 +132,7 @@ public static class BiasCatalog
     {
         Id = new Guid("cf71d1e1-f49e-4d8f-a6c3-37056297bf13"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Peak-End Rule",
         Description =
             """
             # Peak-End Rule
@@ -150,6 +155,7 @@ public static class BiasCatalog
     {
         Id = new Guid("0378a05c-b55b-4451-a7f4-b5e1d6287d83"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Fading Affect Bias",
         Description =
             """
             # Fading Affect Bias
@@ -169,6 +175,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ef521fbb-c20b-47c9-87f8-a571a06a03eb"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Negativity Bias",
         Description =
             """
             # Negativity Bias
@@ -194,6 +201,7 @@ public static class BiasCatalog
     {
         Id = new Guid("efb6606f-4629-4e5e-973f-94d5ac496638"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Prejudice",
         Description =
             """
             # Prejudice
@@ -228,6 +236,7 @@ public static class BiasCatalog
     {
         Id = new Guid("30bd6403-b7f4-4d16-9494-af6a22b349d3"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Implicit Stereotypes",
         Description =
             """
             # Implicit Stereotypes
@@ -263,6 +272,7 @@ public static class BiasCatalog
     {
         Id = new Guid("6f1d8a61-cb64-44fe-9a52-5ee66c22fba4"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Implicit Associations",
         Description =
             """
             # Implicit Associations
@@ -290,6 +300,7 @@ public static class BiasCatalog
     {
         Id = new Guid("41e06aaf-73c2-4f48-9962-312d57308468"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Spacing Effect",
         Description =
             """
             # Spacing Effect
@@ -319,6 +330,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4d377bac-062a-46d3-a1a5-46f3ac804a97"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Suggestibility",
         Description =
             """
             # Suggestibility
@@ -366,6 +378,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ad341a56-ffa5-4dd1-b3c6-ef2476b89b5a"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Tip of the Tongue Phenomenon",
         Description =
             """
             # Tip of the Tongue Phenomenon
@@ -401,6 +414,7 @@ public static class BiasCatalog
     {
         Id = new Guid("aca65269-40cc-4a9f-b850-c0e2eb283987"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Google Effect",
         Description =
             """
             # Google Effect
@@ -425,6 +439,7 @@ public static class BiasCatalog
     {
         Id = new Guid("c0b3d9f9-c0d9-482f-bf6f-d52dffe58205"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Next-In-Line Effect",
         Description =
             """
             # Next-In-Line Effect
@@ -456,6 +471,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2fe5fbe7-3fff-4621-9111-21d8c3b8bcb2"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Testing Effect",
         Description =
             """
             # Testing Effect
@@ -480,6 +496,7 @@ public static class BiasCatalog
     {
         Id = new Guid("f459e613-4f6a-472e-ab9a-0961f5f4a685"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Absent-Mindedness",
         Description =
             """
             # Absent-Mindedness
@@ -512,6 +529,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a4027640-1f52-4ff1-ae13-bd14a30d5b8d"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Levels of Processing Effect",
         Description =
             """
             # Levels of Processing Effect
@@ -540,6 +558,7 @@ public static class BiasCatalog
     {
         Id = new Guid("1f2b459b-26bc-4a2d-b48e-a9b06d34f924"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Suffix Effect",
         Description =
             """
             # Suffix Effect
@@ -561,6 +580,7 @@ public static class BiasCatalog
     {
         Id = new Guid("fdd1e260-125b-4d06-bab5-a6204f96d5a7"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Serial-Position Effect",
         Description =
             """
             # Serial-Position Effect
@@ -605,6 +625,7 @@ public static class BiasCatalog
     {
         Id = new Guid("005b650d-74be-4c10-a279-33dcd5c13f84"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Part-List Cuing",
         Description =
             """
             # Part-List Cuing
@@ -619,6 +640,7 @@ public static class BiasCatalog
     {
         Id = new Guid("741cafef-3f47-45dd-a082-bb243eba124a"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Recency Effect",
         Description =
             """
             # Recency Bias
@@ -646,6 +668,7 @@ public static class BiasCatalog
     {
         Id = new Guid("78f65dab-ab6d-4c4c-81f5-250edd1e8991"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Primacy Effect",
         Description =
             """
             # Primacy Effect
@@ -669,6 +692,7 @@ public static class BiasCatalog
     {
         Id = new Guid("0a370e78-860b-4784-9acf-688b5e1c3148"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Memory Inhibition",
         Description =
             """
             # Memory Inhibition
@@ -699,6 +723,7 @@ public static class BiasCatalog
     {
         Id = new Guid("eeca14c3-8710-4522-8991-81db170d7f8b"),
         Category = BiasCategory.WHAT_SHOULD_WE_REMEMBER,
+        Name = "Modality Effect",
         Description =
             """
             # Modality Effect
@@ -729,6 +754,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d749ce96-32f3-4c3d-86f7-26ff4edabe4a"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Availability Heuristic",
         Description =
             """
             # Availability Heuristic
@@ -771,6 +797,7 @@ public static class BiasCatalog
     {
         Id = new Guid("368cc51b-a235-4fa4-ad90-446c084ffae8"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Attentional Bias",
         Description =
             """
             # Attentional Bias
@@ -792,6 +819,7 @@ public static class BiasCatalog
     {
         Id = new Guid("cadafb8f-d1ed-4c92-9c29-2f1cb0797a66"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Illusory Truth Effect",
         Description =
             """
             # Illusory Truth Effect
@@ -827,6 +855,7 @@ public static class BiasCatalog
     {
         Id = new Guid("8b6cd991-fcf4-4e45-b3ac-f20987667d94"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Mere-Exposure Effect",
         Description =
             """
             # Mere-Exposure Effect
@@ -861,6 +890,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ccba2bca-8739-4b05-8c88-e54424e441d4"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Context Effect",
         Description =
             """
             # Context Effect
@@ -898,6 +928,7 @@ public static class BiasCatalog
     {
         Id = new Guid("944bc142-895e-4c7f-ba00-bbceefc383c9"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Cue-Dependent Forgetting",
         Description =
             """
             # Cue-Dependent Forgetting
@@ -926,6 +957,7 @@ public static class BiasCatalog
     {
         Id = new Guid("bf83101d-47af-4d81-8306-935d4ab59fd7"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "State-Dependent Memory",
         Description =
             """
             # State-Dependent Memory
@@ -952,6 +984,7 @@ public static class BiasCatalog
     {
         Id = new Guid("6b049d68-9104-4579-a7a4-a744c11bd65f"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Context-Dependent Memory",
         Description =
             """
             # Context-Dependent Memory
@@ -987,6 +1020,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4e571eaf-7c2b-44c8-b8cb-0c8da658b82d"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Frequency Illusion",
         Description =
             """
             # Frequency Illusion
@@ -1020,6 +1054,7 @@ public static class BiasCatalog
     {
         Id = new Guid("e4e091cf-fed3-4c09-9c21-509db0b2729b"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Hot-Cold Empathy Gap",
         Description =
             """
             # Hot-Cold Empathy Gap
@@ -1075,6 +1110,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ad32d669-fc79-44c9-a570-609e1ccdc799"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Omission Bias",
         Description =
             """
             # Omission Bias
@@ -1109,6 +1145,7 @@ public static class BiasCatalog
     {
         Id = new Guid("1de0de03-a2a7-4248-b004-4152d84a3c86"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Base Rate Fallacy",
         Description =
             """
             # Base Rate Fallacy
@@ -1139,6 +1176,7 @@ public static class BiasCatalog
     {
         Id = new Guid("7f2d9bd2-96e5-4100-85f8-a13b37e91a9f"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Bizarreness Effect",
         Description =
             """
             # Bizarreness Effect
@@ -1164,6 +1202,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4c5ef2d4-5ebb-48ea-b9ee-9b2751ae6914"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Humour Effect",
         Description =
             """
             # Humour Effect
@@ -1178,6 +1217,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b922da6f-765e-42e9-b675-f8109c010f2f"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Von Restorff Effect",
         Description =
             """
             # Von Restorff Effect
@@ -1217,6 +1257,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2b8f679b-480c-4588-96b5-951767f870e3"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Picture Superiority Effect",
         Description =
             """
             # Picture Superiority Effect
@@ -1243,6 +1284,7 @@ public static class BiasCatalog
     {
         Id = new Guid("302b0004-1f18-4ed0-8fc1-6396fc7e6dbe"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Self-Reference Effect",
         Description =
             """
             # Self-Reference Effect
@@ -1262,6 +1304,7 @@ public static class BiasCatalog
     {
         Id = new Guid("fe94ab26-70bb-4682-b7ee-e2828e4b02bd"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Anchoring Effect",
         Description =
             """
             # Anchoring Effect
@@ -1299,6 +1342,7 @@ public static class BiasCatalog
     {
         Id = new Guid("8533edf9-3117-48c5-8f78-efbd996911f0"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Conservatism Bias",
         Description =
             """
             # Conservatism Bias
@@ -1326,6 +1370,7 @@ public static class BiasCatalog
     {
         Id = new Guid("bc69c14d-0f2d-47ce-b20f-836fae36beb6"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Contrast Effect",
         Description =
             """
             # Contrast Effect
@@ -1359,6 +1404,7 @@ public static class BiasCatalog
     {
         Id = new Guid("0c65fbf8-c74a-49a1-8a16-0e789bce9524"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Distinction Bias",
         Description =
             """
             # Distinction Bias
@@ -1390,6 +1436,7 @@ public static class BiasCatalog
     {
         Id = new Guid("490f26a1-3b9b-4048-9488-8ba93b8bd8af"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Focusing Effect",
         Description =
             """
             # Focusing Effect
@@ -1408,6 +1455,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a1950fc4-20e0-4d36-8e68-540b491b2d23"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Framing Effect",
         Description =
             """
             # Framing Effect
@@ -1442,6 +1490,7 @@ public static class BiasCatalog
     {
         Id = new Guid("33136203-8d52-42e5-ad32-561b3c288676"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Money Illusion",
         Description =
             """
             # Money Illusion
@@ -1485,6 +1534,7 @@ public static class BiasCatalog
     {
         Id = new Guid("528077d5-fdad-47df-89d4-6a32287c321b"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Weber–Fechner Law",
         Description =
             """
             # Weber–Fechner Law
@@ -1520,6 +1570,7 @@ public static class BiasCatalog
     {
         Id = new Guid("af63ce77-f6c6-4e0f-8a9e-3daedc497f9a"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Confirmation Bias",
         Description =
             """
             # Confirmation Bias
@@ -1561,6 +1612,7 @@ public static class BiasCatalog
     {
         Id = new Guid("fee14af4-34af-4cd0-a72c-9ad489516b60"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Congruence Bias",
         Description =
             """
             # Congruence Bias
@@ -1582,9 +1634,10 @@ public static class BiasCatalog
     {
         Id = new Guid("51337702-9dc4-442a-8584-78f56e9ec186"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Choice-supportive Bias",
         Description =
             """
-            # Choice-supportive bias
+            # Choice-supportive Bias
             Choice-supportive bias or post-purchase rationalization is the tendency to retroactively ascribe positive attributes
             to an option one has selected and/or to demote the forgone options. It is part of cognitive science, and is a
             distinct cognitive bias that occurs once a decision is made. For example, if a person chooses option A instead of
@@ -1606,6 +1659,7 @@ public static class BiasCatalog
     {
         Id = new Guid("91fded4f-de89-405e-8627-dba49cf5deaa"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Selective Perception",
         Description =
             """
             # Selective Perception
@@ -1631,6 +1685,7 @@ public static class BiasCatalog
     {
         Id = new Guid("c06c9a63-15aa-4601-aff4-ddfe6dd9727a"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Observer-Expectancy Effect",
         Description =
             """
             # Observer-Expectancy Effect
@@ -1667,6 +1722,7 @@ public static class BiasCatalog
     {
         Id = new Guid("75e51ef5-f992-41c2-8778-0002c617db9a"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Ostrich Effect",
         Description =
             """
             # Ostrich Effect
@@ -1698,6 +1754,7 @@ public static class BiasCatalog
     {
         Id = new Guid("85612b34-0a78-454e-a204-7840bc11521c"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Subjective Validation",
         Description =
             """
             # Subjective Validation
@@ -1727,6 +1784,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2cb8514a-c4a2-4cf6-aed7-72d7870ace84"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Barnum Effect",
         Description =
             """
             # Barnum Effect
@@ -1755,6 +1813,7 @@ public static class BiasCatalog
     {
         Id = new Guid("7169c5e4-ca95-4568-b816-a36e2049993b"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Continued Influence Effect",
         Description =
             """
             # Continued Influence Effect
@@ -1775,6 +1834,7 @@ public static class BiasCatalog
     {
         Id = new Guid("48e2374a-9919-43eb-baa6-fc8c4f837d31"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Semmelweis Reflex",
         Description =
             """
             # Semmelweis Reflex
@@ -1796,6 +1856,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d8f01e8b-23c3-47da-979e-f18a3d4e104d"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Bias Blind Spot",
         Description =
             """
             # Bias Blind Spot
@@ -1828,6 +1889,7 @@ public static class BiasCatalog
     {
         Id = new Guid("80f9b496-798a-4a1e-a426-815f23b8698e"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Introspection Illusion",
         Description =
             """
             # Introspection Illusion
@@ -1870,6 +1932,7 @@ public static class BiasCatalog
     {
         Id = new Guid("f8fd4635-69b3-47be-8243-8c7c6749cae2"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Illusory Superiority",
         Description =
             """
             # Illusory Superiority
@@ -1901,6 +1964,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b821d449-64e5-4c0a-9d5a-3fda609a9b86"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Overconfidence Effect",
         Description =
             """
             # Overconfidence Effect
@@ -1936,6 +2000,7 @@ public static class BiasCatalog
     {
         Id = new Guid("5ae6f7ec-3be2-47ad-ad75-0ed114f97fe0"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Naïve Cynicism",
         Description =
             """
             # Naïve Cynicism
@@ -1988,6 +2053,7 @@ public static class BiasCatalog
     {
         Id = new Guid("f0ad095e-8e9c-4bfb-855e-11fb5dd58cea"),
         Category = BiasCategory.TOO_MUCH_INFORMATION,
+        Name = "Naïve Realism",
         Description =
             """
             # Naïve Realism
@@ -2031,6 +2097,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2bbea096-a2a6-413f-85ce-32b5ae18669f"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Confabulation",
         Description =
             """
             # Confabulation
@@ -2052,6 +2119,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2c2ed1a8-aa4d-486d-a9b4-5a16ae9230c9"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Clustering Illusion",
         Description =
             """
             # Clustering Illusion
@@ -2075,6 +2143,7 @@ public static class BiasCatalog
     {
         Id = new Guid("465418ae-54b8-42ef-a29e-6ee9e9ffa769"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Insensitivity to Sample Size",
         Description =
             """
             # Insensitivity to Sample Size
@@ -2097,6 +2166,7 @@ public static class BiasCatalog
     {
         Id = new Guid("44c6efd7-53f1-4d22-82fe-25e941390089"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Neglect of Probability",
         Description =
             """
             # Neglect of Probability
@@ -2125,6 +2195,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a448fe93-b176-4b5f-9498-f57f3f970a67"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Anecdotal Fallacy",
         Description =
             """
             # Anecdotal Fallacy
@@ -2150,6 +2221,7 @@ public static class BiasCatalog
     {
         Id = new Guid("8f68af8b-7b27-4697-bcf6-8bd4a5392a22"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Illusion of Validity",
         Description =
             """
             # Illusion of Validity
@@ -2180,6 +2252,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ecfa5b28-3900-45ba-89c7-f8d995dfe406"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "WYSIATI (What You See Is All There Is)",
         Description =
             """
             # WYSIATI (What You See Is All There Is)
@@ -2201,6 +2274,7 @@ public static class BiasCatalog
     {
         Id = new Guid("5ddf8011-0ba2-4341-9e18-46178f8d4fbe"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Masked-Man Fallacy",
         Description =
             """
             # Masked-Man Fallacy
@@ -2233,6 +2307,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d0a79f6e-7786-4dd7-8a3f-62f167252171"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Recency Illusion",
         Description =
             """
             # Recency Illusion
@@ -2257,6 +2332,7 @@ public static class BiasCatalog
     {
         Id = new Guid("61cd7e34-23be-43ef-ab97-8118cef7d23f"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Gambler's Fallacy",
         Description =
             """
             # Gambler's Fallacy
@@ -2298,6 +2374,7 @@ public static class BiasCatalog
     {
         Id = new Guid("5fd14849-7041-42ee-976e-9a2b10522d29"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Hot Hand Fallacy",
         Description =
             """
             # Hot Hand Fallacy
@@ -2326,6 +2403,7 @@ public static class BiasCatalog
     {
         Id = new Guid("829d3178-8ebc-417c-b587-2ead31525327"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Illusory Correlation",
         Description =
             """
             # Illusory Correlation
@@ -2355,6 +2433,7 @@ public static class BiasCatalog
     {
         Id = new Guid("274cc868-df03-4fae-9dca-ccb07a66aeaf"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Pareidolia",
         Description =
             """
             # Pareidolia
@@ -2382,6 +2461,7 @@ public static class BiasCatalog
     {
         Id = new Guid("6ab69dc8-6fcc-42c3-b190-90125a15b49f"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Apophenia",
         Description =
             """
             # Apophenia
@@ -2413,6 +2493,7 @@ public static class BiasCatalog
     {
         Id = new Guid("70470097-52a8-4ea7-a85c-ed88ad1ed972"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Anthropomorphism",
         Description =
             """
             # Anthropomorphism
@@ -2443,6 +2524,7 @@ public static class BiasCatalog
     {
         Id = new Guid("577e79e5-0a53-4c4c-a2ea-d039870bfbb9"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Group Attribution Error",
         Description =
             """
             # Group Attribution Error
@@ -2473,6 +2555,7 @@ public static class BiasCatalog
     {
         Id = new Guid("efceb4b1-e19f-4997-9f96-1657bb269b2d"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Attribution Bias",
         Description =
             """
             # Attribution Bias
@@ -2510,6 +2593,7 @@ public static class BiasCatalog
     {
         Id = new Guid("e85d8b16-5a36-4b63-af07-72c5188f089f"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Hostile Attribution Bias",
         Description =
             """
             # Hostile Attribution Bias
@@ -2532,6 +2616,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ca2d4f1f-924f-44ae-886b-19240cf2c8c0"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Ultimate Attribution Error",
         Description =
             """
             # Ultimate Attribution Error
@@ -2567,6 +2652,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b1cc861b-f445-450b-9bdf-e9d222abdb4e"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "In-Group Favoritism",
         Description =
             """
             # In-Group Favoritism
@@ -2602,6 +2688,7 @@ public static class BiasCatalog
     {
         Id = new Guid("46c2a0b2-6b1b-4e02-86ea-3cff2bf292d0"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Stereotyping",
         Description =
             """
             # Stereotyping
@@ -2625,6 +2712,7 @@ public static class BiasCatalog
     {
         Id = new Guid("179535d0-5da5-4c0f-b9b3-fb6644496254"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Essentialism",
         Description =
             """
             # Essentialism
@@ -2656,6 +2744,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4346bdf9-4448-413f-92cd-4d146bf4789d"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Functional Fixedness",
         Description =
             """
             # Functional Fixedness
@@ -2684,6 +2773,7 @@ public static class BiasCatalog
     {
         Id = new Guid("e36f82b7-43dd-4073-99d9-c33073007185"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Moral Credential Effect",
         Description =
             """
             # Moral Credential Effect
@@ -2726,6 +2816,7 @@ public static class BiasCatalog
     {
         Id = new Guid("50c5f877-e656-494d-bc15-57c45a190cf9"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Just-World Fallacy",
         Description =
             """
             # Just-World Fallacy
@@ -2759,6 +2850,7 @@ public static class BiasCatalog
     {
         Id = new Guid("704695f1-9753-478b-9e9f-878e3a01e041"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Argument from Fallacy",
         Description =
             """
             # Argument from Fallacy
@@ -2791,6 +2883,7 @@ public static class BiasCatalog
     {
         Id = new Guid("7256f3f1-6650-4c45-bb85-36d81c9edd1a"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Authority Bias",
         Description =
             """
             # Authority Bias
@@ -2825,6 +2918,7 @@ public static class BiasCatalog
     {
         Id = new Guid("c9e10d5b-6a32-4766-b937-aa03e276f018"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Automation Bias",
         Description =
             """
             # Automation Bias
@@ -2868,6 +2962,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b1d46b0f-fa51-4e82-b0aa-71ba2c6ad1f1"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Bandwagon Effect",
         Description =
             """
             # Bandwagon Effect
@@ -2905,6 +3000,7 @@ public static class BiasCatalog
     {
         Id = new Guid("8d76fae9-cd8e-46b5-9cbc-c8fffa6613a8"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Placebo Effect",
         Description =
             """
             # Placebo Effect
@@ -2923,6 +3019,7 @@ public static class BiasCatalog
     {
         Id = new Guid("6f5f4cbf-e6f3-439b-ad78-81b2dd266315"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Out-Group Homogeneity",
         Description =
             """
             # Out-Group Homogeneity
@@ -2953,6 +3050,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d36f046d-fe5c-4f4a-8d7f-14427b834581"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Cross-Race Effect",
         Description =
             """
             # Cross-Race Effect
@@ -2995,6 +3093,7 @@ public static class BiasCatalog
     {
         Id = new Guid("79f705e9-c461-4ad7-8b5e-83358aa345f7"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Cheerleader Effect",
         Description =
             """
             # Cheerleader Effect
@@ -3017,6 +3116,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b57a862b-b490-4d61-96b8-29d548c2eee4"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Positivity Effect",
         Description =
             """
             # Positivity Effect
@@ -3056,6 +3156,7 @@ public static class BiasCatalog
     {
         Id = new Guid("72fd9f08-b3c2-40b7-8d56-a2e84d776041"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Not Invented Here",
         Description =
             """
             # Not Invented Here
@@ -3084,6 +3185,7 @@ public static class BiasCatalog
     {
         Id = new Guid("46493445-4a8b-4488-901c-85da417c80a3"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Reactive Devaluation",
         Description =
             """
             # Reactive Devaluation
@@ -3123,6 +3225,7 @@ public static class BiasCatalog
     {
         Id = new Guid("9ee2b5b5-463c-4bca-af85-087683f89ab3"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Well-Travelled Road Effect",
         Description =
             """
             # Well-Travelled Road Effect
@@ -3146,6 +3249,7 @@ public static class BiasCatalog
     {
         Id = new Guid("9444923f-90c9-4269-a4dc-291513fa6d12"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Mental Accounting",
         Description =
             """
             # Mental Accounting
@@ -3187,6 +3291,7 @@ public static class BiasCatalog
     {
         Id = new Guid("73ca0caa-25e5-4edb-91d4-f375a773f82c"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Appeal to Probability",
         Description =
             """
             # Appeal to Probability
@@ -3219,6 +3324,7 @@ public static class BiasCatalog
     {
         Id = new Guid("1dfd3e9e-e44e-44cf-b8a0-95dea7a0e780"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Normalcy Bias",
         Description =
             """
             # Normalcy Bias
@@ -3263,6 +3369,7 @@ public static class BiasCatalog
     {
         Id = new Guid("35c21723-8dd7-4fea-9404-b26660fa6db1"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Zero-Sum Bias",
         Description =
             """
             # Zero-Sum Thinking & Zero-Sum Bias
@@ -3322,6 +3429,7 @@ public static class BiasCatalog
     {
         Id = new Guid("87ef31b2-6b2a-4fbb-9974-fefec5480c28"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Survivorship Bias",
         Description =
             """
             # Survivorship Bias
@@ -3372,6 +3480,7 @@ public static class BiasCatalog
     {
         Id = new Guid("73e39503-4a2e-4090-88c2-5ce20565a722"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Subadditivity Effect",
         Description =
             """
             # Subadditivity Effect
@@ -3398,6 +3507,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a913b2cf-dc2f-4dd9-87dc-3e11efb9457b"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Denomination Effect",
         Description =
             """
             # Denomination Effect
@@ -3433,6 +3543,7 @@ public static class BiasCatalog
     {
         Id = new Guid("81ca1f50-aaf9-4416-a94a-3676b26e510a"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Miller's Law",
         Description =
             """
             # Miller's Law
@@ -3452,6 +3563,7 @@ public static class BiasCatalog
     {
         Id = new Guid("c727e47c-da6f-4804-a1d0-9027af645218"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Illusion of Transparency",
         Description =
             """
             # Illusion of Transparency
@@ -3474,6 +3586,7 @@ public static class BiasCatalog
     {
         Id = new Guid("697f58a7-45d7-4268-8951-81681fb005de"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Curse of Knowledge",
         Description =
             """
             # Curse of Knowledge
@@ -3498,6 +3611,7 @@ public static class BiasCatalog
     {
         Id = new Guid("1a6f6356-6d61-4892-8494-0257a7fa718b"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Spotlight Effect",
         Description =
             """
             # Spotlight Effect
@@ -3525,6 +3639,7 @@ public static class BiasCatalog
     {
         Id = new Guid("07237744-843d-4c0c-81b5-0c9c8664daea"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Extrinsic Incentives Bias",
         Description =
             """
             # Extrinsic Incentives Bias
@@ -3585,6 +3700,7 @@ public static class BiasCatalog
     {
         Id = new Guid("184c9dc0-6885-4dee-b777-bc1725cc7e2c"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Illusion of External Agency",
         Description =
             """
             # Illusion of External Agency
@@ -3607,6 +3723,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a44a6bcf-b2b8-47f1-84e0-d740af56aa1e"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Illusion of Asymmetric Insight",
         Description =
             """
             # Illusion of Asymmetric Insight
@@ -3644,6 +3761,7 @@ public static class BiasCatalog
     {
         Id = new Guid("88b90cfb-93f5-429b-b00f-fabe7ada485c"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Telescoping Effect",
         Description =
             """
             # Telescoping Effect
@@ -3682,6 +3800,7 @@ public static class BiasCatalog
     {
         Id = new Guid("5e08ec28-0814-499f-82bd-eb7afb2080aa"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Rosy Retrospection",
         Description =
             """
             # Rosy Retrospection
@@ -3722,6 +3841,7 @@ public static class BiasCatalog
     {
         Id = new Guid("61ca5b76-66d0-4ce2-b260-7fd42696000a"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Projection Bias",
         Description =
             """
             # Projection Bias
@@ -3765,6 +3885,7 @@ public static class BiasCatalog
     {
         Id = new Guid("8e0f2242-6ad8-4e1e-a9e5-b55a4166781a"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Impact Bias",
         Description =
             """
             # Impact Bias
@@ -3809,6 +3930,7 @@ public static class BiasCatalog
     {
         Id = new Guid("fa033e14-41f3-45a9-887f-17e30f24c4e5"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Pro-Innovation Bias",
         Description =
             """
             # Pro-Innovation Bias
@@ -3842,6 +3964,7 @@ public static class BiasCatalog
     {
         Id = new Guid("f262db5e-b668-4bf9-9591-e38e153717da"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Time-Saving Bias",
         Description =
             """
             # Time-Saving Bias
@@ -3864,6 +3987,7 @@ public static class BiasCatalog
     {
         Id = new Guid("144a4177-96fa-428f-8f42-bd7c3671c8a6"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Planning Fallacy",
         Description =
             """
             # Planning Fallacy
@@ -3915,6 +4039,7 @@ public static class BiasCatalog
     {
         Id = new Guid("67041978-ac8e-4254-ae2c-509e7301619f"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Pessimism Bias",
         Description =
             """
             # Pessimism Bias
@@ -3942,6 +4067,7 @@ public static class BiasCatalog
     {
         Id = new Guid("23e4b2ad-c915-4d47-ab2d-79a3dce2a7e5"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Declinism",
         Description =
             """
             # Declinism
@@ -3966,6 +4092,7 @@ public static class BiasCatalog
     {
         Id = new Guid("7534480a-1abf-40d5-acec-ace1bfc5be3a"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Moral Luck",
         Description =
             """
             # Moral Luck
@@ -3996,6 +4123,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a3f4415d-b7fa-4668-bcc2-20c79f714bdd"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Outcome Bias",
         Description =
             """
             # Outcome Bias
@@ -4025,6 +4153,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b9edd2f0-8503-4eb5-a4c3-369fcb318894"),
         Category = BiasCategory.NOT_ENOUGH_MEANING,
+        Name = "Hindsight Bias",
         Description =
             """
             # Hindsight Bias
@@ -4080,6 +4209,7 @@ public static class BiasCatalog
     {
         Id = new Guid("593f2a10-46a6-471e-9ab3-86df740df6f2"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Less-Is-Better Effect",
         Description =
             """
             # Less-Is-Better Effect
@@ -4123,6 +4253,7 @@ public static class BiasCatalog
     {
         Id = new Guid("3d5e3115-a98e-4d11-9760-4a3ddbbe6c69"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Occam's Razor",
         Description =
             """
             # Occam’s Razor
@@ -4143,6 +4274,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b0c60f50-cc40-4bde-996c-1833741622a0"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Conjunction Fallacy",
         Description =
             """
             # Conjunction Fallacy
@@ -4201,6 +4333,7 @@ public static class BiasCatalog
     {
         Id = new Guid("93a3d088-183f-47e7-a010-721f1cd6bac8"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Delmore Effect",
         Description =
             """
             # Delmore Effect
@@ -4221,6 +4354,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d3ec6a5d-91cf-4aec-8541-bd87e1ad834b"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Law of Triviality",
         Description =
             """
             # Law of Triviality
@@ -4251,6 +4385,7 @@ public static class BiasCatalog
     {
         Id = new Guid("0d290221-81a0-4e44-bdec-30709117d90d"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Rhyme as Reason Effect",
         Description =
             """
             # Rhyme as Reason Effect
@@ -4281,6 +4416,7 @@ public static class BiasCatalog
     {
         Id = new Guid("1c5aa90a-e732-4f45-bf26-1b86c49a82f9"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Belief Bias",
         Description =
             """
             # Belief Bias
@@ -4303,6 +4439,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d0e251bb-3e09-43f5-8c5e-bc933e743509"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Information Bias",
         Description =
             """
             # Information Bias
@@ -4322,6 +4459,7 @@ public static class BiasCatalog
     {
         Id = new Guid("e9b00144-0cb3-46de-8a68-09daa00de1e4"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Ambiguity Effect",
         Description =
             """
             # Ambiguity Effect
@@ -4352,6 +4490,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b9e05a25-ac09-407d-8aee-f54a04decf0b"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Status Quo Bias",
         Description =
             """
             # Status Quo Bias
@@ -4389,6 +4528,7 @@ public static class BiasCatalog
     {
         Id = new Guid("09527928-6417-4eea-9719-d8ed4748691f"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Social Comparison Bias",
         Description =
             """
             # Social Comparison Bias
@@ -4416,6 +4556,7 @@ public static class BiasCatalog
     {
         Id = new Guid("c8a532e9-5958-4894-aa0d-29ed6412780f"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Decoy Effect",
         Description =
             """
             # Decoy Effect
@@ -4491,6 +4632,7 @@ public static class BiasCatalog
     {
         Id = new Guid("d3c2cb4b-ec29-4cf3-a485-9a98e9f1f223"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Reactance",
         Description =
             """
             # Reactance
@@ -4522,6 +4664,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a9c7faa7-2368-4be5-9eda-a37ffd8f7ab1"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Reverse Psychology",
         Description =
             """
             # Reverse Psychology
@@ -4545,6 +4688,7 @@ public static class BiasCatalog
     {
         Id = new Guid("755c8f9e-b172-4ff7-9797-9cc130bf4939"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "System Justification",
         Description =
             """
             # System Justification
@@ -4582,6 +4726,7 @@ public static class BiasCatalog
     {
         Id = new Guid("bf8f304d-2e8e-4a90-a9c5-7bd56f6058a6"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Belief Perseverance",
         Description =
             """
             # Belief Perseverance
@@ -4612,6 +4757,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b81482f8-b2cf-4b86-a5a4-fcd29aee4e69"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Endowment Effect",
         Description =
             """
             # Endowment Effect
@@ -4641,6 +4787,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4f61b9fa-146a-4b6e-b075-f0ba2ee0d9d0"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Processing Difficulty Effect",
         Description =
             """
             # Processing Difficulty Effect
@@ -4660,6 +4807,7 @@ public static class BiasCatalog
     {
         Id = new Guid("656c78c9-d75a-4c07-a80d-f3a5026f859c"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Pseudocertainty Effect",
         Description =
             """
             # Pseudocertainty Effect
@@ -4683,6 +4831,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ac7d745c-d66e-4886-87d7-ddaba349d4e8"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Certainty Effect",
         Description =
             """
             # Certainty Effect
@@ -4705,6 +4854,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4ecb0187-b2e2-446f-87e2-1e32f269e497"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Disposition Effect",
         Description =
             """
             # Disposition Effect
@@ -4738,6 +4888,7 @@ public static class BiasCatalog
     {
         Id = new Guid("77553998-bfa7-450e-acd9-586a55064302"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Zero-Risk Bias",
         Description =
             """
             # Zero-Risk Bias
@@ -4768,6 +4919,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ff43a9e2-7dde-47ca-a3ef-5a9c2d3117c9"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Unit Bias",
         Description =
             """
             # Unit Bias
@@ -4786,6 +4938,7 @@ public static class BiasCatalog
     {
         Id = new Guid("565616dc-ed84-42af-b9cc-6fa666cc5d66"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "IKEA Effect",
         Description =
             """
             # IKEA Effect
@@ -4810,6 +4963,7 @@ public static class BiasCatalog
     {
         Id = new Guid("ad3ed908-c56e-411b-a130-8af8574ff67b"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Loss Aversion",
         Description =
             """
             # Loss Aversion
@@ -4848,6 +5002,7 @@ public static class BiasCatalog
     {
         Id = new Guid("af442ab1-ffc5-404c-9ee8-3497fe6992ec"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Generation Effect",
         Description =
             """
             # Generation Effect
@@ -4867,6 +5022,7 @@ public static class BiasCatalog
     {
         Id = new Guid("30deb7d6-4019-4fef-9823-8d8126e54f0a"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Escalation of Commitment",
         Description =
             """
             # Escalation of Commitment
@@ -4897,6 +5053,7 @@ public static class BiasCatalog
     {
         Id = new Guid("9a2d58f5-bbf1-4b34-8e1b-f9bcd8814f05"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Sunk Cost Fallacy",
         Description =
             """
             # Sunk Cost Fallacy
@@ -4928,6 +5085,7 @@ public static class BiasCatalog
     {
         Id = new Guid("0c18a8bd-5e5f-4cf0-a90e-47dd7a421035"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Identifiable Victim Effect",
         Description =
             """
             # Identifiable Victim Effect
@@ -4965,6 +5123,7 @@ public static class BiasCatalog
     {
         Id = new Guid("2d57f4d6-e599-4738-812a-c12cef877779"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Appeal to Novelty",
         Description =
             """
             # Appeal to Novelty
@@ -4990,6 +5149,7 @@ public static class BiasCatalog
     {
         Id = new Guid("19a483d0-2c8f-486f-bf9e-619d0df4c916"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Hyperbolic Discounting",
         Description =
             """
             # Hyperbolic Discounting
@@ -5012,6 +5172,7 @@ public static class BiasCatalog
     {
         Id = new Guid("10fcc295-02b6-4dbf-b655-f5bcff3c1ca7"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Risk Compensation",
         Description =
             """
             # Risk Compensation
@@ -5040,6 +5201,7 @@ public static class BiasCatalog
     {
         Id = new Guid("cff2c74d-a160-4a90-b0b2-10f145b804cb"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Effort Justification",
         Description =
             """
             # Effort Justification
@@ -5079,6 +5241,7 @@ public static class BiasCatalog
     {
         Id = new Guid("4727839d-64c5-4ba4-b044-6b09f14d5a34"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Trait Ascription Bias",
         Description =
             """
             # Trait Ascription Bias
@@ -5116,6 +5279,7 @@ public static class BiasCatalog
     {
         Id = new Guid("5a973490-c19a-43c7-8a01-a26e0d05f275"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Defensive Attribution Hypothesis",
         Description =
             """
             # Defensive Attribution Hypothesis
@@ -5155,6 +5319,7 @@ public static class BiasCatalog
     {
         Id = new Guid("f1570784-f8ec-46fd-8bb8-763aef31a04a"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Fundamental Attribution Error",
         Description =
             """
             # Fundamental Attribution Error
@@ -5186,6 +5351,7 @@ public static class BiasCatalog
     {
         Id = new Guid("7fce783e-2120-4aad-9805-2c2a2b937b7d"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Illusion of Control",
         Description =
             """
             # Illusion of Control
@@ -5229,6 +5395,7 @@ public static class BiasCatalog
     {
         Id = new Guid("5da6dcf4-ed01-4e14-99b0-7a624b16cf17"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Actor-Observer Bias",
         Description =
             """
             # Actor-Observer Bias
@@ -5269,6 +5436,7 @@ public static class BiasCatalog
     {
         Id = new Guid("923ee6c0-2f9c-47fc-a570-339190c1a250"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Self-Serving Bias",
         Description =
             """
             # Self-Serving Bias
@@ -5311,6 +5479,7 @@ public static class BiasCatalog
     {
         Id = new Guid("7bf44f8f-a4b0-404c-8f15-8ca6e3322d32"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Optimism Bias",
         Description =
             """
             # Optimism Bias
@@ -5353,6 +5522,7 @@ public static class BiasCatalog
     {
         Id = new Guid("953746dc-ce10-4e3b-8f9e-9246de63f531"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Egocentric Bias",
         Description =
             """
             # Egocentric Bias
@@ -5385,6 +5555,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b9c06da1-d2eb-4871-8159-a2a6d25e9eff"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Dunning-Kruger Effect", 
         Description =
             """
             # Dunning-Kruger Effect
@@ -5408,6 +5579,7 @@ public static class BiasCatalog
     {
         Id = new Guid("07f0c252-1d97-4207-8000-8e4d8800fb42"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Hard-Easy Effect",
         Description =
             """
             # Hard-Easy Effect
@@ -5438,6 +5610,7 @@ public static class BiasCatalog
     {
         Id = new Guid("bc0dc6d3-5115-4def-91ae-a38aebed185e"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "False Consensus Effect",
         Description =
             """
             # False Consensus Effect
@@ -5479,6 +5652,7 @@ public static class BiasCatalog
     {
         Id = new Guid("b9186d75-3362-4dd4-a3ec-4345a04161c9"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Third-Person Effect",
         Description =
             """
             # Third-Person Effect
@@ -5505,6 +5679,7 @@ public static class BiasCatalog
     {
         Id = new Guid("a378b725-8bf9-4213-a875-326426d5c759"),
         Category = BiasCategory.NEED_TO_ACT_FAST,
+        Name = "Social-Desirability Bias",
         Description =
             """
             # Social-Desirability Bias
