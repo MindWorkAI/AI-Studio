@@ -8,6 +8,7 @@ public sealed partial class Routes
     public const string ASSISTANTS = "/assistants";
     public const string SETTINGS = "/settings";
     public const string SUPPORTERS = "/supporters";
+    public const string WRITER = "/writer";
     
     // ReSharper disable InconsistentNaming
     public const string ASSISTANT_TRANSLATION = "/assistant/translation";
