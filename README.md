@@ -3,7 +3,7 @@
 ## News
 Things we are currently working on:
 
-- Since September 2024: Work on the first personal assistant. The first personal assistant is a specialist in cognitive bias. It should be able to explain to you what biases exist. We do not want to rely on the training data of the LLM. Instead, AI Studio will bring a large catalog of bias descriptions in the future. This requires a lot of editorial work because we need to collect and revise the information. Related PR: [#166](https://github.com/MindWorkAI/AI-Studio/pull/166).
+- Since September 2024: Work on the first personal assistant. The first personal assistant is a specialist in cognitive bias. It should be able to explain to you what biases exist. We do not want to rely on the training data of the LLM. Instead, AI Studio will bring a large catalog of bias descriptions in the future. This requires a lot of editorial work because we need to collect and revise the information. Related PR: [~~#166~~](https://github.com/MindWorkAI/AI-Studio/pull/166), [#173](https://github.com/MindWorkAI/AI-Studio/pull/173).
 
 
 - Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. Related PR: [#167](https://github.com/MindWorkAI/AI-Studio/pull/167).
