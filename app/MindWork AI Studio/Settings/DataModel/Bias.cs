@@ -11,6 +11,11 @@ public sealed class Bias
     /// In which category the bias is located.
     /// </summary>
     public BiasCategory Category { get; set; } = BiasCategory.NONE;
+
+    /// <summary>
+    /// The bias name.
+    /// </summary>
+    public string Name { get; init; } = string.Empty;
     
     /// <summary>
     /// The bias description.
