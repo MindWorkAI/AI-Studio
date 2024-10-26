@@ -48,17 +48,20 @@
             
             @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
             {
-                <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
-                    @foreach (var assistant in Enum.GetValues<Components>().OrderBy(n => n.Name().Length))
-                    {
-                        if (assistant is Components.NONE || this.Component == assistant)
-                            continue;
+                @if (this.ShowSendTo)
+                {
+                    <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                        @foreach (var assistant in Enum.GetValues<Components>().OrderBy(n => n.Name().Length))
+                        {
+                            if (assistant is Components.NONE || this.Component == assistant)
+                                continue;
 
-                        <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
-                            @assistant.Name()
-                        </MudMenuItem>
-                    }
-                </MudMenu>
+                            <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
+                                @assistant.Name()
+                            </MudMenuItem>
+                        }
+                    </MudMenu>
+                }
             }
 
             @foreach (var button in this.FooterButtons)
@@ -95,13 +98,19 @@
                 }
             }
             
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
-                Copy result
-            </MudButton>
-            
-            <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
-                Reset
-            </MudButton>
+            @if (this.ShowCopyResult)
+            {
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
+                    Copy result
+                </MudButton>
+            }
+
+            @if (this.ShowReset)
+            {
+                <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
+                    Reset
+                </MudButton>
+            }
 
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {

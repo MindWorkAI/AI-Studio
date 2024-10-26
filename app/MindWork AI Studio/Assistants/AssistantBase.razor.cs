@@ -74,6 +74,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected virtual bool ShowProfileSelection => true;
     
     protected virtual bool ShowDedicatedProgress => false;
+    
+    protected virtual bool ShowSendTo => true;
+    
+    protected virtual bool ShowCopyResult => true;
+    
+    protected virtual bool ShowReset => true;
 
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
