@@ -16,6 +16,7 @@ public enum Components
     SYNONYMS_ASSISTANT,
     MY_TASKS_ASSISTANT,
     JOB_POSTING_ASSISTANT,
+    BIAS_DAY_ASSISTANT,
     
     CHAT,
 }
