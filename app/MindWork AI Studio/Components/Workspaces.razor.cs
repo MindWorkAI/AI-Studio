@@ -37,6 +37,7 @@ public partial class Workspaces : ComponentBase
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
     
+    private static readonly Guid WORKSPACE_ID_BIAS = Guid.Parse("82050a4e-ee92-43d7-8ee5-ab512f847e02");
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -64,6 +65,7 @@ public partial class Workspaces : ComponentBase
         //
         
         await this.LoadTreeItems();
+        await this.EnsureBiasWorkspace();
         await base.OnInitializedAsync();
     }
 
@@ -432,6 +434,19 @@ public partial class Workspaces : ComponentBase
         var workspaceNamePath = Path.Join(workspacePath, "name");
         await File.WriteAllTextAsync(workspaceNamePath, (dialogResult.Data as string)!, Encoding.UTF8);
         
+        await this.LoadTreeItems();
+    }
+
+    private async Task EnsureBiasWorkspace()
+    {
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", WORKSPACE_ID_BIAS.ToString());
+        
+        if(Path.Exists(workspacePath))
+            return;
+        
+        Directory.CreateDirectory(workspacePath);
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        await File.WriteAllTextAsync(workspaceNamePath, "Bias of the Day", Encoding.UTF8);
         await this.LoadTreeItems();
     }
     
