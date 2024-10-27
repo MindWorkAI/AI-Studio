@@ -5920,7 +5920,7 @@ public static class BiasCatalog
         { IMPLICIT_ASSOCIATIONS.Id, IMPLICIT_ASSOCIATIONS },
     };
     
-    public static Bias GetRandomBias(ref IList<int> usedBias)
+    public static Bias GetRandomBias(IList<int> usedBias)
     {
         if(usedBias.Count >= ALL_BIAS.Count)
             usedBias.Clear();
