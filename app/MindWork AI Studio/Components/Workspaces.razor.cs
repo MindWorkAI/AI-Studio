@@ -37,7 +37,7 @@ public partial class Workspaces : ComponentBase
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
     
-    private static readonly Guid WORKSPACE_ID_BIAS = Guid.Parse("82050a4e-ee92-43d7-8ee5-ab512f847e02");
+    public static readonly Guid WORKSPACE_ID_BIAS = Guid.Parse("82050a4e-ee92-43d7-8ee5-ab512f847e02");
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
