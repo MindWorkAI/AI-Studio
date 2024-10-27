@@ -68,14 +68,17 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             this.chatThread = deferredContent;
             if (this.chatThread is not null)
             {
-                var firstUserBlock = this.chatThread.Blocks.FirstOrDefault(x => x.Role == ChatRole.USER);
-                if (firstUserBlock is not null)
+                if (string.IsNullOrWhiteSpace(this.chatThread.Name))
                 {
-                    this.chatThread.Name = firstUserBlock.Content switch
+                    var firstUserBlock = this.chatThread.Blocks.FirstOrDefault(x => x.Role == ChatRole.USER);
+                    if (firstUserBlock is not null)
                     {
-                        ContentText textBlock => this.ExtractThreadName(textBlock.Text),
-                        _ => "Thread"
-                    };
+                        this.chatThread.Name = firstUserBlock.Content switch
+                        {
+                            ContentText textBlock => this.ExtractThreadName(textBlock.Text),
+                            _ => "Thread"
+                        };
+                    }
                 }
             }
             
