@@ -201,13 +201,14 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         return chatId;
     }
     
-    protected DateTimeOffset AddUserRequest(string request)
+    protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false)
     {
         var time = DateTimeOffset.Now;
         this.chatThread!.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
+            HideFromUser = hideContentFromUser,
             Role = ChatRole.USER,
             Content = new ContentText
             {

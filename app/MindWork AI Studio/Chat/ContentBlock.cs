@@ -18,10 +18,15 @@ public class ContentBlock
     /// <summary>
     /// The content of the block.
     /// </summary>
-    public IContent? Content { get; init; } = null;
+    public IContent? Content { get; init; }
 
     /// <summary>
     /// The role of the content block in the chat thread, e.g., user, AI, etc.
     /// </summary>
     public ChatRole Role { get; init; } = ChatRole.NONE;
+
+    /// <summary>
+    /// Should the content block be hidden from the user?
+    /// </summary>
+    public bool HideFromUser { get; set; }
 }
