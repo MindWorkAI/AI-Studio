@@ -16,6 +16,8 @@ public enum Event
     // Chat events:
     HAS_CHAT_UNSAVED_CHANGES,
     RESET_CHAT_STATE,
+    LOAD_CHAT,
+    CHAT_STREAMING_DONE,
     
     // Send events:
     SEND_TO_GRAMMAR_SPELLING_ASSISTANT,
