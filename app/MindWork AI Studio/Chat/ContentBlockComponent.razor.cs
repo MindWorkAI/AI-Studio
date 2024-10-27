@@ -64,7 +64,7 @@ public partial class ContentBlockComponent : ComponentBase
     private async Task AfterStreaming()
     {
         // Might be called from a different thread, so we need to invoke the UI thread:
-        await this.InvokeAsync(() =>
+        await this.InvokeAsync(async () =>
         {
             //
             // Issue we try to solve: When the content changes during streaming,
