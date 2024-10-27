@@ -243,7 +243,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         return icon;
     }
     
-    private Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
+    protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
         var contentToSend = sendToButton.UseResultingContentBlockData switch
         {
