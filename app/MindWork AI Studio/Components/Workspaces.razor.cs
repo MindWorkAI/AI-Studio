@@ -64,8 +64,8 @@ public partial class Workspaces : ComponentBase
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
         
-        await this.LoadTreeItems();
         await this.EnsureBiasWorkspace();
+        await this.LoadTreeItems();
         await base.OnInitializedAsync();
     }
 
@@ -252,7 +252,7 @@ public partial class Workspaces : ComponentBase
         return result;
     }
 
-    public async Task StoreChat(ChatThread chat)
+    public async Task StoreChat(ChatThread chat, bool reloadTreeItems = true)
     {
         string chatDirectory;
         if (chat.WorkspaceId == Guid.Empty)
@@ -272,7 +272,9 @@ public partial class Workspaces : ComponentBase
         await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
         
         // Reload the tree items:
-        await this.LoadTreeItems();
+        if(reloadTreeItems)
+            await this.LoadTreeItems();
+        
         this.StateHasChanged();
     }
     
@@ -456,7 +458,6 @@ public partial class Workspaces : ComponentBase
         Directory.CreateDirectory(workspacePath);
         var workspaceNamePath = Path.Join(workspacePath, "name");
         await File.WriteAllTextAsync(workspaceNamePath, "Bias of the Day", Encoding.UTF8);
-        await this.LoadTreeItems();
     }
     
     private async Task DeleteWorkspace(string? workspacePath)
