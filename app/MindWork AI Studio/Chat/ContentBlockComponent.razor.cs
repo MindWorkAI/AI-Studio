@@ -83,6 +83,9 @@ public partial class ContentBlockComponent : ComponentBase
             
             // Let Blazor update the UI, i.e., to see the render tree diff:
             this.StateHasChanged();
+            
+            // Inform the chat that the streaming is done:
+            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.CHAT_STREAMING_DONE);
         });
     }
 
