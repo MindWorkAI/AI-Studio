@@ -45,7 +45,11 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private bool workspacesVisible;
     private Workspaces? workspaces;
     private bool mustScrollToBottomAfterRender;
+    private bool mustStoreChat;
+    private bool mustLoadChat;
+    private LoadChat loadChat;
     private byte scrollRenderCountdown;
+    private bool autoSaveEnabled;
     
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -55,7 +59,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -80,6 +84,12 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                         };
                     }
                 }
+                
+                if(this.chatThread.WorkspaceId != Guid.Empty)
+                {
+                    this.autoSaveEnabled = true;
+                    this.mustStoreChat = true;
+                }
             }
             
             if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
@@ -89,12 +99,33 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                 this.StateHasChanged();
             }
         }
+        
+        var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
+        if (deferredLoading != default)
+        {
+            this.loadChat = deferredLoading;
+            this.mustLoadChat = true;
+        }
 
         await base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender && this.workspaces is not null && this.chatThread is not null && this.mustStoreChat)
+        {
+            this.mustStoreChat = false;
+            await this.workspaces.StoreChat(this.chatThread, false);
+            this.currentWorkspaceId = this.chatThread.WorkspaceId;
+            this.currentWorkspaceName = await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
+        }
+        
+        if (firstRender && this.workspaces is not null && this.mustLoadChat)
+        {
+            this.mustLoadChat = false;
+            await this.workspaces.LoadChat(this.loadChat);
+        }
+        
         if(this.mustScrollToBottomAfterRender)
         {
             if (--this.scrollRenderCountdown == 0)
@@ -458,16 +489,19 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     #region Overrides of MSGComponentBase
 
-    public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
             case Event.RESET_CHAT_STATE:
                 this.ResetState();
                 break;
+            
+            case Event.CHAT_STREAMING_DONE:
+                if(this.autoSaveEnabled)
+                    await this.SaveThread();
+                break;
         }
-        
-        return Task.CompletedTask;
     }
 
     public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
