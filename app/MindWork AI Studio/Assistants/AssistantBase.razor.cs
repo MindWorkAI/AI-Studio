@@ -179,6 +179,27 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             Blocks = [],
         };
     }
+
+    protected Guid CreateChatThread(Guid workspaceId, string name)
+    {
+        var chatId = Guid.NewGuid();
+        this.chatThread = new()
+        {
+            WorkspaceId = workspaceId,
+            ChatId = chatId,
+            Name = name,
+            Seed = this.RNG.Next(),
+            SystemPrompt = !this.AllowProfiles ? this.SystemPrompt :
+                $"""
+                 {this.SystemPrompt}
+
+                 {this.currentProfile.ToSystemPrompt()}
+                 """,
+            Blocks = [],
+        };
+        
+        return chatId;
+    }
     
     protected DateTimeOffset AddUserRequest(string request)
     {
