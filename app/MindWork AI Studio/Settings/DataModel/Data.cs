@@ -67,4 +67,6 @@ public sealed class Data
     public DataMyTasks MyTasks { get; init; } = new();
     
     public DataJobPostings JobPostings { get; init; } = new();
+    
+    public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
 }
