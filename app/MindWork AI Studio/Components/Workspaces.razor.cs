@@ -275,6 +275,15 @@ public partial class Workspaces : ComponentBase
         await this.LoadTreeItems();
         this.StateHasChanged();
     }
+    
+    public async Task LoadChat(LoadChat loadChat)
+    {
+        var chatPath = loadChat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+        
+        await this.LoadChat(chatPath, switchToChat: true);
+    }
 
     private async Task<ChatThread?> LoadChat(string? chatPath, bool switchToChat)
     {
