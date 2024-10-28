@@ -4,9 +4,9 @@
     "net8.0": {
       "HtmlAgilityPack": {
         "type": "Direct",
-        "requested": "[1.11.67, )",
-        "resolved": "1.11.67",
-        "contentHash": "xnt6f8E56oK9nLqgkF42bsVSAkUuIuJnSfvzimK7GwvbhdXWRmGsx4A8AKmLOlCUq1rVSUADKalxnSMizHt4Mg=="
+        "requested": "[1.11.70, )",
+        "resolved": "1.11.70",
+        "contentHash": "lwCgdq4H+WXH+lkM7TvJhyEs5uNGzoTud1VmXz2jr30/yOTRtG/oMCour5JMTN0t0fU4uFwFYIrDd98FH2RKsQ=="
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
@@ -25,9 +25,9 @@
       },
       "MudBlazor": {
         "type": "Direct",
-        "requested": "[7.13.0, )",
-        "resolved": "7.13.0",
-        "contentHash": "FapnlYCCN84ah+5vwMjcLAvdwFUXhsNxroi7y1sRI0vqYtUR6IZu0CaTbI9zcFAjDHQ4acHVNN71rcRbOfX+Rg==",
+        "requested": "[7.14.0, )",
+        "resolved": "7.14.0",
+        "contentHash": "hpuNSlI6/BVCe4H6X4BoHijxMffFE1ldunvFzAFZRTGuSGoYC7N6IIUv64MN3F/hkiRllx3gtivTZjivymxIpQ==",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.8",
           "Microsoft.AspNetCore.Components.Web": "8.0.8",
@@ -36,12 +36,12 @@
       },
       "MudBlazor.Markdown": {
         "type": "Direct",
-        "requested": "[7.8.0, )",
-        "resolved": "7.8.0",
-        "contentHash": "XaspHsS5I9osnna46Q/tH7cy3OlgG7dnycZgn7KhkTBNqpFzelrBoMkf/YFjRWSWEHEeO2o8AKjrG6uo99OYsw==",
+        "requested": "[7.14.0, )",
+        "resolved": "7.14.0",
+        "contentHash": "c6kFfMgUxKxYK1AkGHRNg5B9jw+iwxelBuDpaI5N+guOleT37BxYetYlD0iOew/n1plhobynUJn3Kk4MXhv6RA==",
         "dependencies": {
           "Markdig": "0.37.0",
-          "MudBlazor": "7.8.0"
+          "MudBlazor": "7.14.0"
         }
       },
       "ReverseMarkdown": {
