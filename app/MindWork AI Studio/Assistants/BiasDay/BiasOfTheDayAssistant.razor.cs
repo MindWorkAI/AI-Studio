@@ -117,19 +117,25 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
     
     private async Task TellBias()
     {
+        bool useDrawnBias = false;
         if(this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay)
         {
             if(this.SettingsManager.ConfigurationData.BiasOfTheDay.DateLastBiasDrawn == DateOnly.FromDateTime(DateTime.Now))
             {
-                MessageBus.INSTANCE.DeferMessage(this, Event.LOAD_CHAT,
-                    new LoadChat
-                    {
-                        WorkspaceId = Workspaces.WORKSPACE_ID_BIAS,
-                        ChatId = this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId,
-                    });
-                
-                this.NavigationManager.NavigateTo(Routes.CHAT);
-                return;
+                var biasChat = new LoadChat
+                {
+                    WorkspaceId = Workspaces.WORKSPACE_ID_BIAS,
+                    ChatId = this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId,
+                };
+
+                if (Workspaces.IsChatExisting(biasChat))
+                {
+                    MessageBus.INSTANCE.DeferMessage(this, Event.LOAD_CHAT, biasChat);
+                    this.NavigationManager.NavigateTo(Routes.CHAT);
+                    return;
+                }
+                else
+                    useDrawnBias = true;
             }
         }
         
@@ -137,7 +143,10 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
         if (!this.inputIsValid)
             return;
 
-        this.biasOfTheDay = BiasCatalog.GetRandomBias(this.SettingsManager.ConfigurationData.BiasOfTheDay.UsedBias);
+        this.biasOfTheDay = useDrawnBias ?
+            BiasCatalog.ALL_BIAS[this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayId] :
+            BiasCatalog.GetRandomBias(this.SettingsManager.ConfigurationData.BiasOfTheDay.UsedBias);
+        
         var chatId = this.CreateChatThread(Workspaces.WORKSPACE_ID_BIAS, this.biasOfTheDay.Name);
         this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayId = this.biasOfTheDay.Id;
         this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId = chatId;
