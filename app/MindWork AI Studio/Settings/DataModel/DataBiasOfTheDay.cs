@@ -20,6 +20,11 @@ public sealed class DataBiasOfTheDay
     public Guid BiasOfTheDayChatId { get; set; } = Guid.Empty;
 
     /// <summary>
+    /// Which bias is the bias of the day?
+    /// </summary>
+    public Guid BiasOfTheDayId { get; set; } = Guid.Empty;
+
+    /// <summary>
     /// Restrict to one bias per day?
     /// </summary>
     public bool RestrictOneBiasPerDay { get; set; } = true;
