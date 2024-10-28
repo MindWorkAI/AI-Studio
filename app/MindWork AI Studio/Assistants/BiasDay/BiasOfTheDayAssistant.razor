@@ -1,0 +1,14 @@
+@attribute [Route(Routes.ASSISTANT_BIAS)]
+@inherits AssistantBaseCore
+
+<MudText Typo="Typo.body1">
+    <b>Links:</b>
+</MudText>
+<MudList T="string" Class="mb-6">
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://en.wikipedia.org/wiki/List_of_cognitive_biases">Wikipedia list of cognitive biases</MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://commons.wikimedia.org/wiki/File:Cognitive_Bias_Codex_With_Definitions_1-2,_an_Extension_of_the_work_of_John_Manoogian_by_Brian_Rene_Morrissette.png">Extended bias poster</MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://betterhumans.pub/cognitive-bias-cheat-sheet-55a472476b18">Blog post of Buster Benson: "Cognitive bias cheat sheet"</MudListItem>
+</MudList>
+
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

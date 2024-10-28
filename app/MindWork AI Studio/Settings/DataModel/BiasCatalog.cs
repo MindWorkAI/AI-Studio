@@ -22,6 +22,16 @@ namespace AIStudio.Settings.DataModel;
 /// </remarks>
 public static class BiasCatalog
 {
+    public static readonly Bias NONE = new()
+    {
+        Id = Guid.Empty,
+        Category = BiasCategory.NONE,
+        Name = "None",
+        Description = "No bias selected.",
+        Related = [],
+        Links = [],
+    };
+    
     #region WHAT_SHOULD_WE_REMEMBER
 
     private static readonly Bias MISATTRIBUTION_OF_MEMORY = new()
@@ -5909,4 +5919,23 @@ public static class BiasCatalog
         { IMPLICIT_STEREOTYPES.Id, IMPLICIT_STEREOTYPES },
         { IMPLICIT_ASSOCIATIONS.Id, IMPLICIT_ASSOCIATIONS },
     };
+    
+    public static Bias GetRandomBias(IList<int> usedBias)
+    {
+        if(usedBias.Count >= ALL_BIAS.Count)
+            usedBias.Clear();
+        
+        int randomBiasIndex;
+        lock (RANDOM)
+        {
+            randomBiasIndex = RANDOM.Next(0, ALL_BIAS.Count);
+            while(usedBias.Contains(randomBiasIndex))
+                randomBiasIndex = RANDOM.Next(0, ALL_BIAS.Count);
+        }
+        
+        usedBias.Add(randomBiasIndex);
+        return ALL_BIAS.Values.ElementAt(randomBiasIndex);
+    }
+    
+    private static readonly Random RANDOM = new();
 }

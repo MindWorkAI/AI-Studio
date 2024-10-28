@@ -74,6 +74,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected virtual bool ShowProfileSelection => true;
     
     protected virtual bool ShowDedicatedProgress => false;
+    
+    protected virtual bool ShowSendTo => true;
+    
+    protected virtual bool ShowCopyResult => true;
+    
+    protected virtual bool ShowReset => true;
 
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
@@ -173,14 +179,36 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             Blocks = [],
         };
     }
+
+    protected Guid CreateChatThread(Guid workspaceId, string name)
+    {
+        var chatId = Guid.NewGuid();
+        this.chatThread = new()
+        {
+            WorkspaceId = workspaceId,
+            ChatId = chatId,
+            Name = name,
+            Seed = this.RNG.Next(),
+            SystemPrompt = !this.AllowProfiles ? this.SystemPrompt :
+                $"""
+                 {this.SystemPrompt}
+
+                 {this.currentProfile.ToSystemPrompt()}
+                 """,
+            Blocks = [],
+        };
+        
+        return chatId;
+    }
     
-    protected DateTimeOffset AddUserRequest(string request)
+    protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false)
     {
         var time = DateTimeOffset.Now;
         this.chatThread!.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
+            HideFromUser = hideContentFromUser,
             Role = ChatRole.USER,
             Content = new ContentText
             {
@@ -237,9 +265,9 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         return icon;
     }
     
-    private Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
+    protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
-        var contentToSend = sendToButton.UseResultingContentBlockData switch
+        var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
         {
             false => sendToButton.GetText(),
             true => this.resultingContentBlock?.Content switch

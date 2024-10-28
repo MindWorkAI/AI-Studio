@@ -37,6 +37,7 @@ public partial class Workspaces : ComponentBase
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
     
+    public static readonly Guid WORKSPACE_ID_BIAS = Guid.Parse("82050a4e-ee92-43d7-8ee5-ab512f847e02");
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -63,6 +64,7 @@ public partial class Workspaces : ComponentBase
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
         
+        await this.EnsureBiasWorkspace();
         await this.LoadTreeItems();
         await base.OnInitializedAsync();
     }
@@ -250,7 +252,7 @@ public partial class Workspaces : ComponentBase
         return result;
     }
 
-    public async Task StoreChat(ChatThread chat)
+    public async Task StoreChat(ChatThread chat, bool reloadTreeItems = true)
     {
         string chatDirectory;
         if (chat.WorkspaceId == Guid.Empty)
@@ -270,8 +272,28 @@ public partial class Workspaces : ComponentBase
         await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
         
         // Reload the tree items:
-        await this.LoadTreeItems();
+        if(reloadTreeItems)
+            await this.LoadTreeItems();
+        
         this.StateHasChanged();
+    }
+    
+    public async Task LoadChat(LoadChat loadChat)
+    {
+        var chatPath = loadChat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+        
+        await this.LoadChat(chatPath, switchToChat: true);
+    }
+    
+    public static bool IsChatExisting(LoadChat loadChat)
+    {
+        var chatPath = loadChat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+        
+        return Directory.Exists(chatPath);
     }
 
     private async Task<ChatThread?> LoadChat(string? chatPath, bool switchToChat)
@@ -433,6 +455,18 @@ public partial class Workspaces : ComponentBase
         await File.WriteAllTextAsync(workspaceNamePath, (dialogResult.Data as string)!, Encoding.UTF8);
         
         await this.LoadTreeItems();
+    }
+
+    private async Task EnsureBiasWorkspace()
+    {
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", WORKSPACE_ID_BIAS.ToString());
+        
+        if(Path.Exists(workspacePath))
+            return;
+        
+        Directory.CreateDirectory(workspacePath);
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        await File.WriteAllTextAsync(workspaceNamePath, "Bias of the Day", Encoding.UTF8);
     }
     
     private async Task DeleteWorkspace(string? workspacePath)

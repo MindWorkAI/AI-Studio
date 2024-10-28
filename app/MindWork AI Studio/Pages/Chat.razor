@@ -22,7 +22,10 @@
         {
             foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
             {
-                <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                @if (!block.HideFromUser)
+                {
+                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                }
             }
         }
     </ChildContent>
