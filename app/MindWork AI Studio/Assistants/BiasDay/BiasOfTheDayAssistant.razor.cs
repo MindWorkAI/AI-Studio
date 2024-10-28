@@ -139,6 +139,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
 
         this.biasOfTheDay = BiasCatalog.GetRandomBias(this.SettingsManager.ConfigurationData.BiasOfTheDay.UsedBias);
         var chatId = this.CreateChatThread(Workspaces.WORKSPACE_ID_BIAS, this.biasOfTheDay.Name);
+        this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayId = this.biasOfTheDay.Id;
         this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId = chatId;
         this.SettingsManager.ConfigurationData.BiasOfTheDay.DateLastBiasDrawn = DateOnly.FromDateTime(DateTime.Now);
         await this.SettingsManager.StoreSettings();
