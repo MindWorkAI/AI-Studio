@@ -286,6 +286,15 @@ public partial class Workspaces : ComponentBase
         
         await this.LoadChat(chatPath, switchToChat: true);
     }
+    
+    public static bool IsChatExisting(LoadChat loadChat)
+    {
+        var chatPath = loadChat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+        
+        return Directory.Exists(chatPath);
+    }
 
     private async Task<ChatThread?> LoadChat(string? chatPath, bool switchToChat)
     {
