@@ -13,7 +13,13 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
     
     protected override string Description =>
         """
-        Learn about a different cognitive bias every day. You have the opportunity to ask your questions to the LLM.
+        Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind
+        "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster
+        Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them
+        into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and
+        Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia
+        versions, updated them, and added source references. The idea of learning about one bias each day based on John's
+        poster comes from Drew Nelson.
         """;
 
     protected override string SystemPrompt => $"""
