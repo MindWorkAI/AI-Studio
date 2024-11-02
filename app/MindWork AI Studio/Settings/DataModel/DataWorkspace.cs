@@ -11,4 +11,14 @@ public sealed class DataWorkspace
     /// The chat storage maintenance behavior.
     /// </summary>
     public WorkspaceStorageTemporaryMaintenancePolicy StorageTemporaryMaintenancePolicy { get; set; } = WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS;
+
+    /// <summary>
+    /// The behavior used for displaying the workspace.
+    /// </summary>
+    public WorkspaceDisplayBehavior DisplayBehavior { get; set; } = WorkspaceDisplayBehavior.TOGGLE_SIDEBAR;
+
+    /// <summary>
+    /// Indicates whether the sidebar is currently visible.
+    /// </summary>
+    public bool IsSidebarVisible { get; set; } = true;
 }
