@@ -7,7 +7,7 @@ namespace AIStudio.Components;
 public partial class InnerScrolling : MSGComponentBase
 {
     [Parameter]
-    public bool FillEntireHorizontalSpace { get; set; } = false;
+    public bool FillEntireHorizontalSpace { get; set; }
     
     /// <summary>
     /// Set the height of anything above the scrolling content; usually a header.
