@@ -6,6 +6,9 @@ namespace AIStudio.Components;
 
 public partial class InnerScrolling : MSGComponentBase
 {
+    [Parameter]
+    public bool FillEntireHorizontalSpace { get; set; } = false;
+    
     /// <summary>
     /// Set the height of anything above the scrolling content; usually a header.
     /// What we do is calc(100vh - HeaderHeight). Means, you can use multiple measures like
@@ -15,6 +18,9 @@ public partial class InnerScrolling : MSGComponentBase
     public string HeaderHeight { get; set; } = "3em";
     
     [Parameter]
+    public RenderFragment? HeaderContent { get; set; }
+    
+    [Parameter]
     public RenderFragment? ChildContent { get; set; }
     
     /// <summary>
@@ -22,6 +28,9 @@ public partial class InnerScrolling : MSGComponentBase
     /// </summary>
     [Parameter]
     public RenderFragment? FooterContent { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
     
     [CascadingParameter]
     private MainLayout MainLayout { get; set; } = null!;
@@ -62,7 +71,9 @@ public partial class InnerScrolling : MSGComponentBase
 
     #endregion
 
-    private string Height => $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight});";
+    private string Styles => this.FillEntireHorizontalSpace ? $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); overflow-x: auto; min-width: 0;" : $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); flex-shrink: 0;";
+
+    private string Classes => this.FillEntireHorizontalSpace ? $"{this.Class} d-flex flex-column flex-grow-1" : $"{this.Class} d-flex flex-column";
     
     public async Task ScrollToBottom()
     {

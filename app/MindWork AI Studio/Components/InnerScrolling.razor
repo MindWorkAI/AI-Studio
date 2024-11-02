@@ -1,6 +1,12 @@
 @inherits MSGComponentBase
 
-<div class="d-flex flex-column" style="@this.Height">
+<div class="@this.Classes" style="@this.Styles">
+    @if (this.HeaderContent is not null)
+    {
+        <div>
+            @this.HeaderContent
+        </div>
+    }
     <div class="flex-auto overflow-auto">
         @this.ChildContent
         
