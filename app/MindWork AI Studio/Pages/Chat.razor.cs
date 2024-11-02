@@ -42,7 +42,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private string userInput = string.Empty;
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
-    private bool workspacesVisible;
+    private bool workspaceOverlayVisible;
     private Workspaces? workspaces;
     private bool mustScrollToBottomAfterRender;
     private bool mustStoreChat;
@@ -157,6 +157,8 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
     
     private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
+    
+    private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? Icons.Material.Filled.ArrowCircleLeft : Icons.Material.Filled.ArrowCircleRight;
 
     private void ProfileWasChanged(Profile profile)
     {
@@ -308,9 +310,15 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         }
     }
     
-    private void ToggleWorkspaces()
+    private void ToggleWorkspaceOverlay()
     {
-        this.workspacesVisible = !this.workspacesVisible;
+        this.workspaceOverlayVisible = !this.workspaceOverlayVisible;
+    }
+
+    private async Task ToggleWorkspaceSidebar()
+    {
+        this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible = !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible;
+        await this.SettingsManager.StoreSettings();
     }
     
     private async Task SaveThread()
