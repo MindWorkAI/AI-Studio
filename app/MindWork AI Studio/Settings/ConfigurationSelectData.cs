@@ -58,6 +58,13 @@ public static class ConfigurationSelectDataFactory
         yield return new("Delete temporary chats older than 1 year", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
     }
     
+    public static IEnumerable<ConfigurationSelectData<WorkspaceDisplayBehavior>> GetWorkspaceDisplayBehaviorData()
+    {
+        yield return new("Toggle the overlay: the chat uses all the space, workspaces are temporarily shown", WorkspaceDisplayBehavior.TOGGLE_OVERLAY);
+        yield return new("Toggle the sidebar: show the workspaces next to the chat when desired", WorkspaceDisplayBehavior.TOGGLE_SIDEBAR);
+        yield return new("Sidebar is always visible: show the workspaces next to the chat all the time", WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
     {
         yield return new("Navigation expands on mouse hover", NavBehavior.EXPAND_ON_HOVER);

@@ -35,6 +35,9 @@ public partial class Workspaces : ComponentBase
     [Parameter]
     public Func<Task> LoadedChatWasChanged { get; set; } = () => Task.CompletedTask;
 
+    [Parameter]
+    public bool ExpandRootNodes { get; set; } = true;
+
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
     
     public static readonly Guid WORKSPACE_ID_BIAS = Guid.Parse("82050a4e-ee92-43d7-8ee5-ab512f847e02");
@@ -73,9 +76,9 @@ public partial class Workspaces : ComponentBase
 
     private async Task LoadTreeItems()
     {
-        this.treeItems.Clear();
-        this.treeItems.Add(new TreeItemData<ITreeItem>
+        var workspacesNode = new TreeItemData<ITreeItem>
         {
+            Expanded = this.ExpandRootNodes,
             Expandable = true,
             Value = new TreeItemData
             {
@@ -87,16 +90,11 @@ public partial class Workspaces : ComponentBase
                 Path = "root",
                 Children = await this.LoadWorkspaces(),
             },
-        });
+        };
 
-        this.treeItems.Add(new TreeItemData<ITreeItem>
+        var tempChatNode = new TreeItemData<ITreeItem>
         {
-            Expandable = false,
-            Value = new TreeDivider(),
-        });
-        
-        this.treeItems.Add(new TreeItemData<ITreeItem>
-        {
+            Expanded = this.ExpandRootNodes,
             Expandable = true,
             Value = new TreeItemData
             {
@@ -108,7 +106,16 @@ public partial class Workspaces : ComponentBase
                 Path = "temp",
                 Children = await this.LoadTemporaryChats(),
             },
+        };
+        
+        this.treeItems.Clear();
+        this.treeItems.Add(workspacesNode);
+        this.treeItems.Add(new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeDivider(),
         });
+        this.treeItems.Add(tempChatNode);
     }
 
     private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadTemporaryChats()
