@@ -30,7 +30,7 @@
         }
 
         <MudMainContent Class="mud-height-full pt-1" Style="@this.PaddingLeft">
-            <MudContainer Fixed="@true" Class="mud-height-full" Style="margin-left: 5em; width: calc(100% - 5em);">
+            <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mud-height-full" Style="margin-left: 5em; width: calc(100% - 5em);">
                 @if (!this.performingUpdate && this.IsUpdateAlertVisible)
                 {
                     <MudAlert NoIcon="@true" Severity="Severity.Info" Variant="Variant.Filled" ShowCloseIcon="@true" Dense="@true" CloseIconClicked="() => this.DismissUpdate()" Class="mt-2 mb-2">
