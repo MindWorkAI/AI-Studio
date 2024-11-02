@@ -5,6 +5,14 @@ namespace AIStudio.Tools;
 
 public static class ComponentsExtensions
 {
+    public static bool AllowSendTo(this Components component) => component switch
+    {
+        Components.NONE => false,
+        Components.BIAS_DAY_ASSISTANT => false,
+        
+        _ => true,
+    };
+    
     public static string Name(this Components component) => component switch
     {
         Components.GRAMMAR_SPELLING_ASSISTANT => "Grammar & Spelling Assistant",

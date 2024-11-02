@@ -267,6 +267,9 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     
     protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
+        if (!destination.AllowSendTo())
+            return Task.CompletedTask;
+        
         var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
         {
             false => sendToButton.GetText(),
