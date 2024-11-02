@@ -33,14 +33,8 @@
                     The first 10 supporters who make a monthly contribution:
                 </MudText>
                 <MudList T="string">
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
-                        <MudLink Href="https://github.com/richard-stanton" Target="_blank">
-                            richard-stanton
-                        </MudLink>
-                        <MudText Typo="Typo.body1" Class="ml-3" Inline="@true">
-                            Thank you, Richard, for being the first.
-                        </MudText>
-                    </MudListItem>
+                    <Supporter Name="richard-stanton" Type="SupporterType.INDIVIDUAL" URL="https://github.com/richard-stanton" Acknowledgment="Thank you, Richard, for being the first."/>
+                    <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="Thank you, Peer, for your courage in being the second person to support the project financially."/>
                 </MudList>
             </MudPaper>
         </MudItem>
