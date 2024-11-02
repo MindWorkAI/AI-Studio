@@ -60,6 +60,10 @@
     background-color: initial !important;
 }
 
+.improvedDiff .wikEdDiffNoChange {
+    background-color: initial !important;
+}
+
 .improvedDiff .wikEdDiffDelete {
     text-decoration-line: line-through;
     text-decoration-style: double;
