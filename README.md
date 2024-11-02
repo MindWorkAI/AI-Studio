@@ -8,7 +8,7 @@ Things we are currently working on:
 
 Other News:
 
-- October 2024: We have our first financial supporter: Thank you @richard-stanton for financially supporting AI Studio. The supporter page in the app will be updated accordingly with the next update.
+- October 2024: We've found the first two financial supporters. Huge thanks to `richard-stanton` and `peerschuett` for backing the project. Thanks for having the courage to be the first to support us.
 
 - October 2024: The [German Aerospace Center (DLR)](https://en.wikipedia.org/wiki/German_Aerospace_Center) ([Website](https://www.dlr.de/en)) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
 
