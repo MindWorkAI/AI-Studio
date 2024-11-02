@@ -1,0 +1,18 @@
+<MudListItem T="string" Icon="@this.Icon">
+    @if (string.IsNullOrWhiteSpace(this.URL))
+    {
+        <MudText Typo="Typo.body1" Inline="@true">
+            @this.Name
+        </MudText>
+    }
+    else
+    {
+        <MudLink Href="@this.URL" Target="_blank">
+            @this.Name
+        </MudLink>
+    }
+    
+    <MudText Typo="Typo.body1" Class="ml-3" Inline="@true">
+        @this.Acknowledgment
+    </MudText>
+</MudListItem>
