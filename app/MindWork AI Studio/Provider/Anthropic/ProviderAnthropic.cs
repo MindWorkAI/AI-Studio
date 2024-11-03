@@ -147,8 +147,13 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     {
         return Task.FromResult(new[]
         {
+            new Model("claude-3-5-sonnet-latest"),
             new Model("claude-3-5-sonnet-20240620"),
+            new Model("claude-3-5-sonnet-20241022"),
+            
             new Model("claude-3-opus-20240229"),
+            new Model("claude-3-opus-latest"),
+            
             new Model("claude-3-sonnet-20240229"),
             new Model("claude-3-haiku-20240307"),
         }.AsEnumerable());
