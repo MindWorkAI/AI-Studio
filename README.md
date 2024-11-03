@@ -15,6 +15,8 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.17: Added the new Anthropic model `claude-3-5-sonnet-20241022`.
+- v0.9.16: Added workspace display options & improved the layout of the app window.
 - v0.9.15: Added the bias-of-the-day assistant. Tells you about a cognitive bias every day.
 - v0.9.13: You can use `ollama` providers secured with API keys.
 - v0.9.12: Added a job posting assistant to the business category and improved grammar & spelling check and rewrite assistants.
