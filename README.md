@@ -5,7 +5,7 @@ Things we are currently working on:
 
 - Since November 2024: Work on RAG (integration of your data and files) has begun. We will support the integration of local and external data sources. We need to implement the following runtime (Rust) and app (.NET) steps:
 
-  - [ ] Runtime: Restructuring the code into meaningful modules
+  - [ ] Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))
   - [ ] App: Metadata for providers (which provider offers embeddings?)
   - [ ] App: Management of data sources (local data)
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
