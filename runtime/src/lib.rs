@@ -5,3 +5,4 @@ pub mod dotnet;
 pub mod network;
 pub mod api_token;
 pub mod app_window;
+pub mod secret;

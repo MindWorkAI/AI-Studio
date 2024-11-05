@@ -8,9 +8,7 @@ use std::collections::HashSet;
 use once_cell::sync::Lazy;
 
 use arboard::Clipboard;
-use keyring::Entry;
-use serde::{Deserialize, Serialize};
-use keyring::error::Error::NoEntry;
+use serde::Serialize;
 use log::{debug, error, info, warn};
 use rcgen::generate_simple_self_signed;
 use rocket::figment::Figment;
@@ -148,9 +146,9 @@ async fn main() {
                 set_clipboard,
                 mindwork_ai_studio::app_window::check_for_update,
                 mindwork_ai_studio::app_window::install_update,
-                get_secret,
-                store_secret,
-                delete_secret,
+                mindwork_ai_studio::secret::get_secret,
+                mindwork_ai_studio::secret::store_secret,
+                mindwork_ai_studio::secret::delete_secret,
                 mindwork_ai_studio::environment::get_data_directory,
                 mindwork_ai_studio::environment::get_config_directory,
             ])
@@ -161,157 +159,6 @@ async fn main() {
     info!("Secret password for the IPC channel was generated successfully.");
     start_dotnet_server(*API_SERVER_PORT, certificate_fingerprint);
     start_tauri();
-}
-
-#[post("/secrets/store", data = "<request>")]
-fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
-    let user_name = request.user_name.as_str();
-    let decrypted_text = match ENCRYPTION.decrypt(&request.secret) {
-        Ok(text) => text,
-        Err(e) => {
-            error!(Source = "Secret Store"; "Failed to decrypt the text: {e}.");
-            return Json(StoreSecretResponse {
-                success: false,
-                issue: format!("Failed to decrypt the text: {e}"),
-            })
-        },
-    };
-
-    let service = format!("mindwork-ai-studio::{}", request.destination);
-    let entry = Entry::new(service.as_str(), user_name).unwrap();
-    let result = entry.set_password(decrypted_text.as_str());
-    match result {
-        Ok(_) => {
-            info!(Source = "Secret Store"; "Secret for {service} and user {user_name} was stored successfully.");
-            Json(StoreSecretResponse {
-                success: true,
-                issue: String::from(""),
-            })
-        },
-        
-        Err(e) => {
-            error!(Source = "Secret Store"; "Failed to store secret for {service} and user {user_name}: {e}.");
-            Json(StoreSecretResponse {
-                success: false,
-                issue: e.to_string(),
-            })
-        },
-    }
-}
-
-#[derive(Deserialize)]
-struct StoreSecret {
-    destination: String,
-    user_name: String,
-    secret: EncryptedText,
-}
-
-#[derive(Serialize)]
-struct StoreSecretResponse {
-    success: bool,
-    issue: String,
-}
-
-#[post("/secrets/get", data = "<request>")]
-fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
-    let user_name = request.user_name.as_str();
-    let service = format!("mindwork-ai-studio::{}", request.destination);
-    let entry = Entry::new(service.as_str(), user_name).unwrap();
-    let secret = entry.get_password();
-    match secret {
-        Ok(s) => {
-            info!(Source = "Secret Store"; "Secret for '{service}' and user '{user_name}' was retrieved successfully.");
-
-            // Encrypt the secret:
-            let encrypted_secret = match ENCRYPTION.encrypt(s.as_str()) {
-                Ok(e) => e,
-                Err(e) => {
-                    error!(Source = "Secret Store"; "Failed to encrypt the secret: {e}.");
-                    return Json(RequestedSecret {
-                        success: false,
-                        secret: EncryptedText::new(String::from("")),
-                        issue: format!("Failed to encrypt the secret: {e}"),
-                    });
-                },
-            };
-
-            Json(RequestedSecret {
-                success: true,
-                secret: encrypted_secret,
-                issue: String::from(""),
-            })
-        },
-
-        Err(e) => {
-            if !request.is_trying {
-                error!(Source = "Secret Store"; "Failed to retrieve secret for '{service}' and user '{user_name}': {e}.");
-            }
-            
-            Json(RequestedSecret {
-                success: false,
-                secret: EncryptedText::new(String::from("")),
-                issue: format!("Failed to retrieve secret for '{service}' and user '{user_name}': {e}"),
-            })
-        },
-    }
-}
-
-#[derive(Deserialize)]
-struct RequestSecret {
-    destination: String,
-    user_name: String,
-    is_trying: bool,
-}
-
-#[derive(Serialize)]
-struct RequestedSecret {
-    success: bool,
-    secret: EncryptedText,
-    issue: String,
-}
-
-#[post("/secrets/delete", data = "<request>")]
-fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
-    let user_name = request.user_name.as_str();
-    let service = format!("mindwork-ai-studio::{}", request.destination);
-    let entry = Entry::new(service.as_str(), user_name).unwrap();
-    let result = entry.delete_credential();
-
-    match result {
-        Ok(_) => {
-            warn!(Source = "Secret Store"; "Secret for {service} and user {user_name} was deleted successfully.");
-            Json(DeleteSecretResponse {
-                success: true,
-                was_entry_found: true,
-                issue: String::from(""),
-            })
-        },
-
-        Err(NoEntry) => {
-            warn!(Source = "Secret Store"; "No secret for {service} and user {user_name} was found.");
-            Json(DeleteSecretResponse {
-                success: true,
-                was_entry_found: false,
-                issue: String::from(""),
-            })
-        }
-        
-        Err(e) => {
-            error!(Source = "Secret Store"; "Failed to delete secret for {service} and user {user_name}: {e}.");
-            Json(DeleteSecretResponse {
-                success: false,
-                was_entry_found: false,
-                issue: e.to_string(),
-            })
-        },
-    }
-}
-
-#[derive(Serialize)]
-struct DeleteSecretResponse {
-    success: bool,
-    was_entry_found: bool,
-    issue: String,
 }
 
 #[post("/clipboard/set", data = "<encrypted_text>")]
