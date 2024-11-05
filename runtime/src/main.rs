@@ -14,6 +14,7 @@ use rocket::routes;
 use rocket::config::{Shutdown};
 use sha2::{Sha256, Digest};
 use mindwork_ai_studio::app_window::start_tauri;
+use mindwork_ai_studio::certificate::{generate_certificate, CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use mindwork_ai_studio::dotnet::start_dotnet_server;
 use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
@@ -66,19 +67,7 @@ async fn main() {
         info!("Running in production mode.");
     }
 
-    info!("Try to generate a TLS certificate for the runtime API server...");
-
-    let subject_alt_names = vec!["localhost".to_string()];
-    let certificate_data = generate_simple_self_signed(subject_alt_names).unwrap();
-    let certificate_binary_data = certificate_data.cert.der().to_vec();
-    let certificate_fingerprint = Sha256::digest(certificate_binary_data).to_vec();
-    let certificate_fingerprint = certificate_fingerprint.iter().fold(String::new(), |mut result, byte| {
-        result.push_str(&format!("{:02x}", byte));
-        result
-    });
-    let certificate_fingerprint = certificate_fingerprint.to_uppercase();
-    info!("Certificate fingerprint: '{certificate_fingerprint}'.");
-    info!("Done generating certificate for the runtime API server.");
+    generate_certificate();
 
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
@@ -122,8 +111,8 @@ async fn main() {
         .merge(("cli_colors", false))
 
         // Read the TLS certificate and key from the generated certificate data in-memory:
-        .merge(("tls.certs", certificate_data.cert.pem().as_bytes()))
-        .merge(("tls.key", certificate_data.key_pair.serialize_pem().as_bytes()))
+        .merge(("tls.certs", CERTIFICATE.get().unwrap()))
+        .merge(("tls.key", CERTIFICATE_PRIVATE_KEY.get().unwrap()))
 
         // Set the shutdown configuration:
         .merge(("shutdown", shutdown));
@@ -152,6 +141,6 @@ async fn main() {
     });
 
     info!("Secret password for the IPC channel was generated successfully.");
-    start_dotnet_server(*API_SERVER_PORT, certificate_fingerprint);
+    start_dotnet_server(*API_SERVER_PORT);
     start_tauri();
 }

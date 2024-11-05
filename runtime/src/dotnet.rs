@@ -9,6 +9,7 @@ use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tauri::Url;
 use crate::api_token::{APIToken, API_TOKEN};
 use crate::app_window::change_location_to;
+use crate::certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
 use crate::environment::is_dev;
 use crate::network::get_available_port;
@@ -30,7 +31,7 @@ pub fn dotnet_port(_token: APIToken) -> String {
     format!("{dotnet_server_port}")
 }
 
-pub fn start_dotnet_server(api_server_port: u16, certificate_fingerprint: String) {
+pub fn start_dotnet_server(api_server_port: u16) {
 
     // Get the secret password & salt and convert it to a base64 string:
     let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
@@ -39,7 +40,7 @@ pub fn start_dotnet_server(api_server_port: u16, certificate_fingerprint: String
     let dotnet_server_environment = HashMap::from_iter([
         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
-        (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), certificate_fingerprint),
+        (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), CERTIFICATE_FINGERPRINT.get().unwrap().to_string()),
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
     ]);
 
