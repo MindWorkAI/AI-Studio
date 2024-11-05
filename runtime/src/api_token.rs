@@ -40,6 +40,8 @@ impl APIToken {
     }
 }
 
+type RequestOutcome<R, T> = rocket::request::Outcome<R, T>;
+
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for APIToken {
     type Error = APITokenError;

@@ -35,7 +35,6 @@ use mindwork_ai_studio::encryption::{EncryptedText, ENCRYPTION};
 use mindwork_ai_studio::environment::{is_dev, is_prod};
 use mindwork_ai_studio::log::{init_logging, switch_to_file_logging};
 
-type RequestOutcome<R, T> = rocket::request::Outcome<R, T>;
 
 // The .NET server is started in a separate process and communicates with this
 // runtime process via IPC. However, we do net start the .NET server in
