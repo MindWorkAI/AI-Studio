@@ -8,11 +8,9 @@ use std::collections::HashSet;
 use once_cell::sync::Lazy;
 
 use log::{info, warn};
-use rcgen::generate_simple_self_signed;
 use rocket::figment::Figment;
 use rocket::routes;
 use rocket::config::{Shutdown};
-use sha2::{Sha256, Digest};
 use mindwork_ai_studio::app_window::start_tauri;
 use mindwork_ai_studio::certificate::{generate_certificate, CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use mindwork_ai_studio::dotnet::start_dotnet_server;
