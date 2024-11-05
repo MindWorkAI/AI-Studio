@@ -517,11 +517,6 @@ async fn dotnet_ready(_token: APIToken) {
     }
 }
 
-fn get_available_port() -> Option<u16> {
-    TcpListener::bind(("127.0.0.1", 0))
-        .map(|listener| listener.local_addr().unwrap().port())
-        .ok()
-}
 
 fn stop_servers() {
     if let Some(server_process) = DOTNET_SERVER.lock().unwrap().take() {
