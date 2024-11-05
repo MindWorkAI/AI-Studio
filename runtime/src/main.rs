@@ -63,9 +63,6 @@ static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None))
 // The update response coming from the Tauri updater.
 static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<UpdateResponse<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
 
-static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
-
-static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 
 static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 
@@ -382,21 +379,6 @@ fn dotnet_port(_token: APIToken) -> String {
     format!("{dotnet_server_port}")
 }
 
-#[get("/system/directories/data")]
-fn get_data_directory(_token: APIToken) -> String {
-    match DATA_DIRECTORY.get() {
-        Some(data_directory) => data_directory.clone(),
-        None => String::from(""),
-    }
-}
-
-#[get("/system/directories/config")]
-fn get_config_directory(_token: APIToken) -> String {
-    match CONFIG_DIRECTORY.get() {
-        Some(config_directory) => config_directory.clone(),
-        None => String::from(""),
-    }
-}
 
 #[get("/system/dotnet/ready")]
 async fn dotnet_ready(_token: APIToken) {
