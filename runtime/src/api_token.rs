@@ -11,7 +11,7 @@ pub static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
     APIToken::from_bytes(token.to_vec())
 });
 
-pub struct APIToken{
+pub struct APIToken {
     hex_text: String,
 }
 
