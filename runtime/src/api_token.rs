@@ -64,7 +64,7 @@ impl<'r> FromRequest<'r> for APIToken {
 }
 
 #[derive(Debug)]
-enum APITokenError {
+pub enum APITokenError {
     Missing,
     Invalid,
 }
