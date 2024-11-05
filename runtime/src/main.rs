@@ -4,7 +4,7 @@
 extern crate rocket;
 extern crate core;
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::net::TcpListener;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
@@ -18,11 +18,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{Manager, Url, Window};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time;
-use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger};
-use flexi_logger::writers::FileLogWriter;
 use keyring::error::Error::NoEntry;
-use log::{debug, error, info, kv, warn};
-use log::kv::{Key, Value, VisitSource};
+use log::{debug, error, info, warn};
 use rand::{RngCore, SeedableRng};
 use rcgen::generate_simple_self_signed;
 use rocket::figment::Figment;
@@ -35,6 +32,8 @@ use sha2::{Sha256, Digest};
 use tauri::updater::UpdateResponse;
 
 use mindwork_ai_studio::encryption::{EncryptedText, ENCRYPTION};
+use mindwork_ai_studio::environment::{is_dev, is_prod};
+use mindwork_ai_studio::log::{init_logging, switch_to_file_logging};
 
 type RequestOutcome<R, T> = rocket::request::Outcome<R, T>;
 
@@ -93,45 +92,7 @@ async fn main() {
     let tauri_version = metadata_lines.next().unwrap();
     let app_commit_hash = metadata_lines.next().unwrap();
 
-    //
-    // Configure the logger:
-    //
-    let mut log_config = String::new();
-
-    // Set the log level depending on the environment:
-    match is_dev() {
-        true => log_config.push_str("debug, "),
-        false => log_config.push_str("info, "),
-    };
-
-    // Set the log level for the Rocket library:
-    log_config.push_str("rocket=info, ");
-
-    // Set the log level for the Rocket server:
-    log_config.push_str("rocket::server=warn, ");
-
-    // Set the log level for the Reqwest library:
-    log_config.push_str("reqwest::async_impl::client=info");
-
-    // Configure the initial filename. On Unix systems, the file should start
-    // with a dot to be hidden.
-    let log_basename = match cfg!(unix)
-    {
-        true => ".AI Studio Events",
-        false => "AI Studio Events",
-    };
-    
-    let logger = Logger::try_with_str(log_config).expect("Cannot create logging")
-        .log_to_file(FileSpec::default()
-            .basename(log_basename)
-            .suppress_timestamp()
-            .suffix("log"))
-        .duplicate_to_stdout(Duplicate::All)
-        .use_utc()
-        .format_for_files(file_logger_format)
-        .format_for_stderr(terminal_colored_logger_format)
-        .format_for_stdout(terminal_colored_logger_format)
-        .start().expect("Cannot start logging");
+    init_logging();
 
     info!("Starting MindWork AI Studio:");
     let working_directory = std::env::current_dir().unwrap();
@@ -337,12 +298,7 @@ async fn main() {
             CONFIG_DIRECTORY.set(app.path_resolver().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {logger_path:?}");
-            logger.reset_flw(&FileLogWriter::builder(
-                FileSpec::default()
-                .directory(logger_path)
-                .basename("events")
-                .suppress_timestamp()
-                .suffix("log")))?;
+            switch_to_file_logging(logger_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
 
             Ok(())
         })
@@ -480,85 +436,6 @@ impl<'r> FromRequest<'r> for APIToken {
 enum APITokenError {
     Missing,
     Invalid,
-}
-
-//
-// Data structure for iterating over key-value pairs of log messages.
-//
-struct LogKVCollect<'kvs>(BTreeMap<Key<'kvs>, Value<'kvs>>);
-
-impl<'kvs> VisitSource<'kvs> for LogKVCollect<'kvs> {
-    fn visit_pair(&mut self, key: Key<'kvs>, value: Value<'kvs>) -> Result<(), kv::Error> {
-        self.0.insert(key, value);
-        Ok(())
-    }
-}
-
-pub fn write_kv_pairs(w: &mut dyn std::io::Write, record: &log::Record) -> Result<(), std::io::Error> {
-    if record.key_values().count() > 0 {
-        let mut visitor = LogKVCollect(BTreeMap::new());
-        record.key_values().visit(&mut visitor).unwrap();
-        write!(w, "[")?;
-        let mut index = 0;
-        for (key, value) in visitor.0 {
-            index += 1;
-            if index > 1 {
-                write!(w, ", ")?;
-            }
-
-            write!(w, "{} = {}", key, value)?;
-        }
-        write!(w, "] ")?;
-    }
-
-    Ok(())
-}
-
-// Custom logger format for the terminal:
-pub fn terminal_colored_logger_format(
-    w: &mut dyn std::io::Write,
-    now: &mut DeferredNow,
-    record: &log::Record,
-) -> Result<(), std::io::Error> {
-    let level = record.level();
-
-    // Write the timestamp, log level, and module path:
-    write!(
-        w,
-        "[{}] {} [{}] ",
-        flexi_logger::style(level).paint(now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).to_string()),
-        flexi_logger::style(level).paint(record.level().to_string()),
-        record.module_path().unwrap_or("<unnamed>"),
-    )?;
-
-    // Write all key-value pairs:
-    write_kv_pairs(w, record)?;
-
-    // Write the log message:
-    write!(w, "{}", flexi_logger::style(level).paint(record.args().to_string()))
-}
-
-// Custom logger format for the log files:
-pub fn file_logger_format(
-    w: &mut dyn std::io::Write,
-    now: &mut DeferredNow,
-    record: &log::Record,
-) -> Result<(), std::io::Error> {
-
-    // Write the timestamp, log level, and module path:
-    write!(
-        w,
-        "[{}] {} [{}] ",
-        now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK),
-        record.level(),
-        record.module_path().unwrap_or("<unnamed>"),
-    )?;
-
-    // Write all key-value pairs:
-    write_kv_pairs(w, record)?;
-
-    // Write the log message:
-    write!(w, "{}", &record.args())
 }
 
 #[get("/system/dotnet/port")]
