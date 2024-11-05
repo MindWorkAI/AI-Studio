@@ -7,19 +7,14 @@ extern crate core;
 use std::collections::HashSet;
 use once_cell::sync::Lazy;
 
-use arboard::Clipboard;
-use serde::Serialize;
-use log::{debug, error, info, warn};
+use log::{info, warn};
 use rcgen::generate_simple_self_signed;
 use rocket::figment::Figment;
-use rocket::{post, routes};
+use rocket::routes;
 use rocket::config::{Shutdown};
-use rocket::serde::json::Json;
 use sha2::{Sha256, Digest};
-use mindwork_ai_studio::api_token::APIToken;
 use mindwork_ai_studio::app_window::start_tauri;
 use mindwork_ai_studio::dotnet::start_dotnet_server;
-use mindwork_ai_studio::encryption::{EncryptedText, ENCRYPTION};
 use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::network::get_available_port;
@@ -143,7 +138,7 @@ async fn main() {
             .mount("/", routes![
                 mindwork_ai_studio::dotnet::dotnet_port,
                 mindwork_ai_studio::dotnet::dotnet_ready,
-                set_clipboard,
+                mindwork_ai_studio::clipboard::set_clipboard,
                 mindwork_ai_studio::app_window::check_for_update,
                 mindwork_ai_studio::app_window::install_update,
                 mindwork_ai_studio::secret::get_secret,
@@ -159,57 +154,4 @@ async fn main() {
     info!("Secret password for the IPC channel was generated successfully.");
     start_dotnet_server(*API_SERVER_PORT, certificate_fingerprint);
     start_tauri();
-}
-
-#[post("/clipboard/set", data = "<encrypted_text>")]
-fn set_clipboard(_token: APIToken, encrypted_text: EncryptedText) -> Json<SetClipboardResponse> {
-
-    // Decrypt this text first:
-    let decrypted_text = match ENCRYPTION.decrypt(&encrypted_text) {
-        Ok(text) => text,
-        Err(e) => {
-            error!(Source = "Clipboard"; "Failed to decrypt the text: {e}.");
-            return Json(SetClipboardResponse {
-                success: false,
-                issue: e,
-            })
-        },
-    };
-
-    let clipboard_result = Clipboard::new();
-    let mut clipboard = match clipboard_result {
-        Ok(clipboard) => clipboard,
-        Err(e) => {
-            error!(Source = "Clipboard"; "Failed to get the clipboard instance: {e}.");
-            return Json(SetClipboardResponse {
-                success: false,
-                issue: e.to_string(),
-            })
-        },
-    };
-    
-    let set_text_result = clipboard.set_text(decrypted_text);
-    match set_text_result {
-        Ok(_) => {
-            debug!(Source = "Clipboard"; "Text was set to the clipboard successfully.");
-            Json(SetClipboardResponse {
-                success: true,
-                issue: String::from(""),
-            })
-        },
-        
-        Err(e) => {
-            error!(Source = "Clipboard"; "Failed to set text to the clipboard: {e}.");
-            Json(SetClipboardResponse {
-                success: false,
-                issue: e.to_string(),
-            })
-        },
-    }
-}
-
-#[derive(Serialize)]
-struct SetClipboardResponse {
-    success: bool,
-    issue: String,
 }
