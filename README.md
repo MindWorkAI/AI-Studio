@@ -11,7 +11,7 @@ Things we are currently working on:
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
   - [ ] App: Define an interface for the integration of RAG processes in chats
-  - [ ] Define the [External Data API (EDI)](https://github.com/MindWorkAI/EDI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/EDI/pull/1))
+  - [x] ~~Define the [External Data API (EDI)](https://github.com/MindWorkAI/EDI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/EDI/pull/1))~~
   - [ ] App: Implement the process control of vectorizing local data
   - [ ] App: Integrate data sources in chats
   - [ ] App: Management of data sources (external data via [EDI](https://github.com/MindWorkAI/EDI))
