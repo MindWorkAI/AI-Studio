@@ -640,14 +640,6 @@ async fn dotnet_ready(_token: APIToken) {
     }
 }
 
-pub fn is_dev() -> bool {
-    cfg!(debug_assertions)
-}
-
-pub fn is_prod() -> bool {
-    !is_dev()
-}
-
 fn get_available_port() -> Option<u16> {
     TcpListener::bind(("127.0.0.1", 0))
         .map(|listener| listener.local_addr().unwrap().port())
