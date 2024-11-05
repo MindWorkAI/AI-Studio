@@ -5,7 +5,7 @@ Things we are currently working on:
 
 - Since November 2024: Work on RAG (integration of your data and files) has begun. We will support the integration of local and external data sources. We need to implement the following runtime (Rust) and app (.NET) steps:
 
-  - [ ] Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))
+  - [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
   - [ ] App: Metadata for providers (which provider offers embeddings?)
   - [ ] App: Management of data sources (local data)
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
@@ -65,7 +65,7 @@ We offer various ways you can support the project:
 - **One-Time Contributions**: Make a one-time donation and have your name or company logo included in the app as a gesture of our gratitude.
 
 For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
- 
+
 To view all available tiers, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
 
