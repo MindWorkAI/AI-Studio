@@ -8,10 +8,10 @@ use crate::certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use crate::environment::is_dev;
 use crate::network::get_available_port;
 
-// The port used for the runtime API server. In the development environment, we use a fixed
-// port, in the production environment we use the next available port. This differentiation
-// is necessary because we cannot communicate the port to the .NET server in the development
-// environment.
+/// The port used for the runtime API server. In the development environment, we use a fixed
+/// port, in the production environment we use the next available port. This differentiation
+/// is necessary because we cannot communicate the port to the .NET server in the development
+/// environment.
 pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
     if is_dev() {
         5000
@@ -20,6 +20,8 @@ pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
     }
 });
 
+/// Starts the runtime API server. The server is used to communicate with the .NET server and
+/// to provide additional functionality to the Tauri app.
 pub fn start_runtime_api() {
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");

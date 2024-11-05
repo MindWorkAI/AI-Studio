@@ -26,12 +26,15 @@ static DOTNET_SERVER_PORT: Lazy<u16> = Lazy::new(|| get_available_port().unwrap(
 
 static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 
+/// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
+/// the port where the .NET server should listen to.
 #[get("/system/dotnet/port")]
 pub fn dotnet_port(_token: APIToken) -> String {
     let dotnet_server_port = *DOTNET_SERVER_PORT;
     format!("{dotnet_server_port}")
 }
 
+/// Starts the .NET server in a separate process.
 pub fn start_dotnet_server() {
 
     // Get the secret password & salt and convert it to a base64 string:
@@ -128,6 +131,7 @@ pub fn start_dotnet_server() {
     });
 }
 
+/// This endpoint is called by the .NET server to signal that the server is ready.
 #[get("/system/dotnet/ready")]
 pub async fn dotnet_ready(_token: APIToken) {
 
@@ -158,6 +162,7 @@ pub async fn dotnet_ready(_token: APIToken) {
     change_location_to(url.as_str()).await;
 }
 
+/// Stops the .NET server process.
 pub fn stop_dotnet_server() {
     if let Some(server_process) = DOTNET_SERVER.lock().unwrap().take() {
         let server_kill_result = server_process.kill();

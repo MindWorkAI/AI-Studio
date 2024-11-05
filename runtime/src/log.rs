@@ -11,6 +11,7 @@ use crate::environment::is_dev;
 
 static LOGGER: OnceLock<RuntimeLoggerHandle> = OnceLock::new();
 
+/// Initialize the logging system.
 pub fn init_logging() {
 
     //
@@ -60,6 +61,7 @@ pub fn init_logging() {
     LOGGER.set(runtime_logger).expect("Cannot set LOGGER");
 }
 
+/// Switch the logging system to a file-based output.
 pub fn switch_to_file_logging(logger_path: PathBuf) -> Result<(), Box<dyn Error>>{
     LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(
         FileSpec::default()
@@ -137,7 +139,7 @@ fn terminal_colored_logger_format(
     write!(w, "{}", flexi_logger::style(level).paint(record.args().to_string()))
 }
 
-// Custom LOGGER format for the log files:
+/// Custom LOGGER format for the log files:
 fn file_logger_format(
     w: &mut dyn std::io::Write,
     now: &mut DeferredNow,

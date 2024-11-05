@@ -3,10 +3,16 @@ use log::info;
 use rcgen::generate_simple_self_signed;
 use sha2::{Sha256, Digest};
 
+/// The certificate used for the runtime API server.
 pub static CERTIFICATE: OnceLock<Vec<u8>> = OnceLock::new();
+
+/// The private key used for the certificate of the runtime API server.
 pub static CERTIFICATE_PRIVATE_KEY: OnceLock<Vec<u8>> = OnceLock::new();
+
+/// The fingerprint of the certificate used for the runtime API server.
 pub static CERTIFICATE_FINGERPRINT: OnceLock<String> = OnceLock::new();
 
+/// Generates a TLS certificate for the runtime API server.
 pub fn generate_certificate() {
     
     info!("Try to generate a TLS certificate for the runtime API server...");

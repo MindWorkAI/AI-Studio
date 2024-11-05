@@ -13,12 +13,13 @@ use crate::dotnet::stop_dotnet_server;
 use crate::environment::{is_prod, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 
-// The Tauri main window.
+/// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
 
-// The update response coming from the Tauri updater.
+/// The update response coming from the Tauri updater.
 static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<UpdateResponse<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
 
+/// Starts the Tauri app.
 pub fn start_tauri() {
     info!("Starting Tauri app...");
     let app = tauri::Builder::default()
@@ -118,6 +119,7 @@ pub fn start_tauri() {
     }
 }
 
+/// Changes the location of the main window to the given URL.
 pub async fn change_location_to(url: &str) {
     // Try to get the main window. If it is not available yet, wait for it:
     let mut main_window_ready = false;
@@ -149,6 +151,7 @@ pub async fn change_location_to(url: &str) {
     }
 }
 
+/// Checks for updates.
 #[get("/updates/check")]
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
     let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().unwrap().app_handle();
@@ -194,6 +197,7 @@ pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
     }
 }
 
+/// The response to the check for update request.
 #[derive(Serialize)]
 pub struct CheckUpdateResponse {
     update_is_available: bool,
@@ -202,6 +206,7 @@ pub struct CheckUpdateResponse {
     changelog: String,
 }
 
+/// Installs the update.
 #[get("/updates/install")]
 pub async fn install_update(_token: APIToken) {
     let cloned_response_option = CHECK_UPDATE_RESPONSE.lock().unwrap().clone();

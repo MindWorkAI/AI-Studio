@@ -6,6 +6,7 @@ use serde::Serialize;
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
+/// Sets the clipboard text to the provided encrypted text.
 #[post("/clipboard/set", data = "<encrypted_text>")]
 pub fn set_clipboard(_token: APIToken, encrypted_text: EncryptedText) -> Json<SetClipboardResponse> {
 
@@ -53,6 +54,7 @@ pub fn set_clipboard(_token: APIToken, encrypted_text: EncryptedText) -> Json<Se
     }
 }
 
+/// The response for setting the clipboard text.
 #[derive(Serialize)]
 pub struct SetClipboardResponse {
     success: bool,

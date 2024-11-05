@@ -21,6 +21,7 @@ type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
 
 type DataOutcome<'r, T> = data::Outcome<'r, T>;
 
+/// The encryption instance used for the IPC channel.
 pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
     //
     // Generate a secret key & salt for the AES encryption for the IPC channel:
@@ -41,6 +42,7 @@ pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
     Encryption::new(&secret_key, &secret_key_salt).unwrap()
 });
 
+/// The encryption struct used for the IPC channel.
 pub struct Encryption {
     key: [u8; 32],
     iv: [u8; 16],
@@ -58,6 +60,7 @@ impl Encryption {
     // algorithms we chose, requires a fixed key length, and our password is too long.
     const ITERATIONS: u32 = 100;
 
+    /// Initializes the encryption with the given secret password and salt.
     pub fn new(secret_password: &[u8], secret_key_salt: &[u8]) -> Result<Self, String> {
         if secret_password.len() != 512 {
             return Err("The secret password must be 512 bytes long.".to_string());
@@ -92,6 +95,7 @@ impl Encryption {
         Ok(encryption)
     }
 
+    /// Encrypts the given data.
     pub fn encrypt(&self, data: &str) -> Result<EncryptedText, String> {
         let cipher = Aes256CbcEnc::new(&self.key.into(), &self.iv.into());
         let encrypted = cipher.encrypt_padded_vec_mut::<Pkcs7>(data.as_bytes());
@@ -100,6 +104,7 @@ impl Encryption {
         Ok(EncryptedText::new(result))
     }
 
+    /// Decrypts the given data.
     pub fn decrypt(&self, encrypted_data: &EncryptedText) -> Result<String, String> {
         let decoded = BASE64_STANDARD.decode(encrypted_data.get_encrypted()).map_err(|e| format!("Error decoding base64: {e}"))?;
 
@@ -119,14 +124,18 @@ impl Encryption {
     }
 }
 
+/// Represents encrypted text.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct EncryptedText(String);
 
 impl EncryptedText {
+    
+    /// Creates a new encrypted text instance.
     pub fn new(encrypted_data: String) -> Self {
         EncryptedText(encrypted_data)
     }
 
+    /// Returns the encrypted data.
     pub fn get_encrypted(&self) -> &str {
         &self.0
     }
@@ -144,11 +153,13 @@ impl fmt::Display for EncryptedText {
     }
 }
 
-// Use Case: When we receive encrypted text from the client as body (e.g., in a POST request).
-// We must interpret the body as EncryptedText.
+/// Use Case: When we receive encrypted text from the client as body (e.g., in a POST request).
+/// We must interpret the body as EncryptedText.
 #[rocket::async_trait]
 impl<'r> data::FromData<'r> for EncryptedText {
     type Error = String;
+    
+    /// Parses the data as EncryptedText.
     async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> DataOutcome<'r, Self> {
         let content_type = req.content_type();
         if content_type.map_or(true, |ct| !ct.is_text()) {

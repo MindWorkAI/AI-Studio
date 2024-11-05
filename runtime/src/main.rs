@@ -28,7 +28,6 @@ async fn main() {
     let app_commit_hash = metadata_lines.next().unwrap();
 
     init_logging();
-
     info!("Starting MindWork AI Studio:");
     
     let working_directory = std::env::current_dir().unwrap();

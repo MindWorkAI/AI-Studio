@@ -7,6 +7,7 @@ use keyring::error::Error::NoEntry;
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
+/// Stores a secret in the secret store using the operating system's keyring.
 #[post("/secrets/store", data = "<request>")]
 pub fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
     let user_name = request.user_name.as_str();
@@ -43,6 +44,7 @@ pub fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreS
     }
 }
 
+/// The structure of the request to store a secret.
 #[derive(Deserialize)]
 pub struct StoreSecret {
     destination: String,
@@ -50,12 +52,14 @@ pub struct StoreSecret {
     secret: EncryptedText,
 }
 
+/// The structure of the response to storing a secret.
 #[derive(Serialize)]
 pub struct StoreSecretResponse {
     success: bool,
     issue: String,
 }
 
+/// Retrieves a secret from the secret store using the operating system's keyring.
 #[post("/secrets/get", data = "<request>")]
 pub fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
     let user_name = request.user_name.as_str();
@@ -100,6 +104,7 @@ pub fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<Reques
     }
 }
 
+/// The structure of the request to retrieve a secret.
 #[derive(Deserialize)]
 pub struct RequestSecret {
     destination: String,
@@ -107,6 +112,7 @@ pub struct RequestSecret {
     is_trying: bool,
 }
 
+/// The structure of the response to retrieving a secret.
 #[derive(Serialize)]
 pub struct RequestedSecret {
     success: bool,
@@ -114,6 +120,7 @@ pub struct RequestedSecret {
     issue: String,
 }
 
+/// Deletes a secret from the secret store using the operating system's keyring.
 #[post("/secrets/delete", data = "<request>")]
 pub fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
     let user_name = request.user_name.as_str();
@@ -151,6 +158,7 @@ pub fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<Del
     }
 }
 
+/// The structure of the response to deleting a secret.
 #[derive(Serialize)]
 pub struct DeleteSecretResponse {
     success: bool,
