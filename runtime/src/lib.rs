@@ -4,3 +4,4 @@ pub mod environment;
 pub mod dotnet;
 pub mod network;
 pub mod api_token;
+pub mod app_window;
