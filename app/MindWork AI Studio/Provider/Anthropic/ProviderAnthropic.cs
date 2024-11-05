@@ -151,6 +151,9 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
             new Model("claude-3-5-sonnet-20240620"),
             new Model("claude-3-5-sonnet-20241022"),
             
+            new Model("claude-3-5-haiku-latest"),
+            new Model("claude-3-5-heiku-20241022"),
+            
             new Model("claude-3-opus-20240229"),
             new Model("claude-3-opus-latest"),
             
