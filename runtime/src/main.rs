@@ -4,38 +4,27 @@
 extern crate rocket;
 extern crate core;
 
-use std::collections::{HashMap, HashSet};
-use std::net::TcpListener;
-use std::sync::{Arc, Mutex, OnceLock};
-use std::time::Duration;
+use std::collections::HashSet;
 use once_cell::sync::Lazy;
 
 use arboard::Clipboard;
-use base64::Engine;
-use base64::prelude::BASE64_STANDARD;
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
-use tauri::{Manager, Url, Window};
-use tauri::api::process::{Command, CommandChild, CommandEvent};
-use tokio::time;
 use keyring::error::Error::NoEntry;
 use log::{debug, error, info, warn};
-use rand::{RngCore, SeedableRng};
 use rcgen::generate_simple_self_signed;
 use rocket::figment::Figment;
-use rocket::{get, post, routes, Request};
+use rocket::{post, routes};
 use rocket::config::{Shutdown};
-use rocket::http::Status;
-use rocket::request::{FromRequest};
 use rocket::serde::json::Json;
 use sha2::{Sha256, Digest};
-use tauri::updater::UpdateResponse;
-
+use mindwork_ai_studio::api_token::APIToken;
+use mindwork_ai_studio::app_window::start_tauri;
+use mindwork_ai_studio::dotnet::start_dotnet_server;
 use mindwork_ai_studio::encryption::{EncryptedText, ENCRYPTION};
-use mindwork_ai_studio::environment::{is_dev, is_prod};
-use mindwork_ai_studio::log::{init_logging, switch_to_file_logging};
-
-
+use mindwork_ai_studio::environment::is_dev;
+use mindwork_ai_studio::log::init_logging;
+use mindwork_ai_studio::network::get_available_port;
 
 // The port used for the runtime API server. In the development environment, we use a fixed
 // port, in the production environment we use the next available port. This differentiation
