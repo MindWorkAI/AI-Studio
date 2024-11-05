@@ -139,8 +139,7 @@ async fn main() {
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
-
-    info!("Secret password for the IPC channel was generated successfully.");
+    
     start_dotnet_server(*API_SERVER_PORT);
     start_tauri();
 }

@@ -37,6 +37,7 @@ pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
     rng.fill_bytes(&mut secret_key);
     rng.fill_bytes(&mut secret_key_salt);
 
+    info!("Secret password for the IPC channel was generated successfully.");
     Encryption::new(&secret_key, &secret_key_salt).unwrap()
 });
 

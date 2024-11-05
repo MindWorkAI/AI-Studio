@@ -1,3 +1,4 @@
+use log::info;
 use once_cell::sync::Lazy;
 use rand::{RngCore, SeedableRng};
 use rocket::http::Status;
@@ -8,7 +9,11 @@ pub static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
     let mut token = [0u8; 32];
     let mut rng = rand_chacha::ChaChaRng::from_entropy();
     rng.fill_bytes(&mut token);
-    APIToken::from_bytes(token.to_vec())
+    
+    let token = APIToken::from_bytes(token.to_vec());
+    info!("API token was generated successfully.");
+    
+    token
 });
 
 pub struct APIToken {
