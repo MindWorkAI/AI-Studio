@@ -154,8 +154,16 @@ async fn main() {
     tauri::async_runtime::spawn(async move {
         rocket::custom(figment)
             .mount("/", routes![
-                dotnet_port, dotnet_ready, set_clipboard, check_for_update, install_update,
-                get_secret, store_secret, delete_secret, get_data_directory, get_config_directory,
+                mindwork_ai_studio::dotnet::dotnet_port,
+                mindwork_ai_studio::dotnet::dotnet_ready,
+                set_clipboard,
+                mindwork_ai_studio::app_window::check_for_update,
+                mindwork_ai_studio::app_window::install_update,
+                get_secret,
+                store_secret,
+                delete_secret,
+                mindwork_ai_studio::environment::get_data_directory,
+                mindwork_ai_studio::environment::get_config_directory,
             ])
             .ignite().await.unwrap()
             .launch().await.unwrap();
