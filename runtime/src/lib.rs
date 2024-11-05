@@ -7,4 +7,5 @@ pub mod api_token;
 pub mod app_window;
 pub mod secret;
 pub mod clipboard;
+pub mod runtime_api;
 pub mod certificate;

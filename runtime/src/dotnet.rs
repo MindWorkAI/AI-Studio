@@ -13,6 +13,7 @@ use crate::certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
 use crate::environment::is_dev;
 use crate::network::get_available_port;
+use crate::runtime_api::API_SERVER_PORT;
 
 // The .NET server is started in a separate process and communicates with this
 // runtime process via IPC. However, we do net start the .NET server in
@@ -31,7 +32,7 @@ pub fn dotnet_port(_token: APIToken) -> String {
     format!("{dotnet_server_port}")
 }
 
-pub fn start_dotnet_server(api_server_port: u16) {
+pub fn start_dotnet_server() {
 
     // Get the secret password & salt and convert it to a base64 string:
     let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
@@ -47,8 +48,7 @@ pub fn start_dotnet_server(api_server_port: u16) {
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
     tauri::async_runtime::spawn(async move {
-        let api_port = api_server_port;
-
+        let api_port = *API_SERVER_PORT;
         let (mut rx, child) = match is_dev() {
             true => {
                 // We are in the development environment, so we try to start a process
