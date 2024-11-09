@@ -173,7 +173,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         return modelResponse.Data.Where(n => 
             !n.Id.StartsWith("code", StringComparison.InvariantCulture) &&
             !n.Id.Contains("embed", StringComparison.InvariantCulture))
-            .Select(n => new Provider.Model(n.Id));
+            .Select(n => new Provider.Model(n.Id, null));
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

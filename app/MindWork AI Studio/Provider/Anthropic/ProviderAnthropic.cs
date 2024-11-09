@@ -147,18 +147,18 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     {
         return Task.FromResult(new[]
         {
-            new Model("claude-3-5-sonnet-latest"),
-            new Model("claude-3-5-sonnet-20240620"),
-            new Model("claude-3-5-sonnet-20241022"),
+            new Model("claude-3-5-sonnet-latest", "Claude 3.5 Sonnet (latest)"),
+            new Model("claude-3-5-sonnet-20240620", "Claude 3.5 Sonnet (20. June 2024)"),
+            new Model("claude-3-5-sonnet-20241022", "Claude 3.5 Sonnet (22. October 2024)"),
             
-            new Model("claude-3-5-haiku-latest"),
-            new Model("claude-3-5-heiku-20241022"),
+            new Model("claude-3-5-haiku-latest", "Claude 3.5 Haiku (latest)"),
+            new Model("claude-3-5-heiku-20241022", "Claude 3.5 Haiku (22. October 2024)"),
             
-            new Model("claude-3-opus-20240229"),
-            new Model("claude-3-opus-latest"),
+            new Model("claude-3-opus-20240229", "Claude 3.0 Opus (29. February 2024)"),
+            new Model("claude-3-opus-latest", "Claude 3.0 Opus (latest)"),
             
-            new Model("claude-3-sonnet-20240229"),
-            new Model("claude-3-haiku-20240307"),
+            new Model("claude-3-sonnet-20240229", "Claude 3.0 Sonnet (29. February 2024)"),
+            new Model("claude-3-haiku-20240307", "Claude 3.0 Haiku (7. March 2024)"),
         }.AsEnumerable());
     }
 

@@ -164,7 +164,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
                 case Host.LLAMACPP:
                     // Right now, llama.cpp only supports one model.
                     // There is no API to list the model(s).
-                    return [ new Provider.Model("as configured by llama.cpp") ];
+                    return [ new Provider.Model("as configured by llama.cpp", null) ];
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
@@ -188,7 +188,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
                         return [];
 
                     var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-                    return lmStudioModelResponse.Data.Select(n => new Provider.Model(n.Id));
+                    return lmStudioModelResponse.Data.Select(n => new Provider.Model(n.Id, null));
             }
 
             return [];
