@@ -133,6 +133,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         LLMProviders.ANTHROPIC => true,
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
+        LLMProviders.GOOGLE => true,
         
         _ => false,
     };
@@ -143,6 +144,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
         LLMProviders.GROQ => "https://console.groq.com/settings/usage",
+        LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
         
         _ => string.Empty,

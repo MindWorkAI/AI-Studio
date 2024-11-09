@@ -6,9 +6,9 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 
-namespace AIStudio.Provider.Mistral;
+namespace AIStudio.Provider.Google;
 
-public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger), IProvider
+public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", logger), IProvider
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -17,9 +17,11 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     
     #region Implementation of IProvider
 
-    public string Id => "Mistral";
-    
-    public string InstanceName { get; set; } = "Mistral";
+    /// <inheritdoc />
+    public string Id => "Google";
+
+    /// <inheritdoc />
+    public string InstanceName { get; set; } = "Google Gemini";
 
     /// <inheritdoc />
     public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
@@ -30,21 +32,21 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new RegularMessage
+        var systemPrompt = new Message
         {
             Role = "system",
             Content = chatThread.SystemPrompt,
         };
         
-        // Prepare the Mistral HTTP chat request:
-        var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest
+        // Prepare the Google HTTP chat request:
+        var geminiChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
             
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new RegularMessage
+            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
             {
                 Role = n.Role switch
                 {
@@ -62,12 +64,9 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            RandomSeed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
-            SafePrompt = false,
         }, JSON_SERIALIZER_OPTIONS);
 
         // Build the HTTP post request:
@@ -77,7 +76,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         
         // Set the content:
-        request.Content = new StringContent(mistralChatRequest, Encoding.UTF8, "application/json");
+        request.Content = new StringContent(geminiChatRequest, Encoding.UTF8, "application/json");
         
         // Send the request with the ResponseHeadersRead option.
         // This allows us to read the stream as soon as the headers are received.
@@ -85,10 +84,10 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         
         // Open the response stream:
-        var mistralStream = await response.Content.ReadAsStreamAsync(token);
+        var geminiStream = await response.Content.ReadAsStreamAsync(token);
         
         // Add a stream reader to read the stream, line by line:
-        var streamReader = new StreamReader(mistralStream);
+        var streamReader = new StreamReader(geminiStream);
         
         // Read the stream, line by line:
         while(!streamReader.EndOfStream)
@@ -113,7 +112,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
                 yield break;
 
-            ResponseStreamLine mistralResponse;
+            ResponseStreamLine geminiResponse;
             try
             {
                 // We know that the line starts with "data: ". Hence, we can
@@ -121,7 +120,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 var jsonData = line[6..];
                 
                 // Deserialize the JSON data:
-                mistralResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
+                geminiResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
             }
             catch
             {
@@ -130,11 +129,11 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             }    
             
             // Skip empty responses:
-            if(mistralResponse == default || mistralResponse.Choices.Count == 0)
+            if(geminiResponse == default || geminiResponse.Choices.Count == 0)
                 continue;
             
             // Yield the response:
-            yield return mistralResponse.Choices[0].Delta.Content;
+            yield return geminiResponse.Choices[0].Delta.Content;
         }
     }
 
@@ -147,7 +146,20 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return this.LoadModels(token, apiKeyProvisional);
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+    }
+
+    #endregion
+
+    private async Task<IEnumerable<Provider.Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
@@ -158,31 +170,19 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 _ => null,
             }
         };
-
+        
         if (secretKey is null)
             return [];
-        
-        var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
+        var request = new HttpRequestMessage(HttpMethod.Get, $"models?key={secretKey}");
         var response = await this.httpClient.SendAsync(request, token);
+        
         if(!response.IsSuccessStatusCode)
             return [];
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n => 
-            !n.Id.StartsWith("code", StringComparison.InvariantCulture) &&
-            !n.Id.Contains("embed", StringComparison.InvariantCulture))
-            .Select(n => new Provider.Model(n.Id, null));
+        return modelResponse.Models.Where(model =>
+            model.Name.StartsWith("models/gemini-", StringComparison.InvariantCultureIgnoreCase))
+            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
-
-    #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
-    {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
-    }
-    #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
-    #endregion
 }
