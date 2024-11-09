@@ -1196,7 +1196,7 @@ public static class BiasCatalog
             
             McDaniel and Einstein argues that bizarreness intrinsically does not enhance memory in their paper
             from 1986. They claim that bizarre information becomes distinctive. It is the distinctiveness that
-            according to them makes encoding easier.[3] Which makes common sense from an instinctual perspective
+            according to them makes encoding easier. Which makes common sense from an instinctual perspective
             as the human brain will disregard ingesting information it already is familiar with and will be
             particularly attuned to taking in new information as an adaptation technique.
             """,
@@ -4749,7 +4749,7 @@ public static class BiasCatalog
             effect. There are psychological mechanisms by which backfire effects could potentially occur, but the evidence on
             this topic is mixed, and backfire effects are very rare in practice. A 2020 review of the scientific literature on
             backfire effects found that there have been widespread failures to replicate their existence, even under conditions
-            that would be theoretically favorable to observing them.[8] Due to the lack of reproducibility, as of 2020 most
+            that would be theoretically favorable to observing them. Due to the lack of reproducibility, as of 2020 most
             researchers believe that backfire effects are either unlikely to occur on the broader population level, or they
             only occur in very specific circumstances, or they do not exist. For most people, corrections and fact-checking
             are very unlikely to have a negative impact, and there is no specific group of people in which backfire effects
@@ -5715,13 +5715,13 @@ public static class BiasCatalog
             
             Other topics that are sensitive to social-desirability bias include:
             
-            - Self-reported personality traits will correlate strongly with social desirability bias[2]
+            - Self-reported personality traits will correlate strongly with social desirability bias
             - Personal income and earnings, often inflated when low and deflated when high
             - Feelings of low self-worth and/or powerlessness, often denied
             - Excretory functions, often approached uncomfortably, if discussed at all
             - Compliance with medicinal-dosing schedules, often inflated
-            - Family planning, including use of contraceptives and abortion[3][4]
-            - Religion, often either avoided or uncomfortably approached[5]
+            - Family planning, including use of contraceptives and abortion
+            - Religion, often either avoided or uncomfortably approached
             - Patriotism, either inflated or, if denied, done so with a fear of other party's judgment
             - Bigotry and intolerance, often denied, even if it exists within the responder
             - Intellectual achievements, often inflated
