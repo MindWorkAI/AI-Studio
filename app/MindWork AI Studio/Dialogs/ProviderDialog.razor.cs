@@ -105,7 +105,7 @@ public partial class ProviderDialog : ComponentBase
         Id = this.DataId,
         InstanceName = this.DataInstanceName,
         UsedLLMProvider = this.DataLLMProvider,
-        Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel) : this.DataModel,
+        Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel, null) : this.DataModel,
         IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
         Hostname = this.DataHostname.EndsWith('/') ? this.DataHostname[..^1] : this.DataHostname,
         Host = this.DataHost,
@@ -357,6 +357,7 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.OPEN_AI => true,
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
+        LLMProviders.GOOGLE => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -369,6 +370,7 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.OPEN_AI => true,
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
+        LLMProviders.GOOGLE => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -414,6 +416,7 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
         LLMProviders.MISTRAL => "https://console.mistral.ai/",
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
+        LLMProviders.GOOGLE => "https://console.cloud.google.com/",
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",

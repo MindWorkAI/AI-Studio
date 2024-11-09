@@ -1,5 +1,6 @@
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.Fireworks;
+using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
@@ -22,6 +23,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_AI => "OpenAI",
         LLMProviders.ANTHROPIC => "Anthropic",
         LLMProviders.MISTRAL => "Mistral",
+        LLMProviders.GOOGLE => "Google",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -50,6 +52,8 @@ public static class LLMProvidersExtensions
             "https://openai.com/enterprise-privacy/"
         ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
+        LLMProviders.GOOGLE => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://ai.google.dev/gemini-api/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
         LLMProviders.GROQ => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://wow.groq.com/terms-of-use/").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.ANTHROPIC => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.anthropic.com/legal/commercial-terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -76,6 +80,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.OPEN_AI => new ProviderOpenAI(logger) { InstanceName = providerSettings.InstanceName },
                 LLMProviders.ANTHROPIC => new ProviderAnthropic(logger) { InstanceName = providerSettings.InstanceName },
                 LLMProviders.MISTRAL => new ProviderMistral(logger) { InstanceName = providerSettings.InstanceName },
+                LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = providerSettings.InstanceName },
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = providerSettings.InstanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = providerSettings.InstanceName },

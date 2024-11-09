@@ -10,6 +10,7 @@ public enum LLMProviders
     OPEN_AI = 1,
     ANTHROPIC = 2,
     MISTRAL = 3,
+    GOOGLE = 7,
     
     FIREWORKS = 5,
     GROQ = 6,
