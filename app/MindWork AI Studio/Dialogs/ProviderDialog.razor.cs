@@ -358,6 +358,7 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
         
+        LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         
         _ => false,
@@ -369,7 +370,9 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
         
+        LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
+        
         LLMProviders.SELF_HOSTED => this.DataHost is Host.OLLAMA,
         
         _ => false,
@@ -411,7 +414,8 @@ public partial class ProviderDialog : ComponentBase
         LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
         LLMProviders.MISTRAL => "https://console.mistral.ai/",
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
-        
+     
+        LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
         
         _ => string.Empty,

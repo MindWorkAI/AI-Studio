@@ -12,6 +12,7 @@ public enum LLMProviders
     MISTRAL = 3,
     
     FIREWORKS = 5,
+    GROQ = 6,
     
     SELF_HOSTED = 4,
 }

@@ -131,6 +131,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         LLMProviders.OPEN_AI => true,
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
+        LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         
         _ => false,
@@ -141,6 +142,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
         LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+        LLMProviders.GROQ => "https://console.groq.com/settings/usage",
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
         
         _ => string.Empty,
