@@ -30,6 +30,7 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.18: Added the new Anthropic Heiku model; added Groq and Google Gemini as provider options.
 - v0.9.17: Added the new Anthropic model `claude-3-5-sonnet-20241022`.
 - v0.9.16: Added workspace display options & improved the layout of the app window.
 - v0.9.15: Added the bias-of-the-day assistant. Tells you about a cognitive bias every day.
