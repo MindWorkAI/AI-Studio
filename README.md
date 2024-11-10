@@ -72,11 +72,13 @@ To view all available tiers, please visit our [GitHub Sponsors page](https://git
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
 
 ## Planned Features
-Here's an exciting look at some of the features we're planning to add to MindWork AI Studio in future releases:
-- **More providers**: We plan to add support for additional LLM providers, such as Google Gemini, giving you more options to choose from.
-- **System prompts**: Integration of a system prompt library will allow you to control the behavior of the LLM with predefined prompts, ensuring consistency and efficiency.
-- **Text replacement for better privacy**: Define keywords that will be replaced in your chats before sending content to the provider, enhancing your privacy.
-- **Advanced interactions**: We're full of ideas for advanced interactions tailored for specific use cases, whether in a business context or for writers and other professionals.
+Here's an exciting look at some of the features we're planning to add to AI Studio in future releases:
+- **Integrating your data**: You should be able to integrate your data into AI Studio. For example, your PDF or Office files, or your Markdown notes.
+- **Integration of enterprise data:** Soon, it will also be possible to integrate data from the corporate network using an interface that we have specified ([External Data API](https://github.com/MindWorkAI/EDI), EDI for short).
+- **Writing mode:** We want to integrate a writing mode that should support you in creating extensive works. We are thinking of comprehensive project proposals, tenders, or your next fantasy novel.
+- **Browser usage:** We're trying to offer the features from AI Studio to you in the browser via a plugin, so we could use spell-checking or rewriting text directly in the browser.
+- **Voice control:** You should be able to interact with the AI systems using your voice as well. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
+- **Email monitoring:** You should have the option to connect your email inboxes with AI Studio. The AI reads your emails and sends you a notification when something important happens. At the same time, you can access knowledge from your emails in your chats.
 
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
