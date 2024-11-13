@@ -40,7 +40,7 @@ public sealed class ContentText : IContent
         if(chatThread is null)
             return;
 
-        // Store the last time we got a response. We use this ater
+        // Store the last time we got a response. We use this later
         // to determine whether we should notify the UI about the
         // new content or not. Depends on the energy saving mode
         // the user chose.

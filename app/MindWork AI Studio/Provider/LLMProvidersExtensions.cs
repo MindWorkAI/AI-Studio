@@ -66,6 +66,35 @@ public static class LLMProvidersExtensions
     };
 
     /// <summary>
+    /// Determines if the specified provider supports embeddings.
+    /// </summary>
+    /// <param name="llmProvider">The provider to check.</param>
+    /// <returns>True if the provider supports embeddings; otherwise, false.</returns>
+    public static bool ProvideEmbeddings(this LLMProviders llmProvider) => llmProvider switch
+    {
+        //
+        // Providers that support embeddings:
+        //
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.GOOGLE => true,
+        
+        //
+        // Providers that do not support embeddings:
+        //
+        LLMProviders.GROQ => false,
+        LLMProviders.ANTHROPIC => false,
+        LLMProviders.FIREWORKS => false,
+        
+        //
+        // Self-hosted providers are treated as a special case anyway.
+        //
+        LLMProviders.SELF_HOSTED => false,
+        
+        _ => false,
+    };
+
+    /// <summary>
     /// Creates a new provider instance based on the provider value.
     /// </summary>
     /// <param name="providerSettings">The provider settings.</param>
