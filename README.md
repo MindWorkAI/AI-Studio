@@ -7,15 +7,17 @@ Things we are currently working on:
 
   - [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
   - [x] ~~Define the [External Data API (EDI)](https://github.com/MindWorkAI/EDI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/EDI/pull/1))~~
-  - [ ] App: Metadata for providers (which provider offers embeddings?)
-  - [ ] App: Management of data sources (local data)
+  - [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
+  - [ ] App: Add an option to show preview features
+  - [ ] App: Configure embedding providers
+  - [ ] App: Management of data sources (local & external data via [EDI](https://github.com/MindWorkAI/EDI))
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
   - [ ] App: Implement embedding providers
-  - [ ] App: Implement the process to vectorize local data using embeddings
+  - [ ] App: Implement the process to vectorize one local file using embeddings
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
+  - [ ] App: Implement the continuous process of vectorizing data
   - [ ] App: Define an interface for the integration of RAG processes in chats
   - [ ] App: Integrate data sources in chats
-  - [ ] App: Management of data sources (external data via [EDI](https://github.com/MindWorkAI/EDI))
 
 
 - Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. Related PR: [#167](https://github.com/MindWorkAI/AI-Studio/pull/167).
