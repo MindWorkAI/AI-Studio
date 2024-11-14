@@ -99,17 +99,21 @@ public partial class ProviderDialog : ComponentBase
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
 
-    private Settings.Provider CreateProviderSettings() => new()
+    private Settings.Provider CreateProviderSettings()
     {
-        Num = this.DataNum,
-        Id = this.DataId,
-        InstanceName = this.DataInstanceName,
-        UsedLLMProvider = this.DataLLMProvider,
-        Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel, null) : this.DataModel,
-        IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
-        Hostname = this.DataHostname.EndsWith('/') ? this.DataHostname[..^1] : this.DataHostname,
-        Host = this.DataHost,
-    };
+        var cleanedHostname = this.DataHostname.Trim();
+        return new()
+        {
+            Num = this.DataNum,
+            Id = this.DataId,
+            InstanceName = this.DataInstanceName,
+            UsedLLMProvider = this.DataLLMProvider,
+            Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel, null) : this.DataModel,
+            IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
+            Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
+            Host = this.DataHost,
+        };
+    }
 
     #region Overrides of ComponentBase
 
