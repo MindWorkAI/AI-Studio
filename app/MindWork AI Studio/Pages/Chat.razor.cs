@@ -112,18 +112,19 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && this.workspaces is not null && this.chatThread is not null && this.mustStoreChat)
+        if (firstRender && this.chatThread is not null && this.mustStoreChat)
         {
             this.mustStoreChat = false;
-            await this.workspaces.StoreChat(this.chatThread, false);
+            await WorkspaceBehaviour.StoreChat(this.chatThread);
             this.currentWorkspaceId = this.chatThread.WorkspaceId;
-            this.currentWorkspaceName = await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
         }
         
-        if (firstRender && this.workspaces is not null && this.mustLoadChat)
+        if (firstRender && this.mustLoadChat)
         {
             this.mustLoadChat = false;
-            await this.workspaces.LoadChat(this.loadChat);
+            this.chatThread = await WorkspaceBehaviour.LoadChat(this.loadChat);
+            this.StateHasChanged();
         }
         
         if(this.mustScrollToBottomAfterRender)
@@ -323,16 +324,22 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
     
     private async Task SaveThread()
     {
-        if(this.workspaces is null)
-            return;
-        
         if(this.chatThread is null)
             return;
         
         if (!this.CanThreadBeSaved)
             return;
+
+        //
+        // When the workspace component is visible, we store the chat
+        // through the workspace component. The advantage of this is that
+        // the workspace gets updated automatically when the chat is saved.
+        //
+        if (this.workspaces is not null)
+            await this.workspaces.StoreChat(this.chatThread);
+        else
+            await WorkspaceBehaviour.StoreChat(this.chatThread);
         
-        await this.workspaces.StoreChat(this.chatThread);
         this.hasUnsavedChanges = false;
     }
     
@@ -462,7 +469,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         await this.SaveThread();
         
         this.currentWorkspaceId = this.chatThread.WorkspaceId;
-        this.currentWorkspaceName = await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
+        this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
     }
 
     private async Task LoadedChatChanged()
@@ -474,7 +481,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
         this.currentWorkspaceId = this.chatThread?.WorkspaceId ?? Guid.Empty;
-        this.currentWorkspaceName = this.chatThread is null ? string.Empty : await this.workspaces.LoadWorkspaceName(this.chatThread.WorkspaceId);
+        this.currentWorkspaceName = this.chatThread is null ? string.Empty : await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
 
         this.userInput = string.Empty;
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)

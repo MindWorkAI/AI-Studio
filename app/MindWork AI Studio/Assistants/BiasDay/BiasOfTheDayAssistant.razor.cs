@@ -128,7 +128,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
                     ChatId = this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId,
                 };
 
-                if (Workspaces.IsChatExisting(biasChat))
+                if (WorkspaceBehaviour.IsChatExisting(biasChat))
                 {
                     MessageBus.INSTANCE.DeferMessage(this, Event.LOAD_CHAT, biasChat);
                     this.NavigationManager.NavigateTo(Routes.CHAT);
