@@ -1,0 +1,84 @@
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using AIStudio.Chat;
+using AIStudio.Settings;
+
+namespace AIStudio.Tools;
+
+public static class WorkspaceBehaviour
+{
+    public static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    {
+        WriteIndented = true,
+        AllowTrailingCommas = true,
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),
+        }
+    };
+    
+    public static bool IsChatExisting(LoadChat loadChat)
+    {
+        var chatPath = loadChat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+        
+        return Directory.Exists(chatPath);
+    }
+
+    public static async Task StoreChat(ChatThread chat)
+    {
+        string chatDirectory;
+        if (chat.WorkspaceId == Guid.Empty)
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
+        else
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+        
+        // Ensure the directory exists:
+        Directory.CreateDirectory(chatDirectory);
+        
+        // Save the chat name:
+        var chatNamePath = Path.Join(chatDirectory, "name");
+        await File.WriteAllTextAsync(chatNamePath, chat.Name);
+        
+        // Save the thread as thread.json:
+        var chatPath = Path.Join(chatDirectory, "thread.json");
+        await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
+    }
+
+    public static async Task<ChatThread?> LoadChat(LoadChat loadChat)
+    {
+        var chatPath = loadChat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+
+        if(!Directory.Exists(chatPath))
+            return null;
+        
+        try
+        {
+            var chatData = await File.ReadAllTextAsync(Path.Join(chatPath, "thread.json"), Encoding.UTF8);
+            var chat = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
+            return chat;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+    
+    public static async Task<string> LoadWorkspaceName(Guid workspaceId)
+    {
+        if(workspaceId == Guid.Empty)
+            return string.Empty;
+        
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        return await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+    }
+}
