@@ -63,8 +63,11 @@ def "main fix_web_assets" []: nothing -> nothing {
     mkdir wwwroot/system
 
     # Copy the web assets from the first RID to the source project:
-    let source_path: glob = $"bin/release/net8.0/($rid)/publish/wwwroot/_content/*"
-    cp --recursive --force --update $source_path wwwroot/system/
+    let source_paths = glob --depth 99 bin/release/net8.0/($rid)/publish/wwwroot/_content/*
+    
+    for source_path in $source_paths {
+        cp --recursive --force --update $source_path wwwroot/system/
+    }
 }
 
 def "main publish" []: nothing -> nothing {
