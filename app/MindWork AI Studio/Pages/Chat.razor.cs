@@ -124,6 +124,10 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         {
             this.mustLoadChat = false;
             this.chatThread = await WorkspaceBehaviour.LoadChat(this.loadChat);
+            
+            if(this.chatThread is not null)
+                this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
+            
             this.StateHasChanged();
         }
         
