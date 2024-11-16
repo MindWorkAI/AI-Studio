@@ -5924,18 +5924,12 @@ public static class BiasCatalog
     {
         if(usedBias.Count >= ALL_BIAS.Count)
             usedBias.Clear();
-        
-        int randomBiasIndex;
-        lock (RANDOM)
-        {
-            randomBiasIndex = RANDOM.Next(0, ALL_BIAS.Count);
-            while(usedBias.Contains(randomBiasIndex))
-                randomBiasIndex = RANDOM.Next(0, ALL_BIAS.Count);
-        }
+
+        var randomBiasIndex = Random.Shared.Next(0, ALL_BIAS.Count);
+        while(usedBias.Contains(randomBiasIndex))
+            randomBiasIndex = Random.Shared.Next(0, ALL_BIAS.Count);
         
         usedBias.Add(randomBiasIndex);
         return ALL_BIAS.Values.ElementAt(randomBiasIndex);
     }
-    
-    private static readonly Random RANDOM = new();
 }
