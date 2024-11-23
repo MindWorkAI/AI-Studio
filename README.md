@@ -12,11 +12,13 @@ Things we are currently working on:
   - [ ] App: Configure embedding providers
   - [ ] App: Management of data sources (local & external data via [EDI](https://github.com/MindWorkAI/EDI))
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
-  - [ ] App: Implement embedding providers
+  - [ ] Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
+  - [ ] App: Implement external embedding providers
   - [ ] App: Implement the process to vectorize one local file using embeddings
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
   - [ ] App: Implement the continuous process of vectorizing data
-  - [ ] App: Define an interface for the integration of RAG processes in chats
+  - [ ] App: Define a common retrieval context interface for the integration of RAG processes in chats
+  - [ ] App: Define a common augmentation interface for the integration of RAG processes in chats
   - [ ] App: Integrate data sources in chats
 
 
