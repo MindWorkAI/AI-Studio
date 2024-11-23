@@ -84,8 +84,8 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                         };
                     }
                 }
-                
-                if(this.chatThread.WorkspaceId != Guid.Empty)
+
+                if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                 {
                     this.autoSaveEnabled = true;
                     this.mustStoreChat = true;
