@@ -8,6 +8,16 @@ public sealed class DataChat
     public SendBehavior ShortcutSendBehavior { get; set; } = SendBehavior.ENTER_IS_SENDING;
 
     /// <summary>
+    /// Defines the provider behavior for loading a chat.
+    /// </summary>
+    public LoadingChatProviderBehavior LoadingProviderBehavior { get; set; } = LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE;
+
+    /// <summary>
+    /// Defines the provider behavior when adding a chat.
+    /// </summary>
+    public AddChatProviderBehavior AddChatProviderBehavior { get; set; } = AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER;
+
+    /// <summary>
     /// Preselect any chat options?
     /// </summary>
     public bool PreselectOptions { get; set; }
