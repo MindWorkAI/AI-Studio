@@ -9,7 +9,7 @@ authors = ["Thorsten Sommer"]
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.8.1", features = [ "http-all", "updater", "shell-sidecar", "shell-open"] }
+tauri = { version = "1.8", features = [ "http-all", "updater", "shell-sidecar", "shell-open"] }
 tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -29,7 +29,7 @@ cbc = "0.1.2"
 pbkdf2 = "0.12.2"
 hmac = "0.12.1"
 sha2 = "0.10.8"
-rcgen = { version = "0.13.1", features = ["pem"] }
+rcgen = { version = "0.13", features = ["pem"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # See issue https://github.com/tauri-apps/tauri/issues/4470
