@@ -115,7 +115,12 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if (firstRender && this.chatThread is not null && this.mustStoreChat)
         {
             this.mustStoreChat = false;
-            await WorkspaceBehaviour.StoreChat(this.chatThread);
+            
+            if(this.workspaces is not null)
+                await this.workspaces.StoreChat(this.chatThread);
+            else
+                await WorkspaceBehaviour.StoreChat(this.chatThread);
+            
             this.currentWorkspaceId = this.chatThread.WorkspaceId;
             this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
         }
