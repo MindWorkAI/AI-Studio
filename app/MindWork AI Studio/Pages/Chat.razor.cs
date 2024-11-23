@@ -200,6 +200,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         {
             this.chatThread = new()
             {
+                SelectedProvider = this.providerSettings.Id,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = threadName,
