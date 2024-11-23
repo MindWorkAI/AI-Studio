@@ -166,6 +166,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     {
         this.chatThread = new()
         {
+            SelectedProvider = this.providerSettings.Id,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
             Name = string.Empty,
@@ -185,6 +186,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         var chatId = Guid.NewGuid();
         this.chatThread = new()
         {
+            SelectedProvider = this.providerSettings.Id,
             WorkspaceId = workspaceId,
             ChatId = chatId,
             Name = name,
@@ -235,8 +237,13 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             Role = ChatRole.AI,
             Content = aiText,
         };
-        
-        this.chatThread?.Blocks.Add(this.resultingContentBlock);
+
+        if (this.chatThread is not null)
+        {
+            this.chatThread.Blocks.Add(this.resultingContentBlock);
+            this.chatThread.SelectedProvider = this.providerSettings.Id;
+        }
+
         this.isProcessing = true;
         this.StateHasChanged();
         
@@ -284,7 +291,9 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         switch (destination)
         {
             case Tools.Components.CHAT:
-                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, this.ConvertToChatThread);
+                var convertedChatThread = this.ConvertToChatThread;
+                convertedChatThread = convertedChatThread with { SelectedProvider = this.providerSettings.Id };
+                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
                 break;
             
             default:
