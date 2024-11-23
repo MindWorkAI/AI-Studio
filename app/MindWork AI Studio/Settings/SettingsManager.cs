@@ -131,7 +131,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         return minimumLevel;
     }
     
-    public Provider GetPreselectedProvider(Tools.Components component)
+    public Provider GetPreselectedProvider(Tools.Components component, string? chatProviderId = null)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
         
@@ -139,6 +139,14 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             return this.ConfigurationData.Providers[0];
 
+        // When there is a chat provider, and it has a confidence level that is high enough, we return it:
+        if (chatProviderId is not null && !string.IsNullOrWhiteSpace(chatProviderId))
+        {
+            var chatProvider = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == chatProviderId);
+            if (chatProvider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+                return chatProvider;
+        }
+        
         // When there is a component-preselected provider, and it has a confidence level that is high enough, we return it:
         var preselectedProvider = component.PreselectedProvider(this);
         if(preselectedProvider != default && preselectedProvider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
