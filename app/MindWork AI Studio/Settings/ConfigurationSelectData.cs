@@ -25,6 +25,19 @@ public readonly record struct ConfigurationSelectData<T>(string Name, T Value);
 /// </summary>
 public static class ConfigurationSelectDataFactory
 {
+    public static IEnumerable<ConfigurationSelectData<LoadingChatProviderBehavior>> GetLoadingChatProviderBehavior()
+    {
+        yield return new("When possible, use the LLM provider which was used for each chat in the first place", LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);
+        yield return new("Use the latest LLM provider, which was used before; use the default chat provider initially", LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER);
+        yield return new("Always use the default chat provider when loading chats", LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<AddChatProviderBehavior>> GetAddChatProviderBehavior()
+    {
+        yield return new("Use the latest LLM provider, which was used before; use the default chat provider initially", AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER);
+        yield return new("Always use the default chat provider for new chats", AddChatProviderBehavior.ADDED_CHATS_USE_DEFAULT_PROVIDER);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<SendBehavior>> GetSendBehaviorData()
     {
         yield return new("No key is sending the input", SendBehavior.NO_KEY_IS_SENDING);
