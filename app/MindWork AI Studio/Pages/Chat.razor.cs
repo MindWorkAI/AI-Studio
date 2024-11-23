@@ -64,7 +64,6 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
 
-        this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)
@@ -106,7 +105,8 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             this.loadChat = deferredLoading;
             this.mustLoadChat = true;
         }
-
+        
+        this.SelectProviderWhenLoadingChat();
         await base.OnInitializedAsync();
     }
 
@@ -115,7 +115,12 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if (firstRender && this.chatThread is not null && this.mustStoreChat)
         {
             this.mustStoreChat = false;
-            await WorkspaceBehaviour.StoreChat(this.chatThread);
+            
+            if(this.workspaces is not null)
+                await this.workspaces.StoreChat(this.chatThread);
+            else
+                await WorkspaceBehaviour.StoreChat(this.chatThread);
+            
             this.currentWorkspaceId = this.chatThread.WorkspaceId;
             this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
         }
@@ -126,8 +131,11 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             this.chatThread = await WorkspaceBehaviour.LoadChat(this.loadChat);
             
             if(this.chatThread is not null)
+            {
                 this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
-            
+                this.SelectProviderWhenLoadingChat();
+            }
+
             this.StateHasChanged();
         }
         
@@ -197,6 +205,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         {
             this.chatThread = new()
             {
+                SelectedProvider = this.providerSettings.Id,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = threadName,
@@ -393,6 +402,19 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
+        
+        switch (this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior)
+        {
+            case AddChatProviderBehavior.ADDED_CHATS_USE_DEFAULT_PROVIDER:
+                this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
+                break;
+            
+            default:
+            case AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER:
+                if(this.providerSettings == default)
+                    this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
+                break;
+        }
 
         if (!useSameWorkspace)
         {
@@ -404,6 +426,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         {
             this.chatThread = new()
             {
+                SelectedProvider = this.providerSettings.Id,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
@@ -486,7 +509,9 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.userInput = string.Empty;
         this.currentWorkspaceId = this.chatThread?.WorkspaceId ?? Guid.Empty;
         this.currentWorkspaceName = this.chatThread is null ? string.Empty : await WorkspaceBehaviour.LoadWorkspaceName(this.chatThread.WorkspaceId);
-
+        
+        this.SelectProviderWhenLoadingChat();
+        
         this.userInput = string.Empty;
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
@@ -504,6 +529,27 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         this.currentWorkspaceId = Guid.Empty;
         this.currentWorkspaceName = string.Empty;
         this.chatThread = null;
+    }
+
+    private void SelectProviderWhenLoadingChat()
+    {
+        var chatProvider = this.chatThread?.SelectedProvider;
+        switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
+        {
+            default:
+            case LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE:
+                this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT, chatProvider);
+                break;
+            
+            case LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER:
+                this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
+                break;
+            
+            case LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER:
+                if(this.providerSettings == default)
+                    this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
+                break;
+        }
     }
 
     #region Overrides of MSGComponentBase
