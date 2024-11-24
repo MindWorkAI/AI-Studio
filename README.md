@@ -41,7 +41,7 @@ Features we have recently released:
 - v0.9.13: You can use `ollama` providers secured with API keys.
 - v0.9.12: Added a job posting assistant to the business category and improved grammar & spelling check and rewrite assistants.
 - v0.9.11: Added enforcement of minimal confidence levels & dark mode.
-- v0.9.10: Added support for the OpenAI `o1` model.
+- v0.9.10: Added support for the OpenAI `o1` model. [But there are issues](https://github.com/MindWorkAI/AI-Studio/issues/215).
 
 ## What is AI Studio?
 
