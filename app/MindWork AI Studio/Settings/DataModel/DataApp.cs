@@ -27,6 +27,11 @@ public sealed class DataApp
     /// The navigation behavior.
     /// </summary>
     public NavBehavior NavigationBehavior { get; set; } = NavBehavior.NEVER_EXPAND_USE_TOOLTIPS;
+
+    /// <summary>
+    /// The visibility setting for previews features.
+    /// </summary>
+    public PreviewVisibility PreviewVisibility { get; set; } = PreviewVisibility.NONE;
     
     /// <summary>
     /// Should we preselect a provider for the entire app?
