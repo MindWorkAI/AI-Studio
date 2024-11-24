@@ -8,7 +8,7 @@ Things we are currently working on:
   - [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
   - [x] ~~Define the [External Data API (EDI)](https://github.com/MindWorkAI/EDI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/EDI/pull/1))~~
   - [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
-  - [ ] App: Add an option to show preview features
+  - [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
   - [ ] App: Configure embedding providers
   - [ ] App: Management of data sources (local & external data via [EDI](https://github.com/MindWorkAI/EDI))
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
