@@ -77,6 +77,15 @@ public static class ConfigurationSelectDataFactory
         yield return new("Toggle the sidebar: show the workspaces next to the chat when desired", WorkspaceDisplayBehavior.TOGGLE_SIDEBAR);
         yield return new("Sidebar is always visible: show the workspaces next to the chat all the time", WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
     }
+
+    public static IEnumerable<ConfigurationSelectData<PreviewVisibility>> GetPreviewVisibility()
+    {
+        yield return new("All preview features are hidden", PreviewVisibility.NONE);
+        yield return new("Also show features ready for release; these should be stable", PreviewVisibility.RELEASE_CANDIDATE);
+        yield return new("Also show features in beta: these are almost ready for release; expect some bugs", PreviewVisibility.BETA);
+        yield return new("Also show features in alpha: these are in early development; expect bugs and missing features", PreviewVisibility.ALPHA);
+        yield return new("Show also prototype features: these are works in progress; expect bugs and missing features", PreviewVisibility.PROTOTYPE);
+    }
     
     public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
     {
