@@ -12,7 +12,7 @@ Things we are currently working on:
   - [ ] App: Configure embedding providers
   - [ ] App: Management of data sources (local & external data via [EDI](https://github.com/MindWorkAI/EDI))
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
-  - [ ] Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
+  - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
   - [ ] App: Implement external embedding providers
   - [ ] App: Implement the process to vectorize one local file using embeddings
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
