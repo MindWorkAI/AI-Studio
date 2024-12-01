@@ -146,9 +146,15 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(token, apiKeyProvisional);
+        var modelResponse = await this.LoadModels(token, apiKeyProvisional);
+        if(modelResponse == default)
+            return [];
+        
+        return modelResponse.Models.Where(model =>
+                model.Name.StartsWith("models/gemini-", StringComparison.InvariantCultureIgnoreCase))
+            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
 
     /// <inheritdoc />
@@ -157,9 +163,20 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
 
+    public async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        var modelResponse = await this.LoadModels(token, apiKeyProvisional);
+        if(modelResponse == default)
+            return [];
+        
+        return modelResponse.Models.Where(model =>
+                model.Name.StartsWith("models/text-embedding-", StringComparison.InvariantCultureIgnoreCase))
+            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
+    }
+
     #endregion
 
-    private async Task<IEnumerable<Provider.Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelsResponse> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
@@ -170,19 +187,17 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                 _ => null,
             }
         };
-        
+
         if (secretKey is null)
-            return [];
+            return default;
 
         var request = new HttpRequestMessage(HttpMethod.Get, $"models?key={secretKey}");
         var response = await this.httpClient.SendAsync(request, token);
         
         if(!response.IsSuccessStatusCode)
-            return [];
+            return default;
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Models.Where(model =>
-            model.Name.StartsWith("models/gemini-", StringComparison.InvariantCultureIgnoreCase))
-            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
+        return modelResponse;
     }
 }

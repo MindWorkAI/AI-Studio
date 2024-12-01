@@ -155,6 +155,12 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
+    
+    /// <inheritdoc />
+    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
 
     #endregion
 }

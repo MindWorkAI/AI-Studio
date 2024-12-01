@@ -149,6 +149,37 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     /// <inheritdoc />
     public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
+        var modelResponse = await this.LoadModelList(apiKeyProvisional, token);
+        if(modelResponse == default)
+            return [];
+        
+        return modelResponse.Data.Where(n => 
+            !n.Id.StartsWith("code", StringComparison.InvariantCulture) &&
+            !n.Id.Contains("embed", StringComparison.InvariantCulture))
+            .Select(n => new Provider.Model(n.Id, null));
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        var modelResponse = await this.LoadModelList(apiKeyProvisional, token);
+        if(modelResponse == default)
+            return [];
+        
+        return modelResponse.Data.Where(n => n.Id.Contains("embed", StringComparison.InvariantCulture))
+            .Select(n => new Provider.Model(n.Id, null));
+    }
+    
+    /// <inheritdoc />
+    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+    }
+
+    #endregion
+    
+    private async Task<ModelsResponse> LoadModelList(string? apiKeyProvisional, CancellationToken token)
+    {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
@@ -160,29 +191,16 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         };
 
         if (secretKey is null)
-            return [];
+            return default;
         
         var request = new HttpRequestMessage(HttpMethod.Get, "models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
         var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
-            return [];
+            return default;
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n => 
-            !n.Id.StartsWith("code", StringComparison.InvariantCulture) &&
-            !n.Id.Contains("embed", StringComparison.InvariantCulture))
-            .Select(n => new Provider.Model(n.Id, null));
+        return modelResponse;
     }
-
-    #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
-    {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
-    }
-    #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
-    #endregion
 }

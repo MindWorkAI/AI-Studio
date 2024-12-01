@@ -158,6 +158,12 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
     {
         return Task.FromResult<IEnumerable<Model>>(Array.Empty<Model>());
     }
+    
+    /// <inheritdoc />
+    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
 
     #endregion
 

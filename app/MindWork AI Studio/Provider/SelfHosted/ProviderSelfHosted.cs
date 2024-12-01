@@ -200,13 +200,16 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
         }
     }
 
-    #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
     public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
-    #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+    public Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+    }
 
     #endregion
 }

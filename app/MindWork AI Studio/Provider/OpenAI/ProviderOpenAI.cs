@@ -161,6 +161,12 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     {
         return this.LoadModels(["dall-e-"], token, apiKeyProvisional);
     }
+    
+    /// <inheritdoc />
+    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return this.LoadModels(["text-embedding-"], token, apiKeyProvisional);
+    }
 
     #endregion
 
