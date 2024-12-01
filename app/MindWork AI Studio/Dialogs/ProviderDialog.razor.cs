@@ -41,7 +41,7 @@ public partial class ProviderDialog : ComponentBase
     public string DataHostname { get; set; } = string.Empty;
     
     /// <summary>
-    /// The local host to use, e.g., llama.cpp.
+    /// The host to use, e.g., llama.cpp.
     /// </summary>
     [Parameter]
     public Host DataHost { get; set; } = Host.NONE;
