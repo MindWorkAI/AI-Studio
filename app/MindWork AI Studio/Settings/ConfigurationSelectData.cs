@@ -83,7 +83,7 @@ public static class ConfigurationSelectDataFactory
         yield return new("All preview features are hidden", PreviewVisibility.NONE);
         yield return new("Also show features ready for release; these should be stable", PreviewVisibility.RELEASE_CANDIDATE);
         yield return new("Also show features in beta: these are almost ready for release; expect some bugs", PreviewVisibility.BETA);
-        yield return new("Also show features in alpha: these are in early development; expect bugs and missing features", PreviewVisibility.ALPHA);
+        yield return new("Also show features in alpha: these are in development; expect bugs and missing features", PreviewVisibility.ALPHA);
         yield return new("Show also prototype features: these are works in progress; expect bugs and missing features", PreviewVisibility.PROTOTYPE);
     }
     
