@@ -7,6 +7,8 @@ using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
 
+using Host = AIStudio.Provider.SelfHosted.Host;
+
 namespace AIStudio.Provider;
 
 public static class LLMProvidersExtensions
@@ -124,5 +126,102 @@ public static class LLMProvidersExtensions
             logger.LogError($"Failed to create provider: {e.Message}");
             return new NoProvider();
         }
+    }
+    
+    public static string GetCreationURL(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
+        LLMProviders.MISTRAL => "https://console.mistral.ai/",
+        LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
+        LLMProviders.GOOGLE => "https://console.cloud.google.com/",
+     
+        LLMProviders.GROQ => "https://console.groq.com/",
+        LLMProviders.FIREWORKS => "https://fireworks.ai/login",
+        
+        _ => string.Empty,
+    };
+
+    public static string GetModelsOverviewURL(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
+        _ => string.Empty,
+    };
+
+    public static bool IsLLMModelProvidedManually(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.FIREWORKS => true,
+        _ => false,
+    };
+    
+    public static bool IsEmbeddingModelProvidedManually(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.SELF_HOSTED => true,
+        _ => false,
+    };
+
+    public static bool IsHostNeeded(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.SELF_HOSTED => true,
+        _ => false,
+    };
+
+    public static bool IsHostnameNeeded(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.SELF_HOSTED => true,
+        _ => false,
+    };
+
+    public static bool IsAPIKeyNeeded(this LLMProviders provider, Host host) => provider switch
+    {
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.ANTHROPIC => true,
+        LLMProviders.GOOGLE => true,
+        
+        LLMProviders.GROQ => true,
+        LLMProviders.FIREWORKS => true,
+        
+        LLMProviders.SELF_HOSTED => host is Host.OLLAMA,
+        
+        _ => false,
+    };
+
+    public static bool ShowRegisterButton(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.ANTHROPIC => true,
+        LLMProviders.GOOGLE => true,
+        
+        LLMProviders.GROQ => true,
+        LLMProviders.FIREWORKS => true,
+        
+        _ => false,
+    };
+
+    public static bool CanLoadModels(this LLMProviders provider, Host host, string? apiKey)
+    {
+        if (provider is LLMProviders.SELF_HOSTED)
+        {
+            switch (host)
+            {
+                case Host.NONE:
+                case Host.LLAMACPP:
+                default:
+                    return false;
+
+                case Host.OLLAMA:
+                case Host.LM_STUDIO:
+                    return true;
+            }
+        }
+
+        if(provider is LLMProviders.NONE)
+            return false;
+        
+        if(string.IsNullOrWhiteSpace(apiKey))
+            return false;
+        
+        return true;
     }
 }

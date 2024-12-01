@@ -12,7 +12,7 @@
                         <MudSelectItem Value="@provider">@provider</MudSelectItem>
                     }
                 </MudSelect>
-                <MudButton Disabled="@(!this.ShowRegisterButton)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.GetProviderCreationURL()" Target="_blank">Create account</MudButton>
+                <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">Create account</MudButton>
             </MudStack>
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
@@ -20,7 +20,7 @@
                 T="string"
                 @bind-Text="@this.dataAPIKey"
                 Label="@this.APIKeyText"
-                Disabled="@(!this.NeedAPIKey)"
+                Disabled="@(!this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.VpnKey"
@@ -33,7 +33,7 @@
                 T="string"
                 @bind-Text="@this.DataHostname"
                 Label="Hostname"
-                Disabled="@(!this.NeedHostname)"
+                Disabled="@(!this.DataLLMProvider.IsHostnameNeeded())"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Dns"
@@ -42,7 +42,7 @@
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
-            <MudSelect Disabled="@(!this.NeedHost)" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingHost">
+            <MudSelect Disabled="@(!this.DataLLMProvider.IsHostNeeded())" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingHost">
                 @foreach (Host host in Enum.GetValues(typeof(Host)))
                 {
                     <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
@@ -50,9 +50,9 @@
             </MudSelect>
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
-                @if (this.ProvideModelManually)
+                @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 {
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.GetModelOverviewURL()" Target="_blank">Show available models</MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL()" Target="_blank">Show available models</MudButton>
                     <MudTextField
                         T="string"
                         @bind-Text="@this.dataManuallyModel"
@@ -67,7 +67,7 @@
                 }
                 else
                 {
-                    <MudButton Disabled="@(!this.CanLoadModels())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
+                    <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
                     <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
                         @foreach (var model in this.availableModels)
                         {

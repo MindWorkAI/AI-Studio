@@ -324,108 +324,10 @@ public partial class ProviderDialog : ComponentBase
         this.availableModels.AddRange(orderedModels);
     }
     
-    private bool CanLoadModels()
-    {
-        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-        {
-            switch (this.DataHost)
-            {
-                case Host.NONE:
-                    return false;
-
-                case Host.LLAMACPP:
-                    return false;
-
-                case Host.LM_STUDIO:
-                    return true;
-
-                case Host.OLLAMA:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
-
-        if(this.DataLLMProvider is LLMProviders.NONE)
-            return false;
-        
-        if(string.IsNullOrWhiteSpace(this.dataAPIKey))
-            return false;
-        
-        return true;
-    }
-
-    private bool ShowRegisterButton => this.DataLLMProvider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.GOOGLE => true,
-        
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        
-        _ => false,
-    };
-
-    private bool NeedAPIKey => this.DataLLMProvider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.GOOGLE => true,
-        
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        
-        LLMProviders.SELF_HOSTED => this.DataHost is Host.OLLAMA,
-        
-        _ => false,
-    };
-    
     private string APIKeyText => this.DataLLMProvider switch
     {
         LLMProviders.SELF_HOSTED => "(Optional) API Key",
         _ => "API Key",
-    };
-
-    private bool NeedHostname => this.DataLLMProvider switch
-    {
-        LLMProviders.SELF_HOSTED => true,
-        _ => false,
-    };
-    
-    private bool NeedHost => this.DataLLMProvider switch
-    {
-        LLMProviders.SELF_HOSTED => true,
-        _ => false,
-    };
-    
-    private bool ProvideModelManually => this.DataLLMProvider switch
-    {
-        LLMProviders.FIREWORKS => true,
-        _ => false,
-    };
-    
-    private string GetModelOverviewURL() => this.DataLLMProvider switch
-    {
-        LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
-        
-        _ => string.Empty,
-    };
-
-    private string GetProviderCreationURL() => this.DataLLMProvider switch
-    {
-        LLMProviders.OPEN_AI => "https://platform.openai.com/signup",
-        LLMProviders.MISTRAL => "https://console.mistral.ai/",
-        LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
-        LLMProviders.GOOGLE => "https://console.cloud.google.com/",
-     
-        LLMProviders.GROQ => "https://console.groq.com/",
-        LLMProviders.FIREWORKS => "https://fireworks.ai/login",
-        
-        _ => string.Empty,
     };
     
     private bool IsNoneProvider => this.DataLLMProvider is LLMProviders.NONE;
