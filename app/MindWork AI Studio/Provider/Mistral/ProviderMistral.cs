@@ -8,7 +8,7 @@ using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger), IProvider
+public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger)
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -17,12 +17,12 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     
     #region Implementation of IProvider
 
-    public string Id => "Mistral";
+    public override string Id => LLMProviders.MISTRAL.ToName();
     
-    public string InstanceName { get; set; } = "Mistral";
+    public override string InstanceName { get; set; } = "Mistral";
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -140,14 +140,14 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var modelResponse = await this.LoadModelList(apiKeyProvisional, token);
         if(modelResponse == default)
@@ -160,7 +160,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     }
     
     /// <inheritdoc />
-    public async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var modelResponse = await this.LoadModelList(apiKeyProvisional, token);
         if(modelResponse == default)
@@ -171,7 +171,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     }
     
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }

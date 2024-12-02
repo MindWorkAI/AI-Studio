@@ -8,7 +8,7 @@ using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.Google;
 
-public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", logger), IProvider
+public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", logger)
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -18,13 +18,13 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public string Id => "Google";
+    public override string Id => LLMProviders.GOOGLE.ToName();
 
     /// <inheritdoc />
-    public string InstanceName { get; set; } = "Google Gemini";
+    public override string InstanceName { get; set; } = "Google Gemini";
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -139,14 +139,14 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var modelResponse = await this.LoadModels(token, apiKeyProvisional);
         if(modelResponse == default)
@@ -158,12 +158,12 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
 
-    public async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var modelResponse = await this.LoadModels(token, apiKeyProvisional);
         if(modelResponse == default)

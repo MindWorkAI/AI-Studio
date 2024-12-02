@@ -104,19 +104,35 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this Settings.Provider providerSettings, ILogger logger)
     {
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, logger);
+    }
+    
+    /// <summary>
+    /// Creates a new provider instance based on the embedding provider value.
+    /// </summary>
+    /// <param name="embeddingProviderSettings">The embedding provider settings.</param>
+    /// <param name="logger">The logger to use.</param>
+    /// <returns>The provider instance.</returns>
+    public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings, ILogger logger)
+    {
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, logger);
+    }
+    
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, ILogger logger)
+    {
         try
         {
-            return providerSettings.UsedLLMProvider switch
+            return provider switch
             {
-                LLMProviders.OPEN_AI => new ProviderOpenAI(logger) { InstanceName = providerSettings.InstanceName },
-                LLMProviders.ANTHROPIC => new ProviderAnthropic(logger) { InstanceName = providerSettings.InstanceName },
-                LLMProviders.MISTRAL => new ProviderMistral(logger) { InstanceName = providerSettings.InstanceName },
-                LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = providerSettings.InstanceName },
+                LLMProviders.OPEN_AI => new ProviderOpenAI(logger) { InstanceName = instanceName },
+                LLMProviders.ANTHROPIC => new ProviderAnthropic(logger) { InstanceName = instanceName },
+                LLMProviders.MISTRAL => new ProviderMistral(logger) { InstanceName = instanceName },
+                LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = instanceName },
                 
-                LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = providerSettings.InstanceName },
-                LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = providerSettings.InstanceName },
+                LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
+                LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
                 
-                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, providerSettings) { InstanceName = providerSettings.InstanceName },
+                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
                 
                 _ => new NoProvider(),
             };

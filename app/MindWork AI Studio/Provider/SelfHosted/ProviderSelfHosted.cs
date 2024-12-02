@@ -8,7 +8,7 @@ using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}", logger), IProvider
+public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", logger)
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -17,12 +17,12 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
 
     #region Implementation of IProvider
 
-    public string Id => "Self-hosted";
+    public override string Id => LLMProviders.SELF_HOSTED.ToName();
     
-    public string InstanceName { get; set; } = "Self-hosted";
+    public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
@@ -70,7 +70,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
         try
         {
             // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, provider.Host.ChatURL());
+            var request = new HttpRequestMessage(HttpMethod.Post, host.ChatURL());
 
             // Set the authorization header:
             if (requestedSecret.Success)
@@ -148,18 +148,18 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
 
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
-            switch (provider.Host)
+            switch (host)
             {
                 case Host.LLAMACPP:
                     // Right now, llama.cpp only supports one model.
@@ -201,12 +201,12 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
 
-    public Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
