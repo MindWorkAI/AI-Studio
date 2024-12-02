@@ -114,8 +114,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.CreateProvider(this.Logger);
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(providerInstance);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);

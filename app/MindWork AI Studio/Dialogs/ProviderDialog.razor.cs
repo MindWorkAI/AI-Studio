@@ -11,7 +11,7 @@ namespace AIStudio.Dialogs;
 /// <summary>
 /// The provider settings dialog.
 /// </summary>
-public partial class ProviderDialog : ComponentBase
+public partial class ProviderDialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
@@ -144,23 +144,10 @@ public partial class ProviderDialog : ComponentBase
                 return;
             }
             
-            var loadedProviderSettings = this.CreateProviderSettings();
-            var provider = loadedProviderSettings.CreateProvider(this.Logger);
-            if(provider is NoProvider)
-            {
-                await base.OnInitializedAsync();
-                return;
-            }
-            
             // Load the API key:
-            var requestedSecret = await this.RustService.GetAPIKey(provider, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
-            if(requestedSecret.Success)
-            {
+            var requestedSecret = await this.RustService.GetAPIKey(this, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
+            if (requestedSecret.Success)
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
-                
-                // Now, we try to load the list of available models:
-                await this.ReloadModels();
-            }
             else
             {
                 this.dataAPIKey = string.Empty;
@@ -169,10 +156,9 @@ public partial class ProviderDialog : ComponentBase
                     this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
                     await this.form.Validate();
                 }
-
-                // We still try to load the models. Some local hosts don't need an API key:
-                await this.ReloadModels();
             }
+
+            await this.ReloadModels();
         }
         
         await base.OnInitializedAsync();
@@ -189,7 +175,15 @@ public partial class ProviderDialog : ComponentBase
     }
 
     #endregion
+
+    #region Implementation of ISecretId
+
+    public string SecretId => this.DataLLMProvider.ToName();
     
+    public string SecretName => this.DataInstanceName;
+
+    #endregion
+
     private async Task Store()
     {
         await this.form.Validate();
@@ -205,11 +199,8 @@ public partial class ProviderDialog : ComponentBase
         var addedProviderSettings = this.CreateProviderSettings();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKey))
         {
-            // We need to instantiate the provider to store the API key:
-            var provider = addedProviderSettings.CreateProvider(this.Logger);
-            
             // Store the API key in the OS secure storage:
-            var storeResponse = await this.RustService.SetAPIKey(provider, this.dataAPIKey);
+            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey);
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
