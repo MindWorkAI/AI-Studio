@@ -6,7 +6,7 @@
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudSelect @bind-Value="@this.DataLLMProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingProvider">
+                <MudSelect @bind-Value="@this.DataLLMProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">@provider</MudSelectItem>
@@ -26,7 +26,7 @@
                 AdornmentIcon="@Icons.Material.Filled.VpnKey"
                 AdornmentColor="Color.Info"
                 InputType="InputType.Password"
-                Validation="@this.ValidatingAPIKey"
+                Validation="@this.providerValidation.ValidatingAPIKey"
             />
             
             <MudTextField
@@ -38,11 +38,11 @@
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Dns"
                 AdornmentColor="Color.Info"
-                Validation="@this.ValidatingHostname"
+                Validation="@this.providerValidation.ValidatingHostname"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
-            <MudSelect Disabled="@(!this.DataLLMProvider.IsHostNeeded())" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingHost">
+            <MudSelect Disabled="@(!this.DataLLMProvider.IsHostNeeded())" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
                 @foreach (Host host in Enum.GetValues(typeof(Host)))
                 {
                     <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
@@ -68,7 +68,7 @@
                 else
                 {
                     <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
-                    <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidatingModel">
+                    <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingModel">
                         @foreach (var model in this.availableModels)
                         {
                             <MudSelectItem Value="@model">@model</MudSelectItem>
@@ -89,7 +89,7 @@
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
-                Validation="@this.ValidatingInstanceName"
+                Validation="@this.providerValidation.ValidatingInstanceName"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
             

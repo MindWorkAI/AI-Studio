@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -98,6 +99,19 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
+    private readonly ProviderValidation providerValidation;
+
+    public ProviderDialog()
+    {
+        this.providerValidation = new()
+        {
+            GetProvider = () => this.DataLLMProvider,
+            GetAPIKeyStorageIssue = () => this.dataAPIKeyStorageIssue,
+            GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
+            GetUsedInstanceNames = () => this.UsedInstanceNames,
+            GetHost = () => this.DataHost,
+        };
+    }
 
     private Settings.Provider CreateProviderSettings()
     {
@@ -212,87 +226,10 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
-    private string? ValidatingProvider(LLMProviders llmProvider)
-    {
-        if (llmProvider == LLMProviders.NONE)
-            return "Please select a provider.";
-        
-        return null;
-    }
-    
-    private string? ValidatingHost(Host host)
-    {
-        if(this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
-            return null;
-
-        if (host == Host.NONE)
-            return "Please select a host.";
-
-        return null;
-    }
-    
     private string? ValidateManuallyModel(string manuallyModel)
     {
         if (this.DataLLMProvider is LLMProviders.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
             return "Please enter a model name.";
-        
-        return null;
-    }
-    
-    private string? ValidatingModel(Model model)
-    {
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost == Host.LLAMACPP)
-            return null;
-        
-        if (model == default)
-            return "Please select a model.";
-        
-        return null;
-    }
-
-    private string? ValidatingInstanceName(string instanceName)
-    {
-        if (string.IsNullOrWhiteSpace(instanceName))
-            return "Please enter an instance name.";
-        
-        if (instanceName.Length > 40)
-            return "The instance name must not exceed 40 characters.";
-        
-        // The instance name must be unique:
-        var lowerInstanceName = instanceName.ToLowerInvariant();
-        if (lowerInstanceName != this.dataEditingPreviousInstanceName && this.UsedInstanceNames.Contains(lowerInstanceName))
-            return "The instance name must be unique; the chosen name is already in use.";
-        
-        return null;
-    }
-    
-    private string? ValidatingAPIKey(string apiKey)
-    {
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-            return null;
-        
-        if(!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
-            return this.dataAPIKeyStorageIssue;
-
-        if(string.IsNullOrWhiteSpace(apiKey))
-            return "Please enter an API key.";
-        
-        return null;
-    }
-
-    private string? ValidatingHostname(string hostname)
-    {
-        if(this.DataLLMProvider != LLMProviders.SELF_HOSTED)
-            return null;
-        
-        if(string.IsNullOrWhiteSpace(hostname))
-            return "Please enter a hostname, e.g., http://localhost:1234";
-        
-        if(!hostname.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
-            return "The hostname must start with either http:// or https://";
-
-        if(!Uri.TryCreate(hostname, UriKind.Absolute, out _))
-            return "The hostname is not a valid HTTP(S) URL.";
         
         return null;
     }
