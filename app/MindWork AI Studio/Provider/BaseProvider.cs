@@ -8,7 +8,7 @@ namespace AIStudio.Provider;
 public abstract class BaseProvider
 {
     /// <summary>
-    /// The HTTP client to use for all requests.
+    /// The HTTP client to use it for all requests.
     /// </summary>
     protected readonly HttpClient httpClient = new();
     
