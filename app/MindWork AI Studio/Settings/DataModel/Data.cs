@@ -20,6 +20,11 @@ public sealed class Data
     /// Settings concerning the LLM providers.
     /// </summary>
     public DataLLMProviders LLMProviders { get; init; } = new();
+
+    /// <summary>
+    /// A collection of embedding providers configured.
+    /// </summary>
+    public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
     
     /// <summary>
     /// List of configured profiles.
@@ -30,6 +35,11 @@ public sealed class Data
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;
+
+    /// <summary>
+    /// The next embedding number to use.
+    /// </summary>
+    public uint NextEmbeddingNum { get; set; } = 1;
 
     /// <summary>
     /// The next profile number to use.
