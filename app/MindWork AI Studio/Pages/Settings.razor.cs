@@ -23,9 +23,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private MessageBus MessageBus { get; init; } = null!;
     
     [Inject]
-    private ILogger<Settings> Logger { get; init; } = null!;
-    
-    [Inject]
     private RustService RustService { get; init; } = null!;
     
     private readonly List<ConfigurationSelectData<string>> availableProviders = new();
