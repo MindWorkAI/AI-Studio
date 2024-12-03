@@ -104,7 +104,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     private void LoadNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
-        if (this.SettingsManager.ConfigurationData.App.PreviewVisibility < PreviewVisibility.EXPERIMENTAL)
+        var isWriterModePreviewEnabled = PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager);
+        if (!isWriterModePreviewEnabled)
         {
             this.navItems = new List<NavBarItem>
             {
@@ -116,7 +117,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                 new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false),
             };
         }
-        else if (this.SettingsManager.ConfigurationData.App.PreviewVisibility >= PreviewVisibility.EXPERIMENTAL)
+        else
         {
             this.navItems = new List<NavBarItem>
             {
