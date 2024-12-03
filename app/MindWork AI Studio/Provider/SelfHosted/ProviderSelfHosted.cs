@@ -168,27 +168,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
-                    
-                    var secretKey = apiKeyProvisional switch
-                    {
-                        not null => apiKeyProvisional,
-                        _ => await RUST_SERVICE.GetAPIKey(this, isTrying: true) switch
-                        {
-                            { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                            _ => null,
-                        }
-                    };
-                    
-                    var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
-                    if(secretKey is not null)
-                        lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
-                    
-                    var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
-                    if(!lmStudioResponse.IsSuccessStatusCode)
-                        return [];
-
-                    var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-                    return lmStudioModelResponse.Data.Where(n => !n.Id.Contains("embed")).Select(n => new Provider.Model(n.Id, null));
+                    return await this.LoadModels(["embed"], [], token, apiKeyProvisional);
             }
 
             return [];
@@ -206,10 +186,52 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
 
-    public override Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+        try
+        {
+            switch (host)
+            {
+                case Host.LM_STUDIO:
+                case Host.OLLAMA:
+                    return await this.LoadModels([], ["embed"], token, apiKeyProvisional);
+            }
+
+            return [];
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            return [];
+        }
     }
 
     #endregion
+
+    private async Task<IEnumerable<Provider.Model>> LoadModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    {
+        var secretKey = apiKeyProvisional switch
+        {
+            not null => apiKeyProvisional,
+            _ => await RUST_SERVICE.GetAPIKey(this, isTrying: true) switch
+            {
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+                _ => null,
+            }
+        };
+                    
+        var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
+        if(secretKey is not null)
+            lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
+                    
+        var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
+        if(!lmStudioResponse.IsSuccessStatusCode)
+            return [];
+
+        var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
+        return lmStudioModelResponse.Data.
+            Where(model => !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
+                           filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
+            .Select(n => new Provider.Model(n.Id, null));
+    }
 }

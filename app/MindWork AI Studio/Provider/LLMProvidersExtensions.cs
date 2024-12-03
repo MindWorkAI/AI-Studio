@@ -193,9 +193,9 @@ public static class LLMProvidersExtensions
         _ => false,
     };
     
-    public static bool IsEmbeddingModelProvidedManually(this LLMProviders provider) => provider switch
+    public static bool IsEmbeddingModelProvidedManually(this LLMProviders provider, Host host) => provider switch
     {
-        LLMProviders.SELF_HOSTED => true,
+        LLMProviders.SELF_HOSTED => host is not Host.LM_STUDIO,
         _ => false,
     };
 

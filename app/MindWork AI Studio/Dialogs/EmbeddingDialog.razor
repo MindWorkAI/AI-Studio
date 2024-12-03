@@ -56,7 +56,7 @@
             </MudSelect>
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
-                @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually())
+                @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
                 {
                     <MudTextField
                         T="string"
