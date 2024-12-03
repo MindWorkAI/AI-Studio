@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging.Console;
 
 using MudBlazor.Services;
 
+using MudExtensions.Services;
+
 #if !DEBUG
 using System.Reflection;
 using Microsoft.Extensions.FileProviders;
@@ -93,6 +95,7 @@ internal sealed class Program
             options.FormatterName = TerminalLogger.FORMATTER_NAME;
         }).AddConsoleFormatter<TerminalLogger, ConsoleFormatterOptions>();
 
+        builder.Services.AddMudExtensions();
         builder.Services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
