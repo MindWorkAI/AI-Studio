@@ -52,7 +52,7 @@
                         }
                     </MudTd>
                     <MudTd Style="text-align: left;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Class="ma-2" Href="@this.GetProviderDashboardURL(context.UsedLLMProvider)" Target="_blank" Disabled="@(!this.HasDashboard(context.UsedLLMProvider))">
+                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Class="ma-2" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())">
                             Open Dashboard
                         </MudButton>
                         <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditProvider(context)">

@@ -124,30 +124,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
-    private bool HasDashboard(LLMProviders llmProvider) => llmProvider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        LLMProviders.GOOGLE => true,
-        
-        _ => false,
-    };
-    
-    private string GetProviderDashboardURL(LLMProviders llmProvider) => llmProvider switch
-    {
-        LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
-        LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
-        LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
-        LLMProviders.GROQ => "https://console.groq.com/settings/usage",
-        LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
-        LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
-        
-        _ => string.Empty,
-    };
 
     private string GetProviderModelName(AIStudio.Settings.Provider provider)
     {

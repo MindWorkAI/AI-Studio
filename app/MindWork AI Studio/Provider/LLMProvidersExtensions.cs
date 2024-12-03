@@ -157,6 +157,30 @@ public static class LLMProvidersExtensions
         _ => string.Empty,
     };
 
+    public static string GetDashboardURL(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
+        LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
+        LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+        LLMProviders.GROQ => "https://console.groq.com/settings/usage",
+        LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
+        LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
+        
+        _ => string.Empty,
+    };
+
+    public static bool HasDashboard(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.ANTHROPIC => true,
+        LLMProviders.GROQ => true,
+        LLMProviders.FIREWORKS => true,
+        LLMProviders.GOOGLE => true,
+        
+        _ => false,
+    };
+
     public static string GetModelsOverviewURL(this LLMProviders provider) => provider switch
     {
         LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
