@@ -188,7 +188,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
                         return [];
 
                     var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-                    return lmStudioModelResponse.Data.Select(n => new Provider.Model(n.Id, null));
+                    return lmStudioModelResponse.Data.Where(n => !n.Id.Contains("embed")).Select(n => new Provider.Model(n.Id, null));
             }
 
             return [];
