@@ -91,7 +91,7 @@ public static class LLMProvidersExtensions
         //
         // Self-hosted providers are treated as a special case anyway.
         //
-        LLMProviders.SELF_HOSTED => false,
+        LLMProviders.SELF_HOSTED => true,
         
         _ => false,
     };
