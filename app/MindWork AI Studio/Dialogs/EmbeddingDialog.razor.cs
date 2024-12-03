@@ -5,35 +5,31 @@ using AIStudio.Tools.Validation;
 using Microsoft.AspNetCore.Components;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
-using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Dialogs;
 
-/// <summary>
-/// The provider settings dialog.
-/// </summary>
-public partial class ProviderDialog : ComponentBase, ISecretId
+public partial class EmbeddingDialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
-    /// The provider's number in the list.
+    /// The embedding's number in the list.
     /// </summary>
     [Parameter]
     public uint DataNum { get; set; }
     
     /// <summary>
-    /// The provider's ID.
+    /// The embedding's ID.
     /// </summary>
     [Parameter]
     public string DataId { get; set; } = Guid.NewGuid().ToString();
     
     /// <summary>
-    /// The user chosen instance name.
+    /// The user chosen name.
     /// </summary>
     [Parameter]
-    public string DataInstanceName { get; set; } = string.Empty;
+    public string DataName { get; set; } = string.Empty;
     
     /// <summary>
     /// The chosen hostname for self-hosted providers.
@@ -60,7 +56,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
     
     /// <summary>
-    /// The LLM model to use, e.g., GPT-4o.
+    /// The embedding model to use.
     /// </summary>
     [Parameter]
     public Model DataModel { get; set; }
@@ -79,9 +75,9 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-
-    private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
+    private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
+
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
@@ -100,8 +96,8 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
     private readonly ProviderValidation providerValidation;
-
-    public ProviderDialog()
+    
+    public EmbeddingDialog()
     {
         this.providerValidation = new()
         {
@@ -112,23 +108,23 @@ public partial class ProviderDialog : ComponentBase, ISecretId
             GetHost = () => this.DataHost,
         };
     }
-
-    private Settings.Provider CreateProviderSettings()
+    
+    private EmbeddingProvider CreateEmbeddingProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
-            InstanceName = this.DataInstanceName,
+            Name = this.DataName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel, null) : this.DataModel,
+            Model = this.DataLLMProvider is LLMProviders.SELF_HOSTED ? new Model(this.dataManuallyModel, null) : this.DataModel,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
         };
     }
-
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -137,15 +133,15 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
-        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
+        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.EmbeddingProviders.Select(x => x.Name.ToLowerInvariant()).ToList();
         
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
-            this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
+            this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
             
-            // When using Fireworks, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.FIREWORKS)
+            // When using self-hosted embedding, we must copy the model name:
+            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
                 this.dataManuallyModel = this.DataModel.Id;
             
             //
@@ -189,15 +185,15 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     }
 
     #endregion
-
+    
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToName();
+    public string SecretId => this.DataId;
     
-    public string SecretName => this.DataInstanceName;
+    public string SecretName => this.DataName;
 
     #endregion
-
+    
     private async Task Store()
     {
         await this.form.Validate();
@@ -210,7 +206,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:
-        var addedProviderSettings = this.CreateProviderSettings();
+        var addedProviderSettings = this.CreateEmbeddingProviderSettings();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKey))
         {
             // Store the API key in the OS secure storage:
@@ -228,8 +224,8 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if (this.DataLLMProvider is LLMProviders.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
-            return "Please enter a model name.";
+        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
+            return "Please enter an embedding model name.";
         
         return null;
     }
@@ -238,12 +234,12 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     private async Task ReloadModels()
     {
-        var currentProviderSettings = this.CreateProviderSettings();
-        var provider = currentProviderSettings.CreateProvider(this.Logger);
+        var currentEmbeddingProviderSettings = this.CreateEmbeddingProviderSettings();
+        var provider = currentEmbeddingProviderSettings.CreateProvider(this.Logger);
         if(provider is NoProvider)
             return;
         
-        var models = await provider.GetTextModels(this.dataAPIKey);
+        var models = await provider.GetEmbeddingModels(this.dataAPIKey);
         
         // Order descending by ID means that the newest models probably come first:
         var orderedModels = models.OrderByDescending(n => n.Id);

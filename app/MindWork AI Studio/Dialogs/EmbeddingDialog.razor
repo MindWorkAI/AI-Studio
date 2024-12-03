@@ -9,7 +9,10 @@
                 <MudSelect @bind-Value="@this.DataLLMProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
-                        <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                        if (provider.ProvideEmbeddings())
+                        {
+                            <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                        }
                     }
                 </MudSelect>
                 <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">Create account</MudButton>
@@ -45,14 +48,16 @@
             <MudSelect Disabled="@(!this.DataLLMProvider.IsHostNeeded())" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
                 @foreach (Host host in Enum.GetValues(typeof(Host)))
                 {
-                    <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
+                    if (host.AreEmbeddingsSupported())
+                    {
+                        <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
+                    }
                 }
             </MudSelect>
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
-                @if (this.DataLLMProvider.IsLLMModelProvidedManually())
+                @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
                 {
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL()" Target="_blank">Show available models</MudButton>
                     <MudTextField
                         T="string"
                         @bind-Text="@this.dataManuallyModel"
@@ -63,6 +68,7 @@
                         AdornmentColor="Color.Info"
                         Validation="@this.ValidateManuallyModel"
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                        HelperText="Currently, we cannot query the embedding models of self-hosted systems. Therefore, enter the model name manually."
                     />
                 }
                 else
@@ -80,7 +86,7 @@
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
-                @bind-Text="@this.DataInstanceName"
+                @bind-Text="@this.DataName"
                 Label="Instance Name"
                 Class="mb-3"
                 MaxLength="40"

@@ -23,12 +23,10 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private MessageBus MessageBus { get; init; } = null!;
     
     [Inject]
-    private ILogger<Settings> Logger { get; init; } = null!;
-    
-    [Inject]
     private RustService RustService { get; init; } = null!;
     
-    private readonly List<ConfigurationSelectData<string>> availableProviders = new();
+    private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
+    private readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
 
     #region Overrides of ComponentBase
 
@@ -46,14 +44,14 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 
     #region Provider related
 
-    private async Task AddProvider()
+    private async Task AddLLMProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -68,7 +66,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task EditProvider(AIStudio.Settings.Provider provider)
+    private async Task EditLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
@@ -83,7 +81,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
             { x => x.DataHost, provider.Host },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -102,20 +100,19 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task DeleteProvider(AIStudio.Settings.Provider provider)
+    private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters
         {
             { "Message", $"Are you sure you want to delete the provider '{provider.InstanceName}'?" },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var providerInstance = provider.CreateProvider(this.Logger);
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(providerInstance);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
@@ -125,32 +122,8 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
-    private bool HasDashboard(LLMProviders llmProvider) => llmProvider switch
-    {
-        LLMProviders.OPEN_AI => true,
-        LLMProviders.MISTRAL => true,
-        LLMProviders.ANTHROPIC => true,
-        LLMProviders.GROQ => true,
-        LLMProviders.FIREWORKS => true,
-        LLMProviders.GOOGLE => true,
-        
-        _ => false,
-    };
-    
-    private string GetProviderDashboardURL(LLMProviders llmProvider) => llmProvider switch
-    {
-        LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
-        LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
-        LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
-        LLMProviders.GROQ => "https://console.groq.com/settings/usage",
-        LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
-        LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
-        
-        _ => string.Empty,
-    };
 
-    private string GetProviderModelName(AIStudio.Settings.Provider provider)
+    private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
     {
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
@@ -159,9 +132,9 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     private void UpdateProviders()
     {
-        this.availableProviders.Clear();
+        this.availableLLMProviders.Clear();
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-            this.availableProviders.Add(new (provider.InstanceName, provider.Id));
+            this.availableLLMProviders.Add(new (provider.InstanceName, provider.Id));
     }
 
     private string GetCurrentConfidenceLevelName(LLMProviders llmProvider)
@@ -184,6 +157,103 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     {
         this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
         await this.SettingsManager.StoreSettings();
+    }
+
+    #endregion
+
+    #region Embedding provider related 
+
+    private string GetEmbeddingProviderModelName(EmbeddingProvider provider)
+    {
+        const int MAX_LENGTH = 36;
+        var modelName = provider.Model.ToString();
+        return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
+    }
+    
+    private async Task AddEmbeddingProvider()
+    {
+        var dialogParameters = new DialogParameters<EmbeddingDialog>
+        {
+            { x => x.IsEditing, false },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingDialog>("Add Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;
+        addedEmbedding = addedEmbedding with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
+        
+        this.SettingsManager.ConfigurationData.EmbeddingProviders.Add(addedEmbedding);
+        this.UpdateEmbeddingProviders();
+        
+        await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+    
+    private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
+    {
+        var dialogParameters = new DialogParameters<EmbeddingDialog>
+        {
+            { x => x.DataNum, embeddingProvider.Num },
+            { x => x.DataId, embeddingProvider.Id },
+            { x => x.DataName, embeddingProvider.Name },
+            { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
+            { x => x.DataModel, embeddingProvider.Model },
+            { x => x.DataHostname, embeddingProvider.Hostname },
+            { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
+            { x => x.IsEditing, true },
+            { x => x.DataHost, embeddingProvider.Host },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingDialog>("Edit Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var editedEmbeddingProvider = (EmbeddingProvider)dialogResult.Data!;
+        
+        // Set the provider number if it's not set. This is important for providers
+        // added before we started saving the provider number.
+        if(editedEmbeddingProvider.Num == 0)
+            editedEmbeddingProvider = editedEmbeddingProvider with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
+        
+        this.SettingsManager.ConfigurationData.EmbeddingProviders[this.SettingsManager.ConfigurationData.EmbeddingProviders.IndexOf(embeddingProvider)] = editedEmbeddingProvider;
+        this.UpdateEmbeddingProviders();
+        
+        await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
+    {
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete the embedding provider '{provider.Name}'?" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+        
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
+        if(deleteSecretResponse.Success)
+        {
+            this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
+            await this.SettingsManager.StoreSettings();
+        }
+        
+        this.UpdateEmbeddingProviders();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+    
+    private void UpdateEmbeddingProviders()
+    {
+        this.availableEmbeddingProviders.Clear();
+        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
+            this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
 
     #endregion

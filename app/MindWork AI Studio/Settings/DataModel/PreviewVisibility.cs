@@ -8,4 +8,5 @@ public enum PreviewVisibility
     BETA,
     ALPHA,
     PROTOTYPE,
+    EXPERIMENTAL,
 }

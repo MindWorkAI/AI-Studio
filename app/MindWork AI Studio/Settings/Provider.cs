@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Provider;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
@@ -22,7 +24,7 @@ public readonly record struct Provider(
     Model Model,
     bool IsSelfHosted = false,
     string Hostname = "http://localhost:1234",
-    Host Host = Host.NONE)
+    Host Host = Host.NONE) : ISecretId
 {
     #region Overrides of ValueType
 
@@ -39,5 +41,17 @@ public readonly record struct Provider(
         return $"{this.InstanceName} ({this.UsedLLMProvider.ToName()}, {this.Model})";
     }
 
+    #endregion
+    
+    #region Implementation of ISecretId
+    
+    /// <inheritdoc />
+    [JsonIgnore]
+    public string SecretId => this.Id;
+    
+    /// <inheritdoc />
+    [JsonIgnore]
+    public string SecretName => this.InstanceName;
+    
     #endregion
 }

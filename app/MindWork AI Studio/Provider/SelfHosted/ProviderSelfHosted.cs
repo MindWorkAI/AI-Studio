@@ -8,7 +8,7 @@ using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provider) : BaseProvider($"{provider.Hostname}{provider.Host.BaseURL()}", logger), IProvider
+public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", logger)
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -17,12 +17,12 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
 
     #region Implementation of IProvider
 
-    public string Id => "Self-hosted";
+    public override string Id => LLMProviders.SELF_HOSTED.ToName();
     
-    public string InstanceName { get; set; } = "Self-hosted";
+    public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
@@ -70,7 +70,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
         try
         {
             // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, provider.Host.ChatURL());
+            var request = new HttpRequestMessage(HttpMethod.Post, host.ChatURL());
 
             // Set the authorization header:
             if (requestedSecret.Success)
@@ -148,18 +148,18 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
 
-    public async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
-            switch (provider.Host)
+            switch (host)
             {
                 case Host.LLAMACPP:
                     // Right now, llama.cpp only supports one model.
@@ -168,27 +168,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
-                    
-                    var secretKey = apiKeyProvisional switch
-                    {
-                        not null => apiKeyProvisional,
-                        _ => await RUST_SERVICE.GetAPIKey(this, isTrying: true) switch
-                        {
-                            { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                            _ => null,
-                        }
-                    };
-                    
-                    var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
-                    if(secretKey is not null)
-                        lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
-                    
-                    var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
-                    if(!lmStudioResponse.IsSuccessStatusCode)
-                        return [];
-
-                    var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-                    return lmStudioModelResponse.Data.Select(n => new Provider.Model(n.Id, null));
+                    return await this.LoadModels(["embed"], [], token, apiKeyProvisional);
             }
 
             return [];
@@ -200,13 +180,58 @@ public sealed class ProviderSelfHosted(ILogger logger, Settings.Provider provide
         }
     }
 
-    #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
-    #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        try
+        {
+            switch (host)
+            {
+                case Host.LM_STUDIO:
+                case Host.OLLAMA:
+                    return await this.LoadModels([], ["embed"], token, apiKeyProvisional);
+            }
+
+            return [];
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            return [];
+        }
+    }
 
     #endregion
+
+    private async Task<IEnumerable<Provider.Model>> LoadModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    {
+        var secretKey = apiKeyProvisional switch
+        {
+            not null => apiKeyProvisional,
+            _ => await RUST_SERVICE.GetAPIKey(this, isTrying: true) switch
+            {
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+                _ => null,
+            }
+        };
+                    
+        var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
+        if(secretKey is not null)
+            lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
+                    
+        var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
+        if(!lmStudioResponse.IsSuccessStatusCode)
+            return [];
+
+        var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
+        return lmStudioModelResponse.Data.
+            Where(model => !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
+                           filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
+            .Select(n => new Provider.Model(n.Id, null));
+    }
 }

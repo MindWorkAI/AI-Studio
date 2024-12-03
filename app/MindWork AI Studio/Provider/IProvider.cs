@@ -16,7 +16,7 @@ public interface IProvider
     /// The provider's instance name. Useful for multiple instances of the same provider,
     /// e.g., to distinguish between different OpenAI API keys.
     /// </summary>
-    public string InstanceName { get; set; }
+    public string InstanceName { get; }
     
     /// <summary>
     /// Starts a chat completion stream.
@@ -53,4 +53,12 @@ public interface IProvider
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of image models.</returns>
     public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default);
+
+    /// <summary>
+    /// Load all possible embedding models that can be used with this provider.
+    /// </summary>
+    /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The list of embedding models.</returns>
+    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
 }

@@ -10,7 +10,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <summary>
 /// The OpenAI provider.
 /// </summary>
-public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.openai.com/v1/", logger), IProvider
+public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.openai.com/v1/", logger)
 {
     private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
@@ -20,13 +20,13 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public string Id => "OpenAI";
+    public override string Id => LLMProviders.OPEN_AI.ToName();
 
     /// <inheritdoc />
-    public string InstanceName { get; set; } = "OpenAI";
+    public override string InstanceName { get; set; } = "OpenAI";
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -144,22 +144,28 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(["gpt-", "o1-"], token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(["dall-e-"], token, apiKeyProvisional);
+    }
+    
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return this.LoadModels(["text-embedding-"], token, apiKeyProvisional);
     }
 
     #endregion
