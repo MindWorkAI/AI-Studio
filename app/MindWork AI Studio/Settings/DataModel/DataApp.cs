@@ -32,6 +32,11 @@ public sealed class DataApp
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = PreviewVisibility.NONE;
+
+    /// <summary>
+    /// The enabled preview features.
+    /// </summary>
+    public HashSet<PreviewFeatures> EnabledPreviewFeatures { get; set; } = new();
     
     /// <summary>
     /// Should we preselect a provider for the entire app?

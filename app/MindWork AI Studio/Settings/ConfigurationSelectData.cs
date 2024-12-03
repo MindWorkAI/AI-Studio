@@ -88,6 +88,12 @@ public static class ConfigurationSelectDataFactory
         yield return new("Show also experimental features: these are experimental; expect bugs, missing features, many changes", PreviewVisibility.EXPERIMENTAL);
     }
     
+    public static IEnumerable<ConfigurationSelectData<PreviewFeatures>> GetPreviewFeaturesData(SettingsManager settingsManager)
+    {
+        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures())
+            yield return new(source.GetPreviewDescription(), source);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
     {
         yield return new("Navigation expands on mouse hover", NavBehavior.EXPAND_ON_HOVER);

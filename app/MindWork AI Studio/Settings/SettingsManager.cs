@@ -84,6 +84,14 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
             }
                 
             this.ConfigurationData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            
+            //
+            // We filter the enabled preview features based on the preview visibility.
+            // This is necessary when the app starts up: some preview features may have
+            // been disabled or released from the last time the app was started.
+            //
+            this.ConfigurationData.App.EnabledPreviewFeatures = this.ConfigurationData.App.PreviewVisibility.FilterPreviewFeatures(this.ConfigurationData.App.EnabledPreviewFeatures);
+
             return;
         }
         

@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
@@ -42,6 +43,16 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 
     #endregion
 
+    #region Preview-feature related
+
+    private void UpdatePreviewFeatures(PreviewVisibility previewVisibility)
+    {
+        this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = previewVisibility.FilterPreviewFeatures(this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures);
+    }
+
+    #endregion
+    
     #region Provider related
 
     private async Task AddLLMProvider()
