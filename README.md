@@ -9,7 +9,7 @@ Things we are currently working on:
   - [x] ~~Define the [External Data API (EDI)](https://github.com/MindWorkAI/EDI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/EDI/pull/1))~~
   - [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
   - [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
-  - [ ] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
+  - [x] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
   - [ ] App: Management of data sources (local & external data via [EDI](https://github.com/MindWorkAI/EDI))
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
   - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
