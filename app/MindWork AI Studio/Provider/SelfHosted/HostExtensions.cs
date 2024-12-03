@@ -30,4 +30,18 @@ public static class HostExtensions
 
         _ => "chat/completions",
     };
+    
+    public static bool AreEmbeddingsSupported(this Host host)
+    {
+        switch (host)
+        {
+            case Host.LM_STUDIO:
+            case Host.OLLAMA:
+                return true;
+            
+            default:
+            case Host.LLAMACPP:
+                return false;
+        }
+    }
 }
