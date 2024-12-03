@@ -103,6 +103,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
             new("Home", Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true),
             new("Chat", Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false),
             new("Assistants", Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false),
+            new("Writer", Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false),
             new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false),
             new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false),
             new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false),

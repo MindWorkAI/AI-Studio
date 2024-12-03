@@ -1,9 +1,14 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
 public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver
 {
+    [Inject]
+    protected SettingsManager SettingsManager { get; init; } = null!;
+    
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
 
