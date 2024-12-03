@@ -25,7 +25,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     [Inject]
     private RustService RustService { get; init; } = null!;
     
-    private readonly List<ConfigurationSelectData<string>> availableProviders = new();
+    private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
 
     #region Overrides of ComponentBase
 
@@ -43,14 +43,14 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 
     #region Provider related
 
-    private async Task AddProvider()
+    private async Task AddLLMProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -65,7 +65,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task EditProvider(AIStudio.Settings.Provider provider)
+    private async Task EditLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
@@ -80,7 +80,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
             { x => x.DataHost, provider.Host },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -99,14 +99,14 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task DeleteProvider(AIStudio.Settings.Provider provider)
+    private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters
         {
             { "Message", $"Are you sure you want to delete the provider '{provider.InstanceName}'?" },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -122,7 +122,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private string GetProviderModelName(AIStudio.Settings.Provider provider)
+    private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
     {
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
@@ -131,9 +131,9 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     private void UpdateProviders()
     {
-        this.availableProviders.Clear();
+        this.availableLLMProviders.Clear();
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-            this.availableProviders.Add(new (provider.InstanceName, provider.Id));
+            this.availableLLMProviders.Add(new (provider.InstanceName, provider.Id));
     }
 
     private string GetCurrentConfidenceLevelName(LLMProviders llmProvider)
