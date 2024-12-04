@@ -4,7 +4,7 @@ public static class ProgrammingLanguagesExtensions
 {
     public static string Name(this ProgrammingLanguages language) => language switch
     { 
-        ProgrammingLanguages.NONE => "None",
+        ProgrammingLanguages.NONE => "No programming language selected",
         
         ProgrammingLanguages.C => "C",
         ProgrammingLanguages.CPP => "C++",
