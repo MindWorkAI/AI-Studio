@@ -22,7 +22,7 @@ Things we are currently working on:
   - [ ] App: Integrate data sources in chats
 
 
-- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. Related PR: [#167](https://github.com/MindWorkAI/AI-Studio/pull/167).
+- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[#167](https://github.com/MindWorkAI/AI-Studio/pull/167), [#226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~.
 
 
 Other News:
@@ -34,6 +34,7 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.22: Added options for preview features; added embedding provider configuration for RAG (preview) and writer mode (experimental preview).
 - v0.9.18: Added the new Anthropic Heiku model; added Groq and Google Gemini as provider options.
 - v0.9.17: Added the new Anthropic model `claude-3-5-sonnet-20241022`.
 - v0.9.16: Added workspace display options & improved the layout of the app window.
@@ -41,7 +42,6 @@ Features we have recently released:
 - v0.9.13: You can use `ollama` providers secured with API keys.
 - v0.9.12: Added a job posting assistant to the business category and improved grammar & spelling check and rewrite assistants.
 - v0.9.11: Added enforcement of minimal confidence levels & dark mode.
-- v0.9.10: Added support for the OpenAI `o1` model. [But there are issues](https://github.com/MindWorkAI/AI-Studio/issues/215).
 
 ## What is AI Studio?
 
