@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Settings;
 
 namespace AIStudio.Tools;
@@ -80,5 +81,40 @@ public static class WorkspaceBehaviour
         var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
         var workspaceNamePath = Path.Join(workspacePath, "name");
         return await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+    }
+    
+    public static async Task DeleteChat(IDialogService dialogService, Guid workspaceId, Guid chatId, bool askForConfirmation = true)
+    {
+        var chat = await LoadChat(new(workspaceId, chatId));
+        if (chat is null)
+            return;
+
+        if (askForConfirmation)
+        {
+            var workspaceName = await LoadWorkspaceName(chat.WorkspaceId);
+            var dialogParameters = new DialogParameters
+            {
+                {
+                    "Message", (chat.WorkspaceId == Guid.Empty) switch
+                    {
+                        true => $"Are you sure you want to delete the temporary chat '{chat.Name}'?",
+                        false => $"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?",
+                    }
+                },
+            };
+
+            var dialogReference = await dialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
+        }
+
+        string chatDirectory;
+        if (chat.WorkspaceId == Guid.Empty)
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
+        else
+            chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+
+        Directory.Delete(chatDirectory, true);
     }
 }
