@@ -1,7 +1,5 @@
 using AIStudio.Chat;
 
-using Microsoft.AspNetCore.Components;
-
 namespace AIStudio.Assistants.EDI;
 
 public partial class AssistantEDI : AssistantBaseCore
@@ -42,5 +40,30 @@ public partial class AssistantEDI : AssistantBaseCore
     protected override bool MightPreselectValues()
     {
         return false;
+    }
+    
+    private ProgrammingLanguages selectedProgrammingLanguage = ProgrammingLanguages.NONE;
+    private string otherProgrammingLanguage = string.Empty;
+    
+    private string? ValidateProgrammingLanguage(ProgrammingLanguages language)
+    {
+        if (language == ProgrammingLanguages.OTHER)
+            return null;
+        
+        if (language == ProgrammingLanguages.NONE)
+            return "Please select a programming language for the EDI server.";
+        
+        return null;
+    }
+    
+    private string? ValidateOtherLanguage(string language)
+    {
+        if(this.selectedProgrammingLanguage != ProgrammingLanguages.OTHER)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(language))
+            return "Please specify the custom programming language for the EDI server.";
+        
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-using AIStudio.Assistants.Coding;
+using AIStudio.Assistants.EDI;
 using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
@@ -13,7 +13,7 @@ public sealed class DataEDI
     /// <summary>
     /// Preselect the language for implementing the EDI?
     /// </summary>
-    public CommonCodingLanguages PreselectedProgrammingLanguage { get; set; }
+    public ProgrammingLanguages PreselectedProgrammingLanguage { get; set; }
 
     /// <summary>
     /// Do you want to preselect any other language?
