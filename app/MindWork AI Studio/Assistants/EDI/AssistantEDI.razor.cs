@@ -26,7 +26,7 @@ public partial class AssistantEDI : AssistantBaseCore
     
     protected override string SubmitText => "Create the EDI server";
 
-    protected override Func<Task> SubmitAction => () => Task.CompletedTask;
+    protected override Func<Task> SubmitAction => this.GenerateServer;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
@@ -123,5 +123,12 @@ public partial class AssistantEDI : AssistantBaseCore
             return $"You have selected 1 authentication method";
         
         return $"You have selected {selectedValues.Count} authentication methods";
+    }
+
+    private async Task GenerateServer()
+    {
+        await this.form!.Validate();
+        if (!this.inputIsValid)
+            return;
     }
 }
