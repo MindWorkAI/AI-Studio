@@ -46,6 +46,8 @@ public partial class AssistantEDI : AssistantBaseCore
     private string otherProgrammingLanguage = string.Empty;
     private DataSources selectedDataSource = DataSources.NONE;
     private string otherDataSource = string.Empty;
+    private IEnumerable<Auth> selectedAuthenticationMethods = new HashSet<Auth>();
+    private string authDescription = string.Empty;
     
     private string? ValidateProgrammingLanguage(ProgrammingLanguages language)
     {
@@ -89,5 +91,37 @@ public partial class AssistantEDI : AssistantBaseCore
             return "Please describe the data source of your EDI server.";
         
         return null;
+    }
+    
+    private string? ValidateAuthenticationMethods(Auth _)
+    {
+        var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
+        if(authenticationMethods.Count == 0)
+            return "Please select at least one authentication method for the EDI server.";
+        
+        return null;
+    }
+    
+    private string? ValidateAuthDescription(string description)
+    {
+        var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
+        if(authenticationMethods.Any(n => n == Auth.NONE) && authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
+            return "Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.";
+        
+        if(authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
+            return "Please describe how the selected authentication methods should be used.";
+        
+        return null;
+    }
+    
+    private string GetMultiSelectionAuthText(List<Auth> selectedValues)
+    {
+        if(selectedValues.Count == 0)
+            return "Please select at least one authentication method";
+        
+        if(selectedValues.Count == 1)
+            return $"You have selected 1 authentication method";
+        
+        return $"You have selected {selectedValues.Count} authentication methods";
     }
 }

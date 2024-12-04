@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_EDI)]
+@using MudExtensions
 @inherits AssistantBaseCore
 
 <MudText Typo="Typo.body1" Class="mb-3">
@@ -43,6 +44,25 @@
     {
         <MudTextField T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="Describe your data source" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
+</MudStack>
+
+<MudStack Row="@false" AlignItems="AlignItems.Stretch" Class="mb-3">
+    <MudSelectExtended
+        T="Auth"
+        ShrinkLabel="@true"
+        MultiSelection="@true"
+        MultiSelectionTextFunc="@this.GetMultiSelectionAuthText"
+        @bind-SelectedValues="@this.selectedAuthenticationMethods"
+        Validation="@this.ValidateAuthenticationMethods"
+        Label="Authentication method(s)"
+        Variant="Variant.Outlined"
+        Margin="Margin.Dense">
+        @foreach (var authMethod in Enum.GetValues<Auth>())
+        {
+            <MudSelectItemExtended Value="@authMethod">@authMethod.Name()</MudSelectItemExtended>
+        }
+    </MudSelectExtended>
+    <MudTextField T="string" @bind-Text="@this.authDescription" ShrinkLabel="@true" Label="Describe how you planned the authentication" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 </MudStack>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

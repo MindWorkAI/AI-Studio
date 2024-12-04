@@ -31,6 +31,16 @@ public sealed class DataEDI
     public string PreselectedOtherDataSource { get; set; } = string.Empty;
 
     /// <summary>
+    /// Preselect any authentication methods?
+    /// </summary>
+    public HashSet<Auth> PreselectedAuthMethods { get; set; } = [];
+
+    /// <summary>
+    /// Do you want to preselect any authentication description?
+    /// </summary>
+    public string PreselectedAuthDescription { get; set; } = string.Empty;
+
+    /// <summary>
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
