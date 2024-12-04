@@ -381,19 +381,18 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                 return;
         }
 
-        if (this.chatThread is not null && this.workspaces is not null && deletePreviousChat)
+        if (this.chatThread is not null && deletePreviousChat)
         {
             string chatPath;
             if (this.chatThread.WorkspaceId == Guid.Empty)
-            {
                 chatPath = Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString());
-            }
             else
-            {
                 chatPath = Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString());
-            }
-            
-            await this.workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
+
+            if(this.workspaces is null)
+                await WorkspaceBehaviour.DeleteChat(this.DialogService, this.chatThread.WorkspaceId, this.chatThread.ChatId, askForConfirmation: false);
+            else
+                await this.workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
         }
 
         this.isStreaming = false;
@@ -445,9 +444,6 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         if(this.chatThread is null)
             return;
         
-        if(this.workspaces is null)
-            return;
-        
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var confirmationDialogParameters = new DialogParameters
@@ -478,16 +474,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
             return;
         
         // Delete the chat from the current workspace or the temporary storage:
-        if (this.chatThread!.WorkspaceId == Guid.Empty)
-        {
-            // Case: The chat is stored in the temporary storage:
-            await this.workspaces.DeleteChat(Path.Join(SettingsManager.DataDirectory, "tempChats", this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
-        }
-        else
-        {
-            // Case: The chat is stored in a workspace.
-            await this.workspaces.DeleteChat(Path.Join(SettingsManager.DataDirectory, "workspaces", this.chatThread.WorkspaceId.ToString(), this.chatThread.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
-        }
+        await WorkspaceBehaviour.DeleteChat(this.DialogService, this.chatThread!.WorkspaceId, this.chatThread.ChatId, askForConfirmation: false);
         
         this.chatThread!.WorkspaceId = workspaceId;
         await this.SaveThread();
@@ -498,6 +485,10 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
 
     private async Task LoadedChatChanged()
     {
+        //
+        // It should not happen that the workspace component is not loaded
+        // because the workspace component is calling this method.
+        //
         if(this.workspaces is null)
             return;
         
