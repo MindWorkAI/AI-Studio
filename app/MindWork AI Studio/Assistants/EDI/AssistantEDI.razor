@@ -1,0 +1,19 @@
+@attribute [Route(Routes.ASSISTANT_EDI)]
+@inherits AssistantBaseCore
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    You can imagine it like this: Hypothetically, when Wikipedia implemented the EDI, it would vectorize
+    all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the
+    vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to
+    significantly reduce the hallucination of the LLM in knowledge questions.
+</MudText>
+
+<MudText Typo="Typo.body1">
+    <b>Related links:</b>
+</MudText>
+<MudList T="string" Class="mb-6">
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://github.com/MindWorkAI/EDI">EDI repository with example implementation in .NET and C#</MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://mindworkai.org/swagger-ui.html">Interactive documentation aka Swagger UI</MudListItem>
+</MudList>
+
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
