@@ -44,6 +44,8 @@ public partial class AssistantEDI : AssistantBaseCore
     
     private ProgrammingLanguages selectedProgrammingLanguage = ProgrammingLanguages.NONE;
     private string otherProgrammingLanguage = string.Empty;
+    private DataSources selectedDataSource = DataSources.NONE;
+    private string otherDataSource = string.Empty;
     
     private string? ValidateProgrammingLanguage(ProgrammingLanguages language)
     {
@@ -63,6 +65,28 @@ public partial class AssistantEDI : AssistantBaseCore
         
         if(string.IsNullOrWhiteSpace(language))
             return "Please specify the custom programming language for the EDI server.";
+        
+        return null;
+    }
+    
+    private string? ValidateDataSource(DataSources dataSource)
+    {
+        if (dataSource == DataSources.CUSTOM)
+            return null;
+        
+        if (dataSource == DataSources.NONE)
+            return "Please select a data source for the EDI server.";
+        
+        return null;
+    }
+    
+    private string? ValidateOtherDataSource(string dataSource)
+    {
+        if(this.selectedDataSource != DataSources.CUSTOM)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(dataSource))
+            return "Please describe the data source of your EDI server.";
         
         return null;
     }

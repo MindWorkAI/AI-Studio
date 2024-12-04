@@ -31,4 +31,17 @@
     }
 </MudStack>
 
+<MudStack Row="@false" AlignItems="AlignItems.Stretch" Class="mb-3">
+    <MudSelect T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource">
+        @foreach (var dataSource in Enum.GetValues<DataSources>())
+        {
+            <MudSelectItem Value="@dataSource">@dataSource.Name()</MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.selectedDataSource is DataSources.CUSTOM)
+    {
+        <MudTextField T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="Describe your data source" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+</MudStack>
+
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

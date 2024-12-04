@@ -21,6 +21,16 @@ public sealed class DataEDI
     public string PreselectedOtherProgrammingLanguage { get; set; } = string.Empty;
 
     /// <summary>
+    /// Preselect a data source?
+    /// </summary>
+    public DataSources PreselectedDataSource { get; set; }
+
+    /// <summary>
+    /// Do you want to preselect any other data source?
+    /// </summary>
+    public string PreselectedOtherDataSource { get; set; } = string.Empty;
+
+    /// <summary>
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
