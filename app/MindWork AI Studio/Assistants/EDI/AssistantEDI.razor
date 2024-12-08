@@ -33,8 +33,8 @@
     }
 </MudStack>
 
-<MudStack Row="@false" AlignItems="AlignItems.Stretch" Class="mb-3">
-    <MudSelect T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource">
+<MudStack Row="@false" Spacing="1" Class="mb-3">
+    <MudSelect T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource" SelectedValuesChanged="@this.DataSourceWasChanged">
         @foreach (var dataSource in Enum.GetValues<DataSources>())
         {
             <MudSelectItem Value="@dataSource">@dataSource.Name()</MudSelectItem>
@@ -46,14 +46,36 @@
     }
 </MudStack>
 
-<MudStack Row="@false" AlignItems="AlignItems.Stretch" Class="mb-3">
+@if(this.selectedDataSource > DataSources.FILE_SYSTEM)
+{
+    <MudTextField T="string" @bind-Text="@this.dataSourceProductName" Label="Data source: product name" Validation="@this.ValidateDataSourceProductName" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+}
+
+@if (this.NeedHostnamePort())
+{
+    <div class="mb-3">
+        <MudStack Row="@true">
+            <MudTextField T="string" @bind-Text="@this.dataSourceHostname" Label="Data source: hostname" Validation="@this.ValidateHostname" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudNumericField Label="Data source: port" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+        </MudStack>
+        @if (this.dataSourcePort < 1024)
+        {
+            <MudText Typo="Typo.body2">
+                <b>Warning:</b> Ports below 1024 are reserved for system services. Your EDI server need to run with elevated permissions (root user).
+            </MudText>
+        }
+    </div>
+}
+
+<MudStack Row="@false" Spacing="1" Class="mb-1">
     <MudSelectExtended
         T="Auth"
         ShrinkLabel="@true"
         MultiSelection="@true"
         MultiSelectionTextFunc="@this.GetMultiSelectionAuthText"
-        @bind-SelectedValues="@this.selectedAuthenticationMethods"
+        SelectedValues="@this.selectedAuthenticationMethods"
         Validation="@this.ValidateAuthenticationMethods"
+        SelectedValuesChanged="@this.AuthenticationMethodWasChanged"
         Label="Authentication method(s)"
         Variant="Variant.Outlined"
         Margin="Margin.Dense">
@@ -62,7 +84,20 @@
             <MudSelectItemExtended Value="@authMethod">@authMethod.Name()</MudSelectItemExtended>
         }
     </MudSelectExtended>
-    <MudTextField T="string" @bind-Text="@this.authDescription" ShrinkLabel="@true" Label="Describe how you planned the authentication" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Text="@this.authDescription" Label="@this.AuthDescriptionTitle()" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 </MudStack>
+
+@if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))
+{
+    <MudSelect T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="Operating system on which your EDI will run" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
+        @foreach (var os in Enum.GetValues<OperatingSystem>())
+        {
+            <MudSelectItem Value="@os">@os.Name()</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+<MudTextField T="string" @bind-Text="@this.retrievalDescription" Validation="@this.ValidateRetrievalDescription" Label="Describe your data retrieval process" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="6" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

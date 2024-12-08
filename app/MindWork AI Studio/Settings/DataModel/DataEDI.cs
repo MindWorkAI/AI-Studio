@@ -1,6 +1,8 @@
 using AIStudio.Assistants.EDI;
 using AIStudio.Provider;
 
+using OperatingSystem = AIStudio.Assistants.EDI.OperatingSystem;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataEDI
@@ -26,9 +28,24 @@ public sealed class DataEDI
     public DataSources PreselectedDataSource { get; set; }
 
     /// <summary>
+    /// Do you want to preselect a product name for the data source?
+    /// </summary>
+    public string PreselectedDataSourceProductName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Do you want to preselect any other data source?
     /// </summary>
     public string PreselectedOtherDataSource { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Do you want to preselect a hostname for the data source?
+    /// </summary>
+    public string PreselectedDataSourceHostname { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Do you want to preselect a port for the data source?
+    /// </summary>
+    public int? PreselectedDataSourcePort { get; set; }
 
     /// <summary>
     /// Preselect any authentication methods?
@@ -39,6 +56,21 @@ public sealed class DataEDI
     /// Do you want to preselect any authentication description?
     /// </summary>
     public string PreselectedAuthDescription { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Do you want to preselect an operating system? This is necessary when SSO with Kerberos is used.
+    /// </summary>
+    public OperatingSystem PreselectedOperatingSystem { get; set; } = OperatingSystem.NONE;
+
+    /// <summary>
+    /// Do you want to preselect a retrieval description?
+    /// </summary>
+    public string PreselectedRetrievalDescription { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Do you want to preselect any additional libraries?
+    /// </summary>
+    public string PreselectedAdditionalLibraries { get; set; } = string.Empty;
 
     /// <summary>
     /// The minimum confidence level required for a provider to be considered.
