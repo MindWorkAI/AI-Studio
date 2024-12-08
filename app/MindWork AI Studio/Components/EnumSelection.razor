@@ -1,7 +1,7 @@
 @typeparam T
 @inherits EnumSelectionBase
 
-<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+<MudStack Row="@true" Class="mb-3">
     <MudSelect T="@T" Value="@this.Value" ValueChanged="@this.SelectionChanged" AdornmentIcon="@this.Icon" Adornment="Adornment.Start" Label="@this.Label" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateSelection">
         @foreach (var value in Enum.GetValues<T>())
         {

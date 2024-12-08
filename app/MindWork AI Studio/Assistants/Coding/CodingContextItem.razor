@@ -1,5 +1,5 @@
 ﻿<MudTextField T="string" @bind-Text="@this.CodingContext.Id" AdornmentIcon="@Icons.Material.Filled.Numbers" Adornment="Adornment.Start" Label="(Optional) Identifier" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
-<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+<MudStack Row="@true" Class="mb-3">
     <MudSelect T="CommonCodingLanguages" @bind-Value="@this.CodingContext.Language" AdornmentIcon="@Icons.Material.Filled.Code" Adornment="Adornment.Start" Label="Language" Variant="Variant.Outlined" Margin="Margin.Dense">
         @foreach (var language in Enum.GetValues<CommonCodingLanguages>())
         {
