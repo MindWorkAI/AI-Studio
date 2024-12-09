@@ -11,6 +11,11 @@ public sealed class DataEDI
     /// Preselect any EDI options?
     /// </summary>
     public bool PreselectOptions { get; set; }
+
+    /// <summary>
+    /// Preselect the EDI version?
+    /// </summary>
+    public EDIVersion PreselectedEDIVersion { get; set; } = EDIVersion.NONE;
     
     /// <summary>
     /// Preselect the language for implementing the EDI?

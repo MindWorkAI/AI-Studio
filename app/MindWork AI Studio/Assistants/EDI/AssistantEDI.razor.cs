@@ -1,9 +1,14 @@
 using AIStudio.Chat;
 
+using Microsoft.AspNetCore.Components;
+
 namespace AIStudio.Assistants.EDI;
 
 public partial class AssistantEDI : AssistantBaseCore
 {
+    [Inject]
+    private HttpClient HttpClient { get; set; } = null!;
+    
     public override Tools.Components Component => Tools.Components.EDI_ASSISTANT;
     
     protected override string Title => "EDI Server";
@@ -37,6 +42,7 @@ public partial class AssistantEDI : AssistantBaseCore
     {
         if (!this.MightPreselectValues())
         {
+            this.selectedEDIVersion = EDIVersion.V1;
             this.selectedProgrammingLanguage = ProgrammingLanguages.NONE;
             this.otherProgrammingLanguage = string.Empty;
             this.selectedDataSource = DataSources.NONE;
@@ -56,6 +62,7 @@ public partial class AssistantEDI : AssistantBaseCore
     {
         if (this.SettingsManager.ConfigurationData.EDI.PreselectOptions)
         {
+            this.selectedEDIVersion = this.SettingsManager.ConfigurationData.EDI.PreselectedEDIVersion;
             this.selectedProgrammingLanguage = this.SettingsManager.ConfigurationData.EDI.PreselectedProgrammingLanguage;
             this.otherProgrammingLanguage = this.SettingsManager.ConfigurationData.EDI.PreselectedOtherProgrammingLanguage;
             this.selectedDataSource = this.SettingsManager.ConfigurationData.EDI.PreselectedDataSource;
@@ -77,6 +84,7 @@ public partial class AssistantEDI : AssistantBaseCore
         return false;
     }
     
+    private EDIVersion selectedEDIVersion = EDIVersion.V1;
     private ProgrammingLanguages selectedProgrammingLanguage = ProgrammingLanguages.NONE;
     private string otherProgrammingLanguage = string.Empty;
     private DataSources selectedDataSource = DataSources.NONE;
@@ -89,6 +97,14 @@ public partial class AssistantEDI : AssistantBaseCore
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
     private string retrievalDescription = string.Empty;
     private string additionalLibraries = string.Empty;
+    
+    private string? ValidateEDIVersion(EDIVersion version)
+    {
+        if (version == EDIVersion.NONE)
+            return "Please select an EDI specification version for the EDI server.";
+        
+        return null;
+    }
     
     private string? ValidateProgrammingLanguage(ProgrammingLanguages language)
     {
@@ -307,5 +323,11 @@ public partial class AssistantEDI : AssistantBaseCore
         await this.form!.Validate();
         if (!this.inputIsValid)
             return;
+        
+        var ediSpecification = await this.selectedEDIVersion.ReadSpecification(this.HttpClient);
+        if (string.IsNullOrWhiteSpace(ediSpecification))
+        {
+            // TODO: Show an error message
+        }
     }
 }
