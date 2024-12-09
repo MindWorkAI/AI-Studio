@@ -57,6 +57,8 @@ public sealed class Data
     public DataTranslation Translation { get; init; } = new();
 
     public DataCoding Coding { get; init; } = new();
+    
+    public DataEDI EDI { get; init; } = new();
 
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 

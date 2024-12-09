@@ -24,5 +24,6 @@ public sealed partial class Routes
     public const string ASSISTANT_MY_TASKS = "/assistant/my-tasks";
     public const string ASSISTANT_JOB_POSTING = "/assistant/job-posting";
     public const string ASSISTANT_BIAS = "/assistant/bias-of-the-day";
+    public const string ASSISTANT_EDI = "/assistant/edi";
     // ReSharper restore InconsistentNaming
 }
