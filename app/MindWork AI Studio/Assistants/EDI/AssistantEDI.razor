@@ -20,6 +20,9 @@
 <PreviewPrototype/>
 <div class="mb-6"></div>
 
+<MudTextField T="string" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="EDI server name" HelperText="Please give your EDI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="EDI server description" HelperText="Please provide a brief description of your EDI server. Describe or explain what your EDI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
     <MudSelect T="EDIVersion" @bind-Value="@this.selectedEDIVersion" Label="EDI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateEDIVersion">
         @foreach (var version in Enum.GetValues<EDIVersion>())

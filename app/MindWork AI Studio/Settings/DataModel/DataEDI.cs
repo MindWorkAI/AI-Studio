@@ -13,6 +13,16 @@ public sealed class DataEDI
     public bool PreselectOptions { get; set; }
 
     /// <summary>
+    /// Preselect the server name?
+    /// </summary>
+    public string PreselectedServerName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Preselect the server description?
+    /// </summary>
+    public string PreselectedServerDescription { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Preselect the EDI version?
     /// </summary>
     public EDIVersion PreselectedEDIVersion { get; set; } = EDIVersion.NONE;

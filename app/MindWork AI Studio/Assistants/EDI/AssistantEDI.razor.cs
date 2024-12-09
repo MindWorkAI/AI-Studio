@@ -42,6 +42,8 @@ public partial class AssistantEDI : AssistantBaseCore
     {
         if (!this.MightPreselectValues())
         {
+            this.serverName = string.Empty;
+            this.serverDescription = string.Empty;
             this.selectedEDIVersion = EDIVersion.V1;
             this.selectedProgrammingLanguage = ProgrammingLanguages.NONE;
             this.otherProgrammingLanguage = string.Empty;
@@ -62,6 +64,8 @@ public partial class AssistantEDI : AssistantBaseCore
     {
         if (this.SettingsManager.ConfigurationData.EDI.PreselectOptions)
         {
+            this.serverName = this.SettingsManager.ConfigurationData.EDI.PreselectedServerName;
+            this.serverDescription = this.SettingsManager.ConfigurationData.EDI.PreselectedServerDescription;
             this.selectedEDIVersion = this.SettingsManager.ConfigurationData.EDI.PreselectedEDIVersion;
             this.selectedProgrammingLanguage = this.SettingsManager.ConfigurationData.EDI.PreselectedProgrammingLanguage;
             this.otherProgrammingLanguage = this.SettingsManager.ConfigurationData.EDI.PreselectedOtherProgrammingLanguage;
@@ -84,6 +88,8 @@ public partial class AssistantEDI : AssistantBaseCore
         return false;
     }
     
+    private string serverName = string.Empty;
+    private string serverDescription = string.Empty;
     private EDIVersion selectedEDIVersion = EDIVersion.V1;
     private ProgrammingLanguages selectedProgrammingLanguage = ProgrammingLanguages.NONE;
     private string otherProgrammingLanguage = string.Empty;
@@ -97,6 +103,28 @@ public partial class AssistantEDI : AssistantBaseCore
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
     private string retrievalDescription = string.Empty;
     private string additionalLibraries = string.Empty;
+    
+    private string? ValidateServerName(string name)
+    {
+        if(string.IsNullOrWhiteSpace(name))
+            return "Please provide a name for your EDI server. This name will be used to identify the server in AI Studio.";
+        
+        if(name.Length is > 60 or < 6)
+            return "The name of your EDI server must be between 6 and 60 characters long.";
+        
+        return null;
+    }
+    
+    private string? ValidateServerDescription(string description)
+    {
+        if(string.IsNullOrWhiteSpace(description))
+            return "Please provide a description for your EDI server. What data will the server retrieve? This description will be used to inform users about the purpose of your EDI.";
+        
+        if(description.Length is < 32 or > 512)
+            return "The description of your EDI server must be between 32 and 512 characters long.";
+        
+        return null;
+    }
     
     private string? ValidateEDIVersion(EDIVersion version)
     {
