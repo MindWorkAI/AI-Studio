@@ -6,11 +6,11 @@ Things we are currently working on:
 - Since November 2024: Work on RAG (integration of your data and files) has begun. We will support the integration of local and external data sources. We need to implement the following runtime (Rust) and app (.NET) steps:
 
   - [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
-  - [x] ~~Define the [External Data API (EDI)](https://github.com/MindWorkAI/EDI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/EDI/pull/1))~~
+  - [x] ~~Define the [External Retrieval Interface (ERI)](https://github.com/MindWorkAI/ERI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/ERI/pull/1))~~
   - [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
   - [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
   - [x] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
-  - [ ] App: Management of data sources (local & external data via [EDI](https://github.com/MindWorkAI/EDI))
+  - [ ] App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI))
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
   - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
   - [ ] App: Implement external embedding providers
@@ -78,7 +78,7 @@ Your support, whether big or small, keeps the wheels turning and is deeply appre
 ## Planned Features
 Here's an exciting look at some of the features we're planning to add to AI Studio in future releases:
 - **Integrating your data**: You should be able to integrate your data into AI Studio. For example, your PDF or Office files, or your Markdown notes.
-- **Integration of enterprise data:** Soon, it will also be possible to integrate data from the corporate network using an interface that we have specified ([External Data API](https://github.com/MindWorkAI/EDI), EDI for short).
+- **Integration of enterprise data:** Soon, it will also be possible to integrate data from the corporate network using an interface that we have specified ([External Retrieval Interface](https://github.com/MindWorkAI/ERI), ERI for short).
 - **Writing mode:** We want to integrate a writing mode that should support you in creating extensive works. We are thinking of comprehensive project proposals, tenders, or your next fantasy novel.
 - **Browser usage:** We're trying to offer the features from AI Studio to you in the browser via a plugin, so we could use spell-checking or rewriting text directly in the browser.
 - **Voice control:** You should be able to interact with the AI systems using your voice as well. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
