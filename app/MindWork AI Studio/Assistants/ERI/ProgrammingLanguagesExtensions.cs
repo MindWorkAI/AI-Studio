@@ -1,4 +1,4 @@
-namespace AIStudio.Assistants.EDI;
+namespace AIStudio.Assistants.ERI;
 
 public static class ProgrammingLanguagesExtensions
 {

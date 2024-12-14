@@ -1,8 +1,8 @@
-namespace AIStudio.Assistants.EDI;
+namespace AIStudio.Assistants.ERI;
 
-public static class EDIVersionExtensions
+public static class ERIVersionExtensions
 {
-    public static async Task<string> ReadSpecification(this EDIVersion version, HttpClient httpClient)
+    public static async Task<string> ReadSpecification(this ERIVersion version, HttpClient httpClient)
     {
         try
         {
@@ -16,12 +16,12 @@ public static class EDIVersionExtensions
         }
     }
     
-    public static string SpecificationURL(this EDIVersion version)
+    public static string SpecificationURL(this ERIVersion version)
     {
         var nameLower = version.ToString().ToLowerInvariant();
         var filename = $"{nameLower}.json";
-        return $"specs/edi/{filename}";
+        return $"specs/eri/{filename}";
     }
     
-    public static bool WasSpecificationSelected(this EDIVersion version) => version != EDIVersion.NONE;
+    public static bool WasSpecificationSelected(this ERIVersion version) => version != ERIVersion.NONE;
 }

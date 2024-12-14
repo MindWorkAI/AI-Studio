@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "EDI - (E)xternal (D)ata AP(I) for AI Studio",
-    "description": "This API serves as a contract between AI Studio and any external data sources for RAG\n(retrieval-augmented generation). AI Studio acts as the client (the augmentation and\ngeneration parts) and the data sources act as the server (the retrieval part). The data\nsources implement some form of data retrieval and return a suitable context to AI Studio.\nAI Studio, in turn, handles the integration of appropriate LLMs (augmentation & generation).\nData sources can be document or graph databases, or even a file system, for example. They\nwill likely implement an appropriate retrieval process by using some kind of embedding.\nHowever, this API does not inherently require any embedding, as data processing is\nimplemented decentralized by the data sources.",
+    "title": "ERI - (E)xternal (R)etrieval (I)nterface",
+    "description": "This API serves as a contract between LLM tools like AI Studio and any external data sources for RAG\n(retrieval-augmented generation). The tool, e.g., AI Studio acts as the client (the augmentation and\ngeneration parts) and the data sources act as the server (the retrieval part). The data\nsources implement some form of data retrieval and return a suitable context to the LLM tool.\nThe LLM tool, in turn, handles the integration of appropriate LLMs (augmentation & generation).\nData sources can be document or graph databases, or even a file system, for example. They\nwill likely implement an appropriate retrieval process by using some kind of embedding.\nHowever, this API does not inherently require any embedding, as data processing is\nimplemented decentralized by the data sources.",
     "version": "v1"
   },
   "paths": {
@@ -515,9 +515,9 @@
       }
     },
     "securitySchemes": {
-      "EDI_Token": {
+      "ERI_Token": {
         "type": "apiKey",
-        "description": "Enter the EDI token yielded by the authentication process at /auth.",
+        "description": "Enter the ERI token yielded by the authentication process at /auth.",
         "name": "token",
         "in": "header"
       }
@@ -525,7 +525,7 @@
   },
   "security": [
     {
-      "EDI_Token": [ ]
+      "ERI_Token": [ ]
     }
   ]
 }

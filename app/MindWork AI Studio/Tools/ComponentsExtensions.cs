@@ -8,7 +8,7 @@ public static class ComponentsExtensions
     public static bool AllowSendTo(this Components component) => component switch
     {
         Components.NONE => false,
-        Components.EDI_ASSISTANT => false,
+        Components.ERI_ASSISTANT => false,
         Components.BIAS_DAY_ASSISTANT => false,
         
         _ => true,
@@ -28,7 +28,7 @@ public static class ComponentsExtensions
         Components.SYNONYMS_ASSISTANT => "Synonym Assistant",
         Components.MY_TASKS_ASSISTANT => "My Tasks Assistant",
         Components.JOB_POSTING_ASSISTANT => "Job Posting Assistant",
-        Components.EDI_ASSISTANT => "EDI Server",
+        Components.ERI_ASSISTANT => "ERI Server",
         
         Components.CHAT => "New Chat",
         
@@ -70,7 +70,7 @@ public static class ComponentsExtensions
         Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.MyTasks.MinimumProviderConfidence : default,
         Components.JOB_POSTING_ASSISTANT => settingsManager.ConfigurationData.JobPostings.PreselectOptions ? settingsManager.ConfigurationData.JobPostings.MinimumProviderConfidence : default,
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
-        Components.EDI_ASSISTANT => settingsManager.ConfigurationData.EDI.PreselectOptions ? settingsManager.ConfigurationData.EDI.MinimumProviderConfidence : default,
+        Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
 
         _ => default,
     };
@@ -90,7 +90,7 @@ public static class ComponentsExtensions
         Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.MyTasks.PreselectedProvider) : default,
         Components.JOB_POSTING_ASSISTANT => settingsManager.ConfigurationData.JobPostings.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.JobPostings.PreselectedProvider) : default,
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider) : default,
-        Components.EDI_ASSISTANT => settingsManager.ConfigurationData.EDI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.EDI.PreselectedProvider) : default,
+        Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : default,
 
         Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : default,
         
@@ -105,7 +105,7 @@ public static class ComponentsExtensions
         Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.LegalCheck.PreselectedProfile) : default,
         Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.MyTasks.PreselectedProfile) : default,
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProfile) : default,
-        Components.EDI_ASSISTANT => settingsManager.ConfigurationData.EDI.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.EDI.PreselectedProfile) : default,
+        Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProfile) : default,
 
         Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProfile) : default,
         

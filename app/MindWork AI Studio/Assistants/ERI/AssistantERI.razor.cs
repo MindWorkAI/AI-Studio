@@ -2,24 +2,24 @@ using AIStudio.Chat;
 
 using Microsoft.AspNetCore.Components;
 
-namespace AIStudio.Assistants.EDI;
+namespace AIStudio.Assistants.ERI;
 
-public partial class AssistantEDI : AssistantBaseCore
+public partial class AssistantERI : AssistantBaseCore
 {
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
     
-    public override Tools.Components Component => Tools.Components.EDI_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.ERI_ASSISTANT;
     
-    protected override string Title => "EDI Server";
+    protected override string Title => "ERI Server";
     
     protected override string Description =>
         """
-        The EDI is the (E)xternal (D)ata AP(I) for AI Studio. The EDI acts as a contract between decentralized data
-        sources and AI Studio. The EDI is implemented by the data sources, allowing them to be integrated into AI
-        Studio later. This means that the data sources assume the server role and AI Studio assumes the client role
-        of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external
-        data.
+        The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract
+        between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources,
+        allowing them to be integrated into AI Studio later. This means that the data sources assume the server
+        role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to
+        realize a Retrieval-Augmented Generation (RAG) process with external data.
         """;
     
     protected override string SystemPrompt => 
@@ -29,7 +29,7 @@ public partial class AssistantEDI : AssistantBaseCore
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Create the EDI server";
+    protected override string SubmitText => "Create the ERI server";
 
     protected override Func<Task> SubmitAction => this.GenerateServer;
     
@@ -44,7 +44,7 @@ public partial class AssistantEDI : AssistantBaseCore
         {
             this.serverName = string.Empty;
             this.serverDescription = string.Empty;
-            this.selectedEDIVersion = EDIVersion.V1;
+            this.selectedERIVersion = ERIVersion.V1;
             this.selectedProgrammingLanguage = ProgrammingLanguages.NONE;
             this.otherProgrammingLanguage = string.Empty;
             this.selectedDataSource = DataSources.NONE;
@@ -62,26 +62,26 @@ public partial class AssistantEDI : AssistantBaseCore
     
     protected override bool MightPreselectValues()
     {
-        if (this.SettingsManager.ConfigurationData.EDI.PreselectOptions)
+        if (this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
         {
-            this.serverName = this.SettingsManager.ConfigurationData.EDI.PreselectedServerName;
-            this.serverDescription = this.SettingsManager.ConfigurationData.EDI.PreselectedServerDescription;
-            this.selectedEDIVersion = this.SettingsManager.ConfigurationData.EDI.PreselectedEDIVersion;
-            this.selectedProgrammingLanguage = this.SettingsManager.ConfigurationData.EDI.PreselectedProgrammingLanguage;
-            this.otherProgrammingLanguage = this.SettingsManager.ConfigurationData.EDI.PreselectedOtherProgrammingLanguage;
-            this.selectedDataSource = this.SettingsManager.ConfigurationData.EDI.PreselectedDataSource;
-            this.dataSourceProductName = this.SettingsManager.ConfigurationData.EDI.PreselectedDataSourceProductName;
-            this.otherDataSource = this.SettingsManager.ConfigurationData.EDI.PreselectedOtherDataSource;
-            this.dataSourceHostname = this.SettingsManager.ConfigurationData.EDI.PreselectedDataSourceHostname;
-            this.dataSourcePort = this.SettingsManager.ConfigurationData.EDI.PreselectedDataSourcePort;
+            this.serverName = this.SettingsManager.ConfigurationData.ERI.PreselectedServerName;
+            this.serverDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedServerDescription;
+            this.selectedERIVersion = this.SettingsManager.ConfigurationData.ERI.PreselectedERIVersion;
+            this.selectedProgrammingLanguage = this.SettingsManager.ConfigurationData.ERI.PreselectedProgrammingLanguage;
+            this.otherProgrammingLanguage = this.SettingsManager.ConfigurationData.ERI.PreselectedOtherProgrammingLanguage;
+            this.selectedDataSource = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSource;
+            this.dataSourceProductName = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceProductName;
+            this.otherDataSource = this.SettingsManager.ConfigurationData.ERI.PreselectedOtherDataSource;
+            this.dataSourceHostname = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceHostname;
+            this.dataSourcePort = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort;
 
-            var authMethods = new HashSet<Auth>(this.SettingsManager.ConfigurationData.EDI.PreselectedAuthMethods);
+            var authMethods = new HashSet<Auth>(this.SettingsManager.ConfigurationData.ERI.PreselectedAuthMethods);
             this.selectedAuthenticationMethods = authMethods;
             
-            this.authDescription = this.SettingsManager.ConfigurationData.EDI.PreselectedAuthDescription;
-            this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.EDI.PreselectedOperatingSystem;
-            this.retrievalDescription = this.SettingsManager.ConfigurationData.EDI.PreselectedRetrievalDescription;
-            this.additionalLibraries = this.SettingsManager.ConfigurationData.EDI.PreselectedAdditionalLibraries;
+            this.authDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription;
+            this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
+            this.retrievalDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription;
+            this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
             return true;
         }
         
@@ -90,7 +90,7 @@ public partial class AssistantEDI : AssistantBaseCore
     
     private string serverName = string.Empty;
     private string serverDescription = string.Empty;
-    private EDIVersion selectedEDIVersion = EDIVersion.V1;
+    private ERIVersion selectedERIVersion = ERIVersion.V1;
     private ProgrammingLanguages selectedProgrammingLanguage = ProgrammingLanguages.NONE;
     private string otherProgrammingLanguage = string.Empty;
     private DataSources selectedDataSource = DataSources.NONE;
@@ -107,10 +107,10 @@ public partial class AssistantEDI : AssistantBaseCore
     private string? ValidateServerName(string name)
     {
         if(string.IsNullOrWhiteSpace(name))
-            return "Please provide a name for your EDI server. This name will be used to identify the server in AI Studio.";
+            return "Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.";
         
         if(name.Length is > 60 or < 6)
-            return "The name of your EDI server must be between 6 and 60 characters long.";
+            return "The name of your ERI server must be between 6 and 60 characters long.";
         
         return null;
     }
@@ -118,18 +118,18 @@ public partial class AssistantEDI : AssistantBaseCore
     private string? ValidateServerDescription(string description)
     {
         if(string.IsNullOrWhiteSpace(description))
-            return "Please provide a description for your EDI server. What data will the server retrieve? This description will be used to inform users about the purpose of your EDI.";
+            return "Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.";
         
         if(description.Length is < 32 or > 512)
-            return "The description of your EDI server must be between 32 and 512 characters long.";
+            return "The description of your ERI server must be between 32 and 512 characters long.";
         
         return null;
     }
     
-    private string? ValidateEDIVersion(EDIVersion version)
+    private string? ValidateERIVersion(ERIVersion version)
     {
-        if (version == EDIVersion.NONE)
-            return "Please select an EDI specification version for the EDI server.";
+        if (version == ERIVersion.NONE)
+            return "Please select an ERI specification version for the ERI server.";
         
         return null;
     }
@@ -140,7 +140,7 @@ public partial class AssistantEDI : AssistantBaseCore
             return null;
         
         if (language == ProgrammingLanguages.NONE)
-            return "Please select a programming language for the EDI server.";
+            return "Please select a programming language for the ERI server.";
         
         return null;
     }
@@ -151,7 +151,7 @@ public partial class AssistantEDI : AssistantBaseCore
             return null;
         
         if(string.IsNullOrWhiteSpace(language))
-            return "Please specify the custom programming language for the EDI server.";
+            return "Please specify the custom programming language for the ERI server.";
         
         return null;
     }
@@ -162,7 +162,7 @@ public partial class AssistantEDI : AssistantBaseCore
             return null;
         
         if (dataSource == DataSources.NONE)
-            return "Please select a data source for the EDI server.";
+            return "Please select a data source for the ERI server.";
         
         return null;
     }
@@ -184,7 +184,7 @@ public partial class AssistantEDI : AssistantBaseCore
             return null;
         
         if(string.IsNullOrWhiteSpace(dataSource))
-            return "Please describe the data source of your EDI server.";
+            return "Please describe the data source of your ERI server.";
         
         return null;
     }
@@ -199,7 +199,7 @@ public partial class AssistantEDI : AssistantBaseCore
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
-            return "Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the EDI server.";
+            return "Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.";
         
         if(hostname.Length > 255)
             return "The hostname of the data source must not exceed 255 characters.";
@@ -227,7 +227,7 @@ public partial class AssistantEDI : AssistantBaseCore
     
     private void DataSourceWasChanged()
     {
-        if(this.SettingsManager.ConfigurationData.EDI.PreselectedDataSourcePort is not null)
+        if(this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort is not null)
             return;
         
         //
@@ -249,7 +249,7 @@ public partial class AssistantEDI : AssistantBaseCore
     {
         var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
         if(authenticationMethods.Count == 0)
-            return "Please select at least one authentication method for the EDI server.";
+            return "Please select at least one authentication method for the ERI server.";
         
         return null;
     }
@@ -279,7 +279,7 @@ public partial class AssistantEDI : AssistantBaseCore
             return null;
         
         if(os is OperatingSystem.NONE)
-            return "Please select the operating system on which the EDI server will run. This is necessary when using SSO with Kerberos.";
+            return "Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.";
         
         return null;
     }
@@ -328,7 +328,7 @@ public partial class AssistantEDI : AssistantBaseCore
     private string? ValidateRetrievalDescription(string description)
     {
         if(string.IsNullOrWhiteSpace(description))
-            return "Please describe how the data retrieval process should work. This is important for the integration of the data source into AI Studio by means of the EDI.";
+            return "Please describe how the data retrieval process should work. This is important for the integration of the data source into AI Studio by means of the ERI.";
         
         return null;
     }
@@ -352,7 +352,7 @@ public partial class AssistantEDI : AssistantBaseCore
         if (!this.inputIsValid)
             return;
         
-        var ediSpecification = await this.selectedEDIVersion.ReadSpecification(this.HttpClient);
+        var ediSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
         if (string.IsNullOrWhiteSpace(ediSpecification))
         {
             // TODO: Show an error message

@@ -1,9 +1,9 @@
-@attribute [Route(Routes.ASSISTANT_EDI)]
+@attribute [Route(Routes.ASSISTANT_ERI)]
 @using MudExtensions
 @inherits AssistantBaseCore
 
 <MudText Typo="Typo.body1" Class="mb-3">
-    You can imagine it like this: Hypothetically, when Wikipedia implemented the EDI, it would vectorize
+    You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize
     all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the
     vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to
     significantly reduce the hallucination of the LLM in knowledge questions.
@@ -13,24 +13,24 @@
     <b>Related links:</b>
 </MudText>
 <MudList T="string" Class="mb-6">
-    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://github.com/MindWorkAI/EDI">EDI repository with example implementation in .NET and C#</MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://github.com/MindWorkAI/ERI">ERI repository with example implementation in .NET and C#</MudListItem>
     <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://mindworkai.org/swagger-ui.html">Interactive documentation aka Swagger UI</MudListItem>
 </MudList>
 
 <PreviewPrototype/>
 <div class="mb-6"></div>
 
-<MudTextField T="string" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="EDI server name" HelperText="Please give your EDI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
-<MudTextField T="string" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="EDI server description" HelperText="Please provide a brief description of your EDI server. Describe or explain what your EDI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="ERI server name" HelperText="Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField T="string" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="ERI server description" HelperText="Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudSelect T="EDIVersion" @bind-Value="@this.selectedEDIVersion" Label="EDI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateEDIVersion">
-        @foreach (var version in Enum.GetValues<EDIVersion>())
+    <MudSelect T="ERIVersion" @bind-Value="@this.selectedERIVersion" Label="ERI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateERIVersion">
+        @foreach (var version in Enum.GetValues<ERIVersion>())
         {
             <MudSelectItem Value="@version">@version</MudSelectItem>
         }
     </MudSelect>
-    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedEDIVersion.WasSpecificationSelected())" Href="@this.selectedEDIVersion.SpecificationURL()" Target="_blank">
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedERIVersion.WasSpecificationSelected())" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
         <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2"/> Download specification
     </MudButton>
 </MudStack>
@@ -76,7 +76,7 @@
         @if (this.dataSourcePort < 1024)
         {
             <MudText Typo="Typo.body2">
-                <b>Warning:</b> Ports below 1024 are reserved for system services. Your EDI server need to run with elevated permissions (root user).
+                <b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
             </MudText>
         }
     </div>
@@ -104,7 +104,7 @@
 
 @if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))
 {
-    <MudSelect T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="Operating system on which your EDI will run" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
+    <MudSelect T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="Operating system on which your ERI will run" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
         @foreach (var os in Enum.GetValues<OperatingSystem>())
         {
             <MudSelectItem Value="@os">@os.Name()</MudSelectItem>

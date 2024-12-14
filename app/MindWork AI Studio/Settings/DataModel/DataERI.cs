@@ -1,14 +1,14 @@
-using AIStudio.Assistants.EDI;
+using AIStudio.Assistants.ERI;
 using AIStudio.Provider;
 
-using OperatingSystem = AIStudio.Assistants.EDI.OperatingSystem;
+using OperatingSystem = AIStudio.Assistants.ERI.OperatingSystem;
 
 namespace AIStudio.Settings.DataModel;
 
-public sealed class DataEDI
+public sealed class DataERI
 {
     /// <summary>
-    /// Preselect any EDI options?
+    /// Preselect any ERI options?
     /// </summary>
     public bool PreselectOptions { get; set; }
 
@@ -23,12 +23,12 @@ public sealed class DataEDI
     public string PreselectedServerDescription { get; set; } = string.Empty;
     
     /// <summary>
-    /// Preselect the EDI version?
+    /// Preselect the ERI version?
     /// </summary>
-    public EDIVersion PreselectedEDIVersion { get; set; } = EDIVersion.NONE;
+    public ERIVersion PreselectedERIVersion { get; set; } = ERIVersion.NONE;
     
     /// <summary>
-    /// Preselect the language for implementing the EDI?
+    /// Preselect the language for implementing the ERI?
     /// </summary>
     public ProgrammingLanguages PreselectedProgrammingLanguage { get; set; }
 

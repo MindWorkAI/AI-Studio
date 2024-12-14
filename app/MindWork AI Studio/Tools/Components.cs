@@ -17,7 +17,7 @@ public enum Components
     MY_TASKS_ASSISTANT,
     JOB_POSTING_ASSISTANT,
     BIAS_DAY_ASSISTANT,
-    EDI_ASSISTANT,
+    ERI_ASSISTANT,
     
     CHAT,
 }
