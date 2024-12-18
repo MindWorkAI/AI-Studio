@@ -20,20 +20,11 @@
 <PreviewPrototype/>
 <div class="mb-6"></div>
 
+<MudText Typo="Typo.h4" Class="mb-1">
+    Common ERI server settings
+</MudText>
 <MudTextField T="string" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="ERI server name" HelperText="Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 <MudTextField T="string" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="ERI server description" HelperText="Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
-
-<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudSelect T="ERIVersion" @bind-Value="@this.selectedERIVersion" Label="ERI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateERIVersion">
-        @foreach (var version in Enum.GetValues<ERIVersion>())
-        {
-            <MudSelectItem Value="@version">@version</MudSelectItem>
-        }
-    </MudSelect>
-    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedERIVersion.WasSpecificationSelected())" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
-        <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2"/> Download specification
-    </MudButton>
-</MudStack>
 
 <MudStack Row="@true" Class="mb-3">
     <MudSelect T="ProgrammingLanguages" @bind-Value="@this.selectedProgrammingLanguage" AdornmentIcon="@Icons.Material.Filled.Code" Adornment="Adornment.Start" Label="Programming language" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateProgrammingLanguage">
@@ -47,6 +38,22 @@
         <MudTextField T="string" @bind-Text="@this.otherProgrammingLanguage" Validation="@this.ValidateOtherLanguage" Label="Other language" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudSelect T="ERIVersion" @bind-Value="@this.selectedERIVersion" Label="ERI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateERIVersion">
+        @foreach (var version in Enum.GetValues<ERIVersion>())
+        {
+            <MudSelectItem Value="@version">@version</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedERIVersion.WasSpecificationSelected())" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
+        <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2"/> Download specification
+    </MudButton>
+</MudStack>
+
+<MudText Typo="Typo.h4" Class="mt-6 mb-3">
+    Data source settings
+</MudText>
 
 <MudStack Row="@false" Spacing="1" Class="mb-3">
     <MudSelect T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource" SelectedValuesChanged="@this.DataSourceWasChanged">
@@ -82,6 +89,10 @@
     </div>
 }
 
+<MudText Typo="Typo.h4" Class="mt-6 mb-3">
+    Authentication settings
+</MudText>
+
 <MudStack Row="@false" Spacing="1" Class="mb-1">
     <MudSelectExtended
         T="Auth"
@@ -111,6 +122,10 @@
         }
     </MudSelect>
 }
+
+<MudText Typo="Typo.h4" Class="mt-6 mb-1">
+    Data retrieval settings
+</MudText>
 
 <MudTextField T="string" @bind-Text="@this.retrievalDescription" Validation="@this.ValidateRetrievalDescription" Label="Describe your data retrieval process" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="6" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 <MudTextField T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
