@@ -55,6 +55,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.selectedAuthenticationMethods = [];
             this.authDescription = string.Empty;
             this.selectedOperatingSystem = OperatingSystem.NONE;
+            this.allowedLLMProviders = AllowedLLMProviders.NONE;
             this.retrievalDescription = string.Empty;
             this.additionalLibraries = string.Empty;
         }
@@ -80,6 +81,7 @@ public partial class AssistantERI : AssistantBaseCore
             
             this.authDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription;
             this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
+            this.allowedLLMProviders = this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders;
             this.retrievalDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription;
             this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
             return true;
@@ -101,6 +103,7 @@ public partial class AssistantERI : AssistantBaseCore
     private IEnumerable<Auth> selectedAuthenticationMethods = new HashSet<Auth>();
     private string authDescription = string.Empty;
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
+    private AllowedLLMProviders allowedLLMProviders = AllowedLLMProviders.NONE;
     private string retrievalDescription = string.Empty;
     private string additionalLibraries = string.Empty;
     
@@ -280,6 +283,14 @@ public partial class AssistantERI : AssistantBaseCore
         
         if(os is OperatingSystem.NONE)
             return "Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.";
+        
+        return null;
+    }
+    
+    private string? ValidateAllowedLLMProviders(AllowedLLMProviders provider)
+    {
+        if(provider == AllowedLLMProviders.NONE)
+            return "Please select which types of LLMs users are allowed to use with the data from this ERI server.";
         
         return null;
     }

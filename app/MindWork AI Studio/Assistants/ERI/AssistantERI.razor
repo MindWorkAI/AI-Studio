@@ -123,6 +123,17 @@
     </MudSelect>
 }
 
+<MudText Typo="Typo.h4" Class="mt-6 mb-3">
+    Data protection settings
+</MudText>
+
+<MudSelect T="AllowedLLMProviders" @bind-Value="@this.allowedLLMProviders" Label="Allowed LLM providers for this data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateAllowedLLMProviders" Class="mb-1">
+    @foreach (var option in Enum.GetValues<AllowedLLMProviders>())
+    {
+        <MudSelectItem Value="@option">@option.Name()</MudSelectItem>
+    }
+</MudSelect>
+
 <MudText Typo="Typo.h4" Class="mt-6 mb-1">
     Data retrieval settings
 </MudText>

@@ -78,6 +78,11 @@ public sealed class DataERI
     public OperatingSystem PreselectedOperatingSystem { get; set; } = OperatingSystem.NONE;
 
     /// <summary>
+    /// Do you want to preselect which LLM providers are allowed?
+    /// </summary>
+    public AllowedLLMProviders PreselectedAllowedLLMProviders { get; set; } = AllowedLLMProviders.NONE;
+
+    /// <summary>
     /// Do you want to preselect a retrieval description?
     /// </summary>
     public string PreselectedRetrievalDescription { get; set; } = string.Empty;
