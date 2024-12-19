@@ -6,7 +6,7 @@
 
 <InnerScrolling HeaderHeight="6em">
     <ChildContent>
-        <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" Class="pr-2">
+        <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
             <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
                 @this.Description
             </MudText>

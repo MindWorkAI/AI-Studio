@@ -1,3 +1,4 @@
+@using AIStudio.Settings.DataModel
 @attribute [Route(Routes.ASSISTANTS)]
 
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
@@ -41,6 +42,10 @@
     </MudText>
     <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
         <AssistantBlock Name="Coding" Description="Get coding and debugging support from a LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
+        @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+        {
+            <AssistantBlock Name="ERI Server" Description="Generate an ERI server to integrate business systems." Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
+        }
     </MudStack>
     
 </InnerScrolling>

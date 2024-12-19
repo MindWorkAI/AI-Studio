@@ -4,7 +4,10 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
+using MudBlazor.Utilities;
+
 using RustService = AIStudio.Tools.RustService;
+using Timer = System.Timers.Timer;
 
 namespace AIStudio.Assistants;
 
@@ -91,8 +94,10 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
-    
     protected ChatThread? chatThread;
+    
+    private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
+    
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -101,6 +106,13 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
 
     protected override async Task OnInitializedAsync()
     {
+        this.formChangeTimer.AutoReset = false;
+        this.formChangeTimer.Elapsed += async (_, _) =>
+        {
+            this.formChangeTimer.Stop();
+            await this.OnFormChange();
+        };
+        
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
@@ -161,7 +173,23 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         
         return null;
     }
+
+    private void TriggerFormChange(FormFieldChangedEventArgs _)
+    {
+        this.formChangeTimer.Stop();
+        this.formChangeTimer.Start();
+    }
     
+    /// <summary>
+    /// This method is called after any form field has changed.
+    /// </summary>
+    /// <remarks>
+    /// This method is called after a delay of 1.6 seconds. This is to prevent
+    /// the method from being called too often. This method is called after
+    /// the user has stopped typing or selecting options.
+    /// </remarks>
+    protected virtual Task OnFormChange() => Task.CompletedTask;
+
     protected void CreateChatThread()
     {
         this.chatThread = new()
@@ -341,6 +369,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
+        this.formChangeTimer.Dispose();
     }
 
     #endregion
