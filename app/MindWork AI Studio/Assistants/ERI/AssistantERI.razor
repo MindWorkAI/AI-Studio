@@ -20,7 +20,19 @@
 <PreviewPrototype/>
 <div class="mb-6"></div>
 
-<MudText Typo="Typo.h4" Class="mb-1">
+<MudText Typo="Typo.h4" Class="mb-3">
+    Auto Save
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to
+    regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be
+    automatically saved. Would you like this?
+</MudText>
+
+<MudTextSwitch Label="Should we automatically save any input made?" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
+
+<MudText Typo="Typo.h4" Class="mt-6 mb-1">
     Common ERI server settings
 </MudText>
 <MudTextField T="string" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="ERI server name" HelperText="Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>

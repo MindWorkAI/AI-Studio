@@ -8,9 +8,14 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataERI
 {
     /// <summary>
+    /// Should we automatically save any input made in the ERI assistant?
+    /// </summary>
+    public bool AutoSaveChanges { get; set; } = true;
+
+    /// <summary>
     /// Preselect any ERI options?
     /// </summary>
-    public bool PreselectOptions { get; set; }
+    public bool PreselectOptions { get; set; } = true;
 
     /// <summary>
     /// Preselect the server name?

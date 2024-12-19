@@ -63,6 +63,7 @@ public partial class AssistantERI : AssistantBaseCore
     
     protected override bool MightPreselectValues()
     {
+        this.autoSave = this.SettingsManager.ConfigurationData.ERI.AutoSaveChanges;
         if (this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
         {
             this.serverName = this.SettingsManager.ConfigurationData.ERI.PreselectedServerName;
@@ -90,6 +91,36 @@ public partial class AssistantERI : AssistantBaseCore
         return false;
     }
     
+    protected override async Task OnFormChange()
+    {
+        await this.AutoSave();
+    }
+
+    private async Task AutoSave()
+    {
+        if(!this.autoSave)
+            return;
+        
+        this.SettingsManager.ConfigurationData.ERI.PreselectedServerName = this.serverName;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedServerDescription = this.serverDescription;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedERIVersion = this.selectedERIVersion;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedProgrammingLanguage = this.selectedProgrammingLanguage;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedOtherProgrammingLanguage = this.otherProgrammingLanguage;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSource = this.selectedDataSource;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceProductName = this.dataSourceProductName;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedOtherDataSource = this.otherDataSource;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceHostname = this.dataSourceHostname;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort = this.dataSourcePort;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedAuthMethods = [..this.selectedAuthenticationMethods];
+        this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription = this.authDescription;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders = this.allowedLLMProviders;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription = this.retrievalDescription;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries = this.additionalLibraries;
+        await this.SettingsManager.StoreSettings();
+    }
+    
+    private bool autoSave;
     private string serverName = string.Empty;
     private string serverDescription = string.Empty;
     private ERIVersion selectedERIVersion = ERIVersion.V1;
@@ -303,7 +334,9 @@ public partial class AssistantERI : AssistantBaseCore
 
     private bool IsAuthDescriptionOptional()
     {
-        var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
+        if (this.selectedAuthenticationMethods is not HashSet<Auth> authenticationMethods)
+            return true;
+        
         if(authenticationMethods.Count > 1)
             return false;
         
@@ -359,6 +392,7 @@ public partial class AssistantERI : AssistantBaseCore
 
     private async Task GenerateServer()
     {
+        await this.AutoSave();
         await this.form!.Validate();
         if (!this.inputIsValid)
             return;
