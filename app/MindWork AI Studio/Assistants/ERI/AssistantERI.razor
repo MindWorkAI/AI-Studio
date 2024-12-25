@@ -146,6 +146,57 @@
     }
 </MudSelect>
 
+<MudText Typo="Typo.h4" Class="mt-6 mb-3">
+    Embedding settings
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector
+    space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't
+    have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You
+    store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't
+    need embeddings.
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries
+    or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
+</MudText>
+
+<MudTable Items="@this.embeddings" Hover="@true" Class="border-dashed border rounded-lg">
+    <ColGroup>
+        <col/>
+        <col style="width: 34em;"/>
+        <col style="width: 34em;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh Style="text-align: left;">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.EmbeddingName</MudTd>
+        <MudTd>@context.EmbeddingType</MudTd>
+        <MudTd Style="text-align: left;">
+            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditEmbedding(context)">
+                Edit
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteEmbedding(context)">
+                Delete
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if(this.embeddings.Count == 0)
+{
+    <MudText Typo="Typo.h6" Class="mt-3">No embeddings configured yet.</MudText>
+}
+
+<MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbedding">
+    Add Embedding
+</MudButton>
+
 <MudText Typo="Typo.h4" Class="mt-6 mb-1">
     Data retrieval settings
 </MudText>

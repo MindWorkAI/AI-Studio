@@ -1,6 +1,9 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.ERI;
 
@@ -8,6 +11,9 @@ public partial class AssistantERI : AssistantBaseCore
 {
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     public override Tools.Components Component => Tools.Components.ERI_ASSISTANT;
     
@@ -56,6 +62,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.authDescription = string.Empty;
             this.selectedOperatingSystem = OperatingSystem.NONE;
             this.allowedLLMProviders = AllowedLLMProviders.NONE;
+            this.embeddings = new();
             this.retrievalDescription = string.Empty;
             this.additionalLibraries = string.Empty;
         }
@@ -83,6 +90,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.authDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription;
             this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
             this.allowedLLMProviders = this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders;
+            this.embeddings = this.SettingsManager.ConfigurationData.ERI.EmbeddingInfos;
             this.retrievalDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription;
             this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
             return true;
@@ -115,6 +123,7 @@ public partial class AssistantERI : AssistantBaseCore
         this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription = this.authDescription;
         this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders = this.allowedLLMProviders;
+        this.SettingsManager.ConfigurationData.ERI.EmbeddingInfos = this.embeddings;
         this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription = this.retrievalDescription;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries = this.additionalLibraries;
         await this.SettingsManager.StoreSettings();
@@ -135,6 +144,7 @@ public partial class AssistantERI : AssistantBaseCore
     private string authDescription = string.Empty;
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
     private AllowedLLMProviders allowedLLMProviders = AllowedLLMProviders.NONE;
+    private List<EmbeddingInfo> embeddings = new();
     private string retrievalDescription = string.Empty;
     private string additionalLibraries = string.Empty;
     
@@ -388,6 +398,62 @@ public partial class AssistantERI : AssistantBaseCore
             default:
                 return true;
         }
+    }
+    
+    private async Task AddEmbedding()
+    {
+        var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
+        {
+            { x => x.IsEditing, false },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Add Embedding", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var addedEmbedding = (EmbeddingInfo)dialogResult.Data!;
+        this.embeddings.Add(addedEmbedding);
+        await this.AutoSave();
+    }
+    
+    private async Task EditEmbedding(EmbeddingInfo embeddingInfo)
+    {
+        var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
+        {
+            { x => x.DataEmbeddingName, embeddingInfo.EmbeddingName },
+            { x => x.DataEmbeddingType, embeddingInfo.EmbeddingType },
+            { x => x.DataDescription, embeddingInfo.Description },
+            { x => x.DataUsedWhen, embeddingInfo.UsedWhen },
+            { x => x.DataLink, embeddingInfo.Link },
+            { x => x.IsEditing, true },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Edit Embedding", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var editedEmbedding = (EmbeddingInfo)dialogResult.Data!;
+        
+        this.embeddings[this.embeddings.IndexOf(embeddingInfo)] = editedEmbedding;
+        await this.AutoSave();
+    }
+    
+    private async Task DeleteEmbedding(EmbeddingInfo embeddingInfo)
+    {
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete the embedding '{embeddingInfo.EmbeddingName}'?" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Embedding", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+        
+        this.embeddings.Remove(embeddingInfo);
+        await this.AutoSave();
     }
 
     private async Task GenerateServer()

@@ -88,6 +88,11 @@ public sealed class DataERI
     public AllowedLLMProviders PreselectedAllowedLLMProviders { get; set; } = AllowedLLMProviders.NONE;
 
     /// <summary>
+    /// Do you want to predefine any embedding information?
+    /// </summary>
+    public List<EmbeddingInfo> EmbeddingInfos { get; set; } = new();
+
+    /// <summary>
     /// Do you want to preselect a retrieval description?
     /// </summary>
     public string PreselectedRetrievalDescription { get; set; } = string.Empty;
