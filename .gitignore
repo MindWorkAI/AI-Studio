@@ -147,3 +147,5 @@ orleans.codegen.cs
 **/.idea/**/dynamic.xml
 **/.idea/**/uiDesigner.xml
 **/.idea/**/dbnavigator.xml
+/.vs
+/app/.vs
