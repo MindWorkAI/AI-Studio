@@ -437,7 +437,7 @@ public partial class AssistantERI : AssistantBaseCore
             { x => x.DataUsedWhen, embeddingInfo.UsedWhen },
             { x => x.DataLink, embeddingInfo.Link },
             
-            { x => x.UsedEmbeddingMethodNames, this.embeddings.Select(n => n.EmbeddingName).ToList() },
+            { x => x.UsedEmbeddingMethodNames, this.embeddings.Where(n => n != embeddingInfo).Select(n => n.EmbeddingName).ToList() },
             { x => x.IsEditing, true },
         };
 
@@ -505,7 +505,7 @@ public partial class AssistantERI : AssistantBaseCore
             
             { x => x.IsEditing, true },
             { x => x.AvailableEmbeddings, this.embeddings },
-            { x => x.UsedRetrievalProcessNames, this.retrievalProcesses.Select(n => n.Name).ToList() },
+            { x => x.UsedRetrievalProcessNames, this.retrievalProcesses.Where(n => n != retrievalInfo).Select(n => n.Name).ToList() },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<RetrievalProcessDialog>("Edit Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
