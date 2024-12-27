@@ -38,7 +38,7 @@ public partial class EmbeddingMethodDialog : ComponentBase
     /// A link to the embedding documentation or the source code. Might be null, which means no link is provided.
     /// </summary>
     [Parameter]
-    public string? DataLink { get; set; }
+    public string DataLink { get; set; } = string.Empty;
     
     /// <summary>
     /// Should the dialog be in editing mode?
