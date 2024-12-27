@@ -58,6 +58,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.otherDataSource = string.Empty;
             this.dataSourceHostname = string.Empty;
             this.dataSourcePort = null;
+            this.userTypedPort = false;
             this.selectedAuthenticationMethods = [];
             this.authDescription = string.Empty;
             this.selectedOperatingSystem = OperatingSystem.NONE;
@@ -83,6 +84,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.otherDataSource = this.SettingsManager.ConfigurationData.ERI.PreselectedOtherDataSource;
             this.dataSourceHostname = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceHostname;
             this.dataSourcePort = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort;
+            this.userTypedPort = this.SettingsManager.ConfigurationData.ERI.UserTypedPort;
 
             var authMethods = new HashSet<Auth>(this.SettingsManager.ConfigurationData.ERI.PreselectedAuthMethods);
             this.selectedAuthenticationMethods = authMethods;
@@ -119,6 +121,7 @@ public partial class AssistantERI : AssistantBaseCore
         this.SettingsManager.ConfigurationData.ERI.PreselectedOtherDataSource = this.otherDataSource;
         this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceHostname = this.dataSourceHostname;
         this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort = this.dataSourcePort;
+        this.SettingsManager.ConfigurationData.ERI.UserTypedPort = this.userTypedPort;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAuthMethods = [..this.selectedAuthenticationMethods];
         this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription = this.authDescription;
         this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
@@ -140,6 +143,7 @@ public partial class AssistantERI : AssistantBaseCore
     private string dataSourceProductName = string.Empty;
     private string dataSourceHostname = string.Empty;
     private int? dataSourcePort;
+    private bool userTypedPort;
     private IEnumerable<Auth> selectedAuthenticationMethods = new HashSet<Auth>();
     private string authDescription = string.Empty;
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
@@ -268,10 +272,23 @@ public partial class AssistantERI : AssistantBaseCore
         
         return null;
     }
+
+    private void DataSourcePortWasTyped()
+    {
+        this.userTypedPort = true;
+    }
     
     private void DataSourceWasChanged()
     {
-        if(this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort is not null)
+        if (this.selectedDataSource is DataSources.NONE)
+        {
+            this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort = null;
+            this.dataSourcePort = null;
+            this.userTypedPort = false;
+            return;
+        }
+        
+        if(this.userTypedPort)
             return;
         
         //

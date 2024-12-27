@@ -68,6 +68,11 @@ public sealed class DataERI
     public int? PreselectedDataSourcePort { get; set; }
 
     /// <summary>
+    /// Did the user type the port number?
+    /// </summary>
+    public bool UserTypedPort { get; set; } = false;
+
+    /// <summary>
     /// Preselect any authentication methods?
     /// </summary>
     public HashSet<Auth> PreselectedAuthMethods { get; set; } = [];

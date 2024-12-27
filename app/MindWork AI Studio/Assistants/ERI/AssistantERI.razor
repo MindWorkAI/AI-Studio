@@ -90,7 +90,7 @@
     <div class="mb-3">
         <MudStack Row="@true">
             <MudTextField T="string" @bind-Text="@this.dataSourceHostname" Label="Data source: hostname" Validation="@this.ValidateHostname" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-            <MudNumericField Label="Data source: port" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            <MudNumericField Label="Data source: port" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyUp="@(() => this.DataSourcePortWasTyped())"/>
         </MudStack>
         @if (this.dataSourcePort < 1024)
         {
