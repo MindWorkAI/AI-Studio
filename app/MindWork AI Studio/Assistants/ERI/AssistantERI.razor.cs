@@ -412,7 +412,7 @@ public partial class AssistantERI : AssistantBaseCore
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Add Embedding", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Add Embedding Method", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -434,7 +434,7 @@ public partial class AssistantERI : AssistantBaseCore
             { x => x.IsEditing, true },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Edit Embedding", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Edit Embedding Method", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
