@@ -64,6 +64,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.selectedOperatingSystem = OperatingSystem.NONE;
             this.allowedLLMProviders = AllowedLLMProviders.NONE;
             this.embeddings = new();
+            this.retrievalProcesses = new();
             this.additionalLibraries = string.Empty;
         }
     }
@@ -92,6 +93,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
             this.allowedLLMProviders = this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders;
             this.embeddings = this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos;
+            this.retrievalProcesses = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalInfos;
             this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
             return true;
         }
@@ -125,6 +127,7 @@ public partial class AssistantERI : AssistantBaseCore
         this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders = this.allowedLLMProviders;
         this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos = this.embeddings;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalInfos = this.retrievalProcesses;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries = this.additionalLibraries;
         await this.SettingsManager.StoreSettings();
     }
@@ -146,6 +149,7 @@ public partial class AssistantERI : AssistantBaseCore
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
     private AllowedLLMProviders allowedLLMProviders = AllowedLLMProviders.NONE;
     private List<EmbeddingInfo> embeddings = new();
+    private List<RetrievalInfo> retrievalProcesses = new();
     private string additionalLibraries = string.Empty;
     
     private string? ValidateServerName(string name)
@@ -458,6 +462,65 @@ public partial class AssistantERI : AssistantBaseCore
             return;
         
         this.embeddings.Remove(embeddingInfo);
+        await this.AutoSave();
+    }
+    
+    private async Task AddRetrievalProcess()
+    {
+        var dialogParameters = new DialogParameters<RetrievalProcessDialog>
+        {
+            { x => x.IsEditing, false },
+            { x => x.AvailableEmbeddings, this.embeddings },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<RetrievalProcessDialog>("Add Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var addedRetrievalProcess = (RetrievalInfo)dialogResult.Data!;
+        this.retrievalProcesses.Add(addedRetrievalProcess);
+        await this.AutoSave();
+    }
+    
+    private async Task EditRetrievalProcess(RetrievalInfo retrievalInfo)
+    {
+        var dialogParameters = new DialogParameters<RetrievalProcessDialog>
+        {
+            { x => x.DataName, retrievalInfo.Name },
+            { x => x.DataDescription, retrievalInfo.Description },
+            { x => x.DataLink, retrievalInfo.Link },
+            { x => x.DataParametersDescription, retrievalInfo.ParametersDescription },
+            { x => x.DataEmbeddings, retrievalInfo.Embeddings?.ToHashSet() },
+            
+            { x => x.IsEditing, true },
+            { x => x.AvailableEmbeddings, this.embeddings },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Edit Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var editedRetrievalProcess = (RetrievalInfo)dialogResult.Data!;
+        
+        this.retrievalProcesses[this.retrievalProcesses.IndexOf(retrievalInfo)] = editedRetrievalProcess;
+        await this.AutoSave();
+    }
+    
+    private async Task DeleteRetrievalProcess(RetrievalInfo retrievalInfo)
+    {
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete the retrieval process '{retrievalInfo.Name}'?" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+        
+        this.retrievalProcesses.Remove(retrievalInfo);
         await this.AutoSave();
     }
 

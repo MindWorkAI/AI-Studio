@@ -201,6 +201,44 @@
     Data retrieval settings
 </MudText>
 
+<MudText Typo="Typo.body1" Class="mb-2">
+    For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process.
+    You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows
+    you to test with beta users which process works better. Or you might generally want to give users the choice so they can select
+    the process that best suits their circumstances.
+</MudText>
+
+<MudTable Items="@this.retrievalProcesses" Hover="@true" Class="border-dashed border rounded-lg">
+    <ColGroup>
+        <col/>
+        <col style="width: 34em;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh Style="text-align: left;">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd Style="text-align: left;">
+            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditRetrievalProcess(context)">
+                Edit
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteRetrievalProcess(context)">
+                Delete
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if(this.retrievalProcesses.Count == 0)
+{
+    <MudText Typo="Typo.h6" Class="mt-3">No retrieval process configured yet.</MudText>
+}
+
+<MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddRetrievalProcess">
+    Add Retrieval Process
+</MudButton>
+
 <MudText Typo="Typo.body1" Class="mb-1">
     You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text
     mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here.

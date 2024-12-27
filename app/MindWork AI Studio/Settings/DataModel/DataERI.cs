@@ -98,7 +98,10 @@ public sealed class DataERI
     public List<EmbeddingInfo> PreselectedEmbeddingInfos { get; set; } = new();
 
     /// <summary>
+    /// Do you want to predefine any retrieval information?
     /// </summary>
+    public List<RetrievalInfo> PreselectedRetrievalInfos { get; set; } = new();
+    
     /// <summary>
     /// Do you want to preselect any additional libraries?
     /// </summary>
