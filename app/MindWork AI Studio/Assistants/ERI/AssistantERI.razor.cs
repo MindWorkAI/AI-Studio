@@ -92,8 +92,8 @@ public partial class AssistantERI : AssistantBaseCore
             this.authDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription;
             this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
             this.allowedLLMProviders = this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders;
-            this.embeddings = this.SettingsManager.ConfigurationData.ERI.EmbeddingInfos;
             this.retrievalDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription;
+            this.embeddings = this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos;
             this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
             return true;
         }
@@ -126,8 +126,8 @@ public partial class AssistantERI : AssistantBaseCore
         this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription = this.authDescription;
         this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders = this.allowedLLMProviders;
-        this.SettingsManager.ConfigurationData.ERI.EmbeddingInfos = this.embeddings;
         this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription = this.retrievalDescription;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos = this.embeddings;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries = this.additionalLibraries;
         await this.SettingsManager.StoreSettings();
     }
