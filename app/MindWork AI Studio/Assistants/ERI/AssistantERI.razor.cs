@@ -414,6 +414,7 @@ public partial class AssistantERI : AssistantBaseCore
         var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
         {
             { x => x.IsEditing, false },
+            { x => x.UsedEmbeddingMethodNames, this.embeddings.Select(n => n.EmbeddingName).ToList() },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Add Embedding Method", dialogParameters, DialogOptions.FULLSCREEN);
@@ -435,6 +436,8 @@ public partial class AssistantERI : AssistantBaseCore
             { x => x.DataDescription, embeddingInfo.Description },
             { x => x.DataUsedWhen, embeddingInfo.UsedWhen },
             { x => x.DataLink, embeddingInfo.Link },
+            
+            { x => x.UsedEmbeddingMethodNames, this.embeddings.Select(n => n.EmbeddingName).ToList() },
             { x => x.IsEditing, true },
         };
 
@@ -471,6 +474,7 @@ public partial class AssistantERI : AssistantBaseCore
         {
             { x => x.IsEditing, false },
             { x => x.AvailableEmbeddings, this.embeddings },
+            { x => x.UsedRetrievalProcessNames, this.retrievalProcesses.Select(n => n.Name).ToList() },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<RetrievalProcessDialog>("Add Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
@@ -495,6 +499,7 @@ public partial class AssistantERI : AssistantBaseCore
             
             { x => x.IsEditing, true },
             { x => x.AvailableEmbeddings, this.embeddings },
+            { x => x.UsedRetrievalProcessNames, this.retrievalProcesses.Select(n => n.Name).ToList() },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Edit Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);

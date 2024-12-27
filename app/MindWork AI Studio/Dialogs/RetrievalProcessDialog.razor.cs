@@ -47,6 +47,12 @@ public partial class RetrievalProcessDialog : ComponentBase
     /// </summary>
     [Parameter]
     public IReadOnlyList<EmbeddingInfo> AvailableEmbeddings { get; set; } = new List<EmbeddingInfo>();
+
+    /// <summary>
+    /// The retrieval process names that are already used. The user must choose a unique name.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<string> UsedRetrievalProcessNames { get; set; } = new List<string>();
     
     /// <summary>
     /// Should the dialog be in editing mode?
@@ -102,6 +108,9 @@ public partial class RetrievalProcessDialog : ComponentBase
         
         if (name.Length > 26)
             return "The retrieval process name must not be longer than 26 characters.";
+        
+        if (this.UsedRetrievalProcessNames.Contains(name))
+            return $"The retrieval process name '{name}' must be unique. Please choose a different name.";
         
         return null;
     }

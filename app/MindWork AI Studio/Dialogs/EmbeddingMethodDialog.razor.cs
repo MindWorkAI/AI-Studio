@@ -39,6 +39,12 @@ public partial class EmbeddingMethodDialog : ComponentBase
     /// </summary>
     [Parameter]
     public string DataLink { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The embedding method names that are already used. The user must choose a unique name.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<string> UsedEmbeddingMethodNames { get; set; } = new List<string>();
     
     /// <summary>
     /// Should the dialog be in editing mode?
@@ -88,6 +94,9 @@ public partial class EmbeddingMethodDialog : ComponentBase
         
         if (name.Length > 26)
             return "The embedding name must not be longer than 26 characters.";
+        
+        if (this.UsedEmbeddingMethodNames.Contains(name))
+            return $"The embedding method name '{name}' is already used. Please choose a unique name.";
         
         return null;
     }
