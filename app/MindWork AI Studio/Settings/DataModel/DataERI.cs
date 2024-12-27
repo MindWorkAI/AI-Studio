@@ -98,10 +98,7 @@ public sealed class DataERI
     public List<EmbeddingInfo> PreselectedEmbeddingInfos { get; set; } = new();
 
     /// <summary>
-    /// Do you want to preselect a retrieval description?
     /// </summary>
-    public string PreselectedRetrievalDescription { get; set; } = string.Empty;
-
     /// <summary>
     /// Do you want to preselect any additional libraries?
     /// </summary>

@@ -64,7 +64,6 @@ public partial class AssistantERI : AssistantBaseCore
             this.selectedOperatingSystem = OperatingSystem.NONE;
             this.allowedLLMProviders = AllowedLLMProviders.NONE;
             this.embeddings = new();
-            this.retrievalDescription = string.Empty;
             this.additionalLibraries = string.Empty;
         }
     }
@@ -92,7 +91,6 @@ public partial class AssistantERI : AssistantBaseCore
             this.authDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription;
             this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
             this.allowedLLMProviders = this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders;
-            this.retrievalDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription;
             this.embeddings = this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos;
             this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
             return true;
@@ -126,7 +124,6 @@ public partial class AssistantERI : AssistantBaseCore
         this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription = this.authDescription;
         this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders = this.allowedLLMProviders;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalDescription = this.retrievalDescription;
         this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos = this.embeddings;
         this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries = this.additionalLibraries;
         await this.SettingsManager.StoreSettings();
@@ -149,7 +146,6 @@ public partial class AssistantERI : AssistantBaseCore
     private OperatingSystem selectedOperatingSystem = OperatingSystem.NONE;
     private AllowedLLMProviders allowedLLMProviders = AllowedLLMProviders.NONE;
     private List<EmbeddingInfo> embeddings = new();
-    private string retrievalDescription = string.Empty;
     private string additionalLibraries = string.Empty;
     
     private string? ValidateServerName(string name)
@@ -394,14 +390,6 @@ public partial class AssistantERI : AssistantBaseCore
             return $"You have selected 1 authentication method";
         
         return $"You have selected {selectedValues.Count} authentication methods";
-    }
-    
-    private string? ValidateRetrievalDescription(string description)
-    {
-        if(string.IsNullOrWhiteSpace(description))
-            return "Please describe how the data retrieval process should work. This is important for the integration of the data source into AI Studio by means of the ERI.";
-        
-        return null;
     }
 
     private bool NeedHostnamePort()
