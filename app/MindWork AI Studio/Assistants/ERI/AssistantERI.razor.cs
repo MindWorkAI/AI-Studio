@@ -454,9 +454,13 @@ public partial class AssistantERI : AssistantBaseCore
     
     private async Task DeleteEmbedding(EmbeddingInfo embeddingInfo)
     {
+        var message = this.retrievalProcesses.Any(n => n.Embeddings?.Contains(embeddingInfo) is true)
+            ? $"The embedding '{embeddingInfo.EmbeddingName}' is used in one or more retrieval processes. Are you sure you want to delete it?"
+            : $"Are you sure you want to delete the embedding '{embeddingInfo.EmbeddingName}'?";
+        
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete the embedding '{embeddingInfo.EmbeddingName}'?" },
+            { "Message", message },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Embedding", dialogParameters, DialogOptions.FULLSCREEN);
@@ -464,7 +468,9 @@ public partial class AssistantERI : AssistantBaseCore
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
+        this.retrievalProcesses.ForEach(n => n.Embeddings?.Remove(embeddingInfo));
         this.embeddings.Remove(embeddingInfo);
+        
         await this.AutoSave();
     }
     
