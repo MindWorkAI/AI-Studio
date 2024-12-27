@@ -201,10 +201,23 @@
     Data retrieval settings
 </MudText>
 
+<MudText Typo="Typo.body1" Class="mb-1">
+    You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text
+    mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here.
+    It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these
+    libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe
+    the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
+</MudText>
+
 <MudTextField T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <MudText Typo="Typo.h4" Class="mt-9 mb-1">
     Provider selection for generation
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-1">
+    The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task.
+    Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
 </MudText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
