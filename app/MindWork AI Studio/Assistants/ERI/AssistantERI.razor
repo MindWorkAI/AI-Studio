@@ -30,7 +30,14 @@
     automatically saved. Would you like this?
 </MudText>
 
-<MudTextSwitch Label="Should we automatically save any input made?" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
+@if(!this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
+{
+    <MudText Typo="Typo.body1" Class="mb-3">
+        Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.
+    </MudText>
+}
+
+<MudTextSwitch Label="Should we automatically save any input made?" Disabled="@(!this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
 
 <MudText Typo="Typo.h4" Class="mt-6 mb-1">
     Common ERI server settings

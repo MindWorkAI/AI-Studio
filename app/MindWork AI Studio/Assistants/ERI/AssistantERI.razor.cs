@@ -108,7 +108,7 @@ public partial class AssistantERI : AssistantBaseCore
 
     private async Task AutoSave()
     {
-        if(!this.autoSave)
+        if(!this.autoSave || !this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
             return;
         
         this.SettingsManager.ConfigurationData.ERI.PreselectedServerName = this.serverName;
