@@ -332,6 +332,23 @@
                 <ConfigurationSelect OptionDescription="Preselect one of your profiles?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Coding.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Coding.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Coding.PreselectedProfile = selectedValue)" OptionHelp="Would you like to preselect one of your profiles?"/>
             </MudPaper>
         </ExpansionPanel>
+
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.PrivateConnectivity" HeaderText="Assistant: ERI Server Options">
+            <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+                <ConfigurationOption OptionDescription="Preselect ERI server options?" LabelOn="ERI server options are preselected" LabelOff="No ERI server options are preselected" State="@(() => this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.ERI.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect some ERI server options."/>
+                <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ERI.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ERI.MinimumProviderConfidence = selectedValue)"/>
+                <ConfigurationSelect OptionDescription="Preselect one of your profiles?" Disabled="@(() => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ERI.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ERI.PreselectedProfile = selectedValue)" OptionHelp="Would you like to preselect one of your profiles?"/>
+
+                <MudText Typo="Typo.body1" Class="mb-3">
+                    Most ERI server options can be customized and saved directly in the ERI server assistant.
+                    For this, the ERI server assistant has an auto-save function.
+                </MudText>
+                
+                <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PrivateConnectivity" Color="Color.Default" Href="@Routes.ASSISTANT_ERI">
+                    Switch to ERI server assistant
+                </MudButton>
+            </MudPaper>
+        </ExpansionPanel>
         
         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TextSnippet" HeaderText="Assistant: Text Summarizer Options">
             <ConfigurationOption OptionDescription="Hide the web content reader?" LabelOn="Web content reader is hidden" LabelOff="Web content reader is shown" State="@(() => this.SettingsManager.ConfigurationData.TextSummarizer.HideWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.TextSummarizer.HideWebContentReader = updatedState)" OptionHelp="When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use."/>
