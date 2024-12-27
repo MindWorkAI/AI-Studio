@@ -508,7 +508,7 @@ public partial class AssistantERI : AssistantBaseCore
             { x => x.UsedRetrievalProcessNames, this.retrievalProcesses.Select(n => n.Name).ToList() },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingMethodDialog>("Edit Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<RetrievalProcessDialog>("Edit Retrieval Process", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
