@@ -86,6 +86,9 @@ public partial class EmbeddingMethodDialog : ComponentBase
         if (string.IsNullOrWhiteSpace(name))
             return "The embedding name must not be empty. Please name the embedding.";
         
+        if (name.Length > 26)
+            return "The embedding name must not be longer than 26 characters.";
+        
         return null;
     }
     
@@ -93,6 +96,9 @@ public partial class EmbeddingMethodDialog : ComponentBase
     {
         if (string.IsNullOrWhiteSpace(type))
             return "The embedding type must not be empty. Please specify the embedding type.";
+        
+        if (type.Length > 56)
+            return "The embedding type must not be longer than 56 characters.";
         
         return null;
     }
