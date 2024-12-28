@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
@@ -38,7 +39,9 @@ public partial class AssistantERI : AssistantBaseCore
     protected override string SubmitText => "Create the ERI server";
 
     protected override Func<Task> SubmitAction => this.GenerateServer;
-    
+
+    protected override bool SubmitDisabled => this.IsNoneERIServerSelected;
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,
@@ -72,29 +75,29 @@ public partial class AssistantERI : AssistantBaseCore
     protected override bool MightPreselectValues()
     {
         this.autoSave = this.SettingsManager.ConfigurationData.ERI.AutoSaveChanges;
-        if (this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
+        if (this.SettingsManager.ConfigurationData.ERI.PreselectOptions && this.selectedERIServer is not null)
         {
-            this.serverName = this.SettingsManager.ConfigurationData.ERI.PreselectedServerName;
-            this.serverDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedServerDescription;
-            this.selectedERIVersion = this.SettingsManager.ConfigurationData.ERI.PreselectedERIVersion;
-            this.selectedProgrammingLanguage = this.SettingsManager.ConfigurationData.ERI.PreselectedProgrammingLanguage;
-            this.otherProgrammingLanguage = this.SettingsManager.ConfigurationData.ERI.PreselectedOtherProgrammingLanguage;
-            this.selectedDataSource = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSource;
-            this.dataSourceProductName = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceProductName;
-            this.otherDataSource = this.SettingsManager.ConfigurationData.ERI.PreselectedOtherDataSource;
-            this.dataSourceHostname = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceHostname;
-            this.dataSourcePort = this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort;
-            this.userTypedPort = this.SettingsManager.ConfigurationData.ERI.UserTypedPort;
+            this.serverName = this.selectedERIServer.ServerName;
+            this.serverDescription = this.selectedERIServer.ServerDescription;
+            this.selectedERIVersion = this.selectedERIServer.ERIVersion;
+            this.selectedProgrammingLanguage = this.selectedERIServer.ProgrammingLanguage;
+            this.otherProgrammingLanguage = this.selectedERIServer.OtherProgrammingLanguage;
+            this.selectedDataSource = this.selectedERIServer.DataSource;
+            this.dataSourceProductName = this.selectedERIServer.DataSourceProductName;
+            this.otherDataSource = this.selectedERIServer.OtherDataSource;
+            this.dataSourceHostname = this.selectedERIServer.DataSourceHostname;
+            this.dataSourcePort = this.selectedERIServer.DataSourcePort;
+            this.userTypedPort = this.selectedERIServer.UserTypedPort;
 
-            var authMethods = new HashSet<Auth>(this.SettingsManager.ConfigurationData.ERI.PreselectedAuthMethods);
+            var authMethods = new HashSet<Auth>(this.selectedERIServer.AuthMethods);
             this.selectedAuthenticationMethods = authMethods;
             
-            this.authDescription = this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription;
-            this.selectedOperatingSystem = this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem;
-            this.allowedLLMProviders = this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders;
-            this.embeddings = this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos;
-            this.retrievalProcesses = this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalInfos;
-            this.additionalLibraries = this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries;
+            this.authDescription = this.selectedERIServer.AuthDescription;
+            this.selectedOperatingSystem = this.selectedERIServer.OperatingSystem;
+            this.allowedLLMProviders = this.selectedERIServer.AllowedLLMProviders;
+            this.embeddings = this.selectedERIServer.EmbeddingInfos;
+            this.retrievalProcesses = this.selectedERIServer.RetrievalInfos;
+            this.additionalLibraries = this.selectedERIServer.AdditionalLibraries;
             return true;
         }
         
@@ -106,32 +109,52 @@ public partial class AssistantERI : AssistantBaseCore
         await this.AutoSave();
     }
 
+    #region Overrides of AssistantBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.selectedERIServer = this.SettingsManager.ConfigurationData.ERI.ERIServers.FirstOrDefault();
+        if(this.selectedERIServer is null)
+        {
+            await this.AddERIServer();
+            this.selectedERIServer = this.SettingsManager.ConfigurationData.ERI.ERIServers.First();
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private async Task AutoSave()
     {
         if(!this.autoSave || !this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
             return;
         
-        this.SettingsManager.ConfigurationData.ERI.PreselectedServerName = this.serverName;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedServerDescription = this.serverDescription;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedERIVersion = this.selectedERIVersion;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedProgrammingLanguage = this.selectedProgrammingLanguage;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedOtherProgrammingLanguage = this.otherProgrammingLanguage;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSource = this.selectedDataSource;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceProductName = this.dataSourceProductName;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedOtherDataSource = this.otherDataSource;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourceHostname = this.dataSourceHostname;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort = this.dataSourcePort;
-        this.SettingsManager.ConfigurationData.ERI.UserTypedPort = this.userTypedPort;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedAuthMethods = [..this.selectedAuthenticationMethods];
-        this.SettingsManager.ConfigurationData.ERI.PreselectedAuthDescription = this.authDescription;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedOperatingSystem = this.selectedOperatingSystem;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedAllowedLLMProviders = this.allowedLLMProviders;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedEmbeddingInfos = this.embeddings;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedRetrievalInfos = this.retrievalProcesses;
-        this.SettingsManager.ConfigurationData.ERI.PreselectedAdditionalLibraries = this.additionalLibraries;
+        if(this.selectedERIServer is null)
+            return;
+        
+        this.selectedERIServer.ServerName = this.serverName;
+        this.selectedERIServer.ServerDescription = this.serverDescription;
+        this.selectedERIServer.ERIVersion = this.selectedERIVersion;
+        this.selectedERIServer.ProgrammingLanguage = this.selectedProgrammingLanguage;
+        this.selectedERIServer.OtherProgrammingLanguage = this.otherProgrammingLanguage;
+        this.selectedERIServer.DataSource = this.selectedDataSource;
+        this.selectedERIServer.DataSourceProductName = this.dataSourceProductName;
+        this.selectedERIServer.OtherDataSource = this.otherDataSource;
+        this.selectedERIServer.DataSourceHostname = this.dataSourceHostname;
+        this.selectedERIServer.DataSourcePort = this.dataSourcePort;
+        this.selectedERIServer.UserTypedPort = this.userTypedPort;
+        this.selectedERIServer.AuthMethods = [..this.selectedAuthenticationMethods];
+        this.selectedERIServer.AuthDescription = this.authDescription;
+        this.selectedERIServer.OperatingSystem = this.selectedOperatingSystem;
+        this.selectedERIServer.AllowedLLMProviders = this.allowedLLMProviders;
+        this.selectedERIServer.EmbeddingInfos = this.embeddings;
+        this.selectedERIServer.RetrievalInfos = this.retrievalProcesses;
+        this.selectedERIServer.AdditionalLibraries = this.additionalLibraries;
         await this.SettingsManager.StoreSettings();
     }
-    
+
+    private DataERIServer? selectedERIServer;
     private bool autoSave;
     private string serverName = string.Empty;
     private string serverDescription = string.Empty;
@@ -151,6 +174,54 @@ public partial class AssistantERI : AssistantBaseCore
     private List<EmbeddingInfo> embeddings = new();
     private List<RetrievalInfo> retrievalProcesses = new();
     private string additionalLibraries = string.Empty;
+
+    private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
+    
+    private void SelectedERIServerChanged(DataERIServer? server)
+    {
+        this.selectedERIServer = server;
+        this.ResetForm();
+    }
+    
+    private async Task AddERIServer()
+    {
+        this.SettingsManager.ConfigurationData.ERI.ERIServers.Add(new ()
+        {
+            ServerName = $"ERI Server {DateTimeOffset.UtcNow}",
+        });
+        
+        await this.SettingsManager.StoreSettings();
+    }
+
+    private async Task RemoveERIServer()
+    {
+        if(this.selectedERIServer is null)
+            return;
+        
+        this.SettingsManager.ConfigurationData.ERI.ERIServers.Remove(this.selectedERIServer);
+        this.selectedERIServer = null;
+        this.ResetForm();
+        
+        await this.SettingsManager.StoreSettings();
+        this.form?.ResetValidation();
+    }
+    
+    private bool IsNoneERIServerSelected => this.selectedERIServer is null;
+
+    /// <summary>
+    /// Gets called when the server name was changed by typing.
+    /// </summary>
+    /// <remarks>
+    /// This method is used to update the server name in the selected ERI server preset.
+    /// Otherwise, the users would be confused when they change the server name and the changes are not reflected in the UI.
+    /// </remarks>
+    private void ServerNameWasChanged()
+    {
+        if(this.selectedERIServer is null)
+            return;
+        
+        this.selectedERIServer.ServerName = this.serverName;
+    }
     
     private string? ValidateServerName(string name)
     {
@@ -159,6 +230,9 @@ public partial class AssistantERI : AssistantBaseCore
         
         if(name.Length is > 60 or < 6)
             return "The name of your ERI server must be between 6 and 60 characters long.";
+        
+        if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Where(n => n != this.selectedERIServer).Any(n => n.ServerName == name))
+            return "An ERI server preset with this name already exists. Please choose a different name.";
         
         return null;
     }
@@ -280,9 +354,12 @@ public partial class AssistantERI : AssistantBaseCore
     
     private void DataSourceWasChanged()
     {
+        if(this.selectedERIServer is null)
+            return;
+        
         if (this.selectedDataSource is DataSources.NONE)
         {
-            this.SettingsManager.ConfigurationData.ERI.PreselectedDataSourcePort = null;
+            this.selectedERIServer.DataSourcePort = null;
             this.dataSourcePort = null;
             this.userTypedPort = false;
             return;
@@ -537,6 +614,9 @@ public partial class AssistantERI : AssistantBaseCore
 
     private async Task GenerateServer()
     {
+        if(this.IsNoneERIServerSelected)
+            return;
+        
         await this.AutoSave();
         await this.form!.Validate();
         if (!this.inputIsValid)

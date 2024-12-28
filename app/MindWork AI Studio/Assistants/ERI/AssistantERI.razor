@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_ERI)]
+@using AIStudio.Settings.DataModel
 @using MudExtensions
 @inherits AssistantBaseCore
 
@@ -21,7 +22,50 @@
 <div class="mb-6"></div>
 
 <MudText Typo="Typo.h4" Class="mb-3">
-    Auto Save
+    ERI server presets
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if
+    you are responsible for multiple ERI servers.
+</MudText>
+
+@if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Count is 0)
+{
+    <MudText Typo="Typo.body1" Class="mb-3">
+        You have not yet added any ERI server presets.
+    </MudText>
+}
+else
+{
+    <MudList Disabled="@this.AreServerPresetsBlocked" T="DataERIServer" Class="mb-1" SelectedValue="@this.selectedERIServer" SelectedValueChanged="@this.SelectedERIServerChanged">
+        @foreach (var server in this.SettingsManager.ConfigurationData.ERI.ERIServers)
+        {
+            <MudListItem T="DataERIServer" Icon="@Icons.Material.Filled.Settings" Value="@server">
+                @server.ServerName
+            </MudListItem>
+        }
+    </MudList>
+}
+
+<MudStack Row="@true" Class="mt-1">
+    <MudButton Disabled="@this.AreServerPresetsBlocked" OnClick="@this.AddERIServer" Variant="Variant.Filled" Color="Color.Primary">
+        Add ERI server preset
+    </MudButton>
+    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Primary">
+        Delete this server preset
+    </MudButton>
+</MudStack>
+
+@if(this.AreServerPresetsBlocked)
+{
+    <MudText Typo="Typo.body1" Class="mb-3 mt-3">
+        Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.
+    </MudText>
+}
+
+<MudText Typo="Typo.h4" Class="mb-3 mt-6">
+    Auto save
 </MudText>
 
 <MudText Typo="Typo.body1" Class="mb-3">
@@ -30,23 +74,25 @@
     automatically saved. Would you like this?
 </MudText>
 
-@if(!this.SettingsManager.ConfigurationData.ERI.PreselectOptions)
+@if(this.AreServerPresetsBlocked)
 {
     <MudText Typo="Typo.body1" Class="mb-3">
         Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.
     </MudText>
 }
 
-<MudTextSwitch Label="Should we automatically save any input made?" Disabled="@(!this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
+<MudTextSwitch Label="Should we automatically save any input made?" Disabled="@this.AreServerPresetsBlocked" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
+
+<hr style="width: 100%; border-width: 0.25ch;" class="mt-6"/>
 
 <MudText Typo="Typo.h4" Class="mt-6 mb-1">
     Common ERI server settings
 </MudText>
-<MudTextField T="string" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="ERI server name" HelperText="Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
-<MudTextField T="string" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="ERI server description" HelperText="Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField T="string" Disabled="@this.IsNoneERIServerSelected" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="ERI server name" HelperText="Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="() => this.ServerNameWasChanged()"/>
+<MudTextField T="string" Disabled="@this.IsNoneERIServerSelected" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="ERI server description" HelperText="Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <MudStack Row="@true" Class="mb-3">
-    <MudSelect T="ProgrammingLanguages" @bind-Value="@this.selectedProgrammingLanguage" AdornmentIcon="@Icons.Material.Filled.Code" Adornment="Adornment.Start" Label="Programming language" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateProgrammingLanguage">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="ProgrammingLanguages" @bind-Value="@this.selectedProgrammingLanguage" AdornmentIcon="@Icons.Material.Filled.Code" Adornment="Adornment.Start" Label="Programming language" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateProgrammingLanguage">
         @foreach (var language in Enum.GetValues<ProgrammingLanguages>())
         {
             <MudSelectItem Value="@language">@language.Name()</MudSelectItem>
@@ -54,18 +100,18 @@
     </MudSelect>
     @if (this.selectedProgrammingLanguage is ProgrammingLanguages.OTHER)
     {
-        <MudTextField T="string" @bind-Text="@this.otherProgrammingLanguage" Validation="@this.ValidateOtherLanguage" Label="Other language" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.otherProgrammingLanguage" Validation="@this.ValidateOtherLanguage" Label="Other language" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
 
 <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudSelect T="ERIVersion" @bind-Value="@this.selectedERIVersion" Label="ERI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateERIVersion">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="ERIVersion" @bind-Value="@this.selectedERIVersion" Label="ERI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateERIVersion">
         @foreach (var version in Enum.GetValues<ERIVersion>())
         {
             <MudSelectItem Value="@version">@version</MudSelectItem>
         }
     </MudSelect>
-    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedERIVersion.WasSpecificationSelected())" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedERIVersion.WasSpecificationSelected() || this.IsNoneERIServerSelected)" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
         <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2"/> Download specification
     </MudButton>
 </MudStack>
@@ -75,7 +121,7 @@
 </MudText>
 
 <MudStack Row="@false" Spacing="1" Class="mb-3">
-    <MudSelect T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource" SelectedValuesChanged="@this.DataSourceWasChanged">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource" SelectedValuesChanged="@this.DataSourceWasChanged">
         @foreach (var dataSource in Enum.GetValues<DataSources>())
         {
             <MudSelectItem Value="@dataSource">@dataSource.Name()</MudSelectItem>
@@ -83,21 +129,21 @@
     </MudSelect>
     @if (this.selectedDataSource is DataSources.CUSTOM)
     {
-        <MudTextField T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="Describe your data source" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="Describe your data source" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
 
 @if(this.selectedDataSource > DataSources.FILE_SYSTEM)
 {
-    <MudTextField T="string" @bind-Text="@this.dataSourceProductName" Label="Data source: product name" Validation="@this.ValidateDataSourceProductName" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+    <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.dataSourceProductName" Label="Data source: product name" Validation="@this.ValidateDataSourceProductName" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 }
 
 @if (this.NeedHostnamePort())
 {
     <div class="mb-3">
         <MudStack Row="@true">
-            <MudTextField T="string" @bind-Text="@this.dataSourceHostname" Label="Data source: hostname" Validation="@this.ValidateHostname" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-            <MudNumericField Label="Data source: port" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyUp="@(() => this.DataSourcePortWasTyped())"/>
+            <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.dataSourceHostname" Label="Data source: hostname" Validation="@this.ValidateHostname" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudNumericField Disabled="@this.IsNoneERIServerSelected" Label="Data source: port" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyUp="() => this.DataSourcePortWasTyped()"/>
         </MudStack>
         @if (this.dataSourcePort < 1024)
         {
@@ -115,6 +161,7 @@
 <MudStack Row="@false" Spacing="1" Class="mb-1">
     <MudSelectExtended
         T="Auth"
+        Disabled="@this.IsNoneERIServerSelected"
         ShrinkLabel="@true"
         MultiSelection="@true"
         MultiSelectionTextFunc="@this.GetMultiSelectionAuthText"
@@ -129,12 +176,12 @@
             <MudSelectItemExtended Value="@authMethod">@authMethod.Name()</MudSelectItemExtended>
         }
     </MudSelectExtended>
-    <MudTextField T="string" @bind-Text="@this.authDescription" Label="@this.AuthDescriptionTitle()" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.authDescription" Label="@this.AuthDescriptionTitle()" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 </MudStack>
 
 @if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))
 {
-    <MudSelect T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="Operating system on which your ERI will run" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="Operating system on which your ERI will run" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
         @foreach (var os in Enum.GetValues<OperatingSystem>())
         {
             <MudSelectItem Value="@os">@os.Name()</MudSelectItem>
@@ -146,7 +193,7 @@
     Data protection settings
 </MudText>
 
-<MudSelect T="AllowedLLMProviders" @bind-Value="@this.allowedLLMProviders" Label="Allowed LLM providers for this data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateAllowedLLMProviders" Class="mb-1">
+<MudSelect Disabled="@this.IsNoneERIServerSelected" T="AllowedLLMProviders" @bind-Value="@this.allowedLLMProviders" Label="Allowed LLM providers for this data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateAllowedLLMProviders" Class="mb-1">
     @foreach (var option in Enum.GetValues<AllowedLLMProviders>())
     {
         <MudSelectItem Value="@option">@option.Name()</MudSelectItem>
@@ -170,37 +217,40 @@
     or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
 </MudText>
 
-<MudTable Items="@this.embeddings" Hover="@true" Class="border-dashed border rounded-lg">
-    <ColGroup>
-        <col/>
-        <col style="width: 34em;"/>
-        <col style="width: 34em;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Type</MudTh>
-        <MudTh Style="text-align: left;">Actions</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.EmbeddingName</MudTd>
-        <MudTd>@context.EmbeddingType</MudTd>
-        <MudTd Style="text-align: left;">
-            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditEmbedding(context)">
-                Edit
-            </MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteEmbedding(context)">
-                Delete
-            </MudButton>
-        </MudTd>
-    </RowTemplate>
-</MudTable>
-
-@if(this.embeddings.Count == 0)
+@if (!this.IsNoneERIServerSelected)
 {
-    <MudText Typo="Typo.h6" Class="mt-3">No embedding methods configured yet.</MudText>
+    <MudTable Items="@this.embeddings" Hover="@true" Class="border-dashed border rounded-lg">
+        <ColGroup>
+            <col/>
+            <col style="width: 34em;"/>
+            <col style="width: 34em;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh Style="text-align: left;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.EmbeddingName</MudTd>
+            <MudTd>@context.EmbeddingType</MudTd>
+            <MudTd Style="text-align: left;">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditEmbedding(context)">
+                    Edit
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteEmbedding(context)">
+                    Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (this.embeddings.Count == 0)
+    {
+        <MudText Typo="Typo.h6" Class="mt-3">No embedding methods configured yet.</MudText>
+    }
 }
 
-<MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbedding">
+<MudButton Disabled="@this.IsNoneERIServerSelected" Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbedding">
     Add Embedding Method
 </MudButton>
 
@@ -215,34 +265,37 @@
     the process that best suits their circumstances.
 </MudText>
 
-<MudTable Items="@this.retrievalProcesses" Hover="@true" Class="border-dashed border rounded-lg">
-    <ColGroup>
-        <col/>
-        <col style="width: 34em;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh Style="text-align: left;">Actions</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.Name</MudTd>
-        <MudTd Style="text-align: left;">
-            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditRetrievalProcess(context)">
-                Edit
-            </MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteRetrievalProcess(context)">
-                Delete
-            </MudButton>
-        </MudTd>
-    </RowTemplate>
-</MudTable>
-
-@if(this.retrievalProcesses.Count == 0)
+@if (!this.IsNoneERIServerSelected)
 {
-    <MudText Typo="Typo.h6" Class="mt-3">No retrieval process configured yet.</MudText>
+    <MudTable Items="@this.retrievalProcesses" Hover="@true" Class="border-dashed border rounded-lg">
+        <ColGroup>
+            <col/>
+            <col style="width: 34em;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh Style="text-align: left;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd Style="text-align: left;">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditRetrievalProcess(context)">
+                    Edit
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteRetrievalProcess(context)">
+                    Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (this.retrievalProcesses.Count == 0)
+    {
+        <MudText Typo="Typo.h6" Class="mt-3">No retrieval process configured yet.</MudText>
+    }
 }
 
-<MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddRetrievalProcess">
+<MudButton Disabled="@this.IsNoneERIServerSelected" Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddRetrievalProcess">
     Add Retrieval Process
 </MudButton>
 
@@ -254,7 +307,7 @@
     the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
 </MudText>
 
-<MudTextField T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+<MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <MudText Typo="Typo.h4" Class="mt-9 mb-1">
     Provider selection for generation
