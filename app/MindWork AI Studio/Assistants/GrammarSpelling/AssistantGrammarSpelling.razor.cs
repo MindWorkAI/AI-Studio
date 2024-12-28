@@ -48,7 +48,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputText = string.Empty;
         this.correctedText = string.Empty;

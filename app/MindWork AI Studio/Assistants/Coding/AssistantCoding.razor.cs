@@ -32,7 +32,7 @@ public partial class AssistantCoding : AssistantBaseCore
 
     protected override Func<Task> SubmitAction => this.GetSupport;
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.codingContexts.Clear();
         this.compilerMessages = string.Empty;

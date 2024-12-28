@@ -58,7 +58,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         _ => string.Empty,
     };
 
-    protected abstract void ResetFrom();
+    protected abstract void ResetForm();
 
     protected abstract bool MightPreselectValues();
     
@@ -341,7 +341,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
-        this.ResetFrom();
+        this.ResetForm();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         
         this.inputIsValid = false;

@@ -33,7 +33,7 @@ public partial class AssistantEMail : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputBulletPoints = string.Empty;
         this.bulletPointsLines.Clear();

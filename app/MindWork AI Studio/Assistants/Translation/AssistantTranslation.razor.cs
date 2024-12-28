@@ -36,7 +36,7 @@ public partial class AssistantTranslation : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputText = string.Empty;
         this.inputTextLastTranslation = string.Empty;

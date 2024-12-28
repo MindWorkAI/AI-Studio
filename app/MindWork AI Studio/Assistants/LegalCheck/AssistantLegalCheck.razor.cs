@@ -37,7 +37,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputLegalDocument = string.Empty;
         this.inputQuestions = string.Empty;

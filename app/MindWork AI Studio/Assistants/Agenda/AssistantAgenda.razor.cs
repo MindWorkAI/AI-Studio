@@ -106,7 +106,7 @@ public partial class AssistantAgenda : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputContent = string.Empty;
         this.contentLines.Clear();

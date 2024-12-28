@@ -44,7 +44,7 @@ public partial class AssistantERI : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         if (!this.MightPreselectValues())
         {

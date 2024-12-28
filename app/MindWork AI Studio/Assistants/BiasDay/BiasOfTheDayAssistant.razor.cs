@@ -50,7 +50,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
     
     protected override bool ShowReset => false;
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         if (!this.MightPreselectValues())
         {
