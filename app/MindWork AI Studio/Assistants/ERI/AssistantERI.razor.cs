@@ -622,10 +622,17 @@ public partial class AssistantERI : AssistantBaseCore
         if (!this.inputIsValid)
             return;
         
-        var ediSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
-        if (string.IsNullOrWhiteSpace(ediSpecification))
+        if(this.retrievalProcesses.Count == 0)
         {
-            // TODO: Show an error message
+            this.AddInputIssue("Please describe at least one retrieval process.");
+            return;
+        }
+        
+        var specification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
+        if (string.IsNullOrWhiteSpace(specification))
+        {
+            this.AddInputIssue("The ERI specification could not be loaded. Please try again later.");
+            return;
         }
     }
 }
