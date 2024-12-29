@@ -189,6 +189,18 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     /// the user has stopped typing or selecting options.
     /// </remarks>
     protected virtual Task OnFormChange() => Task.CompletedTask;
+    
+    /// <summary>
+    /// Add an issue to the UI.
+    /// </summary>
+    /// <param name="issue">The issue to add.</param>
+    protected void AddInputIssue(string issue)
+    {
+        Array.Resize(ref this.inputIssues, this.inputIssues.Length + 1);
+        this.inputIssues[^1] = issue;
+        this.inputIsValid = false;
+        this.StateHasChanged();
+    }
 
     protected void CreateChatThread()
     {
