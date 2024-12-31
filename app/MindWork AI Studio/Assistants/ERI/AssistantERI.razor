@@ -313,9 +313,16 @@ else
     Provider selection for generation
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-1">
+<MudText Typo="Typo.body1" Class="mb-2">
     The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task.
     Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number
+    of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.
+    <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations
+    and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
 </MudText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

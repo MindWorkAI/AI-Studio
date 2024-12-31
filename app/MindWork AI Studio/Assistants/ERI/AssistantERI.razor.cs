@@ -1,3 +1,6 @@
+using System.Text;
+using System.Text.RegularExpressions;
+
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
@@ -29,13 +32,274 @@ public partial class AssistantERI : AssistantBaseCore
         realize a Retrieval-Augmented Generation (RAG) process with external data.
         """;
     
-    protected override string SystemPrompt => 
-        $"""
-         
-         """;
-    
+    protected override string SystemPrompt
+    {
+        get
+        {
+            var sb = new StringBuilder();
+            
+            //
+            // ---------------------------------
+            // Introduction
+            // ---------------------------------
+            //
+            var programmingLanguage = this.selectedProgrammingLanguage is ProgrammingLanguages.OTHER ? this.otherProgrammingLanguage : this.selectedProgrammingLanguage.Name();
+            sb.Append($"""
+                       # Introduction
+                       You are an experienced {programmingLanguage} developer. Your task is to implement an API server in
+                       the {programmingLanguage} language according to the following OpenAPI Description (OAD):
+                       
+                       ```
+                       {this.eriSpecification}
+                       ```
+                       
+                       The server realizes the data retrieval component for a "Retrieval-Augmentation Generation" (RAG) process.
+                       The server is called "{this.serverName}" and is described as follows:
+                       
+                       ```
+                       {this.serverDescription}
+                       ```
+                       """);
+
+            //
+            // ---------------------------------
+            // Data Source
+            // ---------------------------------
+            //
+            
+            sb.Append("""
+                      
+                      # Data Source
+                      """);
+            
+            switch (this.selectedDataSource)
+            {
+                case DataSources.CUSTOM:
+                    sb.Append($"""
+                               The data source for the retrieval process is described as follows:
+                               
+                               ```
+                               {this.otherDataSource}
+                               ```
+                               """);
+                    
+                    if(!string.IsNullOrWhiteSpace(this.dataSourceHostname))
+                    {
+                        sb.Append($"""
+                                   
+                                   The data source is accessible via the hostname `{this.dataSourceHostname}`.
+                                   """);
+                    }
+                    
+                    if(this.dataSourcePort is not null)
+                    {
+                        sb.Append($"""
+                                   
+                                   The data source is accessible via port `{this.dataSourcePort}`.
+                                   """);
+                    }
+                    
+                    break;
+                
+                case DataSources.FILE_SYSTEM:
+                    sb.Append("""
+
+                              The data source for the retrieval process is the local file system. Use a placeholder for the data source path.
+                              """);
+                    break;
+                
+                default:
+                case DataSources.OBJECT_STORAGE:
+                case DataSources.KEY_VALUE_STORE:
+                case DataSources.DOCUMENT_STORE:
+                case DataSources.RELATIONAL_DATABASE:
+                case DataSources.GRAPH_DATABASE:
+                    sb.Append($"""
+                               The data source for the retrieval process is an "{this.dataSourceProductName}" database running on the
+                               host `{this.dataSourceHostname}` and is accessible via port `{this.dataSourcePort}`.
+                               """);
+                    break;
+            }
+
+            //
+            // ---------------------------------
+            // Authentication and Authorization
+            // ---------------------------------
+            //
+            
+            sb.Append("""
+                      
+                      # Authentication and Authorization
+                      The process for authentication and authorization is two-step. Step 1: Users must authenticate
+                      with the API server using a `POST` call on `/auth` with the chosen method. If this step is
+                      successful, the API server returns a token. Step 2: This token is then required for all
+                      other API calls.
+                      
+                      Important notes:
+                      - Calls to `/auth` and `/auth/methods` are accessible without authentication. All other API
+                      endpoints require a valid step 2 token.
+                      
+                      - It is possible that a token (step 1 token) is desired as `authMethod`. These step 1 tokens
+                      must never be accepted as valid tokens for step 2.
+                      
+                      - The OpenAPI Description (OAD) for `/auth` is not complete. This is because, at the time of
+                      writing the OAD, it is not known what kind of authentication is desired. Therefore, you must
+                      supplement the corresponding fields or data in the implementation. Example: If username/password
+                      is desired, you must expect and read both. If both token and username/password are desired, you
+                      must dynamically read the `authMethod` and expect and evaluate different fields accordingly.
+                      
+                      The following authentications and authorizations should be implemented for the API server:
+                      """);
+            
+            foreach (var auth in this.selectedAuthenticationMethods)
+                sb.Append($"- {auth.ToPrompt()}");
+            
+            if(this.IsUsingKerberos())
+            {
+                sb.Append($"""
+                           
+                           The server will run on {this.selectedOperatingSystem.Name()} operating systems. Keep
+                           this in mind when implementing the SSO with Kerberos.
+                           """);
+            }
+
+            //
+            // ---------------------------------
+            // Security
+            // ---------------------------------
+            //
+            
+            sb.Append($"""
+                      
+                      # Security
+                      The following security requirement for `allowedProviderType` was chosen: `{this.allowedLLMProviders}`
+                      """);
+            
+            //
+            // ---------------------------------
+            // Retrieval Processes
+            // ---------------------------------
+            //
+            
+            sb.Append($"""
+                       
+                       # Retrieval Processes
+                       You are implementing the following data retrieval processes:
+                       """);
+            
+            var retrievalProcessCounter = 1;
+            foreach (var retrievalProcess in this.retrievalProcesses)
+            {
+                sb.Append($"""
+                           
+                           ## {retrievalProcessCounter++}. Retrieval Process
+                           - Name: {retrievalProcess.Name}
+                           - Description:
+                           
+                           ```
+                           {retrievalProcess.Description}
+                           ```
+                           """);
+                
+                if(retrievalProcess.ParametersDescription?.Count > 0)
+                {
+                    sb.Append("""
+                              
+                              This retrieval process recognizes the following parameters:
+                              """);
+                    
+                    var parameterCounter = 1;
+                    foreach (var (parameter, description) in retrievalProcess.ParametersDescription)
+                    {
+                        sb.Append($"""
+                                   
+                                   - The {parameterCounter++} parameter is named "{parameter}":
+                                   
+                                   ```
+                                   {description}
+                                   ```
+                                   """);
+                    }
+
+                    sb.Append("""
+
+                              Please use sensible default values for the parameters. They are optional
+                              for the user.
+                              """);
+                }
+                
+                if(retrievalProcess.Embeddings?.Count > 0)
+                {
+                    sb.Append("""
+                               
+                               The following embeddings are implemented for this retrieval process:
+                               """);
+                    
+                    var embeddingCounter = 1;
+                    foreach (var embedding in retrievalProcess.Embeddings)
+                    {
+                        sb.Append($"""
+                                   
+                                   - {embeddingCounter++}. Embedding
+                                   - Name: {embedding.EmbeddingName}
+                                   - Type: {embedding.EmbeddingType}
+                                   
+                                   - Description:
+                                   
+                                   ```
+                                   {embedding.Description}
+                                   ```
+                                   
+                                   - When used:
+                                   
+                                   ```
+                                   {embedding.UsedWhen}
+                                   ```
+                                   """);
+                    }
+                }
+            }
+
+            //
+            // ---------------------------------
+            // Additional Libraries
+            // ---------------------------------
+            //
+            
+            if (!string.IsNullOrWhiteSpace(this.additionalLibraries))
+            {
+                sb.Append($"""
+                           
+                           # Additional Libraries
+                           You use the following libraries for your implementation:
+                           
+                           {this.additionalLibraries}
+                           """);
+            }
+
+            //
+            // ---------------------------------
+            // Remarks
+            // ---------------------------------
+            //
+            
+            sb.Append("""
+                      
+                      # Remarks
+                      - You do not ask follow-up questions.
+                      - You consider the security of the implementation by applying the Security by Design principle.
+                      - Your output is formatted as Markdown. Code is formatted as code blocks. For every file, you
+                        create a separate code block with its file path and name as chapter title.
+                      """);
+            
+            return sb.ToString();
+        }
+    }
+
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
+    protected override bool ShowEntireChatThread => true;
+
     protected override string SubmitText => "Create the ERI server";
 
     protected override Func<Task> SubmitAction => this.GenerateServer;
@@ -613,6 +877,25 @@ public partial class AssistantERI : AssistantBaseCore
         await this.AutoSave();
     }
 
+    [GeneratedRegex("""
+                    "([\\/._\w-]+)"
+                    """, RegexOptions.NonBacktracking)]
+    private static partial Regex FileExtractRegex();
+
+    private IEnumerable<string> ExtractFiles(string fileListAnswer)
+    {
+        //
+        // We asked the LLM for answering using a specific JSON scheme.
+        // However, the LLM might not follow this scheme. Therefore, we
+        // need to parse the answer and extract the files.
+        // The parsing strategy is to look for all strings.
+        //
+        var matches = FileExtractRegex().Matches(fileListAnswer);
+        foreach (Match match in matches)
+            if(match.Groups[1].Value is {} file && !string.IsNullOrWhiteSpace(file) && !file.Equals("files", StringComparison.OrdinalIgnoreCase))
+                yield return file;
+    }
+
     private async Task GenerateServer()
     {
         if(this.IsNoneERIServerSelected)
@@ -634,6 +917,58 @@ public partial class AssistantERI : AssistantBaseCore
         {
             this.AddInputIssue("The ERI specification could not be loaded. Please try again later.");
             return;
+        }
+        
+        this.CreateChatThread();
+        
+        //
+        // ---------------------------------
+        // Ask for files (viewable in the chat)
+        // ---------------------------------
+        //
+        var time = this.AddUserRequest("""
+                                       Please list all the files you want to create. Provide the result as a Markdown list.
+                                       Start with a brief message that these are the files we are now creating.
+                                       """, true);
+        await this.AddAIResponseAsync(time);
+        
+        //
+        // ---------------------------------
+        // Ask for files, again (JSON output, invisible)
+        // ---------------------------------
+        //
+        time = this.AddUserRequest("""
+                                   Please format all the files you want to create as a JSON object, without Markdown.
+                                   Use the following JSON schema:
+                                   
+                                   {
+                                     [
+                                         "path/to/file1",
+                                         "path/to/file2"
+                                     ]
+                                   }
+                                   """, true);
+        var fileListAnswer = await this.AddAIResponseAsync(time, true);
+        foreach (var file in this.ExtractFiles(fileListAnswer))
+        {
+            this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
+            
+            //
+            // ---------------------------------
+            // Ask the AI to create another file
+            // ---------------------------------
+            //
+            time = this.AddUserRequest($"""
+                                        Please create the file `{file}`. Your output is formatted in Markdown
+                                        using the following template:
+                                        
+                                        ## file/path
+                                        
+                                        ```language
+                                        content of the file
+                                        ```
+                                        """, true);
+            await this.AddAIResponseAsync(time);
         }
     }
 }
