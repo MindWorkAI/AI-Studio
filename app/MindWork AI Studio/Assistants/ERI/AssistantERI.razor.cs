@@ -308,7 +308,7 @@ public partial class AssistantERI : AssistantBaseCore
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
+        SystemPrompt = this.SystemPrompt,
     };
     
     protected override void ResetForm()
@@ -920,7 +920,8 @@ public partial class AssistantERI : AssistantBaseCore
             return;
         }
         
-        this.CreateChatThread();
+        var now = DateTimeOffset.UtcNow;
+        this.CreateChatThread(KnownWorkspaces.ERI_SERVER_WORKSPACE_ID, $"{now:yyyy-MM-dd HH:mm} - {this.serverName}");
         
         //
         // ---------------------------------
@@ -971,5 +972,7 @@ public partial class AssistantERI : AssistantBaseCore
                                         """, true);
             await this.AddAIResponseAsync(time);
         }
+        
+        await this.SendToAssistant(Tools.Components.CHAT, default);
     }
 }
