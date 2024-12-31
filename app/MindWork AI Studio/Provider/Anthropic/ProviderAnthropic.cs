@@ -58,26 +58,33 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
             // Right now, we only support streaming completions:
             Stream = true,
         }, JSON_SERIALIZER_OPTIONS);
-        
-        // Build the HTTP post request:
-        var request = new HttpRequestMessage(HttpMethod.Post, "messages");
-        
-        // Set the authorization header:
-        request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
-        
-        // Set the Anthropic version:
-        request.Headers.Add("anthropic-version", "2023-06-01");
-        
-        // Set the content:
-        request.Content = new StringContent(chatRequest, Encoding.UTF8, "application/json");
-        
-        // Send the request with the ResponseHeadersRead option.
-        // This allows us to read the stream as soon as the headers are received.
-        // This is important because we want to stream the responses.
-        var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+
+        async Task<HttpRequestMessage> RequestBuilder()
+        {
+            // Build the HTTP post request:
+            var request = new HttpRequestMessage(HttpMethod.Post, "messages");
+
+            // Set the authorization header:
+            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+
+            // Set the Anthropic version:
+            request.Headers.Add("anthropic-version", "2023-06-01");
+
+            // Set the content:
+            request.Content = new StringContent(chatRequest, Encoding.UTF8, "application/json");
+            return request;
+        }
+
+        // Send the request using exponential backoff:
+        using var responseData = await this.SendRequest(RequestBuilder, token);
+        if(responseData.IsFailedAfterAllRetries)
+        {
+            this.logger.LogError($"Anthropic chat completion failed: {responseData.ErrorMessage}");
+            yield break;
+        }
         
         // Open the response stream:
-        var stream = await response.Content.ReadAsStreamAsync(token);
+        var stream = await responseData.Response!.Content.ReadAsStreamAsync(token);
         
         // Add a stream reader to read the stream, line by line:
         var streamReader = new StreamReader(stream);

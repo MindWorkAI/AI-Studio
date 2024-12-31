@@ -74,4 +74,47 @@ public abstract class BaseProvider : IProvider, ISecretId
     public string SecretName => this.InstanceName;
 
     #endregion
+    
+    /// <summary>
+    /// Sends a request and handles rate limiting by exponential backoff.
+    /// </summary>
+    /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The status object of the request.</returns>
+    protected async Task<HttpRateLimitedStreamResult> SendRequest(Func<Task<HttpRequestMessage>> requestBuilder, CancellationToken token = default)
+    {
+        const int MAX_RETRIES = 6;
+        const double RETRY_DELAY_SECONDS = 4;
+        
+        var retry = 0;
+        var response = default(HttpResponseMessage);
+        var errorMessage = string.Empty;
+        while (retry++ < MAX_RETRIES)
+        {
+            using var request = await requestBuilder();
+            
+            // Send the request with the ResponseHeadersRead option.
+            // This allows us to read the stream as soon as the headers are received.
+            // This is important because we want to stream the responses.
+            var nextResponse = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+            if (nextResponse.IsSuccessStatusCode)
+            {
+                response = nextResponse;
+                break;
+            }
+
+            errorMessage = nextResponse.ReasonPhrase;
+            var timeSeconds = Math.Pow(RETRY_DELAY_SECONDS, retry + 1);
+            if(timeSeconds > 90)
+                timeSeconds = 90;
+            
+            this.logger.LogDebug($"Failed request with status code {nextResponse.StatusCode} (message = '{errorMessage}'). Retrying in {timeSeconds:0.00} seconds.");
+            await Task.Delay(TimeSpan.FromSeconds(timeSeconds), token);
+        }
+        
+        if(retry >= MAX_RETRIES)
+            return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
+        
+        return new HttpRateLimitedStreamResult(true, false, string.Empty, response);
+    }
 }
