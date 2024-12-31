@@ -71,6 +71,8 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;
+    
+    protected virtual bool ShowEntireChatThread => false;
 
     protected virtual bool AllowProfiles => true;
 
