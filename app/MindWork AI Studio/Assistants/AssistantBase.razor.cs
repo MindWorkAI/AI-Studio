@@ -263,7 +263,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         return time;
     }
 
-    protected async Task<string> AddAIResponseAsync(DateTimeOffset time)
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
     {
         var aiText = new ContentText
         {
@@ -278,6 +278,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             ContentType = ContentType.TEXT,
             Role = ChatRole.AI,
             Content = aiText,
+            HideFromUser = hideContentFromUser,
         };
 
         if (this.chatThread is not null)
