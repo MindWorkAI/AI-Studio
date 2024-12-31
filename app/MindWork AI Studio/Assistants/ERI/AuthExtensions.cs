@@ -12,4 +12,15 @@ public static class AuthExtensions
         
         _ => "Unknown login method"
     };
+    
+    public static string ToPrompt(this Auth auth) => auth switch
+    {
+        Auth.NONE => "No login is necessary, the data source is public.",
+        
+        Auth.KERBEROS => "Login by single-sign-on (SSO) using Kerberos.",
+        Auth.USERNAME_PASSWORD => "Login by username and password.",
+        Auth.TOKEN => "Login by static token per user.",
+        
+        _ => string.Empty,
+    };
 }
