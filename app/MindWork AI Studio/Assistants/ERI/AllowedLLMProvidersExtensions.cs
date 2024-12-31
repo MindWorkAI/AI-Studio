@@ -2,7 +2,7 @@ namespace AIStudio.Assistants.ERI;
 
 public static class AllowedLLMProvidersExtensions
 {
-    public static string Name(this AllowedLLMProviders provider)
+    public static string Description(this AllowedLLMProviders provider)
     {
         return provider switch
         {
