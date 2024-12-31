@@ -38,8 +38,6 @@ public partial class Workspaces : ComponentBase
     public bool ExpandRootNodes { get; set; } = true;
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
-    
-    public static readonly Guid WORKSPACE_ID_BIAS = Guid.Parse("82050a4e-ee92-43d7-8ee5-ab512f847e02");
 
     private readonly List<TreeItemData<ITreeItem>> treeItems = new();
     
@@ -53,8 +51,6 @@ public partial class Workspaces : ComponentBase
         // - Those initial tree items cannot have children
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
-        
-        await this.EnsureBiasWorkspace();
         await this.LoadTreeItems();
         await base.OnInitializedAsync();
     }
@@ -408,18 +404,6 @@ public partial class Workspaces : ComponentBase
         await this.LoadTreeItems();
     }
 
-    private async Task EnsureBiasWorkspace()
-    {
-        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", WORKSPACE_ID_BIAS.ToString());
-        
-        if(Path.Exists(workspacePath))
-            return;
-        
-        Directory.CreateDirectory(workspacePath);
-        var workspaceNamePath = Path.Join(workspacePath, "name");
-        await File.WriteAllTextAsync(workspaceNamePath, "Bias of the Day", Encoding.UTF8);
-    }
-    
     private async Task DeleteWorkspace(string? workspacePath)
     {
         if(workspacePath is null)

@@ -117,4 +117,16 @@ public static class WorkspaceBehaviour
 
         Directory.Delete(chatDirectory, true);
     }
+
+    public static async Task EnsureBiasWorkspace()
+    {
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", KnownWorkspaces.BIAS_WORKSPACE_ID.ToString());
+        
+        if(Path.Exists(workspacePath))
+            return;
+        
+        Directory.CreateDirectory(workspacePath);
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        await File.WriteAllTextAsync(workspaceNamePath, "Bias of the Day", Encoding.UTF8);
+    }
 }

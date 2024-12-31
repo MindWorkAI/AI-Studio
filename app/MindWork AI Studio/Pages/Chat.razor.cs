@@ -61,6 +61,9 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
 
+        // Ensure the bias workspace exists:
+        await WorkspaceBehaviour.EnsureBiasWorkspace();
+        
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)

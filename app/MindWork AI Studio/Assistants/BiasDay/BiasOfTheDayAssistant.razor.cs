@@ -1,6 +1,6 @@
 using System.Text;
 
-using AIStudio.Components;
+using AIStudio.Chat;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Assistants.BiasDay;
@@ -124,7 +124,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
             {
                 var biasChat = new LoadChat
                 {
-                    WorkspaceId = Workspaces.WORKSPACE_ID_BIAS,
+                    WorkspaceId = KnownWorkspaces.BIAS_WORKSPACE_ID,
                     ChatId = this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId,
                 };
 
@@ -147,7 +147,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
             BiasCatalog.ALL_BIAS[this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayId] :
             BiasCatalog.GetRandomBias(this.SettingsManager.ConfigurationData.BiasOfTheDay.UsedBias);
         
-        var chatId = this.CreateChatThread(Workspaces.WORKSPACE_ID_BIAS, this.biasOfTheDay.Name);
+        var chatId = this.CreateChatThread(KnownWorkspaces.BIAS_WORKSPACE_ID, this.biasOfTheDay.Name);
         this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayId = this.biasOfTheDay.Id;
         this.SettingsManager.ConfigurationData.BiasOfTheDay.BiasOfTheDayChatId = chatId;
         this.SettingsManager.ConfigurationData.BiasOfTheDay.DateLastBiasDrawn = DateOnly.FromDateTime(DateTime.Now);
