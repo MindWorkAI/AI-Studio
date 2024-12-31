@@ -159,6 +159,7 @@ public partial class AssistantERI : AssistantBaseCore
     private string serverName = string.Empty;
     private string serverDescription = string.Empty;
     private ERIVersion selectedERIVersion = ERIVersion.V1;
+    private string? eriSpecification;
     private ProgrammingLanguages selectedProgrammingLanguage = ProgrammingLanguages.NONE;
     private string otherProgrammingLanguage = string.Empty;
     private DataSources selectedDataSource = DataSources.NONE;
@@ -628,8 +629,8 @@ public partial class AssistantERI : AssistantBaseCore
             return;
         }
         
-        var specification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
-        if (string.IsNullOrWhiteSpace(specification))
+        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
+        if (string.IsNullOrWhiteSpace(this.eriSpecification))
         {
             this.AddInputIssue("The ERI specification could not be loaded. Please try again later.");
             return;
