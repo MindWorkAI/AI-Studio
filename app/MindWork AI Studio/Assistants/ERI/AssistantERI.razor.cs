@@ -396,7 +396,8 @@ public partial class AssistantERI : AssistantBaseCore
         
         if(this.selectedERIServer is null)
             return;
-        
+
+        this.SettingsManager.ConfigurationData.ERI.PreselectedProvider = this.providerSettings.Id;
         this.selectedERIServer.ServerName = this.serverName;
         this.selectedERIServer.ServerDescription = this.serverDescription;
         this.selectedERIServer.ERIVersion = this.selectedERIVersion;
