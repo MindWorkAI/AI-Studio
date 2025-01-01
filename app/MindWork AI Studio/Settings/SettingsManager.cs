@@ -118,8 +118,10 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         }
 
         var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
-        await File.WriteAllTextAsync(settingsPath, settingsJson);
+        var tempFile = Path.GetTempFileName();
+        await File.WriteAllTextAsync(tempFile, settingsJson);
         
+        File.Move(tempFile, settingsPath, true);
         this.logger.LogInformation("Stored the settings to the file system.");
     }
     
