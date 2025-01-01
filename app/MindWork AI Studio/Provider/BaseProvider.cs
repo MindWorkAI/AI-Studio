@@ -1,3 +1,5 @@
+using System.Net;
+
 using AIStudio.Chat;
 
 using RustService = AIStudio.Tools.RustService;
@@ -102,6 +104,13 @@ public abstract class BaseProvider : IProvider, ISecretId
                 response = nextResponse;
                 break;
             }
+            
+            if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
+            {
+                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                errorMessage = nextResponse.ReasonPhrase;
+                break;
+            }
 
             errorMessage = nextResponse.ReasonPhrase;
             var timeSeconds = Math.Pow(RETRY_DELAY_SECONDS, retry + 1);
@@ -112,7 +121,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             await Task.Delay(TimeSpan.FromSeconds(timeSeconds), token);
         }
         
-        if(retry >= MAX_RETRIES)
+        if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         
         return new HttpRateLimitedStreamResult(true, false, string.Empty, response);
