@@ -32,11 +32,36 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
+        
+        // Unfortunately, OpenAI changed the name of the system prompt based on the model.
+        // All models that start with "o" (the omni aka reasoning models) and all GPT4o models
+        // have the system prompt named "developer". All other models have the system prompt
+        // named "system". We need to check this to get the correct system prompt.
+        //
+        // To complicate it even more: The early versions of reasoning models, which are released
+        // before the 17th of December 2024, have no system prompt at all. We need to check this
+        // as well.
+        
+        // Apply the basic rule first:
+        var systemPromptRole = chatModel.Id.StartsWith('o') || chatModel.Id.Contains("4o") ? "developer" : "system";
+        
+        // Check if the model is an early version of the reasoning models:
+        systemPromptRole = chatModel.Id switch
+        {
+            "o1-mini" => "user",
+            "o1-mini-2024-09-12" => "user",
+            "o1-preview" => "user",
+            "o1-preview-2024-09-12" => "user",
+            
+            _ => systemPromptRole,
+        };
+        
+        this.logger.LogInformation($"Using the system prompt role '{systemPromptRole}' for model '{chatModel.Id}'.");
 
         // Prepare the system prompt:
         var systemPrompt = new Message
         {
-            Role = "system",
+            Role = systemPromptRole,
             Content = chatThread.SystemPrompt,
         };
         
@@ -55,7 +80,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
+                    ChatRole.SYSTEM => systemPromptRole,
 
                     _ => "user",
                 },
@@ -71,7 +96,6 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
             
             // Right now, we only support streaming completions:
             Stream = true,
-            FrequencyPenalty = 0f,
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
