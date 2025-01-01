@@ -69,23 +69,30 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         StreamReader? streamReader = default;
         try
         {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, host.ChatURL());
+            async Task<HttpRequestMessage> RequestBuilder()
+            {
+                // Build the HTTP post request:
+                var request = new HttpRequestMessage(HttpMethod.Post, host.ChatURL());
 
-            // Set the authorization header:
-            if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                // Set the authorization header:
+                if (requestedSecret.Success)
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
-            // Set the content:
-            request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
-
-            // Send the request with the ResponseHeadersRead option.
-            // This allows us to read the stream as soon as the headers are received.
-            // This is important because we want to stream the responses.
-            var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+                // Set the content:
+                request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
+                return request;
+            }
+            
+            // Send the request using exponential backoff:
+            using var responseData = await this.SendRequest(RequestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"Self-hosted provider's chat completion failed: {responseData.ErrorMessage}");
+                yield break;
+            }
 
             // Open the response stream:
-            var providerStream = await response.Content.ReadAsStreamAsync(token);
+            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
 
             // Add a stream reader to read the stream, line by line:
             streamReader = new StreamReader(providerStream);

@@ -8,7 +8,7 @@ using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Dialogs;
 
-public partial class EmbeddingDialog : ComponentBase, ISecretId
+public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
@@ -97,7 +97,7 @@ public partial class EmbeddingDialog : ComponentBase, ISecretId
     private readonly Encryption encryption = Program.ENCRYPTION;
     private readonly ProviderValidation providerValidation;
     
-    public EmbeddingDialog()
+    public EmbeddingProviderDialog()
     {
         this.providerValidation = new()
         {

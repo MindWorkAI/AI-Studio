@@ -183,12 +183,12 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     private async Task AddEmbeddingProvider()
     {
-        var dialogParameters = new DialogParameters<EmbeddingDialog>
+        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
         {
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingDialog>("Add Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>("Add Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -205,7 +205,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
     {
-        var dialogParameters = new DialogParameters<EmbeddingDialog>
+        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
         {
             { x => x.DataNum, embeddingProvider.Num },
             { x => x.DataId, embeddingProvider.Id },
@@ -218,7 +218,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
             { x => x.DataHost, embeddingProvider.Host },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingDialog>("Edit Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>("Edit Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;

@@ -60,7 +60,7 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
-
+        
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)
@@ -85,6 +85,13 @@ public partial class Chat : MSGComponentBase, IAsyncDisposable
                 {
                     this.autoSaveEnabled = true;
                     this.mustStoreChat = true;
+                    
+                    // Ensure the workspace exists:
+                    if(this.chatThread.WorkspaceId == KnownWorkspaces.ERI_SERVER_WORKSPACE_ID)
+                        await WorkspaceBehaviour.EnsureERIServerWorkspace();
+                    
+                    else if (this.chatThread.WorkspaceId == KnownWorkspaces.BIAS_WORKSPACE_ID)
+                        await WorkspaceBehaviour.EnsureBiasWorkspace();
                 }
             }
             

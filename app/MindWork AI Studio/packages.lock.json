@@ -207,6 +207,6 @@
         "contentHash": "7WaVMHklpT3Ye2ragqRIwlFRsb6kOk63BOGADV0fan3ulVfGLUYkDi5yNUsZS/7FVNkWbtHAlDLmu4WnHGfqvQ=="
       }
     },
-    "net8.0/osx-x64": {}
+    "net8.0/osx-arm64": {}
   }
 }

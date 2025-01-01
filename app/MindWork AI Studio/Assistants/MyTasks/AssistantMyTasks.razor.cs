@@ -41,7 +41,7 @@ public partial class AssistantMyTasks : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
 
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputText = string.Empty;
         if (!this.MightPreselectValues())

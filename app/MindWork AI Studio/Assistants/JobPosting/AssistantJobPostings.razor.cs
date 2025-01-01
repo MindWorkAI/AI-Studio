@@ -59,7 +59,7 @@ public partial class AssistantJobPostings : AssistantBaseCore
         SystemPrompt = SystemPrompts.DEFAULT,
     };
 
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputEntryDate = string.Empty;
         this.inputValidUntil = string.Empty;

@@ -1,0 +1,349 @@
+@attribute [Route(Routes.ASSISTANT_ERI)]
+@using AIStudio.Settings.DataModel
+@using MudExtensions
+@inherits AssistantBaseCore
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize
+    all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the
+    vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to
+    significantly reduce the hallucination of the LLM in knowledge questions.
+</MudText>
+
+<MudText Typo="Typo.body1">
+    <b>Related links:</b>
+</MudText>
+<MudList T="string" Class="mb-6">
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://github.com/MindWorkAI/ERI">ERI repository with example implementation in .NET and C#</MudListItem>
+    <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="https://mindworkai.org/swagger-ui.html">Interactive documentation aka Swagger UI</MudListItem>
+</MudList>
+
+<PreviewPrototype/>
+<div class="mb-6"></div>
+
+<MudText Typo="Typo.h4" Class="mb-3">
+    ERI server presets
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if
+    you are responsible for multiple ERI servers.
+</MudText>
+
+@if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Count is 0)
+{
+    <MudText Typo="Typo.body1" Class="mb-3">
+        You have not yet added any ERI server presets.
+    </MudText>
+}
+else
+{
+    <MudList Disabled="@this.AreServerPresetsBlocked" T="DataERIServer" Class="mb-1" SelectedValue="@this.selectedERIServer" SelectedValueChanged="@this.SelectedERIServerChanged">
+        @foreach (var server in this.SettingsManager.ConfigurationData.ERI.ERIServers)
+        {
+            <MudListItem T="DataERIServer" Icon="@Icons.Material.Filled.Settings" Value="@server">
+                @server.ServerName
+            </MudListItem>
+        }
+    </MudList>
+}
+
+<MudStack Row="@true" Class="mt-1">
+    <MudButton Disabled="@this.AreServerPresetsBlocked" OnClick="@this.AddERIServer" Variant="Variant.Filled" Color="Color.Primary">
+        Add ERI server preset
+    </MudButton>
+    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Primary">
+        Delete this server preset
+    </MudButton>
+</MudStack>
+
+@if(this.AreServerPresetsBlocked)
+{
+    <MudText Typo="Typo.body1" Class="mb-3 mt-3">
+        Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.
+    </MudText>
+}
+
+<MudText Typo="Typo.h4" Class="mb-3 mt-6">
+    Auto save
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to
+    regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be
+    automatically saved. Would you like this?
+</MudText>
+
+@if(this.AreServerPresetsBlocked)
+{
+    <MudText Typo="Typo.body1" Class="mb-3">
+        Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.
+    </MudText>
+}
+
+<MudTextSwitch Label="Should we automatically save any input made?" Disabled="@this.AreServerPresetsBlocked" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
+
+<hr style="width: 100%; border-width: 0.25ch;" class="mt-6"/>
+
+<MudText Typo="Typo.h4" Class="mt-6 mb-1">
+    Common ERI server settings
+</MudText>
+<MudTextField T="string" Disabled="@this.IsNoneERIServerSelected" @bind-Text="@this.serverName" Validation="@this.ValidateServerName" Immediate="@true" Label="ERI server name" HelperText="Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio." Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="() => this.ServerNameWasChanged()"/>
+<MudTextField T="string" Disabled="@this.IsNoneERIServerSelected" @bind-Text="@this.serverDescription" Validation="@this.ValidateServerDescription" Immediate="@true" Label="ERI server description" HelperText="Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio." Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+
+<MudStack Row="@true" Class="mb-3">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="ProgrammingLanguages" @bind-Value="@this.selectedProgrammingLanguage" AdornmentIcon="@Icons.Material.Filled.Code" Adornment="Adornment.Start" Label="Programming language" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateProgrammingLanguage">
+        @foreach (var language in Enum.GetValues<ProgrammingLanguages>())
+        {
+            <MudSelectItem Value="@language">@language.Name()</MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.selectedProgrammingLanguage is ProgrammingLanguages.OTHER)
+    {
+        <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.otherProgrammingLanguage" Validation="@this.ValidateOtherLanguage" Label="Other language" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+</MudStack>
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="ERIVersion" @bind-Value="@this.selectedERIVersion" Label="ERI specification version" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateERIVersion">
+        @foreach (var version in Enum.GetValues<ERIVersion>())
+        {
+            <MudSelectItem Value="@version">@version</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(!this.selectedERIVersion.WasSpecificationSelected() || this.IsNoneERIServerSelected)" Href="@this.selectedERIVersion.SpecificationURL()" Target="_blank">
+        <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2"/> Download specification
+    </MudButton>
+</MudStack>
+
+<MudText Typo="Typo.h4" Class="mt-9 mb-3">
+    Data source settings
+</MudText>
+
+<MudStack Row="@false" Spacing="1" Class="mb-3">
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="DataSources" @bind-Value="@this.selectedDataSource" AdornmentIcon="@Icons.Material.Filled.Dataset" Adornment="Adornment.Start" Label="Data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateDataSource" SelectedValuesChanged="@this.DataSourceWasChanged">
+        @foreach (var dataSource in Enum.GetValues<DataSources>())
+        {
+            <MudSelectItem Value="@dataSource">@dataSource.Name()</MudSelectItem>
+        }
+    </MudSelect>
+    @if (this.selectedDataSource is DataSources.CUSTOM)
+    {
+        <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="Describe your data source" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+</MudStack>
+
+@if(this.selectedDataSource > DataSources.FILE_SYSTEM)
+{
+    <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.dataSourceProductName" Label="Data source: product name" Validation="@this.ValidateDataSourceProductName" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+}
+
+@if (this.NeedHostnamePort())
+{
+    <div class="mb-3">
+        <MudStack Row="@true">
+            <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.dataSourceHostname" Label="Data source: hostname" Validation="@this.ValidateHostname" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudNumericField Disabled="@this.IsNoneERIServerSelected" Label="Data source: port" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyUp="() => this.DataSourcePortWasTyped()"/>
+        </MudStack>
+        @if (this.dataSourcePort < 1024)
+        {
+            <MudText Typo="Typo.body2">
+                <b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
+            </MudText>
+        }
+    </div>
+}
+
+<MudText Typo="Typo.h4" Class="mt-9 mb-3">
+    Authentication settings
+</MudText>
+
+<MudStack Row="@false" Spacing="1" Class="mb-1">
+    <MudSelectExtended
+        T="Auth"
+        Disabled="@this.IsNoneERIServerSelected"
+        ShrinkLabel="@true"
+        MultiSelection="@true"
+        MultiSelectionTextFunc="@this.GetMultiSelectionAuthText"
+        SelectedValues="@this.selectedAuthenticationMethods"
+        Validation="@this.ValidateAuthenticationMethods"
+        SelectedValuesChanged="@this.AuthenticationMethodWasChanged"
+        Label="Authentication method(s)"
+        Variant="Variant.Outlined"
+        Margin="Margin.Dense">
+        @foreach (var authMethod in Enum.GetValues<Auth>())
+        {
+            <MudSelectItemExtended Value="@authMethod">@authMethod.Name()</MudSelectItemExtended>
+        }
+    </MudSelectExtended>
+    <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.authDescription" Label="@this.AuthDescriptionTitle()" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+</MudStack>
+
+@if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))
+{
+    <MudSelect Disabled="@this.IsNoneERIServerSelected" T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="Operating system on which your ERI will run" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
+        @foreach (var os in Enum.GetValues<OperatingSystem>())
+        {
+            <MudSelectItem Value="@os">@os.Name()</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+<MudText Typo="Typo.h4" Class="mt-11 mb-3">
+    Data protection settings
+</MudText>
+
+<MudSelect Disabled="@this.IsNoneERIServerSelected" T="AllowedLLMProviders" @bind-Value="@this.allowedLLMProviders" Label="Allowed LLM providers for this data source" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateAllowedLLMProviders" Class="mb-1">
+    @foreach (var option in Enum.GetValues<AllowedLLMProviders>())
+    {
+        <MudSelectItem Value="@option">@option.Description()</MudSelectItem>
+    }
+</MudSelect>
+
+<MudText Typo="Typo.h4" Class="mt-11 mb-3">
+    Embedding settings
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector
+    space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't
+    have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You
+    store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't
+    need embeddings.
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-3">
+    You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries
+    or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
+</MudText>
+
+@if (!this.IsNoneERIServerSelected)
+{
+    <MudTable Items="@this.embeddings" Hover="@true" Class="border-dashed border rounded-lg">
+        <ColGroup>
+            <col/>
+            <col style="width: 34em;"/>
+            <col style="width: 34em;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh Style="text-align: left;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.EmbeddingName</MudTd>
+            <MudTd>@context.EmbeddingType</MudTd>
+            <MudTd Style="text-align: left;">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditEmbedding(context)">
+                    Edit
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteEmbedding(context)">
+                    Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (this.embeddings.Count == 0)
+    {
+        <MudText Typo="Typo.h6" Class="mt-3">No embedding methods configured yet.</MudText>
+    }
+}
+
+<MudButton Disabled="@this.IsNoneERIServerSelected" Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbedding">
+    Add Embedding Method
+</MudButton>
+
+<MudText Typo="Typo.h4" Class="mt-6 mb-1">
+    Data retrieval settings
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process.
+    You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows
+    you to test with beta users which process works better. Or you might generally want to give users the choice so they can select
+    the process that best suits their circumstances.
+</MudText>
+
+@if (!this.IsNoneERIServerSelected)
+{
+    <MudTable Items="@this.retrievalProcesses" Hover="@true" Class="border-dashed border rounded-lg">
+        <ColGroup>
+            <col/>
+            <col style="width: 34em;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh Style="text-align: left;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd Style="text-align: left;">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditRetrievalProcess(context)">
+                    Edit
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteRetrievalProcess(context)">
+                    Delete
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (this.retrievalProcesses.Count == 0)
+    {
+        <MudText Typo="Typo.h6" Class="mt-3">No retrieval process configured yet.</MudText>
+    }
+}
+
+<MudButton Disabled="@this.IsNoneERIServerSelected" Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddRetrievalProcess">
+    Add Retrieval Process
+</MudButton>
+
+<MudText Typo="Typo.body1" Class="mb-1">
+    You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text
+    mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here.
+    It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these
+    libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe
+    the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
+</MudText>
+
+<MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+
+<MudText Typo="Typo.h4" Class="mt-9 mb-1">
+    Provider selection for generation
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task.
+    Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number
+    of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.
+    <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations
+    and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
+</MudText>
+
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudText Typo="Typo.h4" Class="mt-9 mb-1">
+    Write code to file system
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created
+    outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the
+    AI has made in which files.
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All
+    other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a
+    file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore,
+    you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization,
+    you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
+</MudText>
+
+<MudTextSwitch Label="Should we write the generated code to the file system?" Disabled="@this.IsNoneERIServerSelected" @bind-Value="@this.writeToFilesystem" LabelOn="Yes, please write or update all generated code to the file system" LabelOff="No, just show me the code" />
+<SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server"/>

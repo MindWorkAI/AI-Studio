@@ -1,0 +1,109 @@
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataEmbeddingName"
+                Label="Embedding Name"
+                HelperText="The name of the embedding method."
+                Class="mb-3"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Label"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateName"
+                Counter="26"
+                MaxLength="26"
+                Immediate="@true"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataEmbeddingType"
+                Label="Embedding Type"
+                HelperText="What kind of embedding is used. For example, Transformer Embedding, Contextual Word Embedding, Graph Embedding, etc."
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Extension"
+                AdornmentColor="Color.Info"
+                Counter="56"
+                MaxLength="56"
+                Validation="@this.ValidateType"
+                Immediate="@true"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <MudList T="@string" Class="mb-3">
+                <MudListItem Icon="@Icons.Material.Filled.Link" Href="https://en.wikipedia.org/wiki/Word_embedding" Target="_blank" Text="See Wikipedia for more information about word embeddings"/>
+                <MudListItem Icon="@Icons.Material.Filled.Link" Href="https://en.wikipedia.org/wiki/Knowledge_graph_embedding" Target="_blank" Text="See Wikipedia for more information about knowledge graph embeddings"/>
+            </MudList>
+
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataDescription"
+                Label="Embedding Description"
+                HelperText="A short description of the embedding method."
+                Lines="3"
+                AutoGrow="@true"
+                MaxLines="6"
+                Immediate="@true"
+                Variant="Variant.Outlined"
+                Class="mb-3"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Extension"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateDescription"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataUsedWhen"
+                Label="Used when"
+                HelperText="When is this embedding used? When you define multiple embeddings, it is helpful to know when to use which one."
+                Lines="3"
+                AutoGrow="@true"
+                MaxLines="6"
+                Immediate="@true"
+                Variant="Variant.Outlined"
+                Class="mb-3"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Assessment"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateUsedWhen"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataLink"
+                Label="Embedding Link"
+                HelperText="A link to the embedding, e.g., to the model, the source code, the paper, it's Wikipedia page, etc."
+                Class="mb-3"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Link"
+                AdornmentColor="Color.Info"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+            
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+            @if(this.IsEditing)
+            {
+                @:Update
+            }
+            else
+            {
+                @:Add
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

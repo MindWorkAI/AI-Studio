@@ -117,4 +117,20 @@ public static class WorkspaceBehaviour
 
         Directory.Delete(chatDirectory, true);
     }
+
+    private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
+    {
+        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
+        
+        if(Path.Exists(workspacePath))
+            return;
+        
+        Directory.CreateDirectory(workspacePath);
+        var workspaceNamePath = Path.Join(workspacePath, "name");
+        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+    }
+    
+    public static async Task EnsureBiasWorkspace() => await EnsureWorkspace(KnownWorkspaces.BIAS_WORKSPACE_ID, "Bias of the Day");
+    
+    public static async Task EnsureERIServerWorkspace() => await EnsureWorkspace(KnownWorkspaces.ERI_SERVER_WORKSPACE_ID, "ERI Servers");
 }

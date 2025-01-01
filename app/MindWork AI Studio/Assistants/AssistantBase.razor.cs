@@ -4,7 +4,10 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
+using MudBlazor.Utilities;
+
 using RustService = AIStudio.Tools.RustService;
+using Timer = System.Timers.Timer;
 
 namespace AIStudio.Assistants;
 
@@ -55,7 +58,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         _ => string.Empty,
     };
 
-    protected abstract void ResetFrom();
+    protected abstract void ResetForm();
 
     protected abstract bool MightPreselectValues();
     
@@ -68,6 +71,8 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     private protected virtual RenderFragment? Body => null;
 
     protected virtual bool ShowResult => true;
+    
+    protected virtual bool ShowEntireChatThread => false;
 
     protected virtual bool AllowProfiles => true;
 
@@ -91,8 +96,10 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
-    
     protected ChatThread? chatThread;
+    
+    private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
+    
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -101,6 +108,13 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
 
     protected override async Task OnInitializedAsync()
     {
+        this.formChangeTimer.AutoReset = false;
+        this.formChangeTimer.Elapsed += async (_, _) =>
+        {
+            this.formChangeTimer.Stop();
+            await this.OnFormChange();
+        };
+        
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
@@ -161,7 +175,35 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         
         return null;
     }
+
+    private void TriggerFormChange(FormFieldChangedEventArgs _)
+    {
+        this.formChangeTimer.Stop();
+        this.formChangeTimer.Start();
+    }
     
+    /// <summary>
+    /// This method is called after any form field has changed.
+    /// </summary>
+    /// <remarks>
+    /// This method is called after a delay of 1.6 seconds. This is to prevent
+    /// the method from being called too often. This method is called after
+    /// the user has stopped typing or selecting options.
+    /// </remarks>
+    protected virtual Task OnFormChange() => Task.CompletedTask;
+    
+    /// <summary>
+    /// Add an issue to the UI.
+    /// </summary>
+    /// <param name="issue">The issue to add.</param>
+    protected void AddInputIssue(string issue)
+    {
+        Array.Resize(ref this.inputIssues, this.inputIssues.Length + 1);
+        this.inputIssues[^1] = issue;
+        this.inputIsValid = false;
+        this.StateHasChanged();
+    }
+
     protected void CreateChatThread()
     {
         this.chatThread = new()
@@ -221,7 +263,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         return time;
     }
 
-    protected async Task<string> AddAIResponseAsync(DateTimeOffset time)
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
     {
         var aiText = new ContentText
         {
@@ -236,6 +278,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             ContentType = ContentType.TEXT,
             Role = ChatRole.AI,
             Content = aiText,
+            HideFromUser = hideContentFromUser,
         };
 
         if (this.chatThread is not null)
@@ -313,7 +356,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
-        this.ResetFrom();
+        this.ResetForm();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         
         this.inputIsValid = false;
@@ -341,6 +384,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
+        this.formChangeTimer.Dispose();
     }
 
     #endregion

@@ -1,0 +1,531 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ERI - (E)xternal (R)etrieval (I)nterface",
+    "description": "This API serves as a contract between LLM tools like AI Studio and any external data sources for RAG\n(retrieval-augmented generation). The tool, e.g., AI Studio acts as the client (the augmentation and\ngeneration parts) and the data sources act as the server (the retrieval part). The data\nsources implement some form of data retrieval and return a suitable context to the LLM tool.\nThe LLM tool, in turn, handles the integration of appropriate LLMs (augmentation & generation).\nData sources can be document or graph databases, or even a file system, for example. They\nwill likely implement an appropriate retrieval process by using some kind of embedding.\nHowever, this API does not inherently require any embedding, as data processing is\nimplemented decentralized by the data sources.",
+    "version": "v1"
+  },
+  "paths": {
+    "/auth/methods": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "description": "Get the available authentication methods.",
+        "operationId": "GetAuthMethods",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthScheme"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "description": "Authenticate with the data source to get a token for further requests.",
+        "operationId": "Authenticate",
+        "parameters": [
+          {
+            "name": "authMethod",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AuthMethod"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dataSource": {
+      "get": {
+        "tags": [
+          "Data Source"
+        ],
+        "description": "Get information about the data source.",
+        "operationId": "GetDataSourceInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataSourceInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/embedding/info": {
+      "get": {
+        "tags": [
+          "Embedding"
+        ],
+        "description": "Get information about the used embedding(s).",
+        "operationId": "GetEmbeddingInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmbeddingInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/retrieval/info": {
+      "get": {
+        "tags": [
+          "Retrieval"
+        ],
+        "description": "Get information about the retrieval processes implemented by this data source.",
+        "operationId": "GetRetrievalInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RetrievalInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/retrieval": {
+      "post": {
+        "tags": [
+          "Retrieval"
+        ],
+        "description": "Retrieve information from the data source.",
+        "operationId": "Retrieve",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrievalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Context"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/requirements": {
+      "get": {
+        "tags": [
+          "Security"
+        ],
+        "description": "Get the security requirements for this data source.",
+        "operationId": "GetSecurityRequirements",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityRequirements"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthField": {
+        "enum": [
+          "NONE",
+          "USERNAME",
+          "PASSWORD",
+          "TOKEN",
+          "KERBEROS_TICKET"
+        ],
+        "type": "string",
+        "description": "An authentication field."
+      },
+      "AuthFieldMapping": {
+        "type": "object",
+        "properties": {
+          "authField": {
+            "$ref": "#/components/schemas/AuthField"
+          },
+          "fieldName": {
+            "type": "string",
+            "description": "The field name in the authentication request.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The mapping between an AuthField and the field name in the authentication request."
+      },
+      "AuthMethod": {
+        "enum": [
+          "NONE",
+          "KERBEROS",
+          "USERNAME_PASSWORD",
+          "TOKEN"
+        ],
+        "type": "string"
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "True, when the authentication was successful."
+          },
+          "token": {
+            "type": "string",
+            "description": "The token to use for further requests.",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "When the authentication was not successful, this contains the reason.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The response to an authentication request."
+      },
+      "AuthScheme": {
+        "type": "object",
+        "properties": {
+          "authMethod": {
+            "$ref": "#/components/schemas/AuthMethod"
+          },
+          "authFieldMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthFieldMapping"
+            },
+            "description": "A list of field mappings for the authentication method. The client must know,\r\n            e.g., how the password field is named in the request.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Describes one authentication scheme for this data source."
+      },
+      "ChatThread": {
+        "type": "object",
+        "properties": {
+          "contentBlocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentBlock"
+            },
+            "description": "The content blocks in this chat thread.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A chat thread, which is a list of content blocks."
+      },
+      "ContentBlock": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The content of the block. Remember that images and other media are base64 encoded.",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ContentType"
+          }
+        },
+        "additionalProperties": false,
+        "description": "A block of content of a chat thread."
+      },
+      "ContentType": {
+        "enum": [
+          "NONE",
+          "UNKNOWN",
+          "TEXT",
+          "IMAGE",
+          "VIDEO",
+          "AUDIO",
+          "SPEECH"
+        ],
+        "type": "string",
+        "description": "The type of content."
+      },
+      "Context": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the source, e.g., a document name, database name,\r\n            collection name, etc.",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "description": "What are the contents of the source? For example, is it a\r\n            dictionary, a book chapter, business concept, a paper, etc.",
+            "nullable": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The path to the content, e.g., a URL, a file path, a path in a\r\n            graph database, etc.",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/ContentType"
+          },
+          "matchedContent": {
+            "type": "string",
+            "description": "The content that matched the user prompt. For text, you\r\n            return the matched text and, e.g., three words before and after it.",
+            "nullable": true
+          },
+          "surroundingContent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The surrounding content of the matched content.\r\n            For text, you may return, e.g., one sentence or paragraph before and after\r\n            the matched content.",
+            "nullable": true
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Links to related content, e.g., links to Wikipedia articles,\r\n            links to sources, etc.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Matching context returned by the data source as a result of a retrieval request."
+      },
+      "DataSourceInfo": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the data source, e.g., \"Internal Organization Documents.\"",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A short description of the data source. What kind of data does it contain?\r\n            What is the data source used for?",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information about the data source."
+      },
+      "EmbeddingInfo": {
+        "type": "object",
+        "properties": {
+          "embeddingType": {
+            "type": "string",
+            "description": "What kind of embedding is used. For example, \"Transformer Embedding,\" \"Contextual Word\r\n            Embedding,\" \"Graph Embedding,\" etc.",
+            "nullable": true
+          },
+          "embeddingName": {
+            "type": "string",
+            "description": "Name the embedding used. This can be a library, a framework, or the name of the used\r\n            algorithm.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A short description of the embedding. Describe what the embedding is doing.",
+            "nullable": true
+          },
+          "usedWhen": {
+            "type": "string",
+            "description": "Describe when the embedding is used. For example, when the user prompt contains certain\r\n            keywords, or anytime?",
+            "nullable": true
+          },
+          "link": {
+            "type": "string",
+            "description": "A link to the embedding's documentation or the source code. Might be null.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents information about the used embedding for this data source. The purpose of this information is to give the\r\ninterested user an idea of what kind of embedding is used and what it does."
+      },
+      "ProviderType": {
+        "enum": [
+          "NONE",
+          "ANY",
+          "SELF_HOSTED"
+        ],
+        "type": "string",
+        "description": "Known types of providers that can process data."
+      },
+      "RetrievalInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for the retrieval process. This can be a GUID, a unique name, or an increasing integer.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the retrieval process, e.g., \"Keyword-Based Wikipedia Article Retrieval\".",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A short description of the retrieval process. What kind of retrieval process is it?",
+            "nullable": true
+          },
+          "link": {
+            "type": "string",
+            "description": "A link to the retrieval process's documentation, paper, Wikipedia article, or the source code. Might be null.",
+            "nullable": true
+          },
+          "parametersDescription": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A dictionary that describes the parameters of the retrieval process. The key is the parameter name,\r\n            and the value is a description of the parameter. Although each parameter will be sent as a string, the description should indicate the\r\n            expected type and range, e.g., 0.0 to 1.0 for a float parameter.",
+            "nullable": true
+          },
+          "embeddings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmbeddingInfo"
+            },
+            "description": "A list of embeddings used in this retrieval process. It might be empty in case no embedding is used.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information about a retrieval process, which this data source implements."
+      },
+      "RetrievalRequest": {
+        "type": "object",
+        "properties": {
+          "latestUserPrompt": {
+            "type": "string",
+            "description": "The latest user prompt that AI Studio received.",
+            "nullable": true
+          },
+          "latestUserPromptType": {
+            "$ref": "#/components/schemas/ContentType"
+          },
+          "thread": {
+            "$ref": "#/components/schemas/ChatThread"
+          },
+          "retrievalProcessId": {
+            "type": "string",
+            "description": "Optional. The ID of the retrieval process that the data source should use.\r\n            When null, the data source chooses an appropriate retrieval process. Selecting a retrieval process is optional\r\n            for AI Studio users. Most users do not specify a retrieval process.",
+            "nullable": true
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A dictionary of parameters that the data source should use for the retrieval process.\r\n            Although each parameter will be sent as a string, the retrieval process specifies the expected type and range.",
+            "nullable": true
+          },
+          "maxMatches": {
+            "type": "integer",
+            "description": "The maximum number of matches that the data source should return. AI Studio uses\r\n            any value below 1 to indicate that the data source should return as many matches as appropriate.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "The retrieval request sent by AI Studio."
+      },
+      "Role": {
+        "enum": [
+          "NONE",
+          "UNKNOW",
+          "SYSTEM",
+          "USER",
+          "AI",
+          "AGENT"
+        ],
+        "type": "string",
+        "description": "Possible roles of any chat thread."
+      },
+      "SecurityRequirements": {
+        "type": "object",
+        "properties": {
+          "allowedProviderType": {
+            "$ref": "#/components/schemas/ProviderType"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents the security requirements for this data source."
+      }
+    },
+    "securitySchemes": {
+      "ERI_Token": {
+        "type": "apiKey",
+        "description": "Enter the ERI token yielded by the authentication process at /auth.",
+        "name": "token",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "ERI_Token": [ ]
+    }
+  ]
+}

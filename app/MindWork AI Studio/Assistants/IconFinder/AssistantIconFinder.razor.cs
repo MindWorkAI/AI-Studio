@@ -33,7 +33,7 @@ public partial class AssistantIconFinder : AssistantBaseCore
 
     protected override Func<Task> SubmitAction => this.FindIcon;
     
-    protected override void ResetFrom()
+    protected override void ResetForm()
     {
         this.inputContext = string.Empty;
         if (!this.MightPreselectValues())
