@@ -95,4 +95,14 @@ public sealed class DataERIServer
     /// Do you want to preselect any additional libraries?
     /// </summary>
     public string AdditionalLibraries { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Do you want to write all generated code to the filesystem?
+    /// </summary>
+    public bool WriteToFilesystem { get; set; } = false;
+
+    /// <summary>
+    /// The base directory where to write the generated code to.
+    /// </summary>
+    public string BaseDirectory { get; set; } = string.Empty;
 }

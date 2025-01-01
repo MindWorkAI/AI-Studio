@@ -326,3 +326,16 @@ else
 </MudText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+<MudText Typo="Typo.h4" Class="mt-9 mb-1">
+    Write code to file system
+</MudText>
+
+<MudText Typo="Typo.body1" Class="mb-2">
+    AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created
+    outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the
+    AI has made in which files.
+</MudText>
+
+<MudTextSwitch Label="Should we write the generated code to the file system?" Disabled="@this.IsNoneERIServerSelected" @bind-Value="@this.writeToFilesystem" LabelOn="Yes, please write or update all generated code to the file system" LabelOff="No, just show me the code" />
+<SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server"/>

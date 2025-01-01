@@ -333,6 +333,8 @@ public partial class AssistantERI : AssistantBaseCore
             this.embeddings = new();
             this.retrievalProcesses = new();
             this.additionalLibraries = string.Empty;
+            this.writeToFilesystem = false;
+            this.baseDirectory = string.Empty;
         }
     }
     
@@ -362,6 +364,8 @@ public partial class AssistantERI : AssistantBaseCore
             this.embeddings = this.selectedERIServer.EmbeddingInfos;
             this.retrievalProcesses = this.selectedERIServer.RetrievalInfos;
             this.additionalLibraries = this.selectedERIServer.AdditionalLibraries;
+            this.writeToFilesystem = this.selectedERIServer.WriteToFilesystem;
+            this.baseDirectory = this.selectedERIServer.BaseDirectory;
             return true;
         }
         
@@ -416,6 +420,8 @@ public partial class AssistantERI : AssistantBaseCore
         this.selectedERIServer.EmbeddingInfos = this.embeddings;
         this.selectedERIServer.RetrievalInfos = this.retrievalProcesses;
         this.selectedERIServer.AdditionalLibraries = this.additionalLibraries;
+        this.selectedERIServer.WriteToFilesystem = this.writeToFilesystem;
+        this.selectedERIServer.BaseDirectory = this.baseDirectory;
         await this.SettingsManager.StoreSettings();
     }
 
@@ -440,6 +446,8 @@ public partial class AssistantERI : AssistantBaseCore
     private List<EmbeddingInfo> embeddings = new();
     private List<RetrievalInfo> retrievalProcesses = new();
     private string additionalLibraries = string.Empty;
+    private bool writeToFilesystem;
+    private string baseDirectory = string.Empty;
 
     private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
     
