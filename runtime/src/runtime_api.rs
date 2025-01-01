@@ -84,6 +84,7 @@ pub fn start_runtime_api() {
                 crate::clipboard::set_clipboard,
                 crate::app_window::check_for_update,
                 crate::app_window::install_update,
+                crate::app_window::select_directory,
                 crate::secret::get_secret,
                 crate::secret::store_secret,
                 crate::secret::delete_secret,

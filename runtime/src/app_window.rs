@@ -2,11 +2,13 @@ use std::sync::Mutex;
 use std::time::Duration;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use rocket::get;
+use rocket::{get, post};
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
+use serde::Deserialize;
 use tauri::updater::UpdateResponse;
 use tauri::{Manager, Window};
+use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::time;
 use crate::api_token::APIToken;
 use crate::dotnet::stop_dotnet_server;
@@ -219,4 +221,53 @@ pub async fn install_update(_token: APIToken) {
             error!(Source = "Updater"; "No update available to install. Did you check for updates first?");
         },
     }
+}
+
+/// Let the user select a directory.
+#[post("/select/directory?<title>", data = "<previous_directory>")]
+pub fn select_directory(_token: APIToken, title: &str, previous_directory: Option<Json<PreviousDirectory>>) -> Json<DirectorySelectionResponse> {
+    let folder_path = match previous_directory {
+        Some(previous) => {
+            let previous_path = previous.path.as_str();
+            FileDialogBuilder::new()
+                .set_title(title)
+                .set_directory(previous_path)
+                .pick_folder()
+        },
+
+        None => {
+            FileDialogBuilder::new()
+                .set_title(title)
+                .pick_folder()
+        },
+    };
+    
+    match folder_path {
+        Some(path) => {
+            info!("User selected directory: {path:?}");
+            Json(DirectorySelectionResponse {
+                user_cancelled: false,
+                selected_directory: path.to_str().unwrap().to_string(),
+            })
+        },
+
+        None => {
+            info!("User cancelled directory selection.");
+            Json(DirectorySelectionResponse {
+                user_cancelled: true,
+                selected_directory: String::from(""),
+            })
+        },
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct PreviousDirectory {
+    path: String,
+}
+
+#[derive(Serialize)]
+pub struct DirectorySelectionResponse {
+    user_cancelled: bool,
+    selected_directory: String,
 }

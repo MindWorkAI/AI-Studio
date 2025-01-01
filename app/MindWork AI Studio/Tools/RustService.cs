@@ -322,6 +322,19 @@ public sealed class RustService : IDisposable
         
         return state;
     }
+    
+    public async Task<DirectorySelectionResponse> SelectDirectory(string title, string? initialDirectory = null)
+    {
+        PreviousDirectory? previousDirectory = initialDirectory is null ? null : new (initialDirectory);
+        var result = await this.http.PostAsJsonAsync($"/select/directory?title={title}", previousDirectory, this.jsonRustSerializerOptions);
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to select a directory: '{result.StatusCode}'");
+            return new DirectorySelectionResponse(true, string.Empty);
+        }
+        
+        return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
+    }
 
     #region IDisposable
 
