@@ -335,6 +335,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.additionalLibraries = string.Empty;
             this.writeToFilesystem = false;
             this.baseDirectory = string.Empty;
+            this.previouslyGeneratedFiles = new();
         }
     }
     
@@ -366,6 +367,7 @@ public partial class AssistantERI : AssistantBaseCore
             this.additionalLibraries = this.selectedERIServer.AdditionalLibraries;
             this.writeToFilesystem = this.selectedERIServer.WriteToFilesystem;
             this.baseDirectory = this.selectedERIServer.BaseDirectory;
+            this.previouslyGeneratedFiles = this.selectedERIServer.PreviouslyGeneratedFiles;
             return true;
         }
         
@@ -422,6 +424,7 @@ public partial class AssistantERI : AssistantBaseCore
         this.selectedERIServer.AdditionalLibraries = this.additionalLibraries;
         this.selectedERIServer.WriteToFilesystem = this.writeToFilesystem;
         this.selectedERIServer.BaseDirectory = this.baseDirectory;
+        this.selectedERIServer.PreviouslyGeneratedFiles = this.previouslyGeneratedFiles;
         await this.SettingsManager.StoreSettings();
     }
 
@@ -448,6 +451,7 @@ public partial class AssistantERI : AssistantBaseCore
     private string additionalLibraries = string.Empty;
     private bool writeToFilesystem;
     private string baseDirectory = string.Empty;
+    private List<string> previouslyGeneratedFiles = new();
 
     private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
     
@@ -904,6 +908,17 @@ public partial class AssistantERI : AssistantBaseCore
             if(match.Groups[1].Value is {} file && !string.IsNullOrWhiteSpace(file) && !file.Equals("files", StringComparison.OrdinalIgnoreCase))
                 yield return file;
     }
+    
+    [GeneratedRegex("""
+                    \s*#+\s+[\w\\/.]+\s*```\w*\s+([\s\w\W]+)\s*```\s*
+                    """, RegexOptions.Singleline)]
+    private static partial Regex CodeExtractRegex();
+    
+    private string ExtractCode(string markdown)
+    {
+        var match = CodeExtractRegex().Match(markdown);
+        return match.Success ? match.Groups[1].Value : string.Empty;
+    }
 
     private async Task GenerateServer()
     {
@@ -959,10 +974,36 @@ public partial class AssistantERI : AssistantBaseCore
                                    }
                                    """, true);
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
+
+        // Is this an update of the ERI server? If so, we need to delete the previously generated files:
+        if (this.writeToFilesystem && this.previouslyGeneratedFiles.Count > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
+        {
+            foreach (var file in this.previouslyGeneratedFiles)
+            {
+                try
+                {
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                        this.Logger.LogInformation($"The previously created file '{file}' was deleted.");
+                    }
+                    else
+                    {
+                        this.Logger.LogWarning($"The previously created file '{file}' could not be found.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    this.Logger.LogWarning($"The previously created file '{file}' could not be deleted: {e.Message}");
+                }
+            }
+        }
+        
+        var generatedFiles = new List<string>();
         foreach (var file in this.ExtractFiles(fileListAnswer))
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
-            
+
             //
             // ---------------------------------
             // Ask the AI to create another file
@@ -978,9 +1019,69 @@ public partial class AssistantERI : AssistantBaseCore
                                         content of the file
                                         ```
                                         """, true);
-            await this.AddAIResponseAsync(time);
+            var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
+            if (this.writeToFilesystem)
+            {
+                var desiredFilePath = Path.Join(this.baseDirectory, file);
+                
+                // Security check: ensure that the desired file path is inside the base directory.
+                // We cannot trust the beginning of the file path because it would be possible
+                // to escape by using `..` in the file path.
+                if (!desiredFilePath.StartsWith(this.baseDirectory, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
+                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{this.baseDirectory}'.");
+                
+                else
+                {
+                    var code = this.ExtractCode(generatedCodeMarkdown);
+                    if (string.IsNullOrWhiteSpace(code))
+                        this.Logger.LogWarning($"The file content for '{desiredFilePath}' is empty or was not found.");
+
+                    else
+                    {
+
+                        // Ensure that the directory exists:
+                        var fileDirectory = Path.GetDirectoryName(desiredFilePath);
+                        if (fileDirectory is null)
+                            this.Logger.LogWarning($"The file path '{desiredFilePath}' does not contain a directory.");
+                        
+                        else
+                        {
+                            generatedFiles.Add(desiredFilePath);
+                            var fileDirectoryInfo = new DirectoryInfo(fileDirectory);
+                            if(!fileDirectoryInfo.Exists)
+                            {
+                                fileDirectoryInfo.Create();
+                                this.Logger.LogInformation($"The directory '{fileDirectory}' was created.");
+                            }
+
+                            // Save the file to the file system:
+                            await File.WriteAllTextAsync(desiredFilePath, code, Encoding.UTF8);
+                            this.Logger.LogInformation($"The file '{desiredFilePath}' was created.");
+                        }
+                    }
+                }
+            }
         }
         
+        if(this.writeToFilesystem)
+        {
+            this.previouslyGeneratedFiles = generatedFiles;
+            this.selectedERIServer!.PreviouslyGeneratedFiles = generatedFiles;
+            await this.SettingsManager.StoreSettings();
+        }
+        
+        //
+        // ---------------------------------
+        // Ask the AI for further steps
+        // ---------------------------------
+        //
+        time = this.AddUserRequest("""
+                                   Thank you for implementing the files. Please explain what the next steps are.
+                                   The goal is for the code to compile and the server to start. We assume that
+                                   the developer has installed the compiler. We will not consider DevOps tools
+                                   like Docker.
+                                   """, true);
+        await this.AddAIResponseAsync(time);
         await this.SendToAssistant(Tools.Components.CHAT, default);
     }
 }

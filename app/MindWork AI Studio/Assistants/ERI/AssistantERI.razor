@@ -337,5 +337,13 @@ else
     AI has made in which files.
 </MudText>
 
+<MudText Typo="Typo.body1" Class="mb-2">
+    When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All
+    other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a
+    file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore,
+    you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization,
+    you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
+</MudText>
+
 <MudTextSwitch Label="Should we write the generated code to the file system?" Disabled="@this.IsNoneERIServerSelected" @bind-Value="@this.writeToFilesystem" LabelOn="Yes, please write or update all generated code to the file system" LabelOff="No, just show me the code" />
 <SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server"/>

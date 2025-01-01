@@ -99,10 +99,15 @@ public sealed class DataERIServer
     /// <summary>
     /// Do you want to write all generated code to the filesystem?
     /// </summary>
-    public bool WriteToFilesystem { get; set; } = false;
+    public bool WriteToFilesystem { get; set; }
 
     /// <summary>
     /// The base directory where to write the generated code to.
     /// </summary>
     public string BaseDirectory { get; set; } = string.Empty;
+
+    /// <summary>
+    /// We save which files were generated previously.
+    /// </summary>
+    public List<string> PreviouslyGeneratedFiles { get; set; } = new();
 }
