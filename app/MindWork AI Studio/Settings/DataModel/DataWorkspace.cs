@@ -21,4 +21,9 @@ public sealed class DataWorkspace
     /// Indicates whether the sidebar is currently visible.
     /// </summary>
     public bool IsSidebarVisible { get; set; } = true;
+
+    /// <summary>
+    /// The position of the splitter between the chat and the workspaces.
+    /// </summary>
+    public double SplitterPosition { get; set; } = 30;
 }

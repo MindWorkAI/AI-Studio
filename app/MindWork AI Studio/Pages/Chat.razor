@@ -1,7 +1,5 @@
 @attribute [Route(Routes.CHAT)]
-@using AIStudio.Chat
 @using AIStudio.Settings.DataModel
-
 @inherits MSGComponentBase
 
 <MudText Typo="Typo.h3" Class="mb-2 mr-3">
@@ -16,113 +14,81 @@
 </MudText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
-<MudStack Row="@true" Style="width: 100%; overflow: hidden;">
-    @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
-         && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR
-         && !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
-    {
+@if (this.AreWorkspacesVisible)
+{
+    <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
+        <StartContent>    
+            @if (this.AreWorkspacesHidden)
+            {
+                <MudPaper Class="border border-solid rounded-lg">
+                    <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
+                    </MudTooltip>
+                </MudPaper>
+            }
+            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            {
+                @if ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible) || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE)
+                {
+                    @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
+                    {
+                        <InnerScrolling HeaderHeight="12.3em" FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg" MinWidth="26em">
+                            <HeaderContent>
+                                <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
+                                </MudTooltip>
+                            </HeaderContent>
+                            <ChildContent>
+                                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" />
+                            </ChildContent>
+                        </InnerScrolling>
+                    }
+                    else
+                    {
+                        <InnerScrolling HeaderHeight="12.3em" FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg" MinWidth="26em">
+                            <ChildContent>
+                                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" />
+                            </ChildContent>
+                        </InnerScrolling>
+                    }
+                }
+            }
+        </StartContent>
+        <EndContent>
+            
+            <ChatComponent
+                @bind-ChatThread="@this.chatThread"
+                @bind-Provider="@this.providerSettings"
+                Workspaces="@this.workspaces"
+                WorkspaceName="name => this.currentWorkspaceName = name" />
+
+        </EndContent>
+    </MudSplitter>
+}
+else if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
+{
+    <MudStack Row="@true" Style="width: 100%; overflow: hidden;">
         <MudPaper Class="border border-solid rounded-lg">
             <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
             </MudTooltip>
         </MudPaper>
-    }
-    @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
-    {
-        @if ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible) || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE)
-        {
-            @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
-            {
-                <InnerScrolling HeaderHeight="12.3em" Class="border border-solid rounded-lg">
-                    <HeaderContent>
-                        <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                            <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-                        </MudTooltip>
-                    </HeaderContent>
-                    <ChildContent>
-                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" LoadedChatWasChanged="this.LoadedChatChanged"/>
-                    </ChildContent>
-                </InnerScrolling>
-            }
-            else
-            {
-                <InnerScrolling HeaderHeight="12.3em" Class="border border-solid rounded-lg">
-                    <ChildContent>
-                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" LoadedChatWasChanged="this.LoadedChatChanged"/>
-                    </ChildContent>
-                </InnerScrolling>
-            }
-        }
-    }
-    <InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" HeaderHeight="12.3em">
-        <ChildContent>
-            @if (this.chatThread is not null)
-            {
-                foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
-                {
-                    @if (!block.HideFromUser)
-                    {
-                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
-                    }
-                }
-            }
-        </ChildContent>
-        <FooterContent>
-            <MudElement Style="flex: 0 0 auto;">
-                <MudTextField T="string" @ref="@this.inputField" @bind-Text="@this.userInput" Variant="Variant.Outlined" AutoGrow="@true" Lines="3" MaxLines="12" Label="@this.InputLabel" Placeholder="@this.ProviderPlaceholder" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" OnAdornmentClick="() => this.SendMessage()" ReadOnly="!this.IsProviderSelected || this.isStreaming" Immediate="@true" OnKeyUp="this.InputKeyEvent" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="@this.UserInputClass" Style="@this.UserInputStyle"/>
-            </MudElement>
-            <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey;">
-                @if (
-                    this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
-                    && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
-                {
-                    <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="() => this.ToggleWorkspaceOverlay()"/>
-                    </MudTooltip>
-                }
-
-                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
-                {
-                    <MudTooltip Text="Save chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="() => this.SaveThread()" Disabled="@(!this.CanThreadBeSaved)"/>
-                    </MudTooltip>
-                }
-
-                <MudTooltip Text="Start temporary chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="() => this.StartNewChat(useSameWorkspace: false)"/>
-                </MudTooltip>
-
-                @if (!string.IsNullOrWhiteSpace(this.currentWorkspaceName))
-                {
-                    <MudTooltip Text="@this.TooltipAddChatToWorkspace" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="() => this.StartNewChat(useSameWorkspace: true)"/>
-                    </MudTooltip>
-                }
-
-                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
-                {
-                    <MudTooltip Text="Delete this chat & start a new one" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true)" Disabled="@(!this.CanThreadBeSaved)"/>
-                    </MudTooltip>
-                }
-
-                @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
-                {
-                    <MudTooltip Text="Move the chat to a workspace, or to another if it is already in one." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
-                    </MudTooltip>
-                }
-
-                @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
-                {
-                    <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.providerSettings.UsedLLMProvider"/>
-                }
-
-                <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" />
-            </MudToolBar>
-        </FooterContent>
-    </InnerScrolling>
-</MudStack>
+        
+        <ChatComponent
+            @bind-ChatThread="@this.chatThread"
+            @bind-Provider="@this.providerSettings"
+            Workspaces="@this.workspaces"
+            WorkspaceName="name => this.currentWorkspaceName = name"/>
+    </MudStack>
+}
+else
+{
+    <ChatComponent
+        @bind-ChatThread="@this.chatThread"
+        @bind-Provider="@this.providerSettings"
+        Workspaces="@this.workspaces"
+        WorkspaceName="name => this.currentWorkspaceName = name"/>
+}
 
 @if (
     this.SettingsManager.ConfigurationData.Workspace.StorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES
@@ -134,11 +100,11 @@
                 <MudText Typo="Typo.h6" Class="mr-3">
                     Your workspaces
                 </MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspaceOverlay()"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspacesOverlay()"/>
             </MudStack>
         </MudDrawerHeader>
         <MudDrawerContainer Class="ml-6">
-            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" LoadedChatWasChanged="this.LoadedChatChanged"/>
+            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" />
         </MudDrawerContainer>
     </MudDrawer>
 }

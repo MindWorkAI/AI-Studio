@@ -19,6 +19,10 @@ public enum Event
     LOAD_CHAT,
     CHAT_STREAMING_DONE,
     
+    // Workspace events:
+    WORKSPACE_LOADED_CHAT_CHANGED,
+    WORKSPACE_TOGGLE_OVERLAY,
+    
     // Send events:
     SEND_TO_GRAMMAR_SPELLING_ASSISTANT,
     SEND_TO_ICON_FINDER_ASSISTANT,
