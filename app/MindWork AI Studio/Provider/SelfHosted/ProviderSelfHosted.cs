@@ -5,6 +5,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
@@ -22,7 +23,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
     public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
@@ -31,7 +32,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.SystemPrompt,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
         // Prepare the OpenAI HTTP chat request:

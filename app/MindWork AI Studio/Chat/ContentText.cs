@@ -54,7 +54,7 @@ public sealed class ContentText : IContent
             this.InitialRemoteWait = true;
             
             // Iterate over the responses from the AI:
-            await foreach (var deltaText in provider.StreamChatCompletion(chatModel, chatThread, token))
+            await foreach (var deltaText in provider.StreamChatCompletion(chatModel, chatThread, settings, token))
             {
                 // When the user cancels the request, we stop the loop:
                 if (token.IsCancellationRequested)

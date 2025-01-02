@@ -210,11 +210,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.ChatThread = this.ChatThread with
         {
-            SystemPrompt = $"""
-                            {SystemPrompts.DEFAULT}
-
-                            {this.currentProfile.ToSystemPrompt()}
-                            """
+            SelectedProfile = this.currentProfile.Id,
         };
         
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -263,15 +259,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ChatThread = new()
             {
                 SelectedProvider = this.Provider.Id,
+                SelectedProfile = this.currentProfile.Id,
+                SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = threadName,
                 Seed = this.RNG.Next(),
-                SystemPrompt = $"""
-                                {SystemPrompts.DEFAULT}
-
-                                {this.currentProfile.ToSystemPrompt()}
-                                """,
                 Blocks = [],
             };
             
@@ -282,6 +275,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Set the thread name if it is empty:
             if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
                 this.ChatThread.Name = threadName;
+            
+            // Update provider and profile:
+            this.ChatThread.SelectedProvider = this.Provider.Id;
+            this.ChatThread.SelectedProfile = this.currentProfile.Id;
         }
         
         //
@@ -443,15 +440,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ChatThread = new()
             {
                 SelectedProvider = this.Provider.Id,
+                SelectedProfile = this.currentProfile.Id,
+                SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
                 Seed = this.RNG.Next(),
-                SystemPrompt = $"""
-                                {SystemPrompts.DEFAULT}
-
-                                {this.currentProfile.ToSystemPrompt()}
-                                """,
                 Blocks = [],
             };
         }
@@ -542,6 +536,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task SelectProviderWhenLoadingChat()
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
+        var chatProfile = this.ChatThread?.SelectedProfile;
+        
         switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
         {
             default:
@@ -560,6 +556,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         await this.ProviderChanged.InvokeAsync(this.Provider);
+
+        // Try to select the profile:
+        if (!string.IsNullOrWhiteSpace(chatProfile))
+        {
+            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile);
+            if(this.currentProfile == default)
+                this.currentProfile = Profile.NO_PROFILE;
+        }
     }
 
     private async Task ToggleWorkspaceOverlay()

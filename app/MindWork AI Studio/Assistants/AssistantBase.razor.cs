@@ -209,16 +209,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         this.chatThread = new()
         {
             SelectedProvider = this.providerSettings.Id,
+            SelectedProfile = this.AllowProfiles ? this.currentProfile.Id : Profile.NO_PROFILE.Id,
+            SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
-            Name = string.Empty,
+            Name = $"Assistant - {this.Title}",
             Seed = this.RNG.Next(),
-            SystemPrompt = !this.AllowProfiles ? this.SystemPrompt :
-                $"""
-                {this.SystemPrompt}
-                
-                {this.currentProfile.ToSystemPrompt()}
-                """,
             Blocks = [],
         };
     }
@@ -229,16 +225,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         this.chatThread = new()
         {
             SelectedProvider = this.providerSettings.Id,
+            SelectedProfile = this.AllowProfiles ? this.currentProfile.Id : Profile.NO_PROFILE.Id,
+            SystemPrompt = this.SystemPrompt,
             WorkspaceId = workspaceId,
             ChatId = chatId,
             Name = name,
             Seed = this.RNG.Next(),
-            SystemPrompt = !this.AllowProfiles ? this.SystemPrompt :
-                $"""
-                 {this.SystemPrompt}
-
-                 {this.currentProfile.ToSystemPrompt()}
-                 """,
             Blocks = [],
         };
         

@@ -4,6 +4,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
@@ -21,7 +22,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     public override string InstanceName { get; set; } = "Anthropic";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -52,7 +53,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 }
             }).ToList()],
             
-            System = chatThread.SystemPrompt,
+            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
             MaxTokens = 4_096,
             
             // Right now, we only support streaming completions:
