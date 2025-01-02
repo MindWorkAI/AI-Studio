@@ -370,7 +370,7 @@ jobs:
           
   build_linux_arm64:
     name: Build app (linux-arm64)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: read_metadata
     env:
       SKIP: false # allows disabling this long-running job temporarily
