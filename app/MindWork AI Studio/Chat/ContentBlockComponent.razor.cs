@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 using RustService = AIStudio.Tools.RustService;
@@ -44,6 +46,9 @@ public partial class ContentBlockComponent : ComponentBase
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
+    
+    [Inject]
+    private SettingsManager SettingsManager { get; init; } = null!;
 
     private bool HideContent { get; set; }
 
@@ -115,4 +120,6 @@ public partial class ContentBlockComponent : ComponentBase
     }
     
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
+
+    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
 }
