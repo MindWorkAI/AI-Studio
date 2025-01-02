@@ -1,6 +1,7 @@
 using System.Net;
 
 using AIStudio.Chat;
+using AIStudio.Settings;
 
 using RustService = AIStudio.Tools.RustService;
 
@@ -53,7 +54,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract string InstanceName { get; set; }
     
     /// <inheritdoc />
-    public abstract IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, CancellationToken token = default);
+    public abstract IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <inheritdoc />
     public abstract IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, CancellationToken token = default);

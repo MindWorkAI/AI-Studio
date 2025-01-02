@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -26,7 +27,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     public override string InstanceName { get; set; } = "OpenAI";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -62,7 +63,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
         var systemPrompt = new Message
         {
             Role = systemPromptRole,
-            Content = chatThread.SystemPrompt,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
         // Prepare the OpenAI HTTP chat request:

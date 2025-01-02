@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
 
@@ -23,7 +24,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
     public override string InstanceName { get; set; } = "Fireworks.ai";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -34,7 +35,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.SystemPrompt,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
         // Prepare the Fireworks HTTP chat request:

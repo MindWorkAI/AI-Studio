@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider;
 
@@ -18,7 +19,7 @@ public class NoProvider : IProvider
     
     public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 
-    public async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatChatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatChatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         await Task.FromResult(0);
         yield break;

@@ -5,6 +5,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider.Google;
 
@@ -24,7 +25,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
     public override string InstanceName { get; set; } = "Google Gemini";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -35,7 +36,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.SystemPrompt,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
         // Prepare the Google HTTP chat request:

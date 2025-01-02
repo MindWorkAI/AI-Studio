@@ -5,6 +5,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
@@ -22,7 +23,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     public override string InstanceName { get; set; } = "Mistral";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -33,7 +34,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         var systemPrompt = new RegularMessage
         {
             Role = "system",
-            Content = chatThread.SystemPrompt,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
         // Prepare the Mistral HTTP chat request:

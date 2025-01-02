@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Settings;
 
 namespace AIStudio.Provider;
 
@@ -23,9 +24,10 @@ public interface IProvider
     /// </summary>
     /// <param name="chatModel">The model to use for chat completion.</param>
     /// <param name="chatThread">The chat thread to continue.</param>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The chat completion stream.</returns>
-    public IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, CancellationToken token = default);
+    public IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <summary>
     /// Starts an image completion stream.
