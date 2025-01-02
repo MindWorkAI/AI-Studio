@@ -1,0 +1,91 @@
+@using AIStudio.Settings.DataModel
+@using AIStudio.Chat
+
+@inherits MSGComponentBase
+
+<InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" HeaderHeight="12.3em" MinWidth="36em">
+    <ChildContent>
+        @if (this.ChatThread is not null)
+        {
+            @foreach (var block in this.ChatThread.Blocks.OrderBy(n => n.Time))
+            {
+                @if (!block.HideFromUser)
+                {
+                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                }
+            }
+        }
+    </ChildContent>
+    <FooterContent>
+        <MudElement Style="flex: 0 0 auto;">
+            <MudTextField
+                T="string"
+                @ref="@this.inputField"
+                @bind-Text="@this.userInput"
+                Variant="Variant.Outlined"
+                AutoGrow="@true"
+                Lines="3"
+                MaxLines="12"
+                Label="@this.InputLabel"
+                Placeholder="@this.ProviderPlaceholder"
+                Adornment="Adornment.End"
+                AdornmentIcon="@Icons.Material.Filled.Send"
+                OnAdornmentClick="() => this.SendMessage()"
+                ReadOnly="!this.IsProviderSelected || this.isStreaming"
+                Immediate="@true"
+                OnKeyUp="this.InputKeyEvent"
+                UserAttributes="@USER_INPUT_ATTRIBUTES"
+                Class="@this.UserInputClass"
+                Style="@this.UserInputStyle"/>
+        </MudElement>
+        <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey;">
+            @if (
+                this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
+                && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
+            {
+                <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="() => this.ToggleWorkspaceOverlay()"/>
+                </MudTooltip>
+            }
+
+            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
+            {
+                <MudTooltip Text="Save chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="() => this.SaveThread()" Disabled="@(!this.CanThreadBeSaved)"/>
+                </MudTooltip>
+            }
+
+            <MudTooltip Text="Start temporary chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="() => this.StartNewChat(useSameWorkspace: false)"/>
+            </MudTooltip>
+
+            @if (!string.IsNullOrWhiteSpace(this.currentWorkspaceName))
+            {
+                <MudTooltip Text="@this.TooltipAddChatToWorkspace" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="() => this.StartNewChat(useSameWorkspace: true)"/>
+                </MudTooltip>
+            }
+
+            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            {
+                <MudTooltip Text="Delete this chat & start a new one" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true)" Disabled="@(!this.CanThreadBeSaved)"/>
+                </MudTooltip>
+            }
+
+            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            {
+                <MudTooltip Text="Move the chat to a workspace, or to another if it is already in one." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
+                </MudTooltip>
+            }
+
+            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+            {
+                <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
+            }
+
+            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
+        </MudToolBar>
+    </FooterContent>
+</InnerScrolling>
