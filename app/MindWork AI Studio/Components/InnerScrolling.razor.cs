@@ -32,6 +32,9 @@ public partial class InnerScrolling : MSGComponentBase
     [Parameter]
     public string Class { get; set; } = string.Empty;
     
+    [Parameter]
+    public string? MinWidth { get; set; }
+    
     [CascadingParameter]
     private MainLayout MainLayout { get; set; } = null!;
     
@@ -71,7 +74,9 @@ public partial class InnerScrolling : MSGComponentBase
 
     #endregion
 
-    private string Styles => this.FillEntireHorizontalSpace ? $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); overflow-x: auto; min-width: 0;" : $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); flex-shrink: 0;";
+    private string MinWidthStyle => string.IsNullOrWhiteSpace(this.MinWidth) ? string.Empty : $"min-width: {this.MinWidth};";
+    
+    private string Styles => this.FillEntireHorizontalSpace ? $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); overflow-x: auto; min-width: 0; {this.MinWidthStyle}" : $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); flex-shrink: 0; {this.MinWidthStyle}";
 
     private string Classes => this.FillEntireHorizontalSpace ? $"{this.Class} d-flex flex-column flex-grow-1" : $"{this.Class} d-flex flex-column";
     
