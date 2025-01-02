@@ -8,25 +8,39 @@
     <MudLayout>
         @if (!this.performingUpdate)
         {
-            <MudDrawerContainer Class="mud-height-full absolute">
-                <MudDrawer @bind-Open="@this.navBarOpen" MiniWidth="@NAVBAR_COLLAPSED_WIDTH" Width="@NAVBAR_EXPANDED_WIDTH" Elevation="1" Fixed="@true" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.EXPAND_ON_HOVER)" Color="Color.Default">
+            @if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.EXPAND_ON_HOVER or NavBehavior.ALWAYS_EXPAND)
+            {
+                <MudDrawerContainer Class="mud-height-full absolute">
+                    <MudDrawer @bind-Open="@this.navBarOpen" MiniWidth="@NAVBAR_COLLAPSED_WIDTH" Width="@NAVBAR_EXPANDED_WIDTH" Elevation="1" Fixed="@true" Variant="@DrawerVariant.Mini" OpenMiniOnHover="@(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.EXPAND_ON_HOVER)" Color="Color.Default">
+                        <MudNavMenu>
+                            @foreach (var navBarItem in this.navItems)
+                            {
+                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">@navBarItem.Name</MudNavLink>
+                            }
+                        </MudNavMenu>
+                    </MudDrawer>
+                </MudDrawerContainer>
+            }
+            else
+            {
+                <MudPaper Width="4em" Class="mud-height-full absolute">
                     <MudNavMenu>
                         @foreach (var navBarItem in this.navItems)
                         {
                             if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.NEVER_EXPAND_USE_TOOLTIPS)
                             {
                                 <MudTooltip Text="@navBarItem.Name" Placement="Placement.Right">
-                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">@navBarItem.Name</MudNavLink>
+                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
                                 </MudTooltip>
                             }
                             else
                             {
-                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">@navBarItem.Name</MudNavLink>
+                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
                             }
                         }
                     </MudNavMenu>
-                </MudDrawer>
-            </MudDrawerContainer>
+                </MudPaper>
+            }
         }
 
         <MudMainContent Class="mud-height-full pt-1" Style="@this.PaddingLeft">
