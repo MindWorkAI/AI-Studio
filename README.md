@@ -35,6 +35,7 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
 - v0.9.22: Added options for preview features; added embedding provider configuration for RAG (preview) and writer mode (experimental preview).
 - v0.9.18: Added the new Anthropic Heiku model; added Groq and Google Gemini as provider options.
 - v0.9.17: Added the new Anthropic model `claude-3-5-sonnet-20241022`.
@@ -42,7 +43,6 @@ Features we have recently released:
 - v0.9.15: Added the bias-of-the-day assistant. Tells you about a cognitive bias every day.
 - v0.9.13: You can use `ollama` providers secured with API keys.
 - v0.9.12: Added a job posting assistant to the business category and improved grammar & spelling check and rewrite assistants.
-- v0.9.11: Added enforcement of minimal confidence levels & dark mode.
 
 ## What is AI Studio?
 

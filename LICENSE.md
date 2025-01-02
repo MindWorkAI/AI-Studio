@@ -6,7 +6,7 @@ FSL-1.1-MIT
 
 ## Notice
 
-Copyright 2024 Thorsten Sommer
+Copyright 2025 Thorsten Sommer
 
 ## Terms and Conditions
 
