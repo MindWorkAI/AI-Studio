@@ -70,3 +70,8 @@
     text-decoration-color: red;
     text-decoration-thickness: 2px;
 }
+
+/* Fixed for MudBlazor, tooltips inside of navmenu */
+.mud-navmenu .mud-tooltip-root {
+    display: initial !important;
+}
