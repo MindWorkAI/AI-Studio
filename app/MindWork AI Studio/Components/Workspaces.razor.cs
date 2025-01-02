@@ -32,9 +32,6 @@ public partial class Workspaces : ComponentBase
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
 
     [Parameter]
-    public Func<Task> LoadedChatWasChanged { get; set; } = () => Task.CompletedTask;
-
-    [Parameter]
     public bool ExpandRootNodes { get; set; } = true;
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
@@ -273,7 +270,7 @@ public partial class Workspaces : ComponentBase
             {
                 this.CurrentChatThread = chat;
                 await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-                await this.LoadedChatWasChanged();
+                await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
             }
             
             return chat;
@@ -325,7 +322,7 @@ public partial class Workspaces : ComponentBase
         {
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await this.LoadedChatWasChanged();
+            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
     }
 
@@ -471,7 +468,7 @@ public partial class Workspaces : ComponentBase
         {
             this.CurrentChatThread = chat;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await this.LoadedChatWasChanged();
+            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
         await this.StoreChat(chat);
