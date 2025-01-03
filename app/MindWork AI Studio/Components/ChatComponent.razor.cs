@@ -252,8 +252,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.inputField.BlurAsync();
         
         // Create a new chat thread if necessary:
-        var threadName = this.ExtractThreadName(this.userInput);
-
         if (this.ChatThread is null)
         {
             this.ChatThread = new()
@@ -263,7 +261,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
-                Name = threadName,
+                Name = this.ExtractThreadName(this.userInput),
                 Seed = this.RNG.Next(),
                 Blocks = [],
             };
@@ -274,7 +272,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             // Set the thread name if it is empty:
             if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
-                this.ChatThread.Name = threadName;
+                this.ChatThread.Name = this.ExtractThreadName(this.userInput);
             
             // Update provider and profile:
             this.ChatThread.SelectedProvider = this.Provider.Id;
