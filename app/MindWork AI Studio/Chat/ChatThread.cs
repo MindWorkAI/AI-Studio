@@ -97,17 +97,45 @@ public sealed record ChatThread
         logger.LogInformation(logMessage);
         return systemPromptText;
     }
-    
+
     /// <summary>
     /// Removes a content block from this chat thread.
     /// </summary>
     /// <param name="content">The content block to remove.</param>
-    public void Remove(IContent content)
+    /// <param name="removeForRegenerate">Indicates whether the content block is removed for
+    /// regeneration purposes. True, when the content block is removed for regeneration purposes,
+    /// which will not remove the previous user block if it is hidden from the user.</param>
+    public void Remove(IContent content, bool removeForRegenerate = false)
     {
         var block = this.Blocks.FirstOrDefault(x => x.Content == content);
         if(block is null)
             return;
-        
+
+        //
+        // Remove the previous user block if it is hidden from the user. Otherwise,
+        // the experience might be confusing for the user.
+        //
+        // Explanation, using the ERI assistant as an example:
+        // - The ERI assistant generates for every file a hidden user prompt.
+        // - In the UI, the user can only see the AI's responses, not the hidden user prompts.
+        // - Now, the user removes one AI response
+        // - The hidden user prompt is still there, but the user can't see it.
+        // - Since the user prompt is hidden, neither is it possible to remove nor edit it.
+        // - This method solves this issue by removing the hidden user prompt when the AI response is removed.
+        //
+        if (block.Role is ChatRole.AI && !removeForRegenerate)
+        {
+            var sortedBlocks = this.Blocks.OrderBy(x => x.Time).ToList();
+            var index = sortedBlocks.IndexOf(block);
+            if (index > 0)
+            {
+                var previousBlock = sortedBlocks[index - 1];
+                if (previousBlock.Role is ChatRole.USER && previousBlock.HideFromUser)
+                    this.Blocks.Remove(previousBlock);
+            }
+        }
+
+        // Remove the block from the chat thread:
         this.Blocks.Remove(block);
     }
 }

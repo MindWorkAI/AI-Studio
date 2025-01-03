@@ -242,7 +242,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
     }
     
-    private async Task SendMessage()
+    private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
         if (!this.IsProviderSelected)
             return;
@@ -278,28 +278,31 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ChatThread.SelectedProvider = this.Provider.Id;
             this.ChatThread.SelectedProfile = this.currentProfile.Id;
         }
-        
-        //
-        // Add the user message to the thread:
-        //
-        var time = DateTimeOffset.Now;
-        this.ChatThread?.Blocks.Add(new ContentBlock
-        {
-            Time = time,
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                Text = this.userInput,
-            },
-        });
 
-        // Save the chat:
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        var time = DateTimeOffset.Now;
+        if (!reuseLastUserPrompt)
         {
-            await this.SaveThread();
-            this.hasUnsavedChanges = false;
-            this.StateHasChanged();
+            //
+            // Add the user message to the thread:
+            //
+            this.ChatThread?.Blocks.Add(new ContentBlock
+            {
+                Time = time,
+                ContentType = ContentType.TEXT,
+                Role = ChatRole.USER,
+                Content = new ContentText
+                {
+                    Text = this.userInput,
+                },
+            });
+
+            // Save the chat:
+            if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            {
+                await this.SaveThread();
+                this.hasUnsavedChanges = false;
+                this.StateHasChanged();
+            }
         }
 
         //
@@ -578,6 +581,18 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.hasUnsavedChanges = true;
         await this.SaveThread();
         this.StateHasChanged();
+    }
+
+    private async Task RegenerateBlock(IContent aiBlock)
+    {
+        if(this.ChatThread is null)
+            return;
+        
+        this.ChatThread.Remove(aiBlock, removeForRegenerate: true);
+        this.hasUnsavedChanges = true;
+        this.StateHasChanged();
+        
+        await this.SendMessage(reuseLastUserPrompt: true);
     }
     
     #region Overrides of MSGComponentBase

@@ -40,9 +40,18 @@ public partial class ContentBlockComponent : ComponentBase
     /// </summary>
     [Parameter]
     public string Class { get; set; } = string.Empty;
+    
+    [Parameter]
+    public bool IsLastContentBlock { get; set; } = false;
 
     [Parameter]
     public Func<IContent, Task>? RemoveBlockFunc { get; set; }
+    
+    [Parameter]
+    public Func<IContent, Task>? RegenerateFunc { get; set; }
+    
+    [Parameter]
+    public Func<bool> RegenerateEnabled { get; set; } = () => false;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -142,5 +151,23 @@ public partial class ContentBlockComponent : ComponentBase
         
         if (remove.HasValue && remove.Value)
             await this.RemoveBlockFunc(this.Content);
+    }
+    
+    private async Task RegenerateBlock()
+    {
+        if (this.RegenerateFunc is null)
+            return;
+        
+        if(this.Role is not ChatRole.AI)
+            return;
+        
+        var regenerate = await this.DialogService.ShowMessageBox(
+            "Regenerate Message",
+            "Do you really want to regenerate this message?",
+            "Yes, regenerate it",
+            "No, keep it");
+        
+        if (regenerate.HasValue && regenerate.Value)
+            await this.RegenerateFunc(this.Content);
     }
 }

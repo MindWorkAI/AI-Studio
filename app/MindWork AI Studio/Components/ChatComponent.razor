@@ -7,11 +7,14 @@
     <ChildContent>
         @if (this.ChatThread is not null)
         {
-            @foreach (var block in this.ChatThread.Blocks.OrderBy(n => n.Time))
+            var blocks = this.ChatThread.Blocks.OrderBy(n => n.Time).ToList();
+            for (var i = 0; i < blocks.Count; i++)
             {
+                var block = blocks[i];
+                var isLastBlock = i == blocks.Count - 1;
                 @if (!block.HideFromUser)
                 {
-                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" RemoveBlockFunc="@this.RemoveBlock"/>
+                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" RemoveBlockFunc="@this.RemoveBlock" IsLastContentBlock="@isLastBlock" RegenerateFunc="@this.RegenerateBlock" RegenerateEnabled="@(() => this.IsProviderSelected)"/>
                 }
             }
         }
