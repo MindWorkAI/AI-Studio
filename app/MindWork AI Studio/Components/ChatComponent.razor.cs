@@ -56,6 +56,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool autoSaveEnabled;
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
+    private CancellationTokenSource? cancellationTokenSource;
     
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -336,15 +337,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.scrollRenderCountdown = 2;
         }
         
-        this.StateHasChanged();
-        
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
         
-        // Use the selected provider to get the AI response.
-        // By awaiting this line, we wait for the entire
-        // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.Provider.Model, this.ChatThread);
+        using (this.cancellationTokenSource = new())
+        {
+            this.StateHasChanged();
+            
+            // Use the selected provider to get the AI response.
+            // By awaiting this line, we wait for the entire
+            // content to be streamed.
+            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.Provider.Model, this.ChatThread, this.cancellationTokenSource.Token);
+        }
         
+        this.cancellationTokenSource = null;
+
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
@@ -355,6 +361,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Disable the stream state:
         this.isStreaming = false;
         this.StateHasChanged();
+    }
+    
+    private async Task CancelStreaming()
+    {
+        if (this.cancellationTokenSource is not null)
+            if(!this.cancellationTokenSource.IsCancellationRequested)
+                await this.cancellationTokenSource.CancelAsync();
     }
     
     private async Task SaveThread()
@@ -678,6 +691,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             await this.SaveThread();
             this.hasUnsavedChanges = false;
+        }
+
+        if (this.cancellationTokenSource is not null)
+        {
+            if(!this.cancellationTokenSource.IsCancellationRequested)
+                await this.cancellationTokenSource.CancelAsync();
+            
+            this.cancellationTokenSource.Dispose();
         }
     }
 
