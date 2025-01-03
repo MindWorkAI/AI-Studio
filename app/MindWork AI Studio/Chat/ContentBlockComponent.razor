@@ -12,10 +12,22 @@
             <MudText Typo="Typo.body1">@this.Role.ToName() (@this.Time)</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
+            @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
+            {
+                <MudTooltip Text="Edit" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastUserBlock"/>
+                </MudTooltip>
+            }
+            @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
+            {
+                <MudTooltip Text="Edit" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastBlock"/>
+                </MudTooltip>
+            }
             @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
             {
                 <MudTooltip Text="Regenerate" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Tertiary" OnClick="@this.RegenerateBlock"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" OnClick="@this.RegenerateBlock"/>
                 </MudTooltip>
             }
             @if (this.RemoveBlockFunc is not null)

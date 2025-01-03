@@ -12,9 +12,21 @@
             {
                 var block = blocks[i];
                 var isLastBlock = i == blocks.Count - 1;
+                var isSecondLastBlock = i == blocks.Count - 2;
                 @if (!block.HideFromUser)
                 {
-                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" RemoveBlockFunc="@this.RemoveBlock" IsLastContentBlock="@isLastBlock" RegenerateFunc="@this.RegenerateBlock" RegenerateEnabled="@(() => this.IsProviderSelected)"/>
+                    <ContentBlockComponent
+                        Role="@block.Role"
+                        Type="@block.ContentType"
+                        Time="@block.Time"
+                        Content="@block.Content"
+                        RemoveBlockFunc="@this.RemoveBlock"
+                        IsLastContentBlock="@isLastBlock"
+                        IsSecondToLastBlock="@isSecondLastBlock"
+                        RegenerateFunc="@this.RegenerateBlock"
+                        RegenerateEnabled="@(() => this.IsProviderSelected)"
+                        EditLastBlockFunc="@this.EditLastBlock"
+                        EditLastUserBlockFunc="@this.EditLastUserBlock"/>
                 }
             }
         }

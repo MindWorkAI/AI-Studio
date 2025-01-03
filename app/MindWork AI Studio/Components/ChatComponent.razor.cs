@@ -595,6 +595,44 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SendMessage(reuseLastUserPrompt: true);
     }
     
+    private Task EditLastUserBlock(IContent block)
+    {
+        if(this.ChatThread is null)
+            return Task.CompletedTask;
+        
+        if (block is not ContentText textBlock)
+            return Task.CompletedTask;
+        
+        var lastBlock = this.ChatThread.Blocks.Last();
+        var lastBlockContent = lastBlock.Content;
+        if(lastBlockContent is null)
+            return Task.CompletedTask;
+        
+        this.userInput = textBlock.Text;
+        this.ChatThread.Remove(block);
+        this.ChatThread.Remove(lastBlockContent);
+        this.hasUnsavedChanges = true;
+        this.StateHasChanged();
+        
+        return Task.CompletedTask;
+    }
+    
+    private Task EditLastBlock(IContent block)
+    {
+        if(this.ChatThread is null)
+            return Task.CompletedTask;
+        
+        if (block is not ContentText textBlock)
+            return Task.CompletedTask;
+        
+        this.userInput = textBlock.Text;
+        this.ChatThread.Remove(block);
+        this.hasUnsavedChanges = true;
+        this.StateHasChanged();
+        
+        return Task.CompletedTask;
+    }
+    
     #region Overrides of MSGComponentBase
 
     public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
