@@ -97,4 +97,17 @@ public sealed record ChatThread
         logger.LogInformation(logMessage);
         return systemPromptText;
     }
+    
+    /// <summary>
+    /// Removes a content block from this chat thread.
+    /// </summary>
+    /// <param name="content">The content block to remove.</param>
+    public void Remove(IContent content)
+    {
+        var block = this.Blocks.FirstOrDefault(x => x.Content == content);
+        if(block is null)
+            return;
+        
+        this.Blocks.Remove(block);
+    }
 }

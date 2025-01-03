@@ -571,6 +571,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_TOGGLE_OVERLAY);
     }
     
+    private async Task RemoveBlock(IContent block)
+    {
+        if(this.ChatThread is null)
+            return;
+        
+        this.ChatThread.Remove(block);
+        this.hasUnsavedChanges = true;
+        await this.SaveThread();
+        this.StateHasChanged();
+    }
+    
     #region Overrides of MSGComponentBase
 
     public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default

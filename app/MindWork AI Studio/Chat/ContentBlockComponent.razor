@@ -12,7 +12,15 @@
             <MudText Typo="Typo.body1">@this.Role.ToName() (@this.Time)</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" OnClick="@this.CopyToClipboard" />
+            @if (this.RemoveBlockFunc is not null)
+            {
+                <MudTooltip Text="Removes this block" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
+                </MudTooltip>
+            }
+            <MudTooltip Text="Copies the content to the clipboard" Placement="Placement.Bottom">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" OnClick="@this.CopyToClipboard"/>
+            </MudTooltip>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>

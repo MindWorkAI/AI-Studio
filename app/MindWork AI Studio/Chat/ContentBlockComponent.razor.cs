@@ -40,6 +40,9 @@ public partial class ContentBlockComponent : ComponentBase
     /// </summary>
     [Parameter]
     public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public Func<IContent, Task>? RemoveBlockFunc { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -49,6 +52,9 @@ public partial class ContentBlockComponent : ComponentBase
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
 
     private bool HideContent { get; set; }
 
@@ -122,4 +128,19 @@ public partial class ContentBlockComponent : ComponentBase
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
+    
+    private async Task RemoveBlock()
+    {
+        if (this.RemoveBlockFunc is null)
+            return;
+        
+        var remove = await this.DialogService.ShowMessageBox(
+            "Remove Message",
+            "Do you really want to remove this message?",
+            "Yes, remove it",
+            "No, keep it");
+        
+        if (remove.HasValue && remove.Value)
+            await this.RemoveBlockFunc(this.Content);
+    }
 }
