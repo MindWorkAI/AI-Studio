@@ -11,7 +11,7 @@
             {
                 @if (!block.HideFromUser)
                 {
-                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" RemoveBlockFunc="@this.RemoveBlock"/>
                 }
             }
         }
