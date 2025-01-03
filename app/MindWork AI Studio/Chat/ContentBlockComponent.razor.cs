@@ -43,12 +43,21 @@ public partial class ContentBlockComponent : ComponentBase
     
     [Parameter]
     public bool IsLastContentBlock { get; set; } = false;
+    
+    [Parameter]
+    public bool IsSecondToLastBlock { get; set; } = false;
 
     [Parameter]
     public Func<IContent, Task>? RemoveBlockFunc { get; set; }
     
     [Parameter]
     public Func<IContent, Task>? RegenerateFunc { get; set; }
+    
+    [Parameter]
+    public Func<IContent, Task>? EditLastBlockFunc { get; set; }
+    
+    [Parameter]
+    public Func<IContent, Task>? EditLastUserBlockFunc { get; set; }
     
     [Parameter]
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
@@ -169,5 +178,34 @@ public partial class ContentBlockComponent : ComponentBase
         
         if (regenerate.HasValue && regenerate.Value)
             await this.RegenerateFunc(this.Content);
+    }
+    
+    private async Task EditLastBlock()
+    {
+        if (this.EditLastBlockFunc is null)
+            return;
+        
+        if(this.Role is not ChatRole.USER)
+            return;
+        
+        await this.EditLastBlockFunc(this.Content);
+    }
+    
+    private async Task EditLastUserBlock()
+    {
+        if (this.EditLastUserBlockFunc is null)
+            return;
+        
+        if(this.Role is not ChatRole.USER)
+            return;
+        
+        var edit = await this.DialogService.ShowMessageBox(
+            "Edit Message",
+            "Do you really want to edit this message? In order to edit this message, the AI response will be deleted.",
+            "Yes, remove the AI response and edit it",
+            "No, keep it");
+        
+        if (edit.HasValue && edit.Value)
+            await this.EditLastUserBlockFunc(this.Content);
     }
 }
