@@ -15,7 +15,7 @@
             @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
             {
                 <MudTooltip Text="Regenerate" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Tertiary" OnClick="@this.RegenerateBlock"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" OnClick="@this.RegenerateBlock"/>
                 </MudTooltip>
             }
             @if (this.RemoveBlockFunc is not null)
