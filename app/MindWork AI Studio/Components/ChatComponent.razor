@@ -100,6 +100,13 @@
                 <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
             }
 
+            @if (this.isStreaming && this.cancellationTokenSource is not null)
+            {
+                <MudTooltip Text="Stop generation" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
+                </MudTooltip>
+            }
+
             <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
         </MudToolBar>
     </FooterContent>
