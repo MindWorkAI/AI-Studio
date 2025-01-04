@@ -67,7 +67,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             MaxTokens = -1,
         }, JSON_SERIALIZER_OPTIONS);
 
-        StreamReader? streamReader = default;
+        StreamReader? streamReader = null;
         try
         {
             async Task<HttpRequestMessage> RequestBuilder()
@@ -91,7 +91,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
                 this.logger.LogError($"Self-hosted provider's chat completion failed: {responseData.ErrorMessage}");
                 yield break;
             }
-
+            
             // Open the response stream:
             var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
 
@@ -103,55 +103,77 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             this.logger.LogError($"Failed to stream chat completion from self-hosted provider '{this.InstanceName}': {e.Message}");
         }
 
-        if (streamReader is not null)
+        if (streamReader is null)
+            yield break;
+        
+        // Read the stream, line by line:
+        while (true)
         {
-            // Read the stream, line by line:
-            while (!streamReader.EndOfStream)
+            try
             {
-                // Check if the token is canceled:
-                if (token.IsCancellationRequested)
-                    yield break;
-
-                // Read the next line:
-                var line = await streamReader.ReadLineAsync(token);
-
-                // Skip empty lines:
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
-                // Skip lines that do not start with "data: ". Regard
-                // to the specification, we only want to read the data lines:
-                if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
-                    continue;
-
-                // Check if the line is the end of the stream:
-                if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
-                    yield break;
-
-                ResponseStreamLine providerResponse;
-                try
-                {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
-                    // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
-                }
-                catch
-                {
-                    // Skip invalid JSON data:
-                    continue;
-                }
-
-                // Skip empty responses:
-                if (providerResponse == default || providerResponse.Choices.Count == 0)
-                    continue;
-
-                // Yield the response:
-                yield return providerResponse.Choices[0].Delta.Content;
+                if(streamReader.EndOfStream)
+                    break;
             }
+            catch (Exception e)
+            {
+                this.logger.LogWarning($"Failed to read the end-of-stream state from self-hosted provider '{this.InstanceName}': {e.Message}");
+                break;
+            }
+                
+            // Check if the token is canceled:
+            if (token.IsCancellationRequested)
+                yield break;
+
+            // Read the next line:
+            string? line;
+            try
+            {
+                line = await streamReader.ReadLineAsync(token);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"Failed to read the stream from self-hosted provider '{this.InstanceName}': {e.Message}");
+                break;
+            }
+
+            // Skip empty lines:
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
+            // Skip lines that do not start with "data: ". Regard
+            // to the specification, we only want to read the data lines:
+            if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+                continue;
+
+            // Check if the line is the end of the stream:
+            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
+                yield break;
+
+            ResponseStreamLine providerResponse;
+            try
+            {
+                // We know that the line starts with "data: ". Hence, we can
+                // skip the first 6 characters to get the JSON data after that.
+                var jsonData = line[6..];
+
+                // Deserialize the JSON data:
+                providerResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
+            }
+            catch
+            {
+                // Skip invalid JSON data:
+                continue;
+            }
+
+            // Skip empty responses:
+            if (providerResponse == default || providerResponse.Choices.Count == 0)
+                continue;
+
+            // Yield the response:
+            yield return providerResponse.Choices[0].Delta.Content;
         }
+        
+        streamReader.Dispose();
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
