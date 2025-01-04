@@ -106,13 +106,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                         await WorkspaceBehaviour.EnsureBiasWorkspace();
                 }
             }
-            
-            if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
-            {
-                this.mustScrollToBottomAfterRender = true;
-                this.scrollRenderCountdown = 2;
-                this.StateHasChanged();
-            }
+        }
+        
+        if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
+        {
+            this.mustScrollToBottomAfterRender = true;
+            this.scrollRenderCountdown = 4;
+            this.StateHasChanged();
         }
         
         var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
