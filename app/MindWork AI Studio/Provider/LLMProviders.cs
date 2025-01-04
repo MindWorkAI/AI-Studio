@@ -11,6 +11,7 @@ public enum LLMProviders
     ANTHROPIC = 2,
     MISTRAL = 3,
     GOOGLE = 7,
+    X = 8,
     
     FIREWORKS = 5,
     GROQ = 6,

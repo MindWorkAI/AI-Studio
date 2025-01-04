@@ -35,6 +35,7 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.25: Added [xAI](https://x.ai/) as a new provider. xAI provides their Grok models for generating content.
 - v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
 - v0.9.22: Added options for preview features; added embedding provider configuration for RAG (preview) and writer mode (experimental preview).
 - v0.9.18: Added the new Anthropic Heiku model; added Groq and Google Gemini as provider options.
@@ -42,7 +43,6 @@ Features we have recently released:
 - v0.9.16: Added workspace display options & improved the layout of the app window.
 - v0.9.15: Added the bias-of-the-day assistant. Tells you about a cognitive bias every day.
 - v0.9.13: You can use `ollama` providers secured with API keys.
-- v0.9.12: Added a job posting assistant to the business category and improved grammar & spelling check and rewrite assistants.
 
 ## What is AI Studio?
 
@@ -53,7 +53,7 @@ MindWork AI Studio is a desktop application available for macOS, Windows, and Li
 
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
-- **Independence**: You are not tied to any single provider. Instead, you can choose the provider that best suits their needs. Right now, we support OpenAI (GPT4o etc.), Mistral, Anthropic (Claude), Google Gemini, and self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), [Groq](https://groq.com/), or [Fireworks](https://fireworks.ai/).
+- **Independence**: You are not tied to any single provider. Instead, you can choose the provider that best suits their needs. Right now, we support OpenAI (GPT4o etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), and self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), [Groq](https://groq.com/), or [Fireworks](https://fireworks.ai/).
 - **Unrestricted usage**: Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 - **Cost-effective**: You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
 - **Privacy**: The data entered into the app is not used for training by the providers since we are using the provider's API.
