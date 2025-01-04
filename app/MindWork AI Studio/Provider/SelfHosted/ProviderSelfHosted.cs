@@ -85,7 +85,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             }
             
             // Send the request using exponential backoff:
-            using var responseData = await this.SendRequest(RequestBuilder, token);
+            var responseData = await this.SendRequest(RequestBuilder, token);
             if(responseData.IsFailedAfterAllRetries)
             {
                 this.logger.LogError($"Self-hosted provider's chat completion failed: {responseData.ErrorMessage}");

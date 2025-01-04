@@ -83,13 +83,13 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             return request;
         }
 
-        // Send the request using exponential backoff:
-        using var responseData = await this.SendRequest(RequestBuilder, token);
-        if(responseData.IsFailedAfterAllRetries)
-        {
-            this.logger.LogError($"Google chat completion failed: {responseData.ErrorMessage}");
-            yield break;
-        }
+            // Send the request using exponential backoff:
+            var responseData = await this.SendRequest(RequestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"Google chat completion failed: {responseData.ErrorMessage}");
+                yield break;
+            }
         
         // Open the response stream:
         var geminiStream = await responseData.Response!.Content.ReadAsStreamAsync(token);

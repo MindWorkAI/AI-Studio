@@ -82,13 +82,13 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
             return request;
         }
 
-        // Send the request using exponential backoff:
-        using var responseData = await this.SendRequest(RequestBuilder, token);
-        if(responseData.IsFailedAfterAllRetries)
-        {
-            this.logger.LogError($"Fireworks chat completion failed: {responseData.ErrorMessage}");
-            yield break;
-        }
+            // Send the request using exponential backoff:
+            var responseData = await this.SendRequest(RequestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"Fireworks chat completion failed: {responseData.ErrorMessage}");
+                yield break;
+            }
         
         // Open the response stream:
         var fireworksStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
