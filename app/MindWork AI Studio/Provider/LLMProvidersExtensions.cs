@@ -5,6 +5,7 @@ using AIStudio.Provider.Groq;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
+using AIStudio.Provider.X;
 using AIStudio.Settings;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
@@ -26,6 +27,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => "Anthropic",
         LLMProviders.MISTRAL => "Mistral",
         LLMProviders.GOOGLE => "Google",
+        LLMProviders.X => "xAI",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -62,6 +64,8 @@ public static class LLMProvidersExtensions
         
         LLMProviders.MISTRAL => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, France").WithSources("https://mistral.ai/terms/#terms-of-service-la-plateforme").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
+        LLMProviders.X => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://x.ai/legal/terms-of-service-enterprise").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -87,6 +91,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GROQ => false,
         LLMProviders.ANTHROPIC => false,
         LLMProviders.FIREWORKS => false,
+        LLMProviders.X => false,
         
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -128,6 +133,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.ANTHROPIC => new ProviderAnthropic(logger) { InstanceName = instanceName },
                 LLMProviders.MISTRAL => new ProviderMistral(logger) { InstanceName = instanceName },
                 LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = instanceName },
+                LLMProviders.X => new ProviderX(logger) { InstanceName = instanceName },
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
@@ -150,6 +156,7 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => "https://console.mistral.ai/",
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
         LLMProviders.GOOGLE => "https://console.cloud.google.com/",
+        LLMProviders.X => "https://accounts.x.ai/sign-up",
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
@@ -162,6 +169,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_AI => "https://platform.openai.com/usage",
         LLMProviders.MISTRAL => "https://console.mistral.ai/usage/",
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/settings/plans",
+        LLMProviders.X => "https://console.x.ai/",
         LLMProviders.GROQ => "https://console.groq.com/settings/usage",
         LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
@@ -174,6 +182,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_AI => true,
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
+        LLMProviders.X => true,
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.GOOGLE => true,
@@ -217,6 +226,7 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
         LLMProviders.GOOGLE => true,
+        LLMProviders.X => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -232,6 +242,7 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.ANTHROPIC => true,
         LLMProviders.GOOGLE => true,
+        LLMProviders.X => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
