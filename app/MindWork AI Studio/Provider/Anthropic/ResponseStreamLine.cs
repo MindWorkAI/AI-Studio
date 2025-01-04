@@ -7,7 +7,14 @@ namespace AIStudio.Provider.Anthropic;
 /// <param name="Type">The type of the response line.</param>
 /// <param name="Index">The index of the response line.</param>
 /// <param name="Delta">The delta of the response line.</param>
-public readonly record struct ResponseStreamLine(string Type, int Index, Delta Delta);
+public readonly record struct ResponseStreamLine(string Type, int Index, Delta Delta) : IResponseStreamLine
+{
+    /// <inheritdoc />
+    public bool ContainsContent() => this != default && !string.IsNullOrWhiteSpace(this.Delta.Text);
+
+    /// <inheritdoc />
+    public string GetContent() => this.Delta.Text;
+}
 
 /// <summary>
 /// The delta object of a response line.
