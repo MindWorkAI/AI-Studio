@@ -99,18 +99,21 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
             Stream = true,
         }, JSON_SERIALIZER_OPTIONS);
 
-        async Task<HttpRequestMessage> RequestBuilder()
+        StreamReader? streamReader = null;
+        try
         {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+            async Task<HttpRequestMessage> RequestBuilder()
+            {
+                // Build the HTTP post request:
+                var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
 
-            // Set the authorization header:
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                // Set the authorization header:
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
-            // Set the content:
-            request.Content = new StringContent(openAIChatRequest, Encoding.UTF8, "application/json");
-            return request;
-        }
+                // Set the content:
+                request.Content = new StringContent(openAIChatRequest, Encoding.UTF8, "application/json");
+                return request;
+            }
         
             // Send the request using exponential backoff:
             var responseData = await this.SendRequest(RequestBuilder, token);
@@ -120,21 +123,49 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                 yield break;
             }
 
-        // Open the response stream:
-        var openAIStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
+            // Open the response stream:
+            var openAIStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
         
-        // Add a stream reader to read the stream, line by line:
-        var streamReader = new StreamReader(openAIStream);
+            // Add a stream reader to read the stream, line by line:
+            streamReader = new StreamReader(openAIStream);
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError($"Failed to stream chat completion from OpenAI '{this.InstanceName}': {e.Message}");
+        }
+        
+        if (streamReader is null)
+            yield break;
         
         // Read the stream, line by line:
-        while(!streamReader.EndOfStream)
+        while(true)
         {
+            try
+            {
+                if(streamReader.EndOfStream)
+                    break;
+            }
+            catch (Exception e)
+            {
+                this.logger.LogWarning($"Failed to read the end-of-stream state from OpenAI '{this.InstanceName}': {e.Message}");
+                break;
+            }
+            
             // Check if the token is canceled:
             if(token.IsCancellationRequested)
                 yield break;
             
             // Read the next line:
-            var line = await streamReader.ReadLineAsync(token);
+            string? line;
+            try
+            {
+                line = await streamReader.ReadLineAsync(token);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"Failed to read the stream from OpenAI '{this.InstanceName}': {e.Message}");
+                break;
+            }
             
             // Skip empty lines:
             if(string.IsNullOrWhiteSpace(line))
