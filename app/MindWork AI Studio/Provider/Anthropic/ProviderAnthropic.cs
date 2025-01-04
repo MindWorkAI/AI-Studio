@@ -10,11 +10,6 @@ namespace AIStudio.Provider.Anthropic;
 
 public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://api.anthropic.com/v1/", logger)
 {
-    private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
-
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.ANTHROPIC.ToName();
@@ -60,117 +55,24 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
             Stream = true,
         }, JSON_SERIALIZER_OPTIONS);
 
-        StreamReader? streamReader = null;
-        try
+        async Task<HttpRequestMessage> RequestBuilder()
         {
-            async Task<HttpRequestMessage> RequestBuilder()
-            {
-                // Build the HTTP post request:
-                var request = new HttpRequestMessage(HttpMethod.Post, "messages");
+            // Build the HTTP post request:
+            var request = new HttpRequestMessage(HttpMethod.Post, "messages");
 
-                // Set the authorization header:
-                request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            // Set the authorization header:
+            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
-                // Set the Anthropic version:
-                request.Headers.Add("anthropic-version", "2023-06-01");
+            // Set the Anthropic version:
+            request.Headers.Add("anthropic-version", "2023-06-01");
 
-                // Set the content:
-                request.Content = new StringContent(chatRequest, Encoding.UTF8, "application/json");
-                return request;
-            }
-
-            // Send the request using exponential backoff:
-            var responseData = await this.SendRequest(RequestBuilder, token);
-            if(responseData.IsFailedAfterAllRetries)
-            {
-                this.logger.LogError($"Anthropic chat completion failed: {responseData.ErrorMessage}");
-                yield break;
-            }
-        
-            // Open the response stream:
-            var stream = await responseData.Response!.Content.ReadAsStreamAsync(token);
-        
-            // Add a stream reader to read the stream, line by line:
-            streamReader = new StreamReader(stream);
-        }
-        catch (Exception e)
-        {
-            this.logger.LogError($"Failed to stream chat completion from Anthropic '{this.InstanceName}': {e.Message}");
+            // Set the content:
+            request.Content = new StringContent(chatRequest, Encoding.UTF8, "application/json");
+            return request;
         }
         
-        if (streamReader is null)
-            yield break;
-        
-        // Read the stream, line by line:
-        while(true)
-        {
-            try
-            {
-                if(streamReader.EndOfStream)
-                    break;
-            }
-            catch (Exception e)
-            {
-                this.logger.LogWarning($"Failed to read the end-of-stream state from Anthropic '{this.InstanceName}': {e.Message}");
-                break;
-            }
-            
-            // Check if the token is canceled:
-            if(token.IsCancellationRequested)
-                yield break;
-            
-            // Read the next line:
-            string? line;
-            try
-            {
-                line = await streamReader.ReadLineAsync(token);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError($"Failed to read the stream from Anthropic '{this.InstanceName}': {e.Message}");
-                break;
-            }
-            
-            // Skip empty lines:
-            if(string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            // Check for the end of the stream:
-            if(line.StartsWith("event: message_stop", StringComparison.InvariantCulture))
-                yield break;
-            
-            // Skip lines that do not start with "data: ". Regard
-            // to the specification, we only want to read the data lines:
-            if(!line.StartsWith("data: ", StringComparison.InvariantCulture))
-                continue;
-            
-            // Ignore any type except "content_block_delta":
-            if(!line.Contains("\"content_block_delta\"", StringComparison.InvariantCulture))
-                continue;
-
-            ResponseStreamLine anthropicResponse;
-            try
-            {
-                // We know that the line starts with "data: ". Hence, we can
-                // skip the first 6 characters to get the JSON data after that.
-                var jsonData = line[6..];
-                
-                // Deserialize the JSON data:
-                anthropicResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
-            }
-            catch
-            {
-                // Skip invalid JSON data:
-                continue;
-            }    
-            
-            // Skip empty responses:
-            if(anthropicResponse == default || string.IsNullOrWhiteSpace(anthropicResponse.Delta.Text))
-                continue;
-            
-            // Yield the response:
-            yield return anthropicResponse.Delta.Text;
-        }
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Anthropic", RequestBuilder, token))
+            yield return content;
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

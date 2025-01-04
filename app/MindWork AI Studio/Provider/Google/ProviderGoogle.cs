@@ -11,11 +11,6 @@ namespace AIStudio.Provider.Google;
 
 public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", logger)
 {
-    private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
-    
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -70,110 +65,21 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             Stream = true,
         }, JSON_SERIALIZER_OPTIONS);
 
-        StreamReader? streamReader = null;
-        try
+        async Task<HttpRequestMessage> RequestBuilder()
         {
-            async Task<HttpRequestMessage> RequestBuilder()
-            {
-                // Build the HTTP post request:
-                var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+            // Build the HTTP post request:
+            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
 
-                // Set the authorization header:
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            // Set the authorization header:
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
-                // Set the content:
-                request.Content = new StringContent(geminiChatRequest, Encoding.UTF8, "application/json");
-                return request;
-            }
-
-            // Send the request using exponential backoff:
-            var responseData = await this.SendRequest(RequestBuilder, token);
-            if(responseData.IsFailedAfterAllRetries)
-            {
-                this.logger.LogError($"Google chat completion failed: {responseData.ErrorMessage}");
-                yield break;
-            }
-        
-            // Open the response stream:
-            var geminiStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
-        
-            // Add a stream reader to read the stream, line by line:
-            streamReader = new StreamReader(geminiStream);
-        }
-        catch (Exception e)
-        {
-            this.logger.LogError($"Failed to stream chat completion from Google '{this.InstanceName}': {e.Message}");
+            // Set the content:
+            request.Content = new StringContent(geminiChatRequest, Encoding.UTF8, "application/json");
+            return request;
         }
         
-        if (streamReader is null)
-            yield break;
-        
-        // Read the stream, line by line:
-        while(true)
-        {
-            try
-            {
-                if(streamReader.EndOfStream)
-                    break;
-            }
-            catch (Exception e)
-            {
-                this.logger.LogWarning($"Failed to read the end-of-stream state from Google '{this.InstanceName}': {e.Message}");
-                break;
-            }
-            
-            // Check if the token is canceled:
-            if(token.IsCancellationRequested)
-                yield break;
-            
-            // Read the next line:
-            string? line;
-            try
-            {
-                line = await streamReader.ReadLineAsync(token);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError($"Failed to read the stream from Google '{this.InstanceName}': {e.Message}");
-                break;
-            }
-            
-            // Skip empty lines:
-            if(string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            // Skip lines that do not start with "data: ". Regard
-            // to the specification, we only want to read the data lines:
-            if(!line.StartsWith("data: ", StringComparison.InvariantCulture))
-                continue;
-
-            // Check if the line is the end of the stream:
-            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
-                yield break;
-
-            ResponseStreamLine geminiResponse;
-            try
-            {
-                // We know that the line starts with "data: ". Hence, we can
-                // skip the first 6 characters to get the JSON data after that.
-                var jsonData = line[6..];
-                
-                // Deserialize the JSON data:
-                geminiResponse = JsonSerializer.Deserialize<ResponseStreamLine>(jsonData, JSON_SERIALIZER_OPTIONS);
-            }
-            catch
-            {
-                // Skip invalid JSON data:
-                continue;
-            }    
-            
-            // Skip empty responses:
-            if(geminiResponse == default || geminiResponse.Choices.Count == 0)
-                continue;
-            
-            // Yield the response:
-            yield return geminiResponse.Choices[0].Delta.Content;
-        }
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Google", RequestBuilder, token))
+            yield return content;
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

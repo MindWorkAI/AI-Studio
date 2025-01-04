@@ -9,7 +9,14 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Model">The model used for the response.</param>
 /// <param name="SystemFingerprint">The system fingerprint; together with the seed, this allows you to reproduce the response.</param>
 /// <param name="Choices">The choices made by the AI.</param>
-public readonly record struct ResponseStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<Choice> Choices);
+public readonly record struct ResponseStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<Choice> Choices) : IResponseStreamLine
+{
+    /// <inheritdoc />
+    public bool ContainsContent() => this != default && this.Choices.Count > 0;
+
+    /// <inheritdoc />
+    public string GetContent() => this.Choices[0].Delta.Content;
+}
 
 /// <summary>
 /// Data model for a choice made by the AI.

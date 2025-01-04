@@ -1,4 +1,6 @@
 using System.Net;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
@@ -31,6 +33,11 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly RustService RUST_SERVICE;
     
     protected static readonly Encryption ENCRYPTION;
+    
+    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    };
 
     /// <summary>
     /// Constructor for the base provider.
@@ -126,5 +133,106 @@ public abstract class BaseProvider : IProvider, ISecretId
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         
         return new HttpRateLimitedStreamResult(true, false, string.Empty, response);
+    }
+
+    protected async IAsyncEnumerable<string> StreamChatCompletionInternal<T>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where T : struct, IResponseStreamLine
+    {
+        StreamReader? streamReader = null;
+        try
+        {
+            // Send the request using exponential backoff:
+            var responseData = await this.SendRequest(requestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"The {providerName} chat completion failed: {responseData.ErrorMessage}");
+                yield break;
+            }
+            
+            // Open the response stream:
+            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
+
+            // Add a stream reader to read the stream, line by line:
+            streamReader = new StreamReader(providerStream);
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError($"Failed to stream chat completion from {providerName} '{this.InstanceName}': {e.Message}");
+        }
+
+        if (streamReader is null)
+            yield break;
+        
+        // Read the stream, line by line:
+        while (true)
+        {
+            try
+            {
+                if(streamReader.EndOfStream)
+                    break;
+            }
+            catch (Exception e)
+            {
+                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
+                break;
+            }
+                
+            // Check if the token is canceled:
+            if (token.IsCancellationRequested)
+            {
+                this.logger.LogWarning($"The user canceled the chat completion for {providerName} '{this.InstanceName}'.");
+                streamReader.Close();
+                yield break;
+            }
+
+            // Read the next line:
+            string? line;
+            try
+            {
+                line = await streamReader.ReadLineAsync(token);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                break;
+            }
+
+            // Skip empty lines:
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
+            // Skip lines that do not start with "data: ". Regard
+            // to the specification, we only want to read the data lines:
+            if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+                continue;
+
+            // Check if the line is the end of the stream:
+            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
+                yield break;
+
+            T providerResponse;
+            try
+            {
+                // We know that the line starts with "data: ". Hence, we can
+                // skip the first 6 characters to get the JSON data after that.
+                var jsonData = line[6..];
+
+                // Deserialize the JSON data:
+                providerResponse = JsonSerializer.Deserialize<T>(jsonData, JSON_SERIALIZER_OPTIONS);
+            }
+            catch
+            {
+                // Skip invalid JSON data:
+                continue;
+            }
+
+            // Skip empty responses:
+            if (!providerResponse.ContainsContent())
+                continue;
+
+            // Yield the response:
+            yield return providerResponse.GetContent();
+        }
+        
+        streamReader.Dispose();
     }
 }
