@@ -149,13 +149,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             if(this.ChatThread is not null)
             {
+                await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
                 this.WorkspaceName(this.currentWorkspaceName);
                 await this.SelectProviderWhenLoadingChat();
             }
 
             this.StateHasChanged();
-            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
         
         if(this.mustScrollToBottomAfterRender)
