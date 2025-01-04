@@ -76,13 +76,13 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
             return request;
         }
 
-        // Send the request using exponential backoff:
-        using var responseData = await this.SendRequest(RequestBuilder, token);
-        if(responseData.IsFailedAfterAllRetries)
-        {
-            this.logger.LogError($"Anthropic chat completion failed: {responseData.ErrorMessage}");
-            yield break;
-        }
+            // Send the request using exponential backoff:
+            var responseData = await this.SendRequest(RequestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"Anthropic chat completion failed: {responseData.ErrorMessage}");
+                yield break;
+            }
         
         // Open the response stream:
         var stream = await responseData.Response!.Content.ReadAsStreamAsync(token);

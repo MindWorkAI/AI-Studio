@@ -10,14 +10,4 @@ public readonly record struct HttpRateLimitedStreamResult(
     bool IsSuccessful,
     bool IsFailedAfterAllRetries,
     string ErrorMessage,
-    HttpResponseMessage? Response) : IDisposable
-{
-    #region IDisposable
-
-    public void Dispose()
-    {
-        this.Response?.Dispose();
-    }
-
-    #endregion
-}
+    HttpResponseMessage? Response);

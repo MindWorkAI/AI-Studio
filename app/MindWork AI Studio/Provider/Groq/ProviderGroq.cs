@@ -85,13 +85,13 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
             return request;
         }
 
-        // Send the request using exponential backoff:
-        using var responseData = await this.SendRequest(RequestBuilder, token);
-        if(responseData.IsFailedAfterAllRetries)
-        {
-            this.logger.LogError($"Groq chat completion failed: {responseData.ErrorMessage}");
-            yield break;
-        }
+            // Send the request using exponential backoff:
+            var responseData = await this.SendRequest(RequestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"Groq chat completion failed: {responseData.ErrorMessage}");
+                yield break;
+            }
         
         // Open the response stream:
         var groqStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
