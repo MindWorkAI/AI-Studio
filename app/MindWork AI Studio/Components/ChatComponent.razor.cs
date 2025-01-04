@@ -76,6 +76,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (deferredContent is not null)
         {
             this.ChatThread = deferredContent;
+            this.Logger.LogInformation($"The chat '{this.ChatThread.Name}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
             if (this.ChatThread is not null)
@@ -120,6 +121,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.loadChat = deferredLoading;
             this.mustLoadChat = true;
+            this.Logger.LogInformation($"The loading of the chat '{this.loadChat.ChatId}' was deferred and will be loaded now.");
         }
         
         await this.SelectProviderWhenLoadingChat();
@@ -144,18 +146,23 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         if (firstRender && this.mustLoadChat)
         {
+            this.Logger.LogInformation($"Try to load the chat '{this.loadChat.ChatId}' now.");
             this.mustLoadChat = false;
             this.ChatThread = await WorkspaceBehaviour.LoadChat(this.loadChat);
             
             if(this.ChatThread is not null)
             {
+                await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+                this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
+                
                 this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
                 this.WorkspaceName(this.currentWorkspaceName);
                 await this.SelectProviderWhenLoadingChat();
             }
+            else
+                this.Logger.LogWarning($"The chat '{this.loadChat.ChatId}' could not be loaded.");
 
             this.StateHasChanged();
-            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
         
         if(this.mustScrollToBottomAfterRender)
@@ -523,8 +530,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.WorkspaceName(this.currentWorkspaceName);
         
         await this.SelectProviderWhenLoadingChat();
-        
-        this.userInput = string.Empty;
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
@@ -551,7 +556,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
         var chatProfile = this.ChatThread?.SelectedProfile;
-        
+
         switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
         {
             default:
