@@ -2,8 +2,6 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
-// ReSharper disable ClassNeverInstantiated.Global
-
 namespace AIStudio.Pages;
 
 public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
