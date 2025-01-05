@@ -26,7 +26,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private RustService RustService { get; init; } = null!;
     
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
-    private readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
+    private List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
 
     #region Overrides of ComponentBase
 
@@ -157,103 +157,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     {
         this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
         await this.SettingsManager.StoreSettings();
-    }
-
-    #endregion
-
-    #region Embedding provider related 
-
-    private string GetEmbeddingProviderModelName(EmbeddingProvider provider)
-    {
-        const int MAX_LENGTH = 36;
-        var modelName = provider.Model.ToString();
-        return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
-    }
-    
-    private async Task AddEmbeddingProvider()
-    {
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.IsEditing, false },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>("Add Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-
-        var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;
-        addedEmbedding = addedEmbedding with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
-        
-        this.SettingsManager.ConfigurationData.EmbeddingProviders.Add(addedEmbedding);
-        this.UpdateEmbeddingProviders();
-        
-        await this.SettingsManager.StoreSettings();
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    }
-    
-    private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
-    {
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.DataNum, embeddingProvider.Num },
-            { x => x.DataId, embeddingProvider.Id },
-            { x => x.DataName, embeddingProvider.Name },
-            { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
-            { x => x.DataModel, embeddingProvider.Model },
-            { x => x.DataHostname, embeddingProvider.Hostname },
-            { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, embeddingProvider.Host },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>("Edit Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-
-        var editedEmbeddingProvider = (EmbeddingProvider)dialogResult.Data!;
-        
-        // Set the provider number if it's not set. This is important for providers
-        // added before we started saving the provider number.
-        if(editedEmbeddingProvider.Num == 0)
-            editedEmbeddingProvider = editedEmbeddingProvider with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
-        
-        this.SettingsManager.ConfigurationData.EmbeddingProviders[this.SettingsManager.ConfigurationData.EmbeddingProviders.IndexOf(embeddingProvider)] = editedEmbeddingProvider;
-        this.UpdateEmbeddingProviders();
-        
-        await this.SettingsManager.StoreSettings();
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    }
-
-    private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
-    {
-        var dialogParameters = new DialogParameters
-        {
-            { "Message", $"Are you sure you want to delete the embedding provider '{provider.Name}'?" },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-        
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
-        if(deleteSecretResponse.Success)
-        {
-            this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
-            await this.SettingsManager.StoreSettings();
-        }
-        
-        this.UpdateEmbeddingProviders();
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    }
-    
-    private void UpdateEmbeddingProviders()
-    {
-        this.availableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
-            this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
 
     #endregion

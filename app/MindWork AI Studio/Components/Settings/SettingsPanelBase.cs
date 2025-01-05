@@ -17,4 +17,7 @@ public abstract class SettingsPanelBase : ComponentBase
     
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
+    
+    [Inject]
+    protected RustService RustService { get; init; } = null!;
 }
