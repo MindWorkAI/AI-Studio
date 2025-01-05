@@ -23,5 +23,5 @@ public enum DataSourceType
     /// <summary>
     /// External data source accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
     /// </summary>
-    ERI,
+    ERI_V1,
 }

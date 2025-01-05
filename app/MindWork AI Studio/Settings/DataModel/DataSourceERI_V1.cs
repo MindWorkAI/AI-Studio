@@ -1,11 +1,14 @@
+using ERI_Client.V1;
+
+// ReSharper disable InconsistentNaming
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
 /// An external data source, accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
 /// </summary>
-public readonly record struct DataSourceERI : IDataSource
+public readonly record struct DataSourceERI_V1 : IDataSource
 {
-    public DataSourceERI()
+    public DataSourceERI_V1()
     {
     }
     
@@ -30,4 +33,9 @@ public readonly record struct DataSourceERI : IDataSource
     /// The port of the ERI server.
     /// </summary>
     public int Port { get; init; }
+
+    /// <summary>
+    /// The authentication method to use.
+    /// </summary>
+    public AuthMethod AuthMethod { get; init; } = AuthMethod.NONE;
 }
