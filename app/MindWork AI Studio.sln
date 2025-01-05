@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindWork AI Studio", "MindWork AI Studio\MindWork AI Studio.csproj", "{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ERIClients", "ERIClients", "{5C2AF789-287B-4FCB-B675-7273D8CD4579}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ERIClientV1", "ERIClientV1\ERIClientV1.csproj", "{9E35A273-0FA6-4BD5-8880-A1DDAC106926}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,12 @@ Global
 		{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E35A273-0FA6-4BD5-8880-A1DDAC106926}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E35A273-0FA6-4BD5-8880-A1DDAC106926}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E35A273-0FA6-4BD5-8880-A1DDAC106926}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E35A273-0FA6-4BD5-8880-A1DDAC106926}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9E35A273-0FA6-4BD5-8880-A1DDAC106926} = {5C2AF789-287B-4FCB-B675-7273D8CD4579}
 	EndGlobalSection
 EndGlobal

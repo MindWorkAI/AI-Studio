@@ -205,6 +205,9 @@
         "type": "Transitive",
         "resolved": "0.16.9",
         "contentHash": "7WaVMHklpT3Ye2ragqRIwlFRsb6kOk63BOGADV0fan3ulVfGLUYkDi5yNUsZS/7FVNkWbtHAlDLmu4WnHGfqvQ=="
+      },
+      "ericlientv1": {
+        "type": "Project"
       }
     },
     "net8.0/osx-arm64": {}
