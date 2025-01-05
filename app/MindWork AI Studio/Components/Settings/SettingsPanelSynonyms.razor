@@ -1,0 +1,15 @@
+@using AIStudio.Settings
+@inherits SettingsPanelBase
+
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Spellcheck" HeaderText="Assistant: Synonyms">
+    <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+        <ConfigurationOption OptionDescription="Preselect synonym options?" LabelOn="Synonym options are preselected" LabelOff="No synonym options are preselected" State="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model."/>
+        <ConfigurationSelect OptionDescription="Preselect the language" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage = selectedValue)" OptionHelp="Which language should be preselected?"/>
+        @if (this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage is CommonLanguages.OTHER)
+        {
+            <ConfigurationText OptionDescription="Preselect another language" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage = updatedText)"/>
+        }
+        <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence = selectedValue)"/>
+        <ConfigurationProviderSelection Component="Components.SYNONYMS_ASSISTANT" Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider = selectedValue)"/>
+    </MudPaper>
+</ExpansionPanel>
