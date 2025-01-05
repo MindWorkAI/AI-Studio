@@ -42,16 +42,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     }
 
     #endregion
-
-    #region Preview-feature related
-
-    private void UpdatePreviewFeatures(PreviewVisibility previewVisibility)
-    {
-        this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;
-        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = previewVisibility.FilterPreviewFeatures(this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures);
-    }
-
-    #endregion
     
     #region Provider related
 
