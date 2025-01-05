@@ -1,0 +1,10 @@
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.TextFields" HeaderText="Agent: Text Content Cleaner Options">
+    <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+        <MudText Typo="Typo.body1" Class="mb-3">
+            Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things,
+            and attempts to convert relative links into absolute links so that they can be used.
+        </MudText>
+        <ConfigurationOption OptionDescription="Preselect text content cleaner options?" LabelOn="Options are preselected" LabelOff="No options are preselected" State="@(() => this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = updatedState)" OptionHelp="When enabled, you can preselect some agent options. This is might be useful when you prefer a LLM."/>
+        <ConfigurationProviderSelection Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider = selectedValue)"/>
+    </MudPaper>
+</ExpansionPanel>
