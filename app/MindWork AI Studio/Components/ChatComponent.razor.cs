@@ -20,10 +20,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     public EventCallback<ChatThread?> ChatThreadChanged { get; set; }
     
     [Parameter]
-    public Settings.Provider Provider { get; set; }
+    public AIStudio.Settings.Provider Provider { get; set; }
     
     [Parameter]
-    public EventCallback<Settings.Provider> ProviderChanged { get; set; }
+    public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
     
     [Parameter]
     public Action<string> WorkspaceName { get; set; } = _ => { };

@@ -107,7 +107,7 @@ public static class LLMProvidersExtensions
     /// <param name="providerSettings">The provider settings.</param>
     /// <param name="logger">The logger to use.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this Settings.Provider providerSettings, ILogger logger)
+    public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings, ILogger logger)
     {
         return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, logger);
     }

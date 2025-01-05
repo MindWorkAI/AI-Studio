@@ -2,12 +2,12 @@ namespace AIStudio.Settings.DataModel.PreviousModels;
 
 public static class ProviderV4Extensions
 {
-    public static List<Settings.Provider> MigrateFromV4ToV5(this IEnumerable<Provider> providers)
+    public static List<AIStudio.Settings.Provider> MigrateFromV4ToV5(this IEnumerable<Provider> providers)
     {
         return providers.Select(provider => provider.MigrateFromV4ToV5()).ToList();
     }
     
-    public static Settings.Provider MigrateFromV4ToV5(this Provider provider) => new()
+    public static AIStudio.Settings.Provider MigrateFromV4ToV5(this Provider provider) => new()
     {
         Num = provider.Num,
         Id = provider.Id,

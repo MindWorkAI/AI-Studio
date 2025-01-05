@@ -113,7 +113,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         };
     }
 
-    private Settings.Provider CreateProviderSettings()
+    private AIStudio.Settings.Provider CreateProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
         return new()
