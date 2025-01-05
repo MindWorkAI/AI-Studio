@@ -16,7 +16,7 @@ public static class DataSourceTypeExtension
         {
             DataSourceType.LOCAL_FILE => "Local File",
             DataSourceType.LOCAL_DIRECTORY => "Local Directory",
-            DataSourceType.ERI => "ERI Server",
+            DataSourceType.ERI => "External ERI Server",
             
             _ => "None",
         };
