@@ -281,16 +281,7 @@
             </MudPaper>
         </ExpansionPanel>
         
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Work" HeaderText="Workspace Options">
-            <ConfigurationSelect OptionDescription="Workspace behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = selectedValue)" OptionHelp="Should we store your chats?"/>
-            
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
-            {
-                <ConfigurationSelect OptionDescription="Workspace maintenance" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageTemporaryMaintenancePolicyData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy = selectedValue)" OptionHelp="If and when should we delete your temporary chats?"/>
-                <ConfigurationSelect OptionDescription="Workspace display behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceDisplayBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior = selectedValue)" OptionHelp="How should we display your workspaces?"/>
-            }
-        </ExpansionPanel>
-        
+        <SettingsPanelWorkspaces />
         <SettingsPanelIconFinder AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
         <SettingsPanelTranslation AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
         <SettingsPanelCoding AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
