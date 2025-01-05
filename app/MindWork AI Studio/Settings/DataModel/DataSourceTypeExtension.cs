@@ -1,6 +1,6 @@
 namespace AIStudio.Settings.DataModel;
 
-public static class DataSourceExtension
+public static class DataSourceTypeExtension
 {
     public static string GetDisplayName(this DataSourceType type)
     {
