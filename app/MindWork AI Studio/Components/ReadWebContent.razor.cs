@@ -24,7 +24,7 @@ public partial class ReadWebContent : ComponentBase
     public EventCallback<string> ContentChanged { get; set; }
     
     [Parameter]
-    public Settings.Provider ProviderSettings { get; set; }
+    public AIStudio.Settings.Provider ProviderSettings { get; set; }
     
     [Parameter]
     public bool AgentIsRunning { get; set; }
@@ -47,7 +47,7 @@ public partial class ReadWebContent : ComponentBase
     private bool urlIsValid;
     private bool isProviderValid;
 
-    private Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings;
 
     #region Overrides of ComponentBase
 

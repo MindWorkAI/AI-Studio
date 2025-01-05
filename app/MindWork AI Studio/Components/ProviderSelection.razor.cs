@@ -12,24 +12,24 @@ public partial class ProviderSelection : ComponentBase
     public AssistantBase? AssistantBase { get; set; }
     
     [Parameter]
-    public Settings.Provider ProviderSettings { get; set; }
+    public AIStudio.Settings.Provider ProviderSettings { get; set; }
     
     [Parameter]
-    public EventCallback<Settings.Provider> ProviderSettingsChanged { get; set; }
+    public EventCallback<AIStudio.Settings.Provider> ProviderSettingsChanged { get; set; }
     
     [Parameter]
-    public Func<Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
+    public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
-    private async Task SelectionChanged(Settings.Provider provider)
+    private async Task SelectionChanged(AIStudio.Settings.Provider provider)
     {
         this.ProviderSettings = provider;
         await this.ProviderSettingsChanged.InvokeAsync(provider);
     }
     
-    private IEnumerable<Settings.Provider> GetAvailableProviders()
+    private IEnumerable<AIStudio.Settings.Provider> GetAvailableProviders()
     {
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.AssistantBase?.Component ?? Tools.Components.NONE);
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)

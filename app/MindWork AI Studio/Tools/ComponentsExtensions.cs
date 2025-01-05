@@ -75,7 +75,7 @@ public static class ComponentsExtensions
         _ => default,
     };
 
-    public static Settings.Provider PreselectedProvider(this Components component, SettingsManager settingsManager) => component switch
+    public static AIStudio.Settings.Provider PreselectedProvider(this Components component, SettingsManager settingsManager) => component switch
     {
         Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider) : default,
         Components.ICON_FINDER_ASSISTANT => settingsManager.ConfigurationData.IconFinder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.IconFinder.PreselectedProvider) : default,

@@ -18,7 +18,7 @@ public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsM
     
     #region Overrides of AgentBase
 
-    public override Settings.Provider? ProviderSettings { get; set; }
+    public override AIStudio.Settings.Provider? ProviderSettings { get; set; }
 
     protected override Type Type => Type.SYSTEM;
 
