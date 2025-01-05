@@ -21,7 +21,7 @@ public enum DataSourceType
     LOCAL_DIRECTORY,
     
     /// <summary>
-    /// External data source accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.   
+    /// External data source accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
     /// </summary>
     ERI,
 }
