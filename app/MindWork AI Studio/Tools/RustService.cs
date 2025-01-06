@@ -1,8 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 
-using AIStudio.Tools.Rust;
-
 // ReSharper disable NotAccessedPositionalProperty.Local
 
 namespace AIStudio.Tools;
