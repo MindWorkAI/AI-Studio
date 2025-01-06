@@ -25,6 +25,11 @@ public sealed class Data
     /// A collection of embedding providers configured.
     /// </summary>
     public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
+
+    /// <summary>
+    /// A collection of data sources configured.
+    /// </summary>
+    public List<IDataSource> DataSources { get; set; } = [];
     
     /// <summary>
     /// List of configured profiles.
