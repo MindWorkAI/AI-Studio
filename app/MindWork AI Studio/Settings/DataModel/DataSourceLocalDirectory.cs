@@ -3,7 +3,7 @@ namespace AIStudio.Settings.DataModel;
 /// <summary>
 /// Represents a local directory as a data source.
 /// </summary>
-public readonly record struct DataSourceLocalDirectory : IDataSource
+public readonly record struct DataSourceLocalDirectory : IInternalDataSource
 {
     public DataSourceLocalDirectory()
     {
@@ -20,6 +20,9 @@ public readonly record struct DataSourceLocalDirectory : IDataSource
     
     /// <inheritdoc />
     public DataSourceType Type { get; init; } = DataSourceType.NONE;
+    
+    /// <inheritdoc />
+    public string EmbeddingId { get; init; } = Guid.Empty.ToString();
     
     /// <summary>
     /// The path to the directory.

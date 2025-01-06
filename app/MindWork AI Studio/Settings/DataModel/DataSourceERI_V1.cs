@@ -6,7 +6,7 @@ namespace AIStudio.Settings.DataModel;
 /// <summary>
 /// An external data source, accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
 /// </summary>
-public readonly record struct DataSourceERI_V1 : IDataSource
+public readonly record struct DataSourceERI_V1 : IExternalDataSource
 {
     public DataSourceERI_V1()
     {

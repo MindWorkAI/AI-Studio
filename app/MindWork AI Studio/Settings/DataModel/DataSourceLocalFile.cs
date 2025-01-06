@@ -3,7 +3,7 @@ namespace AIStudio.Settings.DataModel;
 /// <summary>
 /// Represents one local file as a data source.
 /// </summary>
-public readonly record struct DataSourceLocalFile : IDataSource
+public readonly record struct DataSourceLocalFile : IInternalDataSource
 {
     public DataSourceLocalFile()
     {
@@ -20,6 +20,9 @@ public readonly record struct DataSourceLocalFile : IDataSource
     
     /// <inheritdoc />
     public DataSourceType Type { get; init; } = DataSourceType.NONE;
+    
+    /// <inheritdoc />
+    public string EmbeddingId { get; init; } = Guid.Empty.ToString();
     
     /// <summary>
     /// The path to the file.
