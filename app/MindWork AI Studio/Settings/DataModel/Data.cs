@@ -47,6 +47,11 @@ public sealed class Data
     public uint NextEmbeddingNum { get; set; } = 1;
 
     /// <summary>
+    /// The next data source number to use.
+    /// </summary>
+    public uint NextDataSourceNum { get; set; } = 1;
+
+    /// <summary>
     /// The next profile number to use.
     /// </summary>
     public uint NextProfileNum { get; set; } = 1;
