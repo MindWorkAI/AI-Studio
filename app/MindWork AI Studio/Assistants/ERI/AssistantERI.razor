@@ -52,7 +52,7 @@ else
     <MudButton Disabled="@this.AreServerPresetsBlocked" OnClick="@this.AddERIServer" Variant="Variant.Filled" Color="Color.Primary">
         Add ERI server preset
     </MudButton>
-    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Primary">
+    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Error">
         Delete this server preset
     </MudButton>
 </MudStack>
