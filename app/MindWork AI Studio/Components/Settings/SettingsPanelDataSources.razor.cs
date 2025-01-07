@@ -57,6 +57,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
                 {
                     { x => x.IsEditing, false },
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
         
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Add Local File as Data Source", localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -73,6 +74,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
                 {
                     { x => x.IsEditing, false },
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
         
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>("Add Local Directory as Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -121,6 +123,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 {
                     { x => x.IsEditing, false },
                     { x => x.DataSource, localFile },
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
         
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Edit Local File Data Source", localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -136,6 +139,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 {
                     { x => x.IsEditing, false },
                     { x => x.DataSource, localDirectory },
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
         
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Edit Local Directory Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
