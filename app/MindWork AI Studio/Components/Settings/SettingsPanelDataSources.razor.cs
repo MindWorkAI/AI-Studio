@@ -142,7 +142,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
         
-                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Edit Local Directory Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
+                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>("Edit Local Directory Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
                 var localDirectoryDialogResult = await localDirectoryDialogReference.Result;
                 if (localDirectoryDialogResult is null || localDirectoryDialogResult.Canceled)
                     return;
