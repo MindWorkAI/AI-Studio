@@ -20,6 +20,17 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
     
     [Parameter]
     public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableEmbeddingsFunc { get; set; } = () => [];
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.UpdateDataSources();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
