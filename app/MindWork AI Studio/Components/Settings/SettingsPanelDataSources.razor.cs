@@ -18,6 +18,8 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
     [Parameter]
     public EventCallback<List<ConfigurationSelectData<string>>> AvailableDataSourcesChanged { get; set; }
     
+    [Parameter]
+    public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableEmbeddingsFunc { get; set; } = () => [];
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
