@@ -16,4 +16,17 @@ public sealed partial class RustService
         
         return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
     }
+    
+    public async Task<FileSelectionResponse> SelectFile(string title, string? initialFile = null)
+    {
+        PreviousFile? previousFile = initialFile is null ? null : new (initialFile);
+        var result = await this.http.PostAsJsonAsync($"/select/file?title={title}", previousFile, this.jsonRustSerializerOptions);
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to select a file: '{result.StatusCode}'");
+            return new FileSelectionResponse(true, string.Empty);
+        }
+        
+        return await result.Content.ReadFromJsonAsync<FileSelectionResponse>(this.jsonRustSerializerOptions);
+    }
 }
