@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Settings;
@@ -5,6 +7,10 @@ namespace AIStudio.Settings;
 /// <summary>
 /// The common interface for all data sources.
 /// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type_discriminator")]
+[JsonDerivedType(typeof(DataSourceLocalDirectory), nameof(DataSourceType.LOCAL_DIRECTORY))]
+[JsonDerivedType(typeof(DataSourceLocalFile), nameof(DataSourceType.LOCAL_FILE))]
+[JsonDerivedType(typeof(DataSourceERI_V1), nameof(DataSourceType.ERI_V1))]
 public interface IDataSource
 {
     /// <summary>
