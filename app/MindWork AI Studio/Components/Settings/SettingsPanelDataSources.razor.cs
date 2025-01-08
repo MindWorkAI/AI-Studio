@@ -121,7 +121,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
             case DataSourceLocalFile localFile:
                 var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
                 {
-                    { x => x.IsEditing, false },
+                    { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
@@ -137,7 +137,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
             case DataSourceLocalDirectory localDirectory:
                 var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
                 {
-                    { x => x.IsEditing, false },
+                    { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
                 };
@@ -153,7 +153,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
             case DataSourceERI_V1 eriDataSource:
                 var eriDialogParameters = new DialogParameters<DataSourceERI_V1Dialog>
                 {
-                    { x => x.IsEditing, false },
+                    { x => x.IsEditing, true },
                     { x => x.DataSource, eriDataSource },
                 };
                 
