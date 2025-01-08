@@ -56,7 +56,7 @@
             <MudText Typo="Typo.h6" Class="mt-3">No data sources configured yet.</MudText>
         }
         
-        <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Add Data Source" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.TopLeft">
+        <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Add Data Source" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.TopLeft" Class="mt-3 mb-6">
             <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.ERI_V1)">External Data (ERI-Server v1)</MudMenuItem>
             <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY)">Local Directory</MudMenuItem>
             <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_FILE)">Local File</MudMenuItem>
