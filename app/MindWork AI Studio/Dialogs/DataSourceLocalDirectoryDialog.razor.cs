@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -24,6 +25,8 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
+    private readonly DataSourceValidation dataSourceValidation;
+    
     /// <summary>
     /// The list of used data source names. We need this to check for uniqueness.
     /// </summary>
@@ -42,7 +45,17 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
-    
+
+    public DataSourceLocalDirectoryDialog()
+    {
+        this.dataSourceValidation = new()
+        {
+            GetSelectedCloudEmbedding = () => this.SelectedCloudEmbedding,
+            GetPreviousDataSourceName = () => this.dataEditingPreviousInstanceName,
+            GetUsedDataSourceNames = () => this.UsedDataSourcesNames,
+        };
+    }
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -78,45 +91,6 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
     }
 
     #endregion
-    
-    private string? ValidateName(string value)
-    {
-        if(string.IsNullOrWhiteSpace(value))
-            return "The name must not be empty.";
-        
-        if (value.Length > 40)
-            return "The name must not exceed 40 characters.";
-        
-        var lowerName = value.ToLowerInvariant();
-        if(lowerName != this.dataEditingPreviousInstanceName && this.UsedDataSourcesNames.Contains(lowerName))
-            return "The name is already used by another data source. Please choose a different name.";
-        
-        return null;
-    }
-    
-    private string? ValidatePath(string value)
-    {
-        if(string.IsNullOrWhiteSpace(value))
-            return "The path must not be empty. Please select a directory.";
-        
-        return null;
-    }
-    
-    private string? ValidateEmbeddingId(string value)
-    {
-        if(string.IsNullOrWhiteSpace(value))
-            return "Please select an embedding provider.";
-        
-        return null;
-    }
-    
-    private string? ValidateUserAcknowledgedCloudEmbedding(bool value)
-    {
-        if(this.SelectedCloudEmbedding && !value)
-            return "Please acknowledge that you are aware of the cloud embedding implications.";
-        
-        return null;
-    }
     
     private bool SelectedCloudEmbedding => !this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.dataEmbeddingId).IsSelfHosted;
 

@@ -10,7 +10,7 @@
                 MaxLength="40"
                 Counter="40"
                 Immediate="@true"
-                Validation="@this.ValidateName"
+                Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
@@ -21,13 +21,13 @@
                 Select a root directory for this data source. All data in this directory and all
                 its subdirectories will be processed for this data source.
             </MudJustifiedText>
-            <SelectDirectory @bind-Directory="@this.dataPath" Label="Selected base directory for this data source" DirectoryDialogTitle="Select the base directory" Validation="@this.ValidatePath" />
+            <SelectDirectory @bind-Directory="@this.dataPath" Label="Selected base directory for this data source" DirectoryDialogTitle="Select the base directory" Validation="@this.dataSourceValidation.ValidatePath" />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 In order for the AI to be able to determine the appropriate data at any time, you must
                 choose an embedding method.
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="Embedding" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.ValidateEmbeddingId">
+            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="Embedding" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
                 @foreach (var embedding in this.AvailableEmbeddings)
                 {
                     <MudSelectItem Value="@embedding.Value">@embedding.Name</MudSelectItem>
@@ -51,7 +51,7 @@
                             @: confirm that you have read and understood this.
                         }
                     </MudJustifiedText>
-                    <MudTextSwitch @bind-Value="@this.dataUserAcknowledgedCloudEmbedding" Label="I confirm that I have read and understood the above" LabelOn="Yes, please send my data to the cloud" LabelOff="No, I will chose another embedding" Validation="@this.ValidateUserAcknowledgedCloudEmbedding"/>
+                    <MudTextSwitch @bind-Value="@this.dataUserAcknowledgedCloudEmbedding" Label="I confirm that I have read and understood the above" LabelOn="Yes, please send my data to the cloud" LabelOff="No, I will chose another embedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
                 }
                 else
                 {
