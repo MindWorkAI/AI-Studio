@@ -210,6 +210,6 @@
         "type": "Project"
       }
     },
-    "net8.0/osx-arm64": {}
+    "net8.0/osx-x64": {}
   }
 }
