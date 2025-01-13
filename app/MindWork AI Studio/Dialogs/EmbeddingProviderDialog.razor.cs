@@ -197,8 +197,7 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     private async Task Store()
     {
         await this.form.Validate();
-        if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
-            this.dataAPIKeyStorageIssue = string.Empty;
+        this.dataAPIKeyStorageIssue = string.Empty;
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
