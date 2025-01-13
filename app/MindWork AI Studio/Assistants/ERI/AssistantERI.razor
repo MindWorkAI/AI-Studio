@@ -52,7 +52,7 @@ else
     <MudButton Disabled="@this.AreServerPresetsBlocked" OnClick="@this.AddERIServer" Variant="Variant.Filled" Color="Color.Primary">
         Add ERI server preset
     </MudButton>
-    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Primary">
+    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Error">
         Delete this server preset
     </MudButton>
 </MudStack>
@@ -346,4 +346,4 @@ else
 </MudText>
 
 <MudTextSwitch Label="Should we write the generated code to the file system?" Disabled="@this.IsNoneERIServerSelected" @bind-Value="@this.writeToFilesystem" LabelOn="Yes, please write or update all generated code to the file system" LabelOff="No, just show me the code" />
-<SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server"/>
+<SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server" Validation="@this.ValidateDirectory" />

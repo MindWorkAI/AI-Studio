@@ -1,0 +1,128 @@
+@using ERI_Client.V1
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataName"
+                Label="Data Source Name"
+                Class="mb-6"
+                MaxLength="40"
+                Counter="40"
+                Immediate="@true"
+                Validation="@this.dataSourceValidation.ValidatingName"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentColor="Color.Info"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <MudStack Row="@true">
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.dataHostname"
+                    Label="ERI v1 Server Hostname"
+                    Class="mb-6"
+                    Immediate="@true"
+                    Validation="@this.dataSourceValidation.ValidatingHostname"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.NetworkCheck"
+                    AdornmentColor="Color.Info"
+                    Variant="Variant.Text"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                
+                <MudNumericField
+                    Label="Port"
+                    Immediate="@true"
+                    Min="1" Max="65535"
+                    Validation="@this.dataSourceValidation.ValidatePort"
+                    @bind-Value="@this.dataPort"
+                    Variant="Variant.Text"
+                    Margin="Margin.Dense"/>
+            </MudStack>
+            
+            @if (!this.IsConnectionEncrypted())
+            {
+                <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
+                    Please note: the connection to the ERI v1 server is not encrypted. This means that all
+                    data sent to the server is transmitted in plain text. Please ask the ERI server administrator
+                    to enable encryption.
+                </MudJustifiedText>
+            }
+            
+            @if (this.IsConnectionPossible())
+            {
+                <MudStack Row="@true" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Filled" Color="@this.GetTestResultColor()" StartIcon="@this.GetTestResultIcon()" Class="mb-3" OnClick="@this.TestConnection">
+                        Test connection & read available metadata
+                    </MudButton>
+                    <MudText Typo="Typo.body1" Class="mb-3">
+                        @this.GetTestResultText()
+                    </MudText>
+                </MudStack>
+            }
+            
+            @if(this.availableAuthMethods.Count > 0 || this.dataAuthMethod != default)
+            {
+                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName()" Label="Authentication Method" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
+                    @foreach (var authMethod in this.availableAuthMethods)
+                    {
+                        <MudSelectItem Value="@authMethod">@authMethod.DisplayName()</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            
+            @if (this.NeedsSecret())
+            {
+                if (this.dataAuthMethod is AuthMethod.USERNAME_PASSWORD)
+                {
+                    @* ReSharper disable once CSharpWarnings::CS8974 *@
+                    <MudTextField
+                        T="string"
+                        @bind-Text="@this.dataUsername"
+                        Label="Username"
+                        Class="mb-6"
+                        Immediate="@true"
+                        Validation="@this.dataSourceValidation.ValidateUsername"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Person2"
+                        AdornmentColor="Color.Info"
+                        Variant="Variant.Text"
+                        UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                }
+                
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.dataSecret"
+                    Label="@this.GetSecretLabel()"
+                    Class="mb-6"
+                    Immediate="@true"
+                    Validation="@this.dataSourceValidation.ValidatingSecret"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Security"
+                    AdornmentColor="Color.Info"
+                    Variant="Variant.Text"
+                    InputType="InputType.Password"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+            }
+            
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+            @if(this.IsEditing)
+            {
+                @:Update
+            }
+            else
+            {
+                @:Add
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

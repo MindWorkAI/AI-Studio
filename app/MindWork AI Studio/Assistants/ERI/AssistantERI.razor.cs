@@ -739,6 +739,17 @@ public partial class AssistantERI : AssistantBaseCore
         
         return null;
     }
+
+    private string? ValidateDirectory(string path)
+    {
+        if(!this.writeToFilesystem)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(path))
+            return "Please provide a base directory for the ERI server to write files to.";
+        
+        return null;
+    }
     
     private string GetMultiSelectionAuthText(List<Auth> selectedValues)
     {

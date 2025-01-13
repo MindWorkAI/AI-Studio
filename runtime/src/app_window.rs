@@ -271,3 +271,52 @@ pub struct DirectorySelectionResponse {
     user_cancelled: bool,
     selected_directory: String,
 }
+
+/// Let the user select a file.
+#[post("/select/file?<title>", data = "<previous_file>")]
+pub fn select_file(_token: APIToken, title: &str, previous_file: Option<Json<PreviousFile>>) -> Json<FileSelectionResponse> {
+    let file_path = match previous_file {
+        Some(previous) => {
+            let previous_path = previous.file_path.as_str();
+            FileDialogBuilder::new()
+                .set_title(title)
+                .set_directory(previous_path)
+                .pick_file()
+        },
+
+        None => {
+            FileDialogBuilder::new()
+                .set_title(title)
+                .pick_file()
+        },
+    };
+
+    match file_path {
+        Some(path) => {
+            info!("User selected file: {path:?}");
+            Json(FileSelectionResponse {
+                user_cancelled: false,
+                selected_file_path: path.to_str().unwrap().to_string(),
+            })
+        },
+
+        None => {
+            info!("User cancelled file selection.");
+            Json(FileSelectionResponse {
+                user_cancelled: true,
+                selected_file_path: String::from(""),
+            })
+        },
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct PreviousFile {
+    file_path: String,
+}
+
+#[derive(Serialize)]
+pub struct FileSelectionResponse {
+    user_cancelled: bool,
+    selected_file_path: String,
+}

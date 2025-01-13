@@ -7,6 +7,7 @@
     <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
         <SettingsPanelProviders @bind-AvailableLLMProviders="@this.availableLLMProviders" />
         <SettingsPanelEmbeddings AvailableLLMProvidersFunc="() => this.availableLLMProviders" @bind-AvailableEmbeddingProviders="@this.availableEmbeddingProviders" />
+        <SettingsPanelDataSources AvailableLLMProvidersFunc="() => this.availableLLMProviders" AvailableEmbeddingsFunc="() => this.availableEmbeddingProviders" @bind-AvailableDataSources="@this.availableDataSources" />
         <SettingsPanelProfiles AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
         <SettingsPanelApp AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
         <SettingsPanelChat AvailableLLMProvidersFunc="() => this.availableLLMProviders" />

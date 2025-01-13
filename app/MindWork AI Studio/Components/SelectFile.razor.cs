@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class SelectDirectory : ComponentBase
+public partial class SelectFile : ComponentBase
 {
     [Parameter]
-    public string Directory { get; set; } = string.Empty;
+    public string File { get; set; } = string.Empty;
     
     [Parameter]
-    public EventCallback<string> DirectoryChanged { get; set; }
+    public EventCallback<string> FileChanged { get; set; }
 
     [Parameter]
     public bool Disabled { get; set; }
@@ -19,7 +19,7 @@ public partial class SelectDirectory : ComponentBase
     public string Label { get; set; } = string.Empty;
 
     [Parameter]
-    public string DirectoryDialogTitle { get; set; } = "Select Directory";
+    public string FileDialogTitle { get; set; } = "Select File";
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
@@ -46,18 +46,18 @@ public partial class SelectDirectory : ComponentBase
 
     #endregion
 
-    private void InternalDirectoryChanged(string directory)
+    private void InternalFileChanged(string file)
     {
-        this.Directory = directory;
-        this.DirectoryChanged.InvokeAsync(directory);
+        this.File = file;
+        this.FileChanged.InvokeAsync(file);
     }
 
-    private async Task OpenDirectoryDialog()
+    private async Task OpenFileDialog()
     {
-        var response = await this.RustService.SelectDirectory(this.DirectoryDialogTitle, string.IsNullOrWhiteSpace(this.Directory) ? null : this.Directory);
-        this.Logger.LogInformation($"The user selected the directory '{response.SelectedDirectory}'.");
+        var response = await this.RustService.SelectFile(this.FileDialogTitle, string.IsNullOrWhiteSpace(this.File) ? null : this.File);
+        this.Logger.LogInformation($"The user selected the file '{response.SelectedFilePath}'.");
 
         if (!response.UserCancelled)
-            this.InternalDirectoryChanged(response.SelectedDirectory);
+            this.InternalFileChanged(response.SelectedFilePath);
     }
 }
