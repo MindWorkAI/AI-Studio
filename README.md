@@ -11,7 +11,7 @@ Things we are currently working on:
   - [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
   - [x] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
   - [x] ~~App: Implement an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant (PR [#231](https://github.com/MindWorkAI/AI-Studio/pull/231))~~
-  - [ ] App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI))
+  - [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259))~~
   - [ ] Runtime: Extract data from txt / md / pdf / docx / xlsx files
   - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
   - [ ] App: Implement external embedding providers
