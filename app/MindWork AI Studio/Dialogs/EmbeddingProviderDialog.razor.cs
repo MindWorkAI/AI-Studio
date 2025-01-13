@@ -112,13 +112,24 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     private EmbeddingProvider CreateEmbeddingProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
+        Model model = default;
+        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
+        {
+            if (this.DataHost is Host.OLLAMA)
+                model = new Model(this.dataManuallyModel, null);
+            else if (this.DataHost is Host.LM_STUDIO)
+                model = this.DataModel;
+        }
+        else
+            model = this.DataModel;
+        
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             Name = this.DataName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = this.DataLLMProvider is LLMProviders.SELF_HOSTED ? new Model(this.dataManuallyModel, null) : this.DataModel,
+            Model = model,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
