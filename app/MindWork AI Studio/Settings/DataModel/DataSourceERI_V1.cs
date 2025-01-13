@@ -38,4 +38,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// The authentication method to use.
     /// </summary>
     public AuthMethod AuthMethod { get; init; } = AuthMethod.NONE;
+
+    /// <summary>
+    /// The username to use for authentication, when the auth. method is USERNAME_PASSWORD.
+    /// </summary>
+    public string Username { get; init; } = string.Empty;
 }

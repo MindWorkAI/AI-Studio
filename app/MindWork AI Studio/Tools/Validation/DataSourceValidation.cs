@@ -14,6 +14,12 @@ public sealed class DataSourceValidation
     
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
     
+    public Func<bool> GetTestedConnection { get; init; } = () => false;
+    
+    public Func<bool> GetTestedConnectionResult { get; init; } = () => false;
+    
+    public Func<IReadOnlyList<AuthMethod>> GetAvailableAuthMethods { get; init; } = () => [];
+    
     public string? ValidatingHostname(string hostname)
     {
         if(string.IsNullOrWhiteSpace(hostname))
@@ -24,6 +30,25 @@ public sealed class DataSourceValidation
 
         if(!Uri.TryCreate(hostname, UriKind.Absolute, out _))
             return "The hostname is not a valid HTTP(S) URL.";
+        
+        return null;
+    }
+
+    public string? ValidatePort(int port)
+    {
+        if(port is < 1 or > 65535)
+            return "The port must be between 1 and 65535.";
+        
+        return null;
+    }
+    
+    public string? ValidateUsername(string username)
+    {
+        if(this.GetAuthMethod() is not AuthMethod.USERNAME_PASSWORD)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(username))
+            return "The username must not be empty.";
         
         return null;
     }
@@ -41,7 +66,7 @@ public sealed class DataSourceValidation
         if (string.IsNullOrWhiteSpace(secret))
             return authMethod switch
             {
-                AuthMethod.TOKEN => "Please enter your secure token.",
+                AuthMethod.TOKEN => "Please enter your secure access token.",
                 AuthMethod.USERNAME_PASSWORD => "Please enter your password.",
 
                 _ => "Please enter the secret necessary for authentication."
@@ -99,6 +124,25 @@ public sealed class DataSourceValidation
     {
         if(this.GetSelectedCloudEmbedding() && !value)
             return "Please acknowledge that you are aware of the cloud embedding implications.";
+        
+        return null;
+    }
+
+    public string? ValidateTestedConnection()
+    {
+        if(!this.GetTestedConnection())
+            return "Please test the connection before saving.";
+        
+        if(!this.GetTestedConnectionResult())
+            return "The connection test failed. Please check the connection settings.";
+        
+        return null;
+    }
+    
+    public string? ValidateAuthMethod(AuthMethod authMethod)
+    {
+        if(!this.GetAvailableAuthMethods().Contains(authMethod))
+            return "Please select one valid authentication method.";
         
         return null;
     }
