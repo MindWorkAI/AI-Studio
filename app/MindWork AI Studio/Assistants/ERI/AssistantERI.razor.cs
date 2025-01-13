@@ -476,6 +476,16 @@ public partial class AssistantERI : AssistantBaseCore
         if(this.selectedERIServer is null)
             return;
         
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete the ERI server preset '{this.selectedERIServer.ServerName}'?" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete ERI server preset", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+        
         this.SettingsManager.ConfigurationData.ERI.ERIServers.Remove(this.selectedERIServer);
         this.selectedERIServer = null;
         this.ResetForm();
