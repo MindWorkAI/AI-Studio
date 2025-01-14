@@ -26,8 +26,8 @@
                     {
                         @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
                         {
-                            <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg" MinWidth="26em">
                             // Case: Sidebar can be toggled and is currently visible
+                            <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
                                 <HeaderContent>
                                     <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                         <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
@@ -40,8 +40,8 @@
                         }
                         else
                         {
-                            <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg" MinWidth="26em">
                             // Case: Sidebar is always visible
+                            <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
                                 <ChildContent>
                                     <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
                                 </ChildContent>
