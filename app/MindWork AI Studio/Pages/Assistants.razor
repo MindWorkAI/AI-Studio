@@ -1,51 +1,53 @@
 @using AIStudio.Settings.DataModel
 @attribute [Route(Routes.ASSISTANTS)]
 
-<MudText Typo="Typo.h3" Class="mb-2 mr-3">
-    Assistants
-</MudText>
+<div class="inner-scrolling-context">
+    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
+        Assistants
+    </MudText>
 
-<InnerScrolling HeaderHeight="6em">
-    
-    <MudText Typo="Typo.h4" Class="mb-2 mr-3">
-        General
-    </MudText>
-    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="Text Summarizer" Description="Using a LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
-        <AssistantBlock Name="Translation" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
-        <AssistantBlock Name="Grammar & Spelling" Description="Check grammar and spelling of a given text." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
-        <AssistantBlock Name="Rewrite & Improve" Description="Rewrite and improve a given text for a chosen style." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
-        <AssistantBlock Name="Synonyms" Description="Find synonyms for a given word or phrase." Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
-    </MudStack>
+    <InnerScrolling>
+            
+        <MudText Typo="Typo.h4" Class="mb-2 mr-3">
+            General
+        </MudText>
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantBlock Name="Text Summarizer" Description="Using a LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
+            <AssistantBlock Name="Translation" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
+            <AssistantBlock Name="Grammar & Spelling" Description="Check grammar and spelling of a given text." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
+            <AssistantBlock Name="Rewrite & Improve" Description="Rewrite and improve a given text for a chosen style." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
+            <AssistantBlock Name="Synonyms" Description="Find synonyms for a given word or phrase." Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
+        </MudStack>
 
-    <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-        Business
-    </MudText>
-    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="E-Mail" Description="Generate an e-mail for a given context." Icon="@Icons.Material.Filled.Email" Link="@Routes.ASSISTANT_EMAIL"/>
-        <AssistantBlock Name="My Tasks" Description="Analyze a text or an email for tasks you need to complete." Icon="@Icons.Material.Filled.Task" Link="@Routes.ASSISTANT_MY_TASKS"/>
-        <AssistantBlock Name="Agenda Planner" Description="Generate an agenda for a given meeting, seminar, etc." Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
-        <AssistantBlock Name="Job Posting" Description="Generate a job posting for a given job description." Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
-        <AssistantBlock Name="Legal Check" Description="Ask a question about a legal document." Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
-        <AssistantBlock Name="Icon Finder" Description="Using a LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
-    </MudStack>
+        <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
+            Business
+        </MudText>
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantBlock Name="E-Mail" Description="Generate an e-mail for a given context." Icon="@Icons.Material.Filled.Email" Link="@Routes.ASSISTANT_EMAIL"/>
+            <AssistantBlock Name="My Tasks" Description="Analyze a text or an email for tasks you need to complete." Icon="@Icons.Material.Filled.Task" Link="@Routes.ASSISTANT_MY_TASKS"/>
+            <AssistantBlock Name="Agenda Planner" Description="Generate an agenda for a given meeting, seminar, etc." Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
+            <AssistantBlock Name="Job Posting" Description="Generate a job posting for a given job description." Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
+            <AssistantBlock Name="Legal Check" Description="Ask a question about a legal document." Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
+            <AssistantBlock Name="Icon Finder" Description="Using a LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
+        </MudStack>
 
-    <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-        Learning
-    </MudText>
-    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="Bias of the Day" Description="Learn about one cognitive bias every day." Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
-    </MudStack>
-    
-    <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-        Software Engineering
-    </MudText>
-    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-        <AssistantBlock Name="Coding" Description="Get coding and debugging support from a LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
-        @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
-        {
-            <AssistantBlock Name="ERI Server" Description="Generate an ERI server to integrate business systems." Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
-        }
-    </MudStack>
-    
-</InnerScrolling>
+        <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
+            Learning
+        </MudText>
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantBlock Name="Bias of the Day" Description="Learn about one cognitive bias every day." Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
+        </MudStack>
+            
+        <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
+            Software Engineering
+        </MudText>
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantBlock Name="Coding" Description="Get coding and debugging support from a LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
+            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+            {
+                <AssistantBlock Name="ERI Server" Description="Generate an ERI server to integrate business systems." Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
+            }
+        </MudStack>
+            
+    </InnerScrolling>
+</div>

@@ -1,131 +1,134 @@
 @using AIStudio.Chat
 
-<MudText Typo="Typo.h3" Class="mb-2 mr-3">
-    @(this.Title)
-</MudText>
+<div class="inner-scrolling-context">
 
-<InnerScrolling HeaderHeight="6em">
-    <ChildContent>
-        <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
-            <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
-                @this.Description
-            </MudText>
+    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
+        @(this.Title)
+    </MudText>
 
-            @if (this.Body is not null)
-            {
-                <CascadingValue Value="@this">
-                    @this.Body
-                </CascadingValue>
-                
-                <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
-                    @this.SubmitText
-                </MudButton>
-            }
-        </MudForm>
-        <Issues IssuesData="@(this.inputIssues)"/>
+    <InnerScrolling>
+        <ChildContent>
+            <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
+                <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
+                    @this.Description
+                </MudText>
 
-        @if (this.ShowDedicatedProgress && this.isProcessing)
-        {
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
-        }
-        
-        <div id="@RESULT_DIV_ID" class="mr-2 mt-3">
-        </div>
-
-        <div id="@BEFORE_RESULT_DIV_ID" class="mt-3">
-        </div>
-
-        @if (this.ShowResult && !this.ShowEntireChatThread && this.resultingContentBlock is not null)
-        {
-            <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@(this.resultingContentBlock.Content)"/>
-        }
-        
-        @if(this.ShowResult && this.ShowEntireChatThread && this.chatThread is not null)
-        {
-            foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
-            {
-                @if (!block.HideFromUser)
+                @if (this.Body is not null)
                 {
-                    <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                    <CascadingValue Value="@this">
+                        @this.Body
+                    </CascadingValue>
+                    
+                    <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                        @this.SubmitText
+                    </MudButton>
                 }
+            </MudForm>
+            <Issues IssuesData="@(this.inputIssues)"/>
+
+            @if (this.ShowDedicatedProgress && this.isProcessing)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
             }
-        }
-        
-        <div id="@AFTER_RESULT_DIV_ID" class="mt-3">
-        </div>
-    </ChildContent>
-    <FooterContent>
-        <MudStack Row="@true" Wrap="Wrap.Wrap" Class="ma-1">
             
-            @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
+            <div id="@RESULT_DIV_ID" class="mr-2 mt-3">
+            </div>
+
+            <div id="@BEFORE_RESULT_DIV_ID" class="mt-3">
+            </div>
+
+            @if (this.ShowResult && !this.ShowEntireChatThread && this.resultingContentBlock is not null)
             {
-                @if (this.ShowSendTo)
+                <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@(this.resultingContentBlock.Content)"/>
+            }
+            
+            @if(this.ShowResult && this.ShowEntireChatThread && this.chatThread is not null)
+            {
+                foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
                 {
-                    <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
-                        @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
-                        {
-                            <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
-                                @assistant.Name()
-                            </MudMenuItem>
-                        }
-                    </MudMenu>
+                    @if (!block.HideFromUser)
+                    {
+                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                    }
                 }
             }
-
-            @foreach (var button in this.FooterButtons)
-            {
-                switch (button)
+            
+            <div id="@AFTER_RESULT_DIV_ID" class="mt-3">
+            </div>
+        </ChildContent>
+        <FooterContent>
+            <MudStack Row="@true" Wrap="Wrap.Wrap" Class="ma-1">
+                
+                @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
                 {
-                    case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
-                        <MudTooltip Text="@buttonData.Tooltip">
-                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
-                                @buttonData.Text
-                            </MudButton>
-                        </MudTooltip>
-                        break;
-
-                    case ButtonData buttonData:
-                        <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
-                            @buttonData.Text
-                        </MudButton>
-                        break;
-
-                    case SendToButton sendToButton:
+                    @if (this.ShowSendTo)
+                    {
                         <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                             @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                             {
-                                <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
+                                <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
                                     @assistant.Name()
                                 </MudMenuItem>
                             }
                         </MudMenu>
-                        break;
+                    }
                 }
-            }
-            
-            @if (this.ShowCopyResult)
-            {
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
-                    Copy result
-                </MudButton>
-            }
 
-            @if (this.ShowReset)
-            {
-                <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
-                    Reset
-                </MudButton>
-            }
+                @foreach (var button in this.FooterButtons)
+                {
+                    switch (button)
+                    {
+                        case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
+                            <MudTooltip Text="@buttonData.Tooltip">
+                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                                    @buttonData.Text
+                                </MudButton>
+                            </MudTooltip>
+                            break;
 
-            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
-            {
-                <ConfidenceInfo Mode="ConfidenceInfoMode.BUTTON" LLMProvider="@this.providerSettings.UsedLLMProvider"/>
-            }
+                        case ButtonData buttonData:
+                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                                @buttonData.Text
+                            </MudButton>
+                            break;
 
-            @if (this.AllowProfiles && this.ShowProfileSelection)
-            {
-                <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
-            }
-        </MudStack>
-    </FooterContent>
-</InnerScrolling>
+                        case SendToButton sendToButton:
+                            <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                                @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
+                                {
+                                    <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
+                                        @assistant.Name()
+                                    </MudMenuItem>
+                                }
+                            </MudMenu>
+                            break;
+                    }
+                }
+                
+                @if (this.ShowCopyResult)
+                {
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
+                        Copy result
+                    </MudButton>
+                }
+
+                @if (this.ShowReset)
+                {
+                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
+                        Reset
+                    </MudButton>
+                }
+
+                @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+                {
+                    <ConfidenceInfo Mode="ConfidenceInfoMode.BUTTON" LLMProvider="@this.providerSettings.UsedLLMProvider"/>
+                }
+
+                @if (this.AllowProfiles && this.ShowProfileSelection)
+                {
+                    <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
+                }
+            </MudStack>
+        </FooterContent>
+    </InnerScrolling>
+</div>
