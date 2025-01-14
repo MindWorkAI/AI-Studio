@@ -20,14 +20,6 @@
     {
         <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
             <StartContent>
-                @if (this.AreWorkspacesHidden)
-                {
-                    <MudPaper Class="border border-solid rounded-lg mb-3">
-                        <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                            <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-                        </MudTooltip>
-                    </MudPaper>
-                }
                 @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
                 {
                     @if ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible) || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE)
