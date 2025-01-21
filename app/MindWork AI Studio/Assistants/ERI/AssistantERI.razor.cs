@@ -299,6 +299,8 @@ public partial class AssistantERI : AssistantBaseCore
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override bool ShowEntireChatThread => true;
+    
+    protected override bool ShowSendTo => false;
 
     protected override string SubmitText => "Create the ERI server";
 
