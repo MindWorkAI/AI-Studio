@@ -82,12 +82,15 @@ Your support, whether big or small, keeps the wheels turning and is deeply appre
 
 ## Planned Features
 Here's an exciting look at some of the features we're planning to add to AI Studio in future releases:
-- **Integrating your data**: You should be able to integrate your data into AI Studio. For example, your PDF or Office files, or your Markdown notes.
-- **Integration of enterprise data:** Soon, it will also be possible to integrate data from the corporate network using an interface that we have specified ([External Retrieval Interface](https://github.com/MindWorkAI/ERI), ERI for short).
-- **Writing mode:** We want to integrate a writing mode that should support you in creating extensive works. We are thinking of comprehensive project proposals, tenders, or your next fantasy novel.
-- **Browser usage:** We're trying to offer the features from AI Studio to you in the browser via a plugin, so we could use spell-checking or rewriting text directly in the browser.
-- **Voice control:** You should be able to interact with the AI systems using your voice as well. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
-- **Email monitoring:** You should have the option to connect your email inboxes with AI Studio. The AI reads your emails and sends you a notification when something important happens. At the same time, you can access knowledge from your emails in your chats.
+- **Integrating your data**: You'll be able to integrate your data into AI Studio, like your PDF or Office files, or your Markdown notes.
+- **Integration of enterprise data:** It will soon be possible to integrate data from the corporate network using a specified interface ([External Retrieval Interface](https://github.com/MindWorkAI/ERI), ERI for short). This will likely require development work by the organization in question.
+- **Useful assistants:** We'll develop more assistants for everyday tasks.
+- **Writing mode:** We're integrating a writing mode to help you create extensive works, like comprehensive project proposals, tenders, or your next fantasy novel.
+- **Specific requirements:** Want an assistant that suits your specific needs? We aim to offer a plugin architecture so organizations and enthusiasts can implement such ideas.
+- **Voice control:** You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
+- **Content creation:** There will be an interface for AI Studio to create content in other apps. You could, for example, create blog posts directly on the target platform or add entries to an internal knowledge management tool. This requires development work by the tool developers.
+- **Email monitoring:** You can connect your email inboxes with AI Studio. The AI will read your emails and notify you of important events. You'll also be able to access knowledge from your emails in your chats.
+- **Browser usage:** We're working on offering AI Studio features in your browser via a plugin, allowing, e.g., for spell-checking or text rewriting directly in the browser.
 
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
