@@ -692,6 +692,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        this.MessageBus.Unregister(this);
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();
