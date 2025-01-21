@@ -123,6 +123,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.mustLoadChat = true;
             this.Logger.LogInformation($"The loading of the chat '{this.loadChat.ChatId}' was deferred and will be loaded now.");
         }
+
+        if (this.ChatThread is not null)
+        {
+            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
         
         await this.SelectProviderWhenLoadingChat();
         await base.OnInitializedAsync();
@@ -538,14 +545,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentWorkspaceName = string.Empty;
             this.WorkspaceName(this.currentWorkspaceName);
         }
-
+        
         await this.SelectProviderWhenLoadingChat();
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
             this.scrollRenderCountdown = 2;
-            this.StateHasChanged();
         }
+        
+        this.StateHasChanged();
     }
     
     private async Task ResetState()
