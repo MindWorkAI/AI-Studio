@@ -26,6 +26,9 @@ public partial class InnerScrolling : MSGComponentBase
     
     [Parameter]
     public string? MinWidth { get; set; }
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
     
     [CascadingParameter]
     private MainLayout MainLayout { get; set; } = null!;
@@ -66,9 +69,13 @@ public partial class InnerScrolling : MSGComponentBase
 
     #endregion
 
-    private string MinWidthStyle => string.IsNullOrWhiteSpace(this.MinWidth) ? string.Empty : $"min-width: {this.MinWidth};";
+    private string MinWidthStyle => string.IsNullOrWhiteSpace(this.MinWidth) ? string.Empty : $"min-width: {this.MinWidth}; ";
+    
+    private string TerminatedStyles => string.IsNullOrWhiteSpace(this.Style) ? string.Empty : $"{this.Style}; ";
     
     private string Classes => this.FillEntireHorizontalSpace ? $"{this.Class} d-flex flex-column flex-grow-1" : $"{this.Class} d-flex flex-column";
+    
+    private string Styles => $"flex-grow: 1; overflow: hidden; {this.TerminatedStyles}{this.MinWidthStyle}";
     
     public async Task ScrollToBottom()
     {
