@@ -1,6 +1,6 @@
 @using AIStudio.Provider
 <div class="d-flex">
-    <MudTooltip Text="Shows and hides the confidence card with information about the selected LLM provider.">
+    <MudTooltip Text="Shows and hides the confidence card with information about the selected LLM provider." Placement="Placement.Top">
         @if (this.Mode is ConfidenceInfoMode.ICON)
         {
             <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@(() => this.ToggleConfidence())"/>
