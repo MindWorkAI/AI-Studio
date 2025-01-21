@@ -2,109 +2,100 @@
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
-<MudText Typo="Typo.h3" Class="mb-2 mr-3">
-    @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
-    {
-        @($"Chat in Workspace \"{this.currentWorkspaceName}\"")
-    }
-    else
-    {
-        @("Temporary Chat")
-    }
-</MudText>
+<div class="inner-scrolling-context">
+    
+    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
+        @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
+        {
+            @($"Chat in Workspace \"{this.currentWorkspaceName}\"")
+        }
+        else
+        {
+            @("Temporary Chat")
+        }
+    </MudText>
 
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
-@if (this.AreWorkspacesVisible)
-{
-    <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
-        <StartContent>    
-            @if (this.AreWorkspacesHidden)
-            {
-                <MudPaper Class="border border-solid rounded-lg">
-                    <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-                    </MudTooltip>
-                </MudPaper>
-            }
-            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
-            {
-                @if ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible) || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE)
+    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    @if (this.AreWorkspacesVisible)
+    {
+        <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
+            <StartContent>
+                @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
                 {
-                    @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
-                    {
-                        <InnerScrolling HeaderHeight="12.3em" FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg" MinWidth="26em">
-                            <HeaderContent>
-                                <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                                    <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-                                </MudTooltip>
-                            </HeaderContent>
-                            <ChildContent>
-                                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" />
-                            </ChildContent>
-                        </InnerScrolling>
-                    }
-                    else
-                    {
-                        <InnerScrolling HeaderHeight="12.3em" FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg" MinWidth="26em">
-                            <ChildContent>
-                                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" />
-                            </ChildContent>
-                        </InnerScrolling>
-                    }
+                    // Case: Sidebar can be toggled and is currently visible
+                    <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
+                        <HeaderContent>
+                            <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
+                            </MudTooltip>
+                        </HeaderContent>
+                        <ChildContent>
+                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+                        </ChildContent>
+                    </InnerScrolling>
                 }
-            }
-        </StartContent>
-        <EndContent>
-            
+                else
+                {
+                    // Case: Sidebar is always visible
+                    <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
+                        <ChildContent>
+                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+                        </ChildContent>
+                    </InnerScrolling>
+                }
+            </StartContent>
+            <EndContent>
+                <ChatComponent
+                    @bind-ChatThread="@this.chatThread"
+                    @bind-Provider="@this.providerSettings"
+                    Workspaces="@this.workspaces"
+                    WorkspaceName="name => this.currentWorkspaceName = name"/>
+            </EndContent>
+        </MudSplitter>
+    }
+    else if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
+    {
+        // Case: Sidebar can be toggled and is currently hidden
+        <MudStack Row="@true" Style="width: 100%; overflow: hidden; height: 100%; flex-grow: 1; min-height: 0;">
+            <MudPaper Class="border border-solid rounded-lg mb-3">
+                <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
+                </MudTooltip>
+            </MudPaper>
+
             <ChatComponent
                 @bind-ChatThread="@this.chatThread"
                 @bind-Provider="@this.providerSettings"
                 Workspaces="@this.workspaces"
-                WorkspaceName="name => this.currentWorkspaceName = name" />
-
-        </EndContent>
-    </MudSplitter>
-}
-else if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR)
-{
-    <MudStack Row="@true" Style="width: 100%; overflow: hidden;">
-        <MudPaper Class="border border-solid rounded-lg">
-            <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-            </MudTooltip>
-        </MudPaper>
-        
+                WorkspaceName="name => this.currentWorkspaceName = name"/>
+        </MudStack>
+    }
+    else
+    {
+        // Case: Workspaces are disabled or shown in an overlay
         <ChatComponent
             @bind-ChatThread="@this.chatThread"
             @bind-Provider="@this.providerSettings"
             Workspaces="@this.workspaces"
             WorkspaceName="name => this.currentWorkspaceName = name"/>
-    </MudStack>
-}
-else
-{
-    <ChatComponent
-        @bind-ChatThread="@this.chatThread"
-        @bind-Provider="@this.providerSettings"
-        Workspaces="@this.workspaces"
-        WorkspaceName="name => this.currentWorkspaceName = name"/>
-}
+    }
 
-@if (
-    this.SettingsManager.ConfigurationData.Workspace.StorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES
-    && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
-{
-    <MudDrawer @bind-Open="@this.workspaceOverlayVisible" Width="40em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1">
-        <MudDrawerHeader>
-            <MudStack Row="@true" AlignItems="AlignItems.Center">
-                <MudText Typo="Typo.h6" Class="mr-3">
-                    Your workspaces
-                </MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspacesOverlay()"/>
-            </MudStack>
-        </MudDrawerHeader>
-        <MudDrawerContainer Class="ml-6">
-            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" />
-        </MudDrawerContainer>
-    </MudDrawer>
-}
+    @if (
+        this.SettingsManager.ConfigurationData.Workspace.StorageBehavior != WorkspaceStorageBehavior.DISABLE_WORKSPACES
+        && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
+    {
+        <MudDrawer @bind-Open="@this.workspaceOverlayVisible" Width="40em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1">
+            <MudDrawerHeader>
+                <MudStack Row="@true" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6" Class="mr-3">
+                        Your workspaces
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspacesOverlay()"/>
+                </MudStack>
+            </MudDrawerHeader>
+            <MudDrawerContainer Class="ml-6">
+                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+            </MudDrawerContainer>
+        </MudDrawer>
+    }
+</div>

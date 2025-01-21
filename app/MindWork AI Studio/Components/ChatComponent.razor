@@ -3,7 +3,7 @@
 
 @inherits MSGComponentBase
 
-<InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" HeaderHeight="12.3em" MinWidth="36em">
+<InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" MinWidth="36em" Style="height: 100%">
     <ChildContent>
         @if (this.ChatThread is not null)
         {
