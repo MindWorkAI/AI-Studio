@@ -60,6 +60,8 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(ConfigurationProviderSelection);
+    
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

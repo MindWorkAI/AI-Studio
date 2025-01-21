@@ -28,6 +28,8 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(Settings);
+    
     public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
     {
         switch (triggeredEvent)

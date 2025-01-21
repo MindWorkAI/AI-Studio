@@ -63,6 +63,8 @@ public partial class ConfidenceInfo : ComponentBase, IMessageBusReceiver, IDispo
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(ConfidenceInfo);
+    
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

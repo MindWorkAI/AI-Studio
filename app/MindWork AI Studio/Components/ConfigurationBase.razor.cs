@@ -57,6 +57,8 @@ public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver, IDi
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(ConfigurationBase);
+    
     public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
     {
         switch (triggeredEvent)

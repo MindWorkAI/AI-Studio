@@ -136,6 +136,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
 
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(MainLayout);
+    
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

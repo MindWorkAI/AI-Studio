@@ -653,6 +653,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(ChatComponent);
+    
     public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)

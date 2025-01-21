@@ -74,6 +74,8 @@ public partial class Chat : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(Chat);
+    
     public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
