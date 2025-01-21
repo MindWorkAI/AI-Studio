@@ -28,6 +28,8 @@ public partial class Chat : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY ]);
+        
         this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
         this.splitterSaveTimer.AutoReset = false;
         this.splitterSaveTimer.Elapsed += async (_, _) =>
