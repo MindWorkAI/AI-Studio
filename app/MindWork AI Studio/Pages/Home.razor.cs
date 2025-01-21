@@ -33,10 +33,11 @@ public partial class Home : ComponentBase
     private static readonly TextItem[] ITEMS_ADVANTAGES =
     [
         new("Free of charge", "The app is free to use, both for personal and commercial purposes."),
-        new("Independence", "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks."),
+        new("Independence", "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks."),
+        new("Assistants", "You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants."),
         new("Unrestricted usage", "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."),
         new("Cost-effective", "You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit."),
-        new("Privacy", "The data entered into the app is not used for training by the providers since we are using the provider's API."),
+        new("Privacy", "You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems."),
         new("Flexibility", "Choose the provider and model best suited for your current task."),
         new("No bloatware", "The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life."),
     ];
