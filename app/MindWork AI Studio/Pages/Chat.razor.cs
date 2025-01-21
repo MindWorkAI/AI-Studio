@@ -73,6 +73,12 @@ public partial class Chat : MSGComponentBase
     }
     
     private double ReadSplitterPosition => this.AreWorkspacesHidden ? 6 : this.splitterPosition;
+    
+    private void UpdateWorkspaceName(string workspaceName)
+    {
+        this.currentWorkspaceName = workspaceName;
+        this.StateHasChanged();
+    }
 
     #region Overrides of MSGComponentBase
 
