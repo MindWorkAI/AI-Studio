@@ -40,7 +40,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
-    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Bottom;
+    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
     private Profile currentProfile = Profile.NO_PROFILE;
