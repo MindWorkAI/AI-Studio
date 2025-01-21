@@ -525,10 +525,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
-        this.currentWorkspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
-        this.currentWorkspaceName = this.ChatThread is null ? string.Empty : await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
-        this.WorkspaceName(this.currentWorkspaceName);
-        
+
+        if (this.ChatThread is not null)
+        {
+            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
+        else
+        {
+            this.currentWorkspaceId = Guid.Empty;
+            this.currentWorkspaceName = string.Empty;
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
+
         await this.SelectProviderWhenLoadingChat();
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
