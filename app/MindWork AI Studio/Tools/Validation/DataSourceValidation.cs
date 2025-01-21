@@ -23,7 +23,7 @@ public sealed class DataSourceValidation
     public string? ValidatingHostname(string hostname)
     {
         if(string.IsNullOrWhiteSpace(hostname))
-            return "Please enter a hostname, e.g., http://localhost:1234";
+            return "Please enter a hostname, e.g., http://localhost";
         
         if(!hostname.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
             return "The hostname must start with either http:// or https://";
