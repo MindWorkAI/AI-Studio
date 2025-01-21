@@ -60,6 +60,8 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(UpdateService);
+
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

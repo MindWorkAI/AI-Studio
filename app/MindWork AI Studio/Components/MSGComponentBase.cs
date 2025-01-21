@@ -24,6 +24,8 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
 
     #region Implementation of IMessageBusReceiver
 
+    public abstract string ComponentName { get; }
+
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

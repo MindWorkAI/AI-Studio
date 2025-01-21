@@ -147,6 +147,8 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(AssistantBase);
+    
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

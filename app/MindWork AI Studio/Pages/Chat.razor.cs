@@ -28,6 +28,8 @@ public partial class Chat : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY ]);
+        
         this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
         this.splitterSaveTimer.AutoReset = false;
         this.splitterSaveTimer.Elapsed += async (_, _) =>
@@ -74,6 +76,8 @@ public partial class Chat : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(Chat);
+    
     public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)

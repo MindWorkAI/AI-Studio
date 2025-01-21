@@ -525,10 +525,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
-        this.currentWorkspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
-        this.currentWorkspaceName = this.ChatThread is null ? string.Empty : await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
-        this.WorkspaceName(this.currentWorkspaceName);
-        
+
+        if (this.ChatThread is not null)
+        {
+            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
+        else
+        {
+            this.currentWorkspaceId = Guid.Empty;
+            this.currentWorkspaceName = string.Empty;
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
+
         await this.SelectProviderWhenLoadingChat();
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
@@ -653,6 +663,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(ChatComponent);
+    
     public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
@@ -692,6 +704,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        this.MessageBus.Unregister(this);
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

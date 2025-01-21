@@ -41,6 +41,8 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(Writer);
+    
     public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         return Task.CompletedTask;
