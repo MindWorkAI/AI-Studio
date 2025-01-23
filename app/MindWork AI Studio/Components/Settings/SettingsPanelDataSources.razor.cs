@@ -228,6 +228,15 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
 
                 await this.DialogService.ShowAsync<DataSourceLocalFileInfoDialog>("Local File Data Source Information", localFileDialogParameters, DialogOptions.FULLSCREEN);
                 break;
+            
+            case DataSourceLocalDirectory localDirectory:
+                var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryInfoDialog>
+                {
+                    { x => x.DataSource, localDirectory },
+                };
+
+                await this.DialogService.ShowAsync<DataSourceLocalDirectoryInfoDialog>("Local Directory Data Source Information", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
+                break;
         }
     }
     
