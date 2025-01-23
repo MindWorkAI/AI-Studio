@@ -14,12 +14,6 @@ public partial class DataSourceLocalFileInfoDialog : ComponentBase
     public DataSourceLocalFile DataSource { get; set; }
     
     [Inject]
-    private RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-    
-    [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
 
     #region Overrides of ComponentBase
@@ -42,7 +36,5 @@ public partial class DataSourceLocalFileInfoDialog : ComponentBase
     
     private string FileSize => this.fileInfo.FileSize();
     
-    private async Task CopyToClipboard(string content) => await this.RustService.CopyText2Clipboard(this.Snackbar, content);
-
     private void Close() => this.MudDialog.Close();
 }

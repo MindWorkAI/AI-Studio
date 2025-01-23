@@ -1,37 +1,8 @@
 <MudDialog>
     <DialogContent>
-        <MudStack Row="@true">
-            <MudTextField
-                T="string"
-                ReadOnly="@true"
-                Label="Data source name"
-                Text="@this.DataSource.Name"
-                Variant="Variant.Outlined"
-                Margin="Margin.Dense"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Tag"/>
-
-            <MudTooltip Text="Copy the data source name to the clipboard">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.DataSource.Name))"/>
-            </MudTooltip>
-        </MudStack>
+        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="Data source name" Value="@this.DataSource.Name" ClipboardTooltipSubject="the data source name"/>
         
-        <MudStack Row="@true">
-            <MudTextField
-                T="string"
-                ReadOnly="@true"
-                Label="File path"
-                Text="@this.DataSource.FilePath"
-                Variant="Variant.Outlined"
-                Margin="Margin.Dense"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.FolderOpen"/>
-
-            <MudTooltip Text="Copy this path to the clipboard">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.DataSource.FilePath))"/>
-            </MudTooltip>
-        </MudStack>
-
+        <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="File path" Value="@this.DataSource.FilePath" ClipboardTooltipSubject="this path"/>
         @if (!this.IsFileAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -45,22 +16,7 @@
             </MudJustifiedText>
         }
 
-        <MudStack Row="@true">
-            <MudTextField
-                T="string"
-                ReadOnly="@true"
-                Label="Embedding name"
-                Text="@this.embeddingProvider.Name"
-                Variant="Variant.Outlined"
-                Margin="Margin.Dense"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Layers"/>
-
-            <MudTooltip Text="Copy the embedding name to the clipboard">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.embeddingProvider.Name))"/>
-            </MudTooltip>
-        </MudStack>
-
+        <TextInfoLine Icon="@Icons.Material.Filled.Layers" Label="Embedding name" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="the embedding name"/>
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
@@ -75,21 +31,7 @@
             </MudJustifiedText>
         }
 
-        <MudStack Row="@true">
-            <MudTextField
-                T="string"
-                ReadOnly="@true"
-                Label="File size"
-                Text="@this.FileSize"
-                Variant="Variant.Outlined"
-                Margin="Margin.Dense"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.SquareFoot"/>
-
-            <MudTooltip Text="Copy the file size to the clipboard">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.FileSize))"/>
-            </MudTooltip>
-        </MudStack>
+        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="File size" Value="@this.FileSize" ClipboardTooltipSubject="the file size"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
