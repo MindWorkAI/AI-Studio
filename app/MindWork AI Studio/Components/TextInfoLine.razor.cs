@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -24,6 +26,23 @@ public partial class TextInfoLine : ComponentBase
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
+    
+    [Inject]
+    private SettingsManager SettingsManager { get; init; } = null!;
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Configure the spellchecking for the user input:
+        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
+        
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
+    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     private string ClipboardTooltip => $"Copy {this.ClipboardTooltipSubject} to the clipboard";
     
