@@ -216,10 +216,19 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
         }
     }
     
-    private Task ShowInformation(IDataSource dataSource)
+    private async Task ShowInformation(IDataSource dataSource)
     {
-        #warning Implement the information dialog for ERI data sources.
-        return Task.CompletedTask;
+        switch (dataSource)
+        {
+            case DataSourceLocalFile localFile:
+                var localFileDialogParameters = new DialogParameters<DataSourceLocalFileInfoDialog>
+                {
+                    { x => x.DataSource, localFile },
+                };
+
+                await this.DialogService.ShowAsync<DataSourceLocalFileInfoDialog>("Local File Data Source Information", localFileDialogParameters, DialogOptions.FULLSCREEN);
+                break;
+        }
     }
     
     private async Task UpdateDataSources()

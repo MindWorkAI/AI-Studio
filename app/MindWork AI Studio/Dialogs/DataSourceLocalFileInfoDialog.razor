@@ -1,0 +1,97 @@
+<MudDialog>
+    <DialogContent>
+        <MudStack Row="@true">
+            <MudTextField
+                T="string"
+                ReadOnly="@true"
+                Label="Data source name"
+                Text="@this.DataSource.Name"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Tag"/>
+
+            <MudTooltip Text="Copy the data source name to the clipboard">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.DataSource.Name))"/>
+            </MudTooltip>
+        </MudStack>
+        
+        <MudStack Row="@true">
+            <MudTextField
+                T="string"
+                ReadOnly="@true"
+                Label="File path"
+                Text="@this.DataSource.FilePath"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.FolderOpen"/>
+
+            <MudTooltip Text="Copy this path to the clipboard">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.DataSource.FilePath))"/>
+            </MudTooltip>
+        </MudStack>
+
+        @if (!this.IsFileAvailable)
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
+                The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.
+            </MudJustifiedText>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                The file chosen for the data source exists.
+            </MudJustifiedText>
+        }
+
+        <MudStack Row="@true">
+            <MudTextField
+                T="string"
+                ReadOnly="@true"
+                Label="Embedding name"
+                Text="@this.embeddingProvider.Name"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Layers"/>
+
+            <MudTooltip Text="Copy the embedding name to the clipboard">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.embeddingProvider.Name))"/>
+            </MudTooltip>
+        </MudStack>
+
+        @if (this.IsCloudEmbedding)
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
+                The embedding runs in the cloud. All your data within the
+                file '@this.DataSource.FilePath' will be sent to the cloud.
+            </MudJustifiedText>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                The embedding runs locally or in your organization. Your data is not sent to the cloud.
+            </MudJustifiedText>
+        }
+
+        <MudStack Row="@true">
+            <MudTextField
+                T="string"
+                ReadOnly="@true"
+                Label="File size"
+                Text="@this.FileSize"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.SquareFoot"/>
+
+            <MudTooltip Text="Copy the file size to the clipboard">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => this.CopyToClipboard(this.FileSize))"/>
+            </MudTooltip>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>

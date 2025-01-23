@@ -1,4 +1,3 @@
-@using AIStudio.Settings
 @using AIStudio.Settings.DataModel
 @inherits SettingsPanelBase
 
@@ -37,12 +36,7 @@
                 <MudTd>@this.GetEmbeddingName(context)</MudTd>
                 
                 <MudTd Style="text-align: left;">
-                    @if (context is IERIDataSource)
-                    {
-                        @* <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Info" Class="ma-2" OnClick="() => this.ShowInformation(context)"> *@
-                        @*     Show Information *@
-                        @* </MudButton> *@
-                    }
+                    <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Info" Class="ma-2" OnClick="() => this.ShowInformation(context)"/>
                     <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditDataSource(context)">
                         Edit
                     </MudButton>
