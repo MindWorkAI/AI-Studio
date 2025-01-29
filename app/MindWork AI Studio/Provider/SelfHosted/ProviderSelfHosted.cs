@@ -154,11 +154,11 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             }
         };
                     
-        var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
+        using var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
         if(secretKey is not null)
             lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
                     
-        var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
+        using var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
         if(!lmStudioResponse.IsSuccessStatusCode)
             return [];
 

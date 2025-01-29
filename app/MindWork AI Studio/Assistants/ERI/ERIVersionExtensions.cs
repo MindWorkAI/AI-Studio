@@ -7,7 +7,7 @@ public static class ERIVersionExtensions
         try
         {
             var url = version.SpecificationURL();
-            var response = await httpClient.GetAsync(url);
+            using var response = await httpClient.GetAsync(url);
             return await response.Content.ReadAsStringAsync();
         }
         catch

@@ -26,7 +26,7 @@ public partial class Home : ComponentBase
     private async Task ReadLastChangeAsync()
     {
         var latest = Changelog.LOGS.MaxBy(n => n.Build);
-        var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
+        using var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
         this.LastChangeContent = await response.Content.ReadAsStringAsync();
     }
 

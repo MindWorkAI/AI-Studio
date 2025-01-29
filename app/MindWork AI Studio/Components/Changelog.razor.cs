@@ -23,7 +23,7 @@ public partial class Changelog : ComponentBase
 
     private async Task ReadLogAsync()
     {
-        var response = await this.HttpClient.GetAsync($"changelog/{this.SelectedLog.Filename}");
+        using var response = await this.HttpClient.GetAsync($"changelog/{this.SelectedLog.Filename}");
         this.LogContent = await response.Content.ReadAsStringAsync();
     }
 }
