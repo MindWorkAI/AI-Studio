@@ -1,8 +1,9 @@
+using AIStudio.Assistants.ERI;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ERIClient;
+using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Validation;
-
-using ERI_Client.V1;
 
 using Microsoft.AspNetCore.Components;
 
@@ -43,7 +44,6 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
     private string[] dataIssues = [];
     private string dataSecretStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
-    private HttpClient? httpClient;
     private List<AuthMethod> availableAuthMethods = [];
     private bool connectionTested;
     private bool connectionSuccessfulTested;
@@ -167,31 +167,38 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
     {
         try
         {
-            this.httpClient = new HttpClient
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(14));
+            var dataSource = new DataSourceERI_V1
             {
-                BaseAddress = new Uri($"{this.dataHostname}:{this.dataPort}"),
-                Timeout = TimeSpan.FromSeconds(5),
+                Hostname = this.dataHostname,
+                Port = this.dataPort
             };
-            
-            using (this.httpClient)
+
+            using var client = ERIClientFactory.Get(ERIVersion.V1, dataSource);
+            if(client is null)
             {
-                var client = new Client(this.httpClient);
-                var authSchemes = await client.GetAuthMethodsAsync();
-                if (authSchemes is null)
-                {
-                    await this.form.Validate();
-                    
-                    Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
-                    this.dataIssues[^1] = "Failed to connect to the ERI v1 server. The server did not respond.";
-                    return;
-                }
-
-                this.availableAuthMethods = authSchemes.Select(n => n.AuthMethod).ToList();
-
-                this.connectionTested = true;
-                this.connectionSuccessfulTested = true;
-                this.Logger.LogInformation("Connection to the ERI v1 server was successful tested.");
+                await this.form.Validate();
+                
+                Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
+                this.dataIssues[^1] = "Failed to connect to the ERI v1 server. The server is not supported.";
+                return;
             }
+            
+            var authSchemes = await client.GetAuthMethodsAsync(cts.Token);
+            if (!authSchemes.Successful)
+            {
+                await this.form.Validate();
+                
+                Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
+                this.dataIssues[^1] = authSchemes.Message;
+                return;
+            }
+
+            this.availableAuthMethods = authSchemes.Data!.Select(n => n.AuthMethod).ToList();
+
+            this.connectionTested = true;
+            this.connectionSuccessfulTested = true;
+            this.Logger.LogInformation("Connection to the ERI v1 server was successful tested.");
         }
         catch (Exception e)
         {
