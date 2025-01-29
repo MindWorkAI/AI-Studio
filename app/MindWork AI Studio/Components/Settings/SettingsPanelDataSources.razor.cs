@@ -1,8 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-
-using ERI_Client.V1;
+using AIStudio.Tools.ERIClient.DataModel;
 
 using Microsoft.AspNetCore.Components;
 

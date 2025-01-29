@@ -1,4 +1,4 @@
-using ERI_Client.V1;
+using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Settings;
 

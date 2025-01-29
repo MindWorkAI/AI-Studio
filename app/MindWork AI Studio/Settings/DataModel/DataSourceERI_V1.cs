@@ -1,6 +1,7 @@
-using ERI_Client.V1;
-
 // ReSharper disable InconsistentNaming
+
+using AIStudio.Tools.ERIClient.DataModel;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
