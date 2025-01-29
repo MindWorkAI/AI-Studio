@@ -25,23 +25,15 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// <inheritdoc />
     public DataSourceType Type { get; init; } = DataSourceType.NONE;
     
-    /// <summary>
-    /// The hostname of the ERI server.
-    /// </summary>
+    /// <inheritdoc />
     public string Hostname { get; init; } = string.Empty;
     
-    /// <summary>
-    /// The port of the ERI server.
-    /// </summary>
+    /// <inheritdoc />
     public int Port { get; init; }
 
-    /// <summary>
-    /// The authentication method to use.
-    /// </summary>
+    /// <inheritdoc />
     public AuthMethod AuthMethod { get; init; } = AuthMethod.NONE;
 
-    /// <summary>
-    /// The username to use for authentication, when the auth. method is USERNAME_PASSWORD.
-    /// </summary>
+    /// <inheritdoc />
     public string Username { get; init; } = string.Empty;
 }
