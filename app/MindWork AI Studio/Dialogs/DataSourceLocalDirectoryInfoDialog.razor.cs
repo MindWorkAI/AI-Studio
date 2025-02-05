@@ -5,6 +5,8 @@ using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
+using Timer = System.Timers.Timer;
+
 namespace AIStudio.Dialogs;
 
 public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncDisposable
@@ -17,6 +19,11 @@ public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncD
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
+
+    private readonly Timer refreshTimer = new(TimeSpan.FromSeconds(1.6))
+    {
+        AutoReset = true,
+    };
     
     #region Overrides of ComponentBase
 
@@ -26,8 +33,12 @@ public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncD
         this.directoryInfo = new DirectoryInfo(this.DataSource.Path);
         
         if (this.directoryInfo.Exists)
+        {
             this.directorySizeTask = this.directoryInfo.DetermineContentSize(this.UpdateDirectorySize, this.UpdateDirectoryFiles, this.UpdateFileList, MAX_FILES_TO_SHOW, this.DirectoryOperationDone, this.cts.Token);
-        
+            this.refreshTimer.Elapsed += (_, _) => this.InvokeAsync(this.StateHasChanged);
+            this.refreshTimer.Start();
+        }
+
         await base.OnInitializedAsync();
     }
 
@@ -54,19 +65,18 @@ public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncD
     {
         this.directoryFiles.Append("- ");
         this.directoryFiles.AppendLine(file);
-        this.InvokeAsync(this.StateHasChanged);
     }
 
     private void UpdateDirectorySize(long size)
     {
         this.directorySizeBytes = size;
-        this.InvokeAsync(this.StateHasChanged);
     }
 
     private void UpdateDirectoryFiles(long numFiles) => this.directorySizeNumFiles = numFiles;
 
     private void DirectoryOperationDone()
     {
+        this.refreshTimer.Stop();
         this.IsOperationInProgress = false;
         this.InvokeAsync(this.StateHasChanged);
     }
@@ -89,6 +99,8 @@ public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncD
             await this.directorySizeTask;
         
             this.cts.Dispose();
+            this.refreshTimer.Stop();
+            this.refreshTimer.Dispose();
         }
         catch
         {
