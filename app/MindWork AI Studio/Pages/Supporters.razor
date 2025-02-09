@@ -2,64 +2,100 @@
 
 <div class="inner-scrolling-context">
     <MudText Typo="Typo.h3" Class="mb-2">Supporters</MudText>
-
     <InnerScrolling>
+
+        <MudExpansionPanels>
             
-        <div class="border-solid border-2 rounded-lg pa-3 mb-6">
-            <MudText Typo="Typo.h4" Class="mb-2">Our Titans</MudText>
-            <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
-                In this section, we highlight the titan supporters of MindWork AI Studio. Titans are prestigious companies that provide significant support to our mission.
-            </MudText>
-            <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
-                For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
-            </MudText>
-            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
-                Become our first Titan
-            </MudButton>
-        </div>
-            
-        <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
-            <MudItem Class="pa-0 pr-2" xs="6">
-                <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
-                    <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                        <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
-                        Individual Contributors
+            <ExpansionPanel HeaderText="Financial Support" IsExpanded="@true" HeaderIcon="@Icons.Material.Filled.AttachMoney">
+                <div class="border-solid border-2 rounded-lg pa-3 mb-6">
+                    <MudText Typo="Typo.h4" Class="mb-2">Our Titans</MudText>
+                    <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
+                        In this section, we highlight the titan supporters of MindWork AI Studio. Titans are prestigious companies that provide significant support to our mission.
                     </MudText>
-
-                    <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Target="_blank">
-                        Become a contributor
-                    </MudButton>
-                    
-                    <MudText Typo="Typo.h6" Class="mt-8">
-                        The first 10 supporters who make a monthly contribution:
+                    <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
+                        For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
                     </MudText>
-                    <MudList T="string">
-                        <Supporter Name="richard-stanton" Type="SupporterType.INDIVIDUAL" URL="https://github.com/richard-stanton" Acknowledgment="Thank you, Richard, for being the first."/>
-                        <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="Thank you, Peer, for your courage in being the second person to support the project financially."/>
-                    </MudList>
-
-                    <MudText Typo="Typo.h6" Class="mt-8">
-                        The first 10 supporters who make a one-time contribution:
-                    </MudText>
-                    <MudList T="string">
-                        <Supporter Name="Bessieres" Type="SupporterType.INDIVIDUAL" URL="https://github.com/Bessieres" Acknowledgment="Thank you for being the first to contribute a one-time donation."/>
-                    </MudList>
-                </MudPaper>
-            </MudItem>
-
-            <MudItem xs="6" Class="pa-0 pl-2">
-                <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
-                    <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
-                        Business Contributors
-                    </MudText>
-
                     <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
-                        Become a contributor
+                        Become our first Titan
                     </MudButton>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+                </div>
 
+                <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
+                    <MudItem Class="pa-0 pr-2" xs="6">
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
+                                Individual Contributors
+                            </MudText>
+
+                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Target="_blank">
+                                Become a contributor
+                            </MudButton>
+
+                            <MudText Typo="Typo.h6" Class="mt-8">
+                                The first 10 supporters who make a monthly contribution:
+                            </MudText>
+                            <MudList T="string">
+                                <Supporter Name="richard-stanton" Type="SupporterType.INDIVIDUAL" URL="https://github.com/richard-stanton" Acknowledgment="Thank you, Richard, for being the first."/>
+                                <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="Thank you, Peer, for your courage in being the second person to support the project financially."/>
+                                <Supporter Name="donework" Type="SupporterType.INDIVIDUAL" URL="https://github.com/donework" Acknowledgment="Thanks Dominic for being the third supporter."/>
+                            </MudList>
+
+                            <MudText Typo="Typo.h6" Class="mt-8">
+                                The first 10 supporters who make a one-time contribution:
+                            </MudText>
+                            <MudList T="string">
+                                <Supporter Name="Bessieres" Type="SupporterType.INDIVIDUAL" URL="https://github.com/Bessieres" Acknowledgment="Thank you for being the first to contribute a one-time donation."/>
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" Class="pa-0 pl-2">
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
+                                Business Contributors
+                            </MudText>
+
+                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
+                                Become a contributor
+                            </MudButton>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </ExpansionPanel>
+
+            <ExpansionPanel HeaderText="Content Contributors" HeaderIcon="@Icons.Material.Filled.Code">
+
+                <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
+                    <MudItem Class="pa-0 pr-2" xs="6">
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" class="mr-2"/>
+                                Code Contributions
+                            </MudText>
+
+                            <MudList T="string">
+                                <Supporter Name="DevNullx64" Type="SupporterType.INDIVIDUAL" URL="https://github.com/DevNullx64" Acknowledgment="Thanks Luc for your build script contribution."/>
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem Class="pa-0 pr-2" xs="6">
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
+                                <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" class="mr-2"/>
+                                Moderation, Design, Wiki, and Documentation
+                            </MudText>
+
+                            <MudList T="string">
+                                <Supporter Name="KeSah001" Type="SupporterType.INDIVIDUAL" URL="https://github.com/KeSah001" Acknowledgment="Thank you very much, Kerstin, for taking care of creating the Wiki."/>
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </ExpansionPanel>
+
+        </MudExpansionPanels>
     </InnerScrolling>
 </div>
