@@ -8,7 +8,7 @@ use rocket::request::FromRequest;
 /// The API token used to authenticate requests.
 pub static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
     let mut token = [0u8; 32];
-    let mut rng = rand_chacha::ChaChaRng::from_entropy();
+    let mut rng = rand_chacha::ChaChaRng::from_os_rng();
     rng.fill_bytes(&mut token);
     
     let token = APIToken::from_bytes(token.to_vec());
