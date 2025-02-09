@@ -49,6 +49,9 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
+        if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
+            yield return new("Use app default", string.Empty);
+        
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
         foreach (var providerId in this.Data)
         {

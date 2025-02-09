@@ -20,4 +20,5 @@ public enum Components
     ERI_ASSISTANT,
     
     CHAT,
+    APP_SETTINGS,
 }
