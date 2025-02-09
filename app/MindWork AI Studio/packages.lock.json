@@ -24,11 +24,11 @@
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "6Ev1goLIvggLF6uCs6oZvdr9JM+2b1Zj+4FLdBWNW5iw3tm2BymVIb0yMsjnQTBWL7YUmqVWH3u45hSqOfvuqg==",
+        "requested": "[9.0.1, )",
+        "resolved": "9.0.1",
+        "contentHash": "Pnw9plviwRguhVxHjthooumWH8yUxfF54tuu/+VoVBOuqBmzu6VUnn4NGf3eVkEO1k5q2nihOIAQL/7UMemSmQ==",
         "dependencies": {
-          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.0"
+          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.1"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {
@@ -39,9 +39,9 @@
       },
       "MudBlazor": {
         "type": "Direct",
-        "requested": "[7.15.0, )",
-        "resolved": "7.15.0",
-        "contentHash": "b2+hO7ZTGwsGhu9SoowuNe2ETeF1GzExpg/hIYR++rSh+vy4v/QD0iOsrATWv3LdFJXSgk3d1+XIr5srW3jBiA==",
+        "requested": "[7.16.0, )",
+        "resolved": "7.16.0",
+        "contentHash": "68bEFn7MLCyOB4yYxtvZG+AA+bZbxBDcIOhnSVFrHrAg8LLXVw1LxHCp9EyRktlREpnoAO1JxINp+5WeHc9Z4w==",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.8",
           "Microsoft.AspNetCore.Components.Web": "8.0.8",
@@ -147,10 +147,10 @@
       },
       "Microsoft.Extensions.FileProviders.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.0",
-        "contentHash": "uK439QzYR0q2emLVtYzwyK3x+T5bTY4yWsd/k/ZUS9LR6Sflp8MIdhGXW8kQCd86dQD4tLqvcbLkku8qHY263Q==",
+        "resolved": "9.0.1",
+        "contentHash": "DguZYt1DWL05+8QKWL3b6bW7A2pC5kYFMY5iXM6W2M23jhvcNa8v6AU8PvVJBcysxHwr9/jax0agnwoBumsSwg==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.0"
+          "Microsoft.Extensions.Primitives": "9.0.1"
         }
       },
       "Microsoft.Extensions.Localization": {
@@ -188,8 +188,8 @@
       },
       "Microsoft.Extensions.Primitives": {
         "type": "Transitive",
-        "resolved": "9.0.0",
-        "contentHash": "N3qEBzmLMYiASUlKxxFIISP4AiwuPTHF5uCh+2CWSwwzAJiIYx0kBJsS30cp1nvhSySFAVi30jecD307jV+8Kg=="
+        "resolved": "9.0.1",
+        "contentHash": "bHtTesA4lrSGD1ZUaMIx6frU3wyy0vYtTa/hM6gGQu5QNrydObv8T5COiGUWsisflAfmsaFOe9Xvw5NSO99z0g=="
       },
       "Microsoft.JSInterop": {
         "type": "Transitive",
@@ -205,9 +205,6 @@
         "type": "Transitive",
         "resolved": "0.16.9",
         "contentHash": "7WaVMHklpT3Ye2ragqRIwlFRsb6kOk63BOGADV0fan3ulVfGLUYkDi5yNUsZS/7FVNkWbtHAlDLmu4WnHGfqvQ=="
-      },
-      "ericlientv1": {
-        "type": "Project"
       }
     },
     "net8.0/osx-arm64": {}
