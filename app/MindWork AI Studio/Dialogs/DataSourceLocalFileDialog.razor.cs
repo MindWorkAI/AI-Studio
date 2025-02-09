@@ -23,7 +23,6 @@ public partial class DataSourceLocalFileDialog : ComponentBase
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
-    
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private readonly DataSourceValidation dataSourceValidation;

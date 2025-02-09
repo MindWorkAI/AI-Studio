@@ -1,0 +1,19 @@
+<MudStack Row="@true" AlignItems="AlignItems.Center">
+    <MudTextField
+        T="string"
+        ReadOnly="@true"
+        Label="@this.Label"
+        Text="@this.Value"
+        Variant="Variant.Outlined"
+        Margin="Margin.Dense"
+        Adornment="Adornment.Start"
+        AdornmentIcon="@this.Icon"
+        UserAttributes="@USER_INPUT_ATTRIBUTES" />
+
+    @if (this.ShowingCopyButton)
+    {
+        <MudTooltip Text="@this.ClipboardTooltip">
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Medium" OnClick="@(() => this.CopyToClipboard(this.Value))"/>
+        </MudTooltip>
+    }
+</MudStack>

@@ -1,8 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-
-using ERI_Client.V1;
+using AIStudio.Tools.ERIClient.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
@@ -216,10 +215,37 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
         }
     }
     
-    private Task ShowInformation(IDataSource dataSource)
+    private async Task ShowInformation(IDataSource dataSource)
     {
-        #warning Implement the information dialog for ERI data sources.
-        return Task.CompletedTask;
+        switch (dataSource)
+        {
+            case DataSourceLocalFile localFile:
+                var localFileDialogParameters = new DialogParameters<DataSourceLocalFileInfoDialog>
+                {
+                    { x => x.DataSource, localFile },
+                };
+
+                await this.DialogService.ShowAsync<DataSourceLocalFileInfoDialog>("Local File Data Source Information", localFileDialogParameters, DialogOptions.FULLSCREEN);
+                break;
+            
+            case DataSourceLocalDirectory localDirectory:
+                var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryInfoDialog>
+                {
+                    { x => x.DataSource, localDirectory },
+                };
+
+                await this.DialogService.ShowAsync<DataSourceLocalDirectoryInfoDialog>("Local Directory Data Source Information", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
+                break;
+            
+            case DataSourceERI_V1 eriV1DataSource:
+                var eriV1DialogParameters = new DialogParameters<DataSourceERI_V1InfoDialog>
+                {
+                    { x => x.DataSource, eriV1DataSource },
+                };
+                
+                await this.DialogService.ShowAsync<DataSourceERI_V1InfoDialog>("ERI v1 Data Source Information", eriV1DialogParameters, DialogOptions.FULLSCREEN);
+                break;
+        }
     }
     
     private async Task UpdateDataSources()

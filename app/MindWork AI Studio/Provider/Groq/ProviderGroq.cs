@@ -127,10 +127,10 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
         if (secretKey is null)
             return [];
         
-        var request = new HttpRequestMessage(HttpMethod.Get, "models");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
-        var response = await this.httpClient.SendAsync(request, token);
+        using var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
             return [];
 
