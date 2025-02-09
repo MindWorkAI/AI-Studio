@@ -236,6 +236,15 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
 
                 await this.DialogService.ShowAsync<DataSourceLocalDirectoryInfoDialog>("Local Directory Data Source Information", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
                 break;
+            
+            case DataSourceERI_V1 eriV1DataSource:
+                var eriV1DialogParameters = new DialogParameters<DataSourceERI_V1InfoDialog>
+                {
+                    { x => x.DataSource, eriV1DataSource },
+                };
+                
+                await this.DialogService.ShowAsync<DataSourceERI_V1InfoDialog>("ERI v1 Data Source Information", eriV1DialogParameters, DialogOptions.FULLSCREEN);
+                break;
         }
     }
     
