@@ -33,11 +33,13 @@ rcgen = { version = "0.13.2", features = ["pem"] }
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 url = "2.5"
-openssl = "0.10.70"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # See issue https://github.com/tauri-apps/tauri/issues/4470
-reqwest = { version = "0.12", features = ["native-tls-vendored"] }
+reqwest = { version = "0.12.12", features = ["native-tls-vendored"] }
+
+# Fixes security vulnerability downstream, where the upstream is not fixed yet:
+openssl = "0.10.70"
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]
