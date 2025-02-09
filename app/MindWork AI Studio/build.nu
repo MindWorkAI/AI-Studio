@@ -2,11 +2,11 @@
 
 def main [] {}
 
-def are_assets_exist [rid: string]: string -> bool {
+def are_assets_exist [rid: string] {
     $"bin/release/net8.0/($rid)/publish/wwwroot/_content/MudBlazor/MudBlazor.min.css" | path exists
 }
 
-def "main help" []: nothing -> nothing {
+def "main help" [] {
     print "Usage: nu build.nu [action]"
     print ""
     print "Optional Actions:"
@@ -26,7 +26,7 @@ def "main help" []: nothing -> nothing {
     print ""
 }
 
-def "main prepare" [action: string]: string -> nothing {
+def "main prepare" [action: string] {
     if (update_app_version $action) {
         main fix_web_assets
         inc_build_number
@@ -36,7 +36,7 @@ def "main prepare" [action: string]: string -> nothing {
     }
 }
 
-def "main metadata" []: nothing -> nothing {
+def "main metadata" [] {
     update_dotnet_version
     update_rust_version
     update_mudblazor_version
@@ -46,7 +46,7 @@ def "main metadata" []: nothing -> nothing {
     update_license_year "Pages/About.razor.cs"
 }
 
-def "main fix_web_assets" []: nothing -> nothing {
+def "main fix_web_assets" [] {
 
     # Get the matching RIDs for the current OS:
     let rids = get_rids
@@ -70,7 +70,7 @@ def "main fix_web_assets" []: nothing -> nothing {
     }
 }
 
-def "main publish" []: nothing -> nothing {
+def "main publish" [] {
     
     main metadata
     
@@ -139,7 +139,7 @@ def "main publish" []: nothing -> nothing {
     print "Building done."
 }
 
-def get_rids []: nothing -> list {
+def get_rids [] {
     # Define the list of RIDs to build for, cf. https://learn.microsoft.com/en-us/dotnet/core/rid-catalog:
     let rids = ["win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-arm64", "osx-x64"]
     
@@ -163,7 +163,7 @@ def get_rids []: nothing -> list {
     $rids
 }
 
-def get_os []: nothing -> string {
+def get_os [] {
     let os = (sys host).name | str downcase
     if $os =~ "linux" {
         return "linux"
@@ -171,7 +171,7 @@ def get_os []: nothing -> string {
     $os
 }
 
-def update_build_time []: nothing -> nothing {
+def update_build_time [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut build_time = $meta_lines.1
     
@@ -183,7 +183,7 @@ def update_build_time []: nothing -> nothing {
     $meta_lines | save --raw --force ../../metadata.txt
 }
 
-def inc_build_number []: nothing -> nothing {
+def inc_build_number [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut build_number = $meta_lines.2 | into int
     
@@ -195,7 +195,7 @@ def inc_build_number []: nothing -> nothing {
     $meta_lines | save --raw --force ../../metadata.txt
 }
 
-def update_dotnet_version []: nothing -> nothing {
+def update_dotnet_version [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut dotnet_sdk_version = $meta_lines.3
     mut dotnet_version = $meta_lines.4
@@ -215,7 +215,7 @@ def update_dotnet_version []: nothing -> nothing {
     $meta_lines | save --raw --force ../../metadata.txt
 }
 
-def update_rust_version []: nothing -> nothing {
+def update_rust_version [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut rust_version = $meta_lines.5
     
@@ -229,7 +229,7 @@ def update_rust_version []: nothing -> nothing {
     $meta_lines | save --raw --force ../../metadata.txt
 }
 
-def update_mudblazor_version []: nothing -> nothing {
+def update_mudblazor_version [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut mudblazor_version = $meta_lines.6
     
@@ -242,7 +242,7 @@ def update_mudblazor_version []: nothing -> nothing {
     $meta_lines | save --raw --force ../../metadata.txt
 }
 
-def update_tauri_version []: nothing -> nothing {
+def update_tauri_version [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut tauri_version = $meta_lines.7
     
@@ -276,7 +276,7 @@ def update_license_year [licence_file: string] {
     $updated_license_text | save --raw --force $licence_file
 }
 
-def update_app_version [action: string]: string -> bool {
+def update_app_version [action: string] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut app_version = $meta_lines.0
     
@@ -321,7 +321,7 @@ def update_app_version [action: string]: string -> bool {
     return true
 }
 
-def update_project_commit_hash []: nothing -> nothing {
+def update_project_commit_hash [] {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut commit_hash = $meta_lines.8
     
@@ -356,7 +356,7 @@ def update_project_commit_hash []: nothing -> nothing {
     $meta_lines | save --raw --force ../../metadata.txt
 }
 
-def update_changelog []: nothing -> nothing {
+def update_changelog [] {
     # Get all changelog files:
     let all_changelog_files = glob wwwroot/changelog/*.md
     
