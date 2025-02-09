@@ -41,12 +41,12 @@
         }
         
         <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="Total directory size" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="the total directory size"/>
-        @if (this.IsOperationInProgress)
-        {
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-3 mb-3" />
-        }
     </DialogContent>
     <DialogActions>
+        @if (this.IsOperationInProgress)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ml-5 mr-5"/>
+        }
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
     </DialogActions>
 </MudDialog>
