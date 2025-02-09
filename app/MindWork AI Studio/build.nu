@@ -164,7 +164,11 @@ def get_rids []: nothing -> list {
 }
 
 def get_os []: nothing -> string {
-    (sys host).name | str downcase
+    let os = (sys host).name | str downcase
+    if $os =~ "linux" {
+        return "linux"
+    }
+    $os
 }
 
 def update_build_time []: nothing -> nothing {
@@ -215,7 +219,7 @@ def update_rust_version []: nothing -> nothing {
     mut meta_lines = open --raw ../../metadata.txt | lines
     mut rust_version = $meta_lines.5
     
-    let rust_data = (^rustc -Vv) | parse --regex 'rustc (?<version>[0-9.]+) \((?<commit>[a-zA-Z0-9]+)'
+    let rust_data = (^rustc -Vv) | parse --regex 'rustc (?<version>[0-9.]+)(?:-nightly)? \((?<commit>[a-zA-Z0-9]+)'
     let version = $rust_data.version.0
     let commit = $rust_data.commit.0
     
