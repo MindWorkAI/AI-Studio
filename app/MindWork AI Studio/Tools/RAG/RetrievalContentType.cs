@@ -6,6 +6,7 @@ namespace AIStudio.Tools.RAG;
 public enum RetrievalContentType
 {
     NOT_SPECIFIED,
+    UNKNOWN,
     
     //
     // Text Content:
