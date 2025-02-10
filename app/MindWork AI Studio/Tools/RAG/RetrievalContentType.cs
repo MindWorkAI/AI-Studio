@@ -37,6 +37,10 @@ public enum RetrievalContentType
     SUBTITLE,
     CAPTION,
     DIALOGUE,
+    PROJECT_PROPOSAL,
+    PROJECT_PLAN,
+    SPREADSHEET,
+    PRESENTATION,
     
     //
     // Image Content:
@@ -52,6 +56,12 @@ public enum RetrievalContentType
     MAP,
     CHARACTER,
     SCENE,
+    LANDSCAPE,
+    PORTRAIT,
+    POSTER,
+    LOGO,
+    ICON,
+    SATELLITE_IMAGE,
     
     //
     // Audio Content:
