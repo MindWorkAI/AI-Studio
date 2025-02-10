@@ -40,6 +40,18 @@ public sealed class ContentText : IContent
         if(chatThread is null)
             return;
 
+        //
+        // Check if the user wants to bind any data sources to the chat:
+        //
+        
+        //
+        // Trigger the retrieval part of the (R)AG process:
+        //
+        
+        //
+        // Perform the augmentation of the R(A)G process:
+        //
+        
         // Store the last time we got a response. We use this later
         // to determine whether we should notify the UI about the
         // new content or not. Depends on the energy saving mode
