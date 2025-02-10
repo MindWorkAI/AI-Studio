@@ -20,6 +20,9 @@ public partial class TextInfoLines : ComponentBase
 
     [Parameter]
     public bool ShowingCopyButton { get; set; } = true;
+
+    [Parameter]
+    public TextColor Color { get; set; } = TextColor.DEFAULT;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -47,4 +50,13 @@ public partial class TextInfoLines : ComponentBase
     private string ClipboardTooltip => $"Copy {this.ClipboardTooltipSubject} to the clipboard";
     
     private async Task CopyToClipboard(string content) => await this.RustService.CopyText2Clipboard(this.Snackbar, content);
+    
+    private string GetColor()
+    {
+        var htmlColorCode = this.Color.GetHTMLColor(this.SettingsManager);
+        if(string.IsNullOrWhiteSpace(htmlColorCode))
+            return string.Empty;
+        
+        return $"color: {htmlColorCode} !important;";
+    }
 }
