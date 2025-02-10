@@ -76,6 +76,7 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
             this.dataName = this.DataSource.Name;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
+            this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
         }
         
         await base.OnInitializedAsync();

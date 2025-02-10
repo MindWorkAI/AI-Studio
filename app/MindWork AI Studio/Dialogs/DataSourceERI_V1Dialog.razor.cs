@@ -98,6 +98,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             this.dataPort = this.DataSource.Port;
             this.dataAuthMethod = this.DataSource.AuthMethod;
             this.dataUsername = this.DataSource.Username;
+            this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
 
             if (this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD)
             {

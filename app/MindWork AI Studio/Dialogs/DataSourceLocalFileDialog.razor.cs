@@ -76,6 +76,7 @@ public partial class DataSourceLocalFileDialog : ComponentBase
             this.dataName = this.DataSource.Name;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataFilePath = this.DataSource.FilePath;
+            this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
         }
         
         await base.OnInitializedAsync();
