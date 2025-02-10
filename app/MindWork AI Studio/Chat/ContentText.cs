@@ -35,7 +35,7 @@ public sealed class ContentText : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, ChatThread? chatThread, CancellationToken token = default)
+    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return;

@@ -295,8 +295,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         var time = DateTimeOffset.Now;
+        IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
         {
+            lastUserPrompt = new ContentText
+            {
+                Text = this.userInput,
+            };
+
             //
             // Add the user message to the thread:
             //
@@ -305,10 +311,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Time = time,
                 ContentType = ContentType.TEXT,
                 Role = ChatRole.USER,
-                Content = new ContentText
-                {
-                    Text = this.userInput,
-                },
+                Content = lastUserPrompt,
             });
 
             // Save the chat:
@@ -319,6 +322,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.StateHasChanged();
             }
         }
+        else
+            lastUserPrompt = this.ChatThread.Blocks.Last(x => x.Role is ChatRole.USER).Content;
 
         //
         // Add the AI response to the thread:
@@ -360,7 +365,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
             // content to be streamed.
-            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.Provider.Model, this.ChatThread, this.cancellationTokenSource.Token);
+            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
         }
         
         this.cancellationTokenSource = null;
