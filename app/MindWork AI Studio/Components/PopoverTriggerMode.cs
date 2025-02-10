@@ -1,6 +1,6 @@
 namespace AIStudio.Components;
 
-public enum ConfidenceInfoMode
+public enum PopoverTriggerMode
 {
     BUTTON,
     ICON,

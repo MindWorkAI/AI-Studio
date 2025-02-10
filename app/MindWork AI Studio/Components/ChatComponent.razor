@@ -97,7 +97,7 @@
 
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
+                <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
             }
 
             @if (this.isStreaming && this.cancellationTokenSource is not null)
