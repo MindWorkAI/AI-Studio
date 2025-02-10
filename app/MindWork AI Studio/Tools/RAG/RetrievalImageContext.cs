@@ -6,14 +6,19 @@ public sealed class RetrievalImageContext : IRetrievalContext
 {
     #region Implementation of IRetrievalContext
 
+    /// <inheritdoc />
     public required string DataSourceName { get; init; }
 
+    /// <inheritdoc />
     public required RetrievalContentCategory Category { get; init; }
 
+    /// <inheritdoc />
     public required RetrievalContentType Type { get; init; }
 
+    /// <inheritdoc />
     public required string Path { get; init; }
 
+    /// <inheritdoc />
     public IReadOnlyList<string> Links { get; init; } = [];
 
     #endregion
