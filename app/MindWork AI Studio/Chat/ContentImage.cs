@@ -37,12 +37,15 @@ public sealed class ContentImage : IContent
     #endregion
 
     /// <summary>
-    /// The URL of the image.
+    /// The type of the image source.
     /// </summary>
-    public string URL { get; set; } = string.Empty;
+    /// <remarks>
+    /// Is the image source a URL, a local file path, a base64 string, etc.?
+    /// </remarks>
+    public required ContentImageSource SourceType { get; init; }
 
     /// <summary>
-    /// The local path of the image.
+    /// The image source.
     /// </summary>
-    public string LocalPath { get; set; } = string.Empty;
+    public required string Source { get; set; }
 }

@@ -78,9 +78,9 @@
                     break;
 
                 case ContentType.IMAGE:
-                    if (this.Content is ContentImage imageContent)
+                    if (this.Content is ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent)
                     {
-                        <MudImage Src="@imageContent.URL"/>
+                        <MudImage Src="@imageContent.Source"/>
                     }
 
                     break;
