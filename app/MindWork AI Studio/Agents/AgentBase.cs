@@ -13,6 +13,8 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
     protected ThreadSafeRandom RNG { get; init; } = rng;
     
     protected ILogger<AgentBase> Logger { get; init; } = logger;
+    
+    protected IContent? lastUserPrompt;
 
     /// <summary>
     /// Represents the type or category of this agent.
@@ -63,15 +65,17 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
     protected DateTimeOffset AddUserRequest(ChatThread thread, string request)
     {
         var time = DateTimeOffset.Now;
+        this.lastUserPrompt = new ContentText
+        {
+            Text = request,
+        };
+        
         thread.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
             Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                Text = request,
-            },
+            Content = this.lastUserPrompt,
         });
         
         return time;
@@ -103,6 +107,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, providerSettings.Model, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, providerSettings.Model, this.lastUserPrompt, thread);
     }
 }

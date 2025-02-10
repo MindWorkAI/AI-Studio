@@ -97,6 +97,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
     protected ChatThread? chatThread;
+    protected IContent? lastUserPrompt;
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
     
@@ -242,16 +243,18 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false)
     {
         var time = DateTimeOffset.Now;
+        this.lastUserPrompt = new ContentText
+        {
+            Text = request,
+        };
+        
         this.chatThread!.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
             HideFromUser = hideContentFromUser,
             Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                Text = request,
-            },
+            Content = this.lastUserPrompt,
         });
         
         return time;
@@ -287,7 +290,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();

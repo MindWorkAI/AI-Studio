@@ -42,5 +42,5 @@ public interface IContent
     /// <summary>
     /// Uses the provider to create the content.
     /// </summary>
-    public Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, ChatThread chatChatThread, CancellationToken token = default);
+    public Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
 }
