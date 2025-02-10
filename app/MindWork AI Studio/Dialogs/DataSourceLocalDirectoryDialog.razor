@@ -1,3 +1,5 @@
+@using AIStudio.Settings.DataModel
+
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
@@ -60,6 +62,13 @@
                     </MudJustifiedText>
                 }
             }
+
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="Your security policy" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+                @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
+                {
+                    <MudSelectItem Value="@policy">@policy.ToSelectionText()</MudSelectItem>
+                }
+            </MudSelect>
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>

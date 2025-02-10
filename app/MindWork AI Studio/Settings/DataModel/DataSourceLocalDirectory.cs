@@ -24,6 +24,9 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     /// <inheritdoc />
     public string EmbeddingId { get; init; } = Guid.Empty.ToString();
     
+    /// <inheritdoc />
+    public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+    
     /// <summary>
     /// The path to the directory.
     /// </summary>

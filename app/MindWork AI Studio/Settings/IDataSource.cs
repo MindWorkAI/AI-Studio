@@ -32,4 +32,9 @@ public interface IDataSource
     /// Which type of data source is this?
     /// </summary>
     public DataSourceType Type { get; init; }
+
+    /// <summary>
+    /// Which data security policy is applied to this data source?
+    /// </summary>
+    public DataSourceSecurity SecurityPolicy { get; init; }
 }
