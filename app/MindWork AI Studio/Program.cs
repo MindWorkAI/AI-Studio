@@ -143,12 +143,18 @@ internal sealed class Program
         // Execute the builder to get the app:
         var app = builder.Build();
 
+        // Get a program logger:
+        var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
+        programLogger.LogInformation("Starting the AI Studio server.");
+        
         // Initialize the encryption service:
+        programLogger.LogInformation("Initializing the encryption service.");
         var encryptionLogger = app.Services.GetRequiredService<ILogger<Encryption>>();
         var encryption = new Encryption(encryptionLogger, secretPassword, secretKeySalt);
         var encryptionInitializer = encryption.Initialize();
 
         // Set the logger for the Rust service:
+        programLogger.LogInformation("Initializing the Rust service.");
         var rustLogger = app.Services.GetRequiredService<ILogger<RustService>>();
         rust.SetLogger(rustLogger);
         rust.SetEncryptor(encryption);
@@ -156,6 +162,7 @@ internal sealed class Program
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
 
+        programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
 
 #if DEBUG
@@ -175,9 +182,11 @@ internal sealed class Program
             .AddInteractiveServerRenderMode();
 
         var serverTask = app.RunAsync();
+        programLogger.LogInformation("Server was started successfully.");
 
         await encryptionInitializer;
         await rust.AppIsReady();
+        programLogger.LogInformation("The AI Studio server is ready.");
         await serverTask;
     }
 }
