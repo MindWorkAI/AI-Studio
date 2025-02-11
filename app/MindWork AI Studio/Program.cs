@@ -187,6 +187,13 @@ internal sealed class Program
         await encryptionInitializer;
         await rust.AppIsReady();
         programLogger.LogInformation("The AI Studio server is ready.");
+        
+        TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
+        {
+            programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
+            taskArgs.SetObserved();
+        };
+        
         await serverTask;
     }
 }
