@@ -30,9 +30,15 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        //
+        // Wait until the app is fully initialized.
+        //
         while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
             await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
 
+        //
+        // Set the update interval based on the user's settings.
+        //
         this.updateInterval = this.settingsManager.ConfigurationData.App.UpdateBehavior switch
         {
             UpdateBehavior.NO_CHECK => Timeout.InfiniteTimeSpan,
@@ -45,10 +51,23 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             _ => TimeSpan.FromHours(1)
         };
         
+        //
+        // When the user doesn't want to check for updates, we can
+        // return early.
+        //
         if(this.settingsManager.ConfigurationData.App.UpdateBehavior is UpdateBehavior.NO_CHECK)
             return;
         
+        //
+        // Check for updates at the beginning. The user aspects this when the app
+        // is started.
+        //
         await this.CheckForUpdate();
+        
+        //
+        // Start the update loop. This will check for updates based on the
+        // user's settings.
+        //
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(this.updateInterval, stoppingToken);
