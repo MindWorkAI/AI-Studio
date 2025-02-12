@@ -55,6 +55,12 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             await this.CheckForUpdate();
         }
     }
+    
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        this.messageBus.Unregister(this);
+        await base.StopAsync(cancellationToken);
+    }
 
     #endregion
 
@@ -75,16 +81,6 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
     public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
-
-    #region Overrides of BackgroundService
-
-    public override async Task StopAsync(CancellationToken cancellationToken)
-    {
-        this.messageBus.Unregister(this);
-        await base.StopAsync(cancellationToken);
     }
 
     #endregion
