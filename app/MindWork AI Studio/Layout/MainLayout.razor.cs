@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
-using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Layout;
 

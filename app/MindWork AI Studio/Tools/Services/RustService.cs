@@ -3,7 +3,7 @@ using System.Text.Json;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
 
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Services;
 
 /// <summary>
 /// Calling Rust functions.

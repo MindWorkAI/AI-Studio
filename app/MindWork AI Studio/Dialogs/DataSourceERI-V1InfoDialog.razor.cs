@@ -6,6 +6,7 @@ using AIStudio.Assistants.ERI;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 

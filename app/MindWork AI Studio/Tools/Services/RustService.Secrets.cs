@@ -1,6 +1,6 @@
 using AIStudio.Tools.Rust;
 
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {

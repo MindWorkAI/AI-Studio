@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using AIStudio.Settings;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ERIClient;
 

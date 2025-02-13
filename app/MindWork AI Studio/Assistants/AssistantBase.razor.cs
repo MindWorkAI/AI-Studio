@@ -1,12 +1,12 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
 using MudBlazor.Utilities;
 
-using RustService = AIStudio.Tools.RustService;
 using Timer = System.Timers.Timer;
 
 namespace AIStudio.Assistants;
