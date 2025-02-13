@@ -115,6 +115,7 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
+        builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
         builder.Services.AddHostedService<UpdateService>();
