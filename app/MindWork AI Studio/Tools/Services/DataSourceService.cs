@@ -30,6 +30,17 @@ public sealed class DataSourceService
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
     public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
+        //
+        // Case: Somehow the selected LLM provider was not set. The default provider
+        //       does not mean anything. We cannot filter the data sources by any means.
+        //       We return an empty list. Better safe than sorry.
+        //
+        if (selectedLLMProvider == default)
+        {
+            this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
+            return new([], []);
+        }
+        
         var allDataSources = this.settingsManager.ConfigurationData.DataSources;
         var filteredDataSources = new List<IDataSource>(allDataSources.Count);
         var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSources?.Count ?? 0);
