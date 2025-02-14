@@ -21,6 +21,13 @@ public sealed class DataSourceService
         this.logger.LogInformation("The data source service has been initialized.");
     }
     
+    /// <summary>
+    /// Returns a list of data sources that are allowed for the selected LLM provider.
+    /// It also returns the data sources selected before when they are still allowed.
+    /// </summary>
+    /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="previousSelectedDataSources">The data sources selected before.</param>
+    /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
     public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources;
