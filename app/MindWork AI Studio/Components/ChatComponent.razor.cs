@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -39,6 +40,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+    
+    [Inject]
+    private DataSourceService DataSourceService { get; init; } = null!;
     
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -365,7 +369,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
             // content to be streamed.
-            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
+            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.DataSourceService, this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
         }
         
         this.cancellationTokenSource = null;

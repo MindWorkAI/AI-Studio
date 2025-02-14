@@ -29,6 +29,9 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected RustService RustService { get; init; } = null!;
     
     [Inject]
+    protected DataSourceService DataSourceService { get; init; } = null!;
+    
+    [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
     
     [Inject]
@@ -290,7 +293,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.DataSourceService, this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();

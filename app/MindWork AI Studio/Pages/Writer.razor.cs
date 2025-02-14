@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -13,6 +14,9 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
 {
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
+    
+    [Inject]
+    private DataSourceService DataSourceService { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
@@ -139,7 +143,7 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         this.isStreaming = true;
         this.StateHasChanged();
         
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, lastUserPrompt, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.DataSourceService, this.providerSettings.Model, lastUserPrompt, this.chatThread);
         this.suggestion = aiText.Text;
         
         this.isStreaming = false;
