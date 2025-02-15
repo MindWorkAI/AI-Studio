@@ -29,11 +29,6 @@ public sealed record ChatThread
     public string SelectedProfile { get; set; } = string.Empty;
 
     /// <summary>
-    /// Is this chat thread using data sources?
-    /// </summary>
-    public bool UseDataSources { get; set; }
-
-    /// <summary>
     /// The data source options for this chat thread.
     /// </summary>
     public DataSourceOptions DataSourceOptions { get; set; } = new();
