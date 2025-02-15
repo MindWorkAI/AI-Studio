@@ -47,6 +47,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
+    private DataSourceSelection? dataSourceSelectionComponent;
+    private DataSourceOptions earlyDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
@@ -117,6 +119,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     }
                 }
 
+                //
+                // Check if the user wants to apply the standard chat data source options:
+                //
+                if (this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
+                    this.ChatThread.DataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
                 //
                 // Check if the user wants to store the chat automatically:
@@ -137,6 +144,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                         await WorkspaceBehaviour.EnsureBiasWorkspace();
                 }
             }
+        }
+        else
+        {
+            //
+            // No, the user did not send an assistant result to the chat.
+            //
+            this.ApplyStandardDataSourceOptions();
         }
         
         //
@@ -257,6 +271,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
     
+    private void ApplyStandardDataSourceOptions()
+    {
+        var chatDefaultOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        this.earlyDataSourceOptions = chatDefaultOptions;
+        this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
+    }
+    
     private string ExtractThreadName(string firstUserInput)
     {
         // We select the first 10 words of the user input:
@@ -282,6 +303,30 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         };
         
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+
+    private DataSourceOptions GetCurrentDataSourceOptions()
+    {
+        if (this.ChatThread is not null)
+            return this.ChatThread.DataSourceOptions;
+        
+        return this.earlyDataSourceOptions;
+    }
+    
+    private async Task SetCurrentDataSourceOptions(DataSourceOptions updatedOptions)
+    {
+        if (this.ChatThread is not null)
+        {
+            this.hasUnsavedChanges = true;
+            this.ChatThread.DataSourceOptions = updatedOptions;
+            if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            {
+                await this.SaveThread();
+                this.hasUnsavedChanges = false;
+            }
+        }
+        else
+            this.earlyDataSourceOptions = updatedOptions;
     }
 
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
@@ -329,6 +374,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
+                DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
                 Seed = this.RNG.Next(),
                 Blocks = [],
@@ -561,8 +607,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = [],
             };
         }
-
-        this.userInput = string.Empty;
+        
+        // Now, we have to reset the data source options as well:
+        this.ApplyStandardDataSourceOptions();
+        
         // Notify the parent component about the change:
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
@@ -623,12 +671,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
             this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions);
         }
         else
         {
             this.currentWorkspaceId = Guid.Empty;
             this.currentWorkspaceName = string.Empty;
             this.WorkspaceName(this.currentWorkspaceName);
+            this.ApplyStandardDataSourceOptions();
         }
         
         await this.SelectProviderWhenLoadingChat();
@@ -652,6 +702,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.WorkspaceName(this.currentWorkspaceName);
         
         this.ChatThread = null;
+        this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
