@@ -42,6 +42,7 @@ public partial class DataSourceLocalFileDialog : ComponentBase
     private bool dataUserAcknowledgedCloudEmbedding;
     private string dataEmbeddingId = string.Empty;
     private string dataFilePath = string.Empty;
+    private DataSourceSecurity dataSecurityPolicy;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -75,6 +76,7 @@ public partial class DataSourceLocalFileDialog : ComponentBase
             this.dataName = this.DataSource.Name;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataFilePath = this.DataSource.FilePath;
+            this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
         }
         
         await base.OnInitializedAsync();
@@ -102,6 +104,7 @@ public partial class DataSourceLocalFileDialog : ComponentBase
         Type = DataSourceType.LOCAL_FILE,
         EmbeddingId = this.dataEmbeddingId,
         FilePath = this.dataFilePath,
+        SecurityPolicy = this.dataSecurityPolicy,
     };
     
     private async Task Store()

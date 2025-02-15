@@ -1,4 +1,5 @@
 @using AIStudio.Settings
+@using AIStudio.Settings.DataModel
 @inherits SettingsPanelBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Chat" HeaderText="Chat Options">
@@ -12,4 +13,10 @@
         <ConfigurationProviderSelection Component="Components.CHAT" Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.PreselectedProvider = selectedValue)"/>
         <ConfigurationSelect OptionDescription="Preselect one of your profiles?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.PreselectedProfile = selectedValue)" OptionHelp="Would you like to set one of your profiles as the default for chats?"/>
     </MudPaper>
+
+    @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+    {
+        <DataSourceSelection SelectionMode="DataSourceSelectionMode.CONFIGURATION_MODE" AutoSaveAppSettings="@true" @bind-DataSourceOptions="@this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions" ConfigurationHeaderMessage="You can set default data sources and options for new chats. You can change these settings later for each individual chat."/>
+        <ConfigurationSelect OptionDescription="Apply default data source option when sending assistant results to chat" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior)" Data="@ConfigurationSelectDataFactory.GetSendToChatDataSourceBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior = selectedValue)" OptionHelp="Do you want to apply the default data source options when sending assistant results to chat?"/>
+    }
 </ExpansionPanel>

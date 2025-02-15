@@ -21,7 +21,7 @@ Things we are currently working on:
   - [ ] App: Implement the continuous process of vectorizing data
   - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281))~~
   - [ ] App: Define a common augmentation interface for the integration of RAG processes in chats
-  - [ ] App: Integrate data sources in chats
+  - [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
 
 
 - Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[#167](https://github.com/MindWorkAI/AI-Studio/pull/167), [#226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~.

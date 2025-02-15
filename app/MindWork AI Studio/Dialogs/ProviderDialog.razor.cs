@@ -1,11 +1,11 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
-using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Dialogs;
 

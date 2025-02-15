@@ -1,13 +1,16 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace AIStudio.Agents;
 
-public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, ThreadSafeRandom rng) : IAgent
+public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : IAgent
 {
+    protected DataSourceService DataSourceService { get; init; } = dataSourceService;
+    
     protected SettingsManager SettingsManager { get; init; } = settingsManager;
 
     protected ThreadSafeRandom RNG { get; init; } = rng;
@@ -107,6 +110,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, providerSettings.Model, this.lastUserPrompt, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.DataSourceService, providerSettings.Model, this.lastUserPrompt, thread);
     }
 }

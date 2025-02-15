@@ -1,3 +1,5 @@
+@using AIStudio.Settings.DataModel
+
 <MudDialog>
     <DialogContent>
         <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="Data source name" Value="@this.DataSource.Name" ClipboardTooltipSubject="the data source name"/>
@@ -31,6 +33,7 @@
             </MudJustifiedText>
         }
 
+        <TextInfoLines Label="Your security policy" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="your security policy"/>
         <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="File size" Value="@this.FileSize" ClipboardTooltipSubject="the file size"/>
     </DialogContent>
     <DialogActions>

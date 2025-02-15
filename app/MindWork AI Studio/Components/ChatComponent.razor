@@ -97,7 +97,7 @@
 
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
+                <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
             }
 
             @if (this.isStreaming && this.cancellationTokenSource is not null)
@@ -108,6 +108,11 @@
             }
 
             <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
+            
+            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+            {
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" PopoverButtonClasses="ma-3" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))"/>
+            }
         </MudToolBar>
     </FooterContent>
 </InnerScrolling>

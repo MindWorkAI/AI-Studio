@@ -1,12 +1,12 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
 using MudBlazor.Utilities;
 
-using RustService = AIStudio.Tools.RustService;
 using Timer = System.Timers.Timer;
 
 namespace AIStudio.Assistants;
@@ -27,6 +27,9 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     
     [Inject]
     protected RustService RustService { get; init; } = null!;
+    
+    [Inject]
+    protected DataSourceService DataSourceService { get; init; } = null!;
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
@@ -290,7 +293,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.DataSourceService, this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();

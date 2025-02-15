@@ -4,8 +4,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
-
-using RustService = AIStudio.Tools.RustService;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Provider;
 

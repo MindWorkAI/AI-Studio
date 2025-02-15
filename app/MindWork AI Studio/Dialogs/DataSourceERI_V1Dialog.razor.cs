@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
@@ -45,6 +46,8 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
     private string dataSecretStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
+    private DataSourceSecurity dataSecurityPolicy;
+    private SecurityRequirements dataSourceSecurityRequirements;
     private bool connectionTested;
     private bool connectionSuccessfulTested;
     
@@ -71,6 +74,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             GetTestedConnection = () => this.connectionTested,
             GetTestedConnectionResult = () => this.connectionSuccessfulTested,
             GetAvailableAuthMethods = () => this.availableAuthMethods,
+            GetSecurityRequirements = () => this.dataSourceSecurityRequirements,
         };
     }
     
@@ -95,6 +99,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             this.dataPort = this.DataSource.Port;
             this.dataAuthMethod = this.DataSource.AuthMethod;
             this.dataUsername = this.DataSource.Username;
+            this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
 
             if (this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD)
             {
@@ -147,6 +152,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             AuthMethod = this.dataAuthMethod,
             Username = this.dataUsername,
             Type = DataSourceType.ERI_V1,
+            SecurityPolicy = this.dataSecurityPolicy,
         };
     }
     
@@ -196,6 +202,28 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
 
             this.availableAuthMethods = authSchemes.Data!.Select(n => n.AuthMethod).ToList();
 
+            var loginResult = await client.AuthenticateAsync(this.DataSource, this.RustService, cts.Token);
+            if (!loginResult.Successful)
+            {
+                await this.form.Validate();
+                
+                Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
+                this.dataIssues[^1] = loginResult.Message;
+                return;
+            }
+            
+            var securityRequirementsRequest = await client.GetSecurityRequirementsAsync(cts.Token);
+            if (!securityRequirementsRequest.Successful)
+            {
+                await this.form.Validate();
+                
+                Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
+                this.dataIssues[^1] = securityRequirementsRequest.Message;
+                return;
+            }
+            
+            this.dataSourceSecurityRequirements = securityRequirementsRequest.Data;
+            
             this.connectionTested = true;
             this.connectionSuccessfulTested = true;
             this.Logger.LogInformation("Connection to the ERI v1 server was successful tested.");

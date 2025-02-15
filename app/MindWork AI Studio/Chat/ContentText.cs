@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Chat;
 
@@ -35,7 +36,7 @@ public sealed class ContentText : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
+    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, DataSourceService dataSourceService, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return;
@@ -43,15 +44,35 @@ public sealed class ContentText : IContent
         //
         // Check if the user wants to bind any data sources to the chat:
         //
-        
-        //
-        // Trigger the retrieval part of the (R)AG process:
-        //
-        
-        //
-        // Perform the augmentation of the R(A)G process:
-        //
-        
+        if (chatThread.DataSourceOptions.IsEnabled())
+        {
+            //
+            // When the user wants to bind data sources to the chat, we
+            // have to check if the data sources are available for the
+            // selected provider. Also, we have to check if any ERI
+            // data sources changed its security requirements.
+            //
+            List<IDataSource> preselectedDataSources = chatThread.DataSourceOptions.PreselectedDataSourceIds.Select(id => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == id)).Where(ds => ds is not null).ToList()!;
+            var dataSources = await dataSourceService.GetDataSources(provider, preselectedDataSources);
+            var selectedDataSources = dataSources.SelectedDataSources;
+            
+            //
+            // Should the AI select the data sources?
+            //
+            if (chatThread.DataSourceOptions.AutomaticDataSourceSelection)
+            {
+                // TODO: Start agent based on allowed data sources.
+            }
+
+            //
+            // Trigger the retrieval part of the (R)AG process:
+            //
+
+            //
+            // Perform the augmentation of the R(A)G process:
+            //
+        }
+
         // Store the last time we got a response. We use this later
         // to determine whether we should notify the UI about the
         // new content or not. Depends on the energy saving mode

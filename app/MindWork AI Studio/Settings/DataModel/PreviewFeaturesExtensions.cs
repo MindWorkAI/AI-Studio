@@ -1,6 +1,6 @@
 namespace AIStudio.Settings.DataModel;
 
-public static class PreviewFeatureExtensions
+public static class PreviewFeaturesExtensions
 {
     public static string GetPreviewDescription(this PreviewFeatures feature) => feature switch
     {

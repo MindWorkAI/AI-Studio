@@ -36,4 +36,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
     /// <inheritdoc />
     public string Username { get; init; } = string.Empty;
+
+    /// <inheritdoc />
+    public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
 }

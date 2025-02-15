@@ -1,9 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, rng)
+public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, dataSourceService, rng)
 {
     private static readonly ContentBlock EMPTY_BLOCK = new()
     {

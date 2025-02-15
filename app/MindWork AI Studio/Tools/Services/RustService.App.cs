@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace AIStudio.Tools;
+namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {

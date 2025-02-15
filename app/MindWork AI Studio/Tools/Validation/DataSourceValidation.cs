@@ -1,3 +1,4 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Tools.Validation;
@@ -11,6 +12,8 @@ public sealed class DataSourceValidation
     public Func<IEnumerable<string>> GetUsedDataSourceNames { get; init; } = () => [];
     
     public Func<AuthMethod> GetAuthMethod { get; init; } = () => AuthMethod.NONE;
+
+    public Func<SecurityRequirements?> GetSecurityRequirements { get; init; } = () => null;
     
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
     
@@ -38,6 +41,21 @@ public sealed class DataSourceValidation
     {
         if(port is < 1 or > 65535)
             return "The port must be between 1 and 65535.";
+        
+        return null;
+    }
+    
+    public string? ValidateSecurityPolicy(DataSourceSecurity securityPolicy)
+    {
+        if(securityPolicy is DataSourceSecurity.NOT_SPECIFIED)
+            return "Please select your security policy.";
+        
+        var dataSourceSecurity = this.GetSecurityRequirements();
+        if (dataSourceSecurity is null)
+            return null;
+        
+        if(dataSourceSecurity.Value.AllowedProviderType is ProviderType.SELF_HOSTED && securityPolicy is not DataSourceSecurity.SELF_HOSTED)
+            return "This data source can only be used with a self-hosted LLM provider. Please change the security policy.";
         
         return null;
     }

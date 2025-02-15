@@ -8,7 +8,7 @@ namespace AIStudio.Components;
 public partial class ConfidenceInfo : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Parameter]
-    public ConfidenceInfoMode Mode { get; set; } = ConfidenceInfoMode.BUTTON;
+    public PopoverTriggerMode Mode { get; set; } = PopoverTriggerMode.BUTTON;
     
     [Parameter]
     public LLMProviders LLMProvider { get; set; }
