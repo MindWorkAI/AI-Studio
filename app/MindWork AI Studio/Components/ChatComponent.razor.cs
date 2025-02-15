@@ -331,6 +331,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
+        if(this.dataSourceSelectionComponent?.IsVisible ?? false)
+            this.dataSourceSelectionComponent.Hide();
+        
         this.hasUnsavedChanges = true;
         var key = keyEvent.Code.ToLowerInvariant();
         

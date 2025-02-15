@@ -147,6 +147,14 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
         //
     }
     
+    public bool IsVisible => this.showDataSourceSelection;
+
+    public void Hide()
+    {
+        this.showDataSourceSelection = false;
+        this.StateHasChanged();
+    }
+    
     private async Task LoadAndApplyFilters()
     {
         if(this.DataSourceOptions.DisableDataSources)
