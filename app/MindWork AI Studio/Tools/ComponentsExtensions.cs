@@ -10,6 +10,7 @@ public static class ComponentsExtensions
         Components.NONE => false,
         Components.ERI_ASSISTANT => false,
         Components.BIAS_DAY_ASSISTANT => false,
+        Components.APP_SETTINGS => false,
         
         _ => true,
     };
