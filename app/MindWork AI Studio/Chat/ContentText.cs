@@ -44,7 +44,7 @@ public sealed class ContentText : IContent
         //
         // Check if the user wants to bind any data sources to the chat:
         //
-        if (chatThread.UseDataSources)
+        if (chatThread.DataSourceOptions.IsEnabled())
         {
             //
             // When the user wants to bind data sources to the chat, we
