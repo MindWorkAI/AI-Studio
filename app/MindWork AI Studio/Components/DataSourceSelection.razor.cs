@@ -136,6 +136,7 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
         this.selectedDataSources = this.SettingsManager.ConfigurationData.DataSources.Where(ds => this.DataSourceOptions.PreselectedDataSourceIds.Contains(ds.Id)).ToList();
+        this.waitingForDataSources = false;
 
         //
         // Remark: We do not apply the filters here. This is done later
