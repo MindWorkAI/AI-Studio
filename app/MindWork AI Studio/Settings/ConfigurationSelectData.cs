@@ -94,6 +94,12 @@ public static class ConfigurationSelectDataFactory
             yield return new(source.GetPreviewDescription(), source);
     }
     
+    public static IEnumerable<ConfigurationSelectData<SendToChatDataSourceBehavior>> GetSendToChatDataSourceBehaviorData()
+    {
+        foreach (var behavior in Enum.GetValues<SendToChatDataSourceBehavior>())
+            yield return new(behavior.Description(), behavior);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
     {
         yield return new("Navigation expands on mouse hover", NavBehavior.EXPAND_ON_HOVER);
