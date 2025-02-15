@@ -70,21 +70,40 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
-        
+
+        // Get the preselected profile:
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+        
+        //
+        // Check for deferred messages of the kind 'SEND_TO_CHAT',
+        // aka the user sends an assistant result to the chat:
+        //
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)
         {
+            //
+            // Yes, the user sent an assistant result to the chat.
+            //
+            
+            // Use chat thread sent by the user:
             this.ChatThread = deferredContent;
             this.Logger.LogInformation($"The chat '{this.ChatThread.Name}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
+            // We know already that the chat thread is not null,
+            // but we have to check it again for the nullability
+            // for the compiler:
             if (this.ChatThread is not null)
             {
+                //
+                // Check if the chat thread has a name. If not, we
+                // generate the name now:
+                //
                 if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
                 {
                     var firstUserBlock = this.ChatThread.Blocks.FirstOrDefault(x => x.Role == ChatRole.USER);
@@ -98,12 +117,19 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     }
                 }
 
+
+                //
+                // Check if the user wants to store the chat automatically:
+                //
                 if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                 {
                     this.autoSaveEnabled = true;
                     this.mustStoreChat = true;
                     
-                    // Ensure the workspace exists:
+                    //
+                    // When a standard workspace is used, we have to ensure
+                    // that the workspace is available:
+                    //
                     if(this.ChatThread.WorkspaceId == KnownWorkspaces.ERI_SERVER_WORKSPACE_ID)
                         await WorkspaceBehaviour.EnsureERIServerWorkspace();
                     
@@ -113,13 +139,30 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             }
         }
         
+        //
+        // Check if the user wants to show the latest message after loading:
+        //
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
+            //
+            // We cannot scroll to the bottom right now because the
+            // chat component is not rendered yet. We have to wait for
+            // the rendering process to finish. Thus, we set a flag
+            // to scroll to the bottom after the rendering process.:
+            //
             this.mustScrollToBottomAfterRender = true;
             this.scrollRenderCountdown = 4;
             this.StateHasChanged();
         }
         
+        //
+        // Check if another component deferred the loading of a chat.
+        //
+        // This is used, e.g., for the bias-of-the-day component:
+        // when the bias for this day was already produced, the bias
+        // component sends a message to the chat component to load
+        // the chat with the bias:
+        //
         var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
         if (deferredLoading != default)
         {
@@ -128,6 +171,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.Logger.LogInformation($"The loading of the chat '{this.loadChat.ChatId}' was deferred and will be loaded now.");
         }
 
+        //
+        // When for whatever reason we have a chat thread, we have to
+        // ensure that the corresponding workspace id is set and the
+        // workspace name is loaded:
+        //
         if (this.ChatThread is not null)
         {
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
@@ -135,6 +183,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.WorkspaceName(this.currentWorkspaceName);
         }
         
+        // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
         await base.OnInitializedAsync();
     }
@@ -416,6 +465,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
     {
+        //
+        // Want the user to manage the chat storage manually? In that case, we have to ask the user
+        // about possible data loss:
+        //
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var dialogParameters = new DialogParameters
@@ -429,6 +482,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 return;
         }
 
+        //
+        // Delete the previous chat when desired and necessary:
+        //
         if (this.ChatThread is not null && deletePreviousChat)
         {
             string chatPath;
@@ -443,10 +499,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 await this.Workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
         }
 
+        //
+        // Reset our state:
+        //
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
         
+        //
+        // Reset the LLM provider considering the user's settings:
+        //
         switch (this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior)
         {
             case AddChatProviderBehavior.ADDED_CHATS_USE_DEFAULT_PROVIDER:
@@ -465,8 +527,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
         }
 
+        //
+        // Reset the chat thread or create a new one:
+        //
         if (!useSameWorkspace)
         {
+            //
+            // When the user wants to start a new chat outside the current workspace,
+            // we have to reset the workspace id and the workspace name. Also, we have
+            // to reset the chat thread:
+            //
             this.ChatThread = null;
             this.currentWorkspaceId = Guid.Empty;
             this.currentWorkspaceName = string.Empty;
@@ -474,6 +544,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         else
         {
+            //
+            // When the user wants to start a new chat in the same workspace, we have to
+            // reset the chat thread only. The workspace id and the workspace name remain
+            // the same:
+            //
             this.ChatThread = new()
             {
                 SelectedProvider = this.Provider.Id,
@@ -488,6 +563,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         this.userInput = string.Empty;
+        // Notify the parent component about the change:
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
