@@ -201,5 +201,8 @@ internal sealed class Program
         };
         
         await serverTask;
+        
+        RUST_SERVICE.Dispose();
+        programLogger.LogInformation("The AI Studio server was stopped.");
     }
 }
