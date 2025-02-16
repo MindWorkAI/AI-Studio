@@ -21,6 +21,7 @@ internal sealed class Program
     public static RustService RUST_SERVICE = null!;
     public static Encryption ENCRYPTION = null!;
     public static string API_TOKEN = null!;
+    public static IServiceProvider SERVICE_PROVIDER = null!;
     
     public static async Task Main(string[] args)
     {
@@ -147,6 +148,10 @@ internal sealed class Program
         // Get a program logger:
         var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
         programLogger.LogInformation("Starting the AI Studio server.");
+        
+        // Store the service provider (DI). We need it later for some classes,
+        // which are not part of the request pipeline:
+        SERVICE_PROVIDER = app.Services;
         
         // Initialize the encryption service:
         programLogger.LogInformation("Initializing the encryption service.");
