@@ -154,6 +154,9 @@ public sealed class ContentText : IContent
                         // Transform the selected data sources to the actual data sources.
                         selectedDataSources = aiSelectedDataSources.Select(x => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == x.Id)).Where(ds => ds is not null).ToList()!;
                     }
+                    
+                    // Store the changes in the chat thread:
+                    chatThread.DataSourceOptions.PreselectedDataSourceIds = selectedDataSources.Select(ds => ds.Id).ToList();
                 }
             }
             else

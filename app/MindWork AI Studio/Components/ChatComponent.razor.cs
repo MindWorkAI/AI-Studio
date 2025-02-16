@@ -481,6 +481,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Disable the stream state:
         this.isStreaming = false;
+        
+        // Update the data source options. This is useful when
+        // the AI is responsible for selecting the data source.
+        // The user can then see the selected data source:
+        if(this.ChatThread?.DataSourceOptions.AutomaticDataSourceSelection ?? false)
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread!.DataSourceOptions);
+        
+        // Update the UI:
         this.StateHasChanged();
     }
     
