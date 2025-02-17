@@ -1,6 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Chat;
 
@@ -149,5 +150,47 @@ public sealed record ChatThread
 
         // Remove the block from the chat thread:
         this.Blocks.Remove(block);
+    }
+
+    /// <summary>
+    /// Transforms this chat thread to an ERI chat thread.
+    /// </summary>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The ERI chat thread.</returns>
+    public async Task<Tools.ERIClient.DataModel.ChatThread> ToERIChatThread(CancellationToken token = default)
+    {
+        //
+        // Transform the content blocks:
+        //
+        var contentBlocks = new List<Tools.ERIClient.DataModel.ContentBlock>(this.Blocks.Count);
+        foreach (var block in this.Blocks)
+        {
+            var (contentData, contentType) = block.Content switch
+            {
+                ContentImage image => (await image.AsBase64(token), Tools.ERIClient.DataModel.ContentType.IMAGE),
+                ContentText text => (text.Text, Tools.ERIClient.DataModel.ContentType.TEXT),
+                
+                _ => (string.Empty, Tools.ERIClient.DataModel.ContentType.UNKNOWN),
+            };
+            
+            contentBlocks.Add(new Tools.ERIClient.DataModel.ContentBlock
+            {
+                Role = block.Role switch
+                {
+                    ChatRole.AI => Role.AI,
+                    ChatRole.USER => Role.USER,
+                    ChatRole.AGENT => Role.AGENT,
+                    ChatRole.SYSTEM => Role.SYSTEM,
+                    ChatRole.NONE => Role.NONE,
+                    
+                    _ => Role.UNKNOW,
+                },
+                
+                Content = contentData,
+                Type = contentType,
+            });
+        }
+        
+        return new Tools.ERIClient.DataModel.ChatThread { ContentBlocks = contentBlocks };
     }
 }

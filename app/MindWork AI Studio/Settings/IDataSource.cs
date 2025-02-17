@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 
+using AIStudio.Chat;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Settings;
 
@@ -37,4 +39,13 @@ public interface IDataSource
     /// Which data security policy is applied to this data source?
     /// </summary>
     public DataSourceSecurity SecurityPolicy { get; init; }
+    
+    /// <summary>
+    /// Perform the data retrieval process.
+    /// </summary>
+    /// <param name="lastPrompt">The last prompt from the chat.</param>
+    /// <param name="thread">The chat thread.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The retrieved data context.</returns>
+    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default);
 }
