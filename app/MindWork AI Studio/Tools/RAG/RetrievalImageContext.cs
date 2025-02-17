@@ -2,7 +2,7 @@ using AIStudio.Chat;
 
 namespace AIStudio.Tools.RAG;
 
-public sealed class RetrievalImageContext : IRetrievalContext
+public sealed class RetrievalImageContext : IRetrievalContext, IImageSource
 {
     #region Implementation of IRetrievalContext
 
