@@ -305,6 +305,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
 
+    private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
+    {
+        if (this.ChatThread is null)
+            return [];
+
+        return this.ChatThread.AISelectedDataSources;
+    }
+
     private DataSourceOptions GetCurrentDataSourceOptions()
     {
         if (this.ChatThread is not null)
@@ -481,12 +489,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Disable the stream state:
         this.isStreaming = false;
-        
-        // Update the data source options. This is useful when
-        // the AI is responsible for selecting the data source.
-        // The user can then see the selected data source:
-        if(this.ChatThread?.DataSourceOptions.AutomaticDataSourceSelection ?? false)
-            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread!.DataSourceOptions);
         
         // Update the UI:
         this.StateHasChanged();
@@ -682,7 +684,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
             this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
-            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions);
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
         }
         else
         {

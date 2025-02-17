@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Agents;
+using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -74,6 +75,7 @@ public sealed class ContentText : IContent
                 var selectionAgent = Program.SERVICE_PROVIDER.GetService<AgentDataSourceSelection>()!;
                 
                 // Let the AI agent do its work:
+                IReadOnlyList<DataSourceAgentSelected> finalAISelection = [];
                 var aiSelectedDataSources = await selectionAgent.PerformSelectionAsync(provider, lastPrompt, chatThread, dataSources, token);
 
                 // Check if the AI selected any data sources:
@@ -81,6 +83,11 @@ public sealed class ContentText : IContent
                 {
                     logger.LogWarning("The AI did not select any data sources. The RAG process is skipped.");
                     proceedWithRAG = false;
+                    
+                    // Send the selected data sources to the data source selection component.
+                    // Then, the user can see which data sources were selected by the AI.
+                    await MessageBus.INSTANCE.SendMessage(null, Event.RAG_AUTO_DATA_SOURCES_SELECTED, finalAISelection);
+                    chatThread.AISelectedDataSources = finalAISelection;
                 }
                 else
                 {
@@ -95,6 +102,9 @@ public sealed class ContentText : IContent
                     
                     // Filter out the data sources that are not available:
                     aiSelectedDataSources = aiSelectedDataSources.Where(x => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == x.Id) is not null).ToList();
+                    
+                    // Store the real AI-selected data sources:
+                    finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAgentSelected { DataSource = settings.ConfigurationData.DataSources.First(ds => ds.Id == x.Id), AIDecision = x, Selected = false }).ToList();
                     
                     var numHallucinatedSources = totalAISelectedDataSources - aiSelectedDataSources.Count;
                     if(numHallucinatedSources > 0)
@@ -142,6 +152,10 @@ public sealed class ContentText : IContent
                         // Filter the data sources by the threshold:
                         //
                         aiSelectedDataSources = aiSelectedDataSources.Where(x => x.Confidence >= threshold).ToList();
+                        foreach (var dataSource in finalAISelection)
+                            if(aiSelectedDataSources.Any(x => x.Id == dataSource.DataSource.Id))
+                                dataSource.Selected = true;
+                        
                         logger.LogInformation($"The AI selected {aiSelectedDataSources.Count} data source(s) with a confidence of at least {threshold}.");
                         
                         // Transform the final data sources to the actual data sources:
@@ -151,12 +165,18 @@ public sealed class ContentText : IContent
                     // We have max. 3 data sources. We take all of them:
                     else
                     {
-                        // Transform the selected data sources to the actual data sources.
+                        // Transform the selected data sources to the actual data sources:
                         selectedDataSources = aiSelectedDataSources.Select(x => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == x.Id)).Where(ds => ds is not null).ToList()!;
+                        
+                        // Mark the data sources as selected:
+                        foreach (var dataSource in finalAISelection)
+                            dataSource.Selected = true;
                     }
                     
-                    // Store the changes in the chat thread:
-                    chatThread.DataSourceOptions.PreselectedDataSourceIds = selectedDataSources.Select(ds => ds.Id).ToList();
+                    // Send the selected data sources to the data source selection component.
+                    // Then, the user can see which data sources were selected by the AI.
+                    await MessageBus.INSTANCE.SendMessage(null, Event.RAG_AUTO_DATA_SOURCES_SELECTED, finalAISelection);
+                    chatThread.AISelectedDataSources = finalAISelection;
                 }
             }
             else
