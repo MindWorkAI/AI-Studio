@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -9,6 +11,11 @@ namespace AIStudio.Agents;
 
 public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : IAgent
 {
+    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    };
+    
     protected DataSourceService DataSourceService { get; init; } = dataSourceService;
     
     protected SettingsManager SettingsManager { get; init; } = settingsManager;

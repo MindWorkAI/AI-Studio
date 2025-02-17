@@ -74,6 +74,8 @@ public sealed class Data
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
     
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
+    
     public DataAgenda Agenda { get; init; } = new();
     
     public DataGrammarSpelling GrammarSpelling { get; init; } = new();

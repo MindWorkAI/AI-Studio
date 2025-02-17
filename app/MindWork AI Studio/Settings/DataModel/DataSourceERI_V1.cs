@@ -1,5 +1,6 @@
 // ReSharper disable InconsistentNaming
 
+using AIStudio.Assistants.ERI;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Settings.DataModel;
@@ -39,4 +40,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
     /// <inheritdoc />
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+    
+    /// <inheritdoc />
+    public ERIVersion Version { get; init; } = ERIVersion.V1;
 }

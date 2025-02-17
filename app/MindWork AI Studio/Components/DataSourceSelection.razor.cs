@@ -25,6 +25,9 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
     
     [Parameter]
     public EventCallback<DataSourceOptions> DataSourceOptionsChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<DataSourceAgentSelected> DataSourcesAISelected { get; set; } = [];
     
     [Parameter]
     public string ConfigurationHeaderMessage { get; set; } = string.Empty;
@@ -58,7 +61,7 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
     protected override async Task OnInitializedAsync()
     {
         this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED ]);
+        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED, Event.RAG_AUTO_DATA_SOURCES_SELECTED ]);
         
         //
         // Load the settings:
@@ -129,9 +132,17 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
 
     #endregion
 
-    public void ChangeOptionWithoutSaving(DataSourceOptions options)
+    private SelectionMode GetListSelectionMode() => this.aiBasedSourceSelection ? MudBlazor.SelectionMode.SingleSelection : MudBlazor.SelectionMode.MultiSelection;
+    
+    private IReadOnlyCollection<DataSourceAgentSelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
+
+    private string GetAIReasoning(DataSourceAgentSelected source) => $"AI reasoning (confidence {source.AIDecision.Confidence:P0}): {source.AIDecision.Reason}";
+    
+    public void ChangeOptionWithoutSaving(DataSourceOptions options, IReadOnlyList<DataSourceAgentSelected>? aiSelectedDataSources = null)
     {
         this.DataSourceOptions = options;
+        this.DataSourcesAISelected = aiSelectedDataSources ?? [];
+        
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
@@ -235,6 +246,13 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
         {
             case Event.COLOR_THEME_CHANGED:
                 this.showDataSourceSelection = false;
+                this.StateHasChanged();
+                break;
+            
+            case Event.RAG_AUTO_DATA_SOURCES_SELECTED:
+                if(data is IReadOnlyList<DataSourceAgentSelected> aiSelectedDataSources)
+                    this.DataSourcesAISelected = aiSelectedDataSources;
+                    
                 this.StateHasChanged();
                 break;
         }
