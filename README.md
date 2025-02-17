@@ -20,7 +20,7 @@ Things we are currently working on:
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
   - [ ] App: Implement the continuous process of vectorizing data
   - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
-  - [ ] App: Define a common augmentation interface for the integration of RAG processes in chats
+  - [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288))~~
   - [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
 
 
