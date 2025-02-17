@@ -1,8 +1,6 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
-using AIStudio.Settings;
-using AIStudio.Tools.Services;
 
 namespace AIStudio.Chat;
 
@@ -43,5 +41,5 @@ public interface IContent
     /// <summary>
     /// Uses the provider to create the content.
     /// </summary>
-    public Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, DataSourceService dataSourceService, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
+    public Task CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
 }

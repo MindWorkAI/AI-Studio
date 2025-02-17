@@ -117,6 +117,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.DataSourceService, providerSettings.Model, this.lastUserPrompt, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), providerSettings.Model, this.lastUserPrompt, thread);
     }
 }

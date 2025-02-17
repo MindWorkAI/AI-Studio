@@ -1,8 +1,6 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
-using AIStudio.Settings;
-using AIStudio.Tools.Services;
 
 namespace AIStudio.Chat;
 
@@ -30,7 +28,7 @@ public sealed class ContentImage : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, DataSourceService dataSourceService, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default)
+    public Task CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default)
     {
         throw new NotImplementedException();
     }
