@@ -42,4 +42,15 @@ public interface IContent
     /// Uses the provider to create the content.
     /// </summary>
     public Task CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
+
+    /// <summary>
+    /// Returns the corresponding ERI content type.
+    /// </summary>
+    public Tools.ERIClient.DataModel.ContentType ToERIContentType => this switch
+    {
+        ContentText => Tools.ERIClient.DataModel.ContentType.TEXT,
+        ContentImage => Tools.ERIClient.DataModel.ContentType.IMAGE,
+        
+        _ => Tools.ERIClient.DataModel.ContentType.UNKNOWN,
+    };
 }

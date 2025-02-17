@@ -4,6 +4,7 @@ using AIStudio.Agents;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Chat;
@@ -199,9 +200,30 @@ public sealed class ContentText : IContent
             //
             // Trigger the retrieval part of the (R)AG process:
             //
+            var dataContexts = new List<IRetrievalContext>();
             if (proceedWithRAG)
             {
-                
+                //
+                // We kick off the retrieval process for each data source in parallel:
+                //
+                var retrievalTasks = new List<Task<IReadOnlyList<IRetrievalContext>>>(selectedDataSources.Count);
+                foreach (var dataSource in selectedDataSources)
+                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThread, token));
+            
+                //
+                // Wait for all retrieval tasks to finish:
+                //
+                foreach (var retrievalTask in retrievalTasks)
+                {
+                    try
+                    {
+                        dataContexts.AddRange(await retrievalTask);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogError(e, "An error occurred during the retrieval process.");
+                    }
+                }
             }
 
             //

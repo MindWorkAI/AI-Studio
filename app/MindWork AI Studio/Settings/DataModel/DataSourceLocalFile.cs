@@ -1,3 +1,6 @@
+using AIStudio.Chat;
+using AIStudio.Tools.RAG;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
@@ -26,6 +29,13 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     
     /// <inheritdoc />
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+    
+    /// <inheritdoc />
+    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
+    {
+        IReadOnlyList<IRetrievalContext> retrievalContext = new List<IRetrievalContext>();
+        return Task.FromResult(retrievalContext);
+    }
     
     /// <summary>
     /// The path to the file.
