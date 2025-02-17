@@ -38,12 +38,14 @@ public sealed class ContentText : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, DataSourceService dataSourceService, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
+    public async Task CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return;
 
         var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
+        var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
+        var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
         
         //
         // 1. Check if the user wants to bind any data sources to the chat:
