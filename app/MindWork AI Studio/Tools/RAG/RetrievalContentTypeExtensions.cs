@@ -4,7 +4,7 @@ namespace AIStudio.Tools.RAG;
 
 public static class RetrievalContentTypeExtensions
 {
-    public static RetrievalContentType ToRetrievalContentType(Context eriContext)
+    public static RetrievalContentType ToRetrievalContentType(this Context eriContext)
     {
         //
         // Right now, we have to parse the category string along the type enum to
