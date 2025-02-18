@@ -41,6 +41,7 @@
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <SettingsPanelAgentDataSourceSelection AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+                <SettingsPanelAgentRetrievalContextValidation AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
             }
             
             <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="() => this.availableLLMProviders" />

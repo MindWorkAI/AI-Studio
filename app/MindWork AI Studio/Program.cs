@@ -119,6 +119,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
+        builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
