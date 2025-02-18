@@ -3,6 +3,11 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataAgentRetrievalContextValidation
 {
     /// <summary>
+    /// Enable the retrieval context validation agent?
+    /// </summary>
+    public bool EnableRetrievalContextValidation { get; set; }
+    
+    /// <summary>
     /// Preselect any retrieval context validation options?
     /// </summary>
     public bool PreselectAgentOptions { get; set; }
