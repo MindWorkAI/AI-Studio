@@ -12,14 +12,6 @@ namespace AIStudio.Agents;
 
 public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
 {
-    private static readonly ContentBlock EMPTY_BLOCK = new()
-    {
-        Content = null,
-        ContentType = ContentType.NONE,
-        Role = ChatRole.AGENT,
-        Time = DateTimeOffset.UtcNow,
-    };
-    
     private readonly List<ContentBlock> answers = new();
     
     #region Overrides of AgentBase

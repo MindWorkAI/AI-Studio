@@ -11,6 +11,14 @@ namespace AIStudio.Agents;
 
 public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : IAgent
 {
+    protected static readonly ContentBlock EMPTY_BLOCK = new()
+    {
+        Content = null,
+        ContentType = ContentType.NONE,
+        Role = ChatRole.AGENT,
+        Time = DateTimeOffset.UtcNow,
+    };
+    
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,

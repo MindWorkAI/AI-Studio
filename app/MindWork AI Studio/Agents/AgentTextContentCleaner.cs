@@ -6,14 +6,6 @@ namespace AIStudio.Agents;
 
 public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, dataSourceService, rng)
 {
-    private static readonly ContentBlock EMPTY_BLOCK = new()
-    {
-        Content = null,
-        ContentType = ContentType.NONE,
-        Role = ChatRole.AGENT,
-        Time = DateTimeOffset.UtcNow,
-    };
-    
     private readonly List<ContentBlock> context = new();
     private readonly List<ContentBlock> answers = new();
     
