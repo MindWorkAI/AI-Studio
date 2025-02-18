@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.RAG.AugmentationProcesses;
 using AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 using AIStudio.Tools.Services;
 
@@ -106,7 +107,8 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             if (proceedWithRAG)
             {
-                
+                var augmentationProcess = new AugmentationOne();
+                chatThread = await augmentationProcess.ProcessAsync(provider, lastPrompt, chatThread, dataContexts, token);
             }
         }
         
