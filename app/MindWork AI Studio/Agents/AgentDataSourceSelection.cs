@@ -298,7 +298,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 // We know how bad LLM may be in generating JSON without surrounding text.
                 // Thus, we expect the worst and try to extract the JSON list from the text:
                 //
-                var json = this.ExtractJson(selectedDataSourcesJson);
+                var json = ExtractJson(selectedDataSourcesJson);
                 
                 try
                 {
@@ -344,7 +344,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
     /// </remarks>
     /// <param name="text">The text that may contain the JSON list.</param>
     /// <returns>The extracted JSON list.</returns>
-    private string ExtractJson(string text) => ExtractJson(text.AsSpan()).ToString();
+    private static string ExtractJson(string text) => ExtractJson(text.AsSpan()).ToString();
 
     /// <summary>
     /// Extracts the JSON list from the given text. The text may contain additional
