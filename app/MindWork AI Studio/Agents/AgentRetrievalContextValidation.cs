@@ -121,12 +121,16 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
 
     #endregion
 
-    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IRetrievalContext dataContext, CancellationToken token = default)
+    /// <summary>
+    /// Sets the LLM provider for the agent.
+    /// </summary>
+    /// <remarks>
+    /// When you have to call the validation in parallel for many retrieval contexts,
+    /// you can set the provider once and then call the validation method in parallel.
+    /// </remarks>
+    /// <param name="provider">The current LLM provider. When the user doesn't preselect an agent provider, the agent uses this provider.</param>
+    public void SetLLMProvider(IProvider provider)
     {
-        //
-        // 1. Which LLM provider should the agent use?
-        //
-
         // We start with the provider currently selected by the user:
         var agentProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == provider.Id);
 
@@ -143,9 +147,24 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         // Assign the provider settings to the agent:
         logger.LogInformation($"The agent for the retrieval context validation uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
         this.ProviderSettings = agentProvider;
-        
+    }
+    
+    /// <summary>
+    /// Validates the retrieval context against the last user and the system prompt.
+    /// </summary>
+    /// <remarks>
+    /// Probably, you have a lot of retrieval contexts to validate. In this case, you
+    /// can call this method in parallel for each retrieval context.
+    /// </remarks>
+    /// <param name="lastPrompt">The last user prompt.</param>
+    /// <param name="chatThread">The chat thread.</param>
+    /// <param name="dataContext">The retrieval context to validate.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The validation result.</returns>
+    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastPrompt, ChatThread chatThread, IRetrievalContext dataContext, CancellationToken token = default)
+    {
         //
-        // 2. Prepare the current system and user prompts as input for the agent: 
+        // 1. Prepare the current system and user prompts as input for the agent: 
         //
         var lastPromptContent = lastPrompt switch
         {
@@ -165,14 +184,14 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         }
         
         //
-        // 3. Prepare the retrieval context for the agent:
+        // 2. Prepare the retrieval context for the agent:
         //
         var additionalData = new Dictionary<string, string>();
         var markdownRetrievalContext = await dataContext.AsMarkdown(token: token);
         additionalData.Add("retrievalContext", markdownRetrievalContext);
         
         //
-        // 4. Let the agent validate the retrieval context:
+        // 3. Let the agent validate the retrieval context:
         //
         var prompt = $"""
                       The system prompt is:
@@ -210,7 +229,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         {
             
             //
-            // 5. Parse the agent response:
+            // 4. Parse the agent response:
             //
             case { ContentType: ContentType.TEXT, Content: ContentText textContent }:
             {
