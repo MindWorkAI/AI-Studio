@@ -32,8 +32,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
     
     protected ILogger<AgentBase> Logger { get; init; } = logger;
     
-    protected IContent? lastUserPrompt;
-
     /// <summary>
     /// Represents the type or category of this agent.
     /// </summary>
@@ -80,10 +78,10 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         Blocks = [],
     };
 
-    protected DateTimeOffset AddUserRequest(ChatThread thread, string request)
+    protected UserRequest AddUserRequest(ChatThread thread, string request)
     {
         var time = DateTimeOffset.Now;
-        this.lastUserPrompt = new ContentText
+        var lastUserPrompt = new ContentText
         {
             Text = request,
         };
@@ -93,13 +91,17 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
             Time = time,
             ContentType = ContentType.TEXT,
             Role = ChatRole.USER,
-            Content = this.lastUserPrompt,
+            Content = lastUserPrompt,
         });
-        
-        return time;
+
+        return new()
+        {
+            Time = time,
+            UserPrompt = lastUserPrompt,
+        };
     }
     
-    protected async Task AddAIResponseAsync(ChatThread thread, DateTimeOffset time)
+    protected async Task AddAIResponseAsync(ChatThread thread, IContent lastUserPrompt, DateTimeOffset time)
     {
         if(this.ProviderSettings is null)
             return;
@@ -125,6 +127,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), providerSettings.Model, this.lastUserPrompt, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), providerSettings.Model, lastUserPrompt, thread);
     }
 }

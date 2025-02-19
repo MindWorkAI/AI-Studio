@@ -65,8 +65,8 @@ public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsM
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(sourceURL));
-        var time = this.AddUserRequest(thread, text.Text);
-        await this.AddAIResponseAsync(thread, time);
+        var userRequest = this.AddUserRequest(thread, text.Text);
+        await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];
         this.answers.Add(answer);

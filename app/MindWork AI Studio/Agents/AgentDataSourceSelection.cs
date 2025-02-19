@@ -111,8 +111,8 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(availableDataSources));
-        var time = this.AddUserRequest(thread, text.Text);
-        await this.AddAIResponseAsync(thread, time);
+        var userRequest = this.AddUserRequest(thread, text.Text);
+        await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];
         

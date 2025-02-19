@@ -96,8 +96,8 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             return EMPTY_BLOCK;
           
         var thread = this.CreateChatThread(this.SystemPrompt(retrievalContext));
-        var time = this.AddUserRequest(thread, text.Text);
-        await this.AddAIResponseAsync(thread, time);
+        var userRequest = this.AddUserRequest(thread, text.Text);
+        await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
           
         return thread.Blocks[^1];
     }
