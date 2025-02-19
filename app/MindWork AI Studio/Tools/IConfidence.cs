@@ -10,7 +10,7 @@ namespace AIStudio.Tools;
 public interface IConfidence
 {
     /// <summary>
-    /// How confident the AI in this task or decision?
+    /// How confident is the AI in this task or decision?
     /// </summary>
     public float Confidence { get; init; }
 }
