@@ -121,7 +121,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
 
     #endregion
 
-    public async Task<RetrievalContextValidationResult> ValidateDataSampleAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IRetrievalContext dataContext, CancellationToken token = default)
+    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IRetrievalContext dataContext, CancellationToken token = default)
     {
         //
         // 1. Which LLM provider should the agent use?
