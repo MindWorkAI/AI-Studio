@@ -38,63 +38,8 @@ public sealed class AugmentationOne : IAugmentationProcess
         sb.AppendLine("The following useful information will help you in processing the user prompt:");
         sb.AppendLine();
         
-        var index = 0;
-        foreach(var retrievalContext in retrievalContexts)
-        {
-            index++;
-            sb.AppendLine($"# Retrieval context {index} of {numTotalRetrievalContexts}");
-            sb.AppendLine($"Data source name: {retrievalContext.DataSourceName}");
-            sb.AppendLine($"Content category: {retrievalContext.Category}");
-            sb.AppendLine($"Content type: {retrievalContext.Type}");
-            sb.AppendLine($"Content path: {retrievalContext.Path}");
-            
-            if(retrievalContext.Links.Count > 0)
-            {
-                sb.AppendLine("Additional links:");
-                foreach(var link in retrievalContext.Links)
-                    sb.AppendLine($"- {link}");
-            }
-            
-            switch(retrievalContext)
-            {
-                case RetrievalTextContext textContext:
-                    sb.AppendLine();
-                    sb.AppendLine("Matched text content:");
-                    sb.AppendLine("````");
-                    sb.AppendLine(textContext.MatchedText);
-                    sb.AppendLine("````");
-                    
-                    if(textContext.SurroundingContent.Count > 0)
-                    {
-                        sb.AppendLine();
-                        sb.AppendLine("Surrounding text content:");
-                        foreach(var surrounding in textContext.SurroundingContent)
-                        {
-                            sb.AppendLine();
-                            sb.AppendLine("````");
-                            sb.AppendLine(surrounding);
-                            sb.AppendLine("````");
-                        }
-                    }
-                    
-                    
-                    break;
-                
-                case RetrievalImageContext imageContext:
-                    sb.AppendLine();
-                    sb.AppendLine("Matched image content as base64-encoded data:");
-                    sb.AppendLine("````");
-                    sb.AppendLine(await imageContext.AsBase64(token));
-                    sb.AppendLine("````");
-                    break;
-                
-                default:
-                    logger.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
-                    break;
-            }
-            
-            sb.AppendLine();
-        }
+        // Let's convert all retrieval contexts to Markdown:
+        await retrievalContexts.AsMarkdown(sb, token);
         
         //
         // Append the entire augmentation to the chat thread,

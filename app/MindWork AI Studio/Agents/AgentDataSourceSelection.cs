@@ -12,14 +12,6 @@ namespace AIStudio.Agents;
 
 public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
 {
-    private static readonly ContentBlock EMPTY_BLOCK = new()
-    {
-        Content = null,
-        ContentType = ContentType.NONE,
-        Role = ChatRole.AGENT,
-        Time = DateTimeOffset.UtcNow,
-    };
-    
     private readonly List<ContentBlock> answers = new();
     
     #region Overrides of AgentBase
@@ -119,8 +111,8 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(availableDataSources));
-        var time = this.AddUserRequest(thread, text.Text);
-        await this.AddAIResponseAsync(thread, time);
+        var userRequest = this.AddUserRequest(thread, text.Text);
+        await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];
         
@@ -306,7 +298,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 // We know how bad LLM may be in generating JSON without surrounding text.
                 // Thus, we expect the worst and try to extract the JSON list from the text:
                 //
-                var json = this.ExtractJson(selectedDataSourcesJson);
+                var json = ExtractJson(selectedDataSourcesJson);
                 
                 try
                 {
@@ -352,7 +344,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
     /// </remarks>
     /// <param name="text">The text that may contain the JSON list.</param>
     /// <returns>The extracted JSON list.</returns>
-    private string ExtractJson(string text) => ExtractJson(text.AsSpan()).ToString();
+    private static string ExtractJson(string text) => ExtractJson(text.AsSpan()).ToString();
 
     /// <summary>
     /// Extracts the JSON list from the given text. The text may contain additional
