@@ -76,6 +76,8 @@ public sealed class Data
     
     public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
     
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+    
     public DataAgenda Agenda { get; init; } = new();
     
     public DataGrammarSpelling GrammarSpelling { get; init; } = new();

@@ -1,7 +1,9 @@
 using System.Text;
 
+using AIStudio.Agents;
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 namespace AIStudio.Tools.RAG.AugmentationProcesses;
 
@@ -22,13 +24,36 @@ public sealed class AugmentationOne : IAugmentationProcess
     public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
         var logger = Program.SERVICE_PROVIDER.GetService<ILogger<AugmentationOne>>()!;
+        var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
+        
         if(retrievalContexts.Count == 0)
         {
             logger.LogWarning("No retrieval contexts were issued. Skipping the augmentation process.");
             return chatThread;
         }
-        
+
         var numTotalRetrievalContexts = retrievalContexts.Count;
+        
+        // Want the user to validate all retrieval contexts?
+        if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
+        {
+            // Let's get the validation agent & set up its provider:
+            var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
+            validationAgent.SetLLMProvider(provider);
+            
+            // Let's validate all retrieval contexts:
+            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastPrompt, chatThread, retrievalContexts, token);
+         
+            //
+            // Now, filter the retrieval contexts to the most relevant ones:
+            //
+            var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
+            var threshold = validationResults.GetConfidenceThreshold(targetWindow);
+            
+            // Filter the retrieval contexts:
+            retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+        }
+        
         logger.LogInformation($"Starting the augmentation process over {numTotalRetrievalContexts:###,###,###,###} retrieval contexts.");
         
         //
@@ -38,63 +63,8 @@ public sealed class AugmentationOne : IAugmentationProcess
         sb.AppendLine("The following useful information will help you in processing the user prompt:");
         sb.AppendLine();
         
-        var index = 0;
-        foreach(var retrievalContext in retrievalContexts)
-        {
-            index++;
-            sb.AppendLine($"# Retrieval context {index} of {numTotalRetrievalContexts}");
-            sb.AppendLine($"Data source name: {retrievalContext.DataSourceName}");
-            sb.AppendLine($"Content category: {retrievalContext.Category}");
-            sb.AppendLine($"Content type: {retrievalContext.Type}");
-            sb.AppendLine($"Content path: {retrievalContext.Path}");
-            
-            if(retrievalContext.Links.Count > 0)
-            {
-                sb.AppendLine("Additional links:");
-                foreach(var link in retrievalContext.Links)
-                    sb.AppendLine($"- {link}");
-            }
-            
-            switch(retrievalContext)
-            {
-                case RetrievalTextContext textContext:
-                    sb.AppendLine();
-                    sb.AppendLine("Matched text content:");
-                    sb.AppendLine("````");
-                    sb.AppendLine(textContext.MatchedText);
-                    sb.AppendLine("````");
-                    
-                    if(textContext.SurroundingContent.Count > 0)
-                    {
-                        sb.AppendLine();
-                        sb.AppendLine("Surrounding text content:");
-                        foreach(var surrounding in textContext.SurroundingContent)
-                        {
-                            sb.AppendLine();
-                            sb.AppendLine("````");
-                            sb.AppendLine(surrounding);
-                            sb.AppendLine("````");
-                        }
-                    }
-                    
-                    
-                    break;
-                
-                case RetrievalImageContext imageContext:
-                    sb.AppendLine();
-                    sb.AppendLine("Matched image content as base64-encoded data:");
-                    sb.AppendLine("````");
-                    sb.AppendLine(await imageContext.AsBase64(token));
-                    sb.AppendLine("````");
-                    break;
-                
-                default:
-                    logger.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
-                    break;
-            }
-            
-            sb.AppendLine();
-        }
+        // Let's convert all retrieval contexts to Markdown:
+        await retrievalContexts.AsMarkdown(sb, token);
         
         //
         // Append the entire augmentation to the chat thread,

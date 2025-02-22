@@ -9,7 +9,7 @@ public static class RetrievalContentCategoryExtensions
     /// </summary>
     /// <param name="contentType">The content type yielded by the ERI server.</param>
     /// <returns>The corresponding retrieval content category.</returns>
-    public static RetrievalContentCategory ToRetrievalContentCategory(ContentType contentType) => contentType switch
+    public static RetrievalContentCategory ToRetrievalContentCategory(this ContentType contentType) => contentType switch
     {
         ContentType.NONE => RetrievalContentCategory.NONE,
         ContentType.UNKNOWN => RetrievalContentCategory.UNKNOWN,

@@ -70,41 +70,9 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
 
             if (aiSelectedDataSources.Count > 3)
             {
-                //
-                // We have more than 3 data sources. Let's filter by confidence.
-                // In order to do that, we must identify the lower and upper
-                // bounds of the confidence interval:
-                //
-                var confidenceValues = aiSelectedDataSources.Select(x => x.Confidence).ToList();
-                var lowerBound = confidenceValues.Min();
-                var upperBound = confidenceValues.Max();
-
-                //
-                // Next, we search for a threshold so that we have between 2 and 3
-                // data sources. When not possible, we take all data sources.
-                //
-                var threshold = 0.0f;
-
-                // Check the case where the confidence values are too close:
-                if (upperBound - lowerBound >= 0.01)
-                {
-                    var previousThreshold = 0.0f;
-                    for (var i = 0; i < 10; i++)
-                    {
-                        threshold = lowerBound + (upperBound - lowerBound) * i / 10;
-                        var numMatches = aiSelectedDataSources.Count(x => x.Confidence >= threshold);
-                        if (numMatches <= 1)
-                        {
-                            threshold = previousThreshold;
-                            break;
-                        }
-
-                        if (numMatches is <= 3 and >= 2)
-                            break;
-
-                        previousThreshold = threshold;
-                    }
-                }
+                // We have more than 3 data sources. Let's filter by confidence:
+                var targetWindow = aiSelectedDataSources.DetermineTargetWindow(TargetWindowStrategy.A_FEW_GOOD_ONES);
+                var threshold = aiSelectedDataSources.GetConfidenceThreshold(targetWindow);
 
                 //
                 // Filter the data sources by the threshold:
