@@ -180,7 +180,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         if (string.IsNullOrWhiteSpace(lastPromptContent))
         {
             logger.LogWarning("The last prompt is empty. The AI cannot validate the retrieval context.");
-            return new(false, "The last prompt was empty.", 1.0f);
+            return new(false, "The last prompt was empty.", 1.0f, dataContext);
         }
         
         //
@@ -222,7 +222,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         if(aiResponse.Content is null)
         {
             logger.LogWarning("The agent did not return a response.");
-            return new(false, "The agent did not return a response.", 1.0f);
+            return new(false, "The agent did not return a response.", 1.0f, dataContext);
         }
         
         switch (aiResponse)
@@ -246,26 +246,27 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
                 
                 try
                 {
-                    return JsonSerializer.Deserialize<RetrievalContextValidationResult>(json, JSON_SERIALIZER_OPTIONS);
+                    var result = JsonSerializer.Deserialize<RetrievalContextValidationResult>(json, JSON_SERIALIZER_OPTIONS);
+                    return result with { RetrievalContext = dataContext };
                 }
                 catch
                 {
                     logger.LogWarning("The agent answered with an invalid or unexpected JSON format.");
-                    return new(false, "The agent answered with an invalid or unexpected JSON format.", 1.0f);
+                    return new(false, "The agent answered with an invalid or unexpected JSON format.", 1.0f, dataContext);
                 }
             }
             
             case { ContentType: ContentType.TEXT }:
                 logger.LogWarning("The agent answered with an unexpected inner content type.");
-                return new(false, "The agent answered with an unexpected inner content type.", 1.0f);
+                return new(false, "The agent answered with an unexpected inner content type.", 1.0f, dataContext);
             
             case { ContentType: ContentType.NONE }:
                 logger.LogWarning("The agent did not return a response.");
-                return new(false, "The agent did not return a response.", 1.0f);
+                return new(false, "The agent did not return a response.", 1.0f, dataContext);
             
             default:
                 logger.LogWarning($"The agent answered with an unexpected content type '{aiResponse.ContentType}'.");
-                return new(false, $"The agent answered with an unexpected content type '{aiResponse.ContentType}'.", 1.0f);
+                return new(false, $"The agent answered with an unexpected content type '{aiResponse.ContentType}'.", 1.0f, dataContext);
         }
     }
     
