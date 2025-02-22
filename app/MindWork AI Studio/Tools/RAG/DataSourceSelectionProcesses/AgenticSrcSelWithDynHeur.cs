@@ -71,7 +71,8 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
             if (aiSelectedDataSources.Count > 3)
             {
                 // We have more than 3 data sources. Let's filter by confidence:
-                var threshold = aiSelectedDataSources.GetConfidenceThreshold();
+                var targetWindow = aiSelectedDataSources.DetermineTargetWindow(TargetWindowStrategy.A_FEW_GOOD_ONES);
+                var threshold = aiSelectedDataSources.GetConfidenceThreshold(targetWindow);
 
                 //
                 // Filter the data sources by the threshold:
