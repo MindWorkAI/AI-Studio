@@ -16,4 +16,9 @@ public sealed class DataAgentRetrievalContextValidation
     /// Preselect a retrieval context validation provider?
     /// </summary>
     public string PreselectedAgentProvider { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Configure how many parallel validations to run.
+    /// </summary>
+    public int NumParallelValidations { get; set; } = 3;
 }
