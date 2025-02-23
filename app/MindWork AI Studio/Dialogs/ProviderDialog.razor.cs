@@ -137,7 +137,9 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
+        #pragma warning disable MWAIS0001
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
+        #pragma warning restore MWAIS0001
         
         // When editing, we need to load the data:
         if(this.IsEditing)

@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -26,6 +28,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
 
     #endregion
     
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task AddLLMProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
@@ -48,6 +51,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task EditLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
@@ -82,6 +86,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters
@@ -112,6 +117,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
     }
     
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task UpdateProviders()
     {
         this.AvailableLLMProviders.Clear();

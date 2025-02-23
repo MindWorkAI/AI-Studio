@@ -53,6 +53,10 @@
       <PackageReference Include="ReverseMarkdown" Version="4.6.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
     <!-- Read the meta data file -->
     <Target Name="ReadMetaData" BeforeTargets="BeforeBuild">
         <Error Text="The ../../metadata.txt file was not found!" Condition="!Exists('../../metadata.txt')" />

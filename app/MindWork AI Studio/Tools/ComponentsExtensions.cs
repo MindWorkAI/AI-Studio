@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -11,6 +13,10 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => false,
         Components.BIAS_DAY_ASSISTANT => false,
         Components.APP_SETTINGS => false,
+        
+        Components.AGENT_TEXT_CONTENT_CLEANER => false,
+        Components.AGENT_DATA_SOURCE_SELECTION => false,
+        Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
         
         _ => true,
     };
@@ -76,6 +82,7 @@ public static class ComponentsExtensions
         _ => default,
     };
 
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public static AIStudio.Settings.Provider PreselectedProvider(this Components component, SettingsManager settingsManager) => component switch
     {
         Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider) : default,
@@ -94,6 +101,10 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : default,
 
         Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : default,
+        
+        Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : default,
+        Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : default,
+        Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : default,
         
         _ => default,
     };

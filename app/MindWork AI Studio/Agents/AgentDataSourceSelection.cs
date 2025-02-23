@@ -140,17 +140,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
         //
 
         // We start with the provider currently selected by the user:
-        var agentProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == provider.Id);
-
-        // If the user preselected an agent provider, we try to use this one:
-        if (this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)
-        {
-            var configuredAgentProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider);
-
-            // If the configured agent provider is available, we use it:
-            if (configuredAgentProvider != default)
-                agentProvider = configuredAgentProvider;
-        }
+        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_DATA_SOURCE_SELECTION, provider.Id, true);
 
         // Assign the provider settings to the agent:
         logger.LogInformation($"The agent for the data source selection uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
