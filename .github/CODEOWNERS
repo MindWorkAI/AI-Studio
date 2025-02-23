@@ -2,7 +2,7 @@
 * @MindWorkAI/maintainer
 
 # The release team is responsible for anything inside the .github directory, such as workflows, actions, and issue templates:
-/.github/ @MindWorkAI/release
+/.github/ @MindWorkAI/release @SommerEngineering
 
 # Our Rust experts are responsible for the Rust codebase:
 /runtime/ @MindWorkAI/rust-experts
