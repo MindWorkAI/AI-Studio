@@ -4,4 +4,5 @@
 
  Rule ID   | Category | Severity | Notes                  
 -----------|----------|----------|------------------------
- MWAIS0001 | Usage    | Error    | ProviderAccessAnalyzer 
+ MWAIS0001 | Usage    | Error    | ProviderAccessAnalyzer
+ MWAIS0002 | Naming | Error | ConstStaticAnalyzer
