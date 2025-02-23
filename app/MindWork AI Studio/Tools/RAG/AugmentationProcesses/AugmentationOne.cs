@@ -35,7 +35,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         var numTotalRetrievalContexts = retrievalContexts.Count;
         
         // Want the user to validate all retrieval contexts?
-        if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
+        if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
         {
             // Let's get the validation agent & set up its provider:
             var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
