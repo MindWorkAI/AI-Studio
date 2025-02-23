@@ -9,3 +9,6 @@
 
 # Our .NET experts are responsible for the .NET codebase:
 /app/ @MindWorkAI/net-experts
+
+# The source code rules must be reviewed by the release team: 
+/app/SourceCodeRules/ @MindWorkAI/release @SommerEngineering
