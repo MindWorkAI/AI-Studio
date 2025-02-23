@@ -159,7 +159,10 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         var validationTasks = new List<Task<RetrievalContextValidationResult>>(retrievalContexts.Count);
         
         // Read the number of parallel validations:
-        var numParallelValidations = this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.NumParallelValidations;
+        var numParallelValidations = 3;
+        if(this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions)
+            numParallelValidations = this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.NumParallelValidations;
+        
         numParallelValidations = Math.Max(1, numParallelValidations);
         
         // Use a semaphore to limit the number of parallel validations:
