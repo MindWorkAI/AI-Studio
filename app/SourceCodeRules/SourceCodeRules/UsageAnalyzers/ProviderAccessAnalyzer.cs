@@ -6,12 +6,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace SourceCodeRules;
+namespace SourceCodeRules.UsageAnalyzers;
 
 #pragma warning disable RS1038
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 #pragma warning restore RS1038
-public class ProviderAccessAnalyzer : DiagnosticAnalyzer
+public sealed class ProviderAccessAnalyzer : DiagnosticAnalyzer
 {
     private const string DIAGNOSTIC_ID = $"{Tools.ID_PREFIX}0001";
     
@@ -25,7 +25,7 @@ public class ProviderAccessAnalyzer : DiagnosticAnalyzer
     
     private static readonly DiagnosticDescriptor RULE = new(DIAGNOSTIC_ID, TITLE, MESSAGE_FORMAT, CATEGORY, DiagnosticSeverity.Error, isEnabledByDefault: true, description: DESCRIPTION);
     
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(RULE);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [RULE];
     
     public override void Initialize(AnalysisContext context)
     {
