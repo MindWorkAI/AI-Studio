@@ -37,15 +37,15 @@ public sealed class ProviderAccessAnalyzer : DiagnosticAnalyzer
     private void AnalyzeMemberAccess(SyntaxNodeAnalysisContext context)
     {
         var memberAccess = (MemberAccessExpressionSyntax)context.Node;
-        
-        // Prüfen, ob wir eine Kette von Zugriffen haben, die auf "Providers" endet
+
+        // Check if the member access is not on the `Providers` property:
         if (memberAccess.Name.Identifier.Text != "Providers")
             return;
-        
-        // Den kompletten Zugriffspfad aufbauen
+
+        // Get the full path of the member access:
         var fullPath = this.GetFullMemberAccessPath(memberAccess);
         
-        // Prüfen, ob der Pfad unserem verbotenen Muster entspricht
+        // Check for the forbidden pattern:
         if (fullPath.EndsWith("ConfigurationData.Providers"))
         {
             var diagnostic = Diagnostic.Create(RULE, memberAccess.GetLocation());
