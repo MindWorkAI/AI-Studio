@@ -13,7 +13,7 @@ namespace SourceCodeRules.UsageAnalyzers;
 #pragma warning restore RS1038
 public sealed class ProviderAccessAnalyzer : DiagnosticAnalyzer
 {
-    private const string DIAGNOSTIC_ID = $"{Tools.ID_PREFIX}0001";
+    private const string DIAGNOSTIC_ID = Identifier.PROVIDER_ACCESS_ANALYZER;
     
     private static readonly string TITLE = "Direct access to `Providers` is not allowed";
     

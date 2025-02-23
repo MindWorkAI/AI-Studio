@@ -16,7 +16,7 @@ namespace SourceCodeRules.NamingCodeFixes;
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConstStaticCodeFixProvider)), Shared]
 public sealed class ConstStaticCodeFixProvider : CodeFixProvider
 {
-    public override ImmutableArray<string> FixableDiagnosticIds => [$"{Tools.ID_PREFIX}0002"];
+    public override ImmutableArray<string> FixableDiagnosticIds => [Identifier.CONST_STATIC_ANALYZER];
     
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
     

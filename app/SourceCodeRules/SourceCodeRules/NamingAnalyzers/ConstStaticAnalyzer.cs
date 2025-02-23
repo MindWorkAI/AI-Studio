@@ -13,7 +13,7 @@ namespace SourceCodeRules.NamingAnalyzers;
 #pragma warning restore RS1038
 public sealed class ConstStaticAnalyzer : DiagnosticAnalyzer
 {
-    private const string DIAGNOSTIC_ID = $"{Tools.ID_PREFIX}0002";
+    private const string DIAGNOSTIC_ID = Identifier.CONST_STATIC_ANALYZER;
     
     private static readonly string TITLE = "Constant and static fields must be in UPPER_CASE";
     
