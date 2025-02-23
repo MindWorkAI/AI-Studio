@@ -153,6 +153,8 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         if (!this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
             return [];
         
+        logger.LogInformation($"Validating {retrievalContexts.Count:###,###,###,###} retrieval contexts.");
+        
         // Prepare the list of validation tasks:
         var validationTasks = new List<Task<RetrievalContextValidationResult>>(retrievalContexts.Count);
         
