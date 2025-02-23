@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -47,6 +49,7 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
 
     #endregion
     
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)

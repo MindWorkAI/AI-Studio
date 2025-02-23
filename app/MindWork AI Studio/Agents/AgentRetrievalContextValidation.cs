@@ -132,18 +132,8 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     public void SetLLMProvider(IProvider provider)
     {
         // We start with the provider currently selected by the user:
-        var agentProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == provider.Id);
-
-        // If the user preselected an agent provider, we try to use this one:
-        if (this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions)
-        {
-            var configuredAgentProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider);
-
-            // If the configured agent provider is available, we use it:
-            if (configuredAgentProvider != default)
-                agentProvider = configuredAgentProvider;
-        }
-
+        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, provider.Id, true);
+        
         // Assign the provider settings to the agent:
         logger.LogInformation($"The agent for the retrieval context validation uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
         this.ProviderSettings = agentProvider;
@@ -163,11 +153,16 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         if (!this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
             return [];
         
+        logger.LogInformation($"Validating {retrievalContexts.Count:###,###,###,###} retrieval contexts.");
+        
         // Prepare the list of validation tasks:
         var validationTasks = new List<Task<RetrievalContextValidationResult>>(retrievalContexts.Count);
         
         // Read the number of parallel validations:
-        var numParallelValidations = this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.NumParallelValidations;
+        var numParallelValidations = 3;
+        if(this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions)
+            numParallelValidations = this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.NumParallelValidations;
+        
         numParallelValidations = Math.Max(1, numParallelValidations);
         
         // Use a semaphore to limit the number of parallel validations:

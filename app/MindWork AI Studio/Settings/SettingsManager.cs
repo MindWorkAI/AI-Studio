@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -141,7 +142,8 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         return minimumLevel;
     }
     
-    public Provider GetPreselectedProvider(Tools.Components component, string? chatProviderId = null)
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
         
@@ -149,17 +151,43 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             return this.ConfigurationData.Providers[0];
 
-        // When there is a chat provider, and it has a confidence level that is high enough, we return it:
-        if (chatProviderId is not null && !string.IsNullOrWhiteSpace(chatProviderId))
+        // Is there a current provider with a sufficiently high confidence level?
+        Provider currentProvider = default;
+        if (currentProviderId is not null && !string.IsNullOrWhiteSpace(currentProviderId))
         {
-            var chatProvider = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == chatProviderId);
-            if (chatProvider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
-                return chatProvider;
+            var currentProviderProbe = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == currentProviderId);
+            if (currentProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+                currentProvider = currentProviderProbe;
         }
         
-        // When there is a component-preselected provider, and it has a confidence level that is high enough, we return it:
-        var preselectedProvider = component.PreselectedProvider(this);
-        if(preselectedProvider != default && preselectedProvider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        // Is there a component-preselected provider with a sufficiently high confidence level?
+        Provider preselectedProvider = default;
+        var preselectedProviderProbe = component.PreselectedProvider(this);
+        if(preselectedProviderProbe != default && preselectedProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            preselectedProvider = preselectedProviderProbe;
+
+        //
+        // Case: The preselected provider should be used before the current provider,
+        //       and the preselected provider is available and has a confidence level
+        //       that is high enough.
+        //
+        if(usePreselectionBeforeCurrentProvider && preselectedProvider != default)
+            return preselectedProvider;
+        
+        //
+        // Case: The current provider is available and has a confidence level that is
+        //       high enough.
+        //
+        if(currentProvider != default)
+            return currentProvider;
+        
+        //
+        // Case: The current provider should be used before the preselected provider,
+        //       but the current provider is not available or does not have a confidence
+        //       level that is high enough. The preselected provider is available and
+        //       has a confidence level that is high enough.
+        //
+        if(preselectedProvider != default)
             return preselectedProvider;
 
         // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:

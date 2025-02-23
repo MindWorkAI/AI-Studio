@@ -37,8 +37,12 @@
                         @if (this.areDataSourcesEnabled)
                         {
                             <MudTextSwitch Label="AI-based data source selection" Value="@this.aiBasedSourceSelection" LabelOn="Yes, let the AI decide which data sources are needed." LabelOff="No, I manually decide which data source to use." ValueChanged="@this.AutoModeChanged"/>
-                            <MudTextSwitch Label="AI-based data validation" Value="@this.aiBasedValidation" LabelOn="Yes, let the AI validate & filter the retrieved data." LabelOff="No, use all data retrieved from the data sources." ValueChanged="@this.ValidationModeChanged"/>
                             
+                            @if (this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
+                            {
+                                <MudTextSwitch Label="AI-based data validation" Value="@this.aiBasedValidation" LabelOn="Yes, let the AI validate & filter the retrieved data." LabelOff="No, use all data retrieved from the data sources." ValueChanged="@this.ValidationModeChanged"/>
+                            }
+
                             @if (this.aiBasedSourceSelection is false || this.DataSourcesAISelected.Count == 0)
                             {
                                 <MudField Label="Available Data Sources" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.aiBasedSourceSelection">

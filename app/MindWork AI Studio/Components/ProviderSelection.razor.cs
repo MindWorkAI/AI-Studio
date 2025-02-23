@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Assistants;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -29,6 +31,7 @@ public partial class ProviderSelection : ComponentBase
         await this.ProviderSettingsChanged.InvokeAsync(provider);
     }
     
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<AIStudio.Settings.Provider> GetAvailableProviders()
     {
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.AssistantBase?.Component ?? Tools.Components.NONE);
