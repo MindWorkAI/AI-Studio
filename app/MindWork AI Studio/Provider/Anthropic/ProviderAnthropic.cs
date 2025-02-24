@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -87,21 +88,15 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(new[]
+        var additionalModels = new[]
         {
-            new Model("claude-3-5-sonnet-latest", "Claude 3.5 Sonnet (latest)"),
-            new Model("claude-3-5-sonnet-20240620", "Claude 3.5 Sonnet (20. June 2024)"),
-            new Model("claude-3-5-sonnet-20241022", "Claude 3.5 Sonnet (22. October 2024)"),
-            
-            new Model("claude-3-5-haiku-latest", "Claude 3.5 Haiku (latest)"),
-            new Model("claude-3-5-heiku-20241022", "Claude 3.5 Haiku (22. October 2024)"),
-            
-            new Model("claude-3-opus-20240229", "Claude 3.0 Opus (29. February 2024)"),
-            new Model("claude-3-opus-latest", "Claude 3.0 Opus (latest)"),
-            
-            new Model("claude-3-sonnet-20240229", "Claude 3.0 Sonnet (29. February 2024)"),
-            new Model("claude-3-haiku-20240307", "Claude 3.0 Haiku (7. March 2024)"),
-        }.AsEnumerable());
+            new Model("claude-3-7-sonnet-latest", "Claude 3.7 Sonnet (Latest)"),
+            new Model("claude-3-5-sonnet-latest", "Claude 3.5 Sonnet (Latest)"),
+            new Model("claude-3-5-haiku-latest", "Claude 3.5 Haiku (Latest)"),
+            new Model("claude-3-opus-latest", "Claude 3 Opus (Latest)"),
+        };
+        
+        return this.LoadModels(token, apiKeyProvisional).ContinueWith(t => t.Result.Concat(additionalModels).OrderBy(x => x.Id).AsEnumerable(), token);
     }
 
     /// <inheritdoc />
@@ -117,4 +112,37 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     }
 
     #endregion
+    
+    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    {
+        var secretKey = apiKeyProvisional switch
+        {
+            not null => apiKeyProvisional,
+            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            {
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+                _ => null,
+            }
+        };
+
+        if (secretKey is null)
+            return [];
+        
+        using var request = new HttpRequestMessage(HttpMethod.Get, "models?limit=100");
+        
+        // Set the authorization header:
+        request.Headers.Add("x-api-key", secretKey);
+
+        // Set the Anthropic version:
+        request.Headers.Add("anthropic-version", "2023-06-01");
+        
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+        using var response = await this.httpClient.SendAsync(request, token);
+        if(!response.IsSuccessStatusCode)
+            return [];
+
+        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(JSON_SERIALIZER_OPTIONS, token);
+        return modelResponse.Data;
+    }
 }
