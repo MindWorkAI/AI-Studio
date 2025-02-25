@@ -13,10 +13,10 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace SourceCodeRules.NamingCodeFixes;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConstStaticCodeFixProvider)), Shared]
-public sealed class ConstStaticCodeFixProvider : CodeFixProvider
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConvertToUpperCodeFixProvider)), Shared]
+public sealed class ConvertToUpperCodeFixProvider : CodeFixProvider
 {
-    public override ImmutableArray<string> FixableDiagnosticIds => [Identifier.CONST_STATIC_ANALYZER];
+    public override ImmutableArray<string> FixableDiagnosticIds => [Identifier.CONST_STATIC_ANALYZER, Identifier.LOCAL_CONSTANTS_ANALYZER];
     
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
     
@@ -29,7 +29,7 @@ public sealed class ConstStaticCodeFixProvider : CodeFixProvider
         if (declaration is null)
             return;
         
-        context.RegisterCodeFix(CodeAction.Create(title: "Convert to UPPER_CASE", createChangedDocument: c => this.ConvertToUpperCaseAsync(context.Document, declaration, c), equivalenceKey: nameof(ConstStaticCodeFixProvider)), diagnostic);
+        context.RegisterCodeFix(CodeAction.Create(title: "Convert to UPPER_CASE", createChangedDocument: c => this.ConvertToUpperCaseAsync(context.Document, declaration, c), equivalenceKey: nameof(ConvertToUpperCodeFixProvider)), diagnostic);
     }
     
     private async Task<Document> ConvertToUpperCaseAsync(Document document, VariableDeclaratorSyntax declarator, CancellationToken cancellationToken)
