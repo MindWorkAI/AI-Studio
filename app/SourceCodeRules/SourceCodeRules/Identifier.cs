@@ -8,4 +8,5 @@ public static class Identifier
     public const string RANDOM_INSTANTIATION_ANALYZER = $"{Tools.ID_PREFIX}0004";
     public const string THIS_USAGE_ANALYZER = $"{Tools.ID_PREFIX}0005";
     public const string SWITCH_EXPRESSION_METHOD_ANALYZER = $"{Tools.ID_PREFIX}0006";
+    public const string EMPTY_STRING_ANALYZER = $"{Tools.ID_PREFIX}0007";
 }

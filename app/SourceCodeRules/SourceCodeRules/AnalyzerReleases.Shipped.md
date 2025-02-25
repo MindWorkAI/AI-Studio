@@ -10,3 +10,4 @@
  MWAIS0004 | Usage    | Error    | RandomInstantiationAnalyzer    
  MWAIS0005 | Usage    | Error    | ThisUsageAnalyzer              
  MWAIS0006 | Style    | Error    | SwitchExpressionMethodAnalyzer 
+ MWAIS0007 | Usage    | Error    | EmptyStringAnalyzer            
