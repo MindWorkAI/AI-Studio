@@ -10,15 +10,12 @@ public static class DataSourceTypeExtension
     /// </summary>
     /// <param name="type">The data source type.</param>
     /// <returns>The display name of the data source type.</returns>
-    public static string GetDisplayName(this DataSourceType type)
+    public static string GetDisplayName(this DataSourceType type) => type switch
     {
-        return type switch
-        {
-            DataSourceType.LOCAL_FILE => "Local File",
-            DataSourceType.LOCAL_DIRECTORY => "Local Directory",
-            DataSourceType.ERI_V1 => "External ERI Server (v1)",
-            
-            _ => "None",
-        };
-    }
+        DataSourceType.LOCAL_FILE => "Local File",
+        DataSourceType.LOCAL_DIRECTORY => "Local Directory",
+        DataSourceType.ERI_V1 => "External ERI Server (v1)",
+
+        _ => "None",
+    };
 }

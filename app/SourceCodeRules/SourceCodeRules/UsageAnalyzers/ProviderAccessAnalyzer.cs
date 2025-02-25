@@ -6,14 +6,14 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace SourceCodeRules;
+namespace SourceCodeRules.UsageAnalyzers;
 
 #pragma warning disable RS1038
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 #pragma warning restore RS1038
-public class ProviderAccessAnalyzer : DiagnosticAnalyzer
+public sealed class ProviderAccessAnalyzer : DiagnosticAnalyzer
 {
-    private const string DIAGNOSTIC_ID = $"{Tools.ID_PREFIX}0001";
+    private const string DIAGNOSTIC_ID = Identifier.PROVIDER_ACCESS_ANALYZER;
     
     private static readonly string TITLE = "Direct access to `Providers` is not allowed";
     
@@ -25,7 +25,7 @@ public class ProviderAccessAnalyzer : DiagnosticAnalyzer
     
     private static readonly DiagnosticDescriptor RULE = new(DIAGNOSTIC_ID, TITLE, MESSAGE_FORMAT, CATEGORY, DiagnosticSeverity.Error, isEnabledByDefault: true, description: DESCRIPTION);
     
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(RULE);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [RULE];
     
     public override void Initialize(AnalysisContext context)
     {
@@ -37,15 +37,15 @@ public class ProviderAccessAnalyzer : DiagnosticAnalyzer
     private void AnalyzeMemberAccess(SyntaxNodeAnalysisContext context)
     {
         var memberAccess = (MemberAccessExpressionSyntax)context.Node;
-        
-        // Prüfen, ob wir eine Kette von Zugriffen haben, die auf "Providers" endet
+
+        // Check if the member access is not on the `Providers` property:
         if (memberAccess.Name.Identifier.Text != "Providers")
             return;
-        
-        // Den kompletten Zugriffspfad aufbauen
+
+        // Get the full path of the member access:
         var fullPath = this.GetFullMemberAccessPath(memberAccess);
         
-        // Prüfen, ob der Pfad unserem verbotenen Muster entspricht
+        // Check for the forbidden pattern:
         if (fullPath.EndsWith("ConfigurationData.Providers"))
         {
             var diagnostic = Diagnostic.Create(RULE, memberAccess.GetLocation());

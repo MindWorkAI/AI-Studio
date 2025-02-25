@@ -84,7 +84,7 @@ public static class SettingsMigrations
         {
             Version = Version.V2,
             
-            Providers = previousData.Providers.Select(provider => provider with { IsSelfHosted = false, Hostname = "" }).ToList(),
+            Providers = previousData.Providers.Select(provider => provider with { IsSelfHosted = false, Hostname = string.Empty }).ToList(),
             
             EnableSpellchecking = previousData.EnableSpellchecking,
             IsSavingEnergy = previousData.IsSavingEnergy,

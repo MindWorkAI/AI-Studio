@@ -13,7 +13,6 @@ internal static class Redirect
             await nextHandler();
             return;
         }
-
         
         #if DEBUG
         
