@@ -11,3 +11,4 @@
  MWAIS0005 | Usage    | Error    | ThisUsageAnalyzer              
  MWAIS0006 | Style    | Error    | SwitchExpressionMethodAnalyzer 
  MWAIS0007 | Usage    | Error    | EmptyStringAnalyzer            
+ MWAIS0008 | Naming   | Error    | LocalConstantsAnalyzer         
