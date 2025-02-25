@@ -6,4 +6,5 @@ public static class Identifier
     public const string CONST_STATIC_ANALYZER = $"{Tools.ID_PREFIX}0002";
     public const string UNDERSCORE_PREFIX_ANALYZER = $"{Tools.ID_PREFIX}0003";
     public const string RANDOM_INSTANTIATION_ANALYZER = $"{Tools.ID_PREFIX}0004";
+    public const string THIS_USAGE_ANALYZER = $"{Tools.ID_PREFIX}0005";
 }
