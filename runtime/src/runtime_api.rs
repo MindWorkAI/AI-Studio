@@ -1,4 +1,6 @@
+#[cfg(unix)]
 use std::collections::HashSet;
+
 use log::info;
 use once_cell::sync::Lazy;
 use rocket::config::Shutdown;
@@ -25,9 +27,9 @@ pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
 pub fn start_runtime_api() {
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
-
+    
     // The shutdown configuration for the runtime API server:
-    let mut shutdown = Shutdown {
+    let shutdown = Shutdown {
         // We do not want to use the Ctrl+C signal to stop the server:
         ctrlc: false,
 
@@ -37,6 +39,9 @@ pub fn start_runtime_api() {
 
     #[cfg(unix)]
     {
+        // Now, shutdown needs to be mutable:
+        let mut shutdown = shutdown;
+        
         // We do not want to use the termination signal to stop the server.
         // This option, however, is only available on Unix systems:
         shutdown.signals = HashSet::new();
