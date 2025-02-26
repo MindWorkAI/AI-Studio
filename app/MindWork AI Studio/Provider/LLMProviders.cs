@@ -19,4 +19,5 @@ public enum LLMProviders
     SELF_HOSTED = 4,
     
     HELMHOLTZ = 9,
+    GWDG = 10,
 }
