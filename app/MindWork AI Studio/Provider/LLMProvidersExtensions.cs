@@ -2,6 +2,7 @@ using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.Fireworks;
 using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
+using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
@@ -33,6 +34,8 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => "Fireworks.ai",
         
         LLMProviders.SELF_HOSTED => "Self-hosted",
+        
+        LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
         
         _ => "Unknown",
     };
@@ -68,6 +71,8 @@ public static class LLMProvidersExtensions
         
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
+        LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
         _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
     };
 
@@ -84,6 +89,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_AI => true,
         LLMProviders.MISTRAL => true,
         LLMProviders.GOOGLE => true,
+        LLMProviders.HELMHOLTZ => true,
         
         //
         // Providers that do not support embeddings:
@@ -140,6 +146,8 @@ public static class LLMProvidersExtensions
                 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
                 
+                LLMProviders.HELMHOLTZ => new ProviderHelmholtz(logger) { InstanceName = instanceName },
+                
                 _ => new NoProvider(),
             };
         }
@@ -160,6 +168,8 @@ public static class LLMProvidersExtensions
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
+        
+        LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
         
         _ => string.Empty,
     };
@@ -230,6 +240,7 @@ public static class LLMProvidersExtensions
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
+        LLMProviders.HELMHOLTZ => true,
         
         LLMProviders.SELF_HOSTED => host is Host.OLLAMA,
         
@@ -246,6 +257,7 @@ public static class LLMProvidersExtensions
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
+        LLMProviders.HELMHOLTZ => true,
         
         _ => false,
     };

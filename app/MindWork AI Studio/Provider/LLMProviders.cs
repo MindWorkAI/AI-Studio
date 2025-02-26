@@ -17,4 +17,6 @@ public enum LLMProviders
     GROQ = 6,
     
     SELF_HOSTED = 4,
+    
+    HELMHOLTZ = 9,
 }
