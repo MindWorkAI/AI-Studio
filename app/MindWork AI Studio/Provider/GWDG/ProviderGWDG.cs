@@ -106,7 +106,7 @@ public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai
     public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var models = await this.LoadModels(token, apiKeyProvisional);
-        return models.Where(model => model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase));
+        return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
     }
 
     #endregion

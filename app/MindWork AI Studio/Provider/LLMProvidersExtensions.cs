@@ -93,7 +93,6 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.GOOGLE => true,
         LLMProviders.HELMHOLTZ => true,
-        LLMProviders.GWDG => true,
         
         //
         // Providers that do not support embeddings:
@@ -102,6 +101,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => false,
         LLMProviders.FIREWORKS => false,
         LLMProviders.X => false,
+        LLMProviders.GWDG => false,
         
         //
         // Self-hosted providers are treated as a special case anyway.
