@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use log::info;
 use once_cell::sync::Lazy;
 use rocket::config::Shutdown;
@@ -27,7 +26,7 @@ pub fn start_runtime_api() {
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
     
     // Get the shutdown configuration:
-    let shutdown = create_shutdown(cfg!(windows));
+    let shutdown = create_shutdown();
 
     // Configure the runtime API server:
     let figment = Figment::from(rocket::Config::release_default())
@@ -84,18 +83,33 @@ pub fn start_runtime_api() {
     });
 }
 
-fn create_shutdown(for_windows: bool) -> Shutdown {
-    let mut shutdown = Shutdown {
-        // We do not want to use the Ctrl+C signal to stop the server:
-        ctrlc: false,
+fn create_shutdown() -> Shutdown {
+    //
+    // Create a shutdown configuration, depending on the operating system:
+    //
+    #[cfg(unix)]
+    {
+        use std::collections::HashSet;
+        let mut shutdown = Shutdown {
+            // We do not want to use the Ctrl+C signal to stop the server:
+            ctrlc: false,
 
-        // Everything else is set to default for now:
-        ..Shutdown::default()
-    };
+            // Everything else is set to default for now:
+            ..Shutdown::default()
+        };
 
-    if for_windows {
         shutdown.signals = HashSet::new();
+        shutdown
     }
-    
-    shutdown
+
+    #[cfg(windows)]
+    {
+        Shutdown {
+            // We do not want to use the Ctrl+C signal to stop the server:
+            ctrlc: false,
+
+            // Everything else is set to default for now:
+            ..Shutdown::default()
+        }
+    }
 }
