@@ -53,6 +53,12 @@ public sealed record Confidence
         Description = "The provider operates its service from the USA and is subject to **US jurisdiction**. In case of suspicion, authorities in the USA can access your data. However, **your data is not used for training** purposes.",
     };
     
+    public static readonly Confidence CHINA_NO_TRAINING = new()
+    {
+        Level = ConfidenceLevel.MODERATE,
+        Description = "The provider operates its service from China. In case of suspicion, authorities in the respective countries of operation may access your data. However, **your data is not used for training** purposes.",
+    };
+    
     public static readonly Confidence GDPR_NO_TRAINING = new()
     {
         Level = ConfidenceLevel.MEDIUM,

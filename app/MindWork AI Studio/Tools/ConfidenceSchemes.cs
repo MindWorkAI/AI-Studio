@@ -2,11 +2,13 @@ namespace AIStudio.Tools;
 
 public enum ConfidenceSchemes
 {
-    TRUST_USA_EUROPE = 0,
-    TRUST_USA = 1,
-    TRUST_EUROPE = 2,
+    TRUST_ALL,
+    TRUST_USA_EUROPE,
+    TRUST_USA,
+    TRUST_EUROPE,
+    TRUST_ASIA,
     
-    LOCAL_TRUST_ONLY = 3,
+    LOCAL_TRUST_ONLY,
     
     CUSTOM = 10_000,
 }

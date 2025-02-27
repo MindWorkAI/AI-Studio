@@ -22,7 +22,7 @@ public sealed class DataLLMProviders
     /// <summary>
     /// Which confidence scheme to use.
     /// </summary>
-    public ConfidenceSchemes ConfidenceScheme { get; set; } = ConfidenceSchemes.TRUST_USA_EUROPE;
+    public ConfidenceSchemes ConfidenceScheme { get; set; } = ConfidenceSchemes.TRUST_ALL;
 
     /// <summary>
     /// Provide custom confidence levels for each LLM provider.
