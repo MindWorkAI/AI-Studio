@@ -62,7 +62,6 @@ public class TemporaryChatService(ILogger<TemporaryChatService> logger, Settings
                 WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS => DateTime.UtcNow - lastWriteTime > TimeSpan.FromDays(180),
                 WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS => DateTime.UtcNow - lastWriteTime > TimeSpan.FromDays(365),
                 
-                WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE => false,
                 _ => false,
             };
             

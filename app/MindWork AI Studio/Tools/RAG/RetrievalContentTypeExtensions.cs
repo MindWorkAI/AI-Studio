@@ -134,7 +134,7 @@ public static class RetrievalContentTypeExtensions
             ContentType.VIDEO => RetrievalContentType.NOT_SPECIFIED,
             
             ContentType.NONE => RetrievalContentType.NOT_SPECIFIED,
-            ContentType.UNKNOWN => RetrievalContentType.UNKNOWN,
+            
             _ => RetrievalContentType.UNKNOWN,
         };
     }
