@@ -26,6 +26,38 @@
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Changelog">
                 <Changelog/>
             </ExpansionPanel>
+            
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Book" HeaderText="Logbook">
+                <MudText Typo="Typo.h4">
+                    Explanation
+                </MudText>
+                <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                    AI Studio creates a log file at startup, in which events during startup are recorded. After startup,
+                    another log file is created that records all events that occur during the use of the app. This
+                    includes any errors that may occur. Depending on when an error occurs (at startup or during use),
+                    the contents of these log files can be helpful for troubleshooting. Sensitive information such as
+                    passwords is not included in the log files.
+                </MudJustifiedText>
+                
+                <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                    By clicking on the respective path, the path is copied to the clipboard. You might open these files
+                    with a text editor to view their contents.
+                </MudJustifiedText>
+                
+                <MudText Typo="Typo.h4">
+                    Startup log file
+                </MudText>
+                <MudList T="string" Class="mb-3">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="() => this.CopyStartupLogPath()"/>
+                </MudList>
+                
+                <MudText Typo="Typo.h4">
+                    Usage log file
+                </MudText>
+                <MudList T="string" Class="mb-3">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="() => this.CopyAppLogPath()"/>
+                </MudList>
+            </ExpansionPanel>
 
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Engineering" HeaderText="Motivation">
                 <Motivation/>
