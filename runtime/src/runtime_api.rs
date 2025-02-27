@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use log::info;
 use once_cell::sync::Lazy;
 use rocket::config::Shutdown;
@@ -25,22 +24,9 @@ pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
 pub fn start_runtime_api() {
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
-
-    // The shutdown configuration for the runtime API server:
-    let mut shutdown = Shutdown {
-        // We do not want to use the Ctrl+C signal to stop the server:
-        ctrlc: false,
-
-        // Everything else is set to default for now:
-        ..Shutdown::default()
-    };
-
-    #[cfg(unix)]
-    {
-        // We do not want to use the termination signal to stop the server.
-        // This option, however, is only available on Unix systems:
-        shutdown.signals = HashSet::new();
-    }
+    
+    // Get the shutdown configuration:
+    let shutdown = create_shutdown();
 
     // Configure the runtime API server:
     let figment = Figment::from(rocket::Config::release_default())
@@ -95,4 +81,35 @@ pub fn start_runtime_api() {
             .ignite().await.unwrap()
             .launch().await.unwrap();
     });
+}
+
+fn create_shutdown() -> Shutdown {
+    //
+    // Create a shutdown configuration, depending on the operating system:
+    //
+    #[cfg(unix)]
+    {
+        use std::collections::HashSet;
+        let mut shutdown = Shutdown {
+            // We do not want to use the Ctrl+C signal to stop the server:
+            ctrlc: false,
+
+            // Everything else is set to default for now:
+            ..Shutdown::default()
+        };
+
+        shutdown.signals = HashSet::new();
+        shutdown
+    }
+
+    #[cfg(windows)]
+    {
+        Shutdown {
+            // We do not want to use the Ctrl+C signal to stop the server:
+            ctrlc: false,
+
+            // Everything else is set to default for now:
+            ..Shutdown::default()
+        }
+    }
 }
