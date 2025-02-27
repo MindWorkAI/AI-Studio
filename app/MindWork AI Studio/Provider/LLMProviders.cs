@@ -12,6 +12,7 @@ public enum LLMProviders
     MISTRAL = 3,
     GOOGLE = 7,
     X = 8,
+    DEEP_SEEK = 11,
     
     FIREWORKS = 5,
     GROQ = 6,

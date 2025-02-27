@@ -211,11 +211,19 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         
         switch (this.ConfigurationData.LLMProviders.ConfidenceScheme)
         {
+            case ConfidenceSchemes.TRUST_ALL:
+                return llmProvider switch
+                {
+                    LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    
+                    _ => ConfidenceLevel.MEDIUM,   
+                };
+            
             case ConfidenceSchemes.TRUST_USA_EUROPE:
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
+                    LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
                     
                     _ => ConfidenceLevel.MEDIUM,   
                 };
@@ -224,8 +232,10 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
                     LLMProviders.MISTRAL => ConfidenceLevel.LOW,
+                    LLMProviders.HELMHOLTZ => ConfidenceLevel.LOW,
+                    LLMProviders.GWDG => ConfidenceLevel.LOW,
+                    LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
                     
                     _ => ConfidenceLevel.MEDIUM,
                 };
@@ -234,8 +244,18 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
                     LLMProviders.MISTRAL => ConfidenceLevel.MEDIUM,
+                    LLMProviders.HELMHOLTZ => ConfidenceLevel.MEDIUM,
+                    LLMProviders.GWDG => ConfidenceLevel.MEDIUM,
+                    
+                    _ => ConfidenceLevel.LOW,
+                };
+            
+            case ConfidenceSchemes.TRUST_ASIA:
+                return llmProvider switch
+                {
+                    LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
+                    LLMProviders.DEEP_SEEK => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };
@@ -244,7 +264,6 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.FIREWORKS => ConfidenceLevel.UNTRUSTED,
                     
                     _ => ConfidenceLevel.VERY_LOW,   
                 };
