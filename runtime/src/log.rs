@@ -7,9 +7,17 @@ use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
 use log::kv;
 use log::kv::{Key, Value, VisitSource};
+use rocket::get;
+use rocket::serde::json::Json;
+use rocket::serde::Serialize;
+use crate::api_token::APIToken;
 use crate::environment::is_dev;
 
 static LOGGER: OnceLock<RuntimeLoggerHandle> = OnceLock::new();
+
+static LOG_STARTUP_PATH: OnceLock<String> = OnceLock::new();
+
+static LOG_APP_PATH: OnceLock<String> = OnceLock::new();
 
 /// Initialize the logging system.
 pub fn init_logging() {
@@ -42,11 +50,16 @@ pub fn init_logging() {
         false => "AI Studio Events",
     };
 
+    let log_path = FileSpec::default()
+        .basename(log_basename)
+        .suppress_timestamp()
+        .suffix("log");
+
+    // Store the startup log path:
+    LOG_STARTUP_PATH.set(log_path.as_pathbuf(None).canonicalize().unwrap().to_str().unwrap().to_string()).expect("Cannot store the startup log path");
+
     let runtime_logger = Logger::try_with_str(log_config).expect("Cannot create logging")
-        .log_to_file(FileSpec::default()
-            .basename(log_basename)
-            .suppress_timestamp()
-            .suffix("log"))
+        .log_to_file(log_path)
         .duplicate_to_stdout(Duplicate::All)
         .use_utc()
         .format_for_files(file_logger_format)
@@ -63,12 +76,13 @@ pub fn init_logging() {
 
 /// Switch the logging system to a file-based output.
 pub fn switch_to_file_logging(logger_path: PathBuf) -> Result<(), Box<dyn Error>>{
-    LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(
-        FileSpec::default()
-            .directory(logger_path)
-            .basename("events")
-            .suppress_timestamp()
-            .suffix("log")))?;
+    let log_path = FileSpec::default()
+        .directory(logger_path)
+        .basename("events")
+        .suppress_timestamp()
+        .suffix("log");
+    LOG_APP_PATH.set(log_path.as_pathbuf(None).to_str().unwrap().to_string()).expect("Cannot store the app log path");
+    LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(log_path))?;
 
     Ok(())
 }
@@ -160,4 +174,19 @@ fn file_logger_format(
 
     // Write the log message:
     write!(w, "{}", &record.args())
+}
+
+#[get("/log/paths")]
+pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
+    Json(LogPathsResponse {
+        log_startup_path: LOG_STARTUP_PATH.get().expect("No startup log path was set").clone(),
+        log_app_path: LOG_APP_PATH.get().expect("No app log path was set").clone(),
+    })
+}
+
+/// The response the get log paths request.
+#[derive(Serialize)]
+pub struct LogPathsResponse {
+    log_startup_path: String,
+    log_app_path: String,
 }
