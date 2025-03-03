@@ -30,14 +30,14 @@ pub fn start_tauri() {
             *MAIN_WINDOW.lock().unwrap() = Some(window);
 
             info!(Source = "Bootloader Tauri"; "Setup is running.");
-            let logger_path = app.path_resolver().app_local_data_dir().unwrap();
-            let logger_path = logger_path.join("data");
+            let data_path = app.path_resolver().app_local_data_dir().unwrap();
+            let data_path = data_path.join("data");
 
-            DATA_DIRECTORY.set(logger_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not abe to set the data directory.")).unwrap();
+            DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not abe to set the data directory.")).unwrap();
             CONFIG_DIRECTORY.set(app.path_resolver().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
 
-            info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {logger_path:?}");
-            switch_to_file_logging(logger_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
+            info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
+            switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
 
             Ok(())
         })
