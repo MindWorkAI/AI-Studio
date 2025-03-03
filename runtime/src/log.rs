@@ -78,6 +78,13 @@ pub fn init_logging() {
 
 fn convert_log_path_to_string(log_path: &FileSpec) -> String {
     let log_path = log_path.as_pathbuf(None);
+    
+    // Case: The path is already absolute:
+    if log_path.is_absolute() {
+        return log_path.to_str().unwrap().to_string();
+    }
+    
+    // Case: The path is relative. Let's try to convert it to an absolute path:
     match log_path.canonicalize() {
         // Case: The path exists:
         Ok(log_path) => log_path.to_str().unwrap().to_string(),
