@@ -75,7 +75,7 @@ pub fn init_logging() {
     LOGGER.set(runtime_logger).expect("Cannot set LOGGER");
 }
 
-/// Switch the logging system to a file-based output.
+/// Switch the logging system to a file-based output inside the given directory.
 pub fn switch_to_file_logging(logger_path: PathBuf) -> Result<(), Box<dyn Error>>{
     let log_path = FileSpec::default()
         .directory(logger_path)
