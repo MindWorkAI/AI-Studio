@@ -76,6 +76,28 @@ pub fn init_logging() {
     LOGGER.set(runtime_logger).expect("Cannot set LOGGER");
 }
 
+fn convert_log_path_to_string(log_path: &FileSpec) -> String {
+    let log_path = log_path.as_pathbuf(None);
+    match log_path.canonicalize() {
+        // Case: The path exists:
+        Ok(log_path) => match log_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => String::from(""),
+        }.to_string(),
+
+        // Case: The path does not exist. Let's try to build the
+        // absolute path without touching the file system:
+        Err(_) => match absolute(log_path.clone()) {
+
+            // Case: We could build the absolute path:
+            Ok(log_path) => log_path.to_str().unwrap().to_string(),
+
+            // Case: We could not reconstruct the path using the working directory.
+            Err(_) => log_path.to_str().unwrap().to_string(),
+        }
+    }
+}
+
 // Note: Rust plans to remove the deprecation flag for std::env::home_dir() in Rust 1.86.0.
 #[allow(deprecated)]
 fn get_startup_log_path() -> String {
@@ -195,18 +217,6 @@ fn file_logger_format(
 
     // Write the log message:
     write!(w, "{}", &record.args())
-}
-
-fn convert_log_path_to_string(log_path: &FileSpec) -> String {
-    let log_path = log_path.as_pathbuf(None);
-    match path::absolute(log_path) {
-        Ok(log_path) => match log_path.to_str() {
-            Some(path_string) => path_string.to_string(),
-            None => String::from(""),
-        }.to_string(),
-        
-        Err(_) => String::from(""),
-    }
 }
 
 #[get("/log/paths")]
