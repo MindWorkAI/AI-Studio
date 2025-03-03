@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
+use std::env::{current_dir, temp_dir};
 use std::error::Error;
 use std::fmt::Debug;
-use std::path;
-use std::path::PathBuf;
+use std::path::{absolute, PathBuf};
 use std::sync::OnceLock;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
@@ -52,6 +52,7 @@ pub fn init_logging() {
     };
 
     let log_path = FileSpec::default()
+        .directory(get_startup_log_path())
         .basename(log_basename)
         .suppress_timestamp()
         .suffix("log");
@@ -73,6 +74,25 @@ pub fn init_logging() {
     };
 
     LOGGER.set(runtime_logger).expect("Cannot set LOGGER");
+}
+
+// Note: Rust plans to remove the deprecation flag for std::env::home_dir() in Rust 1.86.0.
+#[allow(deprecated)]
+fn get_startup_log_path() -> String {
+    match std::env::home_dir() {
+        // Case: We could determine the home directory:
+        Some(home_dir) => home_dir.to_str().unwrap().to_string(),
+        
+        // Case: We could not determine the home directory. Let's try to use the working directory:
+        None => match current_dir() {
+
+            // Case: We could determine the working directory:
+            Ok(working_directory) => working_directory.to_str().unwrap().to_string(),
+
+            // Case: We could not determine the working directory. Let's use the temporary directory:
+            Err(_) => temp_dir().to_str().unwrap().to_string(),
+        },
+    }
 }
 
 /// Switch the logging system to a file-based output inside the given directory.
