@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::Debug;
+use std::path;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
@@ -56,7 +57,7 @@ pub fn init_logging() {
         .suffix("log");
 
     // Store the startup log path:
-    LOG_STARTUP_PATH.set(log_path.as_pathbuf(None).canonicalize().unwrap().to_str().unwrap().to_string()).expect("Cannot store the startup log path");
+    let _ = LOG_STARTUP_PATH.set(convert_log_path_to_string(&log_path));
 
     let runtime_logger = Logger::try_with_str(log_config).expect("Cannot create logging")
         .log_to_file(log_path)
@@ -81,7 +82,7 @@ pub fn switch_to_file_logging(logger_path: PathBuf) -> Result<(), Box<dyn Error>
         .basename("events")
         .suppress_timestamp()
         .suffix("log");
-    LOG_APP_PATH.set(log_path.as_pathbuf(None).to_str().unwrap().to_string()).expect("Cannot store the app log path");
+    let _ = LOG_APP_PATH.set(convert_log_path_to_string(&log_path));
     LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(log_path))?;
 
     Ok(())
@@ -174,6 +175,18 @@ fn file_logger_format(
 
     // Write the log message:
     write!(w, "{}", &record.args())
+}
+
+fn convert_log_path_to_string(log_path: &FileSpec) -> String {
+    let log_path = log_path.as_pathbuf(None);
+    match path::absolute(log_path) {
+        Ok(log_path) => match log_path.to_str() {
+            Some(path_string) => path_string.to_string(),
+            None => String::from(""),
+        }.to_string(),
+        
+        Err(_) => String::from(""),
+    }
 }
 
 #[get("/log/paths")]
