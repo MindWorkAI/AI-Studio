@@ -290,6 +290,7 @@ public partial class AssistantERI : AssistantBaseCore
                       - You consider the security of the implementation by applying the Security by Design principle.
                       - Your output is formatted as Markdown. Code is formatted as code blocks. For every file, you
                         create a separate code block with its file path and name as chapter title.
+                      - Important: The JSON objects of the API messages use camel case for the data field names.
                       """);
             
             return sb.ToString();
