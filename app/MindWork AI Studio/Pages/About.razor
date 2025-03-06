@@ -23,20 +23,13 @@
                 </MudButton>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Source" HeaderText="Development">
-                <MudText>
-                    <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Medium" Class="mr-2" Style="vertical-align: text-bottom;"/>
-                    You can find the code for AI Studio on GitHub:
-                    <MudLink Href="https://github.com/MindWorkAI/AI-Studio" Target="_blank" Color="Color.Primary">AI Studio</MudLink>
-                </MudText>
-
-                <MudDivider Class="my-2" />
-
-                <MudText>
-                    <MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Size="Size.Medium" Class="mr-2" Style="vertical-align: text-bottom;"/>
-                    Interested in participating in the development? Check our:
-                    <MudLink Href="https://github.com/orgs/MindWorkAI/projects/2" Target="_blank" Color="Color.Primary">Development Roadmap</MudLink>
-                </MudText>
+            <ExpansionPanel HeaderIcon="@Icons.Custom.Brands.GitHub" HeaderText="Development">
+                <MudList T="string" Class="mb-1">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="http://mindworkai.org/">Visit our official homepage to learn about MindWork AI's mission and vision!</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Custom.Brands.GitHub" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio">Explore the complete source code for AI Studio on GitHub — contributions welcome!</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.DeveloperBoard" Target="_blank" Href="https://github.com/orgs/MindWorkAI/projects/2">See our planned features in the project's roadmap — join the development team and help shape the future!</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.PrivateConnectivity" Target="_blank" Href="https://github.com/MindWorkAI/ERI">Securely interact with your company's data using AI Studio and our External Retrieval Interface (ERI)!</MudListItem>
+                </MudList>
             </ExpansionPanel>
             
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Changelog">
