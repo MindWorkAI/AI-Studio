@@ -22,6 +22,22 @@
                     Check for updates
                 </MudButton>
             </ExpansionPanel>
+
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Source" HeaderText="Development">
+                <MudText>
+                    <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Medium" Class="mr-2" Style="vertical-align: text-bottom;"/>
+                    You can find the code for AI Studio on GitHub:
+                    <MudLink Href="https://github.com/MindWorkAI/AI-Studio" Target="_blank" Color="Color.Primary">AI Studio</MudLink>
+                </MudText>
+
+                <MudDivider Class="my-2" />
+
+                <MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Size="Size.Medium" Class="mr-2" Style="vertical-align: text-bottom;"/>
+                    Interested in participating in the development? Check our:
+                    <MudLink Href="https://github.com/orgs/MindWorkAI/projects/2" Target="_blank" Color="Color.Primary">Development Roadmap</MudLink>
+                </MudText>
+            </ExpansionPanel>
             
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Changelog">
                 <Changelog/>
