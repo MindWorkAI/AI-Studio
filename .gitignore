@@ -138,6 +138,7 @@ orleans.codegen.cs
 
 # Generated files
 **/.idea/**/contentModel.xml
+packages.lock.json
 
 # Sensitive or high-churn files
 **/.idea/**/dataSources/
