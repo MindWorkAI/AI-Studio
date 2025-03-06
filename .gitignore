@@ -138,7 +138,6 @@ orleans.codegen.cs
 
 # Generated files
 **/.idea/**/contentModel.xml
-/app/MindWork AI Studio/packages.lock.json
 
 # Sensitive or high-churn files
 **/.idea/**/dataSources/
