@@ -88,6 +88,8 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected virtual bool ShowCopyResult => true;
     
     protected virtual bool ShowReset => true;
+    
+    protected virtual bool ShowAssistantSettings => true;
 
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
