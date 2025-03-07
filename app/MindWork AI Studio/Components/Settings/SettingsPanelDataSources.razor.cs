@@ -256,4 +256,6 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
         
         await this.AvailableDataSourcesChanged.InvokeAsync(this.AvailableDataSources);
     }
+
+    protected override SettingsPanel Type => SettingsPanel.DATA_SOURCES_PANEL;
 }

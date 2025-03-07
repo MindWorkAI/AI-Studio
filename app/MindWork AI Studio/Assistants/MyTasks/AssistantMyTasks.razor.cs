@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 using AIStudio.Settings;
 
 namespace AIStudio.Assistants.MyTasks;
@@ -33,6 +34,8 @@ public partial class AssistantMyTasks : AssistantBaseCore
     protected override string SubmitText => "Analyze text";
 
     protected override Func<Task> SubmitAction => this.AnalyzeText;
+
+    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_MY_TASKS_PANEL;
 
     protected override bool ShowProfileSelection => false;
     

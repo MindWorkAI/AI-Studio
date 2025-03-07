@@ -12,15 +12,13 @@
         <ChildContent>
             <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
                 <MudGrid Class="mb-2">
-                    <MudItem xs="9">
+                    <MudItem xs="10">
                         <MudText Typo="Typo.body1" Align="Align.Justify">
                             @this.Description
                         </MudText>
                     </MudItem>
-                    <MudItem xs="3" Class="d-flex justify-end align-start">
-                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings">
-                            Settings
-                        </MudButton>
+                    <MudItem xs="2" Class="d-flex justify-end align-start">
+                        <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.NavigateToSettings()"/>
                     </MudItem>
                 </MudGrid>
 

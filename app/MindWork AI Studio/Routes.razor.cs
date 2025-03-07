@@ -26,4 +26,7 @@ public sealed partial class Routes
     public const string ASSISTANT_BIAS = "/assistant/bias-of-the-day";
     public const string ASSISTANT_ERI = "/assistant/eri";
     // ReSharper restore InconsistentNaming
+    
+    
+    public const string SETTINGS_ICON_FINDER = "/settings/icons";
 }

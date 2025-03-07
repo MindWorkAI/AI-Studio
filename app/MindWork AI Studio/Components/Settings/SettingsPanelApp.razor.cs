@@ -9,4 +9,6 @@ public partial class SettingsPanelApp : SettingsPanelBase
         this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = previewVisibility.FilterPreviewFeatures(this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures);
     }
+
+    protected override SettingsPanel Type => SettingsPanel.APP_PANEL;
 }

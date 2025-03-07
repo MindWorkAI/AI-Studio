@@ -69,4 +69,6 @@ public partial class SettingsPanelProfiles : SettingsPanelBase
         
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    protected override SettingsPanel Type => SettingsPanel.PROFILES_PANEL;
 }

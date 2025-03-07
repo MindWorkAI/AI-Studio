@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 
 namespace AIStudio.Assistants.LegalCheck;
 
@@ -29,7 +30,9 @@ public partial class AssistantLegalCheck : AssistantBaseCore
     protected override string SubmitText => "Ask your questions";
 
     protected override Func<Task> SubmitAction => this.AksQuestions;
-    
+
+    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_LEGAL_CHECK_PANEL;
+
     protected override bool SubmitDisabled => this.isAgentRunning;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

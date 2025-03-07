@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 
@@ -10,6 +11,11 @@ public abstract class SettingsPanelBase : ComponentBase
     [Parameter]
     public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableLLMProvidersFunc { get; set; } = () => [];
     
+    [Parameter]
+    public SettingsPanel ChosenPanel { get; set; }
+    
+    protected abstract SettingsPanel Type { get; }
+    
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
     
@@ -21,4 +27,6 @@ public abstract class SettingsPanelBase : ComponentBase
     
     [Inject]
     protected RustService RustService { get; init; } = null!;
+
+    protected bool IsExtended() => this.Type == this.ChosenPanel;
 }

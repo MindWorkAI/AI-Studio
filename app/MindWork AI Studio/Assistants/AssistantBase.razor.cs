@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -68,6 +69,8 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected abstract string SubmitText { get; }
     
     protected abstract Func<Task> SubmitAction { get; }
+    
+    protected abstract SettingsPanel SettingsPanel { get; }
 
     protected virtual bool SubmitDisabled => false;
     
@@ -315,6 +318,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             return null;
         
         return icon;
+    }
+    
+    protected void NavigateToSettings()
+    {
+        MessageBus.INSTANCE.DeferMessage(this, Event.SWITCH_TO_SETTINGS_PANEL, this.SettingsPanel);
+        this.NavigationManager.NavigateTo(Routes.SETTINGS);
     }
     
     protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)

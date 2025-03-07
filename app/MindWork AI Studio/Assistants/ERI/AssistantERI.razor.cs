@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 
@@ -305,6 +306,8 @@ public partial class AssistantERI : AssistantBaseCore
     protected override string SubmitText => "Create the ERI server";
 
     protected override Func<Task> SubmitAction => this.GenerateServer;
+
+    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_ERI_SERVER_PANEL;
 
     protected override bool SubmitDisabled => this.IsNoneERIServerSelected;
 

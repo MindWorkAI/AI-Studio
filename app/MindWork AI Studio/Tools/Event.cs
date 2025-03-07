@@ -40,4 +40,7 @@ public enum Event
     SEND_TO_SYNONYMS_ASSISTANT,
     SEND_TO_MY_TASKS_ASSISTANT,
     SEND_TO_JOB_POSTING_ASSISTANT,
+    
+    // Setting events:
+    SWITCH_TO_SETTINGS_PANEL,
 }

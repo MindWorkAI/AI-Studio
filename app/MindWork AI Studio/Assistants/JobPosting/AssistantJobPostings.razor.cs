@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 
 namespace AIStudio.Assistants.JobPosting;
 
@@ -49,6 +50,8 @@ public partial class AssistantJobPostings : AssistantBaseCore
     protected override string SubmitText => "Create the job posting";
 
     protected override Func<Task> SubmitAction => this.CreateJobPosting;
+
+    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_JOB_POSTING_PANEL;
 
     protected override bool SubmitDisabled => false;
 

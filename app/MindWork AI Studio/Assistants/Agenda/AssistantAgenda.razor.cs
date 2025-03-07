@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 
 namespace AIStudio.Assistants.Agenda;
 
@@ -100,6 +101,8 @@ public partial class AssistantAgenda : AssistantBaseCore
     protected override string SubmitText => "Create Agenda";
 
     protected override Func<Task> SubmitAction => this.CreateAgenda;
+
+    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_AGENDA_PANEL;
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {

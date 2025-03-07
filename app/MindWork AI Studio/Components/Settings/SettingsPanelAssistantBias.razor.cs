@@ -24,4 +24,6 @@ public partial class SettingsPanelAssistantBias : SettingsPanelBase
         
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    protected override SettingsPanel Type => SettingsPanel.ASSISTANT_BIAS_OF_THE_DAY_PANEL;
 }

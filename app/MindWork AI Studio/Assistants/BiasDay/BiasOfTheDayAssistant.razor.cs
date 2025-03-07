@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Assistants.BiasDay;
@@ -43,6 +44,8 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore
     protected override string SubmitText => "Show me the bias of the day";
 
     protected override Func<Task> SubmitAction => this.TellBias;
+
+    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_BIAS_OF_THE_DAY_PANEL;
 
     protected override bool ShowSendTo => false;
     

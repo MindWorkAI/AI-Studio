@@ -24,7 +24,7 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <SettingsPanelERIServer AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+                <SettingsPanelERIServer AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
             }
             
             <SettingsPanelTextSummarizer AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
@@ -44,7 +44,7 @@
                 <SettingsPanelAgentRetrievalContextValidation AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
             }
             
-            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
+            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="() => this.availableLLMProviders" /> 
         </MudExpansionPanels>
     </InnerScrolling>
 </div>

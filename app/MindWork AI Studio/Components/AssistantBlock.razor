@@ -17,8 +17,15 @@
         </MudStack>
     </MudCardContent>
     <MudCardActions>
-        <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link">
-            @this.ButtonText
-        </MudButton>
+        <MudGrid Class="mb-1">
+            <MudItem xs="9">
+                <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link">
+                    @this.ButtonText
+                </MudButton>
+            </MudItem>
+            <MudItem xs="3">
+                <MudIconButton Size="Size.Large" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" Href="@this.Link"/>
+            </MudItem>
+        </MudGrid>
     </MudCardActions>
 </MudCard>

@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.PrivateConnectivity" HeaderText="Assistant: ERI Server Options">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.PrivateConnectivity" HeaderText="Assistant: ERI Server Options" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect ERI server options?" LabelOn="ERI server options are preselected" LabelOff="No ERI server options are preselected" State="@(() => this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.ERI.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect some ERI server options."/>
         <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ERI.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ERI.MinimumProviderConfidence = selectedValue)"/>

@@ -1,3 +1,4 @@
+using AIStudio.Components.Settings;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -15,6 +16,7 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private List<ConfigurationSelectData<string>> availableLLMProviders = new();
     private List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
     private List<ConfigurationSelectData<string>> availableDataSources = new();
+    private SettingsPanel chosenSettingsPanel;
 
     #region Overrides of ComponentBase
 
@@ -23,6 +25,18 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
         this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
+        
+        this.chosenSettingsPanel = MessageBus.INSTANCE.CheckDeferredMessages<SettingsPanel>(Event.SWITCH_TO_SETTINGS_PANEL).FirstOrDefault();
+        // var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<SettingsPanel>(Event.SWITCH_TO_SETTINGS_PANEL).FirstOrDefault();
+        //if (deferredContent != default)
+        //{
+            //switch (deferredContent)
+            //{
+                // case SettingsPanel -am besten nicht alle individuell
+            //}
+            
+        //}
+        //chosenSettingsPanel = deferredContent;
         
         await base.OnInitializedAsync();
     }
