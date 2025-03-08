@@ -275,6 +275,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var chatDefaultOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
         this.earlyDataSourceOptions = chatDefaultOptions;
+        if(this.ChatThread is not null)
+            this.ChatThread.DataSourceOptions = chatDefaultOptions;
+        
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
     }
     
