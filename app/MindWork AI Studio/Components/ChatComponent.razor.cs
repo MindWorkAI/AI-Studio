@@ -793,6 +793,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.ChatThread is null)
             return;
         
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return;
+        
         this.ChatThread.Remove(aiBlock, removeForRegenerate: true);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();

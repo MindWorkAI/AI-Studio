@@ -24,7 +24,7 @@
                         IsLastContentBlock="@isLastBlock"
                         IsSecondToLastBlock="@isSecondLastBlock"
                         RegenerateFunc="@this.RegenerateBlock"
-                        RegenerateEnabled="@(() => this.IsProviderSelected)"
+                        RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
                         EditLastBlockFunc="@this.EditLastBlock"
                         EditLastUserBlockFunc="@this.EditLastUserBlock"/>
                 }
