@@ -42,6 +42,7 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
     private string serverDescription = string.Empty;
     private ProviderType securityRequirements = ProviderType.NONE;
     private IReadOnlyList<RetrievalInfo> retrievalInfoformation = [];
+    private RetrievalInfo selectedRetrievalInfo;
     
     private bool IsOperationInProgress { get; set; } = true;
     
@@ -130,6 +131,7 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
             }
             
             this.retrievalInfoformation = retrievalInfoResult.Data ?? [];
+            this.selectedRetrievalInfo = this.retrievalInfoformation.FirstOrDefault(x => x.Id == this.DataSource.SelectedRetrievalId);
             this.StateHasChanged();
         }
         catch (Exception e)
