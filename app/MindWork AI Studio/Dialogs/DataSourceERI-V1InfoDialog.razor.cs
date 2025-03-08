@@ -130,7 +130,6 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
             }
             
             this.retrievalInfoformation = retrievalInfoResult.Data ?? [];
-            
             this.StateHasChanged();
         }
         catch (Exception e)

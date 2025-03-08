@@ -59,7 +59,8 @@
                         <MudText Typo="Typo.h6" Class="mt-3">
                             Embeddings
                         </MudText>
-                        @if (!info.Embeddings.Any())
+                        @* ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract *@
+                        @if (info.Embeddings is null || !info.Embeddings.Any())
                         {
                             <MudJustifiedText Typo="Typo.body1" Color="Color.Info" Class="mb-3">
                                 The data source does not provide any embedding information.
