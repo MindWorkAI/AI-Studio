@@ -44,8 +44,16 @@ public sealed class ContentText : IContent
         // Call the RAG process. Right now, we only have one RAG process:
         if (lastPrompt is not null)
         {
-            var rag = new AISrcSelWithRetCtxVal();
-            chatThread = await rag.ProcessAsync(provider, lastPrompt, chatThread, token);
+            try
+            {
+                var rag = new AISrcSelWithRetCtxVal();
+                chatThread = await rag.ProcessAsync(provider, lastPrompt, chatThread, token);
+            }
+            catch (Exception e)
+            {
+                var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
+                logger.LogError(e, "Skipping the RAG process due to an error.");
+            }
         }
 
         // Store the last time we got a response. We use this later
