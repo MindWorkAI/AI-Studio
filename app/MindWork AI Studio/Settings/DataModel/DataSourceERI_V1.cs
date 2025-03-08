@@ -52,7 +52,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     public ERIVersion Version { get; init; } = ERIVersion.V1;
     
     /// <inheritdoc />
-    public string SelectedRetrievalId { get; init; }
+    public string SelectedRetrievalId { get; init; } = string.Empty;
     
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
