@@ -41,6 +41,13 @@ public sealed class ContentText : IContent
         if(chatThread is null)
             return new();
         
+        if(!chatThread.IsLLMProviderAllowed(provider))
+        {
+            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
+            logger.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            return chatThread;
+        }
+
         // Call the RAG process. Right now, we only have one RAG process:
         if (lastPrompt is not null)
         {
