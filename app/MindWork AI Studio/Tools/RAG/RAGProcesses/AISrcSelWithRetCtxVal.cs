@@ -80,11 +80,18 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             if (proceedWithRAG)
             {
                 //
+                // At this point in time, the chat thread contains already the
+                // last block, which is the waiting AI block. We need to remove
+                // this block before we call the RAG process:
+                //
+                var chatThreadWithoutWaitingAIBlock = chatThread with { Blocks = chatThread.Blocks[..^1] };
+                
+                //
                 // We kick off the retrieval process for each data source in parallel:
                 //
                 var retrievalTasks = new List<Task<IReadOnlyList<IRetrievalContext>>>(selectedDataSources.Count);
                 foreach (var dataSource in selectedDataSources)
-                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThread, token));
+                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThreadWithoutWaitingAIBlock, token));
             
                 //
                 // Wait for all retrieval tasks to finish:
