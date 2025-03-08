@@ -46,7 +46,7 @@
                 Adornment="Adornment.End"
                 AdornmentIcon="@Icons.Material.Filled.Send"
                 OnAdornmentClick="() => this.SendMessage()"
-                ReadOnly="!this.IsProviderSelected || this.isStreaming"
+                Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
                 OnKeyUp="this.InputKeyEvent"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
@@ -113,6 +113,14 @@
             {
                 <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" PopoverButtonClasses="ma-3" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
             }
+            
+            @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            {
+                <MudTooltip Text="The selected provider is not allowed in this chat due to data security reasons." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                </MudTooltip>
+            }
+            <MudIconButton />
         </MudToolBar>
     </FooterContent>
 </InnerScrolling>

@@ -340,6 +340,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.earlyDataSourceOptions = updatedOptions;
     }
 
+    private bool IsInputForbidden()
+    {
+        if (!this.IsProviderSelected)
+            return true;
+        
+        if(this.isStreaming)
+            return true;
+        
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return true;
+        
+        return false;
+    }
+
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
         if(this.dataSourceSelectionComponent?.IsVisible ?? false)
@@ -372,6 +386,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
         if (!this.IsProviderSelected)
+            return;
+        
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
         
         // We need to blur the focus away from the input field
