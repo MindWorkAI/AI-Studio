@@ -66,22 +66,8 @@ public sealed class AugmentationOne : IAugmentationProcess
         // Let's convert all retrieval contexts to Markdown:
         await retrievalContexts.AsMarkdown(sb, token);
         
-        //
-        // Append the entire augmentation to the chat thread,
-        // just before the user prompt:
-        //
-        chatThread.Blocks.Insert(chatThread.Blocks.Count - 1, new()
-        {
-            Role = ChatRole.RAG,
-            Time = DateTimeOffset.UtcNow,
-            ContentType = ContentType.TEXT,
-            HideFromUser = true,
-            Content = new ContentText
-            {
-                Text = sb.ToString(),
-            }
-        });
-        
+        // Add the augmented data to the chat thread:
+        chatThread.AugmentedData = sb.ToString();
         return chatThread;
     }
 

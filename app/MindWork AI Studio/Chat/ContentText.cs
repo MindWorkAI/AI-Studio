@@ -36,10 +36,10 @@ public sealed class ContentText : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public async Task CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
+    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
-            return;
+            return new();
         
         // Call the RAG process. Right now, we only have one RAG process:
         if (lastPrompt is not null)
@@ -115,6 +115,7 @@ public sealed class ContentText : IContent
         
         // Inform the UI that the streaming is done:
         await this.StreamingDone();
+        return chatThread;
     }
 
     #endregion

@@ -12,7 +12,6 @@ public enum ChatRole
     USER,
     AI,
     AGENT,
-    RAG,
 }
 
 /// <summary>

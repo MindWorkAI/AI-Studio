@@ -475,7 +475,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
             // content to be streamed.
-            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
+            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
         }
         
         this.cancellationTokenSource = null;

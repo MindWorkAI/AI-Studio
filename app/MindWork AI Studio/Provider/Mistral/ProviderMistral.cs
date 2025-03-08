@@ -48,7 +48,6 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
-                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },

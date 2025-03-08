@@ -39,6 +39,30 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             var proceedWithRAG = true;
             
             //
+            // We read the last block in the chat thread. We need to re-arrange
+            // the order of blocks later, after the augmentation process takes
+            // place:
+            //
+            if(chatThread.Blocks.Count == 0)
+            {
+                logger.LogError("The chat thread is empty. Skipping the RAG process.");
+                return chatThread;
+            }
+            
+            if (chatThread.Blocks.Last().Role != ChatRole.AI)
+            {
+                logger.LogError("The last block in the chat thread is not the AI block. There is something wrong with the chat thread. Skipping the RAG process.");
+                return chatThread;
+            }
+            
+            //
+            // At this point in time, the chat thread contains already the
+            // last block, which is the waiting AI block. We need to remove
+            // this block before we call some parts of the RAG process:
+            //
+            var chatThreadWithoutWaitingAIBlock = chatThread with { Blocks = chatThread.Blocks[..^1] };
+            
+            //
             // When the user wants to bind data sources to the chat, we
             // have to check if the data sources are available for the
             // selected provider. Also, we have to check if any ERI
@@ -84,7 +108,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 //
                 var retrievalTasks = new List<Task<IReadOnlyList<IRetrievalContext>>>(selectedDataSources.Count);
                 foreach (var dataSource in selectedDataSources)
-                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThread, token));
+                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThreadWithoutWaitingAIBlock, token));
             
                 //
                 // Wait for all retrieval tasks to finish:
