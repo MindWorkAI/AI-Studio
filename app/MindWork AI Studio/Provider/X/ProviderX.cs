@@ -50,7 +50,6 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
-                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },

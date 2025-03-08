@@ -46,7 +46,6 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
-                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },

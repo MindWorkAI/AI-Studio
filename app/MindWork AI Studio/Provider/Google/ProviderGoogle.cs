@@ -50,7 +50,6 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
-                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },
