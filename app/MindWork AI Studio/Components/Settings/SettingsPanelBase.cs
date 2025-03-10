@@ -8,11 +8,11 @@ namespace AIStudio.Components.Settings;
 
 public abstract class SettingsPanelBase : ComponentBase
 {
-    [Parameter]
-    public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableLLMProvidersFunc { get; set; } = () => [];
+    [CascadingParameter]
+    public Pages.Settings Settings { get; set; } = null!;
     
     [Parameter]
-    public SettingsPanel ChosenPanel { get; set; }
+    public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableLLMProvidersFunc { get; set; } = () => [];
     
     protected abstract SettingsPanel Type { get; }
     
@@ -28,5 +28,5 @@ public abstract class SettingsPanelBase : ComponentBase
     [Inject]
     protected RustService RustService { get; init; } = null!;
 
-    protected bool IsExtended() => this.Type == this.ChosenPanel;
+    protected bool IsExtended() => this.Type == this.Settings.ChosenSettingsPanel;
 }
