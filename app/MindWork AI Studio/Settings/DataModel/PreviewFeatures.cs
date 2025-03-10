@@ -8,4 +8,6 @@ public enum PreviewFeatures
     //
     PRE_WRITER_MODE_2024,
     PRE_RAG_2024,
+    
+    PRE_PLUGINS_2025,
 }

@@ -25,6 +25,7 @@ public static class PreviewVisibilityExtensions
         if (visibility >= PreviewVisibility.EXPERIMENTAL)
         {
             features.Add(PreviewFeatures.PRE_WRITER_MODE_2024);
+            features.Add(PreviewFeatures.PRE_PLUGINS_2025);
         }
         
         return features;
