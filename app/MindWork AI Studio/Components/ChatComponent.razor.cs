@@ -275,6 +275,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var chatDefaultOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
         this.earlyDataSourceOptions = chatDefaultOptions;
+        if(this.ChatThread is not null)
+            this.ChatThread.DataSourceOptions = chatDefaultOptions;
+        
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
     }
     
@@ -337,6 +340,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.earlyDataSourceOptions = updatedOptions;
     }
 
+    private bool IsInputForbidden()
+    {
+        if (!this.IsProviderSelected)
+            return true;
+        
+        if(this.isStreaming)
+            return true;
+        
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return true;
+        
+        return false;
+    }
+
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
         if(this.dataSourceSelectionComponent?.IsVisible ?? false)
@@ -369,6 +386,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
         if (!this.IsProviderSelected)
+            return;
+        
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
         
         // We need to blur the focus away from the input field
@@ -475,7 +495,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
             // content to be streamed.
-            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
+            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
         }
         
         this.cancellationTokenSource = null;
@@ -771,6 +791,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task RegenerateBlock(IContent aiBlock)
     {
         if(this.ChatThread is null)
+            return;
+        
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
         
         this.ChatThread.Remove(aiBlock, removeForRegenerate: true);

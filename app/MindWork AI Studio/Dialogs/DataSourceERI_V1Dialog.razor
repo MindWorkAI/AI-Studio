@@ -109,11 +109,25 @@
                     InputType="InputType.Password"
                     UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
             }
+            
+            @if (this.availableRetrievalProcesses.Count > 0)
+            {
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="Select one retrieval process" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                    @foreach (var retrievalProcess in this.availableRetrievalProcesses)
+                    {
+                        <MudSelectItem Value="@retrievalProcess">
+                            @retrievalProcess.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            }
 
             <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="Your security policy" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
-                    <MudSelectItem Value="@policy">@policy.ToSelectionText()</MudSelectItem>
+                    <MudSelectItem Value="@policy">
+                        @policy.ToSelectionText()
+                    </MudSelectItem>
                 }
             </MudSelect>
             

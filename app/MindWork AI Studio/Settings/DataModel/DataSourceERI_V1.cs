@@ -52,6 +52,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     public ERIVersion Version { get; init; } = ERIVersion.V1;
     
     /// <inheritdoc />
+    public string SelectedRetrievalId { get; init; } = string.Empty;
+    
+    /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
     {
         // Important: Do not dispose the RustService here, as it is a singleton.
@@ -74,7 +77,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 
                 Thread = await thread.ToERIChatThread(token),
                 MaxMatches = 10,
-                RetrievalProcessId = null, // The ERI server selects the retrieval process when multiple processes are available
+                RetrievalProcessId = string.IsNullOrWhiteSpace(this.SelectedRetrievalId) ? null : this.SelectedRetrievalId,
                 Parameters = null, // The ERI server selects useful default parameters
             };
             
@@ -97,7 +100,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Links = eriContext.Links,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 MatchedText = eriContext.MatchedContent,
-                                DataSourceName = eriContext.Name,
+                                DataSourceName = this.Name,
                                 SurroundingContent = eriContext.SurroundingContent,
                             });
                             break;
@@ -111,7 +114,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Source = eriContext.MatchedContent,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceType = ContentImageSource.BASE64,
-                                DataSourceName = eriContext.Name,
+                                DataSourceName = this.Name,
                             });
                             break;
                         

@@ -76,7 +76,6 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
-                    ChatRole.RAG => "assistant",
                     ChatRole.SYSTEM => systemPromptRole,
 
                     _ => "user",

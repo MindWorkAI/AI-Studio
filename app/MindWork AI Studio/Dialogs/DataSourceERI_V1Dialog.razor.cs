@@ -8,6 +8,8 @@ using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
+using RetrievalInfo = AIStudio.Tools.ERIClient.DataModel.RetrievalInfo;
+
 // ReSharper disable InconsistentNaming
 namespace AIStudio.Dialogs;
 
@@ -59,6 +61,8 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
     private int dataPort;
     private AuthMethod dataAuthMethod;
     private string dataUsername = string.Empty;
+    private List<RetrievalInfo> availableRetrievalProcesses = [];
+    private RetrievalInfo dataSelectedRetrievalProcess;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -91,6 +95,9 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
+            //
+            // Assign the data to the form fields:
+            //
             this.dataEditingPreviousInstanceName = this.DataSource.Name.ToLowerInvariant();
             this.dataNum = this.DataSource.Num;
             this.dataId = this.DataSource.Id;
@@ -114,6 +121,12 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
                     await this.form.Validate();
                 }
             }
+            
+            // Load the data:
+            await this.TestConnection();
+            
+            // Select the retrieval process:
+            this.dataSelectedRetrievalProcess = this.availableRetrievalProcesses.FirstOrDefault(n => n.Id == this.DataSource.SelectedRetrievalId);
         }
         
         await base.OnInitializedAsync();
@@ -153,6 +166,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             Username = this.dataUsername,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
+            SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
         };
     }
     
@@ -223,6 +237,18 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             }
             
             this.dataSourceSecurityRequirements = securityRequirementsRequest.Data;
+            
+            var retrievalInfoRequest = await client.GetRetrievalInfoAsync(cts.Token);
+            if (!retrievalInfoRequest.Successful)
+            {
+                await this.form.Validate();
+                
+                Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
+                this.dataIssues[^1] = retrievalInfoRequest.Message;
+                return;
+            }
+            
+            this.availableRetrievalProcesses = retrievalInfoRequest.Data ?? [];
             
             this.connectionTested = true;
             this.connectionSuccessfulTested = true;

@@ -298,7 +298,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
         
         this.isProcessing = false;
         this.StateHasChanged();

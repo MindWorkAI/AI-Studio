@@ -92,6 +92,14 @@ public sealed class DataSourceValidation
         
         return null;
     }
+
+    public string? ValidateRetrievalProcess(RetrievalInfo retrievalInfo)
+    {
+        if(retrievalInfo == default)
+            return "Please select one retrieval process.";
+        
+        return null;
+    }
     
     public string? ValidatingName(string dataSourceName)
     {

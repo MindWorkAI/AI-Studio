@@ -38,7 +38,6 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
-                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },
