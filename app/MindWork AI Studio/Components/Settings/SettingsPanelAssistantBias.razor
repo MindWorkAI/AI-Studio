@@ -2,7 +2,7 @@
 @using AIStudio.Settings.DataModel
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Psychology" HeaderText="Assistant: Bias of the Day">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Psychology" HeaderText="Assistant: Bias of the Day" IsExpanded="@this.IsExtended()">
 
     <ConfigurationOption OptionDescription="Restrict to one bias a day?" LabelOn="Yes, you can only retrieve one bias per day" LabelOff="No restriction. You can retrieve as many biases as you want per day." State="@(() => this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay = updatedState)"/>
     

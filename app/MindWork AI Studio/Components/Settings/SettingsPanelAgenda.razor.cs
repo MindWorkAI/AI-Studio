@@ -2,5 +2,5 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelAgenda : SettingsPanelBase
 {
-    protected override SettingsPanel Type { get; }
+    protected override SettingsPanel Type => SettingsPanel.ASSISTANT_AGENDA_PANEL;
 }

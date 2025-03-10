@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Email" HeaderText="Assistant: Writing E-Mails">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Email" HeaderText="Assistant: Writing E-Mails" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect e-mail options?" LabelOn="E-Mail options are preselected" LabelOff="No e-mail options are preselected" State="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.EMail.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the e-mail options. This is might be useful when you prefer a specific language or LLM model."/>
         <ConfigurationText OptionDescription="Preselect a greeting?" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" Icon="@Icons.Material.Filled.Person" Text="@(() => this.SettingsManager.ConfigurationData.EMail.Greeting)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.EMail.Greeting = updatedText)" />

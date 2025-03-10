@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Edit" HeaderText="Assistant: Grammar & Spelling Checker">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Edit" HeaderText="Assistant: Grammar & Spelling Checker" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect grammar & spell checker options?" LabelOn="Grammar & spell checker options are preselected" LabelOff="No grammar & spell checker options are preselected" State="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the grammar & spell checker options. This is might be useful when you prefer a specific language or LLM model."/>
         <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>

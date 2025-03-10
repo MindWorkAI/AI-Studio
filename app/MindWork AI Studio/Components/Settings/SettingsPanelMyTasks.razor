@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Task" HeaderText="Assistant: My Tasks">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Task" HeaderText="Assistant: My Tasks" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect options?" LabelOn="Options are preselected" LabelOff="No options are preselected" State="@(() => this.SettingsManager.ConfigurationData.MyTasks.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.MyTasks.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."/>
         <ConfigurationSelect OptionDescription="Preselect the language" Disabled="@(() => !this.SettingsManager.ConfigurationData.MyTasks.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.MyTasks.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.MyTasks.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which language should be preselected?"/>

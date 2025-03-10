@@ -2,7 +2,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Code" HeaderText="Assistant: Coding Options">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Code" HeaderText="Assistant: Coding Options" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect coding options?" LabelOn="Coding options are preselected" LabelOff="No coding options are preselected" State="@(() => this.SettingsManager.ConfigurationData.Coding.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Coding.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model."/>
         <ConfigurationOption OptionDescription="Preselect compiler messages?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Coding.PreselectOptions)" LabelOn="Compiler messages are preselected" LabelOff="Compiler messages are not preselected" State="@(() => this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Coding.PreselectCompilerMessages = updatedState)" />

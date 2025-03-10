@@ -2,7 +2,7 @@
 @using AIStudio.Settings.DataModel
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Chat" HeaderText="Chat Options">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Chat" HeaderText="Chat Options" IsExpanded="@this.IsExtended()">
     <ConfigurationSelect OptionDescription="Shortcut to send input" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior = selectedValue)" OptionHelp="Do you want to use any shortcut to send your input?"/>
     <ConfigurationOption OptionDescription="Show the latest message after loading?" LabelOn="Latest message is shown, after loading a chat" LabelOff="First (oldest) message is shown, after loading a chat" State="@(() => this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading = updatedState)" OptionHelp="When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."/>
     <ConfigurationSelect OptionDescription="Provider selection when creating new chats" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior)" Data="@ConfigurationSelectDataFactory.GetAddChatProviderBehavior()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior = selectedValue)" OptionHelp="Control how the LLM provider for added chats is selected."/>

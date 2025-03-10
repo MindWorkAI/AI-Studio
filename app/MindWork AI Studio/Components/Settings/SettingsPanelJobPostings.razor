@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Work" HeaderText="Assistant: Job Postings">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Work" HeaderText="Assistant: Job Postings" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect job posting options?" LabelOn="Job posting options are preselected" LabelOff="No job posting options are preselected" State="@(() => this.SettingsManager.ConfigurationData.JobPostings.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.JobPostings.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect some job posting options. This is might be useful when you prefer a specific LLM model."/>
         <ConfigurationText OptionDescription="Preselect the company name?" Disabled="@(() => !this.SettingsManager.ConfigurationData.JobPostings.PreselectOptions)" Icon="@Icons.Material.Filled.Warehouse" Text="@(() => this.SettingsManager.ConfigurationData.JobPostings.PreselectedCompanyName)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.JobPostings.PreselectedCompanyName = updatedText)" />

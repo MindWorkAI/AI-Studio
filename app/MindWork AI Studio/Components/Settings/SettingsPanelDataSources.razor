@@ -3,7 +3,7 @@
 
 @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
 {
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="Configure Data Sources">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="Configure Data Sources" IsExpanded="@this.IsExtended()">
         <PreviewPrototype/>
         <MudText Typo="Typo.h4" Class="mb-3">
             Configured Data Sources

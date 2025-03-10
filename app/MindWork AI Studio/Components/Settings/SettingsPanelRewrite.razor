@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Edit" HeaderText="Assistant: Rewrite & Improve Text">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Edit" HeaderText="Assistant: Rewrite & Improve Text" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect rewrite & improve text options?" LabelOn="Rewrite & improve text options are preselected" LabelOff="No rewrite & improve text options are preselected" State="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the rewrite & improve text options. This is might be useful when you prefer a specific language or LLM model."/>
         <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>

@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.CalendarToday" HeaderText="Assistant: Agenda Options">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.CalendarToday" HeaderText="Assistant: Agenda Options" IsExpanded="@this.IsExtended()">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
         <ConfigurationOption OptionDescription="Preselect agenda options?" LabelOn="Agenda options are preselected" LabelOff="No agenda options are preselected" State="@(() => this.SettingsManager.ConfigurationData.Agenda.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Agenda.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect most agenda options. This is might be useful when you need to create similar agendas often."/>
         <ConfigurationText OptionDescription="Preselect a name?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Agenda.PreselectOptions)" Icon="@Icons.Material.Filled.Tag" Text="@(() => this.SettingsManager.ConfigurationData.Agenda.PreselectName)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Agenda.PreselectName = updatedText)" />
