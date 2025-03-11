@@ -46,6 +46,9 @@ public sealed class EmptyStringAnalyzer : DiagnosticAnalyzer
         if (IsInConstContext(stringLiteral))
             return;
         
+        if (IsInParameterDefaultValue(stringLiteral))
+            return;
+        
         var diagnostic = Diagnostic.Create(RULE, stringLiteral.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
@@ -64,5 +67,22 @@ public sealed class EmptyStringAnalyzer : DiagnosticAnalyzer
             
             _ => false
         };
+    }
+    
+    private static bool IsInParameterDefaultValue(LiteralExpressionSyntax stringLiteral)
+    {
+        // Prüfen, ob das String-Literal Teil eines Parameter-Defaults ist
+        var parameter = stringLiteral.FirstAncestorOrSelf<ParameterSyntax>();
+        if (parameter is null)
+            return false;
+        
+        // Überprüfen, ob das String-Literal im Default-Wert des Parameters verwendet wird
+        if (parameter.Default is not null && 
+            parameter.Default.Value == stringLiteral)
+        {
+            return true;
+        }
+    
+        return false;
     }
 }
