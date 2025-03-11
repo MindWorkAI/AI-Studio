@@ -190,8 +190,9 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(14));
             var dataSource = new DataSourceERI_V1
             {
+                AuthMethod = this.dataAuthMethod,
                 Hostname = this.dataHostname,
-                Port = this.dataPort
+                Port = this.dataPort,
             };
 
             using var client = ERIClientFactory.Get(ERIVersion.V1, dataSource);
