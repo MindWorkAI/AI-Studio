@@ -2,7 +2,10 @@
 @inherits SettingsDialogBase
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Gavel" Class="mr-2" />Assistant: Legal Check</MudText>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Gavel" Class="mr-2" />
+            Assistant: Legal Check Options
+        </MudText>
     </TitleContent>
     <DialogContent>
         <ConfigurationOption OptionDescription="Hide the web content reader?" LabelOn="Web content reader is hidden" LabelOff="Web content reader is shown" State="@(() => this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader = updatedState)" OptionHelp="When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use."/>
@@ -16,6 +19,6 @@
         </MudPaper>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close">Close</MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
     </DialogActions>
 </MudDialog>

@@ -2,7 +2,10 @@
 @inherits SettingsDialogBase
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Translate" Class="mr-2" />Assistant: Translator Options</MudText>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Translate" Class="mr-2" />
+            Assistant: Translator Options
+        </MudText>
     </TitleContent>
     <DialogContent>
         <ConfigurationSlider T="int" OptionDescription="How fast should the live translation react?" Min="500" Max="3_000" Step="100" Unit="milliseconds" Value="@(() => this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds)" ValueUpdate="@(updatedValue => this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds = updatedValue)"/>

@@ -3,12 +3,15 @@
 @inherits SettingsDialogBase
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Psychology" Class="mr-2" />Assistant: Bias of the Day</MudText>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Psychology" Class="mr-2" />
+            Assistant: Bias of the Day Options
+        </MudText>
     </TitleContent>
     <DialogContent>
         <MudField Label="Assistant: Bias of the Day" Variant="Variant.Outlined" Class="mb-4">
             <ConfigurationOption OptionDescription="Restrict to one bias a day?" LabelOn="Yes, you can only retrieve one bias per day" LabelOff="No restriction. You can retrieve as many biases as you want per day." State="@(() => this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay = updatedState)"/>
-            
+
             <MudField Label="Statistics" Variant="Variant.Outlined" Class="mb-2">
                 <MudText Typo="Typo.body1">
                     You have learned about @this.SettingsManager.ConfigurationData.BiasOfTheDay.UsedBias.Count out of @BiasCatalog.ALL_BIAS.Count biases.
@@ -17,7 +20,7 @@
                     Reset
                 </MudButton>
             </MudField>
-            
+
             <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
                 <ConfigurationOption OptionDescription="Preselect options?" LabelOn="Options are preselected" LabelOff="No options are preselected" State="@(() => this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."/>
                 <ConfigurationSelect OptionDescription="Preselect the language" Disabled="@(() => !this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which language should be preselected?"/>

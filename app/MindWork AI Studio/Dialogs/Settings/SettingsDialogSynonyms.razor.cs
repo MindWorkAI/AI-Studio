@@ -1,6 +1,5 @@
-namespace AIStudio.Components.Settings;
+namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogSynonyms : SettingsPanelBase
+public partial class SettingsDialogSynonyms : SettingsDialogBase
 {
-    protected override SettingsPanel Type => SettingsPanel.ASSISTANT_SYNONYMS_PANEL;
 }

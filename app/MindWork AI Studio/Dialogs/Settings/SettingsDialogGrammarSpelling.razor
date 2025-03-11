@@ -3,7 +3,10 @@
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />Assistant: Grammar & Spelling Checker</MudText>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+            Assistant: Grammar & Spelling Checker Options
+        </MudText>
     </TitleContent>
     <DialogContent>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
@@ -18,6 +21,6 @@
         </MudPaper>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close">Close</MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
     </DialogActions>
 </MudDialog>
