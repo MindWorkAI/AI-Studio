@@ -1,9 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.RewriteImprove;
 
-public partial class AssistantRewriteImprove : AssistantBaseCore
+public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogRewrite>
 {
     public override Tools.Components Component => Tools.Components.REWRITE_ASSISTANT;
     

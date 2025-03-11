@@ -1,0 +1,23 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />Assistant: Grammar & Spelling Checker</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect grammar & spell checker options?" LabelOn="Grammar & spell checker options are preselected" LabelOff="No grammar & spell checker options are preselected" State="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the grammar & spell checker options. This is might be useful when you prefer a specific language or LLM model."/>
+            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.GRAMMAR_SPELLING_ASSISTANT" Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider = selectedValue)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>

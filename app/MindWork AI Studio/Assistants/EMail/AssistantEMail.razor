@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_EMAIL)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogWritingEMails>
 
 <MudTextSwitch Label="Is there a history, a previous conversation?" @bind-Value="@this.provideHistory" LabelOn="Yes, I provide the previous conversation" LabelOff="No, I don't provide a previous conversation" />
 @if (this.provideHistory)

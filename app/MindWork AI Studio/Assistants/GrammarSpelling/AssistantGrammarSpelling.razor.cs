@@ -1,9 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.GrammarSpelling;
 
-public partial class AssistantGrammarSpelling : AssistantBaseCore
+public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialogGrammarSpelling>
 {
     public override Tools.Components Component => Tools.Components.GRAMMAR_SPELLING_ASSISTANT;
     

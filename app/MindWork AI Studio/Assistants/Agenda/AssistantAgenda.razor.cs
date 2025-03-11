@@ -2,10 +2,11 @@ using System.Text;
 
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Agenda;
 
-public partial class AssistantAgenda : AssistantBaseCore
+public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 {
     public override Tools.Components Component => Tools.Components.AGENDA_ASSISTANT;
     

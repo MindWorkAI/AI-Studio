@@ -1,4 +1,5 @@
 using AIStudio.Assistants;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Tools;
 

@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_JOB_POSTING)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogJobPostings>
 
 <MudTextField T="string" @bind-Text="@this.inputCompanyName" Label="(Optional) The company name" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Warehouse" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 <MudTextField T="string" @bind-Text="@this.inputCountryLegalFramework" Label="Provide the country, where the company is located" Validation="@this.ValidateCountryLegalFramework" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Flag" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" HelperText="This is important to consider the legal framework of the country."/>

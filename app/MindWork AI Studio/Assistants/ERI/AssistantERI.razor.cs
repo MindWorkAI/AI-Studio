@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
 using AIStudio.Dialogs;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
@@ -12,7 +13,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.ERI;
 
-public partial class AssistantERI : AssistantBaseCore
+public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 {
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;

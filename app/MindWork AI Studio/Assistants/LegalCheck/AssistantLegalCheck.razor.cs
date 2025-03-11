@@ -1,9 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.LegalCheck;
 
-public partial class AssistantLegalCheck : AssistantBaseCore
+public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegalCheck>
 {
     public override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
     

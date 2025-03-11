@@ -1,7 +1,7 @@
 @attribute [Route(Routes.ASSISTANT_ERI)]
 @using AIStudio.Settings.DataModel
 @using MudExtensions
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogERIServer>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
     You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize

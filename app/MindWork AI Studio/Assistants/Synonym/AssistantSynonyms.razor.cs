@@ -3,7 +3,7 @@ using AIStudio.Components.Settings;
 
 namespace AIStudio.Assistants.Synonym;
 
-public partial class AssistantSynonyms : AssistantBaseCore
+public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonyms>
 {
     public override Tools.Components Component => Tools.Components.SYNONYMS_ASSISTANT;
     

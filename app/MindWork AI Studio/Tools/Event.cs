@@ -43,4 +43,5 @@ public enum Event
     
     // Setting events:
     SWITCH_TO_SETTINGS_PANEL,
+    SWITCH_TO_SETTINGS_DIALOG,
 }

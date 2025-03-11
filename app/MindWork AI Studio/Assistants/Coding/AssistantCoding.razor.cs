@@ -1,9 +1,10 @@
 ﻿using System.Text;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Coding;
 
-public partial class AssistantCoding : AssistantBaseCore
+public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 {
     public override Tools.Components Component => Tools.Components.CODING_ASSISTANT;
     

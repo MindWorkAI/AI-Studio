@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_ICON_FINDER)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogIconFinder>
 
 <MudTextField T="string" @bind-Text="@this.inputContext" Validation="@this.ValidatingContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="Your context" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 

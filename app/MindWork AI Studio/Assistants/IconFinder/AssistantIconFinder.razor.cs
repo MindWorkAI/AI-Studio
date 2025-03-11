@@ -1,8 +1,9 @@
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.IconFinder;
 
-public partial class AssistantIconFinder : AssistantBaseCore
+public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconFinder>
 {
     public override Tools.Components Component => Tools.Components.ICON_FINDER_ASSISTANT;
 

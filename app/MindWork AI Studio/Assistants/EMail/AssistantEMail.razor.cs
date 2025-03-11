@@ -2,10 +2,11 @@ using System.Text;
 
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.EMail;
 
-public partial class AssistantEMail : AssistantBaseCore
+public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMails>
 {
     public override Tools.Components Component => Tools.Components.EMAIL_ASSISTANT;
     

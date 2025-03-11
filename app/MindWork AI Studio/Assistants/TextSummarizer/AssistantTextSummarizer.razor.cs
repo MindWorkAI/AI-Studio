@@ -1,9 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.TextSummarizer;
 
-public partial class AssistantTextSummarizer : AssistantBaseCore
+public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogTextSummarizer>
 {
     public override Tools.Components Component => Tools.Components.TEXT_SUMMARIZER_ASSISTANT;
     
