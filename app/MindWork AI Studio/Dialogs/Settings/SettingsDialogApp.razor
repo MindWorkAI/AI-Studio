@@ -1,0 +1,33 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Apps" Class="mr-2" />App Options</MudText>
+    </TitleContent>
+    <DialogContent>    
+        <ConfigurationSelect OptionDescription="Color theme" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreferredTheme)" Data="@ConfigurationSelectDataFactory.GetThemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreferredTheme = selectedValue)" OptionHelp="Choose the color theme that best suits for you."/>
+        <ConfigurationOption OptionDescription="Save energy?" LabelOn="Energy saving is enabled" LabelOff="Energy saving is disabled" State="@(() => this.SettingsManager.ConfigurationData.App.IsSavingEnergy)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.App.IsSavingEnergy = updatedState)" OptionHelp="When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."/>
+        <ConfigurationOption OptionDescription="Enable spellchecking?" LabelOn="Spellchecking is enabled" LabelOff="Spellchecking is disabled" State="@(() => this.SettingsManager.ConfigurationData.App.EnableSpellchecking)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.App.EnableSpellchecking = updatedState)" OptionHelp="When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections."/>
+        <ConfigurationSelect OptionDescription="Check for updates" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.UpdateBehavior)" Data="@ConfigurationSelectDataFactory.GetUpdateBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.UpdateBehavior = selectedValue)" OptionHelp="How often should we check for app updates?"/>
+        <ConfigurationSelect OptionDescription="Navigation bar behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.NavigationBehavior)" Data="@ConfigurationSelectDataFactory.GetNavBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.NavigationBehavior = selectedValue)" OptionHelp="Select the desired behavior for the navigation bar."/>
+        <ConfigurationSelect OptionDescription="Preview feature visibility" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreviewVisibility)" Data="@ConfigurationSelectDataFactory.GetPreviewVisibility()" SelectionUpdate="@this.UpdatePreviewFeatures" OptionHelp="Do you want to show preview features in the app?"/>
+
+        @if (this.SettingsManager.ConfigurationData.App.PreviewVisibility > PreviewVisibility.NONE)
+        {
+            var availablePreviewFeatures = ConfigurationSelectDataFactory.GetPreviewFeaturesData(this.SettingsManager).ToList();
+            if (availablePreviewFeatures.Count > 0)
+            {
+                <ConfigurationMultiSelect OptionDescription="Select preview features" SelectedValues="@(() => this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures)" Data="@availablePreviewFeatures" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedValue)" OptionHelp="Which preview features would you like to enable?"/>
+            }
+        }
+
+        <ConfigurationProviderSelection Component="Components.APP_SETTINGS" Data="@this.AvailableLLMProvidersFunc()" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreselectedProvider = selectedValue)" HelpText="@(() => "Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.")"/>
+        <ConfigurationSelect OptionDescription="Preselect one of your profiles?" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreselectedProfile = selectedValue)" OptionHelp="Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence."/>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>
