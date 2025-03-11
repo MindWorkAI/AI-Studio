@@ -13,7 +13,7 @@
             General
         </MudText>
         <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-            <AssistantBlock TSettings="SettingsDialogTextSummarizer" Name="Text Summarizer" Description="Using a LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
+            <AssistantBlock TSettings="SettingsDialogTextSummarizer" Name="Text Summarizer" Description="Use an LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
             <AssistantBlock TSettings="SettingsDialogTranslation" Name="Translation" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
             <AssistantBlock TSettings="SettingsDialogGrammarSpelling" Name="Grammar & Spelling" Description="Check grammar and spelling of a given text." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
             <AssistantBlock TSettings="SettingsDialogRewrite" Name="Rewrite & Improve" Description="Rewrite and improve a given text for a chosen style." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
@@ -29,7 +29,7 @@
             <AssistantBlock TSettings="SettingsDialogAgenda" Name="Agenda Planner" Description="Generate an agenda for a given meeting, seminar, etc." Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
             <AssistantBlock TSettings="SettingsDialogJobPostings" Name="Job Posting" Description="Generate a job posting for a given job description." Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
             <AssistantBlock TSettings="SettingsDialogLegalCheck" Name="Legal Check" Description="Ask a question about a legal document." Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
-            <AssistantBlock TSettings="SettingsDialogIconFinder" Name="Icon Finder" Description="Using a LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
+            <AssistantBlock TSettings="SettingsDialogIconFinder" Name="Icon Finder" Description="Use an LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
         </MudStack>
 
         <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
@@ -43,7 +43,7 @@
             Software Engineering
         </MudText>
         <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-            <AssistantBlock TSettings="SettingsDialogCoding" Name="Coding" Description="Get coding and debugging support from a LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
+            <AssistantBlock TSettings="SettingsDialogCoding" Name="Coding" Description="Get coding and debugging support from an LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <AssistantBlock TSettings="SettingsDialogERIServer" Name="ERI Server" Description="Generate an ERI server to integrate business systems." Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
