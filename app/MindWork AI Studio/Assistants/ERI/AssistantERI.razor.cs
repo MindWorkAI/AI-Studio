@@ -309,8 +309,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 
     protected override Func<Task> SubmitAction => this.GenerateServer;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_ERI_SERVER_PANEL;
-
     protected override bool SubmitDisabled => this.IsNoneERIServerSelected;
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

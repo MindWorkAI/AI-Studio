@@ -35,8 +35,6 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
     protected override string SubmitText => "Find Icon";
 
     protected override Func<Task> SubmitAction => this.FindIcon;
-    
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_ICON_FINDER_PANEL;
 
     protected override void ResetForm()
     {

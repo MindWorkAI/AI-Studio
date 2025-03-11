@@ -35,8 +35,6 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     protected override Func<Task> SubmitAction => this.SummarizeText;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_TEXT_SUMMARIZER_PANEL;
-
     protected override bool SubmitDisabled => this.isAgentRunning;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

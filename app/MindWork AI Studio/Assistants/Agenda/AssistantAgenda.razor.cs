@@ -103,8 +103,6 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
     protected override Func<Task> SubmitAction => this.CreateAgenda;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_AGENDA_PANEL;
-
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

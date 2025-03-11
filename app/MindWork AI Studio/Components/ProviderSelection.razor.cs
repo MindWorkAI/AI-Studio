@@ -12,7 +12,7 @@ namespace AIStudio.Components;
 public partial class ProviderSelection : ComponentBase
 {
     [CascadingParameter]
-    public AssistantBase<SettingsDialogProviders>? AssistantBase { get; set; }
+    public AssistantBase<NoComponent>? AssistantBase { get; set; }
     
     [Parameter]
     public AIStudio.Settings.Provider ProviderSettings { get; set; }

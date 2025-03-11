@@ -52,8 +52,6 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
 
     protected override Func<Task> SubmitAction => this.CreateJobPosting;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_JOB_POSTING_PANEL;
-
     protected override bool SubmitDisabled => false;
 
     protected override bool AllowProfiles => false;

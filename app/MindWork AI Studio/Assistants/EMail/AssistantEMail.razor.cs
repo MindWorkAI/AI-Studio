@@ -30,8 +30,6 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     protected override Func<Task> SubmitAction => this.CreateMail;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_EMAIL_PANEL;
-
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

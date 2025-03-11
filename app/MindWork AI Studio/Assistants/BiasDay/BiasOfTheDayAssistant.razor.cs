@@ -46,8 +46,6 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
 
     protected override Func<Task> SubmitAction => this.TellBias;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_BIAS_OF_THE_DAY_PANEL;
-
     protected override bool ShowSendTo => false;
     
     protected override bool ShowCopyResult => false;

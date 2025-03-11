@@ -31,8 +31,6 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     protected override Func<Task> SubmitAction => () => this.TranslateText(true);
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_TRANSLATION_PANEL;
-
     protected override bool SubmitDisabled => this.isAgentRunning;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

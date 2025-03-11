@@ -34,8 +34,6 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     protected override Func<Task> SubmitAction => this.GetSupport;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_CODING_PANEL;
-
     protected override void ResetForm()
     {
         this.codingContexts.Clear();

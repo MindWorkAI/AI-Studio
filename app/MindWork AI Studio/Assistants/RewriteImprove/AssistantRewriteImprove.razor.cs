@@ -46,8 +46,6 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
 
     protected override Func<Task> SubmitAction => this.RewriteText;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_REWRITE_PANEL;
-
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

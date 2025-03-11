@@ -76,8 +76,6 @@ public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessage
     
     protected abstract Func<Task> SubmitAction { get; }
     
-    protected abstract SettingsPanel SettingsPanel { get; }
-    
     protected virtual bool SubmitDisabled => false;
     
     private protected virtual RenderFragment? Body => null;
@@ -324,12 +322,6 @@ public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessage
             return null;
         
         return icon;
-    }
-    
-    protected void NavigateToSettings()
-    {
-        MessageBus.INSTANCE.DeferMessage(this, Event.SWITCH_TO_SETTINGS_PANEL, this.SettingsPanel);
-        this.NavigationManager.NavigateTo(Routes.SETTINGS);
     }
     
     protected async Task OpenSettingsDialog()

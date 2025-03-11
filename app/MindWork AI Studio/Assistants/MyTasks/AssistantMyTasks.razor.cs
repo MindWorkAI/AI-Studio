@@ -36,8 +36,6 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
 
     protected override Func<Task> SubmitAction => this.AnalyzeText;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_MY_TASKS_PANEL;
-
     protected override bool ShowProfileSelection => false;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

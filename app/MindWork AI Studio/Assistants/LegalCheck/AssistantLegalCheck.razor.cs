@@ -32,8 +32,6 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
 
     protected override Func<Task> SubmitAction => this.AksQuestions;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_LEGAL_CHECK_PANEL;
-
     protected override bool SubmitDisabled => this.isAgentRunning;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

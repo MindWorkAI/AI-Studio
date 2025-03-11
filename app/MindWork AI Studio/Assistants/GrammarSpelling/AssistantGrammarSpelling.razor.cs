@@ -45,8 +45,6 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
 
     protected override Func<Task> SubmitAction => this.ProofreadText;
 
-    protected override SettingsPanel SettingsPanel => SettingsPanel.ASSISTANT_GRAMMAR_SPELLING_PANEL;
-
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,
