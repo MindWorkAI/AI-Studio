@@ -19,9 +19,10 @@ public interface IERIClient : IDisposable
     /// Authenticate the user to the ERI server.
     /// </summary>
     /// <param name="rustService">The Rust service.</param>
+    /// <param name="temporarySecret">The temporary secret when adding a new data source, and the secret is not yet stored in the OS.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The authentication response.</returns>
-    public Task<APIResponse<AuthResponse>> AuthenticateAsync(RustService rustService, CancellationToken cancellationToken = default);
+    public Task<APIResponse<AuthResponse>> AuthenticateAsync(RustService rustService, string? temporarySecret = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Retrieves the data source information from the ERI server.

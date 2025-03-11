@@ -211,7 +211,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
 
             this.availableAuthMethods = authSchemes.Data!.Select(n => n.AuthMethod).ToList();
 
-            var loginResult = await client.AuthenticateAsync(this.RustService, cts.Token);
+            var loginResult = await client.AuthenticateAsync(this.RustService, this.dataSecret, cts.Token);
             if (!loginResult.Successful)
             {
                 await this.form.Validate();
