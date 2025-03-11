@@ -113,7 +113,7 @@ public sealed class DataSourceService
             }
 
             this.logger.LogInformation($"Authenticating with ERI source '{source.Name}' (id={source.Id})...");
-            var loginResult = await client.AuthenticateAsync(eriSource, this.rustService, cancellationTokenSource.Token);
+            var loginResult = await client.AuthenticateAsync(this.rustService, cancellationTokenSource.Token);
             if (!loginResult.Successful)
             {
                 this.logger.LogWarning($"Authentication with ERI source '{source.Name}' (id={source.Id}) failed. We skip this source. Reason: {loginResult.Message}");

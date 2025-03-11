@@ -98,7 +98,7 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
                 return;
             }
             
-            var loginResult = await client.AuthenticateAsync(this.DataSource, this.RustService);
+            var loginResult = await client.AuthenticateAsync(this.RustService);
             if (!loginResult.Successful)
             {
                 this.dataIssues.Add(loginResult.Message);

@@ -7,7 +7,7 @@ public static class ERIClientFactory
 {
     public static IERIClient? Get(ERIVersion version, IERIDataSource dataSource) => version switch
     {
-        ERIVersion.V1 => new ERIClientV1($"{dataSource.Hostname}:{dataSource.Port}"),
+        ERIVersion.V1 => new ERIClientV1(dataSource),
         
         _ => null
     };

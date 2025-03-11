@@ -62,7 +62,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         var logger = Program.SERVICE_PROVIDER.GetRequiredService<ILogger<DataSourceERI_V1>>();
         
         using var eriClient = ERIClientFactory.Get(this.Version, this)!;
-        var authResponse = await eriClient.AuthenticateAsync(this, rustService, token);
+        var authResponse = await eriClient.AuthenticateAsync(rustService, token);
         if (authResponse.Successful)
         {
             var retrievalRequest = new RetrievalRequest
