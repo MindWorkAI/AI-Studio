@@ -199,7 +199,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                         // Call the ERI server to get the server description:
                         //
                         using var eriClient = ERIClientFactory.Get(eriDataSource.Version, eriDataSource)!;
-                        var authResponse = await eriClient.AuthenticateAsync(eriDataSource, rustService, token);
+                        var authResponse = await eriClient.AuthenticateAsync(rustService, cancellationToken: token);
                         if (authResponse.Successful)
                         {
                             var serverDescriptionResponse = await eriClient.GetDataSourceInfoAsync(token);

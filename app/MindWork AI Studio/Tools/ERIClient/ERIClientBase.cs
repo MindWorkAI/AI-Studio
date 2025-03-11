@@ -1,10 +1,14 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using AIStudio.Settings;
+
 namespace AIStudio.Tools.ERIClient;
 
-public abstract class ERIClientBase(string baseAddress) : IDisposable
+public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
 {
+    protected readonly IERIDataSource dataSource = dataSource;
+    
     protected static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -21,7 +25,7 @@ public abstract class ERIClientBase(string baseAddress) : IDisposable
     
     protected readonly HttpClient httpClient = new()
     {
-        BaseAddress = new Uri(baseAddress),
+        BaseAddress = new Uri($"{dataSource.Hostname}:{dataSource.Port}"),
     };
     
     protected string securityToken = string.Empty;

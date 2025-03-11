@@ -7,7 +7,7 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ERIClient;
 
-public class ERIClientV1(string baseAddress) : ERIClientBase(baseAddress), IERIClient
+public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource), IERIClient
 {
     #region Implementation of IERIClient
 
@@ -59,13 +59,13 @@ public class ERIClientV1(string baseAddress) : ERIClientBase(baseAddress), IERIC
         }
     }
 
-    public async Task<APIResponse<AuthResponse>> AuthenticateAsync(IERIDataSource dataSource, RustService rustService, CancellationToken cancellationToken = default)
+    public async Task<APIResponse<AuthResponse>> AuthenticateAsync(RustService rustService, string? temporarySecret = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            var authMethod = dataSource.AuthMethod;
-            var username = dataSource.Username;
-            switch (dataSource.AuthMethod)
+            var authMethod = this.dataSource.AuthMethod;
+            var username = this.dataSource.Username;
+            switch (this.dataSource.AuthMethod)
             {
                 case AuthMethod.NONE:
                     using (var request = new HttpRequestMessage(HttpMethod.Post, $"auth?authMethod={authMethod}"))
@@ -99,17 +99,24 @@ public class ERIClientV1(string baseAddress) : ERIClientBase(baseAddress), IERIC
                     }
             
                 case AuthMethod.USERNAME_PASSWORD:
-                    var passwordResponse = await rustService.GetSecret(dataSource);
-                    if (!passwordResponse.Success)
+                    string password;
+                    if (string.IsNullOrWhiteSpace(temporarySecret))
                     {
-                        return new()
+                        var passwordResponse = await rustService.GetSecret(this.dataSource);
+                        if (!passwordResponse.Success)
                         {
-                            Successful = false,
-                            Message = "Failed to retrieve the password."
-                        };
-                    }
+                            return new()
+                            {
+                                Successful = false,
+                                Message = "Failed to retrieve the password."
+                            };
+                        }
 
-                    var password = await passwordResponse.Secret.Decrypt(Program.ENCRYPTION);
+                        password = await passwordResponse.Secret.Decrypt(Program.ENCRYPTION);
+                    }
+                    else
+                        password = temporarySecret;
+
                     using (var request = new HttpRequestMessage(HttpMethod.Post, $"auth?authMethod={authMethod}"))
                     {
                         // We must send both values inside the header. The username field is named 'user'.
@@ -146,17 +153,24 @@ public class ERIClientV1(string baseAddress) : ERIClientBase(baseAddress), IERIC
                     }
 
                 case AuthMethod.TOKEN:
-                    var tokenResponse = await rustService.GetSecret(dataSource);
-                    if (!tokenResponse.Success)
+                    string token;
+                    if (string.IsNullOrWhiteSpace(temporarySecret))
                     {
-                        return new()
+                        var tokenResponse = await rustService.GetSecret(this.dataSource);
+                        if (!tokenResponse.Success)
                         {
-                            Successful = false,
-                            Message = "Failed to retrieve the access token."
-                        };
-                    }
+                            return new()
+                            {
+                                Successful = false,
+                                Message = "Failed to retrieve the access token."
+                            };
+                        }
 
-                    var token = await tokenResponse.Secret.Decrypt(Program.ENCRYPTION);
+                        token = await tokenResponse.Secret.Decrypt(Program.ENCRYPTION);
+                    }
+                    else
+                        token = temporarySecret;
+
                     using (var request = new HttpRequestMessage(HttpMethod.Post, $"auth?authMethod={authMethod}"))
                     {
                         request.Headers.Add("Authorization", $"Bearer {token}");
