@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 
