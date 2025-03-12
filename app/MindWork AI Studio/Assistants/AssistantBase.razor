@@ -7,8 +7,6 @@
         @(this.Title)
     </MudText>
 
-
-
     <InnerScrolling>
         <ChildContent>
             <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
@@ -123,7 +121,6 @@
                     </MudButton>
                 }
 
-
                 @if (this.ShowReset)
                 {
                     <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
@@ -140,8 +137,6 @@
                 {
                     <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
                 }
-                
-                
             </MudStack>
         </FooterContent>
     </InnerScrolling>
