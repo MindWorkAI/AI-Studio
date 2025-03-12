@@ -1,7 +1,3 @@
-using AIStudio.Dialogs;
-
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
-
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogAssistantBias : SettingsDialogBase

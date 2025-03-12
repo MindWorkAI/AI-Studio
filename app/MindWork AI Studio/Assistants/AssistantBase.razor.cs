@@ -1,6 +1,4 @@
 using AIStudio.Chat;
-using AIStudio.Components.Settings;
-using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -34,9 +32,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     
     [Inject]
     protected RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    protected DataSourceService DataSourceService { get; init; } = null!;
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;

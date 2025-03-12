@@ -1,4 +1,3 @@
-using AIStudio.Components.Settings;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.IconFinder;

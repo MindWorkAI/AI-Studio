@@ -1,7 +1,6 @@
 using System.Text;
 
 using AIStudio.Chat;
-using AIStudio.Components.Settings;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Agenda;

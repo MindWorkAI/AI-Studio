@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
-using AIStudio.Components.Settings;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;

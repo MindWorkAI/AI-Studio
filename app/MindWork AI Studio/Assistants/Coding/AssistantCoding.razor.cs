@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using AIStudio.Components.Settings;
+
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Coding;
