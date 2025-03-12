@@ -3,7 +3,7 @@
 def main [] {}
 
 def are_assets_exist [rid: string] {
-    $"bin/release/net8.0/($rid)/publish/wwwroot/_content/MudBlazor/MudBlazor.min.css" | path exists
+    $"bin/release/net9.0/($rid)/publish/wwwroot/_content/MudBlazor/MudBlazor.min.css" | path exists
 }
 
 def "main help" [] {
@@ -63,7 +63,7 @@ def "main fix_web_assets" [] {
     mkdir wwwroot/system
 
     # Copy the web assets from the first RID to the source project:
-    let source_paths = glob --depth 99 bin/release/net8.0/($rid)/publish/wwwroot/_content/*
+    let source_paths = glob --depth 99 bin/release/net9.0/($rid)/publish/wwwroot/_content/*
     
     for source_path in $source_paths {
         cp --recursive --force --update $source_path wwwroot/system/
@@ -112,7 +112,7 @@ def "main publish" [] {
             }
         }
         
-        let published_path = $"bin/release/net8.0/($rid)/publish/($published_filename_dotnet)"
+        let published_path = $"bin/release/net9.0/($rid)/publish/($published_filename_dotnet)"
         let final_path = $"bin/dist/($final_filename)"
         
         if ($published_path | path exists) {
