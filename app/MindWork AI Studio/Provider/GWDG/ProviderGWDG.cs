@@ -49,6 +49,7 @@ public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
+                    ChatRole.RAG => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",

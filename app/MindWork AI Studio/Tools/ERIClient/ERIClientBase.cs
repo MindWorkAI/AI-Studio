@@ -9,10 +9,9 @@ public abstract class ERIClientBase(string baseAddress) : IDisposable
     {
         WriteIndented = true,
         AllowTrailingCommas = true,
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNamingPolicy = null,
         DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        PropertyNameCaseInsensitive = true,
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),

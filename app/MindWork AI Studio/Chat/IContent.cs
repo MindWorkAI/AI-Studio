@@ -41,7 +41,7 @@ public interface IContent
     /// <summary>
     /// Uses the provider to create the content.
     /// </summary>
-    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
+    public Task CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
 
     /// <summary>
     /// Returns the corresponding ERI content type.

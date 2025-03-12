@@ -49,6 +49,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
+                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },

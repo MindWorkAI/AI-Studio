@@ -139,7 +139,7 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         this.isStreaming = true;
         this.StateHasChanged();
         
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, lastUserPrompt, this.chatThread);
+        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, lastUserPrompt, this.chatThread);
         this.suggestion = aiText.Text;
         
         this.isStreaming = false;

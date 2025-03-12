@@ -49,6 +49,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
+                    ChatRole.RAG => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",

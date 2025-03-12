@@ -50,6 +50,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
                     ChatRole.SYSTEM => "system",
+                    ChatRole.RAG => "assistant",
 
                     _ => "user",
                 },

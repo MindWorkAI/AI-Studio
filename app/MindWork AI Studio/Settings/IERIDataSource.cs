@@ -29,9 +29,4 @@ public interface IERIDataSource : IExternalDataSource
     /// The ERI specification to use.
     /// </summary>
     public ERIVersion Version { get; init; }
-    
-    /// <summary>
-    /// The ID of the selected retrieval process.
-    /// </summary>
-    public string SelectedRetrievalId { get; init; }
 }

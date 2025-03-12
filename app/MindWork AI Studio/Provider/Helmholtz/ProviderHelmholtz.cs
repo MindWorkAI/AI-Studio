@@ -49,6 +49,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
                     ChatRole.USER => "user",
                     ChatRole.AI => "assistant",
                     ChatRole.AGENT => "assistant",
+                    ChatRole.RAG => "assistant",
                     ChatRole.SYSTEM => "system",
 
                     _ => "user",
