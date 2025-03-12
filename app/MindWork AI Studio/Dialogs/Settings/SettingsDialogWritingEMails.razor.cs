@@ -1,5 +1,3 @@
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogWritingEMails : SettingsDialogBase
-{
-}
+public partial class SettingsDialogWritingEMails : SettingsDialogBase;

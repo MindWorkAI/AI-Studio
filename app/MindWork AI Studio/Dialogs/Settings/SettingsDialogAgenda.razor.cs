@@ -2,6 +2,4 @@ using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogAgenda : SettingsDialogBase
-{
-}
+public partial class SettingsDialogAgenda : SettingsDialogBase;

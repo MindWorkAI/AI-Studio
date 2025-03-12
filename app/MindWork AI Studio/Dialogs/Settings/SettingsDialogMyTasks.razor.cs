@@ -1,5 +1,3 @@
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogMyTasks : SettingsDialogBase
-{
-}
+public partial class SettingsDialogMyTasks : SettingsDialogBase;

@@ -1,5 +1,3 @@
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogRewrite : SettingsDialogBase
-{
-}
+public partial class SettingsDialogRewrite : SettingsDialogBase;

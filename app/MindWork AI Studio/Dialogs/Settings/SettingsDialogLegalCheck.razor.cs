@@ -1,5 +1,3 @@
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogLegalCheck : SettingsDialogBase
-{
-}
+public partial class SettingsDialogLegalCheck : SettingsDialogBase;

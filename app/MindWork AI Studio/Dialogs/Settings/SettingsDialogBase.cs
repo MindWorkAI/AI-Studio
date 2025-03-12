@@ -12,9 +12,6 @@ public abstract class SettingsDialogBase : ComponentBase
     [CascadingParameter]
     protected MudDialogInstance MudDialog { get; set; } = null!;
     
-    [CascadingParameter]
-    public Pages.Settings Settings { get; set; } = null!;
-    
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
     
