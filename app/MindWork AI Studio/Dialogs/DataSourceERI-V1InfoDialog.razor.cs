@@ -17,7 +17,7 @@ namespace AIStudio.Dialogs;
 public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposable, ISecretId
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public DataSourceERI_V1 DataSource { get; set; }

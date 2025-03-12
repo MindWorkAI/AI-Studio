@@ -3,7 +3,7 @@ namespace AIStudio.Tools;
 /// <inheritdoc />
 public sealed class ThreadSafeRandom : Random
 {
-    private static readonly object LOCK = new();
+    private static readonly Lock LOCK = new();
 
     #region Overrides of Random
 

@@ -7,7 +7,7 @@ namespace AIStudio.Dialogs;
 public partial class ProfileDialog : ComponentBase
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
     /// The profile's number in the list.

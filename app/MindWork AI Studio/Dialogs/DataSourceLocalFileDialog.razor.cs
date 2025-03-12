@@ -9,7 +9,7 @@ namespace AIStudio.Dialogs;
 public partial class DataSourceLocalFileDialog : ComponentBase
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public bool IsEditing { get; set; }

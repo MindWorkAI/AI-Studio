@@ -12,7 +12,7 @@ namespace AIStudio.Dialogs;
 public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
     /// The embedding's number in the list.
