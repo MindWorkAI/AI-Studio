@@ -46,6 +46,7 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           
       - name: Check tag vs. metadata version
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           # Ensure, that the tag matches the version in the metadata file:
           if [ "${GITHUB_REF}" != "refs/tags/${FORMATTED_VERSION}" ]; then
