@@ -1,7 +1,6 @@
 using System.Text;
 
 using AIStudio.Chat;
-using AIStudio.Components.Settings;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 

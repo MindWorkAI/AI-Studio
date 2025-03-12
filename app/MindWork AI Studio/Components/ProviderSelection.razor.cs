@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Assistants;
-using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
 

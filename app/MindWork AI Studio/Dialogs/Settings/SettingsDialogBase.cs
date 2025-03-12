@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+
 using AIStudio.Settings;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -24,8 +23,6 @@ public abstract class SettingsDialogBase : ComponentBase
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
     
-    [Inject]
-    protected RustService RustService { get; init; } = null!;
     
     #region Overrides of ComponentBase
 
