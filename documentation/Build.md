@@ -2,7 +2,7 @@
 You just want to use the app? Then simply [download the appropriate setup for your operating system](Setup.md). This chapter is intended for developers who want to modify and customize the code.
 
 ## Prerequisites
-1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
+1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
 3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
 4. Install the Tauri CLI by running `cargo install --version 1.6.2 tauri-cli`.

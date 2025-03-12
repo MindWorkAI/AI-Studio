@@ -6,7 +6,7 @@
   },
   "package": {
     "productName": "MindWork AI Studio",
-	"version": "0.9.34"
+	"version": "0.9.35"
   },
   "tauri": {
     "allowlist": {
