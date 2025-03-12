@@ -15,7 +15,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants;
 
-public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
+public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
 {
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
@@ -49,10 +49,6 @@ public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessage
     
     [Inject]
     private MessageBus MessageBus { get; init; } = null!;
-    
-    internal const string RESULT_DIV_ID = "assistantResult";
-    internal const string BEFORE_RESULT_DIV_ID = "beforeAssistantResult";
-    internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     
     protected abstract string Title { get; }
     
@@ -99,8 +95,6 @@ public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessage
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
-
-    protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     protected AIStudio.Settings.Provider providerSettings;
     protected MudForm? form;
