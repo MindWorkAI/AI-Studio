@@ -1,8 +1,10 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.TextSummarizer;
 
-public partial class AssistantTextSummarizer : AssistantBaseCore
+public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogTextSummarizer>
 {
     public override Tools.Components Component => Tools.Components.TEXT_SUMMARIZER_ASSISTANT;
     
@@ -32,7 +34,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore
     protected override string SubmitText => "Summarize";
 
     protected override Func<Task> SubmitAction => this.SummarizeText;
-    
+
     protected override bool SubmitDisabled => this.isAgentRunning;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

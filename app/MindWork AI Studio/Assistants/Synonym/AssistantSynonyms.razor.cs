@@ -1,8 +1,9 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Synonym;
 
-public partial class AssistantSynonyms : AssistantBaseCore
+public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonyms>
 {
     public override Tools.Components Component => Tools.Components.SYNONYMS_ASSISTANT;
     
@@ -54,7 +55,7 @@ public partial class AssistantSynonyms : AssistantBaseCore
     protected override string SubmitText => "Find synonyms";
 
     protected override Func<Task> SubmitAction => this.FindSynonyms;
-    
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

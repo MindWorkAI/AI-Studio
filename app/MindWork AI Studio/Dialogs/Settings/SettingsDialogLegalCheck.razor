@@ -1,0 +1,24 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Gavel" Class="mr-2" />
+            Assistant: Legal Check Options
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <ConfigurationOption OptionDescription="Hide the web content reader?" LabelOn="Web content reader is hidden" LabelOff="Web content reader is shown" State="@(() => this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader = updatedState)" OptionHelp="When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use."/>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect legal check options?" LabelOn="Legal check options are preselected" LabelOff="No legal check options are preselected" State="@(() => this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect some legal check options. This is might be useful when you prefer a specific LLM model."/>
+            <ConfigurationOption OptionDescription="Preselect the web content reader?" Disabled="@(() => !this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions || this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)" LabelOn="Web content reader is preselected" LabelOff="Web content reader is not preselected" State="@(() => this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader = updatedState)" OptionHelp="When enabled, the web content reader is preselected. This is might be useful when you prefer to load legal content from the web very often."/>
+            <ConfigurationOption OptionDescription="Preselect the content cleaner agent?" Disabled="@(() => !this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions || this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)" LabelOn="Content cleaner agent is preselected" LabelOff="Content cleaner agent is not preselected" State="@(() => this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent = updatedState)" OptionHelp="When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the legal content before translating it."/>
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LegalCheck.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LegalCheck.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.LEGAL_CHECK_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LegalCheck.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LegalCheck.PreselectedProvider = selectedValue)"/>
+            <ConfigurationSelect OptionDescription="Preselect one of your profiles?" Disabled="@(() => !this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LegalCheck.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LegalCheck.PreselectedProfile = selectedValue)" OptionHelp="Would you like to preselect one of your profiles?"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>

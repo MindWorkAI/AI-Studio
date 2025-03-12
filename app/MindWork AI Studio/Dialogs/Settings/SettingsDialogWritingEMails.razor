@@ -1,0 +1,30 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Email" Class="mr-2" />
+            Assistant: Writing E-Mails Options
+        </MudText>
+    </TitleContent>
+    <DialogContent>    
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect e-mail options?" LabelOn="E-Mail options are preselected" LabelOff="No e-mail options are preselected" State="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.EMail.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the e-mail options. This is might be useful when you prefer a specific language or LLM model."/>
+            <ConfigurationText OptionDescription="Preselect a greeting?" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" Icon="@Icons.Material.Filled.Person" Text="@(() => this.SettingsManager.ConfigurationData.EMail.Greeting)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.EMail.Greeting = updatedText)"/>
+            <ConfigurationText OptionDescription="Preselect your name for the closing salutation?" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" Icon="@Icons.Material.Filled.Person" Text="@(() => this.SettingsManager.ConfigurationData.EMail.SenderName)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.EMail.SenderName = updatedText)"/>
+            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesTranslationData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.EMail.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.EMail.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.EMail.PreselectOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationSelect OptionDescription="Preselect a writing style" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectedWritingStyle)" Data="@ConfigurationSelectDataFactory.GetWritingStyles4EMailData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.EMail.PreselectedWritingStyle = selectedValue)" OptionHelp="Which writing style should be preselected?"/>
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.EMail.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.EMail.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.EMAIL_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.EMail.PreselectedProvider = selectedValue)"/>
+            <ConfigurationSelect OptionDescription="Preselect one of your profiles?" Disabled="@(() => !this.SettingsManager.ConfigurationData.EMail.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.EMail.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.EMail.PreselectedProfile = selectedValue)" OptionHelp="Would you like to preselect one of your profiles?"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>

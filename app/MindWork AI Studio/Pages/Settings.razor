@@ -7,44 +7,25 @@
 
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
-            <SettingsPanelProviders @bind-AvailableLLMProviders="@this.availableLLMProviders" />
-            
+            <SettingsPanelProviders @bind-AvailableLLMProviders="@this.availableLLMProviders"/>
+
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <SettingsPanelEmbeddings AvailableLLMProvidersFunc="() => this.availableLLMProviders" @bind-AvailableEmbeddingProviders="@this.availableEmbeddingProviders"/>
                 <SettingsPanelDataSources AvailableLLMProvidersFunc="() => this.availableLLMProviders" AvailableEmbeddingsFunc="() => this.availableEmbeddingProviders" @bind-AvailableDataSources="@this.availableDataSources"/>
             }
-            <SettingsPanelProfiles AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelApp AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelChat AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelWorkspaces AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelIconFinder AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelTranslation AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelCoding AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            
-            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
-            {
-                <SettingsPanelERIServer AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
-            }
-            
-            <SettingsPanelTextSummarizer AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelAgenda AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelGrammarSpelling AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelRewrite AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelWritingEMails AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelJobPostings AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelLegalCheck AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelSynonyms AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelMyTasks AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            <SettingsPanelAssistantBias AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
-            
+            <SettingsPanelProfiles AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+            <SettingsPanelApp AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+            <SettingsPanelChat AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+            <SettingsPanelWorkspaces AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <SettingsPanelAgentDataSourceSelection AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
                 <SettingsPanelAgentRetrievalContextValidation AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
             }
-            
-            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="() => this.availableLLMProviders" />
+
+            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
         </MudExpansionPanels>
     </InnerScrolling>
 </div>

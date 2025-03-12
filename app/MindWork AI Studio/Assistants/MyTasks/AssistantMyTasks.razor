@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_MY_TASKS)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogMyTasks>
 
 <ProfileFormSelection Validation="@this.ValidateProfile" @bind-Profile="@this.currentProfile"/>
 <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Text or email" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>

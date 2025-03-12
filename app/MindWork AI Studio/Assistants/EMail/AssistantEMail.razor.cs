@@ -1,10 +1,12 @@
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.EMail;
 
-public partial class AssistantEMail : AssistantBaseCore
+public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMails>
 {
     public override Tools.Components Component => Tools.Components.EMAIL_ASSISTANT;
     
@@ -27,7 +29,7 @@ public partial class AssistantEMail : AssistantBaseCore
     protected override string SubmitText => "Create email";
 
     protected override Func<Task> SubmitAction => this.CreateMail;
-    
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

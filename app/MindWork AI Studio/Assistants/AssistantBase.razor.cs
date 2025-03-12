@@ -1,4 +1,6 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -9,12 +11,17 @@ using MudBlazor.Utilities;
 
 using Timer = System.Timers.Timer;
 
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
+
 namespace AIStudio.Assistants;
 
-public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver, IDisposable
+public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
 {
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
@@ -35,7 +42,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected NavigationManager NavigationManager { get; init; } = null!;
     
     [Inject]
-    protected ILogger<AssistantBase> Logger { get; init; } = null!;
+    protected ILogger<AssistantBase<TSettings>> Logger { get; init; } = null!;
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
@@ -68,7 +75,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected abstract string SubmitText { get; }
     
     protected abstract Func<Task> SubmitAction { get; }
-
+    
     protected virtual bool SubmitDisabled => false;
     
     private protected virtual RenderFragment? Body => null;
@@ -151,7 +158,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     
     #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(AssistantBase);
+    public string ComponentName => nameof(AssistantBase<TSettings>);
     
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
@@ -313,6 +320,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             return null;
         
         return icon;
+    }
+    
+    protected async Task OpenSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        await this.DialogService.ShowAsync<TSettings>("Open Settings", dialogParameters, DialogOptions.FULLSCREEN);
     }
     
     protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)

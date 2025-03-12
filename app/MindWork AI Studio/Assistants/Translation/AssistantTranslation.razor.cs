@@ -1,8 +1,10 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Translation;
 
-public partial class AssistantTranslation : AssistantBaseCore
+public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTranslation>
 {
     public override Tools.Components Component => Tools.Components.TRANSLATION_ASSISTANT;
     
@@ -28,7 +30,7 @@ public partial class AssistantTranslation : AssistantBaseCore
     protected override string SubmitText => "Translate";
 
     protected override Func<Task> SubmitAction => () => this.TranslateText(true);
-    
+
     protected override bool SubmitDisabled => this.isAgentRunning;
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with

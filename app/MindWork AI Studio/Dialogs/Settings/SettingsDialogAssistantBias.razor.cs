@@ -2,9 +2,9 @@ using AIStudio.Dialogs;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
-namespace AIStudio.Components.Settings;
+namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsPanelAssistantBias : SettingsPanelBase
+public partial class SettingsDialogAssistantBias : SettingsDialogBase
 {
     private async Task ResetBiasOfTheDayHistory()
     {
@@ -24,4 +24,5 @@ public partial class SettingsPanelAssistantBias : SettingsPanelBase
         
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
 }

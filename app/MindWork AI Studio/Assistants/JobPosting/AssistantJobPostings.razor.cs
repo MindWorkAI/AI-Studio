@@ -1,8 +1,10 @@
 using AIStudio.Chat;
+using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.JobPosting;
 
-public partial class AssistantJobPostings : AssistantBaseCore
+public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobPostings>
 {
     public override Tools.Components Component => Tools.Components.JOB_POSTING_ASSISTANT;
     

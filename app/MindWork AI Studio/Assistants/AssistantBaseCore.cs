@@ -7,7 +7,7 @@ namespace AIStudio.Assistants;
 // See https://stackoverflow.com/a/77300384/2258393 for why this class is necessary
 //
 
-public abstract class AssistantBaseCore : AssistantBase
+public abstract class AssistantBaseCore<TSettings> : AssistantBase<TSettings> where TSettings : IComponent
 {
     private protected sealed override RenderFragment Body => this.BuildRenderTree;
 

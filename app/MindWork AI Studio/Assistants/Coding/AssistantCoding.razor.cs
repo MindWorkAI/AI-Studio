@@ -1,8 +1,10 @@
 ﻿using System.Text;
+using AIStudio.Components.Settings;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Coding;
 
-public partial class AssistantCoding : AssistantBaseCore
+public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 {
     public override Tools.Components Component => Tools.Components.CODING_ASSISTANT;
     
@@ -31,7 +33,7 @@ public partial class AssistantCoding : AssistantBaseCore
     protected override string SubmitText => "Get Support";
 
     protected override Func<Task> SubmitAction => this.GetSupport;
-    
+
     protected override void ResetForm()
     {
         this.codingContexts.Clear();
