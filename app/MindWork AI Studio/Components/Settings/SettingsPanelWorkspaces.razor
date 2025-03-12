@@ -2,7 +2,7 @@
 @using AIStudio.Settings.DataModel
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Work" HeaderText="Workspace Options" IsExpanded="@this.IsExtended()">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Work" HeaderText="Workspace Options">
     <ConfigurationSelect OptionDescription="Workspace behavior" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = selectedValue)" OptionHelp="Should we store your chats?"/>
             
     @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)

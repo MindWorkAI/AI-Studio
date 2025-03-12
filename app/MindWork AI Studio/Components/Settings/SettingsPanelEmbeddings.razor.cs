@@ -119,6 +119,4 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
         
         await this.AvailableEmbeddingProvidersChanged.InvokeAsync(this.AvailableEmbeddingProviders);
     }
-
-    protected override SettingsPanel Type => SettingsPanel.EMBEDDINGS_PANEL;
 }

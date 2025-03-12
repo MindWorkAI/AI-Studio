@@ -148,6 +148,4 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
         await this.SettingsManager.StoreSettings();
     }
-
-    protected override SettingsPanel Type => SettingsPanel.PROVIDER_PANEL;
 }

@@ -16,7 +16,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     private List<ConfigurationSelectData<string>> availableLLMProviders = new();
     private List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
     private List<ConfigurationSelectData<string>> availableDataSources = new();
-    public SettingsPanel ChosenSettingsPanel { get; private set; }
 
     #region Overrides of ComponentBase
 
@@ -25,18 +24,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
         this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
-        
-        this.ChosenSettingsPanel = MessageBus.INSTANCE.CheckDeferredMessages<SettingsPanel>(Event.SWITCH_TO_SETTINGS_PANEL).FirstOrDefault();
-        // var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<SettingsPanel>(Event.SWITCH_TO_SETTINGS_PANEL).FirstOrDefault();
-        //if (deferredContent != default)
-        //{
-            //switch (deferredContent)
-            //{
-                // case SettingsPanel -am besten nicht alle individuell
-            //}
-            
-        //}
-        //chosenSettingsPanel = deferredContent;
         
         await base.OnInitializedAsync();
     }
