@@ -16,7 +16,7 @@ namespace AIStudio.Dialogs;
 public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public bool IsEditing { get; set; }

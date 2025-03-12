@@ -8,7 +8,7 @@ namespace AIStudio.Dialogs;
 public partial class DataSourceLocalFileInfoDialog : ComponentBase
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public DataSourceLocalFile DataSource { get; set; }

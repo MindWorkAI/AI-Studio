@@ -15,7 +15,7 @@ namespace AIStudio.Dialogs;
 public partial class ProviderDialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
     /// The provider's number in the list.

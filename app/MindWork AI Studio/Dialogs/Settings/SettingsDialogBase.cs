@@ -9,7 +9,7 @@ namespace AIStudio.Dialogs.Settings;
 public abstract class SettingsDialogBase : ComponentBase
 {
     [CascadingParameter]
-    protected MudDialogInstance MudDialog { get; set; } = null!;
+    protected IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
