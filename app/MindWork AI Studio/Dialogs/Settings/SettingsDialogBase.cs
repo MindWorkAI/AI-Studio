@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -15,7 +16,7 @@ public abstract class SettingsDialogBase : ComponentBase
     public Pages.Settings Settings { get; set; } = null!;
     
     [Parameter]
-    public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableLLMProvidersFunc { get; set; } = () => [];
+    public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
     
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
@@ -29,5 +30,24 @@ public abstract class SettingsDialogBase : ComponentBase
     [Inject]
     protected RustService RustService { get; init; } = null!;
     
+    #region Overrides of ComponentBase
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        this.UpdateProviders();
+        base.OnInitialized();
+    }
+
+    #endregion
+    
     protected void Close() => this.MudDialog.Cancel();
+    
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    private void UpdateProviders()
+    {
+        this.AvailableLLMProviders.Clear();
+        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+            this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
+    }
 }
