@@ -95,8 +95,6 @@ public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessage
     protected virtual bool ShowCopyResult => true;
     
     protected virtual bool ShowReset => true;
-    
-    protected virtual bool ShowAssistantSettings => true;
 
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
@@ -327,7 +325,6 @@ public abstract partial class AssistantBase<TSettings> : ComponentBase, IMessage
     protected async Task OpenSettingsDialog()
     {
         var dialogParameters = new DialogParameters();
-        
         await this.DialogService.ShowAsync<TSettings>("Open Settings", dialogParameters, DialogOptions.FULLSCREEN);
     }
     
