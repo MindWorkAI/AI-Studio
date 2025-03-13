@@ -294,6 +294,35 @@ jobs:
           } else {
             Write-Output "Tauri is already installed"
           }
+          
+      - name: Delete previous artifact, which may exist due to caching (macOS)
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
+
+      - name: Delete previous artifact, which may exist due to caching (Windows - MSI)
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
+        run: |
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
+          
+      - name: Delete previous artifact, which may exist due to caching (Windows - NSIS)
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
+        run: |
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
+          
+      - name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
+        run: |
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
+      
+      - name: Delete previous artifact, which may exist due to caching (Linux - AppImage)
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
+        run: |
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
       
       - name: Build Tauri project (Unix)
         if: matrix.platform != 'windows-latest'
@@ -509,6 +538,11 @@ jobs:
         if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
         run: |
           mv ${{ steps.build-linux-arm-runner.outputs.image }} ${{ runner.temp }}/linux_arm_qemu_cache.img
+          
+      - name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
             
       - name: Build Tauri project
         if: ${{ env.SKIP != 'true' }}
