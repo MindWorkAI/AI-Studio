@@ -538,11 +538,14 @@ jobs:
         if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
         run: |
           mv ${{ steps.build-linux-arm-runner.outputs.image }} ${{ runner.temp }}/linux_arm_qemu_cache.img
-          
-      - name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+      
+      #
+      # This step does not work, because we start a VM with qemu to run the build.
+      #
+      #- name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
+      #  if: ${{ env.SKIP != 'true' }}
+      #  run: |
+      #    rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
             
       - name: Build Tauri project
         if: ${{ env.SKIP != 'true' }}
@@ -568,6 +571,9 @@ jobs:
           
           shell: /bin/bash
           commands: |
+            # Delete all previous artifacts, which may exist due to caching:
+            rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+            
             export HOME=/root
             export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
             source "$HOME/.cargo/env"
