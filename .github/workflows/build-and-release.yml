@@ -347,7 +347,7 @@ jobs:
           cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
 
       - name: Upload artifact (macOS)
-        if: startsWith(matrix.platform, 'macos')
+        if: startsWith(matrix.platform, 'macos') && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
@@ -358,7 +358,7 @@ jobs:
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Windows - MSI)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi') && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
@@ -369,7 +369,7 @@ jobs:
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Windows - NSIS)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis') && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
@@ -380,7 +380,7 @@ jobs:
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Linux - Debian Package)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb') && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
@@ -390,7 +390,7 @@ jobs:
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
           
       - name: Upload artifact (Linux - AppImage)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage') && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
@@ -538,11 +538,14 @@ jobs:
         if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
         run: |
           mv ${{ steps.build-linux-arm-runner.outputs.image }} ${{ runner.temp }}/linux_arm_qemu_cache.img
-          
-      - name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+      
+      #
+      # This step does not work, because we start a VM with qemu to run the build.
+      #
+      #- name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
+      #  if: ${{ env.SKIP != 'true' }}
+      #  run: |
+      #    rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
             
       - name: Build Tauri project
         if: ${{ env.SKIP != 'true' }}
@@ -568,6 +571,9 @@ jobs:
           
           shell: /bin/bash
           commands: |
+            # Delete all previous artifacts, which may exist due to caching:
+            rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+            
             export HOME=/root
             export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
             source "$HOME/.cargo/env"
@@ -590,7 +596,7 @@ jobs:
           mv ${{ steps.build-linux-arm.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
       
       - name: Upload artifact (Linux - Debian Package)
-        if: ${{ env.SKIP != 'true' }}
+        if: ${{ env.SKIP != 'true' && startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb linux-arm64)
