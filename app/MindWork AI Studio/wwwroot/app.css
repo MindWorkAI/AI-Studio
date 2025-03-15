@@ -81,7 +81,7 @@
    and https://github.com/MindWorkAI/AI-Studio/issues/346
  */
 .mud-popover-provider > .mud-popover-open {
-    z-index: 1604;
+    z-index: 1604 !important;
 }
 
 /* Context div for inner scrolling component */
