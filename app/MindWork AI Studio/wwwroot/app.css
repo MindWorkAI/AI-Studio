@@ -76,6 +76,14 @@
     display: initial !important;
 }
 
+/* Fix for MudBlazor, tooltips and selects inside of popover
+   See issue https://github.com/MudBlazor/MudBlazor/issues/11015
+   and https://github.com/MindWorkAI/AI-Studio/issues/346
+ */
+.mud-popover-provider > .mud-popover-open {
+    z-index: 1604;
+}
+
 /* Context div for inner scrolling component */
 .inner-scrolling-context {
     display: flex;
