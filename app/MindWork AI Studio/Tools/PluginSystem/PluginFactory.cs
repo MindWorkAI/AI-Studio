@@ -30,6 +30,9 @@ public static class PluginFactory
         if (!Enum.TryParse<PluginType>(typeText, out var type))
             return new NoPlugin(state, $"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
+        if(type is PluginType.NONE)
+            return new NoPlugin(state, $"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
+        
         return type switch
         {
             PluginType.LANGUAGE => new PluginLanguage(state, type),
