@@ -7,6 +7,7 @@ public static class PluginTypeExtensions
         PluginType.LANGUAGE => "Language plugin",
         PluginType.ASSISTANT => "Assistant plugin",
         PluginType.CONFIGURATION => "Configuration plugin",
+        PluginType.THEME => "Theme plugin",
         
         _ => "Unknown plugin type",
     };

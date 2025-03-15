@@ -7,4 +7,5 @@ public enum PluginType
     LANGUAGE,
     ASSISTANT,
     CONFIGURATION,
+    THEME,
 }
