@@ -11,9 +11,6 @@ public abstract class SettingsDialogBase : ComponentBase
     [CascadingParameter]
     protected IMudDialogInstance MudDialog { get; set; } = null!;
     
-    [Parameter]
-    public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
-    
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
     
@@ -23,6 +20,8 @@ public abstract class SettingsDialogBase : ComponentBase
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
     
+    
+    protected readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
     
     #region Overrides of ComponentBase
 
@@ -40,8 +39,8 @@ public abstract class SettingsDialogBase : ComponentBase
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private void UpdateProviders()
     {
-        this.AvailableLLMProviders.Clear();
+        this.availableLLMProviders.Clear();
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-            this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
+            this.availableLLMProviders.Add(new (provider.InstanceName, provider.Id));
     }
 }
