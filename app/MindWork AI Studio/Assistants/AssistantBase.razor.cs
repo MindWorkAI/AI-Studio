@@ -314,7 +314,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     protected async Task OpenSettingsDialog()
     {
         var dialogParameters = new DialogParameters();
-        await this.DialogService.ShowAsync<TSettings>("Open Settings", dialogParameters, DialogOptions.FULLSCREEN);
+        await this.DialogService.ShowAsync<TSettings>(null, dialogParameters, DialogOptions.FULLSCREEN);
     }
     
     protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
