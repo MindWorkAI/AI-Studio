@@ -37,6 +37,26 @@
                         <MudSkeleton Width="80%"/>
                         <MudSkeleton Width="100%"/>
                     }
+                    else if (this.SettingsManager.ConfigurationData.DataSources.Count == 0)
+                    {
+                        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                            You haven't configured any data sources. To grant the AI access to your data, you need to
+                            add such a source. However, if you wish to use data from your device, you first have to set up
+                            a so-called embedding. This embedding is necessary so the AI can effectively search your data,
+                            find and retrieve the correct information required for each task. In addition to local data,
+                            you can also incorporate your company's data. To do so, your company must provide the data through
+                            an ERI (External Retrieval Interface).
+                        </MudJustifiedText>
+                        
+                        <MudStack StretchItems="StretchItems.None" AlignItems="AlignItems.Start">
+                            <MudButton Variant="Variant.Filled" OnClick="this.OpenSettingsDialog" StartIcon="@Icons.Material.Filled.Settings">
+                                Manage Data Sources
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Href="https://mindworkai.org/#eri---external-retrieval-interface" Target="_blank" StartIcon="@Icons.Material.Filled.Settings">
+                                Read more about ERI
+                            </MudButton>
+                        </MudStack>
+                    }
                     else if (this.showDataSourceSelection)
                     {
                         <MudTextSwitch Label="Are data sources enabled?" Value="@this.areDataSourcesEnabled" LabelOn="Yes, I want to use data sources." LabelOff="No, I don't want to use data sources." ValueChanged="@this.EnabledChanged"/>
