@@ -3,7 +3,7 @@
 @if (this.SelectionMode is DataSourceSelectionMode.SELECTION_MODE)
 {
     <div class="d-flex">
-        <MudTooltip Text="Select the data sources you want to use here." Placement="Placement.Top">
+        <MudTooltip Text="Select the data you want to use here." Placement="Placement.Top">
             @if (this.PopoverTriggerMode is PopoverTriggerMode.ICON)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.Source" Class="@this.PopoverButtonClasses" OnClick="@(() => this.ToggleDataSourceSelection())"/>
@@ -11,7 +11,7 @@
             else
             {
                 <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Source" Class="@this.PopoverButtonClasses" OnClick="@(() => this.ToggleDataSourceSelection())">
-                    Select data sources
+                    Select data
                 </MudButton>
             }
         </MudTooltip>
@@ -21,7 +21,13 @@
                 <MudCardHeader>
                     <CardHeaderContent>
                         <PreviewPrototype/>
-                        <MudText Typo="Typo.h5">Data Source Selection</MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h5">Data Source Selection</MudText>
+                            <MudSpacer/>
+                            <MudTooltip Text="Manage your data sources" Placement="Placement.Top">
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialog"/>
+                            </MudTooltip>
+                        </MudStack>
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent Style="min-width: 24em; max-height: 60vh; max-width: 45vw; overflow: auto;">
