@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
-public abstract class SettingsDialogBase : ComponentBase
+public abstract class SettingsDialogBase : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [CascadingParameter]
     protected IMudDialogInstance MudDialog { get; set; } = null!;
@@ -30,11 +30,15 @@ public abstract class SettingsDialogBase : ComponentBase
     #region Overrides of ComponentBase
 
     /// <inheritdoc />
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        // Register this component with the message bus:
+        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
+        
         this.UpdateProviders();
         this.UpdateEmbeddingProviders();
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     #endregion
@@ -55,4 +59,36 @@ public abstract class SettingsDialogBase : ComponentBase
         foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
             this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
+    
+    #region Implementation of IMessageBusReceiver
+
+    public string ComponentName => nameof(Settings);
+    
+    public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+                this.StateHasChanged();
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
+    }
+
+    #endregion
 }
