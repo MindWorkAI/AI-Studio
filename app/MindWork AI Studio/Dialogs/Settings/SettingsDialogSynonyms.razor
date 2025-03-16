@@ -17,7 +17,7 @@
                 <ConfigurationText OptionDescription="Preselect another language" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage = updatedText)"/>
             }
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.MinimumProviderConfidence = selectedValue)"/>
-            <ConfigurationProviderSelection Component="Components.SYNONYMS_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.SYNONYMS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Synonyms.PreselectedProvider = selectedValue)"/>
         </MudPaper>
     </DialogContent>
     <DialogActions>

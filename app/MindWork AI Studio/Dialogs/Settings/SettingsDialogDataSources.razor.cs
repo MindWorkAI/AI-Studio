@@ -1,35 +1,11 @@
-using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 
-using Microsoft.AspNetCore.Components;
+namespace AIStudio.Dialogs.Settings;
 
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
-
-namespace AIStudio.Components.Settings;
-
-public partial class SettingsPanelDataSources : SettingsPanelBase
+public partial class SettingsDialogDataSources : SettingsDialogBase
 {
-    [Parameter]
-    public List<ConfigurationSelectData<string>> AvailableDataSources { get; set; } = new();
-    
-    [Parameter]
-    public EventCallback<List<ConfigurationSelectData<string>>> AvailableDataSourcesChanged { get; set; }
-    
-    [Parameter]
-    public Func<IReadOnlyList<ConfigurationSelectData<string>>> AvailableEmbeddingsFunc { get; set; } = () => [];
-
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        await this.UpdateDataSources();
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
-
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
@@ -56,7 +32,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
+                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Add Local File as Data Source", localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -73,7 +49,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
+                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>("Add Local Directory as Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -107,7 +83,6 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
             return;
         
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
-        await this.UpdateDataSources();
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
@@ -122,7 +97,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
-                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
+                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Edit Local File Data Source", localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -138,7 +113,7 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
-                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingsFunc() }
+                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>("Edit Local Directory Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -170,7 +145,6 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
         
         this.SettingsManager.ConfigurationData.DataSources[this.SettingsManager.ConfigurationData.DataSources.IndexOf(dataSource)] = editedDataSource;
 
-        await this.UpdateDataSources();
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
@@ -210,7 +184,6 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
         {
             this.SettingsManager.ConfigurationData.DataSources.Remove(dataSource);
             await this.SettingsManager.StoreSettings();
-            await this.UpdateDataSources();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
     }
@@ -246,14 +219,5 @@ public partial class SettingsPanelDataSources : SettingsPanelBase
                 await this.DialogService.ShowAsync<DataSourceERI_V1InfoDialog>("ERI v1 Data Source Information", eriV1DialogParameters, DialogOptions.FULLSCREEN);
                 break;
         }
-    }
-    
-    private async Task UpdateDataSources()
-    {
-        this.AvailableDataSources.Clear();
-        foreach (var dataSource in this.SettingsManager.ConfigurationData.DataSources)
-            this.AvailableDataSources.Add(new (dataSource.Name, dataSource.Id));
-        
-        await this.AvailableDataSourcesChanged.InvokeAsync(this.AvailableDataSources);
     }
 }

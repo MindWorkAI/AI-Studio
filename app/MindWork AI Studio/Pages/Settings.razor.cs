@@ -14,7 +14,6 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     private List<ConfigurationSelectData<string>> availableLLMProviders = new();
     private List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
-    private List<ConfigurationSelectData<string>> availableDataSources = new();
 
     #region Overrides of ComponentBase
 
