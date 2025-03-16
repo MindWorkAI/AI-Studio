@@ -3,7 +3,6 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -40,9 +39,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
-    [Inject]
-    private DataSourceService DataSourceService { get; init; } = null!;
     
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
