@@ -572,7 +572,7 @@ jobs:
           shell: /bin/bash
           commands: |
             # Delete all previous artifacts, which may exist due to caching:
-            rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
+            rm -f runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
             
             export HOME=/root
             export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
