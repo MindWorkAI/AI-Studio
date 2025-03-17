@@ -6,7 +6,7 @@ namespace AIStudio.Tools.ERIClient.DataModel;
 public enum Role
 {
     NONE,
-    UNKNOW,
+    UNKNOWN,
     
     SYSTEM,
     USER,

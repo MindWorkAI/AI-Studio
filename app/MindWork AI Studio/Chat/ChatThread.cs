@@ -210,7 +210,7 @@ public sealed record ChatThread
                     ChatRole.SYSTEM => Role.SYSTEM,
                     ChatRole.NONE => Role.NONE,
                     
-                    _ => Role.UNKNOW,
+                    _ => Role.UNKNOWN,
                 },
                 
                 Content = contentData,
