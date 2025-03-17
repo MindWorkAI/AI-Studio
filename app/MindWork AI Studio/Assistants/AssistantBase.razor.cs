@@ -100,6 +100,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
     
+    private CancellationTokenSource? cancellationTokenSource;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -285,17 +286,28 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
 
         this.isProcessing = true;
         this.StateHasChanged();
-        
-        // Use the selected provider to get the AI response.
-        // By awaiting this line, we wait for the entire
-        // content to be streamed.
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
-        
+
+        using (this.cancellationTokenSource = new())
+        {
+            // Use the selected provider to get the AI response.
+            // By awaiting this line, we wait for the entire
+            // content to be streamed.
+            this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource.Token);
+        }
+
+        this.cancellationTokenSource = null;
         this.isProcessing = false;
         this.StateHasChanged();
         
         // Return the AI response:
         return aiText.Text;
+    }
+    
+    private async Task CancelStreaming()
+    {
+        if (this.cancellationTokenSource is not null)
+            if(!this.cancellationTokenSource.IsCancellationRequested)
+                await this.cancellationTokenSource.CancelAsync();
     }
     
     protected async Task CopyToClipboard()
