@@ -28,10 +28,17 @@
                         @this.Body
                     </CascadingValue>
                     
-                    <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
-                        @this.SubmitText
-                    </MudButton>
-                    
+                    <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
+                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                            @this.SubmitText
+                        </MudButton>
+                        @if (this.isProcessing && this.cancellationTokenSource is not null)
+                        {
+                            <MudTooltip Text="Stop generation">
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
+                            </MudTooltip>
+                        }
+                    </MudStack>
                 }
             </MudForm>
             <Issues IssuesData="@(this.inputIssues)"/>
