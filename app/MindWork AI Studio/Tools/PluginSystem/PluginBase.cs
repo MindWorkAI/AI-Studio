@@ -1,4 +1,5 @@
 using Lua;
+using Lua.Standard;
 
 // ReSharper disable MemberCanBePrivate.Global
 namespace AIStudio.Tools.PluginSystem;
@@ -84,6 +85,14 @@ public abstract class PluginBase
      
         // For security reasons, we don't want to allow the plugin to load modules:
         this.state.ModuleLoader = new NoModuleLoader();
+        
+        // Add some useful libraries:
+        this.state.OpenModuleLibrary();
+        this.state.OpenStringLibrary();
+        this.state.OpenTableLibrary();
+        this.state.OpenMathLibrary();
+        this.state.OpenBitwiseLibrary();
+        this.state.OpenCoroutineLibrary();
         
         var issues = new List<string>();
         if(!string.IsNullOrWhiteSpace(parseError))
