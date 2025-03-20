@@ -22,6 +22,7 @@ internal sealed class Program
     public static Encryption ENCRYPTION = null!;
     public static string API_TOKEN = null!;
     public static IServiceProvider SERVICE_PROVIDER = null!;
+    public static ILoggerFactory LOGGER_FACTORY = null!;
     
     public static async Task Main(string[] args)
     {
@@ -147,6 +148,9 @@ internal sealed class Program
         // Execute the builder to get the app:
         var app = builder.Build();
 
+        // Get the logging factory for e.g., static classes:
+        LOGGER_FACTORY = app.Services.GetRequiredService<ILoggerFactory>();
+        
         // Get a program logger:
         var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
         programLogger.LogInformation("Starting the AI Studio server.");
