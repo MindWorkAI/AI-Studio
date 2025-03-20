@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -80,6 +81,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
+        
+        // Ensure that all internal plugins are present:
+        await PluginFactory.EnsureInternalPlugins();
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);

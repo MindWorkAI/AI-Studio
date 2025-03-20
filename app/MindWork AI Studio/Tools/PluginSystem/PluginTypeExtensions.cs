@@ -11,4 +11,14 @@ public static class PluginTypeExtensions
         
         _ => "Unknown plugin type",
     };
+    
+    public static string GetDirectory(this PluginType type) => type switch
+    {
+        PluginType.LANGUAGE => "languages",
+        PluginType.ASSISTANT => "assistants",
+        PluginType.CONFIGURATION => "configurations",
+        PluginType.THEME => "themes",
+        
+        _ => "unknown",
+    };
 }
