@@ -1,11 +1,11 @@
 -- The ID for this plugin:
-ID = "97dfb1ba-50c4-4440-8dfa-6575daf543c8"
+ID = "43065dbc-78d0-45b7-92be-f14c2926e2dc"
 
 -- The name of the plugin:
-NAME = "MindWork AI Studio - US English"
+NAME = "MindWork AI Studio - German / Deutsch"
 
 -- The description of the plugin:
-DESCRIPTION = "This plugin provides US English language support for MindWork AI Studio."
+DESCRIPTION = "Dieses Plugin bietet deutsche Sprachunterstützung für MindWork AI Studio."
 
 -- The version of the plugin:
 VERSION = "1.0.0"
@@ -28,6 +28,6 @@ CATEGORIES = { "CORE" }
 -- The target groups for the plugin:
 TARGET_GROUPS = { "EVERYONE" }
 
-TEXT = {
-    Home_LetsGetStarted = "Let's get started",
+CONTENT = {
+    Home_LetsGetStarted = "Lass uns anfangen",
 }
