@@ -78,7 +78,7 @@ public abstract class PluginBase
     /// </remarks>
     public bool IsValid => this is not NoPlugin && this.baseIssues.Count == 0 && this.pluginIssues.Count == 0;
 
-    protected PluginBase(LuaState state, PluginType type, string parseError = "")
+    protected PluginBase(string path, LuaState state, PluginType type, string parseError = "")
     {
         this.state = state;
         this.Type = type;
@@ -93,6 +93,9 @@ public abstract class PluginBase
         this.state.OpenMathLibrary();
         this.state.OpenBitwiseLibrary();
         this.state.OpenCoroutineLibrary();
+     
+        // Add the module loader so that the plugin can load other Lua modules:
+        this.state.ModuleLoader = new PluginLoader(path);
         
         var issues = new List<string>();
         if(!string.IsNullOrWhiteSpace(parseError))

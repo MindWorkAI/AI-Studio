@@ -90,7 +90,7 @@ public static class PluginFactory
         
     }
     
-    public static async Task<PluginBase> Load(string code, CancellationToken cancellationToken = default)
+    public static async Task<PluginBase> Load(string path, string code, CancellationToken cancellationToken = default)
     {
         var state = LuaState.Create();
 
@@ -114,7 +114,7 @@ public static class PluginFactory
         
         return type switch
         {
-            PluginType.LANGUAGE => new PluginLanguage(state, type),
+            PluginType.LANGUAGE => new PluginLanguage(path, state, type),
             
             _ => new NoPlugin(state, "This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };

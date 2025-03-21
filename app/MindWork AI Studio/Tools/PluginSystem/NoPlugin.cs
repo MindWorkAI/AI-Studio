@@ -7,4 +7,4 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 /// <param name="state">The Lua state that the plugin was loaded into.</param>
 /// <param name="parsingError">The error message that occurred while parsing the plugin.</param>
-public sealed class NoPlugin(LuaState state, string parsingError) : PluginBase(state, PluginType.NONE, parsingError);
+public sealed class NoPlugin(LuaState state, string parsingError) : PluginBase(string.Empty, state, PluginType.NONE, parsingError);
