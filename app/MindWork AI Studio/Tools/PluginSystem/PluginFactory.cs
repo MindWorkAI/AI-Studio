@@ -100,23 +100,23 @@ public static class PluginFactory
         }
         catch (LuaParseException e)
         {
-            return new NoPlugin(state, $"Was not able to parse the plugin: {e.Message}");
+            return new NoPlugin($"Was not able to parse the plugin: {e.Message}");
         }
         
         if (!state.Environment["TYPE"].TryRead<string>(out var typeText))
-            return new NoPlugin(state, "TYPE does not exist or is not a valid string.");
+            return new NoPlugin("TYPE does not exist or is not a valid string.");
         
         if (!Enum.TryParse<PluginType>(typeText, out var type))
-            return new NoPlugin(state, $"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
+            return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
         if(type is PluginType.NONE)
-            return new NoPlugin(state, $"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
+            return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
         return type switch
         {
             PluginType.LANGUAGE => new PluginLanguage(path, state, type),
             
-            _ => new NoPlugin(state, "This plugin type is not supported yet. Please try again with a future version of AI Studio.")
+            _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
     }
 }
