@@ -92,6 +92,9 @@ public static class PluginFactory
     
     public static async Task<PluginBase> Load(string path, string code, CancellationToken cancellationToken = default)
     {
+        if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
+            return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
+        
         var state = LuaState.Create();
 
         try
