@@ -12,7 +12,7 @@ public abstract class PluginBase
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState state;
 
-    protected List<string> pluginIssues = [];
+    protected readonly List<string> pluginIssues = [];
     
     /// <summary>
     /// The type of this plugin.
@@ -177,7 +177,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the ID could not be read.</param>
     /// <param name="id">The read ID.</param>
     /// <returns>True, when the ID could be read successfully.</returns>
-    public bool TryInitId(out string message, out Guid id) 
+    private bool TryInitId(out string message, out Guid id) 
     {
         if (!this.state.Environment["ID"].TryRead<string>(out var idText))
         {
@@ -209,7 +209,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the name could not be read.</param>
     /// <param name="name">The read name.</param>
     /// <returns>True, when the name could be read successfully.</returns>
-    public bool TryInitName(out string message, out string name)
+    private bool TryInitName(out string message, out string name)
     {
         if (!this.state.Environment["NAME"].TryRead(out name))
         {
@@ -234,7 +234,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the description could not be read.</param>
     /// <param name="description">The read description.</param>
     /// <returns>True, when the description could be read successfully.</returns>
-    public bool TryInitDescription(out string message, out string description)
+    private bool TryInitDescription(out string message, out string description)
     {
         if (!this.state.Environment["DESCRIPTION"].TryRead(out description))
         {
@@ -259,7 +259,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the version could not be read.</param>
     /// <param name="version">The read version.</param>
     /// <returns>True, when the version could be read successfully.</returns>
-    public bool TryInitVersion(out string message, out PluginVersion version)
+    private bool TryInitVersion(out string message, out PluginVersion version)
     {
         if (!this.state.Environment["VERSION"].TryRead<string>(out var versionText))
         {
@@ -291,7 +291,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the authors could not be read.</param>
     /// <param name="authors">The read authors.</param>
     /// <returns>True, when the authors could be read successfully.</returns>
-    public bool TryInitAuthors(out string message, out string[] authors)
+    private bool TryInitAuthors(out string message, out string[] authors)
     {
         if (!this.state.Environment["AUTHORS"].TryRead<LuaTable>(out var authorsTable))
         {
@@ -322,7 +322,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the support contact could not be read.</param>
     /// <param name="contact">The read support contact.</param>
     /// <returns>True, when the support contact could be read successfully.</returns>
-    public bool TryInitSupportContact(out string message, out string contact)
+    private bool TryInitSupportContact(out string message, out string contact)
     {
         if (!this.state.Environment["SUPPORT_CONTACT"].TryRead(out contact))
         {
@@ -347,7 +347,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the source URL could not be read.</param>
     /// <param name="url">The read source URL.</param>
     /// <returns>True, when the source URL could be read successfully.</returns>
-    public bool TryInitSourceURL(out string message, out string url)
+    private bool TryInitSourceURL(out string message, out string url)
     {
         if (!this.state.Environment["SOURCE_URL"].TryRead(out url))
         {
@@ -373,7 +373,7 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the categories could not be read.</param>
     /// <param name="categories">The read categories.</param>
     /// <returns>True, when the categories could be read successfully.</returns>
-    public bool TryInitCategories(out string message, out PluginCategory[] categories)
+    private bool TryInitCategories(out string message, out PluginCategory[] categories)
     {
         if (!this.state.Environment["CATEGORIES"].TryRead<LuaTable>(out var categoriesTable))
         {
