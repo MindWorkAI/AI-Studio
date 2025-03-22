@@ -468,6 +468,54 @@ public abstract class PluginBase
         message = string.Empty;
         return true;
     }
+    
+    /// <summary>
+    /// Tries to initialize the UI text content of the plugin.
+    /// </summary>
+    /// <param name="message">The error message, when the UI text content could not be read.</param>
+    /// <param name="pluginContent">The read UI text content.</param>
+    /// <returns>True, when the UI text content could be read successfully.</returns>
+    protected bool TryInitUITextContent(out string message, out Dictionary<string, string> pluginContent)
+    {
+        if (!this.state.Environment["UI_TEXT_CONTENT"].TryRead<LuaTable>(out var textTable))
+        {
+            message = "The UI_TEXT_CONTENT table does not exist or is not a valid table.";
+            pluginContent = [];
+            return false;
+        }
+
+        this.ReadTextTable("root", textTable, out pluginContent);
+        
+        message = string.Empty;
+        return true;
+    }
+    
+    /// <summary>
+    /// Reads a flat or hierarchical text table.
+    /// </summary>
+    /// <param name="parent">The parent key(s).</param>
+    /// <param name="table">The table to read.</param>
+    /// <param name="tableContent">The read table content.</param>
+    protected void ReadTextTable(string parent, LuaTable table, out Dictionary<string, string> tableContent)
+    {
+        tableContent = [];
+        var lastKey = LuaValue.Nil;
+        while (table.TryGetNext(lastKey, out var pair))
+        {
+            var keyText = pair.Key.ToString();
+            if (pair.Value.TryRead<string>(out var value))
+                tableContent[$"{parent}::{keyText}"] = value;
+            
+            else if (pair.Value.TryRead<LuaTable>(out var t))
+            {
+                this.ReadTextTable($"{parent}::{keyText}", t, out var subContent);
+                foreach (var (k, v) in subContent)
+                    tableContent[k] = v;
+            }
+
+            lastKey = pair.Key;
+        }
+    }
 
     #endregion
 }
