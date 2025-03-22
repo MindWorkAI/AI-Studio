@@ -430,6 +430,44 @@ public abstract class PluginBase
         message = string.Empty;
         return true;
     }
+    
+    /// <summary>
+    /// Tries to read the maintenance status of the plugin.
+    /// </summary>
+    /// <param name="message">The error message, when the maintenance status could not be read.</param>
+    /// <param name="isMaintained">The read maintenance status.</param>
+    /// <returns>True, when the maintenance status could be read successfully.</returns>
+    private bool TryInitIsMaintained(out string message, out bool isMaintained)
+    {
+        if (!this.state.Environment["IS_MAINTAINED"].TryRead(out isMaintained))
+        {
+            isMaintained = false;
+            message = "The field IS_MAINTAINED does not exist or is not a valid boolean.";
+            return false;
+        }
+        
+        message = string.Empty;
+        return true;
+    }
+    
+    /// <summary>
+    /// Tries to read the deprecation message of the plugin.
+    /// </summary>
+    /// <param name="message">The error message, when the deprecation message could not be read.</param>
+    /// <param name="deprecationMessage">The read deprecation message.</param>
+    /// <returns>True, when the deprecation message could be read successfully.</returns>
+    private bool TryInitDeprecationMessage(out string message, out string? deprecationMessage)
+    {
+        if (!this.state.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
+        {
+            deprecationMessage = null;
+            message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This field is optional: use nil to indicate that the plugin is not deprecated.";
+            return false;
+        }
+        
+        message = string.Empty;
+        return true;
+    }
 
     #endregion
 }
