@@ -22,6 +22,12 @@
         "resolved": "1.12.0",
         "contentHash": "VHtVZmfoYhQyA/POvZRLuTpCz1zhzIDrdYRJIRV73e9wKAzjW71biYNOHOWx8MxEX3TE4TWVfx1QDRoZcj2AWw=="
       },
+      "LuaCSharp": {
+        "type": "Direct",
+        "requested": "[0.4.2, )",
+        "resolved": "0.4.2",
+        "contentHash": "wS0hp7EFx+llJ/U/7Ykz4FSmQf8DH4mNejwo5/h1KuFyguzGZbKhTO22X54pXnuqa5cIKfEfQ29dluHHnCX05Q=="
+      },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
         "requested": "[9.0.3, )",

@@ -41,8 +41,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Embed all files in wwwroot folder -->
         <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
@@ -52,6 +52,7 @@
       <PackageReference Include="MudBlazor" Version="8.4.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.0.0" />
       <PackageReference Include="ReverseMarkdown" Version="4.6.0" />
+      <PackageReference Include="LuaCSharp" Version="0.4.2" />
     </ItemGroup>
 
     <ItemGroup>
