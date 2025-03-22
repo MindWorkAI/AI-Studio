@@ -5,7 +5,7 @@
         <MudText Typo="Typo.body1" Class="mb-3">
             Use Case: this agent is used to select the appropriate data sources for the current prompt.
         </MudText>
-        <ConfigurationOption OptionDescription="Preselect data source selection options?" LabelOn="Options are preselected" LabelOff="No options are preselected" State="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = updatedState)" OptionHelp="When enabled, you can preselect some agent options. This is might be useful when you prefer a LLM."/>
+        <ConfigurationOption OptionDescription="Preselect data source selection options?" LabelOn="Options are preselected" LabelOff="No options are preselected" State="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = updatedState)" OptionHelp="When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM."/>
         <ConfigurationProviderSelection Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider = selectedValue)"/>
     </MudPaper>
 </ExpansionPanel>

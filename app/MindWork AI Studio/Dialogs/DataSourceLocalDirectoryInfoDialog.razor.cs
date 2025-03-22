@@ -12,7 +12,7 @@ namespace AIStudio.Dialogs;
 public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncDisposable
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public DataSourceLocalDirectory DataSource { get; set; }

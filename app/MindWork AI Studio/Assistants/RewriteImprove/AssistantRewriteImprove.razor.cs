@@ -1,8 +1,9 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.RewriteImprove;
 
-public partial class AssistantRewriteImprove : AssistantBaseCore
+public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogRewrite>
 {
     public override Tools.Components Component => Tools.Components.REWRITE_ASSISTANT;
     
@@ -43,7 +44,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore
     protected override string SubmitText => "Improve";
 
     protected override Func<Task> SubmitAction => this.RewriteText;
-    
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

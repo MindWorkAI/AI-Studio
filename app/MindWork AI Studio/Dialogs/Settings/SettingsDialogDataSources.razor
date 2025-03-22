@@ -1,0 +1,66 @@
+@using AIStudio.Settings.DataModel
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <PreviewPrototype/>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.IntegrationInstructions" Class="mr-2"/>
+            Configured Data Sources
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            You might configure different data sources. A data source can include one file, all files
+            in a directory, or data from your company. Later, you can incorporate these data sources
+            as needed when the AI requires this data to complete a certain task.
+        </MudJustifiedText>
+
+        <MudTable Items="@this.SettingsManager.ConfigurationData.DataSources" Hover="@true" Class="border-dashed border rounded-lg">
+            <ColGroup>
+                <col style="width: 3em;"/>
+                <col/>
+                <col style="width: 12em;"/>
+                <col style="width: 12em;"/>
+                <col style="width: 40em;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Embedding</MudTh>
+                <MudTh Style="text-align: left;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Num</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Type.GetDisplayName()</MudTd>
+                <MudTd>@this.GetEmbeddingName(context)</MudTd>
+                
+                <MudTd Style="text-align: left;">
+                    <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Info" Class="ma-2" OnClick="() => this.ShowInformation(context)"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditDataSource(context)">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteDataSource(context)">
+                        Delete
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if (this.SettingsManager.ConfigurationData.DataSources.Count == 0)
+        {
+            <MudText Typo="Typo.h6" Class="mt-3">No data sources configured yet.</MudText>
+        }
+        
+        <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Add Data Source" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.TopLeft" Class="mt-3 mb-6">
+            <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.ERI_V1)">External Data (ERI-Server v1)</MudMenuItem>
+            <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY)">Local Directory</MudMenuItem>
+            <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_FILE)">Local File</MudMenuItem>
+        </MudMenu>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>

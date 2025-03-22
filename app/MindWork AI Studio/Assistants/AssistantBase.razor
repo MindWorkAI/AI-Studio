@@ -1,4 +1,6 @@
 @using AIStudio.Chat
+@inherits AssistantLowerBase
+@typeparam TSettings
 
 <div class="inner-scrolling-context">
 
@@ -9,9 +11,16 @@
     <InnerScrolling>
         <ChildContent>
             <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
-                <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-6">
-                    @this.Description
-                </MudText>
+                <MudGrid Class="mb-2">
+                    <MudItem xs="10">
+                        <MudText Typo="Typo.body1" Align="Align.Justify">
+                            @this.Description
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="2" Class="d-flex justify-end align-start">
+                        <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
+                    </MudItem>
+                </MudGrid>
 
                 @if (this.Body is not null)
                 {
@@ -19,9 +28,17 @@
                         @this.Body
                     </CascadingValue>
                     
-                    <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" Class="mb-3" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
-                        @this.SubmitText
-                    </MudButton>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
+                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                            @this.SubmitText
+                        </MudButton>
+                        @if (this.isProcessing && this.cancellationTokenSource is not null)
+                        {
+                            <MudTooltip Text="Stop generation">
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
+                            </MudTooltip>
+                        }
+                    </MudStack>
                 }
             </MudForm>
             <Issues IssuesData="@(this.inputIssues)"/>
@@ -63,7 +80,7 @@
                 {
                     @if (this.ShowSendTo)
                     {
-                        <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                             @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                             {
                                 <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
@@ -93,7 +110,7 @@
                             break;
 
                         case SendToButton sendToButton:
-                            <MudMenu StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                            <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                                 @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                                 {
                                     <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">

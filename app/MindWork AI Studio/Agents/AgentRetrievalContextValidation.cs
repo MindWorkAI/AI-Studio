@@ -319,9 +319,6 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
         }
     }
     
-    // A wrapper around the span version, because we need to call this method from an async context.
-    private static string ExtractJson(string text) => ExtractJson(text.AsSpan()).ToString();
-    
     private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> input)
     {
         //

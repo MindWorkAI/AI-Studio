@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_LEGAL_CHECK)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogLegalCheck>
 
 @if (!this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)
 {

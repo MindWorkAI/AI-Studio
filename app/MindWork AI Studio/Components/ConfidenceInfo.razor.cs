@@ -59,7 +59,7 @@ public partial class ConfidenceInfo : ComponentBase, IMessageBusReceiver, IDispo
 
     private string GetCurrentConfidenceColor() => $"color: {this.currentConfidence.Level.GetColor(this.SettingsManager)};";
     
-    private string GetPopoverStyle() => $"border-color: {this.currentConfidence.Level.GetColor(this.SettingsManager)}; max-width: calc(35vw);";
+    private string GetPopoverStyle() => $"border-color: {this.currentConfidence.Level.GetColor(this.SettingsManager)};";
     
     #region Implementation of IMessageBusReceiver
 

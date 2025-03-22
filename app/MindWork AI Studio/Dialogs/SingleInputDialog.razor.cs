@@ -7,7 +7,7 @@ namespace AIStudio.Dialogs;
 public partial class SingleInputDialog : ComponentBase
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
     public string Message { get; set; } = string.Empty;

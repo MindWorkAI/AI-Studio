@@ -2,9 +2,11 @@ using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
+
 namespace AIStudio.Components;
 
-public partial class AssistantBlock : ComponentBase, IMessageBusReceiver, IDisposable
+public partial class AssistantBlock<TSettings> : ComponentBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
 {
     [Parameter]
     public string Name { get; set; } = string.Empty;
@@ -29,6 +31,16 @@ public partial class AssistantBlock : ComponentBase, IMessageBusReceiver, IDispo
     
     [Inject]
     private MessageBus MessageBus { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+    
+    private async Task OpenSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        
+        await this.DialogService.ShowAsync<TSettings>("Open Settings", dialogParameters, DialogOptions.FULLSCREEN);
+    }
 
     #region Overrides of ComponentBase
 
@@ -44,7 +56,7 @@ public partial class AssistantBlock : ComponentBase, IMessageBusReceiver, IDispo
     
     #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(AssistantBlock);
+    public string ComponentName => nameof(AssistantBlock<TSettings>);
     
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
@@ -64,7 +76,7 @@ public partial class AssistantBlock : ComponentBase, IMessageBusReceiver, IDispo
     }
 
     #endregion
-
+    
     private string BorderColor => this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayLight,

@@ -1,8 +1,11 @@
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
@@ -45,7 +48,7 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
     private DataSourceService DataSourceService { get; init; } = null!;
     
     [Inject]
-    private ILogger<DataSourceSelection> Logger { get; init; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
 
     private bool internalChange;
     private bool showDataSourceSelection;
@@ -131,6 +134,20 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
     }
 
     #endregion
+    
+    private async Task OpenSettingsDialog()
+    {
+        this.showDataSourceSelection = false;
+        this.StateHasChanged();
+        
+        var dialogParameters = new DialogParameters();
+        var dialogReference = await this.DialogService.ShowAsync<SettingsDialogDataSources>(null, dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+        await this.LoadAndApplyFilters();
+        
+        this.showDataSourceSelection = true;
+        this.StateHasChanged();
+    }
 
     private SelectionMode GetListSelectionMode() => this.aiBasedSourceSelection ? MudBlazor.SelectionMode.SingleSelection : MudBlazor.SelectionMode.MultiSelection;
     

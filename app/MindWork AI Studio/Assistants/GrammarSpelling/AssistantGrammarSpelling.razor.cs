@@ -1,8 +1,9 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.GrammarSpelling;
 
-public partial class AssistantGrammarSpelling : AssistantBaseCore
+public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialogGrammarSpelling>
 {
     public override Tools.Components Component => Tools.Components.GRAMMAR_SPELLING_ASSISTANT;
     
@@ -42,7 +43,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore
     protected override string SubmitText => "Proofread";
 
     protected override Func<Task> SubmitAction => this.ProofreadText;
-    
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,

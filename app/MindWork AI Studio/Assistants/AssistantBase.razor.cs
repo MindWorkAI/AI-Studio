@@ -9,12 +9,17 @@ using MudBlazor.Utilities;
 
 using Timer = System.Timers.Timer;
 
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
+
 namespace AIStudio.Assistants;
 
-public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver, IDisposable
+public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
 {
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
@@ -29,23 +34,16 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected RustService RustService { get; init; } = null!;
     
     [Inject]
-    protected DataSourceService DataSourceService { get; init; } = null!;
-    
-    [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
     
     [Inject]
-    protected ILogger<AssistantBase> Logger { get; init; } = null!;
+    protected ILogger<AssistantBase<TSettings>> Logger { get; init; } = null!;
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
     
     [Inject]
     private MessageBus MessageBus { get; init; } = null!;
-    
-    internal const string RESULT_DIV_ID = "assistantResult";
-    internal const string BEFORE_RESULT_DIV_ID = "beforeAssistantResult";
-    internal const string AFTER_RESULT_DIV_ID = "afterAssistantResult";
     
     protected abstract string Title { get; }
     
@@ -68,7 +66,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected abstract string SubmitText { get; }
     
     protected abstract Func<Task> SubmitAction { get; }
-
+    
     protected virtual bool SubmitDisabled => false;
     
     private protected virtual RenderFragment? Body => null;
@@ -92,8 +90,6 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
-
-    protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
     protected AIStudio.Settings.Provider providerSettings;
     protected MudForm? form;
@@ -104,6 +100,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
     
+    private CancellationTokenSource? cancellationTokenSource;
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -151,7 +148,7 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
     
     #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(AssistantBase);
+    public string ComponentName => nameof(AssistantBase<TSettings>);
     
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
@@ -289,17 +286,28 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
 
         this.isProcessing = true;
         this.StateHasChanged();
-        
-        // Use the selected provider to get the AI response.
-        // By awaiting this line, we wait for the entire
-        // content to be streamed.
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread);
-        
+
+        using (this.cancellationTokenSource = new())
+        {
+            // Use the selected provider to get the AI response.
+            // By awaiting this line, we wait for the entire
+            // content to be streamed.
+            this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource.Token);
+        }
+
+        this.cancellationTokenSource = null;
         this.isProcessing = false;
         this.StateHasChanged();
         
         // Return the AI response:
         return aiText.Text;
+    }
+    
+    private async Task CancelStreaming()
+    {
+        if (this.cancellationTokenSource is not null)
+            if(!this.cancellationTokenSource.IsCancellationRequested)
+                await this.cancellationTokenSource.CancelAsync();
     }
     
     protected async Task CopyToClipboard()
@@ -313,6 +321,12 @@ public abstract partial class AssistantBase : ComponentBase, IMessageBusReceiver
             return null;
         
         return icon;
+    }
+    
+    protected async Task OpenSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        await this.DialogService.ShowAsync<TSettings>(null, dialogParameters, DialogOptions.FULLSCREEN);
     }
     
     protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)

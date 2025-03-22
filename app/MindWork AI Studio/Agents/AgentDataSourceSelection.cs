@@ -199,7 +199,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                         // Call the ERI server to get the server description:
                         //
                         using var eriClient = ERIClientFactory.Get(eriDataSource.Version, eriDataSource)!;
-                        var authResponse = await eriClient.AuthenticateAsync(eriDataSource, rustService, token);
+                        var authResponse = await eriClient.AuthenticateAsync(rustService, cancellationToken: token);
                         if (authResponse.Successful)
                         {
                             var serverDescriptionResponse = await eriClient.GetDataSourceInfoAsync(token);
@@ -315,26 +315,6 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 return [];
         }
     }
-    
-    /// <summary>
-    /// Extracts the JSON list from the given text. The text may contain additional
-    /// information around the JSON list. The method tries to extract the JSON list
-    /// from the text.
-    /// </summary>
-    /// <remarks>
-    /// Algorithm: The method searches for the first line that contains only a '[' character.
-    /// Then, it searches for the first line that contains only a ']' character. The method
-    /// returns the text between these two lines (including the brackets). When the method
-    /// cannot find the JSON list, it returns an empty string.
-    /// <br/><br/>
-    /// This overload is using strings instead of spans. We can use this overload in any
-    /// async method. Thus, it is a wrapper around the span-based method. Yes, we are losing
-    /// the memory efficiency of the span-based method, but we still gain the performance
-    /// of the span-based method: the entire search algorithm is span-based.
-    /// </remarks>
-    /// <param name="text">The text that may contain the JSON list.</param>
-    /// <returns>The extracted JSON list.</returns>
-    private static string ExtractJson(string text) => ExtractJson(text.AsSpan()).ToString();
 
     /// <summary>
     /// Extracts the JSON list from the given text. The text may contain additional

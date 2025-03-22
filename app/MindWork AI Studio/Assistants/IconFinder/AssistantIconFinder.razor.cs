@@ -1,6 +1,8 @@
+using AIStudio.Dialogs.Settings;
+
 namespace AIStudio.Assistants.IconFinder;
 
-public partial class AssistantIconFinder : AssistantBaseCore
+public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconFinder>
 {
     public override Tools.Components Component => Tools.Components.ICON_FINDER_ASSISTANT;
 
@@ -32,7 +34,7 @@ public partial class AssistantIconFinder : AssistantBaseCore
     protected override string SubmitText => "Find Icon";
 
     protected override Func<Task> SubmitAction => this.FindIcon;
-    
+
     protected override void ResetForm()
     {
         this.inputContext = string.Empty;

@@ -12,6 +12,6 @@
     </MudSelect>
     @if (this.AllowOther && this.Value.Equals(this.OtherValue))
     {
-        <MudTextField T="string" Text="@this.OtherInput" TextChanged="this.OtherInputChanged" Validation="@this.ValidateOther" Label="@this.LabelOther" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Immediate="@true"/>
+        <MudTextField T="string" Text="@this.OtherInput" TextChanged="this.OtherValueChanged" Validation="@this.ValidateOther" Label="@this.LabelOther" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Immediate="@true"/>
     }
 </MudStack>

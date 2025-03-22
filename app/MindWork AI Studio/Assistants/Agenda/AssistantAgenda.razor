@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_AGENDA)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogAgenda>
 
 <MudTextField T="string" @bind-Text="@this.inputName" Validation="@this.ValidateName" Label="Meeting Name" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Tag" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Name the meeting, seminar, etc." Placeholder="Weekly jour fixe" Class="mb-3"/>
 <MudTextField T="string" @bind-Text="@this.inputTopic" Validation="@this.ValidateTopic" Label="Topic" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.EventNote" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?" Placeholder="Project meeting" Class="mb-3"/>

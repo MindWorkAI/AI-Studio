@@ -16,7 +16,7 @@ namespace AIStudio.Dialogs;
 public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public bool IsEditing { get; set; }
@@ -188,13 +188,8 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
         try
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(14));
-            var dataSource = new DataSourceERI_V1
-            {
-                Hostname = this.dataHostname,
-                Port = this.dataPort
-            };
-
-            using var client = ERIClientFactory.Get(ERIVersion.V1, dataSource);
+            this.DataSource = this.CreateDataSource();
+            using var client = ERIClientFactory.Get(ERIVersion.V1, this.DataSource);
             if(client is null)
             {
                 await this.form.Validate();
@@ -216,7 +211,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
 
             this.availableAuthMethods = authSchemes.Data!.Select(n => n.AuthMethod).ToList();
 
-            var loginResult = await client.AuthenticateAsync(this.DataSource, this.RustService, cts.Token);
+            var loginResult = await client.AuthenticateAsync(this.RustService, this.dataSecret, cts.Token);
             if (!loginResult.Successful)
             {
                 await this.form.Validate();

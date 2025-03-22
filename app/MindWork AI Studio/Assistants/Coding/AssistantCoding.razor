@@ -1,5 +1,5 @@
 ﻿@attribute [Route(Routes.ASSISTANT_CODING)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogCoding>
 
 <MudExpansionPanels Class="mb-3">
     @for (var contextIndex = 0; contextIndex < this.codingContexts.Count; contextIndex++)
