@@ -36,6 +36,6 @@ IS_MAINTAINED = true
 -- When the plugin is deprecated, this message will be shown to users:
 DEPRECATION_MESSAGE = nil
 
-CONTENT = {
+UI_TEXT_CONTENT = {
     HOME = CONTENT_HOME,
 }
