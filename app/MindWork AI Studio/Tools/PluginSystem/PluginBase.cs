@@ -63,6 +63,16 @@ public abstract class PluginBase
     /// The target groups of this plugin.
     /// </summary>
     public PluginTargetGroup[] TargetGroups { get; } = [];
+    
+    /// <summary>
+    /// True, when the plugin is maintained.
+    /// </summary>
+    public bool IsMaintained { get; }
+    
+    /// <summary>
+    /// The message that should be displayed when the plugin is deprecated.
+    /// </summary>
+    public string? DeprecationMessage { get; }
 
     /// <summary>
     /// The issues that occurred during the initialization of this plugin.
@@ -143,6 +153,16 @@ public abstract class PluginBase
         
         if(this.TryInitTargetGroups(out issue, out var targetGroups))
             this.TargetGroups = targetGroups;
+        else if(this is not NoPlugin)
+            issues.Add(issue);
+        
+        if(this.TryInitIsMaintained(out issue, out var isMaintained))
+            this.IsMaintained = isMaintained;
+        else if(this is not NoPlugin)
+            issues.Add(issue);
+        
+        if(this.TryInitDeprecationMessage(out issue, out var deprecationMessage))
+            this.DeprecationMessage = deprecationMessage;
         else if(this is not NoPlugin)
             issues.Add(issue);
         

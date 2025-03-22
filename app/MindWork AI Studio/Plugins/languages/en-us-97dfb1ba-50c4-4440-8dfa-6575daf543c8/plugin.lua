@@ -30,6 +30,12 @@ CATEGORIES = { "CORE" }
 -- The target groups for the plugin:
 TARGET_GROUPS = { "EVERYONE" }
 
+-- The flag for whether the plugin is maintained:
+IS_MAINTAINED = true
+
+-- When the plugin is deprecated, this message will be shown to users:
+DEPRECATION_MESSAGE = nil
+
 CONTENT = {
     HOME = CONTENT_HOME,
 }
