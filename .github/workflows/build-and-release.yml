@@ -304,14 +304,14 @@ jobs:
       - name: Delete previous artifact, which may exist due to caching (Windows - MSI)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
         run: |
-          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi"
-          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*"
+          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi" -ErrorAction SilentlyContinue
+          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*" -ErrorAction SilentlyContinue
           
       - name: Delete previous artifact, which may exist due to caching (Windows - NSIS)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
         run: |
-          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe"
-          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*"
+          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe" -ErrorAction SilentlyContinue
+          rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*" -ErrorAction SilentlyContinue
           
       - name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
