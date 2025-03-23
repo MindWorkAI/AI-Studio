@@ -1,5 +1,4 @@
 using Lua;
-using Lua.Standard;
 
 // ReSharper disable MemberCanBePrivate.Global
 namespace AIStudio.Tools.PluginSystem;
@@ -64,7 +63,7 @@ public abstract class PluginBase : IPluginMetadata
     /// </remarks>
     public bool IsValid => this is not NoPlugin && this.baseIssues.Count == 0 && this.pluginIssues.Count == 0;
 
-    protected PluginBase(string path, LuaState state, PluginType type, string parseError = "")
+    protected PluginBase(LuaState state, PluginType type, string parseError = "")
     {
         this.state = state;
         this.Type = type;

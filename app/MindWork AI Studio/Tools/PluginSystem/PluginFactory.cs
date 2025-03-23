@@ -132,7 +132,7 @@ public static partial class PluginFactory
         
         return type switch
         {
-            PluginType.LANGUAGE => new PluginLanguage(pluginPath, state, type),
+            PluginType.LANGUAGE => new PluginLanguage(state, type),
             
             _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
