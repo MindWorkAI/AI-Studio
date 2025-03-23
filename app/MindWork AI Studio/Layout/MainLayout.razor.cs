@@ -82,8 +82,19 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
         
-        // Ensure that all internal plugins are present:
-        await PluginFactory.EnsureInternalPlugins();
+        //
+        // We cannot process the plugins before the settings are loaded,
+        // and we know our data directory.
+        //
+        if(PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
+        {
+            // Ensure that all internal plugins are present:
+            await PluginFactory.EnsureInternalPlugins();
+            
+            // Load (but not start) all plugins:
+            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+        }
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
