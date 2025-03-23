@@ -8,6 +8,7 @@ public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
     private static readonly string DATA_DIR = SettingsManager.DataDirectory!;
+    private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
     
     public static async Task LoadAll()
     {

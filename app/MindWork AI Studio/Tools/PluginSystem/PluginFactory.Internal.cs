@@ -59,11 +59,10 @@ public static partial class PluginFactory
     {
         await using var inputStream = resourceInfo.CreateReadStream();
         
-        var pluginsRoot = Path.Join(DATA_DIR, "plugins");
-        var pluginTypeBasePath = Path.Join(pluginsRoot, metaData.Type.GetDirectory());
+        var pluginTypeBasePath = Path.Join(PLUGINS_ROOT, metaData.Type.GetDirectory());
         
-        if (!Directory.Exists(pluginsRoot))
-            Directory.CreateDirectory(pluginsRoot);
+        if (!Directory.Exists(PLUGINS_ROOT))
+            Directory.CreateDirectory(PLUGINS_ROOT);
         
         if (!Directory.Exists(pluginTypeBasePath))
             Directory.CreateDirectory(pluginTypeBasePath);
