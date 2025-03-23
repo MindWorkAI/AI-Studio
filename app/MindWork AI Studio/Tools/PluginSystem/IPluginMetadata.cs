@@ -60,5 +60,5 @@ public interface IPluginMetadata
     /// <summary>
     /// The message that should be displayed when the plugin is deprecated.
     /// </summary>
-    public string? DeprecationMessage { get; }
+    public string DeprecationMessage { get; }
 }

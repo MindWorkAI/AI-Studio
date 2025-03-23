@@ -38,7 +38,7 @@ public sealed class PluginMetadata(PluginBase plugin) : IPluginMetadata
     public bool IsMaintained { get; } = plugin.IsMaintained;
 
     /// <inheritdoc />
-    public string? DeprecationMessage { get; } = plugin.DeprecationMessage;
+    public string DeprecationMessage { get; } = plugin.DeprecationMessage;
 
     #endregion
 }

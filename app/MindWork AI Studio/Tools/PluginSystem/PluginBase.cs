@@ -48,7 +48,7 @@ public abstract class PluginBase : IPluginMetadata
     public bool IsMaintained { get; }
     
     /// <inheritdoc />
-    public string? DeprecationMessage { get; }
+    public string DeprecationMessage { get; } = string.Empty;
 
     /// <summary>
     /// The issues that occurred during the initialization of this plugin.
@@ -418,12 +418,12 @@ public abstract class PluginBase : IPluginMetadata
     /// <param name="message">The error message, when the deprecation message could not be read.</param>
     /// <param name="deprecationMessage">The read deprecation message.</param>
     /// <returns>True, when the deprecation message could be read successfully.</returns>
-    private bool TryInitDeprecationMessage(out string message, out string? deprecationMessage)
+    private bool TryInitDeprecationMessage(out string message, out string deprecationMessage)
     {
         if (!this.state.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
         {
-            deprecationMessage = null;
-            message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This field is optional: use nil to indicate that the plugin is not deprecated.";
+            deprecationMessage = string.Empty;
+            message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.";
             return false;
         }
         
