@@ -78,6 +78,10 @@ public static partial class PluginFactory
                 
                 case { IsValid: false }:
                     LOG.LogError($"Was not able to load plugin '{pluginMainFile}', because the Lua code is not a valid AI Studio plugin. There are {plugin.Issues.Count()} issues to fix.");
+                    #if DEBUG
+                    foreach (var pluginIssue in plugin.Issues)
+                        LOG.LogError($"Plugin issue: {pluginIssue}");
+                    #endif
                     continue;
 
                 case { IsMaintained: false }:
