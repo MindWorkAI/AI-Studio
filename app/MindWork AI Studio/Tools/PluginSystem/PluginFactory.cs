@@ -10,10 +10,19 @@ namespace AIStudio.Tools.PluginSystem;
 public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
+    
     private static readonly string DATA_DIR = SettingsManager.DataDirectory!;
+    
     private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
+    
     private static readonly Dictionary<IPluginMetadata, string> AVAILABLE_PLUGINS = new();
+    
     private static readonly SettingsManager SETTINGS = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    
+    private static readonly Guid[] MANDATORY_INTERNAL_PLUGINS =
+    [
+        new("97dfb1ba-50c4-4440-8dfa-6575daf543c8"), // Language EN-US (base language)
+    ];
     
     /// <summary>
     /// A list of all available plugins.
@@ -23,12 +32,12 @@ public static partial class PluginFactory
     /// <summary>
     /// A list of all enabled plugins.
     /// </summary>
-    public static IEnumerable<IPluginMetadata> EnabledPlugins => AVAILABLE_PLUGINS.Keys.Where(x => SETTINGS.ConfigurationData.EnabledPlugins.Contains(x.Id));
+    public static IEnumerable<IPluginMetadata> EnabledPlugins => AVAILABLE_PLUGINS.Keys.Where(x => SETTINGS.ConfigurationData.EnabledPlugins.Contains(x.Id) || MANDATORY_INTERNAL_PLUGINS.Contains(x.Id));
     
     /// <summary>
     /// A list of all disabled plugins.
     /// </summary>
-    public static IEnumerable<IPluginMetadata> DisabledPlugins => AVAILABLE_PLUGINS.Keys.Where(x => !SETTINGS.ConfigurationData.EnabledPlugins.Contains(x.Id));
+    public static IEnumerable<IPluginMetadata> DisabledPlugins => AVAILABLE_PLUGINS.Keys.Where(x => !(SETTINGS.ConfigurationData.EnabledPlugins.Contains(x.Id) || MANDATORY_INTERNAL_PLUGINS.Contains(x.Id)));
     
     /// <summary>
     /// Try to load all plugins from the plugins directory.
