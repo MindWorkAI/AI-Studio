@@ -3,6 +3,7 @@ using System.Text;
 using AIStudio.Settings;
 
 using Lua;
+using Lua.Standard;
 
 namespace AIStudio.Tools.PluginSystem;
 
@@ -94,6 +95,17 @@ public static partial class PluginFactory
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
         
         var state = LuaState.Create();
+        
+        // Add the module loader so that the plugin can load other Lua modules:
+        state.ModuleLoader = new PluginLoader(pluginPath);
+        
+        // Add some useful libraries:
+        state.OpenModuleLibrary();
+        state.OpenStringLibrary();
+        state.OpenTableLibrary();
+        state.OpenMathLibrary();
+        state.OpenBitwiseLibrary();
+        state.OpenCoroutineLibrary();
 
         try
         {

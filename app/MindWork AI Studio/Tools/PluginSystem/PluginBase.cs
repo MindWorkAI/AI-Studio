@@ -68,20 +68,6 @@ public abstract class PluginBase : IPluginMetadata
     {
         this.state = state;
         this.Type = type;
-     
-        // For security reasons, we don't want to allow the plugin to load modules:
-        this.state.ModuleLoader = new NoModuleLoader();
-        
-        // Add some useful libraries:
-        this.state.OpenModuleLibrary();
-        this.state.OpenStringLibrary();
-        this.state.OpenTableLibrary();
-        this.state.OpenMathLibrary();
-        this.state.OpenBitwiseLibrary();
-        this.state.OpenCoroutineLibrary();
-     
-        // Add the module loader so that the plugin can load other Lua modules:
-        this.state.ModuleLoader = new PluginLoader(path);
         
         var issues = new List<string>();
         if(!string.IsNullOrWhiteSpace(parseError))
