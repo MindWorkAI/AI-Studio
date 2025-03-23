@@ -182,12 +182,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
             yield return new("Writer", Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
 
+        if (PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
+            yield return new("Plugins", Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
+        
         yield return new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
         yield return new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
-
-        if (PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
-            yield return new("Plugins", Icons.Material.Filled.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
-
         yield return new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
     }
     
