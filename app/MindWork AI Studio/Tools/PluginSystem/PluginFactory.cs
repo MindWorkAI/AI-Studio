@@ -63,7 +63,8 @@ public static partial class PluginFactory
             
             LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
             var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
-            var plugin = await Load(pluginMainFile, code, cancellationToken);
+            var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
+            var plugin = await Load(pluginPath, code, cancellationToken);
             
             switch (plugin)
             {
@@ -89,7 +90,7 @@ public static partial class PluginFactory
         }
     }
     
-    public static async Task<PluginBase> Load(string path, string code, CancellationToken cancellationToken = default)
+    public static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
     {
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
@@ -131,7 +132,7 @@ public static partial class PluginFactory
         
         return type switch
         {
-            PluginType.LANGUAGE => new PluginLanguage(path, state, type),
+            PluginType.LANGUAGE => new PluginLanguage(pluginPath, state, type),
             
             _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
