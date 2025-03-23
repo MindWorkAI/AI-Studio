@@ -7,71 +7,47 @@ namespace AIStudio.Tools.PluginSystem;
 /// <summary>
 /// Represents the base of any AI Studio plugin.
 /// </summary>
-public abstract class PluginBase
+public abstract class PluginBase : IPluginMetadata
 {
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState state;
 
     protected readonly List<string> pluginIssues = [];
     
-    /// <summary>
-    /// The type of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginType Type { get; }
     
-    /// <summary>
-    /// The ID of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public Guid Id { get; }
     
-    /// <summary>
-    /// The name of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string Name { get; } = string.Empty;
     
-    /// <summary>
-    /// The description of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string Description { get; } = string.Empty;
     
-    /// <summary>
-    /// The version of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginVersion Version { get; }
 
-    /// <summary>
-    /// The authors of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string[] Authors { get; } = [];
     
-    /// <summary>
-    /// The support contact for this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string SupportContact { get; } = string.Empty;
     
-    /// <summary>
-    /// The source URL of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string SourceURL { get; } = string.Empty;
     
-    /// <summary>
-    /// The categories of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginCategory[] Categories { get; } = [];
     
-    /// <summary>
-    /// The target groups of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginTargetGroup[] TargetGroups { get; } = [];
     
-    /// <summary>
-    /// True, when the plugin is maintained.
-    /// </summary>
+    /// <inheritdoc />
     public bool IsMaintained { get; }
     
-    /// <summary>
-    /// The message that should be displayed when the plugin is deprecated.
-    /// </summary>
+    /// <inheritdoc />
     public string? DeprecationMessage { get; }
 
     /// <summary>
