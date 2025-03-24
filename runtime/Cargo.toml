@@ -30,6 +30,10 @@ pbkdf2 = "0.12.2"
 hmac = "0.12.1"
 sha2 = "0.10.8"
 rcgen = { version = "0.13.2", features = ["pem"] }
+file-format = "0.26.0"
+calamine = { version = "0.26.1", features = ["dates"] }
+chrono = "0.4.39"
+pdfium-render = "0.8.27"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 url = "2.5"
