@@ -2,11 +2,10 @@
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
+    <MudText Typo="Typo.h3" Class="mb-2">
         Writer
     </MudText>
-
-    <PreviewExperimental/>
+    <PreviewExperimental ApplyInnerScrollingFix="true"/>
 
     <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
     <InnerScrolling>

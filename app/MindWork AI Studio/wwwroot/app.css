@@ -45,6 +45,10 @@
     height: 200%;
 }
 
+.mud-popover-open.InnerScrollingFix {
+    left: 0 !important;
+}
+
 :root {
     --confidence-color: #000000;
 }
