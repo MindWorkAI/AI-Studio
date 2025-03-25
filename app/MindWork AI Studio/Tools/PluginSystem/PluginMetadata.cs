@@ -5,6 +5,9 @@ public sealed class PluginMetadata(PluginBase plugin) : IPluginMetadata
     #region Implementation of IPluginMetadata
 
     /// <inheritdoc />
+    public string IconSVG { get; } = plugin.IconSVG;
+    
+    /// <inheritdoc />
     public PluginType Type { get; } = plugin.Type;
 
     /// <inheritdoc />

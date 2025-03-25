@@ -35,6 +35,16 @@
     margin-top: 4px;
 }
 
+.plugin-icon-container {
+    width: var(--mud-icon-size-large);
+    height: var(--mud-icon-size-large);
+}
+
+.plugin-icon-container svg {
+    width: 200%;
+    height: 200%;
+}
+
 :root {
     --confidence-color: #000000;
 }

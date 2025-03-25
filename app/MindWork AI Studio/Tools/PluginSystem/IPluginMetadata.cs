@@ -3,6 +3,11 @@ namespace AIStudio.Tools.PluginSystem;
 public interface IPluginMetadata
 {
     /// <summary>
+    /// The icon of this plugin.
+    /// </summary>
+    public string IconSVG { get; }
+    
+    /// <summary>
     /// The type of this plugin.
     /// </summary>
     public PluginType Type { get; }

@@ -1,4 +1,5 @@
 require("contentHome")
+require("icon")
 
 -- The ID for this plugin:
 ID = "43065dbc-78d0-45b7-92be-f14c2926e2dc"
@@ -39,3 +40,5 @@ DEPRECATION_MESSAGE = ""
 UI_TEXT_CONTENT = {
     HOME = CONTENT_HOME,
 }
+
+ICON_SVG = SVG

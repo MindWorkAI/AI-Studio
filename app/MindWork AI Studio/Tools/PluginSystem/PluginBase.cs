@@ -12,6 +12,9 @@ public abstract class PluginBase : IPluginMetadata
     protected readonly LuaState state;
 
     protected readonly List<string> pluginIssues = [];
+
+    /// <inheritdoc />
+    public string IconSVG { get; }
     
     /// <inheritdoc />
     public PluginType Type { get; }
@@ -71,6 +74,10 @@ public abstract class PluginBase : IPluginMetadata
         var issues = new List<string>();
         if(!string.IsNullOrWhiteSpace(parseError))
             issues.Add(parseError);
+
+        // Notice: when no icon is specified, the default icon will be used.
+        this.TryInitIconSVG(out _, out var iconSVG);
+        this.IconSVG = iconSVG;
         
         if(this.TryInitId(out var issue, out var id))
             this.Id = id;
@@ -423,6 +430,28 @@ public abstract class PluginBase : IPluginMetadata
         {
             deprecationMessage = string.Empty;
             message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.";
+            return false;
+        }
+        
+        message = string.Empty;
+        return true;
+    }
+    
+    /// <summary>
+    /// Tries to initialize the icon of the plugin.
+    /// </summary>
+    /// <remarks>
+    /// When no icon is specified, the default icon will be used.
+    /// </remarks>
+    /// <param name="message">The error message, when the icon could not be read.</param>
+    /// <param name="iconSVG">The read icon as SVG.</param>
+    /// <returns>True, when the icon could be read successfully.</returns>
+    private bool TryInitIconSVG(out string message, out string iconSVG)
+    {
+        if (!this.state.Environment["ICON_SVG"].TryRead(out iconSVG))
+        {
+            iconSVG = Icons.Material.TwoTone.Extension;
+            message = "The field ICON_SVG does not exist or is not a valid string.";
             return false;
         }
         
