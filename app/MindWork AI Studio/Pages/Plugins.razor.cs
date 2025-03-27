@@ -22,6 +22,8 @@ public partial class Plugins : ComponentBase
     {
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
+            Expandable = true,
+            IsInitiallyExpanded = true,
             Selector = pluginMeta =>
             {
                 if (pluginMeta.IsInternal)

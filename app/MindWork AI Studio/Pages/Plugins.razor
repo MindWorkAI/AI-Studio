@@ -11,15 +11,17 @@
         
         <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="border-dashed border rounded-lg">
             <ColGroup>
+                <col style="width: 2em;" />
+                <col/>
                 <col/>
                 <col style="width: 12em;"/>
             </ColGroup>
             <HeaderContent>
-                <MudTh>Plugin</MudTh>
+                <MudTh colspan="2">Plugins</MudTh>
                 <MudTh>Actions</MudTh>
             </HeaderContent>
             <GroupHeaderTemplate>
-                <MudTh Class="mud-table-cell-custom-group" colspan="2">
+                <MudTh Class="mud-table-cell-custom-group" colspan="3">
                     @switch (context.Key)
                     {
                         case GROUP_ENABLED:
@@ -43,22 +45,26 @@
                 </MudTh>
             </GroupHeaderTemplate>
             <RowTemplate>
-                <MudStack Row="true">
-                    <MudAvatar Size="Size.Medium" Class="align-content-stretch me-4">
+                <MudTd>
+                    <MudAvatar Size="Size.Medium" Class="align-content-stretch">
                         <div class="plugin-icon-container">
                             @((MarkupString)context.IconSVG)
                         </div>
                     </MudAvatar>
-                    <MudStack Class="mb-2 mt-2">
+                </MudTd>
+                <MudTd>
+                    <MudStack>
                         <MudText Typo="Typo.h6">
                             @context.Name
                         </MudText>
-                        <MudJustifiedText Typo="Typo.body1">
+                        <MudText Typo="Typo.body1">
                             @context.Description
-                        </MudJustifiedText>
+                        </MudText>
                     </MudStack>
-                </MudStack>
-                
+                </MudTd>
+                <MudTd>
+                    Actions...
+                </MudTd>
             </RowTemplate>
         </MudTable>
     </InnerScrolling>
