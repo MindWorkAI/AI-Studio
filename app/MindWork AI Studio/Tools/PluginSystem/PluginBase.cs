@@ -458,6 +458,8 @@ public abstract class PluginBase : IPluginMetadata
     /// <param name="message">The error message, when the icon could not be read.</param>
     /// <param name="iconSVG">The read icon as SVG.</param>
     /// <returns>True, when the icon could be read successfully.</returns>
+    // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Local
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private bool TryInitIconSVG(out string message, out string iconSVG)
     {
         if (!this.state.Environment["ICON_SVG"].TryRead(out iconSVG))
