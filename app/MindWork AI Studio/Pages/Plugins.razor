@@ -8,27 +8,58 @@
     <PreviewExperimental ApplyInnerScrollingFix="true"/>
     
     <InnerScrolling>
-        <MudList T="string">
-            @foreach (var plugin in PluginFactory.AvailablePlugins)
-            {
-                <MudListItem>
-                    <AvatarContent>
-                        <MudAvatar Size="Size.Large" Class="align-content-stretch me-4">
-                            <div class="plugin-icon-container">
-                                @((MarkupString)plugin.IconSVG)
-                            </div>
-                        </MudAvatar>
-                    </AvatarContent>
-                    <ChildContent>
+        
+        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="border-dashed border rounded-lg">
+            <ColGroup>
+                <col/>
+                <col style="width: 12em;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>Plugin</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <GroupHeaderTemplate>
+                <MudTh Class="mud-table-cell-custom-group" colspan="2">
+                    @switch (context.Key)
+                    {
+                        case GROUP_ENABLED:
+                            <MudText Typo="Typo.h6" Class="mb-2">
+                                Enabled Plugins
+                            </MudText>
+                            break;
+                            
+                        case GROUP_DISABLED:
+                            <MudText Typo="Typo.h6" Class="mb-2">
+                                Disabled Plugins
+                            </MudText>
+                            break;
+                            
+                        case GROUP_INTERNAL:
+                            <MudText Typo="Typo.h6" Class="mb-2">
+                                Internal Plugins
+                            </MudText>
+                            break;
+                    }
+                </MudTh>
+            </GroupHeaderTemplate>
+            <RowTemplate>
+                <MudStack Row="true">
+                    <MudAvatar Size="Size.Medium" Class="align-content-stretch me-4">
+                        <div class="plugin-icon-container">
+                            @((MarkupString)context.IconSVG)
+                        </div>
+                    </MudAvatar>
+                    <MudStack Class="mb-2 mt-2">
                         <MudText Typo="Typo.h6">
-                            @plugin.Name
+                            @context.Name
                         </MudText>
                         <MudJustifiedText Typo="Typo.body1">
-                            @plugin.Description
+                            @context.Description
                         </MudJustifiedText>
-                    </ChildContent>
-                </MudListItem>
-            }
-        </MudList>
+                    </MudStack>
+                </MudStack>
+                
+            </RowTemplate>
+        </MudTable>
     </InnerScrolling>
 </div>
