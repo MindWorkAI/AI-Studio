@@ -17,13 +17,6 @@ public static partial class PluginFactory
     
     private static readonly Dictionary<IPluginMetadata, string> AVAILABLE_PLUGINS = new();
     
-    private static readonly SettingsManager SETTINGS = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
-    
-    private static readonly Guid[] MANDATORY_INTERNAL_PLUGINS =
-    [
-        new("97dfb1ba-50c4-4440-8dfa-6575daf543c8"), // Language EN-US (base language)
-    ];
-    
     /// <summary>
     /// A list of all available plugins.
     /// </summary>

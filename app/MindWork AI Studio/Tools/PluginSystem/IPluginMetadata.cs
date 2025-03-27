@@ -66,4 +66,9 @@ public interface IPluginMetadata
     /// The message that should be displayed when the plugin is deprecated.
     /// </summary>
     public string DeprecationMessage { get; }
+
+    /// <summary>
+    /// True, when the plugin is AI Studio internal.
+    /// </summary>
+    public bool IsInternal { get; }
 }

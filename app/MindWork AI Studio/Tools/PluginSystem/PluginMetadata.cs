@@ -43,5 +43,8 @@ public sealed class PluginMetadata(PluginBase plugin) : IPluginMetadata
     /// <inheritdoc />
     public string DeprecationMessage { get; } = plugin.DeprecationMessage;
 
+    /// <inheritdoc />
+    public bool IsInternal { get; } = plugin.IsInternal;
+
     #endregion
 }
