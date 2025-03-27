@@ -228,18 +228,20 @@ else
         <HeaderContent>
             <MudTh>Name</MudTh>
             <MudTh>Type</MudTh>
-            <MudTh Style="text-align: left;">Actions</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.EmbeddingName</MudTd>
             <MudTd>@context.EmbeddingType</MudTd>
-            <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditEmbedding(context)">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteEmbedding(context)">
-                    Delete
-                </MudButton>
+            <MudTd>
+                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditEmbedding(context)">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteEmbedding(context)">
+                        Delete
+                    </MudButton>
+                </MudStack>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -274,17 +276,19 @@ else
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
-            <MudTh Style="text-align: left;">Actions</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
-            <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditRetrievalProcess(context)">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteRetrievalProcess(context)">
-                    Delete
-                </MudButton>
+            <MudTd>
+                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditRetrievalProcess(context)">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteRetrievalProcess(context)">
+                        Delete
+                    </MudButton>
+                </MudStack>
             </MudTd>
         </RowTemplate>
     </MudTable>
