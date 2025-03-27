@@ -8,12 +8,6 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 public abstract partial class PluginBase : IPluginMetadata
 {
-    private static readonly Guid[] MANDATORY_INTERNAL_PLUGINS =
-    [
-        new("97dfb1ba-50c4-4440-8dfa-6575daf543c8"), // Language EN-US (base language)
-        new("43065dbc-78d0-45b7-92be-f14c2926e2dc"), // Language DE-DE
-    ];
-    
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState state;
 
@@ -75,7 +69,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// </remarks>
     public bool IsValid => this is not NoPlugin && this.baseIssues.Count == 0 && this.pluginIssues.Count == 0;
 
-    protected PluginBase(LuaState state, PluginType type, string parseError = "")
+    protected PluginBase(bool isInternal, LuaState state, PluginType type, string parseError = "")
     {
         this.state = state;
         this.Type = type;
@@ -91,7 +85,7 @@ public abstract partial class PluginBase : IPluginMetadata
         if(this.TryInitId(out var issue, out var id))
         {
             this.Id = id;
-            this.IsInternal = MANDATORY_INTERNAL_PLUGINS.Contains(id);
+            this.IsInternal = isInternal;
         }
         else if(this is not NoPlugin)
             issues.Add(issue);

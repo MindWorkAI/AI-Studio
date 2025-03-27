@@ -46,7 +46,7 @@ public static partial class PluginFactory
                     continue;
                 }
                 
-                await CopyPluginFile(content, metaData);
+                await CopyInternalPluginFile(content, metaData);
             }
         }
         catch
@@ -55,14 +55,14 @@ public static partial class PluginFactory
         }
     }
 
-    private static async Task CopyPluginFile(IFileInfo resourceInfo, InternalPluginData metaData)
+    private static async Task CopyInternalPluginFile(IFileInfo resourceInfo, InternalPluginData metaData)
     {
         await using var inputStream = resourceInfo.CreateReadStream();
         
-        var pluginTypeBasePath = Path.Join(PLUGINS_ROOT, metaData.Type.GetDirectory());
+        var pluginTypeBasePath = Path.Join(INTERNAL_PLUGINS_ROOT, metaData.Type.GetDirectory());
         
-        if (!Directory.Exists(PLUGINS_ROOT))
-            Directory.CreateDirectory(PLUGINS_ROOT);
+        if (!Directory.Exists(INTERNAL_PLUGINS_ROOT))
+            Directory.CreateDirectory(INTERNAL_PLUGINS_ROOT);
         
         if (!Directory.Exists(pluginTypeBasePath))
             Directory.CreateDirectory(pluginTypeBasePath);

@@ -14,6 +14,8 @@ public static partial class PluginFactory
     private static readonly string DATA_DIR = SettingsManager.DataDirectory!;
     
     private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
+    
+    private static readonly string INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
 
     private static readonly List<IPluginMetadata> AVAILABLE_PLUGINS = [];
     
@@ -85,8 +87,8 @@ public static partial class PluginFactory
             AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin));
         }
     }
-    
-    public static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
+
+    private static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
     {
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
@@ -126,9 +128,10 @@ public static partial class PluginFactory
         if(type is PluginType.NONE)
             return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
+        var isInternal = pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
         return type switch
         {
-            PluginType.LANGUAGE => new PluginLanguage(state, type),
+            PluginType.LANGUAGE => new PluginLanguage(isInternal, state, type),
             
             _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
