@@ -1,5 +1,11 @@
-SVG = [[<svg width="1000" height="600" viewBox="0 0 5 3">
-        	<rect id="black_stripe" width="5" height="3" y="0" x="0" fill="#000"/>
-        	<rect id="red_stripe" width="5" height="2" y="1" x="0" fill="#D00"/>
-        	<rect id="gold_stripe" width="5" height="1" y="2" x="0" fill="#FFCE00"/>
+SVG = [[<svg viewBox="0 0 600 600" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2">
+            <path style="fill:none" d="M0 0h600v600H0z"/>
+            <clipPath id="a">
+                <path d="M0 0h600v600H0z"/>
+            </clipPath>
+            <g clip-path="url(#a)">
+                <path d="M17.467 200C58.688 83.529 169.851 0 300.369 0S542.05 83.529 583.271 200c11.072 31.284 17.098 64.944 17.098 100s-6.026 68.716-17.098 100C542.05 516.471 430.887 600 300.369 600S58.688 516.471 17.467 400C6.395 368.716.369 335.056.369 300s6.026-68.716 17.098-100Z"/>
+                <path d="M583.271 200c11.072 31.284 17.098 64.944 17.098 100s-6.026 68.716-17.098 100C542.05 516.471 430.887 600 300.369 600S58.688 516.471 17.467 400C6.395 368.716.369 335.056.369 300s6.026-68.716 17.098-100h565.804Z" style="fill:#d00"/>
+                <path d="M583.271 400C542.05 516.471 430.887 600 300.369 600S58.688 516.471 17.467 400h565.804Z" style="fill:#ffce00"/>
+            </g>
         </svg>]]

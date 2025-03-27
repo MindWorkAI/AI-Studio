@@ -6,7 +6,7 @@ namespace AIStudio.Tools.PluginSystem;
 /// <summary>
 /// Represents the base of any AI Studio plugin.
 /// </summary>
-public abstract class PluginBase : IPluginMetadata
+public abstract partial class PluginBase : IPluginMetadata
 {
     private static readonly Guid[] MANDATORY_INTERNAL_PLUGINS =
     [
@@ -448,31 +448,7 @@ public abstract class PluginBase : IPluginMetadata
         message = string.Empty;
         return true;
     }
-    
-    /// <summary>
-    /// Tries to initialize the icon of the plugin.
-    /// </summary>
-    /// <remarks>
-    /// When no icon is specified, the default icon will be used.
-    /// </remarks>
-    /// <param name="message">The error message, when the icon could not be read.</param>
-    /// <param name="iconSVG">The read icon as SVG.</param>
-    /// <returns>True, when the icon could be read successfully.</returns>
-    // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Local
-    // ReSharper disable once UnusedMethodReturnValue.Local
-    private bool TryInitIconSVG(out string message, out string iconSVG)
-    {
-        if (!this.state.Environment["ICON_SVG"].TryRead(out iconSVG))
-        {
-            iconSVG = Icons.Material.TwoTone.Extension;
-            message = "The field ICON_SVG does not exist or is not a valid string.";
-            return false;
-        }
-        
-        message = string.Empty;
-        return true;
-    }
-    
+
     /// <summary>
     /// Tries to initialize the UI text content of the plugin.
     /// </summary>
