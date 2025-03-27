@@ -63,7 +63,10 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    Actions...
+                    @if (!context.IsInternal)
+                    {
+                        <MudSwitch T="bool" Value="@this.SettingsManager.IsPluginEnabled(context)" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
+                    }
                 </MudTd>
             </RowTemplate>
         </MudTable>

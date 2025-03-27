@@ -12,6 +12,9 @@ public partial class Plugins : ComponentBase
     private const string GROUP_INTERNAL = "Internal";
     
     [Inject]
+    private MessageBus MessageBus { get; init; } = null!;
+    
+    [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
     private TableGroupDefinition<IPluginMetadata> groupConfig = null!;
@@ -29,7 +32,7 @@ public partial class Plugins : ComponentBase
                 if (pluginMeta.IsInternal)
                     return GROUP_INTERNAL;
                 
-                return this.SettingsManager.ConfigurationData.EnabledPlugins.Contains(pluginMeta.Id)
+                return this.SettingsManager.IsPluginEnabled(pluginMeta)
                     ? GROUP_ENABLED
                     : GROUP_DISABLED;
             }
@@ -39,4 +42,15 @@ public partial class Plugins : ComponentBase
     }
 
     #endregion
+    
+    private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
+    {
+        if (this.SettingsManager.IsPluginEnabled(pluginMeta))
+            this.SettingsManager.ConfigurationData.EnabledPlugins.Remove(pluginMeta.Id);
+        else
+            this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginMeta.Id);
+        
+        await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
 }
