@@ -12,7 +12,7 @@
         <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="border-dashed border rounded-lg">
             <ColGroup>
                 <col style="width: 2em;" />
-                <col/>
+                <col style="width: 2.1em; "/>
                 <col/>
                 <col style="width: 12em;"/>
             </ColGroup>
@@ -46,15 +46,15 @@
             </GroupHeaderTemplate>
             <RowTemplate>
                 <MudTd>
-                    <MudAvatar Size="Size.Medium" Class="align-content-stretch">
+                    <MudAvatar Size="Size.Medium" Style="width: 2em; height: 2em;" Class="align-content-stretch">
                         <div class="plugin-icon-container">
                             @((MarkupString)context.IconSVG)
                         </div>
                     </MudAvatar>
                 </MudTd>
                 <MudTd>
-                    <MudStack>
-                        <MudText Typo="Typo.h6">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h6" Class="mb-0 pb-0 gap-0">
                             @context.Name
                         </MudText>
                         <MudText Typo="Typo.body1">
