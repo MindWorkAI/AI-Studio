@@ -29,7 +29,7 @@ public partial class Plugins : ComponentBase
                 if (pluginMeta.IsInternal)
                     return GROUP_INTERNAL;
                 
-                return SettingsManager.ConfigurationData.EnabledPlugins.Contains(pluginMeta.Id)
+                return this.SettingsManager.ConfigurationData.EnabledPlugins.Contains(pluginMeta.Id)
                     ? GROUP_ENABLED
                     : GROUP_DISABLED;
             }
