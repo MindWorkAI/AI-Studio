@@ -14,23 +14,13 @@ public static partial class PluginFactory
     private static readonly string DATA_DIR = SettingsManager.DataDirectory!;
     
     private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
-    
-    private static readonly Dictionary<IPluginMetadata, string> AVAILABLE_PLUGINS = new();
+
+    private static readonly List<IPluginMetadata> AVAILABLE_PLUGINS = [];
     
     /// <summary>
     /// A list of all available plugins.
     /// </summary>
-    public static IEnumerable<IPluginMetadata> AvailablePlugins => AVAILABLE_PLUGINS.Keys;
-    
-    /// <summary>
-    /// A list of all enabled plugins.
-    /// </summary>
-    public static IEnumerable<IPluginMetadata> EnabledPlugins => AVAILABLE_PLUGINS.Keys.Where(x => SETTINGS.ConfigurationData.EnabledPlugins.Contains(x.Id) || MANDATORY_INTERNAL_PLUGINS.Contains(x.Id));
-    
-    /// <summary>
-    /// A list of all disabled plugins.
-    /// </summary>
-    public static IEnumerable<IPluginMetadata> DisabledPlugins => AVAILABLE_PLUGINS.Keys.Where(x => !(SETTINGS.ConfigurationData.EnabledPlugins.Contains(x.Id) || MANDATORY_INTERNAL_PLUGINS.Contains(x.Id)));
+    public static IReadOnlyCollection<IPluginMetadata> AvailablePlugins => AVAILABLE_PLUGINS;
     
     /// <summary>
     /// Try to load all plugins from the plugins directory.
@@ -92,7 +82,7 @@ public static partial class PluginFactory
             }
             
             LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
-            AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin), pluginMainFile);
+            AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin));
         }
     }
     
