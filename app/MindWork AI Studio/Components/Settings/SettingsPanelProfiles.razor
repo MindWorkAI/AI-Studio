@@ -23,18 +23,20 @@
         <HeaderContent>
             <MudTh>#</MudTh>
             <MudTh>Profile Name</MudTh>
-            <MudTh Style="text-align: left;">Actions</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Num</MudTd>
             <MudTd>@context.Name</MudTd>
-            <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditProfile(context)">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteProfile(context)">
-                    Delete
-                </MudButton>
+            <MudTd>
+                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditProfile(context)">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteProfile(context)">
+                        Delete
+                    </MudButton>
+                </MudStack>
             </MudTd>
         </RowTemplate>
     </MudTable>

@@ -1,5 +1,4 @@
 using Lua;
-using Lua.Standard;
 
 // ReSharper disable MemberCanBePrivate.Global
 namespace AIStudio.Tools.PluginSystem;
@@ -7,73 +6,55 @@ namespace AIStudio.Tools.PluginSystem;
 /// <summary>
 /// Represents the base of any AI Studio plugin.
 /// </summary>
-public abstract class PluginBase
+public abstract partial class PluginBase : IPluginMetadata
 {
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState state;
 
     protected readonly List<string> pluginIssues = [];
+
+    /// <inheritdoc />
+    public string IconSVG { get; }
     
-    /// <summary>
-    /// The type of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginType Type { get; }
     
-    /// <summary>
-    /// The ID of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public Guid Id { get; }
     
-    /// <summary>
-    /// The name of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string Name { get; } = string.Empty;
     
-    /// <summary>
-    /// The description of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string Description { get; } = string.Empty;
     
-    /// <summary>
-    /// The version of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginVersion Version { get; }
 
-    /// <summary>
-    /// The authors of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string[] Authors { get; } = [];
     
-    /// <summary>
-    /// The support contact for this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string SupportContact { get; } = string.Empty;
     
-    /// <summary>
-    /// The source URL of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public string SourceURL { get; } = string.Empty;
     
-    /// <summary>
-    /// The categories of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginCategory[] Categories { get; } = [];
     
-    /// <summary>
-    /// The target groups of this plugin.
-    /// </summary>
+    /// <inheritdoc />
     public PluginTargetGroup[] TargetGroups { get; } = [];
     
-    /// <summary>
-    /// True, when the plugin is maintained.
-    /// </summary>
+    /// <inheritdoc />
     public bool IsMaintained { get; }
     
-    /// <summary>
-    /// The message that should be displayed when the plugin is deprecated.
-    /// </summary>
-    public string? DeprecationMessage { get; }
-
+    /// <inheritdoc />
+    public string DeprecationMessage { get; } = string.Empty;
+    
+    /// <inheritdoc />
+    public bool IsInternal { get; }
+    
     /// <summary>
     /// The issues that occurred during the initialization of this plugin.
     /// </summary>
@@ -88,31 +69,24 @@ public abstract class PluginBase
     /// </remarks>
     public bool IsValid => this is not NoPlugin && this.baseIssues.Count == 0 && this.pluginIssues.Count == 0;
 
-    protected PluginBase(string path, LuaState state, PluginType type, string parseError = "")
+    protected PluginBase(bool isInternal, LuaState state, PluginType type, string parseError = "")
     {
         this.state = state;
         this.Type = type;
-     
-        // For security reasons, we don't want to allow the plugin to load modules:
-        this.state.ModuleLoader = new NoModuleLoader();
-        
-        // Add some useful libraries:
-        this.state.OpenModuleLibrary();
-        this.state.OpenStringLibrary();
-        this.state.OpenTableLibrary();
-        this.state.OpenMathLibrary();
-        this.state.OpenBitwiseLibrary();
-        this.state.OpenCoroutineLibrary();
-     
-        // Add the module loader so that the plugin can load other Lua modules:
-        this.state.ModuleLoader = new PluginLoader(path);
         
         var issues = new List<string>();
         if(!string.IsNullOrWhiteSpace(parseError))
             issues.Add(parseError);
+
+        // Notice: when no icon is specified, the default icon will be used.
+        this.TryInitIconSVG(out _, out var iconSVG);
+        this.IconSVG = iconSVG;
         
         if(this.TryInitId(out var issue, out var id))
+        {
             this.Id = id;
+            this.IsInternal = isInternal;
+        }
         else if(this is not NoPlugin)
             issues.Add(issue);
         
@@ -456,19 +430,19 @@ public abstract class PluginBase
     /// <param name="message">The error message, when the deprecation message could not be read.</param>
     /// <param name="deprecationMessage">The read deprecation message.</param>
     /// <returns>True, when the deprecation message could be read successfully.</returns>
-    private bool TryInitDeprecationMessage(out string message, out string? deprecationMessage)
+    private bool TryInitDeprecationMessage(out string message, out string deprecationMessage)
     {
         if (!this.state.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
         {
-            deprecationMessage = null;
-            message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This field is optional: use nil to indicate that the plugin is not deprecated.";
+            deprecationMessage = string.Empty;
+            message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.";
             return false;
         }
         
         message = string.Empty;
         return true;
     }
-    
+
     /// <summary>
     /// Tries to initialize the UI text content of the plugin.
     /// </summary>

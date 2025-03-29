@@ -8,7 +8,7 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     
     private ILanguagePlugin? baseLanguage;
     
-    public PluginLanguage(string path, LuaState state, PluginType type) : base(path, state, type)
+    public PluginLanguage(bool isInternal, LuaState state, PluginType type) : base(isInternal, state, type)
     {
         if (this.TryInitUITextContent(out var issue, out var readContent))
             this.content = readContent;

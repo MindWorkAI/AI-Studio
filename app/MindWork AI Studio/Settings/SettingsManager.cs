@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
 
@@ -141,6 +142,8 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         
         return minimumLevel;
     }
+    
+    public bool IsPluginEnabled(IPluginMetadata plugin) => this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)

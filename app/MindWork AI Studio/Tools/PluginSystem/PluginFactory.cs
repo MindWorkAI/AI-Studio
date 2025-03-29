@@ -1,101 +1,110 @@
-using System.Reflection;
+using System.Text;
 
 using AIStudio.Settings;
 
 using Lua;
-
-using Microsoft.Extensions.FileProviders;
+using Lua.Standard;
 
 namespace AIStudio.Tools.PluginSystem;
 
-public static class PluginFactory
+public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
+    
     private static readonly string DATA_DIR = SettingsManager.DataDirectory!;
     
-    public static async Task EnsureInternalPlugins()
-    {
-        LOG.LogInformation("Start ensuring internal plugins.");
-        foreach (var plugin in Enum.GetValues<InternalPlugin>())
-        {
-            LOG.LogInformation($"Ensure plugin: {plugin}");
-            await EnsurePlugin(plugin);
-        }
-    }
+    private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
     
-    private static async Task EnsurePlugin(InternalPlugin plugin)
+    private static readonly string INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
+
+    private static readonly List<IPluginMetadata> AVAILABLE_PLUGINS = [];
+    
+    /// <summary>
+    /// A list of all available plugins.
+    /// </summary>
+    public static IReadOnlyCollection<IPluginMetadata> AvailablePlugins => AVAILABLE_PLUGINS;
+    
+    /// <summary>
+    /// Try to load all plugins from the plugins directory.
+    /// </summary>
+    /// <remarks>
+    /// Loading plugins means:<br/>
+    /// - Parsing and checking the plugin code<br/>
+    /// - Check for forbidden plugins<br/>
+    /// - Creating a new instance of the allowed plugin<br/>
+    /// - Read the plugin metadata<br/>
+    /// <br/>
+    /// Loading a plugin does not mean to start the plugin, though.
+    /// </remarks>
+    public static async Task LoadAll(CancellationToken cancellationToken = default)
     {
-        try
+        LOG.LogInformation("Start loading plugins.");
+        if (!Directory.Exists(PLUGINS_ROOT))
         {
-            #if DEBUG
-            var basePath = Path.Join(Environment.CurrentDirectory, "Plugins");
-            var resourceFileProvider = new PhysicalFileProvider(basePath);
-            #else
-            var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Plugins");
-            #endif
+            LOG.LogInformation("No plugins found.");
+            return;
+        }
+        
+        //
+        // The easiest way to load all plugins is to find all `plugin.lua` files and load them.
+        // By convention, each plugin is enforced to have a `plugin.lua` file.
+        //
+        var pluginMainFiles = Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories);
+        foreach (var pluginMainFile in pluginMainFiles)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                break;
             
-            var metaData = plugin.MetaData();
-            var mainResourcePath = $"{metaData.ResourcePath}/plugin.lua";
-            var resourceInfo = resourceFileProvider.GetFileInfo(mainResourcePath);
+            LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
+            var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
+            var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
+            var plugin = await Load(pluginPath, code, cancellationToken);
             
-            if(!resourceInfo.Exists)
+            switch (plugin)
             {
-                LOG.LogError($"The plugin {plugin} does not exist. This should not happen, since the plugin is an integral part of AI Studio.");
-                return;
-            }
-            
-            // Ensure that the additional resources exist:
-            foreach (var content in resourceFileProvider.GetDirectoryContents(metaData.ResourcePath))
-            {
-                if(content.IsDirectory)
-                {
-                    LOG.LogError("The plugin contains a directory. This is not allowed.");
+                case NoPlugin noPlugin when noPlugin.Issues.Any():
+                    LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: {noPlugin.Issues.First()}");
                     continue;
-                }
                 
-                await CopyPluginFile(content, metaData);
+                case NoPlugin:
+                    LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: Unknown.");
+                    continue;
+                
+                case { IsValid: false }:
+                    LOG.LogError($"Was not able to load plugin '{pluginMainFile}', because the Lua code is not a valid AI Studio plugin. There are {plugin.Issues.Count()} issues to fix.");
+                    #if DEBUG
+                    foreach (var pluginIssue in plugin.Issues)
+                        LOG.LogError($"Plugin issue: {pluginIssue}");
+                    #endif
+                    continue;
+
+                case { IsMaintained: false }:
+                    LOG.LogWarning($"The plugin '{pluginMainFile}' is not maintained anymore. Please consider to disable it.");
+                    break;
             }
-        }
-        catch
-        {
-            LOG.LogError($"Was not able to ensure the plugin: {plugin}");
-        }
-    }
-
-    private static async Task CopyPluginFile(IFileInfo resourceInfo, InternalPluginData metaData)
-    {
-        await using var inputStream = resourceInfo.CreateReadStream();
-        
-        var pluginsRoot = Path.Join(DATA_DIR, "plugins");
-        var pluginTypeBasePath = Path.Join(pluginsRoot, metaData.Type.GetDirectory());
-        
-        if (!Directory.Exists(pluginsRoot))
-            Directory.CreateDirectory(pluginsRoot);
-        
-        if (!Directory.Exists(pluginTypeBasePath))
-            Directory.CreateDirectory(pluginTypeBasePath);
-        
-        var pluginPath = Path.Join(pluginTypeBasePath, metaData.ResourceName);
-        if (!Directory.Exists(pluginPath))
-            Directory.CreateDirectory(pluginPath);
-        
-        var pluginFilePath = Path.Join(pluginPath, resourceInfo.Name);
             
-        await using var outputStream = File.Create(pluginFilePath);
-        await inputStream.CopyToAsync(outputStream);
+            LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
+            AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin));
+        }
     }
 
-    public static async Task LoadAll()
-    {
-        
-    }
-    
-    public static async Task<PluginBase> Load(string path, string code, CancellationToken cancellationToken = default)
+    private static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
     {
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
         
         var state = LuaState.Create();
+        
+        // Add the module loader so that the plugin can load other Lua modules:
+        state.ModuleLoader = new PluginLoader(pluginPath);
+        
+        // Add some useful libraries:
+        state.OpenModuleLibrary();
+        state.OpenStringLibrary();
+        state.OpenTableLibrary();
+        state.OpenMathLibrary();
+        state.OpenBitwiseLibrary();
+        state.OpenCoroutineLibrary();
 
         try
         {
@@ -104,6 +113,10 @@ public static class PluginFactory
         catch (LuaParseException e)
         {
             return new NoPlugin($"Was not able to parse the plugin: {e.Message}");
+        }
+        catch (LuaRuntimeException e)
+        {
+            return new NoPlugin($"Was not able to run the plugin: {e.Message}");
         }
         
         if (!state.Environment["TYPE"].TryRead<string>(out var typeText))
@@ -115,9 +128,10 @@ public static class PluginFactory
         if(type is PluginType.NONE)
             return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
+        var isInternal = pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
         return type switch
         {
-            PluginType.LANGUAGE => new PluginLanguage(path, state, type),
+            PluginType.LANGUAGE => new PluginLanguage(isInternal, state, type),
             
             _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
