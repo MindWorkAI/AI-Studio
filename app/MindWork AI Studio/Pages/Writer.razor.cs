@@ -1,6 +1,9 @@
+using System.Text;
+
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -13,6 +16,9 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
 {
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
@@ -56,6 +62,19 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     #endregion
     
     private bool IsProviderSelected => this.providerSettings.UsedLLMProvider != LLMProviders.NONE;
+
+    private async Task LoadTextFile()
+    {
+        var result = await this.RustService.SelectFile("Load a text file");
+        if(result.UserCancelled)
+            return;
+        
+        if(!File.Exists(result.SelectedFilePath))
+            return;
+        
+        var text = await File.ReadAllTextAsync(result.SelectedFilePath, Encoding.UTF8);
+        this.userInput = text;
+    }
     
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
