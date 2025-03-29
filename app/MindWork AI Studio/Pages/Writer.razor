@@ -8,51 +8,23 @@
     <PreviewExperimental ApplyInnerScrollingFix="true"/>
 
     <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Download" OnClick="@(() => this.LoadTextFile())" Color="Color.Primary" Class="mb-2">
+        Load a text file
+    </MudButton>
     <InnerScrolling>
         <ChildContent>
-            <MudTextField
-                @ref="@this.textField"
-                T="string"
-                Label="Write your text"
-                @bind-Text="@this.userInput"
-                Immediate="@true"
-                Lines="16"
-                MaxLines="16"
-                Typo="Typo.body1"
-                Variant="Variant.Outlined"
-                InputMode="InputMode.text"
-                FullWidth="@true"
-                OnKeyDown="@this.InputKeyEvent"
-                UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-
-            <MudTextField
-                T="string"
-                Label="Your stage directions"
-                @bind-Text="@this.userDirection"
-                Immediate="@true"
-                Lines="4"
-                MaxLines="4"
-                Typo="Typo.body1"
-                Variant="Variant.Outlined"
-                InputMode="InputMode.text"
-                FullWidth="@true"
-                UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            @foreach (var chunk in this.chunks)
+            {
+                <MudJustifiedText Typo="Typo.body1" Class="ma-3 write-mode-chunk">
+                    @chunk.Content
+                </MudJustifiedText>
+            }
         </ChildContent>
         <FooterContent>
             @if (this.isStreaming)
             {
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
             }
-            <MudTextField
-                T="string"
-                Label="Suggestion"
-                @bind-Text="@this.suggestion"
-                ReadOnly="@true"
-                Lines="3"
-                Typo="Typo.body1"
-                Variant="Variant.Outlined"
-                FullWidth="@true"
-                UserAttributes="@USER_INPUT_ATTRIBUTES"/>
         </FooterContent>
     </InnerScrolling>
 </div>

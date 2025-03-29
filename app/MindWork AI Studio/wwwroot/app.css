@@ -35,6 +35,28 @@
     margin-top: 4px;
 }
 
+.write-mode-chunk {
+    font-size: large;
+    padding-left: 1.5em;
+    position: relative;
+}
+
+.write-mode-chunk::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 0.8em;
+    background-color: transparent;
+    border-radius: 0.4em;
+    transition: background-color 0.5s ease;
+}
+
+.write-mode-chunk:hover::before {
+    background-color: #5894f3; /* Balkenfarbe im hover-Zustand */
+}
+
 .plugin-icon-container {
     width: var(--mud-icon-size-large);
     height: var(--mud-icon-size-large);
