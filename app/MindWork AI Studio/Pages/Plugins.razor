@@ -65,7 +65,10 @@
                 <MudTd>
                     @if (!context.IsInternal)
                     {
-                        <MudSwitch T="bool" Value="@this.SettingsManager.IsPluginEnabled(context)" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
+                        var isEnabled = this.SettingsManager.IsPluginEnabled(context);
+                        <MudTooltip Text="@(isEnabled ? "Disable plugin" : "Enable plugin")">
+                            <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
+                        </MudTooltip>
                     }
                 </MudTd>
             </RowTemplate>
