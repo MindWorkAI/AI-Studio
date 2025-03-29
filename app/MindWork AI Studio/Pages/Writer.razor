@@ -8,6 +8,9 @@
     <PreviewExperimental ApplyInnerScrollingFix="true"/>
 
     <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Download" OnClick="@(() => this.LoadTextFile())" Color="Color.Primary" Class="mb-2">
+        Load a text file
+    </MudButton>
     <InnerScrolling>
         <ChildContent>
             <MudTextField
