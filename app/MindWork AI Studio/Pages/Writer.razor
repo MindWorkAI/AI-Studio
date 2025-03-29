@@ -13,7 +13,12 @@
     </MudButton>
     <InnerScrolling>
         <ChildContent>
-            
+            @foreach (var chunk in this.chunks)
+            {
+                <MudJustifiedText Typo="Typo.body1" Class="ma-3 write-mode-chunk">
+                    @chunk.Content
+                </MudJustifiedText>
+            }
         </ChildContent>
         <FooterContent>
             @if (this.isStreaming)

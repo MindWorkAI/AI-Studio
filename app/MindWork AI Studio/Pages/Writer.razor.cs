@@ -28,6 +28,7 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     private ChatThread? chatThread;
     private bool isStreaming;
     private string userInput = string.Empty;
+    private List<WriterChunk> chunks = new();
     private string userDirection = string.Empty;
     private string suggestion = string.Empty;
 
@@ -74,6 +75,26 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         
         var text = await File.ReadAllTextAsync(result.SelectedFilePath, Encoding.UTF8);
         this.userInput = text;
+        this.ChunkText();
+    }
+
+    private void ChunkText()
+    {
+        this.chunks.Clear();
+        var startIndex = 0;
+        var contentSpan = this.userInput.AsSpan();
+        for (var index = 0; index < contentSpan.Length; index++)
+        {
+            if (contentSpan[index] is '\n')
+            {
+                var endIndex = index;
+                var lineMemory = this.userInput.AsMemory(startIndex..endIndex);
+                this.chunks.Add(new WriterChunk(lineMemory, false, false));
+                startIndex = endIndex + 1;
+            }
+        }
+
+        this.StateHasChanged();
     }
     
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
