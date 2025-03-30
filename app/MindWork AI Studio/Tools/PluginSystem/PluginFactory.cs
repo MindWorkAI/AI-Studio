@@ -45,6 +45,8 @@ public static partial class PluginFactory
             return;
         }
         
+        AVAILABLE_PLUGINS.Clear();
+        
         //
         // The easiest way to load all plugins is to find all `plugin.lua` files and load them.
         // By convention, each plugin is enforced to have a `plugin.lua` file.
