@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Pages;
 
-public partial class Plugins : ComponentBase
+public partial class Plugins : ComponentBase, IMessageBusReceiver
 {
     private const string GROUP_ENABLED = "Enabled";
     private const string GROUP_DISABLED = "Disabled";
@@ -23,6 +23,9 @@ public partial class Plugins : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.ApplyFilters(this, [], [ Event.PLUGINS_RELOADED ]);
+        
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
             Expandable = true,
@@ -53,4 +56,27 @@ public partial class Plugins : ComponentBase
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+    
+    #region Implementation of IMessageBusReceiver
+
+    public string ComponentName => nameof(Plugins);
+    
+    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
+
+    #endregion
 }

@@ -16,6 +16,8 @@ public static partial class PluginFactory
     private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
     
     private static readonly string INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
+    
+    private static readonly FileSystemWatcher HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
 
     private static readonly List<IPluginMetadata> AVAILABLE_PLUGINS = [];
     
@@ -44,6 +46,8 @@ public static partial class PluginFactory
             LOG.LogInformation("No plugins found.");
             return;
         }
+        
+        AVAILABLE_PLUGINS.Clear();
         
         //
         // The easiest way to load all plugins is to find all `plugin.lua` files and load them.
@@ -135,5 +139,10 @@ public static partial class PluginFactory
             
             _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
+    }
+    
+    public static void Dispose()
+    {
+        HOT_RELOAD_WATCHER.Dispose();
     }
 }

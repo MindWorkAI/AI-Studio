@@ -1,5 +1,6 @@
 using AIStudio.Agents;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -209,6 +210,7 @@ internal sealed class Program
         await serverTask;
         
         RUST_SERVICE.Dispose();
+        PluginFactory.Dispose();
         programLogger.LogInformation("The AI Studio server was stopped.");
     }
 }
