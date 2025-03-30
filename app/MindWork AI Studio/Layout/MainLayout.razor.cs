@@ -94,6 +94,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
             // Load (but not start) all plugins, without waiting for them:
             var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             _ = PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+            
+            // Set up hot reloading for plugins:
+            PluginFactory.SetUpHotReloading();
         }
         
         // Register this component with the message bus:

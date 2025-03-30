@@ -8,6 +8,7 @@ public enum Event
     STATE_HAS_CHANGED,
     CONFIGURATION_CHANGED,
     COLOR_THEME_CHANGED,
+    PLUGINS_RELOADED,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,
