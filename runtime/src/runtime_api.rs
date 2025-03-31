@@ -90,7 +90,7 @@ pub fn start_runtime_api() {
                 crate::secret::delete_secret,
                 crate::environment::get_data_directory,
                 crate::environment::get_config_directory,
-                crate::file_data::extract_file_data,
+                crate::file_data::extract_data,
             ])
             .ignite().await.unwrap()
             .launch().await.unwrap();
