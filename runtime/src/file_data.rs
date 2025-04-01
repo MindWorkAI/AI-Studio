@@ -10,7 +10,7 @@ use tokio::io::AsyncBufReadExt;
 use tokio::process::Command;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
-use rocket::{State, Shutdown};
+use rocket::Shutdown;
 use rocket::response::stream::{EventStream, Event};
 use rocket::tokio::select;
 use rocket::serde::Serialize;
@@ -38,11 +38,10 @@ const ODT: &str = "odt";
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/system/file-data/extract?<path>")]
+#[get("/retrieval/fs/extract?<path>")]
 pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
     EventStream! {
         let stream_result = stream_data(&path).await;
-        
         match stream_result {
             Ok(mut stream) => {
                 loop {
@@ -61,6 +60,7 @@ pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
                     yield Event::json(&chunk);
                 }
             },
+
             Err(e) => {
                 yield Event::json(&format!("Error starting stream: {}", e));
             }
@@ -74,21 +74,21 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
     }
 
     let file_path_clone = file_path.to_owned();
-
     let fmt = tokio::task::spawn_blocking(move || {
         FileFormat::from_file(&file_path_clone)
     }).await??;
 
     let ext = file_path.split('.').last().unwrap_or("");
-
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
         }
+        
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
             stream_spreadsheet_as_csv(file_path).await?
         }
+        
         _ => match fmt.kind() {
             Kind::Document => match fmt {
                 FileFormat::PortableDocumentFormat => read_pdf(file_path).await?,
@@ -100,20 +100,24 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
                 }
                 _ => stream_text_file(file_path).await?,
             },
+            
             Kind::Ebook => return Err("Ebooks not yet supported".into()),
             Kind::Image => chunk_image(file_path).await?,
+            
             Kind::Other => match fmt {
                 FileFormat::HypertextMarkupLanguage => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
                 }
                 _ => stream_text_file(file_path).await?,
             },
+            
             Kind::Presentation => match fmt {
                 FileFormat::OfficeOpenXmlPresentation => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
                 }
                 _ => stream_text_file(file_path).await?,
             },
+            
             Kind::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
             _ => stream_text_file(file_path).await?,
         },
@@ -156,7 +160,7 @@ async fn read_pdf(file_path: &str) -> Result<ChunkStream> {
         };
 
         for (i, page) in doc.pages().iter().enumerate() {
-            let content = match page.text().and_then(|t| Ok(t.all())) {
+            let content = match page.text().map(|t| t.all()) {
                 Ok(c) => c,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(e.into()));
@@ -191,12 +195,11 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
 
         for sheet_name in workbook.sheet_names() {
             let range = match workbook.worksheet_range(&sheet_name) {
-                Some(Ok(r)) => r,
-                Some(Err(e)) => {
+                Ok(r) => r,
+                Err(e) => {
                     let _ = tx.blocking_send(Err(e.into()));
                     continue;
                 }
-                None => continue,
             };
 
             for (row_idx, row) in range.rows().enumerate() {
@@ -228,7 +231,7 @@ async fn convert_with_pandoc(
 ) -> Result<ChunkStream> {
     let output = Command::new("pandoc")
         .arg(file_path)
-        .args(&["-f", from, "-t", to])
+        .args(["-f", from, "-t", to])
         .output()
         .await?;
 
