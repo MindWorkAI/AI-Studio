@@ -160,7 +160,7 @@ async fn read_pdf(file_path: &str) -> Result<ChunkStream> {
         };
 
         for (i, page) in doc.pages().iter().enumerate() {
-            let content = match page.text().and_then(|t| Ok(t.all())) {
+            let content = match page.text().map(|t| t.all()) {
                 Ok(c) => c,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(e.into()));
@@ -231,7 +231,7 @@ async fn convert_with_pandoc(
 ) -> Result<ChunkStream> {
     let output = Command::new("pandoc")
         .arg(file_path)
-        .args(&["-f", from, "-t", to])
+        .args(["-f", from, "-t", to])
         .output()
         .await?;
 
