@@ -42,7 +42,6 @@ type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
     EventStream! {
         let stream_result = stream_data(&path).await;
-        
         match stream_result {
             Ok(mut stream) => {
                 loop {
@@ -61,6 +60,7 @@ pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
                     yield Event::json(&chunk);
                 }
             },
+
             Err(e) => {
                 yield Event::json(&format!("Error starting stream: {}", e));
             }
@@ -74,21 +74,21 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
     }
 
     let file_path_clone = file_path.to_owned();
-
     let fmt = tokio::task::spawn_blocking(move || {
         FileFormat::from_file(&file_path_clone)
     }).await??;
 
     let ext = file_path.split('.').last().unwrap_or("");
-
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
         }
+        
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
             stream_spreadsheet_as_csv(file_path).await?
         }
+        
         _ => match fmt.kind() {
             Kind::Document => match fmt {
                 FileFormat::PortableDocumentFormat => read_pdf(file_path).await?,
@@ -100,20 +100,24 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
                 }
                 _ => stream_text_file(file_path).await?,
             },
+            
             Kind::Ebook => return Err("Ebooks not yet supported".into()),
             Kind::Image => chunk_image(file_path).await?,
+            
             Kind::Other => match fmt {
                 FileFormat::HypertextMarkupLanguage => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
                 }
                 _ => stream_text_file(file_path).await?,
             },
+            
             Kind::Presentation => match fmt {
                 FileFormat::OfficeOpenXmlPresentation => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
                 }
                 _ => stream_text_file(file_path).await?,
             },
+            
             Kind::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
             _ => stream_text_file(file_path).await?,
         },
