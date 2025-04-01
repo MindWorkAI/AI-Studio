@@ -191,12 +191,11 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
 
         for sheet_name in workbook.sheet_names() {
             let range = match workbook.worksheet_range(&sheet_name) {
-                Some(Ok(r)) => r,
-                Some(Err(e)) => {
+                Ok(r) => r,
+                Err(e) => {
                     let _ = tx.blocking_send(Err(e.into()));
                     continue;
                 }
-                None => continue,
             };
 
             for (row_idx, row) in range.rows().enumerate() {
