@@ -10,7 +10,7 @@ use tokio::io::AsyncBufReadExt;
 use tokio::process::Command;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
-use rocket::{State, Shutdown};
+use rocket::Shutdown;
 use rocket::response::stream::{EventStream, Event};
 use rocket::tokio::select;
 use rocket::serde::Serialize;
