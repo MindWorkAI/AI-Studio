@@ -38,7 +38,7 @@ const ODT: &str = "odt";
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/system/file-data/extract?<path>")]
+#[get("/retrieval/fs/extract?<path>")]
 pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
     EventStream! {
         let stream_result = stream_data(&path).await;
