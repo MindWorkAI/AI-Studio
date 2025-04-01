@@ -1,5 +1,9 @@
 using Microsoft.Extensions.FileProviders;
 
+#if RELEASE
+using System.Reflection;
+#endif
+
 namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
