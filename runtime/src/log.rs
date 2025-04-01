@@ -1,15 +1,24 @@
 use std::collections::BTreeMap;
+use std::env::{current_dir, temp_dir};
 use std::error::Error;
 use std::fmt::Debug;
-use std::path::PathBuf;
+use std::path::{absolute, PathBuf};
 use std::sync::OnceLock;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
 use log::kv;
 use log::kv::{Key, Value, VisitSource};
+use rocket::get;
+use rocket::serde::json::Json;
+use rocket::serde::Serialize;
+use crate::api_token::APIToken;
 use crate::environment::is_dev;
 
 static LOGGER: OnceLock<RuntimeLoggerHandle> = OnceLock::new();
+
+static LOG_STARTUP_PATH: OnceLock<String> = OnceLock::new();
+
+static LOG_APP_PATH: OnceLock<String> = OnceLock::new();
 
 /// Initialize the logging system.
 pub fn init_logging() {
@@ -42,11 +51,17 @@ pub fn init_logging() {
         false => "AI Studio Events",
     };
 
+    let log_path = FileSpec::default()
+        .directory(get_startup_log_path())
+        .basename(log_basename)
+        .suppress_timestamp()
+        .suffix("log");
+
+    // Store the startup log path:
+    let _ = LOG_STARTUP_PATH.set(convert_log_path_to_string(&log_path));
+
     let runtime_logger = Logger::try_with_str(log_config).expect("Cannot create logging")
-        .log_to_file(FileSpec::default()
-            .basename(log_basename)
-            .suppress_timestamp()
-            .suffix("log"))
+        .log_to_file(log_path)
         .duplicate_to_stdout(Duplicate::All)
         .use_utc()
         .format_for_files(file_logger_format)
@@ -61,14 +76,60 @@ pub fn init_logging() {
     LOGGER.set(runtime_logger).expect("Cannot set LOGGER");
 }
 
-/// Switch the logging system to a file-based output.
+fn convert_log_path_to_string(log_path: &FileSpec) -> String {
+    let log_path = log_path.as_pathbuf(None);
+    
+    // Case: The path is already absolute:
+    if log_path.is_absolute() {
+        return log_path.to_str().unwrap().to_string();
+    }
+    
+    // Case: The path is relative. Let's try to convert it to an absolute path:
+    match log_path.canonicalize() {
+        // Case: The path exists:
+        Ok(log_path) => log_path.to_str().unwrap().to_string(),
+
+        // Case: The path does not exist. Let's try to build the
+        // absolute path without touching the file system:
+        Err(_) => match absolute(log_path.clone()) {
+
+            // Case: We could build the absolute path:
+            Ok(log_path) => log_path.to_str().unwrap().to_string(),
+
+            // Case: We could not reconstruct the path using the working directory.
+            Err(_) => log_path.to_str().unwrap().to_string(),
+        }
+    }
+}
+
+// Note: Rust plans to remove the deprecation flag for std::env::home_dir() in Rust 1.86.0.
+#[allow(deprecated)]
+fn get_startup_log_path() -> String {
+    match std::env::home_dir() {
+        // Case: We could determine the home directory:
+        Some(home_dir) => home_dir.to_str().unwrap().to_string(),
+        
+        // Case: We could not determine the home directory. Let's try to use the working directory:
+        None => match current_dir() {
+
+            // Case: We could determine the working directory:
+            Ok(working_directory) => working_directory.to_str().unwrap().to_string(),
+
+            // Case: We could not determine the working directory. Let's use the temporary directory:
+            Err(_) => temp_dir().to_str().unwrap().to_string(),
+        },
+    }
+}
+
+/// Switch the logging system to a file-based output inside the given directory.
 pub fn switch_to_file_logging(logger_path: PathBuf) -> Result<(), Box<dyn Error>>{
-    LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(
-        FileSpec::default()
-            .directory(logger_path)
-            .basename("events")
-            .suppress_timestamp()
-            .suffix("log")))?;
+    let log_path = FileSpec::default()
+        .directory(logger_path)
+        .basename("events")
+        .suppress_timestamp()
+        .suffix("log");
+    let _ = LOG_APP_PATH.set(convert_log_path_to_string(&log_path));
+    LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(log_path))?;
 
     Ok(())
 }
@@ -160,4 +221,19 @@ fn file_logger_format(
 
     // Write the log message:
     write!(w, "{}", &record.args())
+}
+
+#[get("/log/paths")]
+pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
+    Json(LogPathsResponse {
+        log_startup_path: LOG_STARTUP_PATH.get().expect("No startup log path was set").clone(),
+        log_app_path: LOG_APP_PATH.get().expect("No app log path was set").clone(),
+    })
+}
+
+/// The response the get log paths request.
+#[derive(Serialize)]
+pub struct LogPathsResponse {
+    log_startup_path: String,
+    log_app_path: String,
 }

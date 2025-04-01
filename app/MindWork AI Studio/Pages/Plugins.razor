@@ -1,0 +1,77 @@
+@using AIStudio.Tools.PluginSystem
+@attribute [Route(Routes.PLUGINS)]
+
+<div class="inner-scrolling-context">
+    <MudText Typo="Typo.h3" Class="mb-2">
+        Plugins
+    </MudText>
+    <PreviewExperimental ApplyInnerScrollingFix="true"/>
+    
+    <InnerScrolling>
+        
+        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="border-dashed border rounded-lg">
+            <ColGroup>
+                <col style="width: 2em;" />
+                <col style="width: 2.1em; "/>
+                <col/>
+                <col style="width: 12em;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh colspan="2">Plugins</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <GroupHeaderTemplate>
+                <MudTh Class="mud-table-cell-custom-group" colspan="3">
+                    @switch (context.Key)
+                    {
+                        case GROUP_ENABLED:
+                            <MudText Typo="Typo.h6" Class="mb-2">
+                                Enabled Plugins
+                            </MudText>
+                            break;
+                            
+                        case GROUP_DISABLED:
+                            <MudText Typo="Typo.h6" Class="mb-2">
+                                Disabled Plugins
+                            </MudText>
+                            break;
+                            
+                        case GROUP_INTERNAL:
+                            <MudText Typo="Typo.h6" Class="mb-2">
+                                Internal Plugins
+                            </MudText>
+                            break;
+                    }
+                </MudTh>
+            </GroupHeaderTemplate>
+            <RowTemplate>
+                <MudTd>
+                    <MudAvatar Size="Size.Medium" Style="width: 2em; height: 2em;" Class="align-content-stretch">
+                        <div class="plugin-icon-container">
+                            @((MarkupString)context.IconSVG)
+                        </div>
+                    </MudAvatar>
+                </MudTd>
+                <MudTd>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h6" Class="mb-0 pb-0 gap-0">
+                            @context.Name
+                        </MudText>
+                        <MudText Typo="Typo.body1">
+                            @context.Description
+                        </MudText>
+                    </MudStack>
+                </MudTd>
+                <MudTd>
+                    @if (!context.IsInternal)
+                    {
+                        var isEnabled = this.SettingsManager.IsPluginEnabled(context);
+                        <MudTooltip Text="@(isEnabled ? "Disable plugin" : "Enable plugin")">
+                            <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
+                        </MudTooltip>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </InnerScrolling>
+</div>

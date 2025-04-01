@@ -1,19 +1,37 @@
+using System.Text.Json;
+
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace AIStudio.Agents;
 
-public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, ThreadSafeRandom rng) : IAgent
+public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : IAgent
 {
+    protected static readonly ContentBlock EMPTY_BLOCK = new()
+    {
+        Content = null,
+        ContentType = ContentType.NONE,
+        Role = ChatRole.AGENT,
+        Time = DateTimeOffset.UtcNow,
+    };
+    
+    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    };
+    
+    protected DataSourceService DataSourceService { get; init; } = dataSourceService;
+    
     protected SettingsManager SettingsManager { get; init; } = settingsManager;
 
     protected ThreadSafeRandom RNG { get; init; } = rng;
     
     protected ILogger<AgentBase> Logger { get; init; } = logger;
-
+    
     /// <summary>
     /// Represents the type or category of this agent.
     /// </summary>
@@ -60,24 +78,30 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         Blocks = [],
     };
 
-    protected DateTimeOffset AddUserRequest(ChatThread thread, string request)
+    protected UserRequest AddUserRequest(ChatThread thread, string request)
     {
         var time = DateTimeOffset.Now;
+        var lastUserPrompt = new ContentText
+        {
+            Text = request,
+        };
+        
         thread.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
             Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                Text = request,
-            },
+            Content = lastUserPrompt,
         });
-        
-        return time;
+
+        return new()
+        {
+            Time = time,
+            UserPrompt = lastUserPrompt,
+        };
     }
     
-    protected async Task AddAIResponseAsync(ChatThread thread, DateTimeOffset time)
+    protected async Task AddAIResponseAsync(ChatThread thread, IContent lastUserPrompt, DateTimeOffset time)
     {
         if(this.ProviderSettings is null)
             return;
@@ -103,6 +127,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), this.SettingsManager, providerSettings.Model, thread);
+        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), providerSettings.Model, lastUserPrompt, thread);
     }
 }

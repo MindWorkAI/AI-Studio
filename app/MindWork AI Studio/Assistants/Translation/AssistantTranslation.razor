@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_TRANSLATION)]
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogTranslation>
 
 @if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
 {

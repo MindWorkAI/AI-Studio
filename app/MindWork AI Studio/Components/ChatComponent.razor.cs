@@ -40,9 +40,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
-    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Bottom;
+    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
+    private DataSourceSelection? dataSourceSelectionComponent;
+    private DataSourceOptions earlyDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
@@ -66,21 +68,40 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
-        
+
+        // Get the preselected profile:
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+        
+        //
+        // Check for deferred messages of the kind 'SEND_TO_CHAT',
+        // aka the user sends an assistant result to the chat:
+        //
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
         if (deferredContent is not null)
         {
+            //
+            // Yes, the user sent an assistant result to the chat.
+            //
+            
+            // Use chat thread sent by the user:
             this.ChatThread = deferredContent;
             this.Logger.LogInformation($"The chat '{this.ChatThread.Name}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
+            // We know already that the chat thread is not null,
+            // but we have to check it again for the nullability
+            // for the compiler:
             if (this.ChatThread is not null)
             {
+                //
+                // Check if the chat thread has a name. If not, we
+                // generate the name now:
+                //
                 if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
                 {
                     var firstUserBlock = this.ChatThread.Blocks.FirstOrDefault(x => x.Role == ChatRole.USER);
@@ -94,12 +115,24 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     }
                 }
 
+                //
+                // Check if the user wants to apply the standard chat data source options:
+                //
+                if (this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
+                    this.ChatThread.DataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+
+                //
+                // Check if the user wants to store the chat automatically:
+                //
                 if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                 {
                     this.autoSaveEnabled = true;
                     this.mustStoreChat = true;
                     
-                    // Ensure the workspace exists:
+                    //
+                    // When a standard workspace is used, we have to ensure
+                    // that the workspace is available:
+                    //
                     if(this.ChatThread.WorkspaceId == KnownWorkspaces.ERI_SERVER_WORKSPACE_ID)
                         await WorkspaceBehaviour.EnsureERIServerWorkspace();
                     
@@ -108,14 +141,38 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 }
             }
         }
+        else
+        {
+            //
+            // No, the user did not send an assistant result to the chat.
+            //
+            this.ApplyStandardDataSourceOptions();
+        }
         
+        //
+        // Check if the user wants to show the latest message after loading:
+        //
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
+            //
+            // We cannot scroll to the bottom right now because the
+            // chat component is not rendered yet. We have to wait for
+            // the rendering process to finish. Thus, we set a flag
+            // to scroll to the bottom after the rendering process.:
+            //
             this.mustScrollToBottomAfterRender = true;
             this.scrollRenderCountdown = 4;
             this.StateHasChanged();
         }
         
+        //
+        // Check if another component deferred the loading of a chat.
+        //
+        // This is used, e.g., for the bias-of-the-day component:
+        // when the bias for this day was already produced, the bias
+        // component sends a message to the chat component to load
+        // the chat with the bias:
+        //
         var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
         if (deferredLoading != default)
         {
@@ -123,7 +180,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.mustLoadChat = true;
             this.Logger.LogInformation($"The loading of the chat '{this.loadChat.ChatId}' was deferred and will be loaded now.");
         }
+
+        //
+        // When for whatever reason we have a chat thread, we have to
+        // ensure that the corresponding workspace id is set and the
+        // workspace name is loaded:
+        //
+        if (this.ChatThread is not null)
+        {
+            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
         
+        // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
         await base.OnInitializedAsync();
     }
@@ -197,6 +267,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
     
+    private void ApplyStandardDataSourceOptions()
+    {
+        var chatDefaultOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        this.earlyDataSourceOptions = chatDefaultOptions;
+        if(this.ChatThread is not null)
+            this.ChatThread.DataSourceOptions = chatDefaultOptions;
+        
+        this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
+    }
+    
     private string ExtractThreadName(string firstUserInput)
     {
         // We select the first 10 words of the user input:
@@ -224,8 +304,57 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
 
+    private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
+    {
+        if (this.ChatThread is null)
+            return [];
+
+        return this.ChatThread.AISelectedDataSources;
+    }
+
+    private DataSourceOptions GetCurrentDataSourceOptions()
+    {
+        if (this.ChatThread is not null)
+            return this.ChatThread.DataSourceOptions;
+        
+        return this.earlyDataSourceOptions;
+    }
+    
+    private async Task SetCurrentDataSourceOptions(DataSourceOptions updatedOptions)
+    {
+        if (this.ChatThread is not null)
+        {
+            this.hasUnsavedChanges = true;
+            this.ChatThread.DataSourceOptions = updatedOptions;
+            if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            {
+                await this.SaveThread();
+                this.hasUnsavedChanges = false;
+            }
+        }
+        else
+            this.earlyDataSourceOptions = updatedOptions;
+    }
+
+    private bool IsInputForbidden()
+    {
+        if (!this.IsProviderSelected)
+            return true;
+        
+        if(this.isStreaming)
+            return true;
+        
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return true;
+        
+        return false;
+    }
+
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
+        if(this.dataSourceSelectionComponent?.IsVisible ?? false)
+            this.dataSourceSelectionComponent.Hide();
+        
         this.hasUnsavedChanges = true;
         var key = keyEvent.Code.ToLowerInvariant();
         
@@ -255,6 +384,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (!this.IsProviderSelected)
             return;
         
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return;
+        
         // We need to blur the focus away from the input field
         // to be able to clear the field:
         await this.inputField.BlurAsync();
@@ -269,6 +401,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
+                DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
                 Seed = this.RNG.Next(),
                 Blocks = [],
@@ -288,8 +421,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         var time = DateTimeOffset.Now;
+        IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
         {
+            lastUserPrompt = new ContentText
+            {
+                Text = this.userInput,
+            };
+
             //
             // Add the user message to the thread:
             //
@@ -298,10 +437,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Time = time,
                 ContentType = ContentType.TEXT,
                 Role = ChatRole.USER,
-                Content = new ContentText
-                {
-                    Text = this.userInput,
-                },
+                Content = lastUserPrompt,
             });
 
             // Save the chat:
@@ -312,6 +448,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.StateHasChanged();
             }
         }
+        else
+            lastUserPrompt = this.ChatThread.Blocks.Last(x => x.Role is ChatRole.USER).Content;
 
         //
         // Add the AI response to the thread:
@@ -353,7 +491,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
             // content to be streamed.
-            await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.SettingsManager, this.Provider.Model, this.ChatThread, this.cancellationTokenSource.Token);
+            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
         }
         
         this.cancellationTokenSource = null;
@@ -367,6 +505,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Disable the stream state:
         this.isStreaming = false;
+        
+        // Update the UI:
         this.StateHasChanged();
     }
     
@@ -400,6 +540,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
     {
+        //
+        // Want the user to manage the chat storage manually? In that case, we have to ask the user
+        // about possible data loss:
+        //
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
             var dialogParameters = new DialogParameters
@@ -413,6 +557,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 return;
         }
 
+        //
+        // Delete the previous chat when desired and necessary:
+        //
         if (this.ChatThread is not null && deletePreviousChat)
         {
             string chatPath;
@@ -427,10 +574,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 await this.Workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
         }
 
+        //
+        // Reset our state:
+        //
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
         
+        //
+        // Reset the LLM provider considering the user's settings:
+        //
         switch (this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior)
         {
             case AddChatProviderBehavior.ADDED_CHATS_USE_DEFAULT_PROVIDER:
@@ -449,8 +602,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
         }
 
+        //
+        // Reset the chat thread or create a new one:
+        //
         if (!useSameWorkspace)
         {
+            //
+            // When the user wants to start a new chat outside the current workspace,
+            // we have to reset the workspace id and the workspace name. Also, we have
+            // to reset the chat thread:
+            //
             this.ChatThread = null;
             this.currentWorkspaceId = Guid.Empty;
             this.currentWorkspaceName = string.Empty;
@@ -458,6 +619,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         else
         {
+            //
+            // When the user wants to start a new chat in the same workspace, we have to
+            // reset the chat thread only. The workspace id and the workspace name remain
+            // the same:
+            //
             this.ChatThread = new()
             {
                 SelectedProvider = this.Provider.Id,
@@ -470,8 +636,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = [],
             };
         }
-
-        this.userInput = string.Empty;
+        
+        // Now, we have to reset the data source options as well:
+        this.ApplyStandardDataSourceOptions();
+        
+        // Notify the parent component about the change:
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
@@ -525,17 +694,30 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
-        this.currentWorkspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
-        this.currentWorkspaceName = this.ChatThread is null ? string.Empty : await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
-        this.WorkspaceName(this.currentWorkspaceName);
+
+        if (this.ChatThread is not null)
+        {
+            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.WorkspaceName(this.currentWorkspaceName);
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
+        }
+        else
+        {
+            this.currentWorkspaceId = Guid.Empty;
+            this.currentWorkspaceName = string.Empty;
+            this.WorkspaceName(this.currentWorkspaceName);
+            this.ApplyStandardDataSourceOptions();
+        }
         
         await this.SelectProviderWhenLoadingChat();
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
         {
             this.mustScrollToBottomAfterRender = true;
             this.scrollRenderCountdown = 2;
-            this.StateHasChanged();
         }
+        
+        this.StateHasChanged();
     }
     
     private async Task ResetState()
@@ -549,6 +731,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.WorkspaceName(this.currentWorkspaceName);
         
         this.ChatThread = null;
+        this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
@@ -606,6 +789,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.ChatThread is null)
             return;
         
+        if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            return;
+        
         this.ChatThread.Remove(aiBlock, removeForRegenerate: true);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
@@ -653,6 +839,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(ChatComponent);
+    
     public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
@@ -692,6 +880,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        this.MessageBus.Unregister(this);
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

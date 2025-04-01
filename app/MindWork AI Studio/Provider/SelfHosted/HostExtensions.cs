@@ -15,19 +15,11 @@ public static class HostExtensions
 
     public static string BaseURL(this Host host) => host switch
     {
-        Host.LM_STUDIO => "/v1/",
-        Host.LLAMACPP => "/v1/",
-        Host.OLLAMA => "/v1/",
-
         _ => "/v1/",
     };
 
     public static string ChatURL(this Host host) => host switch
     {
-        Host.LM_STUDIO => "chat/completions",
-        Host.LLAMACPP => "chat/completions",
-        Host.OLLAMA => "chat/completions",
-
         _ => "chat/completions",
     };
     

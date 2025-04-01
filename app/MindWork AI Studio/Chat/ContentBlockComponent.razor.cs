@@ -1,8 +1,7 @@
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
-
-using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Chat;
 
@@ -42,10 +41,10 @@ public partial class ContentBlockComponent : ComponentBase
     public string Class { get; set; } = string.Empty;
     
     [Parameter]
-    public bool IsLastContentBlock { get; set; } = false;
+    public bool IsLastContentBlock { get; set; }
     
     [Parameter]
-    public bool IsSecondToLastBlock { get; set; } = false;
+    public bool IsSecondToLastBlock { get; set; }
 
     [Parameter]
     public Func<IContent, Task>? RemoveBlockFunc { get; set; }

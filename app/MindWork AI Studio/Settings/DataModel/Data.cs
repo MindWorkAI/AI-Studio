@@ -25,11 +25,21 @@ public sealed class Data
     /// A collection of embedding providers configured.
     /// </summary>
     public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
+
+    /// <summary>
+    /// A collection of data sources configured.
+    /// </summary>
+    public List<IDataSource> DataSources { get; set; } = [];
     
     /// <summary>
     /// List of configured profiles.
     /// </summary>
     public List<Profile> Profiles { get; init; } = [];
+
+    /// <summary>
+    /// List of enabled plugins.
+    /// </summary>
+    public List<Guid> EnabledPlugins { get; set; } = [];
 
     /// <summary>
     /// The next provider number to use.
@@ -40,6 +50,11 @@ public sealed class Data
     /// The next embedding number to use.
     /// </summary>
     public uint NextEmbeddingNum { get; set; } = 1;
+
+    /// <summary>
+    /// The next data source number to use.
+    /// </summary>
+    public uint NextDataSourceNum { get; set; } = 1;
 
     /// <summary>
     /// The next profile number to use.
@@ -63,6 +78,10 @@ public sealed class Data
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
+    
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
+    
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
     
     public DataAgenda Agenda { get; init; } = new();
     

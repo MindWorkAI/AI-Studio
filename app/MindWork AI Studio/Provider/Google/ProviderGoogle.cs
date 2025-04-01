@@ -136,8 +136,8 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
         if (secretKey is null)
             return default;
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"models?key={secretKey}");
-        var response = await this.httpClient.SendAsync(request, token);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"models?key={secretKey}");
+        using var response = await this.httpClient.SendAsync(request, token);
         
         if(!response.IsSuccessStatusCode)
             return default;

@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -47,8 +49,12 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
 
     #endregion
     
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
+        if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
+            yield return new("Use app default", string.Empty);
+        
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
         foreach (var providerId in this.Data)
         {
@@ -60,6 +66,8 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(ConfigurationProviderSelection);
+    
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

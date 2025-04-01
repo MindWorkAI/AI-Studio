@@ -1,5 +1,6 @@
 using AIStudio.Agents;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -21,6 +22,8 @@ internal sealed class Program
     public static RustService RUST_SERVICE = null!;
     public static Encryption ENCRYPTION = null!;
     public static string API_TOKEN = null!;
+    public static IServiceProvider SERVICE_PROVIDER = null!;
+    public static ILoggerFactory LOGGER_FACTORY = null!;
     
     public static async Task Main(string[] args)
     {
@@ -115,7 +118,10 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
+        builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddTransient<HTMLParser>();
+        builder.Services.AddTransient<AgentDataSourceSelection>();
+        builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
@@ -143,12 +149,25 @@ internal sealed class Program
         // Execute the builder to get the app:
         var app = builder.Build();
 
+        // Get the logging factory for e.g., static classes:
+        LOGGER_FACTORY = app.Services.GetRequiredService<ILoggerFactory>();
+        
+        // Get a program logger:
+        var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
+        programLogger.LogInformation("Starting the AI Studio server.");
+        
+        // Store the service provider (DI). We need it later for some classes,
+        // which are not part of the request pipeline:
+        SERVICE_PROVIDER = app.Services;
+        
         // Initialize the encryption service:
+        programLogger.LogInformation("Initializing the encryption service.");
         var encryptionLogger = app.Services.GetRequiredService<ILogger<Encryption>>();
         var encryption = new Encryption(encryptionLogger, secretPassword, secretKeySalt);
         var encryptionInitializer = encryption.Initialize();
 
         // Set the logger for the Rust service:
+        programLogger.LogInformation("Initializing the Rust service.");
         var rustLogger = app.Services.GetRequiredService<ILogger<RustService>>();
         rust.SetLogger(rustLogger);
         rust.SetEncryptor(encryption);
@@ -156,6 +175,7 @@ internal sealed class Program
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
 
+        programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
 
 #if DEBUG
@@ -175,9 +195,22 @@ internal sealed class Program
             .AddInteractiveServerRenderMode();
 
         var serverTask = app.RunAsync();
+        programLogger.LogInformation("Server was started successfully.");
 
         await encryptionInitializer;
         await rust.AppIsReady();
+        programLogger.LogInformation("The AI Studio server is ready.");
+        
+        TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
+        {
+            programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
+            taskArgs.SetObserved();
+        };
+        
         await serverTask;
+        
+        RUST_SERVICE.Dispose();
+        PluginFactory.Dispose();
+        programLogger.LogInformation("The AI Studio server was stopped.");
     }
 }

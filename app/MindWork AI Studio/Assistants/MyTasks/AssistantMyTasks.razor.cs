@@ -1,9 +1,10 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
 
 namespace AIStudio.Assistants.MyTasks;
 
-public partial class AssistantMyTasks : AssistantBaseCore
+public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
 {
     public override Tools.Components Component => Tools.Components.MY_TASKS_ASSISTANT;
     

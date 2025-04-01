@@ -1,14 +1,14 @@
 @attribute [Route(Routes.ASSISTANT_ERI)]
 @using AIStudio.Settings.DataModel
 @using MudExtensions
-@inherits AssistantBaseCore
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogERIServer>
 
-<MudText Typo="Typo.body1" Class="mb-3">
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
     You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize
     all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the
     vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to
     significantly reduce the hallucination of the LLM in knowledge questions.
-</MudText>
+</MudJustifiedText>
 
 <MudText Typo="Typo.body1">
     <b>Related links:</b>
@@ -25,10 +25,10 @@
     ERI server presets
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-3">
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
     Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if
     you are responsible for multiple ERI servers.
-</MudText>
+</MudJustifiedText>
 
 @if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Count is 0)
 {
@@ -52,33 +52,33 @@ else
     <MudButton Disabled="@this.AreServerPresetsBlocked" OnClick="@this.AddERIServer" Variant="Variant.Filled" Color="Color.Primary">
         Add ERI server preset
     </MudButton>
-    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Primary">
+    <MudButton OnClick="@this.RemoveERIServer" Disabled="@(this.AreServerPresetsBlocked || this.IsNoneERIServerSelected)" Variant="Variant.Filled" Color="Color.Error">
         Delete this server preset
     </MudButton>
 </MudStack>
 
 @if(this.AreServerPresetsBlocked)
 {
-    <MudText Typo="Typo.body1" Class="mb-3 mt-3">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3 mt-3">
         Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.
-    </MudText>
+    </MudJustifiedText>
 }
 
 <MudText Typo="Typo.h4" Class="mb-3 mt-6">
     Auto save
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-3">
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
     The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to
     regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be
     automatically saved. Would you like this?
-</MudText>
+</MudJustifiedText>
 
 @if(this.AreServerPresetsBlocked)
 {
-    <MudText Typo="Typo.body1" Class="mb-3">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
         Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.
-    </MudText>
+    </MudJustifiedText>
 }
 
 <MudTextSwitch Label="Should we automatically save any input made?" Disabled="@this.AreServerPresetsBlocked" @bind-Value="@this.autoSave" LabelOn="Yes, please save my inputs" LabelOff="No, I will enter everything again or configure it manually in the settings" />
@@ -204,18 +204,18 @@ else
     Embedding settings
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-2">
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
     You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector
     space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't
     have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You
     store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't
     need embeddings.
-</MudText>
+</MudJustifiedText>
 
-<MudText Typo="Typo.body1" Class="mb-3">
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
     You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries
     or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
-</MudText>
+</MudJustifiedText>
 
 @if (!this.IsNoneERIServerSelected)
 {
@@ -228,18 +228,20 @@ else
         <HeaderContent>
             <MudTh>Name</MudTh>
             <MudTh>Type</MudTh>
-            <MudTh Style="text-align: left;">Actions</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.EmbeddingName</MudTd>
             <MudTd>@context.EmbeddingType</MudTd>
-            <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditEmbedding(context)">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteEmbedding(context)">
-                    Delete
-                </MudButton>
+            <MudTd>
+                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditEmbedding(context)">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteEmbedding(context)">
+                        Delete
+                    </MudButton>
+                </MudStack>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -258,12 +260,12 @@ else
     Data retrieval settings
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-2">
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
     For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process.
     You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows
     you to test with beta users which process works better. Or you might generally want to give users the choice so they can select
     the process that best suits their circumstances.
-</MudText>
+</MudJustifiedText>
 
 @if (!this.IsNoneERIServerSelected)
 {
@@ -274,17 +276,19 @@ else
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
-            <MudTh Style="text-align: left;">Actions</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
-            <MudTd Style="text-align: left;">
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Class="ma-2" OnClick="() => this.EditRetrievalProcess(context)">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Class="ma-2" OnClick="() => this.DeleteRetrievalProcess(context)">
-                    Delete
-                </MudButton>
+            <MudTd>
+                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditRetrievalProcess(context)">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteRetrievalProcess(context)">
+                        Delete
+                    </MudButton>
+                </MudStack>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -299,13 +303,13 @@ else
     Add Retrieval Process
 </MudButton>
 
-<MudText Typo="Typo.body1" Class="mb-1">
+<MudJustifiedText Typo="Typo.body1" Class="mb-1">
     You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text
     mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here.
     It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these
     libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe
     the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
-</MudText>
+</MudJustifiedText>
 
 <MudTextField Disabled="@this.IsNoneERIServerSelected" T="string" @bind-Text="@this.additionalLibraries" Label="(Optional) Additional libraries" HelperText="Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them." Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
@@ -313,17 +317,17 @@ else
     Provider selection for generation
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-2">
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
     The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task.
     Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
-</MudText>
+</MudJustifiedText>
 
-<MudText Typo="Typo.body1" Class="mb-2">
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
     <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number
     of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.
     <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations
     and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
-</MudText>
+</MudJustifiedText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
 
@@ -331,19 +335,19 @@ else
     Write code to file system
 </MudText>
 
-<MudText Typo="Typo.body1" Class="mb-2">
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
     AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created
     outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the
     AI has made in which files.
-</MudText>
+</MudJustifiedText>
 
-<MudText Typo="Typo.body1" Class="mb-2">
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
     When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All
     other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a
     file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore,
     you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization,
     you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
-</MudText>
+</MudJustifiedText>
 
 <MudTextSwitch Label="Should we write the generated code to the file system?" Disabled="@this.IsNoneERIServerSelected" @bind-Value="@this.writeToFilesystem" LabelOn="Yes, please write or update all generated code to the file system" LabelOff="No, just show me the code" />
-<SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server"/>
+<SelectDirectory Label="Base directory where to write the code" @bind-Directory="@this.baseDirectory" Disabled="@(this.IsNoneERIServerSelected || !this.writeToFilesystem)" DirectoryDialogTitle="Select the target directory for the ERI server" Validation="@this.ValidateDirectory" />

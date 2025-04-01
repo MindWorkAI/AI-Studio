@@ -1,18 +1,11 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, rng)
+public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(logger, settingsManager, dataSourceService, rng)
 {
-    private static readonly ContentBlock EMPTY_BLOCK = new()
-    {
-        Content = null,
-        ContentType = ContentType.NONE,
-        Role = ChatRole.AGENT,
-        Time = DateTimeOffset.UtcNow,
-    };
-    
     private readonly List<ContentBlock> context = new();
     private readonly List<ContentBlock> answers = new();
     
@@ -72,8 +65,8 @@ public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsM
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(sourceURL));
-        var time = this.AddUserRequest(thread, text.Text);
-        await this.AddAIResponseAsync(thread, time);
+        var userRequest = this.AddUserRequest(thread, text.Text);
+        await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];
         this.answers.Add(answer);

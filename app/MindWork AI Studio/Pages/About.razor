@@ -1,64 +1,122 @@
 @attribute [Route(Routes.ABOUT)]
 
-<MudText Typo="Typo.h3" Class="mb-2">About MindWork AI Studio</MudText>
+<div class="inner-scrolling-context">
+    <MudText Typo="Typo.h3" Class="mb-2">About MindWork AI Studio</MudText>
 
-<InnerScrolling HeaderHeight="6em">
-    <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="Versions" IsExpanded="@true">
-            <MudText>
-                The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
-            </MudText>
-            <MudList T="string" Class="mb-3">
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnetRuntime"/>
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
-                <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
-            </MudList>
-            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
-                Check for updates
-            </MudButton>
-        </ExpansionPanel>
-        
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Changelog">
-            <Changelog/>
-        </ExpansionPanel>
+    <InnerScrolling>
+        <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="Versions" IsExpanded="@true">
+                <MudText>
+                    The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
+                </MudText>
+                <MudList T="string" Class="mb-3">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnetRuntime"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
+                </MudList>
+                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
+                    Check for updates
+                </MudButton>
+            </ExpansionPanel>
 
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Engineering" HeaderText="Motivation">
-            <Motivation/>
-        </ExpansionPanel>
+            <ExpansionPanel HeaderIcon="@Icons.Custom.Brands.GitHub" HeaderText="Community & Code">
+                <MudList T="string" Class="mb-1">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="http://mindworkai.org/">
+                        Discover MindWork AI's mission and vision on our official homepage.
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Custom.Brands.GitHub" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio">
+                        Browse AI Studio's source code on GitHub — we welcome your contributions.
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.PrivateConnectivity" Target="_blank" Href="https://github.com/MindWorkAI/ERI">
+                        Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Timeline" Target="_blank" Href="https://github.com/orgs/MindWorkAI/projects/2/views/3">
+                        View our project roadmap and help shape AI Studio's future development.
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.BugReport" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio/issues">
+                        Did you find a bug or are you experiencing issues? Report your concern here.
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Lightbulb" Target="_blank" Href="https://github.com/MindWorkAI/Planning/issues">
+                        Have feature ideas? Submit suggestions for future AI Studio enhancements.
+                    </MudListItem>
+                </MudList>
+            </ExpansionPanel>
+            
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Changelog">
+                <Changelog/>
+            </ExpansionPanel>
+            
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Book" HeaderText="Logbook">
+                <MudText Typo="Typo.h4">
+                    Explanation
+                </MudText>
+                <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                    AI Studio creates a log file at startup, in which events during startup are recorded. After startup,
+                    another log file is created that records all events that occur during the use of the app. This
+                    includes any errors that may occur. Depending on when an error occurs (at startup or during use),
+                    the contents of these log files can be helpful for troubleshooting. Sensitive information such as
+                    passwords is not included in the log files.
+                </MudJustifiedText>
+                
+                <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                    By clicking on the respective path, the path is copied to the clipboard. You might open these files
+                    with a text editor to view their contents.
+                </MudJustifiedText>
+                
+                <MudText Typo="Typo.h4">
+                    Startup log file
+                </MudText>
+                <MudList T="string" Class="mb-3">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="() => this.CopyStartupLogPath()"/>
+                </MudList>
+                
+                <MudText Typo="Typo.h4">
+                    Usage log file
+                </MudText>
+                <MudList T="string" Class="mb-3">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="() => this.CopyAppLogPath()"/>
+                </MudList>
+            </ExpansionPanel>
 
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="Vision">
-            <Vision/>
-        </ExpansionPanel>
-        
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoAwesomeMotion" HeaderText="Used Open Source Projects">
-            <MudGrid Spacing="1">
-                <ThirdPartyComponent Name=".NET" Developer="Microsoft & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/dotnet/runtime/blob/main/LICENSE.TXT" RepositoryUrl="https://github.com/dotnet" UseCase="The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."/>
-                <ThirdPartyComponent Name="MudBlazor" Developer="Jonny Larsson, Meinrad Recheis & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/MudBlazor/MudBlazor/blob/dev/LICENSE" RepositoryUrl="https://github.com/MudBlazor/MudBlazor/" UseCase="Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor."/>
-                <ThirdPartyComponent Name="MudBlazor.Markdown" Developer="My Nihongo & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/MyNihongo/MudBlazor.Markdown/blob/main/LICENSE" RepositoryUrl="https://github.com/MyNihongo/MudBlazor.Markdown" UseCase="This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read."/>
-                <ThirdPartyComponent Name="CodeBeam.MudBlazor.Extensions" Developer="Mehmet Can Karagöz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions/blob/dev/LICENSE" RepositoryUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions" UseCase="This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."/>
-                <ThirdPartyComponent Name="Rust" Developer="Graydon Hoare, Rust Foundation, Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/rust" UseCase="The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software."/>
-                <ThirdPartyComponent Name="Tauri" Developer="Daniel Thompson-Yvetot, Lucas Nogueira, Tensor, Boscop, Serge Zaitsev, George Burton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tauri-apps/tauri/blob/dev/LICENSE_MIT" RepositoryUrl="https://github.com/tauri-apps/tauri" UseCase="Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"/>
-                <ThirdPartyComponent Name="Rocket" Developer="Sergio Benitez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rwf2/Rocket/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rwf2/Rocket" UseCase="We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."/>
-                <ThirdPartyComponent Name="serde" Developer="Erick Tryzelaar, David Tolnay & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/serde-rs/serde/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/serde-rs/serde" UseCase="Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."/>
-                <ThirdPartyComponent Name="keyring" Developer="Walther Chen, Daniel Brotsky & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/hwchen/keyring-rs/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/hwchen/keyring-rs" UseCase="In order to use any LLM, each user must store their so-called token for each LLM provider. This token must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library."/>
-                <ThirdPartyComponent Name="arboard" Developer="Artur Kovacs, Avi Weinstock, 1Password & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/1Password/arboard/blob/master/LICENSE-MIT.txt" RepositoryUrl="https://github.com/1Password/arboard" UseCase="To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system."/>
-                <ThirdPartyComponent Name="tokio" Developer="Alex Crichton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/tokio/blob/master/LICENSE" RepositoryUrl="https://github.com/tokio-rs/tokio" UseCase="Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor."/>
-                <ThirdPartyComponent Name="flexi_logger" Developer="emabee & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/emabee/flexi_logger/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/emabee/flexi_logger" UseCase="This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible."/>
-                <ThirdPartyComponent Name="rand" Developer="Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-random/rand/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-random/rand" UseCase="We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose."/>
-                <ThirdPartyComponent Name="base64" Developer="Marshall Pierce, Alice Maz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/marshallpierce/rust-base64/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/marshallpierce/rust-base64" UseCase="For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."/>
-                <ThirdPartyComponent Name="Rust Crypto" Developer="Artyom Pavlov, Tony Arcieri, Brian Warner, Arthur Gautier, Vlad Filippov, Friedel Ziegelmayer, Nicolas Stalder & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/RustCrypto/traits/blob/master/cipher/LICENSE-MIT" RepositoryUrl="https://github.com/RustCrypto" UseCase="When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project."/>
-                <ThirdPartyComponent Name="rcgen" Developer="RustTLS developers, est31 & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rcgen/blob/main/LICENSE" RepositoryUrl="https://github.com/rustls/rcgen" UseCase="For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."/>
-                <ThirdPartyComponent Name="HtmlAgilityPack" Developer="ZZZ Projects & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE" RepositoryUrl="https://github.com/zzzprojects/html-agility-pack" UseCase="We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant."/>
-                <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant."/>
-                <ThirdPartyComponent Name="wikEd diff" Developer="Cacycle & Open Source Community" LicenseName="None (public domain)" LicenseUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff#License" RepositoryUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff" UseCase="This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."/>
-            </MudGrid>
-        </ExpansionPanel>
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
-            <MudMarkdown Value="@LICENSE" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
-        </ExpansionPanel>
-    </MudExpansionPanels>
-</InnerScrolling>
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Engineering" HeaderText="Motivation">
+                <Motivation/>
+            </ExpansionPanel>
+
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="Vision">
+                <Vision/>
+            </ExpansionPanel>
+            
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoAwesomeMotion" HeaderText="Used Open Source Projects">
+                <MudGrid Spacing="1">
+                    <ThirdPartyComponent Name=".NET" Developer="Microsoft & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/dotnet/runtime/blob/main/LICENSE.TXT" RepositoryUrl="https://github.com/dotnet" UseCase="The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."/>
+                    <ThirdPartyComponent Name="MudBlazor" Developer="Jonny Larsson, Meinrad Recheis & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/MudBlazor/MudBlazor/blob/dev/LICENSE" RepositoryUrl="https://github.com/MudBlazor/MudBlazor/" UseCase="Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor."/>
+                    <ThirdPartyComponent Name="MudBlazor.Markdown" Developer="My Nihongo & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/MyNihongo/MudBlazor.Markdown/blob/main/LICENSE" RepositoryUrl="https://github.com/MyNihongo/MudBlazor.Markdown" UseCase="This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read."/>
+                    <ThirdPartyComponent Name="CodeBeam.MudBlazor.Extensions" Developer="Mehmet Can Karagöz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions/blob/dev/LICENSE" RepositoryUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions" UseCase="This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."/>
+                    <ThirdPartyComponent Name="Rust" Developer="Graydon Hoare, Rust Foundation, Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/rust" UseCase="The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software."/>
+                    <ThirdPartyComponent Name="Tauri" Developer="Daniel Thompson-Yvetot, Lucas Nogueira, Tensor, Boscop, Serge Zaitsev, George Burton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tauri-apps/tauri/blob/dev/LICENSE_MIT" RepositoryUrl="https://github.com/tauri-apps/tauri" UseCase="Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"/>
+                    <ThirdPartyComponent Name="Rocket" Developer="Sergio Benitez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rwf2/Rocket/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rwf2/Rocket" UseCase="We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."/>
+                    <ThirdPartyComponent Name="serde" Developer="Erick Tryzelaar, David Tolnay & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/serde-rs/serde/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/serde-rs/serde" UseCase="Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."/>
+                    <ThirdPartyComponent Name="keyring" Developer="Walther Chen, Daniel Brotsky & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/hwchen/keyring-rs/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/hwchen/keyring-rs" UseCase="In order to use any LLM, each user must store their so-called token for each LLM provider. This token must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library."/>
+                    <ThirdPartyComponent Name="arboard" Developer="Artur Kovacs, Avi Weinstock, 1Password & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/1Password/arboard/blob/master/LICENSE-MIT.txt" RepositoryUrl="https://github.com/1Password/arboard" UseCase="To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system."/>
+                    <ThirdPartyComponent Name="tokio" Developer="Alex Crichton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/tokio/blob/master/LICENSE" RepositoryUrl="https://github.com/tokio-rs/tokio" UseCase="Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor."/>
+                    <ThirdPartyComponent Name="flexi_logger" Developer="emabee & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/emabee/flexi_logger/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/emabee/flexi_logger" UseCase="This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible."/>
+                    <ThirdPartyComponent Name="rand" Developer="Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-random/rand/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-random/rand" UseCase="We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose."/>
+                    <ThirdPartyComponent Name="base64" Developer="Marshall Pierce, Alice Maz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/marshallpierce/rust-base64/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/marshallpierce/rust-base64" UseCase="For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."/>
+                    <ThirdPartyComponent Name="Rust Crypto" Developer="Artyom Pavlov, Tony Arcieri, Brian Warner, Arthur Gautier, Vlad Filippov, Friedel Ziegelmayer, Nicolas Stalder & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/RustCrypto/traits/blob/master/cipher/LICENSE-MIT" RepositoryUrl="https://github.com/RustCrypto" UseCase="When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project."/>
+                    <ThirdPartyComponent Name="rcgen" Developer="RustTLS developers, est31 & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rcgen/blob/main/LICENSE" RepositoryUrl="https://github.com/rustls/rcgen" UseCase="For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."/>
+                    <ThirdPartyComponent Name="Lua-CSharp" Developer="Yusuke Nakada & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/nuskey8/Lua-CSharp/blob/main/LICENSE" RepositoryUrl="https://github.com/nuskey8/Lua-CSharp" UseCase="We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library." />
+                    <ThirdPartyComponent Name="HtmlAgilityPack" Developer="ZZZ Projects & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE" RepositoryUrl="https://github.com/zzzprojects/html-agility-pack" UseCase="We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant."/>
+                    <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant."/>
+                    <ThirdPartyComponent Name="wikEd diff" Developer="Cacycle & Open Source Community" LicenseName="None (public domain)" LicenseUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff#License" RepositoryUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff" UseCase="This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."/>
+                </MudGrid>
+            </ExpansionPanel>
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
+                <MudMarkdown Value="@LICENSE" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
+            </ExpansionPanel>
+        </MudExpansionPanels>
+    </InnerScrolling>
+</div>

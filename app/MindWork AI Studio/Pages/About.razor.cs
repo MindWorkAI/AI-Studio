@@ -1,5 +1,8 @@
 using System.Reflection;
 
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Pages;
@@ -9,9 +12,15 @@ public partial class About : ComponentBase
     [Inject]
     private MessageBus MessageBus { get; init; } = null!;
     
+    [Inject]
+    private RustService RustService { get; init; } = null!;
+    
+    [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
+    
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
-
+    
     private static string VersionDotnetRuntime => $"Used .NET runtime: v{META_DATA.DotnetVersion}";
     
     private static string VersionDotnetSdk => $"Used .NET SDK: v{META_DATA.DotnetSdkVersion}";
@@ -26,6 +35,28 @@ public partial class About : ComponentBase
     
     private static string TauriVersion => $"Tauri: v{META_DATA.TauriVersion}";
 
+    private GetLogPathsResponse logPaths;
+
+    #region Overrides of ComponentBase
+
+    private async Task CopyStartupLogPath()
+    {
+        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogStartupPath);
+    }
+    
+    private async Task CopyAppLogPath()
+    {
+        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        this.logPaths = await this.RustService.GetLogPaths();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+    
     private const string LICENSE = """
         # Functional Source License, Version 1.1, MIT Future License
 

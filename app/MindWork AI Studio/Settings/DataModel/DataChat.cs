@@ -18,6 +18,11 @@ public sealed class DataChat
     public AddChatProviderBehavior AddChatProviderBehavior { get; set; } = AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER;
 
     /// <summary>
+    /// Defines the data source behavior when sending assistant results to a chat.
+    /// </summary>
+    public SendToChatDataSourceBehavior SendToChatDataSourceBehavior { get; set; } = SendToChatDataSourceBehavior.NO_DATA_SOURCES;
+
+    /// <summary>
     /// Preselect any chat options?
     /// </summary>
     public bool PreselectOptions { get; set; }
@@ -31,6 +36,11 @@ public sealed class DataChat
     /// Preselect a profile?
     /// </summary>
     public string PreselectedProfile { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Should we preselect data sources options for a created chat?
+    /// </summary>
+    public DataSourceOptions PreselectedDataSourceOptions { get; set; } = new();
 
     /// <summary>
     /// Should we show the latest message after loading? When false, we show the first (aka oldest) message.

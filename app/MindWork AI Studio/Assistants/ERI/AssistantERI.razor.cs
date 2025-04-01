@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
@@ -11,7 +12,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.ERI;
 
-public partial class AssistantERI : AssistantBaseCore
+public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 {
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
@@ -290,6 +291,7 @@ public partial class AssistantERI : AssistantBaseCore
                       - You consider the security of the implementation by applying the Security by Design principle.
                       - Your output is formatted as Markdown. Code is formatted as code blocks. For every file, you
                         create a separate code block with its file path and name as chapter title.
+                      - Important: The JSON objects of the API messages use camel case for the data field names.
                       """);
             
             return sb.ToString();
@@ -299,6 +301,8 @@ public partial class AssistantERI : AssistantBaseCore
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
     protected override bool ShowEntireChatThread => true;
+    
+    protected override bool ShowSendTo => false;
 
     protected override string SubmitText => "Create the ERI server";
 
@@ -474,6 +478,16 @@ public partial class AssistantERI : AssistantBaseCore
     private async Task RemoveERIServer()
     {
         if(this.selectedERIServer is null)
+            return;
+        
+        var dialogParameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete the ERI server preset '{this.selectedERIServer.ServerName}'?" },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete ERI server preset", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
             return;
         
         this.SettingsManager.ConfigurationData.ERI.ERIServers.Remove(this.selectedERIServer);
@@ -736,6 +750,17 @@ public partial class AssistantERI : AssistantBaseCore
         
         if(authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
             return "Please describe how the selected authentication methods should be used.";
+        
+        return null;
+    }
+
+    private string? ValidateDirectory(string path)
+    {
+        if(!this.writeToFilesystem)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(path))
+            return "Please provide a base directory for the ERI server to write files to.";
         
         return null;
     }

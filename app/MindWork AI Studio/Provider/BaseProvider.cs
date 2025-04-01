@@ -4,8 +4,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
-
-using RustService = AIStudio.Tools.RustService;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Provider;
 
@@ -103,9 +102,14 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             using var request = await requestBuilder();
             
+            //
             // Send the request with the ResponseHeadersRead option.
             // This allows us to read the stream as soon as the headers are received.
             // This is important because we want to stream the responses.
+            //
+            // Please notice: We do not dispose the response here. The caller is responsible
+            // for disposing the response object. This is important because the response
+            // object is used to read the stream.
             var nextResponse = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
             if (nextResponse.IsSuccessStatusCode)
             {

@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -20,6 +21,9 @@ public partial class SelectDirectory : ComponentBase
 
     [Parameter]
     public string DirectoryDialogTitle { get; set; } = "Select Directory";
+    
+    [Parameter]
+    public Func<string, string?> Validation { get; set; } = _ => null;
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;

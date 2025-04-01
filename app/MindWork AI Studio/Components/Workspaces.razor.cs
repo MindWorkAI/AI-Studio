@@ -14,9 +14,6 @@ namespace AIStudio.Components;
 public partial class Workspaces : ComponentBase
 {
     [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
-    
-    [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]

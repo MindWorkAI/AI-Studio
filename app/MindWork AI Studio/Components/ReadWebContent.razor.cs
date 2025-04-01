@@ -59,11 +59,7 @@ public partial class ReadWebContent : ComponentBase
         if(this.PreselectContentCleanerAgent)
             this.useContentCleanerAgent = true;
         
-        if (this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)
-            this.providerSettings = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider);
-        else
-            this.providerSettings = this.ProviderSettings;
-
+        this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_TEXT_CONTENT_CLEANER, this.ProviderSettings.Id, true);
         await base.OnInitializedAsync();
     }
 

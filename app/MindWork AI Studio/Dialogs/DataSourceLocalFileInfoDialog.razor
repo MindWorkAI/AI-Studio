@@ -1,0 +1,42 @@
+@using AIStudio.Settings.DataModel
+
+<MudDialog>
+    <DialogContent>
+        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="Data source name" Value="@this.DataSource.Name" ClipboardTooltipSubject="the data source name"/>
+        
+        <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="File path" Value="@this.DataSource.FilePath" ClipboardTooltipSubject="this path"/>
+        @if (!this.IsFileAvailable)
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
+                The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.
+            </MudJustifiedText>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                The file chosen for the data source exists.
+            </MudJustifiedText>
+        }
+
+        <TextInfoLine Icon="@Icons.Material.Filled.Layers" Label="Embedding name" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="the embedding name"/>
+        @if (this.IsCloudEmbedding)
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
+                The embedding runs in the cloud. All your data within the
+                file '@this.DataSource.FilePath' will be sent to the cloud.
+            </MudJustifiedText>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                The embedding runs locally or in your organization. Your data is not sent to the cloud.
+            </MudJustifiedText>
+        }
+
+        <TextInfoLines Label="Your security policy" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="your security policy"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="File size" Value="@this.FileSize" ClipboardTooltipSubject="the file size"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>

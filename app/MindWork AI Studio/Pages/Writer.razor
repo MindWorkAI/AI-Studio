@@ -1,57 +1,58 @@
 @attribute [Route(Routes.WRITER)]
 @inherits MSGComponentBase
 
-<MudText Typo="Typo.h3" Class="mb-2 mr-3">
-    Writer
-</MudText>
+<div class="inner-scrolling-context">
+    <MudText Typo="Typo.h3" Class="mb-2">
+        Writer
+    </MudText>
+    <PreviewExperimental ApplyInnerScrollingFix="true"/>
 
-<PreviewExperimental/>
+    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    <InnerScrolling>
+        <ChildContent>
+            <MudTextField
+                @ref="@this.textField"
+                T="string"
+                Label="Write your text"
+                @bind-Text="@this.userInput"
+                Immediate="@true"
+                Lines="16"
+                MaxLines="16"
+                Typo="Typo.body1"
+                Variant="Variant.Outlined"
+                InputMode="InputMode.text"
+                FullWidth="@true"
+                OnKeyDown="@this.InputKeyEvent"
+                UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
-<InnerScrolling HeaderHeight="12.3em">
-    <ChildContent>
-        <MudTextField
-            @ref="@this.textField"
-            T="string"
-            Label="Write your text"
-            @bind-Text="@this.userInput"
-            Immediate="@true"
-            Lines="16"
-            MaxLines="16"
-            Typo="Typo.body1"
-            Variant="Variant.Outlined"
-            InputMode="InputMode.text"
-            FullWidth="@true"
-            OnKeyDown="@this.InputKeyEvent"
-            UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-
-        <MudTextField
-            T="string"
-            Label="Your stage directions"
-            @bind-Text="@this.userDirection"
-            Immediate="@true"
-            Lines="4"
-            MaxLines="4"
-            Typo="Typo.body1"
-            Variant="Variant.Outlined"
-            InputMode="InputMode.text"
-            FullWidth="@true"
-            UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    </ChildContent>
-    <FooterContent>
-        @if (this.isStreaming)
-        {
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
-        }
-        <MudTextField
-            T="string"
-            Label="Suggestion"
-            @bind-Text="@this.suggestion"
-            ReadOnly="@true"
-            Lines="3"
-            Typo="Typo.body1"
-            Variant="Variant.Outlined"
-            FullWidth="@true"
-            UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    </FooterContent>
-</InnerScrolling>
+            <MudTextField
+                T="string"
+                Label="Your stage directions"
+                @bind-Text="@this.userDirection"
+                Immediate="@true"
+                Lines="4"
+                MaxLines="4"
+                Typo="Typo.body1"
+                Variant="Variant.Outlined"
+                InputMode="InputMode.text"
+                FullWidth="@true"
+                UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        </ChildContent>
+        <FooterContent>
+            @if (this.isStreaming)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
+            }
+            <MudTextField
+                T="string"
+                Label="Suggestion"
+                @bind-Text="@this.suggestion"
+                ReadOnly="@true"
+                Lines="3"
+                Typo="Typo.body1"
+                Variant="Variant.Outlined"
+                FullWidth="@true"
+                UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        </FooterContent>
+    </InnerScrolling>
+</div>

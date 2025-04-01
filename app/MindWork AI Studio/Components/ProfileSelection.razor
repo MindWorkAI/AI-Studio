@@ -1,5 +1,5 @@
-<MudTooltip Text="You can switch between your profiles here">
-    <MudMenu StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass">
+<MudTooltip Text="You can switch between your profiles here" Placement="Placement.Top">
+    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass">
         @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
         {
             <MudMenuItem OnClick="() => this.SelectionChanged(profile)">

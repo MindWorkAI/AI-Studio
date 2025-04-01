@@ -1,11 +1,12 @@
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Assistants.BiasDay;
 
-public partial class BiasOfTheDayAssistant : AssistantBaseCore
+public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAssistantBias>
 {
     public override Tools.Components Component => Tools.Components.BIAS_DAY_ASSISTANT;
     

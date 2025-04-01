@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -8,7 +9,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
-using RustService = AIStudio.Tools.RustService;
 
 namespace AIStudio.Layout;
 
@@ -82,6 +82,23 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
         
+        //
+        // We cannot process the plugins before the settings are loaded,
+        // and we know our data directory.
+        //
+        if(PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
+        {
+            // Ensure that all internal plugins are present:
+            await PluginFactory.EnsureInternalPlugins();
+            
+            // Load (but not start) all plugins, without waiting for them:
+            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            _ = PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+            
+            // Set up hot reloading for plugins:
+            PluginFactory.SetUpHotReloading();
+        }
+        
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
         this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED ]);
@@ -103,39 +120,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
 
     private void LoadNavItems()
     {
-        var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
-        var isWriterModePreviewEnabled = PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager);
-        if (!isWriterModePreviewEnabled)
-        {
-            this.navItems = new List<NavBarItem>
-            {
-                new("Home", Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true),
-                new("Chat", Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false),
-                new("Assistants", Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false),
-                new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false),
-                new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false),
-                new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false),
-            };
-        }
-        else
-        {
-            this.navItems = new List<NavBarItem>
-            {
-                new("Home", Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true),
-                new("Chat", Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false),
-                new("Assistants", Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false),
-                new("Writer", Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false),
-                new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false),
-                new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false),
-                new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false),
-            };
-        }
+        this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
 
     #endregion
 
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(MainLayout);
+    
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)
@@ -180,6 +173,25 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     }
 
     #endregion
+
+    private IEnumerable<NavBarItem> GetNavItems()
+    {
+        var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
+        
+        yield return new("Home", Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
+        yield return new("Chat", Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
+        yield return new("Assistants", Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
+
+        if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
+            yield return new("Writer", Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
+
+        if (PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
+            yield return new("Plugins", Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
+        
+        yield return new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
+        yield return new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
+        yield return new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
+    }
     
     private async Task DismissUpdate()
     {

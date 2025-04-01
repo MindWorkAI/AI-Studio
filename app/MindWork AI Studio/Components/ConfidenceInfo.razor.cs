@@ -8,7 +8,7 @@ namespace AIStudio.Components;
 public partial class ConfidenceInfo : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Parameter]
-    public ConfidenceInfoMode Mode { get; set; } = ConfidenceInfoMode.BUTTON;
+    public PopoverTriggerMode Mode { get; set; } = PopoverTriggerMode.BUTTON;
     
     [Parameter]
     public LLMProviders LLMProvider { get; set; }
@@ -59,10 +59,12 @@ public partial class ConfidenceInfo : ComponentBase, IMessageBusReceiver, IDispo
 
     private string GetCurrentConfidenceColor() => $"color: {this.currentConfidence.Level.GetColor(this.SettingsManager)};";
     
-    private string GetPopoverStyle() => $"border-color: {this.currentConfidence.Level.GetColor(this.SettingsManager)}; max-width: calc(35vw);";
+    private string GetPopoverStyle() => $"border-color: {this.currentConfidence.Level.GetColor(this.SettingsManager)};";
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(ConfidenceInfo);
+    
     public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)

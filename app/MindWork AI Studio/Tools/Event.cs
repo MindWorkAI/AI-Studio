@@ -8,6 +8,7 @@ public enum Event
     STATE_HAS_CHANGED,
     CONFIGURATION_CHANGED,
     COLOR_THEME_CHANGED,
+    PLUGINS_RELOADED,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,
@@ -22,6 +23,9 @@ public enum Event
     // Workspace events:
     WORKSPACE_LOADED_CHAT_CHANGED,
     WORKSPACE_TOGGLE_OVERLAY,
+    
+    // RAG events:
+    RAG_AUTO_DATA_SOURCES_SELECTED,
     
     // Send events:
     SEND_TO_GRAMMAR_SPELLING_ASSISTANT,

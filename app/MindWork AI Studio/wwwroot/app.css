@@ -35,6 +35,20 @@
     margin-top: 4px;
 }
 
+.plugin-icon-container {
+    width: var(--mud-icon-size-large);
+    height: var(--mud-icon-size-large);
+}
+
+.plugin-icon-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+.mud-popover-open.InnerScrollingFix {
+    left: 0 !important;
+}
+
 :root {
     --confidence-color: #000000;
 }
@@ -71,7 +85,25 @@
     text-decoration-thickness: 2px;
 }
 
-/* Fixed for MudBlazor, tooltips inside of navmenu */
+/* Fix for MudBlazor, tooltips inside of navmenu */
 .mud-navmenu .mud-tooltip-root {
     display: initial !important;
+}
+
+/* Context div for inner scrolling component */
+.inner-scrolling-context {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Fixed MudSplitter inside context div for inner scrolling component */
+.inner-scrolling-context > .mud-splitter {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* Fixed the slider part of MudSplitter inside context div for inner scrolling component */
+.inner-scrolling-context > .mud-splitter > .mud-slider > .mud-slider-container {
+    padding-bottom: 12px;
 }

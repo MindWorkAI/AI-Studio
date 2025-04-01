@@ -14,7 +14,7 @@ public partial class MudTextList : ComponentBase
     public string Icon { get; set; } = Icons.Material.Filled.CheckCircle;
     
     [Parameter]
-    public string Class { get; set; } = "";
+    public string Class { get; set; } = string.Empty;
     
     private string Classes => $"mud-text-list {this.Class}";
 }

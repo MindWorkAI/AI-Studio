@@ -3,7 +3,7 @@
 
 @inherits MSGComponentBase
 
-<InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" HeaderHeight="12.3em" MinWidth="36em">
+<InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" MinWidth="36em" Style="height: 100%">
     <ChildContent>
         @if (this.ChatThread is not null)
         {
@@ -24,7 +24,7 @@
                         IsLastContentBlock="@isLastBlock"
                         IsSecondToLastBlock="@isSecondLastBlock"
                         RegenerateFunc="@this.RegenerateBlock"
-                        RegenerateEnabled="@(() => this.IsProviderSelected)"
+                        RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
                         EditLastBlockFunc="@this.EditLastBlock"
                         EditLastUserBlockFunc="@this.EditLastUserBlock"/>
                 }
@@ -46,7 +46,7 @@
                 Adornment="Adornment.End"
                 AdornmentIcon="@Icons.Material.Filled.Send"
                 OnAdornmentClick="() => this.SendMessage()"
-                ReadOnly="!this.IsProviderSelected || this.isStreaming"
+                Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
                 OnKeyUp="this.InputKeyEvent"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
@@ -97,7 +97,7 @@
 
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
-                <ConfidenceInfo Mode="ConfidenceInfoMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
+                <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
             }
 
             @if (this.isStreaming && this.cancellationTokenSource is not null)
@@ -108,6 +108,19 @@
             }
 
             <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
+            
+            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+            {
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" PopoverButtonClasses="ma-3" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
+            }
+            
+            @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
+            {
+                <MudTooltip Text="The selected provider is not allowed in this chat due to data security reasons." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                </MudTooltip>
+            }
+            <MudIconButton />
         </MudToolBar>
     </FooterContent>
 </InnerScrolling>

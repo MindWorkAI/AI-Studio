@@ -8,7 +8,7 @@ namespace AIStudio.Dialogs;
 public partial class RetrievalProcessDialog : ComponentBase
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
     /// The user chosen retrieval process name.

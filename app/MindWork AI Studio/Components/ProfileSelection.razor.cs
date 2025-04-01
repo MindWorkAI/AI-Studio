@@ -14,11 +14,14 @@ public partial class ProfileSelection : ComponentBase
 
     [Parameter]
     public string MarginLeft { get; set; } = "ml-3";
+
+    [Parameter]
+    public string MarginRight { get; set; } = string.Empty;
     
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
     
-    private string MarginClass => $"{this.MarginLeft}";
+    private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
     
     private async Task SelectionChanged(Profile profile)
     {

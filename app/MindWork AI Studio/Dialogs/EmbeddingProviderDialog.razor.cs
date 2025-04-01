@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
@@ -11,7 +12,7 @@ namespace AIStudio.Dialogs;
 public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
     /// The embedding's number in the list.
@@ -112,13 +113,24 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     private EmbeddingProvider CreateEmbeddingProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
+        Model model = default;
+        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
+        {
+            if (this.DataHost is Host.OLLAMA)
+                model = new Model(this.dataManuallyModel, null);
+            else if (this.DataHost is Host.LM_STUDIO)
+                model = this.DataModel;
+        }
+        else
+            model = this.DataModel;
+        
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             Name = this.DataName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = this.DataLLMProvider is LLMProviders.SELF_HOSTED ? new Model(this.dataManuallyModel, null) : this.DataModel,
+            Model = model,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
@@ -197,8 +209,7 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     private async Task Store()
     {
         await this.form.Validate();
-        if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
-            this.dataAPIKeyStorageIssue = string.Empty;
+        this.dataAPIKeyStorageIssue = string.Empty;
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)

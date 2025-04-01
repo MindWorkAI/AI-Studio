@@ -1,7 +1,10 @@
 using AIStudio.Provider.Anthropic;
+using AIStudio.Provider.DeepSeek;
 using AIStudio.Provider.Fireworks;
 using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
+using AIStudio.Provider.GWDG;
+using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
@@ -28,11 +31,15 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => "Mistral",
         LLMProviders.GOOGLE => "Google",
         LLMProviders.X => "xAI",
+        LLMProviders.DEEP_SEEK => "DeepSeek",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
         
         LLMProviders.SELF_HOSTED => "Self-hosted",
+        
+        LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
+        LLMProviders.GWDG => "GWDG SAIA",
         
         _ => "Unknown",
     };
@@ -66,7 +73,12 @@ public static class LLMProvidersExtensions
         
         LLMProviders.X => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://x.ai/legal/terms-of-service-enterprise").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
+        LLMProviders.DEEP_SEEK => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
+        LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        LLMProviders.GWDG => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://docs.hpc.gwdg.de/services/chat-ai/data-privacy/index.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         _ => Confidence.UNKNOWN.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
     };
@@ -84,6 +96,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_AI => true,
         LLMProviders.MISTRAL => true,
         LLMProviders.GOOGLE => true,
+        LLMProviders.HELMHOLTZ => true,
         
         //
         // Providers that do not support embeddings:
@@ -92,6 +105,8 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => false,
         LLMProviders.FIREWORKS => false,
         LLMProviders.X => false,
+        LLMProviders.GWDG => false,
+        LLMProviders.DEEP_SEEK => false,
         
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -134,11 +149,15 @@ public static class LLMProvidersExtensions
                 LLMProviders.MISTRAL => new ProviderMistral(logger) { InstanceName = instanceName },
                 LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = instanceName },
                 LLMProviders.X => new ProviderX(logger) { InstanceName = instanceName },
+                LLMProviders.DEEP_SEEK => new ProviderDeepSeek(logger) { InstanceName = instanceName },
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
                 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
+                
+                LLMProviders.HELMHOLTZ => new ProviderHelmholtz(logger) { InstanceName = instanceName },
+                LLMProviders.GWDG => new ProviderGWDG(logger) { InstanceName = instanceName },
                 
                 _ => new NoProvider(),
             };
@@ -157,9 +176,13 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => "https://console.anthropic.com/dashboard",
         LLMProviders.GOOGLE => "https://console.cloud.google.com/",
         LLMProviders.X => "https://accounts.x.ai/sign-up",
+        LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
+        
+        LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
+        LLMProviders.GWDG => "https://docs.hpc.gwdg.de/services/saia/index.html#api-request",
         
         _ => string.Empty,
     };
@@ -173,6 +196,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GROQ => "https://console.groq.com/settings/usage",
         LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
+        LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
         
         _ => string.Empty,
     };
@@ -186,6 +210,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.GOOGLE => true,
+        LLMProviders.DEEP_SEEK => true,
         
         _ => false,
     };
@@ -227,9 +252,12 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => true,
         LLMProviders.GOOGLE => true,
         LLMProviders.X => true,
+        LLMProviders.DEEP_SEEK => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
+        LLMProviders.HELMHOLTZ => true,
+        LLMProviders.GWDG => true,
         
         LLMProviders.SELF_HOSTED => host is Host.OLLAMA,
         
@@ -243,9 +271,12 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => true,
         LLMProviders.GOOGLE => true,
         LLMProviders.X => true,
+        LLMProviders.DEEP_SEEK => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
+        LLMProviders.HELMHOLTZ => true,
+        LLMProviders.GWDG => true,
         
         _ => false,
     };

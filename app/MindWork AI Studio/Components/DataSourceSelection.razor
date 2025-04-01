@@ -1,0 +1,181 @@
+@using AIStudio.Settings
+
+@if (this.SelectionMode is DataSourceSelectionMode.SELECTION_MODE)
+{
+    <div class="d-flex">
+        <MudTooltip Text="Select the data you want to use here." Placement="Placement.Top">
+            @if (this.PopoverTriggerMode is PopoverTriggerMode.ICON)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Source" Class="@this.PopoverButtonClasses" OnClick="@(() => this.ToggleDataSourceSelection())"/>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Source" Class="@this.PopoverButtonClasses" OnClick="@(() => this.ToggleDataSourceSelection())">
+                    Select data
+                </MudButton>
+            }
+        </MudTooltip>
+
+        <MudPopover Open="@this.showDataSourceSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <PreviewPrototype/>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h5">Data Source Selection</MudText>
+                            <MudSpacer/>
+                            <MudTooltip Text="Manage your data sources" Placement="Placement.Top">
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialog"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Style="min-width: 24em; max-height: 60vh; max-width: 45vw; overflow: auto;">
+                    @if (this.waitingForDataSources)
+                    {
+                        <MudSkeleton Width="30%" Height="42px;"/>
+                        <MudSkeleton Width="80%"/>
+                        <MudSkeleton Width="100%"/>
+                    }
+                    else if (this.SettingsManager.ConfigurationData.DataSources.Count == 0)
+                    {
+                        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                            You haven't configured any data sources. To grant the AI access to your data, you need to
+                            add such a source. However, if you wish to use data from your device, you first have to set up
+                            a so-called embedding. This embedding is necessary so the AI can effectively search your data,
+                            find and retrieve the correct information required for each task. In addition to local data,
+                            you can also incorporate your company's data. To do so, your company must provide the data through
+                            an ERI (External Retrieval Interface).
+                        </MudJustifiedText>
+                        
+                        <MudStack StretchItems="StretchItems.None" AlignItems="AlignItems.Start">
+                            <MudButton Variant="Variant.Filled" OnClick="this.OpenSettingsDialog" StartIcon="@Icons.Material.Filled.Settings">
+                                Manage Data Sources
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Href="https://mindworkai.org/#eri---external-retrieval-interface" Target="_blank" StartIcon="@Icons.Material.Filled.Settings">
+                                Read more about ERI
+                            </MudButton>
+                        </MudStack>
+                    }
+                    else if (this.showDataSourceSelection)
+                    {
+                        <MudTextSwitch Label="Are data sources enabled?" Value="@this.areDataSourcesEnabled" LabelOn="Yes, I want to use data sources." LabelOff="No, I don't want to use data sources." ValueChanged="@this.EnabledChanged"/>
+                        @if (this.areDataSourcesEnabled)
+                        {
+                            <MudTextSwitch Label="AI-based data source selection" Value="@this.aiBasedSourceSelection" LabelOn="Yes, let the AI decide which data sources are needed." LabelOff="No, I manually decide which data source to use." ValueChanged="@this.AutoModeChanged"/>
+                            
+                            @if (this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
+                            {
+                                <MudTextSwitch Label="AI-based data validation" Value="@this.aiBasedValidation" LabelOn="Yes, let the AI validate & filter the retrieved data." LabelOff="No, use all data retrieved from the data sources." ValueChanged="@this.ValidationModeChanged"/>
+                            }
+
+                            @switch (this.aiBasedSourceSelection)
+                            {
+                                case true when this.availableDataSources.Count == 0:
+                                    <MudText Typo="Typo.body1" Class="mb-3">
+                                        Your data sources cannot be used with the LLM provider you selected due to data privacy, or they are currently unavailable.
+                                    </MudText>
+                                    break; 
+                                    
+                                case true when this.DataSourcesAISelected.Count == 0:
+                                    <MudText Typo="Typo.body1" Class="mb-3">
+                                        The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.
+                                    </MudText>
+                                    break;
+                                    
+                                case false when this.availableDataSources.Count == 0:
+                                    <MudText Typo="Typo.body1" Class="mb-3">
+                                        Your data sources cannot be used with the LLM provider you selected due to data privacy, or they are currently unavailable.
+                                    </MudText>
+                                    break;
+                                    
+                                case false:
+                                    <MudField Label="Available Data Sources" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.aiBasedSourceSelection">
+                                        <MudList T="IDataSource" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" Style="max-height: 14em;">
+                                            @foreach (var source in this.availableDataSources)
+                                            {
+                                                <MudListItem Value="@source">
+                                                    @source.Name
+                                                </MudListItem>
+                                            }
+                                        </MudList>
+                                    </MudField>
+                                    break;
+                                
+                                case true:
+                                    <MudExpansionPanels MultiExpansion="@false" Class="mt-3" Style="max-height: 14em;">
+                                        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TouchApp" HeaderText="Available Data Sources">
+                                            <MudList T="IDataSource" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
+                                                @foreach (var source in this.availableDataSources)
+                                                {
+                                                    <MudListItem Value="@source">
+                                                        @source.Name
+                                                    </MudListItem>
+                                                }
+                                            </MudList>
+                                        </ExpansionPanel>
+                                        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Filter" HeaderText="AI-Selected Data Sources">
+                                            <MudList T="DataSourceAgentSelected" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
+                                                @foreach (var source in this.DataSourcesAISelected)
+                                                {
+                                                    <MudListItem Value="@source">
+                                                        <ChildContent>
+                                                            <MudText Typo="Typo.body1">
+                                                                @source.DataSource.Name
+                                                            </MudText>
+                                                        
+                                                            <MudProgressLinear Color="Color.Info" Min="0" Max="1" Value="@source.AIDecision.Confidence"/>
+                                                            <MudJustifiedText Typo="Typo.body2">
+                                                                @(this.GetAIReasoning(source))
+                                                            </MudJustifiedText>
+                                                        </ChildContent>
+                                                    </MudListItem>
+                                                }
+                                            </MudList>
+                                        </ExpansionPanel>
+                                    </MudExpansionPanels>
+                                    break;
+                            }
+                        }
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" OnClick="@(() => this.HideDataSourceSelection())">
+                        Close
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudPopover>
+    </div>
+}
+else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
+{
+    <MudPaper Class="pa-3 mb-8 mt-3 border-dashed border rounded-lg">
+        <PreviewPrototype/>
+        <MudText Typo="Typo.h5">Data Source Selection</MudText>
+        
+        @if (!string.IsNullOrWhiteSpace(this.ConfigurationHeaderMessage))
+        {
+            <MudText Typo="Typo.body1">
+                @this.ConfigurationHeaderMessage
+            </MudText>
+        }
+
+        <MudTextSwitch Label="Are data sources enabled?" Value="@this.areDataSourcesEnabled" LabelOn="Yes, I want to use data sources." LabelOff="No, I don't want to use data sources." ValueChanged="@this.EnabledChanged"/>
+        @if (this.areDataSourcesEnabled)
+        {
+            <MudTextSwitch Label="AI-based data source selection" Value="@this.aiBasedSourceSelection" LabelOn="Yes, let the AI decide which data sources are needed." LabelOff="No, I manually decide which data source to use." ValueChanged="@this.AutoModeChanged"/>
+            <MudTextSwitch Label="AI-based data validation" Value="@this.aiBasedValidation" LabelOn="Yes, let the AI validate & filter the retrieved data." LabelOff="No, use all data retrieved from the data sources." ValueChanged="@this.ValidationModeChanged"/>
+            <MudField Label="Available Data Sources" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.aiBasedSourceSelection">
+                <MudList T="IDataSource" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))">
+                    @foreach (var source in this.availableDataSources)
+                    {
+                        <MudListItem Value="@source">
+                            @source.Name
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudField>
+        }
+    </MudPaper>
+}

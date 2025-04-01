@@ -41,6 +41,8 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(Writer);
+    
     public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         return Task.CompletedTask;
@@ -104,17 +106,19 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         };
         
         var time = DateTimeOffset.Now;
+        var lastUserPrompt = new ContentText
+        {
+            // We use the maximum 160 characters from the end of the text:
+            Text = this.userInput.Length > 160 ? this.userInput[^160..] : this.userInput,
+        };
+        
         this.chatThread.Blocks.Clear();
         this.chatThread.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
             Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                // We use the maximum 160 characters from the end of the text:
-                Text = this.userInput.Length > 160 ? this.userInput[^160..] : this.userInput,
-            },
+            Content = lastUserPrompt,
         });
         
         var aiText = new ContentText
@@ -135,7 +139,7 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         this.isStreaming = true;
         this.StateHasChanged();
         
-        await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.SettingsManager, this.providerSettings.Model, this.chatThread);
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, lastUserPrompt, this.chatThread);
         this.suggestion = aiText.Text;
         
         this.isStreaming = false;

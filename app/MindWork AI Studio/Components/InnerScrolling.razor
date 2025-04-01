@@ -7,17 +7,17 @@
             @this.HeaderContent
         </div>
     }
-    <div class="flex-auto overflow-auto">
+    <div class="flex-auto overflow-auto mb-3">
         @this.ChildContent
         
-        <div @ref="@this.AnchorAfterChildContent">
+        <div style="max-height: 0.1em;" @ref="@this.AnchorAfterChildContent">
             &nbsp;
         </div>
     </div>
 
     @if (this.FooterContent is not null)
     {
-        <MudPaper Class="pa-3 border-solid border rounded-lg">
+        <MudPaper Class="pa-3 mb-3 border-solid border rounded-lg">
             @this.FooterContent
         </MudPaper>
     }

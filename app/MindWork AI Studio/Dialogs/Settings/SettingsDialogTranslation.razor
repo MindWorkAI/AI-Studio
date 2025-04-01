@@ -1,0 +1,30 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Translate" Class="mr-2" />
+            Assistant: Translator Options
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <ConfigurationSlider T="int" OptionDescription="How fast should the live translation react?" Min="500" Max="3_000" Step="100" Unit="milliseconds" Value="@(() => this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds)" ValueUpdate="@(updatedValue => this.SettingsManager.ConfigurationData.Translation.DebounceIntervalMilliseconds = updatedValue)"/>
+        <ConfigurationOption OptionDescription="Hide the web content reader?" LabelOn="Web content reader is hidden" LabelOff="Web content reader is shown" State="@(() => this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Translation.HideWebContentReader = updatedState)" OptionHelp="When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use."/>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="Preselect translator options?" LabelOn="Translator options are preselected" LabelOff="No translator options are preselected" State="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Translation.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the translator options. This is might be useful when you prefer a specific target language or LLM model."/>
+            <ConfigurationOption OptionDescription="Preselect the web content reader?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions || this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)" LabelOn="Web content reader is preselected" LabelOff="Web content reader is not preselected" State="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader = updatedState)" OptionHelp="When enabled, the web content reader is preselected. This is might be useful when you prefer to load content from the web very often."/>
+            <ConfigurationOption OptionDescription="Preselect the content cleaner agent?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions || this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)" LabelOn="Content cleaner agent is preselected" LabelOff="Content cleaner agent is not preselected" State="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent = updatedState)" OptionHelp="When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the content before translating it."/>
+            <ConfigurationOption OptionDescription="Preselect live translation?" Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions)" LabelOn="Live translation is preselected" LabelOff="Live translation is not preselected" State="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation = updatedState)" />
+            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            @if (this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Translation.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Translation.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.TRANSLATION_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.Translation.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Translation.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Translation.PreselectedProvider = selectedValue)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>

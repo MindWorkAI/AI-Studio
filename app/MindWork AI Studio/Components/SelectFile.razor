@@ -1,0 +1,17 @@
+<MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+    <MudTextField
+        T="string"
+        Text="@this.File"
+        Label="@this.Label"
+        ReadOnly="@true"
+        Validation="@this.Validation"
+        Adornment="Adornment.Start"
+        AdornmentIcon="@Icons.Material.Filled.AttachFile"
+        UserAttributes="@SPELLCHECK_ATTRIBUTES"
+        Variant="Variant.Outlined"
+    />
+    
+    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="this.Disabled" OnClick="@this.OpenFileDialog">
+        Choose File
+    </MudButton>
+</MudStack>

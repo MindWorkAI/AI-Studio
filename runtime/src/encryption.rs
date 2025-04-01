@@ -32,7 +32,7 @@ pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
     // We use a cryptographically secure pseudo-random number generator
     // to generate the secret password & salt. ChaCha20Rng is the algorithm
     // of our choice:
-    let mut rng = rand_chacha::ChaChaRng::from_entropy();
+    let mut rng = rand_chacha::ChaChaRng::from_os_rng();
 
     // Fill the secret key & salt with random bytes:
     rng.fill_bytes(&mut secret_key);

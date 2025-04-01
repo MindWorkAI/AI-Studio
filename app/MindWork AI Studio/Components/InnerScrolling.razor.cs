@@ -9,14 +9,6 @@ public partial class InnerScrolling : MSGComponentBase
     [Parameter]
     public bool FillEntireHorizontalSpace { get; set; }
     
-    /// <summary>
-    /// Set the height of anything above the scrolling content; usually a header.
-    /// What we do is calc(100vh - HeaderHeight). Means, you can use multiple measures like
-    /// 230px - 3em. Default is 3em.
-    /// </summary>
-    [Parameter]
-    public string HeaderHeight { get; set; } = "3em";
-    
     [Parameter]
     public RenderFragment? HeaderContent { get; set; }
     
@@ -34,6 +26,9 @@ public partial class InnerScrolling : MSGComponentBase
     
     [Parameter]
     public string? MinWidth { get; set; }
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
     
     [CascadingParameter]
     private MainLayout MainLayout { get; set; } = null!;
@@ -55,6 +50,8 @@ public partial class InnerScrolling : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
+    public override string ComponentName => nameof(InnerScrolling);
+    
     public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
@@ -74,11 +71,13 @@ public partial class InnerScrolling : MSGComponentBase
 
     #endregion
 
-    private string MinWidthStyle => string.IsNullOrWhiteSpace(this.MinWidth) ? string.Empty : $"min-width: {this.MinWidth};";
+    private string MinWidthStyle => string.IsNullOrWhiteSpace(this.MinWidth) ? string.Empty : $"min-width: {this.MinWidth}; ";
     
-    private string Styles => this.FillEntireHorizontalSpace ? $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); overflow-x: auto; min-width: 0; {this.MinWidthStyle}" : $"height: calc(100vh - {this.HeaderHeight} - {this.MainLayout.AdditionalHeight}); flex-shrink: 0; {this.MinWidthStyle}";
-
+    private string TerminatedStyles => string.IsNullOrWhiteSpace(this.Style) ? string.Empty : $"{this.Style}; ";
+    
     private string Classes => this.FillEntireHorizontalSpace ? $"{this.Class} d-flex flex-column flex-grow-1" : $"{this.Class} d-flex flex-column";
+    
+    private string Styles => $"flex-grow: 1; overflow: hidden; {this.TerminatedStyles}{this.MinWidthStyle}";
     
     public async Task ScrollToBottom()
     {

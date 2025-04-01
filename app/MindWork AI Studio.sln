@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindWork AI Studio", "MindWork AI Studio\MindWork AI Studio.csproj", "{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceCodeRules", "SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj", "{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,11 @@ Global
 		{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{059FDFCC-7D0B-474E-9F20-B9C437DF1CDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal

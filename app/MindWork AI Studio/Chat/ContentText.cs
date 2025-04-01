@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.RAG.RAGProcesses;
 
 namespace AIStudio.Chat;
 
@@ -35,10 +36,32 @@ public sealed class ContentText : IContent
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
-    public async Task CreateFromProviderAsync(IProvider provider, SettingsManager settings, Model chatModel, ChatThread? chatThread, CancellationToken token = default)
+    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
-            return;
+            return new();
+        
+        if(!chatThread.IsLLMProviderAllowed(provider))
+        {
+            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
+            logger.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            return chatThread;
+        }
+
+        // Call the RAG process. Right now, we only have one RAG process:
+        if (lastPrompt is not null)
+        {
+            try
+            {
+                var rag = new AISrcSelWithRetCtxVal();
+                chatThread = await rag.ProcessAsync(provider, lastPrompt, chatThread, token);
+            }
+            catch (Exception e)
+            {
+                var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
+                logger.LogError(e, "Skipping the RAG process due to an error.");
+            }
+        }
 
         // Store the last time we got a response. We use this later
         // to determine whether we should notify the UI about the
@@ -46,6 +69,9 @@ public sealed class ContentText : IContent
         // the user chose.
         var last = DateTimeOffset.Now;
 
+        // Get the settings manager:
+        var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
+        
         // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
         await Task.Run(async () =>
@@ -96,6 +122,7 @@ public sealed class ContentText : IContent
         
         // Inform the UI that the streaming is done:
         await this.StreamingDone();
+        return chatThread;
     }
 
     #endregion

@@ -7,6 +7,9 @@ namespace AIStudio.Pages;
 public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
 {
     [Inject]
+    private SettingsManager SettingsManager { get; init; } = null!;
+    
+    [Inject]
     private MessageBus MessageBus { get; init; } = null!;
     
     private List<ConfigurationSelectData<string>> availableLLMProviders = new();
@@ -27,6 +30,8 @@ public partial class Settings : ComponentBase, IMessageBusReceiver, IDisposable
     
     #region Implementation of IMessageBusReceiver
 
+    public string ComponentName => nameof(Settings);
+    
     public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
     {
         switch (triggeredEvent)
