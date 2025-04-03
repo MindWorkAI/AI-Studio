@@ -5,6 +5,7 @@ namespace AIStudio.Tools.PluginSystem;
 public sealed class PluginLanguage : PluginBase, ILanguagePlugin
 {
     private readonly Dictionary<string, string> content = [];
+    private readonly List<ILanguagePlugin> otherLanguagePlugins = [];
     
     private ILanguagePlugin? baseLanguage;
     
@@ -23,6 +24,16 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     public void SetBaseLanguage(ILanguagePlugin baseLanguagePlugin) => this.baseLanguage = baseLanguagePlugin;
 
     /// <summary>
+    /// Add another language plugin. This plugin will be used to fill in missing keys.
+    /// </summary>
+    /// <remarks>
+    /// Use this method to add (i.e., register) an assistant plugin as a language plugin.
+    /// This is necessary because the assistant plugins need to serve their own texts.
+    /// </remarks>
+    /// <param name="languagePlugin">The language plugin to add.</param>
+    public void AddOtherLanguagePlugin(ILanguagePlugin languagePlugin) => this.otherLanguagePlugins.Add(languagePlugin);
+
+    /// <summary>
     /// Tries to get a text from the language plugin.
     /// </summary>
     /// <remarks>
@@ -36,9 +47,18 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     /// <returns>True if the key exists, false otherwise.</returns>
     public bool TryGetText(string key, out string value)
     {
+        // First, we check if the key is part of the main language pack:
         if (this.content.TryGetValue(key, out value!))
             return true;
         
+        // Second, we check if the key is part of the other language packs, such as the assistant plugins:
+        foreach (var otherLanguagePlugin in this.otherLanguagePlugins)
+            if(otherLanguagePlugin.TryGetText(key, out value))
+                return true;
+        
+        // Finally, we check if the key is part of the base language pack. This is the case,
+        // when a language plugin does not cover all keys. In this case, the base language plugin
+        // will be used to fill in the missing keys:
         if(this.baseLanguage is not null && this.baseLanguage.TryGetText(key, out value))
             return true;
         
