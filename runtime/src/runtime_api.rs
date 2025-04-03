@@ -77,6 +77,7 @@ pub fn start_runtime_api() {
                 crate::secret::delete_secret,
                 crate::environment::get_data_directory,
                 crate::environment::get_config_directory,
+                crate::environment::read_user_language,
                 crate::file_data::extract_data,
                 crate::log::get_log_paths,
             ])

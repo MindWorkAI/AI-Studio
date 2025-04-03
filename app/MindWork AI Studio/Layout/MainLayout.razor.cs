@@ -79,6 +79,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         SettingsManager.DataDirectory = dataDir;
         Directory.CreateDirectory(SettingsManager.DataDirectory);
         
+        //
+        // Read the user language from Rust:
+        //
+        var userLanguage = await this.RustService.ReadUserLanguage();
+        this.Logger.LogInformation($"The user language is: '{userLanguage}'");
+        
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
         
