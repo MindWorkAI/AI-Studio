@@ -1,5 +1,6 @@
 use std::sync::OnceLock;
 use rocket::get;
+use sys_locale::get_locale;
 use crate::api_token::APIToken;
 
 /// The data directory where the application stores its data.
@@ -34,4 +35,12 @@ pub fn is_dev() -> bool {
 /// Returns true if the application is running in production mode.
 pub fn is_prod() -> bool {
     !is_dev()
+}
+
+#[get("/system/language")]
+pub fn read_user_language(_token: APIToken) -> String {
+    get_locale().unwrap_or_else(|| {
+        log::warn!("Could not determine the system language. Use default 'en-US'.");
+        String::from("en-US")
+    })
 }

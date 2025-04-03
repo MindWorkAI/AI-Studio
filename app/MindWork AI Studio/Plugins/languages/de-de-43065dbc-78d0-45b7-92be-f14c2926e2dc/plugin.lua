@@ -40,6 +40,10 @@ IS_MAINTAINED = true
 -- When the plugin is deprecated, this message will be shown to users:
 DEPRECATION_MESSAGE = ""
 
+-- The IETF BCP 47 tag for the language. It's the ISO 639 language
+-- code followed by the ISO 3166-1 country code:
+IETF_TAG = "de-DE"
+
 UI_TEXT_CONTENT = {
     HOME = CONTENT_HOME,
 }
