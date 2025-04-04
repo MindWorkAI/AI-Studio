@@ -45,19 +45,6 @@
 
         <MudMainContent Class="mud-height-full pt-1" Style="@this.PaddingLeft">
             <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mud-height-full" Style="margin-left: 5em; width: calc(100% - 5em);">
-                @if (!this.performingUpdate && this.IsUpdateAlertVisible)
-                {
-                    <MudAlert NoIcon="@true" Severity="Severity.Info" Variant="Variant.Filled" ShowCloseIcon="@true" Dense="@true" CloseIconClicked="() => this.DismissUpdate()" Class="mt-2 mb-2">
-                        <div class="d-inline-flex align-center">
-                            <MudIcon Icon="@Icons.Material.Filled.Update" Size="Size.Medium" Class="mr-3"/>
-                            An update to version @this.updateToVersion is available.
-                            <MudButton Variant="Variant.Filled" Color="Color.Dark" Size="Size.Small" Class="ml-3" OnClick="() => this.ShowUpdateDialog()">
-                                Show details
-                            </MudButton>
-                        </div>
-                    </MudAlert>
-                }
-
                 @if (!this.performingUpdate)
                 {
                     @this.Body

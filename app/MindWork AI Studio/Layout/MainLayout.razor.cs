@@ -37,8 +37,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
-
-    public string AdditionalHeight { get; private set; } = "0em";
     
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
     
@@ -48,10 +46,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     private static readonly string NAVBAR_EXPANDED_WIDTH = $"{NAVBAR_EXPANDED_WIDTH_INT}em";
     
     private bool navBarOpen;
-    private bool isUpdateAvailable;
     private bool performingUpdate;
-    private bool userDismissedUpdate;
-    private string updateToVersion = string.Empty;
     private UpdateResponse? currentUpdateResponse;
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
@@ -107,7 +102,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.USER_SEARCH_FOR_UPDATE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR ]);
+        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR ]);
         
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
@@ -142,19 +137,24 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     {
         switch (triggeredEvent)
         {
-            case Event.USER_SEARCH_FOR_UPDATE:
-                this.userDismissedUpdate = false;
-                break;
-            
             case Event.UPDATE_AVAILABLE:
                 if (data is UpdateResponse updateResponse)
                 {
                     this.currentUpdateResponse = updateResponse;
-                    this.isUpdateAvailable = updateResponse.UpdateIsAvailable;
-                    this.updateToVersion = updateResponse.NewVersion;
-                    
-                    await this.InvokeAsync(this.StateHasChanged);
-                    await this.SendMessage<bool>(Event.STATE_HAS_CHANGED);
+                    this.Snackbar.Add($"An update to version {updateResponse.NewVersion} is available.", Severity.Info, config =>
+                    {
+                        config.Icon = Icons.Material.Filled.Update;
+                        config.IconSize = Size.Large;
+                        config.HideTransitionDuration = 600;
+                        config.VisibleStateDuration = 32_000;
+                        config.OnClick = async _ =>
+                        {
+                            await this.ShowUpdateDialog();
+                        };
+                        config.Action = "Show details";
+                        config.ActionVariant = Variant.Filled;
+                        config.ActionColor = Color.Dark;
+                    });
                 }
                 
                 break;
@@ -206,25 +206,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         yield return new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
         yield return new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
         yield return new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
-    }
-    
-    private async Task DismissUpdate()
-    {
-        this.userDismissedUpdate = true;
-        this.AdditionalHeight = "0em";
-        
-        await this.SendMessage<bool>(Event.STATE_HAS_CHANGED);
-    }
-    
-    private bool IsUpdateAlertVisible
-    {
-        get
-        {
-            var state = this.isUpdateAvailable && !this.userDismissedUpdate;
-            this.AdditionalHeight = state ? "3em" : "0em";
-            
-            return state;
-        }
     }
 
     private async Task ShowUpdateDialog()
