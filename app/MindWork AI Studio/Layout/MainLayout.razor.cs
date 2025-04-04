@@ -117,6 +117,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
             this.navBarOpen = true;
 
+        // Solve issue https://github.com/MudBlazor/MudBlazor/issues/11133:
+        MudGlobal.TooltipDefaults.Duration = TimeSpan.Zero;
+        
         await this.themeProvider.WatchSystemPreference(this.SystemeThemeChanged);
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
