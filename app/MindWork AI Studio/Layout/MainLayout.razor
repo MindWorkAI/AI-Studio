@@ -60,11 +60,9 @@
 
                 @if (!this.performingUpdate)
                 {
-                    <CascadingValue Value="@this" IsFixed="true">
-                        @this.Body
-                    </CascadingValue>
+                    @this.Body
                 }
-
+                
                 <MudOverlay Visible="@this.performingUpdate" DarkBackground="@true" LockScroll="@true">
                     <MudText Typo="Typo.h3">Please wait for the update to complete...</MudText>
                     <MudProgressLinear Color="Color.Primary" Indeterminate="@true" Size="Size.Large" Rounded="@true"/>

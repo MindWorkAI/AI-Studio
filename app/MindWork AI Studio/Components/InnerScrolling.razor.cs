@@ -1,5 +1,3 @@
-using AIStudio.Layout;
-
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -29,9 +27,6 @@ public partial class InnerScrolling : MSGComponentBase
 
     [Parameter]
     public string Style { get; set; } = string.Empty;
-    
-    [CascadingParameter]
-    private MainLayout MainLayout { get; set; } = null!;
     
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
