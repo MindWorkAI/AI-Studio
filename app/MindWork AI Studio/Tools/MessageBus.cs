@@ -65,7 +65,9 @@ public sealed class MessageBus
             this.sendingSemaphore.Release();
         }
     }
-    
+
+    public Task SendError(Error error) => this.SendMessage(null, Event.SHOW_ERROR, error);
+
     public void DeferMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data = default)
     {
         if (this.deferredMessages.TryGetValue(triggeredEvent, out var queue))
