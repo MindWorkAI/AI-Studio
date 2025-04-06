@@ -105,7 +105,23 @@ public partial class SettingsPanelProviders : SettingsPanelBase
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
+        else
+        {
+            var issueDialogParameters = new DialogParameters
+            {
+                { "Message", $"Couldn't delete the provider '{provider.InstanceName}'. The issue: {deleteSecretResponse.Issue}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?" },
+            };
         
+            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete LLM Provider", issueDialogParameters, DialogOptions.FULLSCREEN);
+            var issueDialogResult = await issueDialogReference.Result;
+            if (issueDialogResult is null || issueDialogResult.Canceled)
+                return;
+            
+            // Case: The user wants to ignore the issue and delete the provider anyway:
+            this.SettingsManager.ConfigurationData.Providers.Remove(provider);
+            await this.SettingsManager.StoreSettings();
+        }
+
         await this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
