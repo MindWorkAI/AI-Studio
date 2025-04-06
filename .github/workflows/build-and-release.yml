@@ -507,7 +507,7 @@ jobs:
         with:
           base_image: dietpi:rpi_armv8_bullseye
           cpu: cortex-a53
-          image_additional_mb: 6000 # ~ 6GB
+          image_additional_mb: 8000 # ~ 8GB
           optimize_image: false
           shell: /bin/bash
           commands: |
