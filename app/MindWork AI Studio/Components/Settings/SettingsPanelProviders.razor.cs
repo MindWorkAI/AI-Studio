@@ -105,7 +105,9 @@ public partial class SettingsPanelProviders : SettingsPanelBase
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
-        
+        else
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Error, deleteSecretResponse.Issue));
+
         await this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
