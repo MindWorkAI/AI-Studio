@@ -16,8 +16,8 @@ public static partial class PluginFactory
     private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
     
     private static readonly string INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
-    
-    private static readonly FileSystemWatcher HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
+
+    private static readonly FileSystemWatcher HOT_RELOAD_WATCHER;
 
     private static readonly List<IPluginMetadata> AVAILABLE_PLUGINS = [];
     
@@ -25,6 +25,14 @@ public static partial class PluginFactory
     /// A list of all available plugins.
     /// </summary>
     public static IReadOnlyCollection<IPluginMetadata> AvailablePlugins => AVAILABLE_PLUGINS;
+
+    static PluginFactory()
+    {
+        if (!Directory.Exists(PLUGINS_ROOT))
+            Directory.CreateDirectory(PLUGINS_ROOT);
+        
+        HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
+    }
     
     /// <summary>
     /// Try to load all plugins from the plugins directory.
