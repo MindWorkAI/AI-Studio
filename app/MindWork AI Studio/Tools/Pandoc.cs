@@ -6,7 +6,6 @@ namespace AIStudio.Tools;
 
 public static partial class Pandoc
 {
-    // Minimale erforderliche Version von Pandoc
     private static readonly Version MINIMUM_REQUIRED_VERSION = new Version(3, 6, 0);
 
     /// <summary>
@@ -27,37 +26,49 @@ public static partial class Pandoc
             };
             using var process = Process.Start(startInfo);
             if (process == null)
+            {
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.AppsOutage, $"Pandoc is not installed."));
                 return false;
+            }
                 
             var output = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
             if (process.ExitCode != 0)
+            {
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.AppsOutage, $"Pandoc is not installed."));
                 return false;
+            }
 
             var versionMatch = PandocRegex().Match(output);
-            if (!versionMatch.Success) return false;
+            if (!versionMatch.Success)
+            {
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.AppsOutage, $"Pandoc is not installed."));
+                return false;
+            }
             var versions = versionMatch.Groups[1].Value.Split('.');
             var major = int.Parse(versions[0]);
             var minor = int.Parse(versions[1]);
             var patch = int.Parse(versions[2]);
             var installedVersion = new Version(major, minor, patch);
             
-            return installedVersion >= MINIMUM_REQUIRED_VERSION;
+            if (installedVersion >= MINIMUM_REQUIRED_VERSION)
+                return true;
+            
+            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.AppsOutage, $"Pandoc {installedVersion.ToString()} is installed, but it doesn't match the required version ({MINIMUM_REQUIRED_VERSION.ToString()}).\n"));
+            return false;
 
         }
         catch (Exception)
         {
+            await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, "An unknown error occured while checking for Pandoc."));
             return false;
         }
     }
 
     /// <summary>
-    /// Gibt den Namen der Pandoc-Executable basierend auf dem Betriebssystem zurück.
+    /// Returns the name of the pandoc executable based on the running operating system
     /// </summary>
-    private static string GetPandocExecutableName()
-    {
-        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pandoc.exe" : "pandoc";
-    }
+    private static string GetPandocExecutableName() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pandoc.exe" : "pandoc";
 
     [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+\.[0-9]+)")]
     private static partial Regex PandocRegex();
