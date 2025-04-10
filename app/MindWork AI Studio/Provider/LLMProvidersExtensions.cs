@@ -33,7 +33,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => "Google",
         LLMProviders.X => "xAI",
         LLMProviders.DEEP_SEEK => "DeepSeek",
-        LLMProviders.ALIBABA_CLOUD => "ALIBABA_CLOUD",
+        LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",

@@ -122,7 +122,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(["gpt-", "o1-"], token, apiKeyProvisional);
+        return this.LoadModels(["gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
