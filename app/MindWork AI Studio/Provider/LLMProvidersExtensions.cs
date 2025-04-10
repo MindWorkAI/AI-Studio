@@ -6,6 +6,7 @@ using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.GWDG;
 using AIStudio.Provider.Helmholtz;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
@@ -37,6 +38,7 @@ public static class LLMProvidersExtensions
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
+        LLMProviders.HUGGINGFACE => "Hugging Face",
         
         LLMProviders.SELF_HOSTED => "Self-hosted",
         
@@ -57,6 +59,9 @@ public static class LLMProvidersExtensions
         LLMProviders.NONE => Confidence.NONE,
         
         LLMProviders.FIREWORKS => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
+        // Not trusted, because huggingface only routes you to a third-party-provider and we can't make sure they do not use your data 
+        LLMProviders.HUGGINGFACE => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://huggingface.co/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)), 
         
         LLMProviders.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
             "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint",
@@ -112,6 +117,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => false,
         LLMProviders.GWDG => false,
         LLMProviders.DEEP_SEEK => false,
+        LLMProviders.HUGGINGFACE => false,
         
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -159,6 +165,7 @@ public static class LLMProvidersExtensions
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger) { InstanceName = instanceName }, 
                 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
                 
@@ -187,6 +194,7 @@ public static class LLMProvidersExtensions
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
+        LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
         
         LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
         LLMProviders.GWDG => "https://docs.hpc.gwdg.de/services/saia/index.html#api-request",
@@ -205,6 +213,7 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
         LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
+        LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
         
         _ => string.Empty,
     };
@@ -220,6 +229,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.HUGGINGFACE => true,
         
         _ => false,
     };
@@ -227,12 +237,14 @@ public static class LLMProvidersExtensions
     public static string GetModelsOverviewURL(this LLMProviders provider) => provider switch
     {
         LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
+        LLMProviders.HUGGINGFACE => "https://huggingface.co/models?inference_provider=all",
         _ => string.Empty,
     };
 
     public static bool IsLLMModelProvidedManually(this LLMProviders provider) => provider switch
     {
         LLMProviders.FIREWORKS => true,
+        LLMProviders.HUGGINGFACE => true,
         _ => false,
     };
     
@@ -268,6 +280,7 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GWDG => true,
+        LLMProviders.HUGGINGFACE => true,
         
         LLMProviders.SELF_HOSTED => host is Host.OLLAMA,
         
@@ -288,6 +301,7 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GWDG => true,
+        LLMProviders.HUGGINGFACE => true,
         
         _ => false,
     };
