@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.HuggingFace;
 
-public sealed class ProviderHuggingFace(ILogger logger) : BaseProvider("https://router.huggingface.co/cerebras/v1/", logger)
+public sealed class ProviderHuggingFace(ILogger logger) : BaseProvider($"https://router.huggingface.co/nebius/v1/", logger)
 {
     #region Implementation of IProvider
 

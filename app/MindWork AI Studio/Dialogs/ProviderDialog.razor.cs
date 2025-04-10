@@ -122,7 +122,12 @@ public partial class ProviderDialog : ComponentBase, ISecretId
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel, null) : this.DataModel,
+            Model = this.DataLLMProvider switch
+            {
+                LLMProviders.FIREWORKS => new Model(this.dataManuallyModel, null),
+                LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
+                _ => this.DataModel
+            },
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
