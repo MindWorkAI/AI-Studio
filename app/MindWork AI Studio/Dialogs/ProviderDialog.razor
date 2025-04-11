@@ -29,34 +29,44 @@
                 InputType="InputType.Password"
                 Validation="@this.providerValidation.ValidatingAPIKey"
             />
-            
-            <MudTextField
-                T="string"
-                @bind-Text="@this.DataHostname"
-                Label="Hostname"
-                Disabled="@(!this.DataLLMProvider.IsHostnameNeeded())"
-                Class="mb-3"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Dns"
-                AdornmentColor="Color.Info"
-                Validation="@this.providerValidation.ValidatingHostname"
-                UserAttributes="@SPELLCHECK_ATTRIBUTES"
-            />
 
-            <MudSelect Disabled="@(!this.DataLLMProvider.IsHostNeeded())" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
-                @foreach (Host host in Enum.GetValues(typeof(Host)))
-                {
-                    <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
-                }
-            </MudSelect>
-            
-            <MudSelect Disabled="@(!this.DataLLMProvider.IsHFInstanceProviderNeeded())" @bind-Value="@this.HfInstanceProviderId" Label="HF Instance Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
-                @foreach (HFInstanceProvider instanceProvider in Enum.GetValues(typeof(HFInstanceProvider)))
-                {
-                    <MudSelectItem Value="@instanceProvider">@instanceProvider.ToName()</MudSelectItem>
-                }
-            </MudSelect>
-            
+            @if (this.DataLLMProvider.IsHostnameNeeded())
+            {
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.DataHostname"
+                    Label="Hostname"
+                    Disabled="@(!this.DataLLMProvider.IsHostnameNeeded())"
+                    Class="mb-3"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Dns"
+                    AdornmentColor="Color.Info"
+                    Validation="@this.providerValidation.ValidatingHostname"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+            }
+
+            @if (this.DataLLMProvider.IsHostNeeded())
+            {
+                <MudSelect Disabled="@(!this.DataLLMProvider.IsHostNeeded())" @bind-Value="@this.DataHost" Label="Host" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
+                    @foreach (Host host in Enum.GetValues(typeof(Host)))
+                    {
+                        <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+
+            @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+            {
+                <MudSelect Disabled="@(!this.DataLLMProvider.IsHFInstanceProviderNeeded())" @bind-Value="@this.HfInstanceProviderId" Label="HF Instance Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                    @foreach (HFInstanceProvider instanceProvider in Enum.GetValues(typeof(HFInstanceProvider)))
+                    {
+                        <MudSelectItem Value="@instanceProvider">@instanceProvider.ToName()</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <MudJustifiedText Class="mb-3"> Please double-check if your model name matches the curl specifications provided by the instance provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.</MudJustifiedText>
+            }
+
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 {
@@ -67,7 +77,7 @@
                         Label="Model"
                         Class="mb-3"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Dns"
+                        AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
                         AdornmentColor="Color.Info"
                         Validation="@this.ValidateManuallyModel"
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"
