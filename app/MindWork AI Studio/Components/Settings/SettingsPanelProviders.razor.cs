@@ -65,6 +65,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
             { x => x.IsSelfHosted, provider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, provider.Host },
+            { x => x.HfInstanceProviderId, provider.HFInstanceProvider },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);

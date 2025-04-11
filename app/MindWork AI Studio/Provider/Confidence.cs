@@ -35,10 +35,10 @@ public sealed record Confidence
             """,
     };
     
-    public static readonly Confidence USA_NOT_TRUSTED = new()
+    public static readonly Confidence USA_HUB = new()
     {
-        Level = ConfidenceLevel.UNTRUSTED,
-        Description = "The provider operates its service from the USA and is subject to **U.S. jurisdiction**. In case of suspicion, authorities in the USA can access your data. The provider's terms of service state that **all your data can be used by the provider at will.**",
+        Level = ConfidenceLevel.UNKNOWN,
+        Description = "The provider operates its service from the USA and is subject to **U.S. jurisdiction**. In case of suspicion, authorities in the USA can access your data. Please inform yourself about the use of your data. We do not know if your data is safe.",
     };
 
     public static readonly Confidence UNKNOWN = new()

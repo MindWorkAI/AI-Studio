@@ -29,7 +29,7 @@
         <RowTemplate>
             <MudTd>@context.Num</MudTd>
             <MudTd>@context.InstanceName</MudTd>
-            <MudTd>@context.UsedLLMProvider</MudTd>
+            <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
             <MudTd>
                 @if (context.UsedLLMProvider is not LLMProviders.SELF_HOSTED)
                 {

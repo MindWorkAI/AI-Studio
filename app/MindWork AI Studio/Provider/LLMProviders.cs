@@ -17,6 +17,7 @@ public enum LLMProviders
     
     FIREWORKS = 5,
     GROQ = 6,
+    HUGGINGFACE = 13,
     
     SELF_HOSTED = 4,
     
