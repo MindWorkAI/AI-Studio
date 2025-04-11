@@ -1,5 +1,5 @@
 using AIStudio.Provider;
-
+using AIStudio.Provider.HuggingFace;
 using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Tools.Validation;
@@ -90,6 +90,17 @@ public sealed class ProviderValidation
 
         if (host == Host.NONE)
             return "Please select a host.";
+
+        return null;
+    }
+    
+    public string? ValidatingHFInstanceProvider(HFInstanceProvider instanceProvider)
+    {
+        if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
+            return null;
+
+        if (instanceProvider is HFInstanceProvider.NONE)
+            return "Please select an Hugging Face instance provider.";
 
         return null;
     }

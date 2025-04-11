@@ -34,7 +34,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => "Google",
         LLMProviders.X => "xAI",
         LLMProviders.DEEP_SEEK => "DeepSeek",
-        LLMProviders.ALIBABA_CLOUD => "ALIBABA_CLOUD",
+        LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -58,10 +58,10 @@ public static class LLMProvidersExtensions
     {
         LLMProviders.NONE => Confidence.NONE,
         
-        LLMProviders.FIREWORKS => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        LLMProviders.FIREWORKS => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         // Not trusted, because huggingface only routes you to a third-party-provider and we can't make sure they do not use your data 
-        LLMProviders.HUGGINGFACE => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://huggingface.co/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)), 
+        LLMProviders.HUGGINGFACE => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://huggingface.co/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)), 
         
         LLMProviders.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
             "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint",
@@ -135,7 +135,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings, ILogger logger)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, logger);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInstanceProvider ,logger);
     }
     
     /// <summary>
@@ -146,10 +146,10 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings, ILogger logger)
     {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, logger);
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInstanceProvider.NONE,logger);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, ILogger logger)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInstanceProvider instanceProvider , ILogger logger)
     {
         try
         {
@@ -165,7 +165,7 @@ public static class LLMProvidersExtensions
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
-                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger) { InstanceName = instanceName }, 
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger, instanceProvider, model) { InstanceName = instanceName }, 
                 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
                 
@@ -234,10 +234,10 @@ public static class LLMProvidersExtensions
         _ => false,
     };
 
-    public static string GetModelsOverviewURL(this LLMProviders provider) => provider switch
+    public static string GetModelsOverviewURL(this LLMProviders provider, HFInstanceProvider instanceProvider) => provider switch
     {
         LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
-        LLMProviders.HUGGINGFACE => "https://huggingface.co/models?inference_provider=all",
+        LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={instanceProvider.EndpointsId()}",
         _ => string.Empty,
     };
 
@@ -331,4 +331,10 @@ public static class LLMProvidersExtensions
         
         return true;
     }
+    
+    public static bool IsHFInstanceProviderNeeded(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.HUGGINGFACE => true,
+        _ => false,
+    };
 }

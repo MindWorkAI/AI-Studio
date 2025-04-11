@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
@@ -46,6 +47,12 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public Host DataHost { get; set; } = Host.NONE;
+    
+    /// <summary>
+    /// The HFInstanceProvider to use, e.g., CEREBRAS.
+    /// </summary>
+    [Parameter]
+    public HFInstanceProvider HfInstanceProviderId { get; set; } = HFInstanceProvider.NONE;
     
     /// <summary>
     /// Is this provider self-hosted?
@@ -131,6 +138,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
+            HFInstanceProvider = this.HfInstanceProviderId,
         };
     }
 
@@ -151,8 +159,8 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
-            // When using Fireworks, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.FIREWORKS)
+            // When using Fireworks or Hugging Face, we must copy the model name:
+            if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
                 this.dataManuallyModel = this.DataModel.Id;
             
             //
@@ -235,7 +243,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if (this.DataLLMProvider is LLMProviders.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
+        if ((this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE) && string.IsNullOrWhiteSpace(manuallyModel))
             return "Please enter a model name.";
         
         return null;
