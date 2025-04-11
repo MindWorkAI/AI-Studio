@@ -9,7 +9,7 @@
                 <MudSelect @bind-Value="@this.DataLLMProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
-                        <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                        <MudSelectItem Value="@provider">@provider.ToName()</MudSelectItem>
                     }
                 </MudSelect>
                 <MudButton Disabled="@(!this.DataLLMProvider.ShowRegisterButton())" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetCreationURL()" Target="_blank">Create account</MudButton>
