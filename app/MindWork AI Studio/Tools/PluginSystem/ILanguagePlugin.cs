@@ -16,8 +16,9 @@ public interface ILanguagePlugin
     /// </remarks>
     /// <param name="key">The key to use to get the text.</param>
     /// <param name="value">The desired text.</param>
+    /// <param name="logWarning">When true, a warning will be logged if the key does not exist.</param>
     /// <returns>True if the key exists, false otherwise.</returns>
-    public bool TryGetText(string key, out string value);
+    public bool TryGetText(string key, out string value, bool logWarning = false);
     
     /// <summary>
     /// Gets the text from the language plugin.

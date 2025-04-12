@@ -4,6 +4,8 @@ namespace AIStudio.Tools.PluginSystem;
 
 public sealed class PluginLanguage : PluginBase, ILanguagePlugin
 {
+    private static readonly ILogger<PluginLanguage> LOGGER = Program.LOGGER_FACTORY.CreateLogger<PluginLanguage>();
+    
     private readonly Dictionary<string, string> content = [];
     private readonly List<ILanguagePlugin> otherLanguagePlugins = [];
     private readonly string langCultureTag;
@@ -132,8 +134,9 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     /// </remarks>
     /// <param name="key">The key to use to get the text.</param>
     /// <param name="value">The desired text.</param>
+    /// <param name="logWarning">When true, a warning will be logged if the key does not exist.</param>
     /// <returns>True if the key exists, false otherwise.</returns>
-    public bool TryGetText(string key, out string value)
+    public bool TryGetText(string key, out string value, bool logWarning = false)
     {
         // First, we check if the key is part of the main language pack:
         if (this.content.TryGetValue(key, out value!))
@@ -149,6 +152,9 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         // will be used to fill in the missing keys:
         if(this.baseLanguage is not null && this.baseLanguage.TryGetText(key, out value))
             return true;
+        
+        if(logWarning)
+            LOGGER.LogWarning($"Missing translation key '{key}'.");
         
         value = string.Empty;
         return false;

@@ -12,7 +12,7 @@ public sealed class NoPluginLanguage : PluginBase, ILanguagePlugin
 
     #region Implementation of ILanguagePlugin
 
-    public bool TryGetText(string key, out string value)
+    public bool TryGetText(string key, out string value, bool logWarning = false)
     {
         value = string.Empty;
         return true;
