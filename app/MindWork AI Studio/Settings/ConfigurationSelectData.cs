@@ -34,10 +34,10 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<Guid>> GetLanguagesData()
     {
-        foreach (var availablePlugin in PluginFactory.RunningPlugins)
+        foreach (var runningPlugin in PluginFactory.RunningPlugins)
         {
-            if(availablePlugin is ILanguagePlugin languagePlugin)
-                yield return new(languagePlugin.LangName, availablePlugin.Id);
+            if(runningPlugin is ILanguagePlugin languagePlugin)
+                yield return new(languagePlugin.LangName, runningPlugin.Id);
         }
     }
     
