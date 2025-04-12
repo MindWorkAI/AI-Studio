@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
 
@@ -13,7 +14,7 @@ namespace AIStudio.Settings;
 /// <summary>
 /// The settings manager.
 /// </summary>
-public sealed class SettingsManager(ILogger<SettingsManager> logger)
+public sealed class SettingsManager(ILogger<SettingsManager> logger, RustService rustService)
 {
     private const string SETTINGS_FILENAME = "settings.json";
     
@@ -24,6 +25,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     };
 
     private readonly ILogger<SettingsManager> logger = logger;
+    private readonly RustService rustService = rustService;
     
     /// <summary>
     /// The directory where the configuration files are stored.
@@ -149,6 +151,46 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     /// <param name="plugin">The plugin to check.</param>
     /// <returns>True, when the plugin is enabled, false otherwise.</returns>
     public bool IsPluginEnabled(IPluginMetadata plugin) => this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
+    
+    /// <summary>
+    /// Returns the active language plugin.
+    /// </summary>
+    /// <returns>The active language plugin.</returns>
+    public async Task<ILanguagePlugin> GetActiveLanguagePlugin()
+    {
+        switch (this.ConfigurationData.App.LanguageBehavior)
+        {
+            case LangBehavior.AUTO:
+                var languageCode = await this.rustService.ReadUserLanguage();
+                var languagePlugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x is ILanguagePlugin langPlug && langPlug.IETFTag == languageCode);
+                if (languagePlugin is null)
+                    return PluginFactory.BaseLanguage;
+            
+                if (languagePlugin is ILanguagePlugin langPlugin)
+                    return langPlugin;
+            
+                this.logger.LogError("The language plugin is not a language plugin.");
+                return PluginFactory.BaseLanguage;
+            
+            case LangBehavior.MANUAL:
+                var pluginId = this.ConfigurationData.App.LanguagePluginId;
+                var plugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x.Id == pluginId);
+                if (plugin is null)
+                {
+                    this.logger.LogWarning($"The chosen language plugin (id='{pluginId}') is not available.");
+                    return PluginFactory.BaseLanguage;
+                }
+
+                if (plugin is ILanguagePlugin chosenLangPlugin)
+                    return chosenLangPlugin;
+                
+                this.logger.LogError("The chosen language plugin is not a language plugin.");
+                return PluginFactory.BaseLanguage;
+        }
+        
+        this.logger.LogError("The language behavior is unknown.");
+        return PluginFactory.BaseLanguage;
+    }
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)
