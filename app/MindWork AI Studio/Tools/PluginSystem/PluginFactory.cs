@@ -10,18 +10,29 @@ namespace AIStudio.Tools.PluginSystem;
 public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginFactory));
+    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
+    private static readonly List<PluginBase> RUNNING_PLUGINS = [];
 
     private static bool IS_INITIALIZED;
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
     private static string INTERNAL_PLUGINS_ROOT = string.Empty;
     private static FileSystemWatcher HOT_RELOAD_WATCHER = null!;
+    private static ILanguagePlugin BASE_LANGUAGE_PLUGIN = NoPluginLanguage.INSTANCE;
     
     /// <summary>
     /// A list of all available plugins.
     /// </summary>
     public static IReadOnlyCollection<IPluginMetadata> AvailablePlugins => AVAILABLE_PLUGINS;
+    
+    /// <summary>
+    /// A list of all running plugins.
+    /// </summary>
+    public static IReadOnlyCollection<PluginBase> RunningPlugins => RUNNING_PLUGINS;
+
+    public static ILanguagePlugin BaseLanguage => BASE_LANGUAGE_PLUGIN;
+
     /// <summary>
     /// Set up the plugin factory. We will read the data directory from the settings manager.
     /// Afterward, we will create the plugins directory and the internal plugin directory.
@@ -109,6 +120,9 @@ public static partial class PluginFactory
             LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
             AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
         }
+        
+        // Start or restart all plugins:
+        await RestartAllPlugins(cancellationToken);
     }
 
     private static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
@@ -158,6 +172,93 @@ public static partial class PluginFactory
             
             _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
         };
+    }
+
+    private static async Task RestartAllPlugins(CancellationToken cancellationToken = default)
+    {
+        LOG.LogInformation("Try to start or restart all plugins.");
+        RUNNING_PLUGINS.Clear();
+
+        //
+        // Get the base language plugin. This is the plugin that will be used to fill in missing keys.
+        //
+        var baseLanguagePluginId = InternalPlugin.LANGUAGE_EN_US.MetaData().Id;
+        var baseLanguagePluginMetaData = AVAILABLE_PLUGINS.FirstOrDefault(p => p.Id == baseLanguagePluginId);
+        if (baseLanguagePluginMetaData is null)
+        {
+            LOG.LogError($"Was not able to find the base language plugin: Id='{baseLanguagePluginId}'. Please check your installation.");
+            return;
+        }
+
+        var startedBasePlugin = await Start(baseLanguagePluginMetaData, cancellationToken);
+        if (startedBasePlugin is NoPlugin noPlugin)
+        {
+            LOG.LogError($"Was not able to start the base language plugin: Id='{baseLanguagePluginId}'. Reason: {noPlugin.Issues.First()}");
+            return;
+        }
+        
+        if (startedBasePlugin is PluginLanguage languagePlugin)
+        {
+            BASE_LANGUAGE_PLUGIN = languagePlugin;
+            LOG.LogInformation($"Successfully started the base language plugin: Id='{languagePlugin.Id}', Type='{languagePlugin.Type}', Name='{languagePlugin.Name}', Version='{languagePlugin.Version}'");
+        }
+        else
+        {
+            LOG.LogError($"Was not able to start the base language plugin: Id='{baseLanguagePluginId}'. Reason: {string.Join("; ", startedBasePlugin.Issues)}");
+            return;
+        }
+
+        //
+        // Iterate over all available plugins and try to start them.
+        //
+        foreach (var availablePlugin in AVAILABLE_PLUGINS)
+        {
+            if(cancellationToken.IsCancellationRequested)
+                break;
+            
+            if (availablePlugin.Id == baseLanguagePluginId)
+                continue;
+            
+            if (availablePlugin.IsInternal || SETTINGS_MANAGER.IsPluginEnabled(availablePlugin))
+                if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
+                    RUNNING_PLUGINS.Add(plugin);
+
+            // Inform all components that the plugins have been reloaded or started:
+            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
+        }
+    }
+    
+    private static async Task<PluginBase> Start(IAvailablePlugin meta, CancellationToken cancellationToken = default)
+    {
+        var pluginMainFile = Path.Join(meta.LocalPath, "plugin.lua");
+        if(!File.Exists(pluginMainFile))
+        {
+            LOG.LogError($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reason: The plugin file does not exist.");
+            return new NoPlugin($"The plugin file does not exist: {pluginMainFile}");
+        }
+
+        var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
+        var plugin = await Load(meta.LocalPath, code, cancellationToken);
+        if (plugin is NoPlugin noPlugin)
+        {
+            LOG.LogError($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reason: {noPlugin.Issues.First()}");
+            return noPlugin;
+        }
+        
+        if (plugin.IsValid)
+        {
+            //
+            // When this is a language plugin, we need to set the base language plugin.
+            //
+            if (plugin is PluginLanguage languagePlugin && BASE_LANGUAGE_PLUGIN != NoPluginLanguage.INSTANCE)
+                languagePlugin.SetBaseLanguage(BASE_LANGUAGE_PLUGIN);
+            
+            LOG.LogInformation($"Successfully started plugin: Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}'");
+            return plugin;
+        }
+
+        LOG.LogError($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reasons: {string.Join("; ", plugin.Issues)}");
+        return new NoPlugin($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reasons: {string.Join("; ", plugin.Issues)}");
     }
     
     public static void Dispose()
