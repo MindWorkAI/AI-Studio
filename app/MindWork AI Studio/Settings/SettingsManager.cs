@@ -143,6 +143,11 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         return minimumLevel;
     }
     
+    /// <summary>
+    /// Checks if the given plugin is enabled.
+    /// </summary>
+    /// <param name="plugin">The plugin to check.</param>
+    /// <returns>True, when the plugin is enabled, false otherwise.</returns>
     public bool IsPluginEnabled(IPluginMetadata plugin) => this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
