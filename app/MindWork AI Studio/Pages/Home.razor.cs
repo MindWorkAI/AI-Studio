@@ -6,7 +6,7 @@ using Changelog = AIStudio.Components.Changelog;
 
 namespace AIStudio.Pages;
 
-public partial class Home : ComponentBase
+public partial class Home : MSGComponentBase
 {
     [Inject]
     private HttpClient HttpClient { get; init; } = null!;
@@ -22,7 +22,13 @@ public partial class Home : ComponentBase
     }
 
     #endregion
-    
+
+    #region Overrides of MSGComponentBase
+
+    public override string ComponentName => nameof(Home);
+
+    #endregion
+
     private async Task ReadLastChangeAsync()
     {
         var latest = Changelog.LOGS.MaxBy(n => n.Build);
