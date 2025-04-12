@@ -3,6 +3,16 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataApp
 {
     /// <summary>
+    /// The language behavior.
+    /// </summary>
+    public LangBehavior LanguageBehavior { get; set; } = LangBehavior.AUTO;
+    
+    /// <summary>
+    /// The language plugin ID to use.
+    /// </summary>
+    public Guid LanguagePluginId { get; set; } = Guid.Empty;
+    
+    /// <summary>
     /// The preferred theme to use.
     /// </summary>
     public Themes PreferredTheme { get; set; } = Themes.SYSTEM;

@@ -44,6 +44,20 @@ DEPRECATION_MESSAGE = ""
 -- code followed by the ISO 3166-1 country code:
 IETF_TAG = "en-US"
 
+-- The language name in the user's language:
+LANG_NAME = "English (United States)"
+
 UI_TEXT_CONTENT = {
     HOME = CONTENT_HOME,
+    AISTUDIO = {
+        PAGES = {
+            HOME = {
+                T2331588413 = "Let's get started",
+            },
+
+            CHAT = {
+                T3718856736 = "Short-Term Chat",
+            },
+        },
+    }
 }

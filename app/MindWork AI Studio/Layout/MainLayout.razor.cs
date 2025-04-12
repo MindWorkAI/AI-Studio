@@ -83,26 +83,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
         
-        //
-        // We cannot process the plugins before the settings are loaded,
-        // and we know our data directory.
-        //
-        if(PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
-        {
-            // Ensure that all internal plugins are present:
-            await PluginFactory.EnsureInternalPlugins();
-            
-            // Load (but not start) all plugins, without waiting for them:
-            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            _ = PluginFactory.LoadAll(pluginLoadingTimeout.Token);
-            
-            // Set up hot reloading for plugins:
-            PluginFactory.SetUpHotReloading();
-        }
-        
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR ]);
+        this.MessageBus.ApplyFilters(this, [],
+        [
+            Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
+            Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED
+        ]);
         
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
@@ -114,6 +101,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
 
         // Solve issue https://github.com/MudBlazor/MudBlazor/issues/11133:
         MudGlobal.TooltipDefaults.Duration = TimeSpan.Zero;
+        
+        // Send a message to start the plugin system:
+        await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
         await this.themeProvider.WatchSystemPreference(this.SystemeThemeChanged);
         await this.UpdateThemeConfiguration();
@@ -178,6 +168,32 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                 if (data is Error error)
                     error.Show(this.Snackbar);
                 
+                break;
+            
+            case Event.STARTUP_PLUGIN_SYSTEM:
+                if(PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        // Set up the plugin system:
+                        PluginFactory.Setup();
+                        
+                        // Ensure that all internal plugins are present:
+                        await PluginFactory.EnsureInternalPlugins();
+            
+                        // Load (but not start) all plugins, without waiting for them:
+                        var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+            
+                        // Set up hot reloading for plugins:
+                        PluginFactory.SetUpHotReloading();
+                    });
+                }
+                
+                break;
+            
+            case Event.PLUGINS_RELOADED:
+                await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
     }

@@ -24,7 +24,7 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     private string userInput = string.Empty;
     private string userDirection = string.Empty;
     private string suggestion = string.Empty;
-
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -43,16 +43,6 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
 
     public override string ComponentName => nameof(Writer);
     
-    public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        return Task.CompletedTask;
-    }
-
-    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
-    {
-        return Task.FromResult(default(TResult));
-    }
-
     #endregion
     
     private bool IsProviderSelected => this.providerSettings.UsedLLMProvider != LLMProviders.NONE;

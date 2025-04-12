@@ -7,11 +7,11 @@
     <MudText Typo="Typo.h3" Class="mb-2 mr-3">
         @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
         {
-            @($"Chat in Workspace \"{this.currentWorkspaceName}\"")
+            @(T("Chat in Workspace") + $" \"{this.currentWorkspaceName}\"")
         }
         else
         {
-            @("Temporary Chat")
+            @(T("Short-Term Chat"))
         }
     </MudText>
 

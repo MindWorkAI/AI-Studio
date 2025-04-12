@@ -1,8 +1,11 @@
 ﻿@attribute [Route(Routes.HOME)]
+@inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
     <MudImage Src="svg/banner.svg" Style="max-height: 16em; width: 100%; object-fit: cover;" />
-    <MudText Typo="Typo.h3" Class="mt-2 mb-2">Let's get started</MudText>
+    <MudText Typo="Typo.h3" Class="mt-2 mb-2">
+        @T("Let's get started")
+    </MudText>
 
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">

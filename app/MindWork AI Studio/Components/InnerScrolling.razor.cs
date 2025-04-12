@@ -46,8 +46,8 @@ public partial class InnerScrolling : MSGComponentBase
     #region Overrides of MSGComponentBase
 
     public override string ComponentName => nameof(InnerScrolling);
-    
-    public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -57,11 +57,6 @@ public partial class InnerScrolling : MSGComponentBase
         }
         
         return Task.CompletedTask;
-    }
-
-    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
-    {
-        return Task.FromResult(default(TResult));
     }
 
     #endregion
