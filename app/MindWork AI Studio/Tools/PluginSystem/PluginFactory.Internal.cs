@@ -40,15 +40,15 @@ public static partial class PluginFactory
             }
             
             // Ensure that the additional resources exist:
-            foreach (var content in resourceFileProvider.GetDirectoryContents(metaData.ResourcePath))
+            foreach (var contentFilePath in resourceFileProvider.GetDirectoryContents(metaData.ResourcePath))
             {
-                if(content.IsDirectory)
+                if(contentFilePath.IsDirectory)
                 {
                     LOG.LogError("The plugin contains a directory. This is not allowed.");
                     continue;
                 }
                 
-                await CopyInternalPluginFile(content, metaData);
+                await CopyInternalPluginFile(contentFilePath, metaData);
             }
         }
         catch
@@ -57,9 +57,9 @@ public static partial class PluginFactory
         }
     }
 
-    private static async Task CopyInternalPluginFile(IFileInfo resourceInfo, InternalPluginData metaData)
+    private static async Task CopyInternalPluginFile(IFileInfo resourceFilePath, InternalPluginData metaData)
     {
-        await using var inputStream = resourceInfo.CreateReadStream();
+        await using var inputStream = resourceFilePath.CreateReadStream();
         
         var pluginTypeBasePath = Path.Join(INTERNAL_PLUGINS_ROOT, metaData.Type.GetDirectory());
         
@@ -73,7 +73,7 @@ public static partial class PluginFactory
         if (!Directory.Exists(pluginPath))
             Directory.CreateDirectory(pluginPath);
         
-        var pluginFilePath = Path.Join(pluginPath, resourceInfo.Name);
+        var pluginFilePath = Path.Join(pluginPath, resourceFilePath.Name);
             
         await using var outputStream = File.Create(pluginFilePath);
         await inputStream.CopyToAsync(outputStream);
