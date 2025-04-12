@@ -107,7 +107,7 @@ public static partial class PluginFactory
             }
             
             LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
-            AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin));
+            AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
         }
     }
 
