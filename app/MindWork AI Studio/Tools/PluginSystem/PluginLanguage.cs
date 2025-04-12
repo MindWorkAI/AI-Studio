@@ -40,39 +40,6 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     /// </remarks>
     /// <param name="languagePlugin">The language plugin to add.</param>
     public void AddOtherLanguagePlugin(ILanguagePlugin languagePlugin) => this.otherLanguagePlugins.Add(languagePlugin);
-
-    /// <summary>
-    /// Tries to get a text from the language plugin.
-    /// </summary>
-    /// <remarks>
-    /// When the key neither in the base language nor in this language exist,
-    /// the value will be an empty string. Please note that the key is case-sensitive.
-    /// Furthermore, the keys are in the format "root::key". That means that
-    /// the keys are hierarchical and separated by "::".
-    /// </remarks>
-    /// <param name="key">The key to use to get the text.</param>
-    /// <param name="value">The desired text.</param>
-    /// <returns>True if the key exists, false otherwise.</returns>
-    public bool TryGetText(string key, out string value)
-    {
-        // First, we check if the key is part of the main language pack:
-        if (this.content.TryGetValue(key, out value!))
-            return true;
-        
-        // Second, we check if the key is part of the other language packs, such as the assistant plugins:
-        foreach (var otherLanguagePlugin in this.otherLanguagePlugins)
-            if(otherLanguagePlugin.TryGetText(key, out value))
-                return true;
-        
-        // Finally, we check if the key is part of the base language pack. This is the case,
-        // when a language plugin does not cover all keys. In this case, the base language plugin
-        // will be used to fill in the missing keys:
-        if(this.baseLanguage is not null && this.baseLanguage.TryGetText(key, out value))
-            return true;
-        
-        value = string.Empty;
-        return false;
-    }
     
     /// <summary>
     /// Tries to initialize the IETF tag.
@@ -151,6 +118,44 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         message = string.Empty;
         return true;
     }
+
+    #region Implementation of ILanguagePlugin
+
+    /// <summary>
+    /// Tries to get a text from the language plugin.
+    /// </summary>
+    /// <remarks>
+    /// When the key neither in the base language nor in this language exist,
+    /// the value will be an empty string. Please note that the key is case-sensitive.
+    /// Furthermore, the keys are in the format "root::key". That means that
+    /// the keys are hierarchical and separated by "::".
+    /// </remarks>
+    /// <param name="key">The key to use to get the text.</param>
+    /// <param name="value">The desired text.</param>
+    /// <returns>True if the key exists, false otherwise.</returns>
+    public bool TryGetText(string key, out string value)
+    {
+        // First, we check if the key is part of the main language pack:
+        if (this.content.TryGetValue(key, out value!))
+            return true;
+        
+        // Second, we check if the key is part of the other language packs, such as the assistant plugins:
+        foreach (var otherLanguagePlugin in this.otherLanguagePlugins)
+            if(otherLanguagePlugin.TryGetText(key, out value))
+                return true;
+        
+        // Finally, we check if the key is part of the base language pack. This is the case,
+        // when a language plugin does not cover all keys. In this case, the base language plugin
+        // will be used to fill in the missing keys:
+        if(this.baseLanguage is not null && this.baseLanguage.TryGetText(key, out value))
+            return true;
+        
+        value = string.Empty;
+        return false;
+    }
+    
+    /// <inheritdoc />
+    public string this[string key] => this.TryGetText(key, out var value) ? value : "string.Empty";
 
     /// <inheritdoc />
     public string IETFTag => this.langCultureTag;

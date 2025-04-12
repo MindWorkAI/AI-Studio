@@ -20,6 +20,15 @@ public interface ILanguagePlugin
     public bool TryGetText(string key, out string value);
     
     /// <summary>
+    /// Gets the text from the language plugin.
+    /// </summary>
+    /// <remarks>
+    /// When the key does not exist, the value will be an empty string.
+    /// </remarks>
+    /// <param name="key">The key to use to get the text.</param>
+    public string this[string key] { get; }
+    
+    /// <summary>
     /// Gets the IETF tag of the language plugin.
     /// </summary>
     public string IETFTag { get; }
