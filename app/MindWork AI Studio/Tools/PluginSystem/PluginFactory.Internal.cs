@@ -10,6 +10,12 @@ public static partial class PluginFactory
 {
     public static async Task EnsureInternalPlugins()
     {
+        if (!IS_INITIALIZED)
+        {
+            LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
+            return;
+        }
+        
         LOG.LogInformation("Start ensuring internal plugins.");
         foreach (var plugin in Enum.GetValues<InternalPlugin>())
         {

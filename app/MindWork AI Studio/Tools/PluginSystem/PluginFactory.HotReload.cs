@@ -4,6 +4,12 @@ public static partial class PluginFactory
 {
     public static void SetUpHotReloading()
     {
+        if (!IS_INITIALIZED)
+        {
+            LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
+            return;
+        }
+        
         LOG.LogInformation($"Start hot reloading plugins for path '{HOT_RELOAD_WATCHER.Path}'.");
         try
         {

@@ -9,29 +9,34 @@ namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
-    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
-    
-    private static readonly string DATA_DIR = SettingsManager.DataDirectory!;
-    
-    private static readonly string PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
-    
-    private static readonly string INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginFactory));
+    private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
 
-    private static readonly FileSystemWatcher HOT_RELOAD_WATCHER;
-
-    private static readonly List<IPluginMetadata> AVAILABLE_PLUGINS = [];
+    private static bool IS_INITIALIZED;
+    private static string DATA_DIR = string.Empty;
+    private static string PLUGINS_ROOT = string.Empty;
+    private static string INTERNAL_PLUGINS_ROOT = string.Empty;
+    private static FileSystemWatcher HOT_RELOAD_WATCHER = null!;
     
     /// <summary>
     /// A list of all available plugins.
     /// </summary>
     public static IReadOnlyCollection<IPluginMetadata> AvailablePlugins => AVAILABLE_PLUGINS;
-
-    static PluginFactory()
+    /// <summary>
+    /// Set up the plugin factory. We will read the data directory from the settings manager.
+    /// Afterward, we will create the plugins directory and the internal plugin directory.
+    /// </summary>
+    public static void Setup()
     {
+        DATA_DIR = SettingsManager.DataDirectory!;
+        PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
+        INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
+        
         if (!Directory.Exists(PLUGINS_ROOT))
             Directory.CreateDirectory(PLUGINS_ROOT);
         
         HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
+        IS_INITIALIZED = true;
     }
     
     /// <summary>
@@ -48,6 +53,12 @@ public static partial class PluginFactory
     /// </remarks>
     public static async Task LoadAll(CancellationToken cancellationToken = default)
     {
+        if (!IS_INITIALIZED)
+        {
+            LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
+            return;
+        }
+        
         LOG.LogInformation("Start loading plugins.");
         if (!Directory.Exists(PLUGINS_ROOT))
         {
@@ -151,6 +162,9 @@ public static partial class PluginFactory
     
     public static void Dispose()
     {
+        if(!IS_INITIALIZED)
+            return;
+        
         HOT_RELOAD_WATCHER.Dispose();
     }
 }
