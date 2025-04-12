@@ -6,6 +6,7 @@ using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 using WritingStylesRewrite = AIStudio.Assistants.RewriteImprove.WritingStyles;
 using WritingStylesEMail = AIStudio.Assistants.EMail.WritingStyles;
@@ -25,6 +26,21 @@ public readonly record struct ConfigurationSelectData<T>(string Name, T Value);
 /// </summary>
 public static class ConfigurationSelectDataFactory
 {
+    public static IEnumerable<ConfigurationSelectData<LangBehavior>> GetLangBehaviorData()
+    {
+        foreach (var behavior in Enum.GetValues<LangBehavior>())
+            yield return new(behavior.Name(), behavior);
+    }
+    
+    public static IEnumerable<ConfigurationSelectData<Guid>> GetLanguagesData()
+    {
+        foreach (var availablePlugin in PluginFactory.RunningPlugins)
+        {
+            if(availablePlugin is ILanguagePlugin languagePlugin)
+                yield return new(languagePlugin.LangName, availablePlugin.Id);
+        }
+    }
+    
     public static IEnumerable<ConfigurationSelectData<LoadingChatProviderBehavior>> GetLoadingChatProviderBehavior()
     {
         yield return new("When possible, use the LLM provider which was used for each chat in the first place", LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);
