@@ -1,10 +1,11 @@
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver
+public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver, ILang
 {
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
@@ -12,12 +13,37 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
 
+    [Inject]
+    private ILogger<PluginLanguage> Logger { get; init; } = null!;
+
+    private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
+
     #region Overrides of ComponentBase
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
+        
         this.MessageBus.RegisterComponent(this);
-        base.OnInitialized();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
+    #region Implementation of ILang
+
+    /// <inheritdoc />
+    public string T(string fallbackEN)
+    {
+        var type = this.GetType();
+        var ns = $"{type.Namespace!}::{type.Name}".ToUpperInvariant().Replace(".", "::");
+        var key = $"root::{ns}::T{fallbackEN.ToFNV32()}";
+        
+        if(this.Lang.TryGetText(key, out var text, logWarning: false))
+            return text;
+        
+        this.Logger.LogWarning($"Missing translation key '{key}' for content '{fallbackEN}'.");
+        return fallbackEN;
     }
 
     #endregion
@@ -34,12 +60,18 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
                 this.StateHasChanged();
                 break;
             
+            case Event.PLUGINS_RELOADED:
+                this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+            
             default:
                 await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
                 break;
         }
     }
 
+    public async Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return await this.ProcessIncomingMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
     }
@@ -80,7 +112,8 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
         // Append the color theme changed event to the list of events:
         var eventsList = new List<Event>(events)
         {
-            Event.COLOR_THEME_CHANGED
+            Event.COLOR_THEME_CHANGED,
+            Event.PLUGINS_RELOADED,
         };
         
         this.MessageBus.ApplyFilters(this, components, eventsList.ToArray());
