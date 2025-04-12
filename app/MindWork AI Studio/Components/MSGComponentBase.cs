@@ -26,7 +26,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
 
     public abstract string ComponentName { get; }
 
-    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
         switch (triggeredEvent)
         {
@@ -35,17 +35,26 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
                 break;
             
             default:
-                return this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+                await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+                break;
         }
-        
-        return Task.CompletedTask;
     }
-    
-    public abstract Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data);
-    
-    public abstract Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data);
+
+    {
+        return await this.ProcessIncomingMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
+    }
 
     #endregion
+
+    protected virtual Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    {
+        return Task.CompletedTask;
+    }
+
+    protected virtual Task<TResult?> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult<TResult?>(default);
+    }
 
     #region Implementation of IDisposable
 

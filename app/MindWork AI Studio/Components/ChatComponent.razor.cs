@@ -840,8 +840,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     #region Overrides of MSGComponentBase
 
     public override string ComponentName => nameof(ChatComponent);
-    
-    public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -860,7 +860,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
     }
 
-    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
+    protected override Task<TResult?> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
     {
         switch (triggeredEvent)
         {
