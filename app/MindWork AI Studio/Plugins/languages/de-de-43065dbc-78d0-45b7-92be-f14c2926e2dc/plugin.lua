@@ -51,7 +51,13 @@ UI_TEXT_CONTENT = {
     HOME = CONTENT_HOME,
     AISTUDIO = {
         PAGES = {
-            T2331588413 = "Lass uns anfangen",
+            HOME = {
+                T2331588413 = "Lass uns anfangen",
+            },
+
+            CHAT = {
+                T3718856736 = "Vorläufiger Chat",
+            }
         },
     }
 }
