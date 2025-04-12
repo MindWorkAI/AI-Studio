@@ -20,7 +20,7 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() },
+        Converters = { new TolerantEnumConverter() },
     };
 
     private readonly ILogger<SettingsManager> logger = logger;
