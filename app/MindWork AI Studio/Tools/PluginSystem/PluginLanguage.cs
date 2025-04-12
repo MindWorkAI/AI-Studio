@@ -7,12 +7,16 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     private readonly Dictionary<string, string> content = [];
     private readonly List<ILanguagePlugin> otherLanguagePlugins = [];
     private readonly string langCultureTag;
+    private readonly string langName;
     
     private ILanguagePlugin? baseLanguage;
     
     public PluginLanguage(bool isInternal, LuaState state, PluginType type) : base(isInternal, state, type)
     {
         if(!this.TryInitIETFTag(out var issue, out this.langCultureTag))
+            this.pluginIssues.Add(issue);
+        
+        if(!this.TryInitLangName(out issue, out this.langName))
             this.pluginIssues.Add(issue);
         
         if (this.TryInitUITextContent(out issue, out var readContent))
@@ -127,7 +131,32 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         message = string.Empty;
         return true;
     }
+    
+    private bool TryInitLangName(out string message, out string readLangName)
+    {
+        if (!this.state.Environment["LANG_NAME"].TryRead(out readLangName))
+        {
+            message = "The field LANG_NAME does not exist or is not a valid string.";
+            readLangName = string.Empty;
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(readLangName))
+        {
+            message = "The field LANG_NAME is empty. Use a valid language name.";
+            readLangName = string.Empty;
+            return false;
+        }
+        
+        message = string.Empty;
+        return true;
+    }
 
     /// <inheritdoc />
     public string IETFTag => this.langCultureTag;
+    
+    /// <inheritdoc />
+    public string LangName => this.langName;
+
+    #endregion
 }

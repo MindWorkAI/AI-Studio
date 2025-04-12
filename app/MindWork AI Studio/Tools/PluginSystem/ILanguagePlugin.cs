@@ -23,4 +23,9 @@ public interface ILanguagePlugin
     /// Gets the IETF tag of the language plugin.
     /// </summary>
     public string IETFTag { get; }
+    
+    /// <summary>
+    /// Gets the name of the language.
+    /// </summary>
+    public string LangName { get; }
 }
