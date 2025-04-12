@@ -200,6 +200,7 @@ public static partial class PluginFactory
         if (startedBasePlugin is PluginLanguage languagePlugin)
         {
             BASE_LANGUAGE_PLUGIN = languagePlugin;
+            RUNNING_PLUGINS.Add(languagePlugin);
             LOG.LogInformation($"Successfully started the base language plugin: Id='{languagePlugin.Id}', Type='{languagePlugin.Type}', Name='{languagePlugin.Name}', Version='{languagePlugin.Version}'");
         }
         else
