@@ -18,4 +18,9 @@ public interface ILanguagePlugin
     /// <param name="value">The desired text.</param>
     /// <returns>True if the key exists, false otherwise.</returns>
     public bool TryGetText(string key, out string value);
+    
+    /// <summary>
+    /// Gets the IETF tag of the language plugin.
+    /// </summary>
+    public string IETFTag { get; }
 }

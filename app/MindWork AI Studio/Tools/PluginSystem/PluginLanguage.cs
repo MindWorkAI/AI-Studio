@@ -127,4 +127,7 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         message = string.Empty;
         return true;
     }
+
+    /// <inheritdoc />
+    public string IETFTag => this.langCultureTag;
 }
