@@ -49,4 +49,9 @@ LANG_NAME = "English (United States)"
 
 UI_TEXT_CONTENT = {
     HOME = CONTENT_HOME,
+    AISTUDIO = {
+        PAGES = {
+            T2331588413 = "Let's get started",
+        },
+    }
 }
