@@ -18,8 +18,6 @@ public sealed class NoPluginLanguage : PluginBase, ILanguagePlugin
         return true;
     }
 
-    public string this[string key] => string.Empty;
-
     public string IETFTag => string.Empty;
     
     public string LangName => string.Empty;

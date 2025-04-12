@@ -159,9 +159,6 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         value = string.Empty;
         return false;
     }
-    
-    /// <inheritdoc />
-    public string this[string key] => this.TryGetText(key, out var value) ? value : "string.Empty";
 
     /// <inheritdoc />
     public string IETFTag => this.langCultureTag;
