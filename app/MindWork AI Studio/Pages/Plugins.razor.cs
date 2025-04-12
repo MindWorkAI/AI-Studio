@@ -1,21 +1,13 @@
-using AIStudio.Settings;
+using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
-
-using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Pages;
 
-public partial class Plugins : ComponentBase, IMessageBusReceiver
+public partial class Plugins : MSGComponentBase
 {
     private const string GROUP_ENABLED = "Enabled";
     private const string GROUP_DISABLED = "Disabled";
     private const string GROUP_INTERNAL = "Internal";
-    
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private TableGroupDefinition<IPluginMetadata> groupConfig = null!;
 
@@ -45,7 +37,13 @@ public partial class Plugins : ComponentBase, IMessageBusReceiver
     }
 
     #endregion
-    
+
+    #region Overrides of MSGComponentBase
+
+    public override string ComponentName => nameof(Plugins);
+
+    #endregion
+
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
     {
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
@@ -56,27 +54,4 @@ public partial class Plugins : ComponentBase, IMessageBusReceiver
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
-    #region Implementation of IMessageBusReceiver
-
-    public string ComponentName => nameof(Plugins);
-    
-    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
-    {
-        switch (triggeredEvent)
-        {
-            case Event.PLUGINS_RELOADED:
-                this.InvokeAsync(this.StateHasChanged);
-                break;
-        }
-        
-        return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
 }
