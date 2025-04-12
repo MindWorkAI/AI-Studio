@@ -9,7 +9,7 @@ namespace AIStudio.Pages;
 public partial class Home : ComponentBase
 {
     [Inject]
-    private HttpClient HttpClient { get; set; } = null!;
+    private HttpClient HttpClient { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
 
