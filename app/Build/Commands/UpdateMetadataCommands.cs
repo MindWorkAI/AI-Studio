@@ -37,7 +37,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated Tauri version from {currentTauriVersion} to {updatedTauriVersion}.");
         lines[TAURI_VERSION_INDEX] = updatedTauriVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Encoding.UTF8);
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
     
     private async Task UpdateMudBlazorVersion()
@@ -62,7 +62,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated MudBlazor version from {currentMudBlazorVersion} to {updatedMudBlazorVersion}.");
         lines[MUD_BLAZOR_VERSION_INDEX] = updatedMudBlazorVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Encoding.UTF8);
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
 
     private async Task UpdateRustVersion()
@@ -86,7 +86,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated Rust version from {currentRustVersion} to {updatedRustVersion}.");
         lines[RUST_VERSION_INDEX] = updatedRustVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Encoding.UTF8);
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
 
     private async Task UpdateDotnetVersion()
@@ -117,7 +117,7 @@ public sealed partial class UpdateMetadataCommands
         lines[DOTNET_VERSION_INDEX] = updatedDotnetVersion;
         lines[DOTNET_SDK_VERSION_INDEX] = updatedDotnetSdkVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Encoding.UTF8);
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
     
     private async Task<IList<Match>> DetermineVersion(string name, string workingDirectory,  Regex regex, string program, string command)
@@ -159,7 +159,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updating build number from '{lines[BUILD_NUMBER_INDEX]}' to '{buildNumber}'.");
         
         lines[BUILD_NUMBER_INDEX] = buildNumber.ToString();
-        await File.WriteAllLinesAsync(pathMetadata, lines, Encoding.UTF8);
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
     
     private async Task UpdateBuildTime()
@@ -172,7 +172,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updating build time from '{lines[BUILD_TIME_INDEX]}' to '{buildTime}'.");
         
         lines[BUILD_TIME_INDEX] = buildTime;
-        await File.WriteAllLinesAsync(pathMetadata, lines, Encoding.UTF8);
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
 
     [GeneratedRegex("""(?ms).?(NET\s+SDK|SDK\s+\.NET)\s*:\s+Version:\s+(?<sdkVersion>[0-9.]+).+Commit:\s+(?<sdkCommit>[a-zA-Z0-9]+).+Host:\s+Version:\s+(?<hostVersion>[0-9.]+).+Commit:\s+(?<hostCommit>[a-zA-Z0-9]+)""")]
