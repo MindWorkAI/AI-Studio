@@ -14,6 +14,38 @@ public sealed partial class UpdateMetadataCommands
     {
         await this.UpdateTauriVersion();
     }
+
+    private async Task UpdateLicenceYear(string licenceFilePath)
+    {
+        var currentYear = DateTime.UtcNow.Year.ToString();
+        var lines = await File.ReadAllLinesAsync(licenceFilePath, Encoding.UTF8);
+
+        var found = false;
+        var copyrightYear = string.Empty;
+        var updatedLines = new List<string>(lines.Length);
+        foreach (var line in lines)
+        {
+            var match = FindCopyrightRegex().Match(line);
+            if (match.Success)
+            {
+                copyrightYear = match.Groups["year"].Value;
+                
+                if(!found && copyrightYear != currentYear)
+                    Console.WriteLine($"- Updating the licence's year in '{Path.GetFileName(licenceFilePath)}' from '{copyrightYear}' to '{currentYear}'.");
+                
+                updatedLines.Add(ReplaceCopyrightYearRegex().Replace(line, currentYear));
+                found = true;
+            }
+            else
+                updatedLines.Add(line);
+        }
+        
+        await File.WriteAllLinesAsync(licenceFilePath, updatedLines, Environment.UTF8_NO_BOM);
+        if (!found)
+            Console.WriteLine($"- Error: No copyright year found in '{Path.GetFileName(licenceFilePath)}'.");
+        else if (copyrightYear == currentYear)
+            Console.WriteLine($"- The copyright year in '{Path.GetFileName(licenceFilePath)}' is already up to date.");
+    }
     
     private async Task UpdateTauriVersion()
     {
@@ -186,4 +218,10 @@ public sealed partial class UpdateMetadataCommands
     
     [GeneratedRegex("""tauri\s+v(?<version>[0-9.]+)""")]
     private static partial Regex TauriVersionRegex();
+    
+    [GeneratedRegex("""^\s*Copyright\s+(?<year>[0-9]{4})""")]
+    private static partial Regex FindCopyrightRegex();
+
+    [GeneratedRegex("""([0-9]{4})""")]
+    private static partial Regex ReplaceCopyrightYearRegex();
 }
