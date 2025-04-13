@@ -1,5 +1,5 @@
 // ReSharper disable MemberCanBePrivate.Global
-namespace AIStudio.Tools;
+namespace SharedTools;
 
 /// <summary>
 /// Implements the Fowler–Noll–Vo hash function for 32-bit and 64-bit hashes.
