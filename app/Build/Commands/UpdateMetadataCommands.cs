@@ -15,6 +15,23 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateTauriVersion();
     }
 
+    private async Task UpdateProjectCommitHash()
+    {
+        const int COMMIT_HASH_INDEX = 8;
+        
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        var currentCommitHash = lines[COMMIT_HASH_INDEX].Trim();
+        var headCommitHash = await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD");
+        var first10Chars = headCommitHash[..11];
+        var updatedCommitHash = $"{first10Chars}, release";
+
+        Console.WriteLine($"- Updating commit hash from '{currentCommitHash}' to '{updatedCommitHash}'.");
+        lines[COMMIT_HASH_INDEX] = updatedCommitHash;
+        
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+    }
+
     private async Task UpdateAppVersion(PrepareAction action)
     {
         const int APP_VERSION_INDEX = 0;
@@ -222,6 +239,28 @@ public sealed partial class UpdateMetadataCommands
         }
         
         return matches;
+    }
+    
+    private async Task<string> ReadCommandOutput(string workingDirectory, string program, string command)
+    {
+        var processInfo = new ProcessStartInfo
+        {
+            WorkingDirectory = workingDirectory,
+            FileName = program,
+            Arguments = command,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        
+        using var process = new Process();
+        process.StartInfo = processInfo;
+        process.Start();
+        
+        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        
+        return output;
     }
     
     private async Task IncreaseBuildNumber()
