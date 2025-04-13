@@ -28,6 +28,13 @@ public static class Environment
         return Path.GetFullPath(directory);
     }
     
+    public static string GetRustRuntimeDirectory()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var directory = Path.Combine(currentDirectory, "..", "..", "runtime");
+        return Path.GetFullPath(directory);
+    }
+    
     public static string GetMetadataPath()
     {
         var currentDirectory = Directory.GetCurrentDirectory();
