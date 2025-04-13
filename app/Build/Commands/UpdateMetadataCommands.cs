@@ -15,6 +15,36 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateTauriVersion();
     }
 
+    private async Task UpdateChangelog(int buildNumber, string appVersion, string buildTime)
+    {
+        var pathChangelogs = Path.Combine(Environment.GetAIStudioDirectory(), "wwwroot", "changelog");
+        var expectedLogFilename = $"v{appVersion}.md";
+        var expectedLogFilePath = Path.Combine(pathChangelogs, expectedLogFilename);
+        
+        if(!File.Exists(expectedLogFilePath))
+        {
+            Console.WriteLine($"- Error: The changelog file '{expectedLogFilename}' does not exist.");
+            return;
+        }
+
+        const string CODE_START =
+        """
+        LOGS = 
+            [
+        """;
+        
+        var changelogCodePath = Path.Join(Environment.GetAIStudioDirectory(), "Components", "Changelog.Logs.cs");
+        var changelogCode = await File.ReadAllTextAsync(changelogCodePath, Encoding.UTF8);
+        var updatedCode =
+        $"""
+        {CODE_START}
+                new ({buildNumber}, "v{appVersion}, build {buildNumber} ({buildTime})", "{expectedLogFilename}"),
+        """;
+        
+        changelogCode = changelogCode.Replace(CODE_START, updatedCode);
+        await File.WriteAllTextAsync(changelogCodePath, changelogCode, Environment.UTF8_NO_BOM);
+    }
+
     private async Task UpdateProjectCommitHash()
     {
         const int COMMIT_HASH_INDEX = 8;
