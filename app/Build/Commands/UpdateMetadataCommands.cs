@@ -15,6 +15,49 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateTauriVersion();
     }
 
+    private async Task UpdateAppVersion(PrepareAction action)
+    {
+        const int APP_VERSION_INDEX = 0;
+        
+        if (action == PrepareAction.NONE)
+        {
+            Console.WriteLine("- No action specified. Skipping app version update.");
+            return;
+        }
+        
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        var currentAppVersionLine = lines[APP_VERSION_INDEX].Trim();
+        var currentAppVersion = AppVersionRegex().Match(currentAppVersionLine);
+        var currentPatch = int.Parse(currentAppVersion.Groups["patch"].Value);
+        var currentMinor = int.Parse(currentAppVersion.Groups["minor"].Value);
+        var currentMajor = int.Parse(currentAppVersion.Groups["major"].Value);
+        
+        switch (action)
+        {
+            case PrepareAction.PATCH:
+                currentPatch++;
+                break;
+            
+            case PrepareAction.MINOR:
+                currentPatch = 0;
+                currentMinor++;
+                break;
+            
+            case PrepareAction.MAJOR:
+                currentPatch = 0;
+                currentMinor = 0;
+                currentMajor++;
+                break;
+        }
+        
+        var updatedAppVersion = $"{currentMajor}.{currentMinor}.{currentPatch}";
+        Console.WriteLine($"- Updating app version from '{currentAppVersionLine}' to '{updatedAppVersion}'.");
+        
+        lines[APP_VERSION_INDEX] = updatedAppVersion;
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+    }
+
     private async Task UpdateLicenceYear(string licenceFilePath)
     {
         var currentYear = DateTime.UtcNow.Year.ToString();
@@ -224,4 +267,7 @@ public sealed partial class UpdateMetadataCommands
 
     [GeneratedRegex("""([0-9]{4})""")]
     private static partial Regex ReplaceCopyrightYearRegex();
+    
+    [GeneratedRegex("""(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)""")]
+    private static partial Regex AppVersionRegex();
 }
