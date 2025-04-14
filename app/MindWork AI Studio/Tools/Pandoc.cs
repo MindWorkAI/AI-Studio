@@ -10,14 +10,17 @@ namespace AIStudio.Tools;
 public static partial class Pandoc
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
-    private static readonly string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download/3.6.4/pandoc-3.6.4-windows-x86_64.zip";
-    private static readonly Version MINIMUM_REQUIRED_VERSION = new Version(3, 6);
+    private static readonly string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download/";
+    private static readonly string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
+    private static readonly Version MINIMUM_REQUIRED_VERSION = new (3, 6);
+    private static readonly Version FALLBACK_VERSION = new (3, 6, 4);
+    private static readonly string CPU_ARCHITECTURE = "win-x64";
     
     /// <summary>
     /// Checks if pandoc is available on the system and can be started as a process
     /// </summary>
     /// <returns>True, if pandoc is available and the minimum required version is met, else False.</returns>
-    public static async Task<bool> IsPandocAvailableAsync()
+    public static async Task<bool> CheckAvailabilityAsync()
     {
         try
         {
@@ -77,7 +80,7 @@ public static partial class Pandoc
         }
     }
 
-    public static async Task InstallPandocAsync(RustService rustService)
+    public static async Task InstallAsync(RustService rustService)
     {
         var dataDir = await rustService.GetDataDirectory();
         await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, $"{dataDir}"));
@@ -89,7 +92,7 @@ public static partial class Pandoc
                 Directory.CreateDirectory(installDir);
 
             using var client = new HttpClient();
-            var response = await client.GetAsync(DOWNLOAD_URL);
+            var response = await client.GetAsync(await GenerateUriAsync());
             if (response.IsSuccessStatusCode)
             {
                 var fileBytes = await response.Content.ReadAsByteArrayAsync();
@@ -125,6 +128,47 @@ public static partial class Pandoc
             Console.WriteLine($"Fehler: {ex.Message}");
         }
     }
+    
+    public static async Task<string> FetchLatestVersionAsync() {
+        using var client = new HttpClient();
+        var response = await client.GetAsync(LATEST_URL);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            LOG.LogError("Code {StatusCode}: Could not fetch pandocs latest page:\n {Response}", response.StatusCode, response.RequestMessage);
+            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
+            return FALLBACK_VERSION.ToString();
+        }
+
+        var htmlContent = await response.Content.ReadAsStringAsync();
+
+        var versionMatch = VersionRegex().Match(htmlContent);
+        if (!versionMatch.Success)
+        {
+            LOG.LogError("The latest version regex returned nothing:\n {Value}", versionMatch.Groups.ToString());
+            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
+            return FALLBACK_VERSION.ToString();
+        }
+        
+        var version = versionMatch.Groups[1].Value;
+        return version;
+    }
+
+    // win arm not available
+    private static async Task<string> GenerateUriAsync()
+    {
+        var version = await FetchLatestVersionAsync();
+        var baseUri = $"{DOWNLOAD_URL}/{version}/pandoc-{version}-";
+        return CPU_ARCHITECTURE switch
+        {
+            "win-x64" => $"{baseUri}windows-x86_64.zip",
+            "osx-x64" => $"{baseUri}x86_64-macOS.zip",
+            "osx-arm64" => $"{baseUri}arm64-macOS.zip",
+            "linux-x64" => $"{baseUri}linux-amd64.tar.gz",
+            "linux-arm" => $"{baseUri}linux-arm64.tar.gz",
+            _ => string.Empty,
+        };
+    }
 
     /// <summary>
     /// Returns the name of the pandoc executable based on the running operating system
@@ -133,4 +177,7 @@ public static partial class Pandoc
 
     [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+)")]
     private static partial Regex PandocRegex();
+    
+    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+\.[0-9]+)")]
+    private static partial Regex VersionRegex();
 }

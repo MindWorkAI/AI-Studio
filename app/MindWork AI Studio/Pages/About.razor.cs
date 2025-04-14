@@ -183,7 +183,7 @@ public partial class About : ComponentBase
         this.isChecking = true;
         this.statusMessage = "Überprüfe die Verfügbarkeit von Pandoc...";
         this.StateHasChanged(); // Aktualisiere die UI
-        var isPandocAvailable = await Pandoc.IsPandocAvailableAsync();
+        var isPandocAvailable = await Pandoc.CheckAvailabilityAsync();
         if (isPandocAvailable)
         {
             this.statusMessage = "Pandoc ist verfügbar und erfüllt die Mindestversion.";
@@ -198,6 +198,11 @@ public partial class About : ComponentBase
 
     private async Task InstallPandoc()
     {
-        var installPandoc = Pandoc.InstallPandocAsync(this.RustService);
+        var installPandoc = Pandoc.InstallAsync(this.RustService);
+    }
+
+    private async Task LatestVersion()
+    {
+        await Pandoc.FetchLatestVersionAsync();
     }
 }
