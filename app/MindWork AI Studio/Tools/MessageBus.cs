@@ -68,6 +68,8 @@ public sealed class MessageBus
 
     public Task SendError(Error error) => this.SendMessage(null, Event.SHOW_ERROR, error);
     
+    public Task SendWarning(Warning warning) => this.SendMessage(null, Event.SHOW_WARNING, warning);
+    
     public Task SendSuccess(Success success) => this.SendMessage(null, Event.SHOW_SUCCESS, success);
 
     public void DeferMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data = default)

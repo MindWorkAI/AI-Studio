@@ -102,7 +102,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR ]);
+        this.MessageBus.ApplyFilters(this, [], [ Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR, Event.SHOW_WARNING, Event.SHOW_SUCCESS, ]);
         
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
@@ -174,9 +174,21 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                 this.StateHasChanged();
                 break;
             
+            case Event.SHOW_SUCCESS:
+                if (data is Success success)
+                    success.Show(this.Snackbar);
+                
+                break;
+            
             case Event.SHOW_ERROR:
                 if (data is Error error)
                     error.Show(this.Snackbar);
+                
+                break;
+            
+            case Event.SHOW_WARNING:
+                if (data is Warning warning)
+                    warning.Show(this.Snackbar);
                 
                 break;
         }

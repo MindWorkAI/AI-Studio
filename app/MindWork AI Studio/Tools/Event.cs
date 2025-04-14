@@ -10,6 +10,7 @@ public enum Event
     COLOR_THEME_CHANGED,
     PLUGINS_RELOADED,
     SHOW_ERROR,
+    SHOW_WARNING,
     SHOW_SUCCESS,
     
     // Update events:
