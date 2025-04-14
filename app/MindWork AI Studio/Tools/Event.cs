@@ -11,6 +11,7 @@ public enum Event
     STARTUP_PLUGIN_SYSTEM,
     PLUGINS_RELOADED,
     SHOW_ERROR,
+    SHOW_SUCCESS,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,

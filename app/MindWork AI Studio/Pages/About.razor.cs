@@ -174,4 +174,30 @@ public partial class About : ComponentBase
     {
         await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
     }
+    
+    // TODO: DELETE FOR DEBUGGING ONLY
+    private bool isChecking;
+    private string statusMessage = string.Empty;
+    private async Task CheckPandoc()
+    {
+        this.isChecking = true;
+        this.statusMessage = "Überprüfe die Verfügbarkeit von Pandoc...";
+        this.StateHasChanged(); // Aktualisiere die UI
+        var isPandocAvailable = await Pandoc.IsPandocAvailableAsync();
+        if (isPandocAvailable)
+        {
+            this.statusMessage = "Pandoc ist verfügbar und erfüllt die Mindestversion.";
+        }
+        else
+        {
+            this.statusMessage = "Pandoc ist nicht verfügbar oder die installierte Version ist zu niedrig.";
+        }
+        this.isChecking = false;
+        this.StateHasChanged(); // Aktualisiere die UI
+    }
+
+    private async Task InstallPandoc()
+    {
+        var installPandoc = Pandoc.InstallPandocAsync(this.RustService);
+    }
 }
