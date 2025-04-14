@@ -25,14 +25,19 @@ In order to build MindWork AI Studio from source instead of using the pre-built 
 4. To build the current version, run `dotnet run build` to build the entire app.
     - This will build the app for the current operating system, for both x64 (Intel, AMD) and ARM64 (e.g., Apple Silicon, Raspberry Pi).
     - The final setup program will be located in `runtime/target/release` afterward.
-5. In order to create a new release:
-   1. Before finishing the PR, make sure to create a changelog file in the `/app/MindWork AI Studio/wwwroot/changelog` directory. The file should be named `vX.Y.Z.md` and contain the changes made in the release (your changes and any other changes that are part of the release).
-   2. To prepare a new release, run `dotnet run release --action <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
-   3. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
-   4. Your proposed changes will be reviewed and merged.
-   5. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.
-   6. The GitHub Workflow will then build the release and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest).
-   7. Building the release including virus scanning takes some time. Please be patient.
+
+## Create a release
+In order to create a release:
+1. To create a new release, you need to be a maintainer of the repository.
+2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version.
+3. After you have created the changelog file, you must commit the changes to the repository.
+4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
+5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the new changelog registered, and the version numbers of central dependencies updated, etc.
+6. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
+7. Your proposed changes will be reviewed and merged.
+8. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.
+9. The GitHub Workflow will then build the release and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest).
+10. Building the release including virus scanning takes some time. Please be patient.
 
 ## Run the app locally with all your changes
 Do you want to test your changes before creating a PR? Follow these steps:
