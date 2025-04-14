@@ -5,15 +5,15 @@ You just want to use the app? Then simply [download the appropriate setup for yo
 1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
 3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
-4. Install the Tauri CLI by running `cargo install --version 1.6.2 tauri-cli`.
-5. Clone the repository.
+4. Clone the repository.
 
 ## One-time mandatory steps
 Regardless of whether you want to build the app locally for yourself (not trusting the pre-built binaries) or test your changes before creating a PR, you have to run the following commands at least once:
 
 1. Open a terminal.
-2. Navigate to the `/app/Build` directory within the repository.
-3. Run `dotnet run build` to build the entire app.
+2. Install the Tauri CLI by running `cargo install --version 1.6.2 tauri-cli`.
+3. Navigate to the `/app/Build` directory within the repository.
+4. Run `dotnet run build` to build the entire app.
 
 This is necessary because the build script and the Tauri framework assume that the .NET app is available as a so-called "sidecar." Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development as well.
 
