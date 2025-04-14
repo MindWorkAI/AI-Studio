@@ -11,9 +11,40 @@ namespace Build.Commands;
 
 public sealed partial class UpdateMetadataCommands
 {
-    [Command("prepare", Description = "Prepare the next release")]
+    [Command("release", Description = "Prepare & build the next release")]
+    public async Task Release(PrepareAction action)
+    {
+        if(!Environment.IsWorkingDirectoryValid())
+            return;
+        
+        // Prepare the metadata for the next release:
+        await this.Prepare(action);
+        
+        // Build once to allow the Rust compiler to read the changed metadata
+        // and to update all .NET artifacts:
+        await this.Build();
+        
+        // Now, we update the web assets (which may were updated by the first build):
+        new UpdateWebAssetsCommand().UpdateWebAssets();
+
+        // Collect the I18N keys from the source code. This step yields a I18N file
+        // that must be part of the final release:
+        await new CollectI18NKeysCommand().CollectI18NKeys();
+        
+        // Build the final release, where Rust knows the updated metadata, the .NET
+        // artifacts are already in place, and .NET knows the updated web assets, etc.:
+        await this.Build();
+    }
+    
+    [Command("prepare", Description = "Prepare the metadata for the next release")]
     public async Task Prepare(PrepareAction action)
     {
+        if(!Environment.IsWorkingDirectoryValid())
+            return;
+
+        Console.WriteLine("==============================");
+        Console.WriteLine("- Prepare the metadata for the next release ...");
+        
         var appVersion = await this.UpdateAppVersion(action);
         if (!string.IsNullOrWhiteSpace(appVersion))
         {
@@ -27,12 +58,16 @@ public sealed partial class UpdateMetadataCommands
             await this.UpdateProjectCommitHash();
             await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "..", "..", "LICENSE.md")));
             await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "About.razor.cs")));
+            Console.WriteLine();
         }
     }
     
     [Command("build", Description = "Build MindWork AI Studio")]
     public async Task Build()
     {
+        if(!Environment.IsWorkingDirectoryValid())
+            return;
+        
         //
         // Build the .NET project:
         //
@@ -156,7 +191,10 @@ public sealed partial class UpdateMetadataCommands
         if(foundRustIssue)
             Console.WriteLine();
         else
+        {
             Console.WriteLine(" completed successfully.");
+            Console.WriteLine();
+        }
     }
 
     private async Task UpdateChangelog(int buildNumber, string appVersion, string buildTime)

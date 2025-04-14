@@ -16,6 +16,9 @@ public sealed partial class CollectI18NKeysCommand
         if(!Environment.IsWorkingDirectoryValid())
             return;
 
+        Console.WriteLine("=========================");
+        Console.Write("- Collecting I18N keys ...");
+        
         var cwd = Environment.GetAIStudioDirectory();
         var binPath = Path.Join(cwd, "bin");
         var objPath = Path.Join(cwd, "obj");
@@ -52,7 +55,8 @@ public sealed partial class CollectI18NKeysCommand
             }
         }
         
-        Console.WriteLine($"{counter:###,###} files processed.");
+        Console.WriteLine($" {counter:###,###} files processed.");
+        Console.WriteLine();
     }
     
     private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent)

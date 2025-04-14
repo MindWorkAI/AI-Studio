@@ -13,6 +13,9 @@ public sealed class UpdateWebAssetsCommand
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
+
+        Console.WriteLine("=========================");
+        Console.Write("- Updating web assets ...");
         
         var rid = Environment.GetRidsForCurrentOS().First();
         var cwd = Environment.GetAIStudioDirectory();
@@ -20,7 +23,8 @@ public sealed class UpdateWebAssetsCommand
         var isMudBlazorDirectoryPresent = Directory.Exists(Path.Join(contentPath, "MudBlazor"));
         if (!isMudBlazorDirectoryPresent)
         {
-            Console.WriteLine($"No web assets found for RID '{rid}'. Please publish the project first.");
+            Console.WriteLine();
+            Console.WriteLine($"- Error: No web assets found for RID '{rid}'. Please publish the project first.");
             return;
         }
         
@@ -38,7 +42,8 @@ public sealed class UpdateWebAssetsCommand
             
             File.Copy(sourcePath, targetPath, true);
         }
-        
-        Console.WriteLine($"{counter:###,###} web assets updated successfully.");
+
+        Console.WriteLine($" {counter:###,###} web assets updated successfully.");
+        Console.WriteLine();
     }
 }
