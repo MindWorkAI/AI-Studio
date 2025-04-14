@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindWork AI Studio", "MindW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceCodeRules", "SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj", "{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Build Script", "Build\Build Script.csproj", "{447A5590-68E1-4EF8-9451-A41AF5FBE571}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedTools", "SharedTools\SharedTools.csproj", "{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,6 +22,14 @@ Global
 		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0976C1CB-D499-4C86-8ADA-B7A7A4DE0BF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{447A5590-68E1-4EF8-9451-A41AF5FBE571}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{447A5590-68E1-4EF8-9451-A41AF5FBE571}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{447A5590-68E1-4EF8-9451-A41AF5FBE571}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{447A5590-68E1-4EF8-9451-A41AF5FBE571}.Release|Any CPU.Build.0 = Release|Any CPU
+		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

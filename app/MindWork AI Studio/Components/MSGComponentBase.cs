@@ -3,6 +3,8 @@ using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
+using SharedTools;
+
 namespace AIStudio.Components;
 
 public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver, ILang
