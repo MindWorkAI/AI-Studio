@@ -5,6 +5,7 @@ using Build.Tools;
 
 namespace Build.Commands;
 
+// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
@@ -166,10 +167,10 @@ public sealed partial class UpdateMetadataCommands
         //
         
         Console.WriteLine("==============================");
-        Console.Write("- Start building the Rust runtime ...");
+        Console.WriteLine("- Start building the Rust runtime ...");
         
         var pathRuntime = Environment.GetRustRuntimeDirectory();
-        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --bundles none");
+        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --bundles none", true);
         var rustBuildOutputLines = rustBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundRustIssue = false;
         foreach (var buildOutputLine in rustBuildOutputLines)
@@ -192,7 +193,8 @@ public sealed partial class UpdateMetadataCommands
             Console.WriteLine();
         else
         {
-            Console.WriteLine(" completed successfully.");
+            Console.WriteLine();
+            Console.WriteLine("- Compilation completed successfully.");
             Console.WriteLine();
         }
     }
@@ -457,7 +459,7 @@ public sealed partial class UpdateMetadataCommands
         return matches;
     }
     
-    private async Task<string> ReadCommandOutput(string workingDirectory, string program, string command)
+    private async Task<string> ReadCommandOutput(string workingDirectory, string program, string command, bool showLiveOutput = false)
     {
         var processInfo = new ProcessStartInfo
         {
@@ -467,21 +469,38 @@ public sealed partial class UpdateMetadataCommands
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
-        
+
+        var sb = new StringBuilder();
         using var process = new Process();
         process.StartInfo = processInfo;
         process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
         
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        process.OutputDataReceived += (_, args) =>
+        {
+            if(!string.IsNullOrWhiteSpace(args.Data))
+            {
+                if(showLiveOutput)
+                    Console.WriteLine(args.Data);
+                sb.AppendLine(args.Data);
+            }
+        };
+        
+        process.ErrorDataReceived += (_, args) =>
+        {
+            if(!string.IsNullOrWhiteSpace(args.Data))
+            {
+                if(showLiveOutput)
+                    Console.WriteLine(args.Data);
+                sb.AppendLine(args.Data);
+            }
+        };
+        
         await process.WaitForExitAsync();
-
-        return $"""
-                {output}
-                {error}
-                """;
+        return sb.ToString();
     }
     
     private async Task<int> IncreaseBuildNumber()
