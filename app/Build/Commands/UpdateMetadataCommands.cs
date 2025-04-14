@@ -130,6 +130,9 @@ public sealed partial class UpdateMetadataCommands
             }
         
             var dotnetArtifactPath = Path.Combine(pathApp, "bin", "dist");
+            if(!Directory.Exists(dotnetArtifactPath))
+                Directory.CreateDirectory(dotnetArtifactPath);
+            
             var dotnetArtifactFilename = os switch
             {
                 "windows" => "mindworkAIStudio.exe",
