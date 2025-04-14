@@ -279,6 +279,7 @@ public sealed partial class UpdateMetadataCommands
             FileName = program,
             Arguments = command,
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -288,9 +289,13 @@ public sealed partial class UpdateMetadataCommands
         process.Start();
         
         var output = await process.StandardOutput.ReadToEndAsync();
+        var error = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
-        
-        return output;
+
+        return $"""
+                {output}
+                {error}
+                """;
     }
     
     private async Task IncreaseBuildNumber()
