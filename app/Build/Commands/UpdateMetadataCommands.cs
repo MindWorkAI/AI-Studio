@@ -11,6 +11,25 @@ namespace Build.Commands;
 
 public sealed partial class UpdateMetadataCommands
 {
+    [Command("prepare", Description = "Prepare the next release")]
+    public async Task Prepare(PrepareAction action)
+    {
+        var appVersion = await this.UpdateAppVersion(action);
+        if (!string.IsNullOrWhiteSpace(appVersion))
+        {
+            var buildNumber = await this.IncreaseBuildNumber();
+            var buildTime = await this.UpdateBuildTime();
+            await this.UpdateChangelog(buildNumber, appVersion, buildTime);
+            await this.UpdateDotnetVersion();
+            await this.UpdateRustVersion();
+            await this.UpdateMudBlazorVersion();
+            await this.UpdateTauriVersion();
+            await this.UpdateProjectCommitHash();
+            await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "..", "..", "LICENSE.md")));
+            await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "About.razor.cs")));
+        }
+    }
+    
     [Command("build", Description = "Build MindWork AI Studio")]
     public async Task Build()
     {
@@ -152,6 +171,9 @@ public sealed partial class UpdateMetadataCommands
             return;
         }
 
+        // Right now, the build time is formatted as "yyyy-MM-dd HH:mm:ss UTC", but must remove the seconds:
+        buildTime = buildTime[..^7] + " UTC";
+        
         const string CODE_START =
         """
         LOGS = 
@@ -187,14 +209,14 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
 
-    private async Task UpdateAppVersion(PrepareAction action)
+    private async Task<string> UpdateAppVersion(PrepareAction action)
     {
         const int APP_VERSION_INDEX = 0;
         
         if (action == PrepareAction.NONE)
         {
             Console.WriteLine("- No action specified. Skipping app version update.");
-            return;
+            return string.Empty;
         }
         
         var pathMetadata = Environment.GetMetadataPath();
@@ -228,6 +250,7 @@ public sealed partial class UpdateMetadataCommands
         
         lines[APP_VERSION_INDEX] = updatedAppVersion;
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        return updatedAppVersion;
     }
 
     private async Task UpdateLicenceYear(string licenceFilePath)
@@ -423,7 +446,7 @@ public sealed partial class UpdateMetadataCommands
                 """;
     }
     
-    private async Task IncreaseBuildNumber()
+    private async Task<int> IncreaseBuildNumber()
     {
         const int BUILD_NUMBER_INDEX = 2;
         var pathMetadata = Environment.GetMetadataPath();
@@ -434,9 +457,10 @@ public sealed partial class UpdateMetadataCommands
         
         lines[BUILD_NUMBER_INDEX] = buildNumber.ToString();
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        return buildNumber;
     }
     
-    private async Task UpdateBuildTime()
+    private async Task<string> UpdateBuildTime()
     {
         const int BUILD_TIME_INDEX = 1;
         var pathMetadata = Environment.GetMetadataPath();
@@ -447,6 +471,7 @@ public sealed partial class UpdateMetadataCommands
         
         lines[BUILD_TIME_INDEX] = buildTime;
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        return buildTime;
     }
 
     [GeneratedRegex("""(?ms).?(NET\s+SDK|SDK\s+\.NET)\s*:\s+Version:\s+(?<sdkVersion>[0-9.]+).+Commit:\s+(?<sdkCommit>[a-zA-Z0-9]+).+Host:\s+Version:\s+(?<hostVersion>[0-9.]+).+Commit:\s+(?<hostCommit>[a-zA-Z0-9]+)""")]
