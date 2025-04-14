@@ -4,6 +4,7 @@ namespace Build.Tools;
 
 public static class Environment
 {
+    public const string DOTNET_VERSION = "net9.0";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     
     private static readonly string[] ALL_RIDS = ["win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-arm64", "osx-x64"];

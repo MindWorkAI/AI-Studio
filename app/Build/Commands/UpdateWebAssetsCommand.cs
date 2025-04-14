@@ -2,6 +2,8 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
 
+using Build.Tools;
+
 namespace Build.Commands;
 
 public sealed class UpdateWebAssetsCommand
@@ -14,7 +16,7 @@ public sealed class UpdateWebAssetsCommand
         
         var rid = Environment.GetRidsForCurrentOS().First();
         var cwd = Environment.GetAIStudioDirectory();
-        var contentPath = Path.Join(cwd, "bin", "release", "net9.0", rid, "publish", "wwwroot", "_content");
+        var contentPath = Path.Join(cwd, "bin", "release", Environment.DOTNET_VERSION, rid.ToName(), "publish", "wwwroot", "_content");
         var isMudBlazorDirectoryPresent = Directory.Exists(Path.Join(contentPath, "MudBlazor"));
         if (!isMudBlazorDirectoryPresent)
         {
