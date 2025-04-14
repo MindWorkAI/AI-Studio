@@ -7,7 +7,7 @@ public static class Environment
     public const string DOTNET_VERSION = "net9.0";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     
-    private static readonly string[] ALL_RIDS = ["win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-arm64", "osx-x64"];
+    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.ToName())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     
     public static bool IsWorkingDirectoryValid()
     {
@@ -60,16 +60,16 @@ public static class Environment
         return null;
     }
     
-    public static IEnumerable<string> GetRidsForCurrentOS()
+    public static IEnumerable<RID> GetRidsForCurrentOS()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return ALL_RIDS.Where(rid => rid.StartsWith("win-", StringComparison.OrdinalIgnoreCase));
+            return ALL_RIDS.Where(rid => rid.Value.StartsWith("win-", StringComparison.Ordinal)).Select(n => n.Key);
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            return ALL_RIDS.Where(rid => rid.StartsWith("osx-", StringComparison.OrdinalIgnoreCase));
+            return ALL_RIDS.Where(rid => rid.Value.StartsWith("osx-", StringComparison.Ordinal)).Select(n => n.Key);
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return ALL_RIDS.Where(rid => rid.StartsWith("linux-", StringComparison.OrdinalIgnoreCase));
+            return ALL_RIDS.Where(rid => rid.Value.StartsWith("linux-", StringComparison.Ordinal)).Select(n => n.Key);
         
         Console.WriteLine($"Error: Unsupported OS '{RuntimeInformation.OSDescription}'");
         return [];
