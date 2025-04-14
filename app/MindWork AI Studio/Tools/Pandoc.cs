@@ -92,41 +92,63 @@ public static partial class Pandoc
                 Directory.CreateDirectory(installDir);
 
             using var client = new HttpClient();
-            var response = await client.GetAsync(await GenerateUriAsync());
-            if (response.IsSuccessStatusCode)
+            var uri = await GenerateUriAsync();
+            
+            var response = await client.GetAsync(uri);
+            if (!response.IsSuccessStatusCode)
             {
-                var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, $"Pandoc was not installed successfully, because the download archive was not found."));
+                LOG.LogError("Pandoc was not installed, the release archive was not found (Status Code {StatusCode}):\n{Uri}\n{Message}", response.StatusCode, uri, response.RequestMessage);
+                return;
+            }
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+
+            if (uri.Contains(".zip"))
+            {
                 var tempZipPath = Path.Join(Path.GetTempPath(), "pandoc.zip");
                 await File.WriteAllBytesAsync(tempZipPath, fileBytes);
                 ZipFile.ExtractToDirectory(tempZipPath, installDir);
                 File.Delete(tempZipPath);
-                
-                var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
-                var pandocDir = Path.Join(currentPath, "pandoc-3.6.4");
-                if (currentPath != null && !currentPath.Contains(pandocDir))
-                {
-                    Environment.SetEnvironmentVariable(
-                        "PATH",
-                        $"{currentPath};{pandocDir}",
-                        EnvironmentVariableTarget.Machine);
-                    Console.WriteLine("Pandoc-Verzeichnis zum PATH hinzugefügt.");
-                }
-                else
-                {
-                    Console.WriteLine("Pandoc-Verzeichnis ist bereits im PATH.");
-                }
-                
-                await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {MINIMUM_REQUIRED_VERSION.ToString()} was installed successfully."));
+            }
+            else if (uri.Contains(".tar.gz"))
+            {
+                Console.WriteLine("is zip");
             }
             else
             {
-                Console.WriteLine("Fehler beim Herunterladen von Pandoc.");
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, $"Pandoc was not installed successfully, because the download archive type is unknown."));
+                LOG.LogError("Pandoc was not installed, the download archive is unknown:\n {Uri}", uri);
+                return;
             }
+            
+
+            var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
+            var pandocDir = Path.Join(currentPath, "pandoc-3.6.4");
+            if (currentPath != null && !currentPath.Contains(pandocDir))
+            {
+                Environment.SetEnvironmentVariable(
+                    "PATH",
+                    $"{currentPath};{pandocDir}",
+                    EnvironmentVariableTarget.Machine);
+                Console.WriteLine("Pandoc-Verzeichnis zum PATH hinzugefügt.");
+            }
+            else
+            {
+                Console.WriteLine("Pandoc-Verzeichnis ist bereits im PATH.");
+            }
+
+            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle,
+                $"Pandoc {MINIMUM_REQUIRED_VERSION.ToString()} was installed successfully."));
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Fehler: {ex.Message}");
         }
+    }
+
+    private static async Task ExtractZipAsync(string zipPath, string targetDir)
+    {
+        
     }
     
     public static async Task<string> FetchLatestVersionAsync() {
