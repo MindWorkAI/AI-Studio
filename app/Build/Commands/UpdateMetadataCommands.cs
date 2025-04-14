@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
+using Build.Tools;
+
 namespace Build.Commands;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -9,10 +11,133 @@ namespace Build.Commands;
 
 public sealed partial class UpdateMetadataCommands
 {
-    [Command("test", Description = "Test command")]
-    public async Task Test()
+    [Command("build", Description = "Build MindWork AI Studio")]
+    public async Task Build()
     {
-        await this.UpdateTauriVersion();
+        //
+        // Build the .NET project:
+        //
+        var pathApp = Environment.GetAIStudioDirectory();
+        var rids = Environment.GetRidsForCurrentOS();
+        foreach (var rid in rids)
+        {
+            Console.WriteLine("==============================");
+            Console.Write($"- Start .NET build for '{rid.ToName()}' ...");
+            await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.ToName()}");
+            var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.ToName()} --disable-build-servers --force");
+            var dotnetBuildOutputLines = dotnetBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+            var foundIssue = false;
+            foreach (var buildOutputLine in dotnetBuildOutputLines)
+            {
+                if(buildOutputLine.Contains(" error ") || buildOutputLine.Contains("#warning"))
+                {
+                    if(!foundIssue)
+                    {
+                        foundIssue = true;
+                        Console.WriteLine();
+                        Console.WriteLine("- Build has issues:");
+                    }
+
+                    Console.Write("   - ");
+                    Console.WriteLine(buildOutputLine);
+                }
+            }
+            
+            if(foundIssue)
+                Console.WriteLine();
+            else
+            {
+                Console.WriteLine(" completed successfully.");
+            }
+            
+            //
+            // Prepare the .NET artifact to be used by Tauri as sidecar:
+            //
+            var os = Environment.GetOS();
+            var tauriSidecarArtifactName = rid switch
+            {
+                RID.WIN_X64 => "mindworkAIStudioServer-x86_64-pc-windows-msvc.exe",
+                RID.WIN_ARM64 => "mindworkAIStudioServer-aarch64-pc-windows-msvc.exe",
+                
+                RID.LINUX_X64 => "mindworkAIStudioServer-x86_64-unknown-linux-gnu",
+                RID.LINUX_ARM64 => "mindworkAIStudioServer-aarch64-unknown-linux-gnu",
+                
+                RID.OSX_ARM64 => "mindworkAIStudioServer-aarch64-apple-darwin",
+                RID.OSX_X64 => "mindworkAIStudioServer-x86_64-apple-darwin",
+                
+                _ => string.Empty,
+            };
+
+            if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
+            {
+                Console.WriteLine($"- Error: Unsupported rid '{rid.ToName()}'.");
+                return;
+            }
+        
+            var dotnetArtifactPath = Path.Combine(pathApp, "bin", "dist");
+            var dotnetArtifactFilename = os switch
+            {
+                "windows" => "mindworkAIStudio.exe",
+                _ => "mindworkAIStudio",
+            };
+            
+            var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.ToName(), "publish", dotnetArtifactFilename);
+            var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
+            
+            if(File.Exists(dotnetPublishedPath))
+                Console.WriteLine("- Published .NET artifact found.");
+            else
+            {
+                Console.WriteLine($"- Error: Published .NET artifact not found: '{dotnetPublishedPath}'.");
+                return;
+            }
+
+            Console.Write($"- Move the .NET artifact to the Tauri sidecar destination ...");
+            try
+            {
+                File.Move(dotnetPublishedPath, finalDestination, true);
+                Console.WriteLine(" done.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" failed.");
+                Console.WriteLine($"   - Error: {e.Message}");
+            }
+            
+            Console.WriteLine();
+        }
+
+        //
+        // Build the Rust project / runtime:
+        //
+        
+        Console.WriteLine("==============================");
+        Console.Write("- Start building the Rust runtime ...");
+        
+        var pathRuntime = Environment.GetRustRuntimeDirectory();
+        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --bundles none");
+        var rustBuildOutputLines = rustBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+        var foundRustIssue = false;
+        foreach (var buildOutputLine in rustBuildOutputLines)
+        {
+            if(buildOutputLine.Contains("error", StringComparison.OrdinalIgnoreCase) || buildOutputLine.Contains("warning"))
+            {
+                if(!foundRustIssue)
+                {
+                    foundRustIssue = true;
+                    Console.WriteLine();
+                    Console.WriteLine("- Build has issues:");
+                }
+
+                Console.Write("   - ");
+                Console.WriteLine(buildOutputLine);
+            }
+        }
+        
+        if(foundRustIssue)
+            Console.WriteLine();
+        else
+            Console.WriteLine(" completed successfully.");
     }
 
     private async Task UpdateChangelog(int buildNumber, string appVersion, string buildTime)
