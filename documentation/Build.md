@@ -28,7 +28,7 @@ In order to build MindWork AI Studio from source instead of using the pre-built 
 
 ## Create a release
 In order to create a release:
-1. To create a new release, you need to be a maintainer of the repository.
+1. To create a new release, you need to be a maintainer of the repository—see step 8.
 2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version.
 3. After you have created the changelog file, you must commit the changes to the repository.
 4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` is either `patch`, `minor`, or `major`.
