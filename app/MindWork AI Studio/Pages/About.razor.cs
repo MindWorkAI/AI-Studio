@@ -1,5 +1,6 @@
 using System.Reflection;
 
+using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 

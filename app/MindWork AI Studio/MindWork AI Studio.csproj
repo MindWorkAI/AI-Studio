@@ -87,7 +87,7 @@
         </PropertyGroup>
         
         <ItemGroup>
-            <AssemblyAttribute Include="AIStudio.MetaDataAttribute">
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaData">
                 <_Parameter1>$(MetaVersion)</_Parameter1>
                 <_Parameter2>$(MetaBuildTime)</_Parameter2>
                 <_Parameter3>$(MetaBuild)</_Parameter3>
