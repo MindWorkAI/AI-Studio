@@ -160,6 +160,9 @@ jobs:
           # Format the app version:
           formatted_app_version="v${app_version}"
           
+          # Set the architecture:
+          sed -i '' "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
+          
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
@@ -211,6 +214,12 @@ jobs:
 
           # Format the app version:
           $formatted_app_version = "v${app_version}"
+          
+          # Set the architecture:
+          $metadata[9] = "${{ matrix.dotnet_runtime }}"
+          
+          # Write the changed metadata back to the file:
+          Set-Content -Path metadata.txt -Value $metadata
           
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV

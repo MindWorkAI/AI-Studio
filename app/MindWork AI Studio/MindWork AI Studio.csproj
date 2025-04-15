@@ -78,6 +78,7 @@
             <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
+            <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             
@@ -98,6 +99,9 @@
                 <_Parameter7>$(MetaMudBlazorVersion)</_Parameter7>
                 <_Parameter8>$(MetaTauriVersion)</_Parameter8>
                 <_Parameter9>$(MetaAppCommitHash)</_Parameter9>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataArchitecture">
+                <_Parameter1>$(MetaArchitecture)</_Parameter1>
             </AssemblyAttribute>
         </ItemGroup>
         

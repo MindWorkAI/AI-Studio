@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-using Build.Tools;
+using SharedTools;
 
 namespace Build.Commands;
 
@@ -77,9 +77,11 @@ public sealed partial class UpdateMetadataCommands
         foreach (var rid in rids)
         {
             Console.WriteLine("==============================");
-            Console.Write($"- Start .NET build for '{rid.ToName()}' ...");
-            await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.ToName()}");
-            var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.ToName()} --disable-build-servers --force");
+            await this.UpdateArchitecture(rid);
+            
+            Console.Write($"- Start .NET build for '{rid.AsMicrosoftRid()}' ...");
+            await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
+            var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
             var dotnetBuildOutputLines = dotnetBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
             var foundIssue = false;
             foreach (var buildOutputLine in dotnetBuildOutputLines)
@@ -125,7 +127,7 @@ public sealed partial class UpdateMetadataCommands
 
             if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
             {
-                Console.WriteLine($"- Error: Unsupported rid '{rid.ToName()}'.");
+                Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
                 return;
             }
         
@@ -139,7 +141,7 @@ public sealed partial class UpdateMetadataCommands
                 _ => "mindworkAIStudio",
             };
             
-            var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.ToName(), "publish", dotnetArtifactFilename);
+            var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", dotnetArtifactFilename);
             var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
             
             if(File.Exists(dotnetPublishedPath))
@@ -233,6 +235,19 @@ public sealed partial class UpdateMetadataCommands
         
         changelogCode = changelogCode.Replace(CODE_START, updatedCode);
         await File.WriteAllTextAsync(changelogCodePath, changelogCode, Environment.UTF8_NO_BOM);
+    }
+
+    private async Task UpdateArchitecture(RID rid)
+    {
+        const int ARCHITECTURE_INDEX = 9;
+        
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        Console.Write("- Updating architecture ...");
+        lines[ARCHITECTURE_INDEX] = rid.AsMicrosoftRid();
+        
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        Console.WriteLine(" done.");
     }
 
     private async Task UpdateProjectCommitHash()

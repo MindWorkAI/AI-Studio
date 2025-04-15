@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 
+using SharedTools;
+
 namespace Build.Tools;
 
 public static class Environment
@@ -7,7 +9,7 @@ public static class Environment
     public const string DOTNET_VERSION = "net9.0";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     
-    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.ToName())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.AsMicrosoftRid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     
     public static bool IsWorkingDirectoryValid()
     {
