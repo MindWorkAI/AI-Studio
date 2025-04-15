@@ -1,0 +1,41 @@
+﻿<MudDialog>
+    <TitleContent>
+        Install Pandoc
+    </TitleContent>
+    <DialogContent>
+        @if (this.showInstallPage)
+        {
+            <MudItem Class="pa-6" Style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <p>Installationpage</p>
+            </MudItem>
+        }
+        else
+        {
+            <MudItem Class="pa-6" Style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                @if (showSkeleton)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Class="mb-4" Style="width: 4em; height: 4em;"/>
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Pulse" Width="230px" Height="35px"/>
+                }
+                else if (isPandocAvailable)
+                {
+                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center">
+                        Pandoc ist auf Ihrem System verfügbar
+                    </MudText>
+                }
+                else
+                {
+                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                    <MudText Class="mb-2" Typo="Typo.subtitle1" Align="Align.Center">
+                        Pandoc ist auf Ihrem System nicht verfügbar
+                    </MudText>
+                    <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled">Proceed to installation</MudButton>
+                }
+            </MudItem>
+        }
+    </DialogContent>
+    <DialogActions>
+        <!-- Hier können Sie bei Bedarf Aktionen hinzufügen -->
+    </DialogActions>
+</MudDialog>
