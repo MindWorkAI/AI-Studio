@@ -1,4 +1,4 @@
-namespace Build.Tools;
+namespace SharedTools;
 
 public enum RID
 {

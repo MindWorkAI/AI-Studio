@@ -14,7 +14,6 @@ use mindwork_ai_studio::runtime_api::start_runtime_api;
 
 #[tokio::main]
 async fn main() {
-
     let metadata = include_str!("../../metadata.txt");
     let mut metadata_lines = metadata.lines();
     let app_version = metadata_lines.next().unwrap();
@@ -26,6 +25,7 @@ async fn main() {
     let mud_blazor_version = metadata_lines.next().unwrap();
     let tauri_version = metadata_lines.next().unwrap();
     let app_commit_hash = metadata_lines.next().unwrap();
+    let architecture = metadata_lines.next().unwrap();
 
     init_logging();
     info!("Starting MindWork AI Studio:");
@@ -33,7 +33,7 @@ async fn main() {
     let working_directory = std::env::current_dir().unwrap();
     info!(".. The working directory is: '{working_directory:?}'");
     
-    info!(".. Version: v{app_version} (commit {app_commit_hash}, build {build_number})");
+    info!(".. Version: v{app_version} (commit {app_commit_hash}, build {build_number}, {architecture})");
     info!(".. Build time: {build_time}");
     info!(".. .NET SDK: v{dotnet_sdk_version}");
     info!(".. .NET: v{dotnet_version}");
