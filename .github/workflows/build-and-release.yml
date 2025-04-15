@@ -161,7 +161,11 @@ jobs:
           formatted_app_version="v${app_version}"
           
           # Set the architecture:
-          sed -i '' "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
+          if sed --version 2>/dev/null | grep -q GNU; then
+            sed -i "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
+          else
+            sed -i '' "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
+          fi
           
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
@@ -173,6 +177,7 @@ jobs:
           echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
           echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
+          echo "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $GITHUB_ENV
 
           # Log the metadata:
           echo "App version: '${formatted_app_version}'"
@@ -183,6 +188,7 @@ jobs:
           echo "Rust version: '${rust_version}'"
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
+          echo "Architecture: '${{ matrix.dotnet_runtime }}'"
           
       - name: Read and format metadata (Windows)
         if: matrix.platform == 'windows-latest'
@@ -230,6 +236,7 @@ jobs:
           Write-Output "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $env:GITHUB_ENV
           Write-Output "RUST_VERSION=${rust_version}" >> $env:GITHUB_ENV
           Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
+          Write-Output "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $env:GITHUB_ENV
           
           # Log the metadata:
           Write-Output "App version: '${formatted_app_version}'"
@@ -240,6 +247,7 @@ jobs:
           Write-Output "Rust version: '${rust_version}'"
           Write-Output "MudBlazor version: '${mud_blazor_version}'"
           Write-Output "Tauri version: '${tauri_version}'"
+          Write-Output "Architecture: '${{ matrix.dotnet_runtime }}'"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
