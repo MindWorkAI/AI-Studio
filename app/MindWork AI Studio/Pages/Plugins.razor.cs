@@ -38,12 +38,6 @@ public partial class Plugins : MSGComponentBase
 
     #endregion
 
-    #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(Plugins);
-
-    #endregion
-
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
     {
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))

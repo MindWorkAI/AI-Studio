@@ -38,12 +38,6 @@ public partial class Home : MSGComponentBase
 
     #endregion
 
-    #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(Home);
-
-    #endregion
-
     private async Task ReadLastChangeAsync()
     {
         var latest = Changelog.LOGS.MaxBy(n => n.Build);

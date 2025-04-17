@@ -60,12 +60,6 @@ public partial class About : MSGComponentBase
 
     #endregion
     
-    #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(About);
-
-    #endregion
-    
     private const string LICENSE = """
         # Functional Source License, Version 1.1, MIT Future License
 

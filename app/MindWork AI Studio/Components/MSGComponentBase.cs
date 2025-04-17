@@ -3,8 +3,6 @@ using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
-using SharedTools;
-
 namespace AIStudio.Components;
 
 public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver, ILang
@@ -40,8 +38,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     #endregion
 
     #region Implementation of IMessageBusReceiver
-
-    public abstract string ComponentName { get; }
 
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {

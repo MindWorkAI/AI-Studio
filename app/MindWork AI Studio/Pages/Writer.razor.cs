@@ -38,12 +38,6 @@ public partial class Writer : MSGComponentBase
 
     #endregion
     
-    #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(Writer);
-    
-    #endregion
-    
     private bool IsProviderSelected => this.providerSettings.UsedLLMProvider != LLMProviders.NONE;
     
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)

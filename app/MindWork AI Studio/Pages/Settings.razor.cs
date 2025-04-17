@@ -22,9 +22,7 @@ public partial class Settings : MSGComponentBase
     #endregion
 
     #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(Settings);
-
+    
     protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
