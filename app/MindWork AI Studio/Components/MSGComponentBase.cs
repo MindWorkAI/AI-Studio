@@ -66,11 +66,9 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
                 this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
-            
-            default:
-                await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
-                break;
         }
+        
+        await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     public async Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
