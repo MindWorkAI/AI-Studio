@@ -12,7 +12,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Layout;
 
-public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDisposable
+public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILang, IDisposable
 {
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
@@ -37,6 +37,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
+    
+    private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
     
@@ -78,7 +80,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // Read the user language from Rust:
         //
         var userLanguage = await this.RustService.ReadUserLanguage();
-        this.Logger.LogInformation($"The user language is: '{userLanguage}'");
+        this.Logger.LogInformation($"The OS says '{userLanguage}' is the user language.");
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
@@ -105,6 +107,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
         // Send a message to start the plugin system:
         await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
+        // Load the language plugin:
+        this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
+        
         await this.themeProvider.WatchSystemPreference(this.SystemeThemeChanged);
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
@@ -116,6 +121,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
     {
         this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
+
+    #endregion
+
+    #region Implementation of ILang
+
+    public string T(string fallbackEN) => this.GetText(this.Lang, fallbackEN);
 
     #endregion
 
