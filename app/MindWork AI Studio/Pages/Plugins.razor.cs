@@ -1,6 +1,8 @@
 using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
 
+using Microsoft.AspNetCore.Components;
+
 namespace AIStudio.Pages;
 
 public partial class Plugins : MSGComponentBase
@@ -15,8 +17,7 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.PLUGINS_RELOADED ]);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED ]);
         
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -48,4 +49,18 @@ public partial class Plugins : MSGComponentBase
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+    }
+
+    #endregion
 }
