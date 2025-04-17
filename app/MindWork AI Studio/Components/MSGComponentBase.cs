@@ -109,7 +109,12 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
         return await this.MessageBus.SendMessageUseFirstResult<TPayload, TResult>(this, triggeredEvent, data);
     }
     
-    protected void ApplyFilters(ComponentBase[] components, Event[] events)
+    /// <summary>
+    /// Define for which components and events you want to receive messages.
+    /// </summary>
+    /// <param name="filterComponents">A list of components for which you want to receive messages. Use an empty list to receive messages from all components.</param>
+    /// <param name="events">A list of events for which you want to receive messages.</param>
+    protected void ApplyFilters(ComponentBase[] filterComponents, Event[] events)
     {
         // Append the color theme changed event to the list of events:
         var eventsList = new List<Event>(events)
@@ -118,6 +123,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
             Event.PLUGINS_RELOADED,
         };
         
-        this.MessageBus.ApplyFilters(this, components, eventsList.ToArray());
+        this.MessageBus.ApplyFilters(this, filterComponents, eventsList.ToArray());
     }
 }

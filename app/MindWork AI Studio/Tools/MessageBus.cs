@@ -19,9 +19,15 @@ public sealed class MessageBus
     {
     }
 
-    public void ApplyFilters(IMessageBusReceiver receiver, ComponentBase[] components, Event[] events)
+    /// <summary>
+    /// Define for which components and events you want to receive messages.
+    /// </summary>
+    /// <param name="receiver">That's you, the receiver.</param>
+    /// <param name="filterComponents">A list of components for which you want to receive messages. Use an empty list to receive messages from all components.</param>
+    /// <param name="events">A list of events for which you want to receive messages.</param>
+    public void ApplyFilters(IMessageBusReceiver receiver, ComponentBase[] filterComponents, Event[] events)
     {
-        this.componentFilters[receiver] = components;
+        this.componentFilters[receiver] = filterComponents;
         this.componentEvents[receiver] = events;
     }
     
