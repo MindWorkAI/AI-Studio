@@ -46,7 +46,7 @@ public sealed partial class CollectI18NKeysCommand
             
             var ns = this.DetermineNamespace(filePath);
             var fileInfo = new FileInfo(filePath);
-            var name = fileInfo.Name.Replace(fileInfo.Extension, string.Empty);
+            var name = fileInfo.Name.Replace(fileInfo.Extension, string.Empty).Replace(".razor", string.Empty);
             var langNamespace = $"{ns}.{name}".ToUpperInvariant();
             foreach (var match in matches)
             {
