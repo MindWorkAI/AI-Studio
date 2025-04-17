@@ -1,5 +1,6 @@
 using System.Reflection;
 
+using AIStudio.Components;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -10,11 +11,8 @@ using SharedTools;
 
 namespace AIStudio.Pages;
 
-public partial class About : ComponentBase
+public partial class About : MSGComponentBase
 {
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
-    
     [Inject]
     private RustService RustService { get; init; } = null!;
     
@@ -24,20 +22,21 @@ public partial class About : ComponentBase
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitecture META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitecture>()!;
-    
-    private static string VersionDotnetRuntime => $"Used .NET runtime: v{META_DATA.DotnetVersion}";
-    
-    private static string VersionDotnetSdk => $"Used .NET SDK: v{META_DATA.DotnetSdkVersion}";
-    
-    private static string VersionRust => $"Used Rust compiler: v{META_DATA.RustVersion}";
 
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
-    
-    private static string BuildTime => $"Build time: {META_DATA.BuildTime}";
     
     private static string MudBlazorVersion => $"MudBlazor: v{META_DATA.MudBlazorVersion}";
     
     private static string TauriVersion => $"Tauri: v{META_DATA.TauriVersion}";
+    
+    private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
+    
+    private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
+    
+    private string VersionDotnetSdk => $"{T("Used .NET SDK")}: v{META_DATA.DotnetSdkVersion}";
+    
+    private string BuildTime => $"{T("Build time")}: {META_DATA.BuildTime}";
+    
 
     private GetLogPathsResponse logPaths;
 
@@ -58,6 +57,12 @@ public partial class About : ComponentBase
         this.logPaths = await this.RustService.GetLogPaths();
         await base.OnInitializedAsync();
     }
+
+    #endregion
+    
+    #region Overrides of MSGComponentBase
+
+    public override string ComponentName => nameof(About);
 
     #endregion
     
