@@ -5,18 +5,20 @@
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
             <MudIcon Icon="@Icons.Material.Filled.FindInPage" Class="mr-2" />
-            Assistant: Icon Finder Options
+            @T("Assistant: Icon Finder Options")
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
-            <ConfigurationOption OptionDescription="Preselect icon options?" LabelOn="Icon options are preselected" LabelOff="No icon options are preselected" State="@(() => this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the icon options. This is might be useful when you prefer a specific icon source or LLM model."/>
-            <ConfigurationSelect OptionDescription="Preselect the icon source" Disabled="@(() => !this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource)" Data="@ConfigurationSelectDataFactory.GetIconSourcesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource = selectedValue)" OptionHelp="Which icon source should be preselected?"/>
+            <ConfigurationOption OptionDescription="@T("Preselect icon options?")" LabelOn="@T("Icon options are preselected")" LabelOn="@T("No icon options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the icon options. This is might be useful when you prefer a specific icon source or LLM model."/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the icon source")" Disabled="@(() => !this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource)" Data="@ConfigurationSelectDataFactory.GetIconSourcesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.IconFinder.PreselectedSource = selectedValue)" OptionHelp="Which icon source should be preselected?"/>
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.IconFinder.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.IconFinder.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.ICON_FINDER_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider = selectedValue)"/>
         </MudPaper>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
     </DialogActions>
 </MudDialog>
