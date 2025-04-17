@@ -1,11 +1,12 @@
-using AIStudio.Settings;
-
-using Microsoft.AspNetCore.Components;
+using AIStudio.Components;
 
 namespace AIStudio.Pages;
 
-public partial class Assistants : ComponentBase
+public partial class Assistants : MSGComponentBase
 {
-    [Inject]
-    public SettingsManager SettingsManager { get; set; } = null!;
+    #region Overrides of MSGComponentBase
+
+    public override string ComponentName => nameof(Assistants);
+
+    #endregion
 }
