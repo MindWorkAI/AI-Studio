@@ -16,7 +16,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     protected MessageBus MessageBus { get; init; } = null!;
 
     [Inject]
-    private ILogger<PluginLanguage> Logger { get; init; } = null!;
+    private ILogger<MSGComponentBase> Logger { get; init; } = null!;
 
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
