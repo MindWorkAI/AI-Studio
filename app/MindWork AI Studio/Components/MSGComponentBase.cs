@@ -35,26 +35,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     #region Implementation of ILang
 
     /// <inheritdoc />
-    public string T(string fallbackEN)
-    {
-        var type = this.GetType();
-        var ns = $"{type.Namespace!}::{type.Name}".ToUpperInvariant().Replace(".", "::");
-        var key = $"root::{ns}::T{fallbackEN.ToFNV32()}";
-        
-        if(this.Lang is NoPluginLanguage)
-            return fallbackEN;
-        
-        if(this.Lang.TryGetText(key, out var text, logWarning: false))
-        {
-            if(string.IsNullOrWhiteSpace(text))
-                return fallbackEN;
-            
-            return text;
-        }
-
-        this.Logger.LogWarning($"Missing translation key '{key}' for content '{fallbackEN}'.");
-        return fallbackEN;
-    }
+    public string T(string fallbackEN) => this.GetText(this.Lang, fallbackEN);
 
     #endregion
 
