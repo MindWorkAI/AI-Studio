@@ -12,31 +12,29 @@
 
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="Introduction" IsExpanded="@true">
                 <MudText Typo="Typo.h5" Class="mb-3">
-                    Welcome to MindWork AI Studio!
+                    @T("Welcome to MindWork AI Studio!")
                 </MudText>
                 <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness
-                    the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated
-                    LLM. Instead, you will need to bring an API key from a suitable provider.
+                    @T("Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.")
                 </MudText>
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    Here's what makes MindWork AI Studio stand out:
+                    @T("Here's what makes MindWork AI Studio stand out:")
                 </MudText>
-                <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@ITEMS_ADVANTAGES" Class="mb-3"/>
+                <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    We hope you enjoy using MindWork AI Studio to bring your AI projects to life!
+                    @T("We hope you enjoy using MindWork AI Studio to bring your AI projects to life!")
                 </MudText>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="Last Changelog">
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")">
                 <MudMarkdown Value="@this.LastChangeContent" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="Vision">
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")">
                 <Vision/>
             </ExpansionPanel>
             
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="Quick Start Guide">
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")">
                 <MudMarkdown OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Value="@QUICK_START_GUIDE"/>
             </ExpansionPanel>
 

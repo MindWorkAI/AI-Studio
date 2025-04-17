@@ -14,40 +14,40 @@
             General
         </MudText>
         <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-            <AssistantBlock TSettings="SettingsDialogTextSummarizer" Name="Text Summarizer" Description="Use an LLM to summarize a given text." Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
-            <AssistantBlock TSettings="SettingsDialogTranslation" Name="Translation" Description="Translate text into another language." Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
-            <AssistantBlock TSettings="SettingsDialogGrammarSpelling" Name="Grammar & Spelling" Description="Check grammar and spelling of a given text." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
-            <AssistantBlock TSettings="SettingsDialogRewrite" Name="Rewrite & Improve" Description="Rewrite and improve a given text for a chosen style." Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
-            <AssistantBlock TSettings="SettingsDialogSynonyms" Name="Synonyms" Description="Find synonyms for a given word or phrase." Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
+            <AssistantBlock TSettings="SettingsDialogTextSummarizer" Name="@T("Text Summarizer")" Description="@T("Use an LLM to summarize a given text.")" Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
+            <AssistantBlock TSettings="SettingsDialogTranslation" Name="@T("Translation")" Description="@T("Translate text into another language.")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
+            <AssistantBlock TSettings="SettingsDialogGrammarSpelling" Name="Grammar & Spelling" Description="@T("Check grammar and spelling of a given text.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
+            <AssistantBlock TSettings="SettingsDialogRewrite" Name="Rewrite & Improve" Description="@T("Rewrite and improve a given text for a chosen style.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
+            <AssistantBlock TSettings="SettingsDialogSynonyms" Name="@T("Synonyms")" Description="@T("Find synonyms for a given word or phrase.")" Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
         </MudStack>
 
         <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
             Business
         </MudText>
         <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-            <AssistantBlock TSettings="SettingsDialogWritingEMails" Name="E-Mail" Description="Generate an e-mail for a given context." Icon="@Icons.Material.Filled.Email" Link="@Routes.ASSISTANT_EMAIL"/>
-            <AssistantBlock TSettings="SettingsDialogMyTasks" Name="My Tasks" Description="Analyze a text or an email for tasks you need to complete." Icon="@Icons.Material.Filled.Task" Link="@Routes.ASSISTANT_MY_TASKS"/>
-            <AssistantBlock TSettings="SettingsDialogAgenda" Name="Agenda Planner" Description="Generate an agenda for a given meeting, seminar, etc." Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
-            <AssistantBlock TSettings="SettingsDialogJobPostings" Name="Job Posting" Description="Generate a job posting for a given job description." Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
-            <AssistantBlock TSettings="SettingsDialogLegalCheck" Name="Legal Check" Description="Ask a question about a legal document." Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
-            <AssistantBlock TSettings="SettingsDialogIconFinder" Name="Icon Finder" Description="Use an LLM to find an icon for a given context." Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
+            <AssistantBlock TSettings="SettingsDialogWritingEMails" Name="E-Mail" Description="@T("Generate an e-mail for a given context.")" Icon="@Icons.Material.Filled.Email" Link="@Routes.ASSISTANT_EMAIL"/>
+            <AssistantBlock TSettings="SettingsDialogMyTasks" Name="@T("My Tasks")" Description="@T("Analyze a text or an email for tasks you need to complete.")" Icon="@Icons.Material.Filled.Task" Link="@Routes.ASSISTANT_MY_TASKS"/>
+            <AssistantBlock TSettings="SettingsDialogAgenda" Name="@T("Agenda Planner")" Description="@T("Generate an agenda for a given meeting, seminar, etc.")" Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
+            <AssistantBlock TSettings="SettingsDialogJobPostings" Name="@T("Job Posting")" Description="@T("Generate a job posting for a given job description.")" Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
+            <AssistantBlock TSettings="SettingsDialogLegalCheck" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
+            <AssistantBlock TSettings="SettingsDialogIconFinder" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
         </MudStack>
 
         <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
             Learning
         </MudText>
         <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-            <AssistantBlock TSettings="SettingsDialogAssistantBias" Name="Bias of the Day" Description="Learn about one cognitive bias every day." Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
+            <AssistantBlock TSettings="SettingsDialogAssistantBias" Name="@T("Bias of the Day")" Description="@T("Learn about one cognitive bias every day.")" Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
         </MudStack>
             
         <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
             Software Engineering
         </MudText>
         <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-            <AssistantBlock TSettings="SettingsDialogCoding" Name="Coding" Description="Get coding and debugging support from an LLM." Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
+            <AssistantBlock TSettings="SettingsDialogCoding" Name="@T("Coding")" Description="@T("Get coding and debugging support from an LLM.")" Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <AssistantBlock TSettings="SettingsDialogERIServer" Name="ERI Server" Description="Generate an ERI server to integrate business systems." Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
+                <AssistantBlock TSettings="SettingsDialogERIServer" Name="@T("ERI Server")" Description="@T("Generate an ERI server to integrate business systems.")" Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
             }
         </MudStack>
             

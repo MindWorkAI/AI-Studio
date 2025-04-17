@@ -9,7 +9,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Pages;
 
-public partial class Writer : MSGComponentBase, IAsyncDisposable
+public partial class Writer : MSGComponentBase
 {
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
@@ -158,13 +158,4 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         this.suggestion = string.Join(' ', words.Skip(1));
         this.StateHasChanged();
     }
-    
-    #region Implementation of IAsyncDisposable
-
-    public ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
-    #endregion
 }
