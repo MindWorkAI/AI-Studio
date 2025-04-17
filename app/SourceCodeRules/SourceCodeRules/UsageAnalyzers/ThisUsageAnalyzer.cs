@@ -36,7 +36,7 @@ public sealed class ThisUsageAnalyzer : DiagnosticAnalyzer
     {
         var genericNameSyntax = (GenericNameSyntax)context.Node;
         
-        // Skip if already part of a 'this' expression
+        // Skip if already part of a 'this' expression:
         if (IsAccessedThroughThis(genericNameSyntax))
             return;
             
@@ -46,7 +46,11 @@ public sealed class ThisUsageAnalyzer : DiagnosticAnalyzer
         if (IsPartOfMemberAccess(genericNameSyntax))
             return;
         
-        // Get symbol info for the generic name
+        // Skip if it's the 'T' translation method
+        if (IsTranslationMethod(genericNameSyntax))
+            return;
+        
+        // Get symbol info for the generic name:
         var symbolInfo = context.SemanticModel.GetSymbolInfo(genericNameSyntax);
         var symbol = symbolInfo.Symbol;
         
@@ -83,15 +87,24 @@ public sealed class ThisUsageAnalyzer : DiagnosticAnalyzer
         }
     }
     
+    private static bool IsTranslationMethod(SyntaxNode node)
+    {
+        // Check if this is a method called 'T' (translation method)
+        if (node is IdentifierNameSyntax { Identifier.Text: "T" })
+            return true;
+        
+        return false;
+    }
+    
     private void AnalyzeIdentifier(SyntaxNodeAnalysisContext context)
     {
         var identifierNameSyntax = (IdentifierNameSyntax)context.Node;
         
-        // Skip if this identifier is part of a generic name - we'll handle that separately
+        // Skip if this identifier is part of a generic name - we'll handle that separately:
         if (identifierNameSyntax.Parent is GenericNameSyntax)
             return;
         
-        // Skip if already part of a 'this' expression
+        // Skip if already part of a 'this' expression:
         if (IsAccessedThroughThis(identifierNameSyntax))
             return;
             
@@ -101,55 +114,59 @@ public sealed class ThisUsageAnalyzer : DiagnosticAnalyzer
         if (IsPartOfMemberAccess(identifierNameSyntax))
             return;
         
-        // Also skip if it's part of static import statements
+        // Also skip if it's part of static import statements:
         if (IsPartOfUsingStaticDirective(identifierNameSyntax))
             return;
             
-        // Skip if it's part of a namespace or type name
+        // Skip if it's part of a namespace or type name:
         if (IsPartOfNamespaceOrTypeName(identifierNameSyntax))
             return;
         
-        // Get symbol info
+        // Skip if it's the 'T' translation method:
+        if (IsTranslationMethod(identifierNameSyntax))
+            return;
+        
+        // Get symbol info:
         var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax);
         var symbol = symbolInfo.Symbol;
         
         if (symbol == null)
             return;
             
-        // Skip local variables, parameters, and range variables
+        // Skip local variables, parameters, and range variables:
         if (symbol.Kind is SymbolKind.Local or SymbolKind.Parameter or SymbolKind.RangeVariable or SymbolKind.TypeParameter)
             return;
             
-        // Skip types and namespaces
+        // Skip types and namespaces:
         if (symbol.Kind is SymbolKind.NamedType or SymbolKind.Namespace)
             return;
         
-        // Explicitly check if this is a local function
+        // Explicitly check if this is a local function:
         if (symbol is IMethodSymbol methodSymbol && IsLocalFunction(methodSymbol))
             return;
             
-        // Get the containing type of the current context
+        // Get the containing type of the current context:
         var containingSymbol = context.ContainingSymbol;
         var currentType = containingSymbol?.ContainingType;
         
-        // If we're in a static context, allow accessing members without this
+        // If we're in a static context, allow accessing members without this:
         if (IsInStaticContext(containingSymbol))
             return;
             
-        // Now check if the symbol is an instance member of the current class
+        // Now check if the symbol is an instance member of the current class:
         if (symbol is IFieldSymbol or IPropertySymbol or IMethodSymbol or IEventSymbol)
         {
-            // Skip static members
+            // Skip static members:
             if (symbol.IsStatic)
                 return;
                 
-            // Skip constants
+            // Skip constants:
             if (symbol is IFieldSymbol { IsConst: true })
                 return;
             
             var containingType = symbol.ContainingType;
             
-            // If the symbol is a member of the current type or a base type, then require this
+            // If the symbol is a member of the current type or a base type, then require this:
             if (currentType != null && (SymbolEqualityComparer.Default.Equals(containingType, currentType) || 
                                         IsBaseTypeOf(containingType, currentType)))
             {

@@ -44,9 +44,7 @@ public partial class InnerScrolling : MSGComponentBase
     #endregion
 
     #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(InnerScrolling);
-
+    
     protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)

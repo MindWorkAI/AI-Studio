@@ -25,7 +25,7 @@
                     // Case: Sidebar can be toggled and is currently visible
                     <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
                         <HeaderContent>
-                            <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                            <MudTooltip Text="@T("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                 <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
                             </MudTooltip>
                         </HeaderContent>
@@ -88,7 +88,7 @@
             <MudDrawerHeader>
                 <MudStack Row="@true" AlignItems="AlignItems.Center">
                     <MudText Typo="Typo.h6" Class="mr-3">
-                        Your workspaces
+                        @T("Your workspaces")
                     </MudText>
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspacesOverlay()"/>
                 </MudStack>

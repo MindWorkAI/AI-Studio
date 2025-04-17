@@ -1,9 +1,10 @@
-@attribute [Route(Routes.SETTINGS)]
 @using AIStudio.Components.Settings
 @using AIStudio.Settings.DataModel
+@attribute [Route(Routes.SETTINGS)]
+@inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-12">Settings</MudText>
+    <MudText Typo="Typo.h3" Class="mb-12">@T("Settings")</MudText>
 
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">

@@ -12,15 +12,15 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         {
             var matchedEmbedding = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == internalDataSource.EmbeddingId);
             if(matchedEmbedding == default)
-                return "No valid embedding";
+                return "T(No valid embedding)";
             
             return matchedEmbedding.Name;
         }
         
         if(dataSource is IExternalDataSource)
-            return "External (ERI)";
+            return "T(External (ERI))";
         
-        return "Unknown";
+        return T("Unknown");
     }
     
     private async Task AddDataSource(DataSourceType type)
@@ -35,7 +35,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
-                var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Add Local File as Data Source", localFileDialogParameters, DialogOptions.FULLSCREEN);
+                var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Add Local File as Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
                 var localFileDialogResult = await localFileDialogReference.Result;
                 if (localFileDialogResult is null || localFileDialogResult.Canceled)
                     return;
@@ -52,7 +52,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
-                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>("Add Local Directory as Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
+                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Add Local Directory as Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
                 var localDirectoryDialogResult = await localDirectoryDialogReference.Result;
                 if (localDirectoryDialogResult is null || localDirectoryDialogResult.Canceled)
                     return;
@@ -68,7 +68,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.IsEditing, false },
                 };
                 
-                var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>("Add ERI v1 Data Source", eriDialogParameters, DialogOptions.FULLSCREEN);
+                var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Add ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
                 var eriDialogResult = await eriDialogReference.Result;
                 if (eriDialogResult is null || eriDialogResult.Canceled)
                     return;
@@ -100,7 +100,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
-                var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>("Edit Local File Data Source", localFileDialogParameters, DialogOptions.FULLSCREEN);
+                var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Edit Local File Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
                 var localFileDialogResult = await localFileDialogReference.Result;
                 if (localFileDialogResult is null || localFileDialogResult.Canceled)
                     return;
@@ -116,7 +116,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
         
-                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>("Edit Local Directory Data Source", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
+                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Edit Local Directory Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
                 var localDirectoryDialogResult = await localDirectoryDialogReference.Result;
                 if (localDirectoryDialogResult is null || localDirectoryDialogResult.Canceled)
                     return;
@@ -131,7 +131,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.DataSource, eriDataSource },
                 };
                 
-                var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>("Edit ERI v1 Data Source", eriDialogParameters, DialogOptions.FULLSCREEN);
+                var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Edit ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
                 var eriDialogResult = await eriDialogReference.Result;
                 if (eriDialogResult is null || eriDialogResult.Canceled)
                     return;
@@ -153,10 +153,10 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
     {
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete the data source '{dataSource.Name}' of type {dataSource.Type.GetDisplayName()}?" },
+            { "Message", string.Format(T("Are you sure you want to delete the data source '{0}' of type {1}?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Data Source", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -198,7 +198,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.DataSource, localFile },
                 };
 
-                await this.DialogService.ShowAsync<DataSourceLocalFileInfoDialog>("Local File Data Source Information", localFileDialogParameters, DialogOptions.FULLSCREEN);
+                await this.DialogService.ShowAsync<DataSourceLocalFileInfoDialog>(T("Local File Data Source Information"), localFileDialogParameters, DialogOptions.FULLSCREEN);
                 break;
             
             case DataSourceLocalDirectory localDirectory:
@@ -207,7 +207,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.DataSource, localDirectory },
                 };
 
-                await this.DialogService.ShowAsync<DataSourceLocalDirectoryInfoDialog>("Local Directory Data Source Information", localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
+                await this.DialogService.ShowAsync<DataSourceLocalDirectoryInfoDialog>(T("Local Directory Data Source Information"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
                 break;
             
             case DataSourceERI_V1 eriV1DataSource:
@@ -216,7 +216,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                     { x => x.DataSource, eriV1DataSource },
                 };
                 
-                await this.DialogService.ShowAsync<DataSourceERI_V1InfoDialog>("ERI v1 Data Source Information", eriV1DialogParameters, DialogOptions.FULLSCREEN);
+                await this.DialogService.ShowAsync<DataSourceERI_V1InfoDialog>(T("ERI v1 Data Source Information"), eriV1DialogParameters, DialogOptions.FULLSCREEN);
                 break;
         }
     }

@@ -9,7 +9,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Pages;
 
-public partial class Writer : MSGComponentBase, IAsyncDisposable
+public partial class Writer : MSGComponentBase
 {
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
@@ -29,7 +29,6 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], []);
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         this.typeTimer.Elapsed += async (_, _) => await this.InvokeAsync(this.GetSuggestions);
         this.typeTimer.AutoReset = false;
@@ -37,12 +36,6 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         await base.OnInitializedAsync();
     }
 
-    #endregion
-    
-    #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(Writer);
-    
     #endregion
     
     private bool IsProviderSelected => this.providerSettings.UsedLLMProvider != LLMProviders.NONE;
@@ -159,13 +152,4 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         this.suggestion = string.Join(' ', words.Skip(1));
         this.StateHasChanged();
     }
-    
-    #region Implementation of IAsyncDisposable
-
-    public ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
-    #endregion
 }
