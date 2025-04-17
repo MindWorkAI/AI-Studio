@@ -134,7 +134,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     public string ComponentName => nameof(MainLayout);
     
-    public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    public async Task ProcessMessage<TMessage>(ComponentBase? sendingComponent, Event triggeredEvent, TMessage? data)
     {
         switch (triggeredEvent)
         {
@@ -142,7 +142,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 if (data is UpdateResponse updateResponse)
                 {
                     this.currentUpdateResponse = updateResponse;
-                    this.Snackbar.Add($"An update to version {updateResponse.NewVersion} is available.", Severity.Info, config =>
+                    var message = string.Format(T("An update to version {0} is available."), updateResponse.NewVersion);
+                    this.Snackbar.Add(message, Severity.Info, config =>
                     {
                         config.Icon = Icons.Material.Filled.Update;
                         config.IconSize = Size.Large;
@@ -152,7 +153,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                         {
                             await this.ShowUpdateDialog();
                         };
-                        config.Action = "Show details";
+                        config.Action = T("Show details");
                         config.ActionVariant = Variant.Filled;
                         config.ActionColor = Color.Dark;
                     });
@@ -220,19 +221,19 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         
-        yield return new("Home", Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
-        yield return new("Chat", Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
-        yield return new("Assistants", Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
+        yield return new(T("Home"), Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
+        yield return new(T("Chat"), Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
+        yield return new(T("Assistants"), Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
-            yield return new("Writer", Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
+            yield return new(T("Writer"), Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
 
         if (PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
-            yield return new("Plugins", Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
+            yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
         
-        yield return new("Supporters", Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
-        yield return new("About", Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
-        yield return new("Settings", Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
+        yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
+        yield return new(T("About"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
+        yield return new(T("Settings"), Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
     }
 
     private async Task ShowUpdateDialog()
@@ -259,7 +260,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             { x => x.UpdateResponse, updatedResponse }
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
+        var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>(T("Update"), dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -275,10 +276,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             var dialogParameters = new DialogParameters
             {
-                { "Message", "Are you sure you want to leave the chat page? All unsaved changes will be lost." },
+                { "Message", T("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
             };
         
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Leave Chat Page", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Leave Chat Page"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
             {
