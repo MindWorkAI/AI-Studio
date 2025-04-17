@@ -29,7 +29,6 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], []);
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         this.typeTimer.Elapsed += async (_, _) => await this.InvokeAsync(this.GetSuggestions);
         this.typeTimer.AutoReset = false;
