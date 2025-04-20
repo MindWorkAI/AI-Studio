@@ -94,13 +94,13 @@ public sealed class ProviderValidation
         return null;
     }
     
-    public string? ValidatingHFInstanceProvider(HFInstanceProvider instanceProvider)
+    public string? ValidatingHFInstanceProvider(HFInferenceProvider inferenceProvider)
     {
         if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
             return null;
 
-        if (instanceProvider is HFInstanceProvider.NONE)
-            return "Please select an Hugging Face instance provider.";
+        if (inferenceProvider is HFInferenceProvider.NONE)
+            return "Please select an Hugging Face inference provider.";
 
         return null;
     }
