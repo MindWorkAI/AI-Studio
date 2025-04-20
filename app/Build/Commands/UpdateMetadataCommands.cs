@@ -36,6 +36,21 @@ public sealed partial class UpdateMetadataCommands
         // artifacts are already in place, and .NET knows the updated web assets, etc.:
         await this.Build();
     }
+
+    [Command("update-versions", Description = "The command will update the package versions in the metadata file")]
+    public async Task UpdateVersions()
+    {
+        if(!Environment.IsWorkingDirectoryValid())
+            return;
+
+        Console.WriteLine("==============================");
+        Console.WriteLine("- Update the main package versions ...");
+        
+        await this.UpdateDotnetVersion();
+        await this.UpdateRustVersion();
+        await this.UpdateMudBlazorVersion();
+        await this.UpdateTauriVersion();
+    }
     
     [Command("prepare", Description = "Prepare the metadata for the next release")]
     public async Task Prepare(PrepareAction action)
