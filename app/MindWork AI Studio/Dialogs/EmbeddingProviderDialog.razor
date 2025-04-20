@@ -11,7 +11,9 @@
                     {
                         if (provider.ProvideEmbeddings())
                         {
-                            <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                            <MudSelectItem Value="@provider">
+                                @provider.ToName()
+                            </MudSelectItem>
                         }
                     }
                 </MudSelect>

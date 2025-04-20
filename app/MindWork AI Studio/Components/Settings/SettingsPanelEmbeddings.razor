@@ -41,7 +41,7 @@
             <RowTemplate>
                 <MudTd>@context.Num</MudTd>
                 <MudTd>@context.Name</MudTd>
-                <MudTd>@context.UsedLLMProvider</MudTd>
+                <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
                 <MudTd>@this.GetEmbeddingProviderModelName(context)</MudTd>
                 
                 <MudTd>
