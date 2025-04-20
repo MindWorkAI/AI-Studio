@@ -15,6 +15,7 @@ Things we are currently working on:
   - [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259), [#273](https://github.com/MindWorkAI/AI-Studio/pull/273))~~
   - [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
   - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
+  - [ ] App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393))
   - [ ] App: Implement external embedding providers
   - [ ] App: Implement the process to vectorize one local file using embeddings
   - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
@@ -24,26 +25,37 @@ Things we are currently working on:
   - [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
 
 
-- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[#167](https://github.com/MindWorkAI/AI-Studio/pull/167), [#226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~.
+- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[PR #167](https://github.com/MindWorkAI/AI-Studio/pull/167), [PR #226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~, [PR #376](https://github.com/MindWorkAI/AI-Studio/pull/376).
 
+- Since March 2025: We have started developing the plugin system. There will be language plugins to offer AI Studio in other languages, configuration plugins to centrally manage certain providers and rules within an organization, and assistant plugins that allow anyone to develop their own assistants. We are using Lua as the plugin language:
+  - [x] ~~Plan & implement the base plugin system ([PR #322](https://github.com/MindWorkAI/AI-Studio/pull/322))~~
+  - [x] ~~Start the plugin system ([PR #372](https://github.com/MindWorkAI/AI-Studio/pull/372))~~
+  - [x] ~~Added hot-reload support for plugins ([PR #377](https://github.com/MindWorkAI/AI-Studio/pull/377), [PR #391](https://github.com/MindWorkAI/AI-Studio/pull/391))~~
+  - [ ] Add support for other languages (I18N) to AI Studio (~~[PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400)~~, [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404))
+  - [ ] Add an I18N assistant to translate all AI Studio texts to a certain language & culture
+  - [ ] Provide MindWork AI Studio in German ([#31](https://github.com/MindWorkAI/Planning/issues/31))
+  - [ ] Add configuration plugins, which allow pre-defining some LLM providers in organizations
+  - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
+  - [ ] Add assistant plugins
 
 Other News:
 
-- October 2024: We've found the first two financial supporters. Huge thanks to `richard-stanton` and `peerschuett` for backing the project. Thanks for having the courage to be the first to support us.
+- April 2025: We have two active financial supporters: Peer `peerschuett` and Dominic `donework`. Thank you very much for your support. MindWork AI reinvests these donations by passing them on to our AI Studio dependencies ([see here](https://github.com/orgs/MindWorkAI/sponsoring)). In the event that we receive large donations, we will first sign the app ([#56](https://github.com/MindWorkAI/Planning/issues/56)). In case we receive more donations, we will look for and pay staff to develop features for AI Studio.
 
-- October 2024: The [German Aerospace Center (DLR)](https://en.wikipedia.org/wiki/German_Aerospace_Center) ([Website](https://www.dlr.de/en)) will use AI Studio at least within the scope of one project and will also contribute to its further development. This is great news.
+- April 2025: The [German Aerospace Center (DLR)](https://en.wikipedia.org/wiki/German_Aerospace_Center) ([Website](https://www.dlr.de/en)) will use AI Studio at least within the scope of three projects and will also contribute to its further development. This is great news.
 
 
 Features we have recently released:
 
+- v0.9.40: Added support for the `o4` models from OpenAI. Also, we added Alibaba Cloud & Hugging Face as LLM providers.
+- v0.9.39: Added the plugin system as a preview feature.
+- v0.9.31: Added Helmholtz & GWDG as LLM providers. This is a huge improvement for many researchers out there who can use these providers for free. We added DeepSeek as a provider as well.
+- v0.9.29: Added agents to support the RAG process (selecting the best data sources & validating retrieved data as part of the augmentation process)
+- v0.9.26+: Added RAG for external data sources using our [ERI interface](https://mindworkai.org/#eri---external-retrieval-interface) as a preview feature.
 - v0.9.25: Added [xAI](https://x.ai/) as a new provider. xAI provides their Grok models for generating content.
 - v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
 - v0.9.22: Added options for preview features; added embedding provider configuration for RAG (preview) and writer mode (experimental preview).
 - v0.9.18: Added the new Anthropic Heiku model; added Groq and Google Gemini as provider options.
-- v0.9.17: Added the new Anthropic model `claude-3-5-sonnet-20241022`.
-- v0.9.16: Added workspace display options & improved the layout of the app window.
-- v0.9.15: Added the bias-of-the-day assistant. Tells you about a cognitive bias every day.
-- v0.9.13: You can use `ollama` providers secured with API keys.
 
 ## What is AI Studio?
 
@@ -56,7 +68,19 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
-- **Independence**: You are not tied to any single provider. Instead, you can choose the provider that best suits their needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, and self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), [Groq](https://groq.com/), or [Fireworks](https://fireworks.ai/). For scientists and employees of research institutions, we also support [Helmholtz](https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570) and [GWDG](https://gwdg.de/services/application-services/ai-services/) AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
+- **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
+  - [OpenAI](https://openai.com/) (GPT4o, GPT4.1, o1, o3, o4, etc.)
+  - [Mistral](https://mistral.ai/)
+  - [Anthropic](https://www.anthropic.com/) (Claude)
+  - [Google Gemini](https://gemini.google.com)
+  - [xAI](https://x.ai/) (Grok)
+  - [DeepSeek](https://www.deepseek.com/en)
+  - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
+  - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
+  - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/)
+  - [Groq](https://groq.com/)
+  - [Fireworks](https://fireworks.ai/)
+  - For scientists and employees of research institutions, we also support [Helmholtz](https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570) and [GWDG](https://gwdg.de/services/application-services/ai-services/) AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
 - **Assistants**: You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.
 - **Unrestricted usage**: Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 - **Cost-effective**: You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
