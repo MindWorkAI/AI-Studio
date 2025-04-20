@@ -52,10 +52,12 @@
                 {
                     if (host.AreEmbeddingsSupported())
                     {
-                        <MudSelectItem Value="@host">@host.Name()</MudSelectItem>
                     }
                 }
             </MudSelect>
+                            <MudSelectItem Value="@host">
+                                @host.Name()
+                            </MudSelectItem>
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
