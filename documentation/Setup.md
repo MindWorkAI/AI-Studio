@@ -14,7 +14,7 @@ AI Studio is only available for modern 64-bit Windows systems. When you have an 
 
 - **Intel/AMD:** In almost all other cases, you have an Intel/AMD system. [Download the x64 version](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/MindWork.AI.Studio_x64-setup.exe) of AI Studio.
 
-When you try to install the app, you get a message regarding protection of your PC (see screenshots below). For Windows to trust our app, we need to purchase a certificate that costs around $1000 per year. Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI). You might want to [visit our release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). There, we provide VirusTotal scan results for each release. If you are unsure about the safety of the app, you can check the results there. Ensure that the majority of scanners have a green checkmark.
+When you try to install the app, you get a message regarding protection of your PC (see screenshots below). For Windows to trust our app, we need to purchase a certificate that [costs around $1000 per year](https://github.com/MindWorkAI/Planning/issues/56). Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI). You might want to [visit our release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). There, we provide VirusTotal scan results for each release. If you are unsure about the safety of the app, you can check the results there. Ensure that the majority of scanners have a green checkmark.
 
 When you are confident in the app's safety, click on "More info" and then "Run anyway" to proceed with the installation:
 
@@ -43,7 +43,7 @@ When you try to open the app, you get a message that the app is damaged:
 
 ![macOS Installation 2](macOS%20Damage.png)
 
-This is because we don't have an Apple Developer account, which costs around $100 per year. Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI). You might want to [visit our release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). There, we provide VirusTotal scan results for each release. If you are unsure about the safety of the app, you can check the results there. Ensure that the majority of scanners have a green checkmark.
+This is because we don't have an Apple Developer account, [which costs around $100 per year](https://github.com/MindWorkAI/Planning/issues/56). Would you like to help us with this? [Please consider supporting us](https://github.com/sponsors/MindWorkAI). You might want to [visit our release page](https://github.com/MindWorkAI/AI-Studio/releases/latest). There, we provide VirusTotal scan results for each release. If you are unsure about the safety of the app, you can check the results there. Ensure that the majority of scanners have a green checkmark.
 
 When you are confident in the app's safety, follow these steps:
 
