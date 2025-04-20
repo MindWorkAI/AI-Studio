@@ -135,7 +135,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings, ILogger logger)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInstanceProvider ,logger);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider ,logger);
     }
     
     /// <summary>
@@ -146,10 +146,10 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings, ILogger logger)
     {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInstanceProvider.NONE,logger);
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE,logger);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInstanceProvider instanceProvider , ILogger logger)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider , ILogger logger)
     {
         try
         {
@@ -165,7 +165,7 @@ public static class LLMProvidersExtensions
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
-                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger, instanceProvider, model) { InstanceName = instanceName }, 
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger, inferenceProvider, model) { InstanceName = instanceName }, 
                 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
                 
@@ -234,10 +234,10 @@ public static class LLMProvidersExtensions
         _ => false,
     };
 
-    public static string GetModelsOverviewURL(this LLMProviders provider, HFInstanceProvider instanceProvider) => provider switch
+    public static string GetModelsOverviewURL(this LLMProviders provider, HFInferenceProvider inferenceProvider) => provider switch
     {
         LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
-        LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={instanceProvider.EndpointsId()}",
+        LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.EndpointsId()}",
         _ => string.Empty,
     };
 

@@ -11,9 +11,9 @@ namespace AIStudio.Provider.HuggingFace;
 
 public sealed class ProviderHuggingFace : BaseProvider
 {
-    public ProviderHuggingFace(ILogger logger, HFInstanceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", logger)
+    public ProviderHuggingFace(ILogger logger, HFInferenceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", logger)
     {
-        logger.LogInformation($"We use the instance provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
+        logger.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
     }
 
     #region Implementation of IProvider

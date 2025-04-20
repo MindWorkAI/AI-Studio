@@ -61,20 +61,22 @@
 
             @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
             {
-                <MudSelect Disabled="@(!this.DataLLMProvider.IsHFInstanceProviderNeeded())" @bind-Value="@this.HfInstanceProviderId" Label="HF Instance Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
-                    @foreach (HFInstanceProvider instanceProvider in Enum.GetValues(typeof(HFInstanceProvider)))
+                <MudSelect Disabled="@(!this.DataLLMProvider.IsHFInstanceProviderNeeded())" @bind-Value="@this.HFInferenceProviderId" Label="HF Inference Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                    @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                     {
-                        <MudSelectItem Value="@instanceProvider">@instanceProvider.ToName()</MudSelectItem>
+                        <MudSelectItem Value="@inferenceProvider">
+                            @inferenceProvider.ToName()
+                        </MudSelectItem>
                     }
                 </MudSelect>
                 
-                <MudJustifiedText Class="mb-3"> Please double-check if your model name matches the curl specifications provided by the instance provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.</MudJustifiedText>
+                <MudJustifiedText Class="mb-3"> Please double-check if your model name matches the curl specifications provided by the inference provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.</MudJustifiedText>
             }
 
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 {
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HfInstanceProviderId)" Target="_blank">Show available models</MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId)" Target="_blank">Show available models</MudButton>
                     <MudTextField
                         T="string"
                         @bind-Text="@this.dataManuallyModel"

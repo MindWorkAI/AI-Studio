@@ -1,9 +1,9 @@
 ﻿namespace AIStudio.Provider.HuggingFace;
 
 /// <summary>
-/// Enum for instance providers that Hugging Face supports.
+/// Enum for inference providers that Hugging Face supports.
 /// </summary>
-public enum HFInstanceProvider
+public enum HFInferenceProvider
 {
     NONE,
     

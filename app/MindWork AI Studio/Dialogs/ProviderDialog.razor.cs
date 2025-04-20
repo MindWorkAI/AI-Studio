@@ -52,7 +52,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     /// The HFInstanceProvider to use, e.g., CEREBRAS.
     /// </summary>
     [Parameter]
-    public HFInstanceProvider HfInstanceProviderId { get; set; } = HFInstanceProvider.NONE;
+    public HFInferenceProvider HFInferenceProviderId { get; set; } = HFInferenceProvider.NONE;
     
     /// <summary>
     /// Is this provider self-hosted?
@@ -138,7 +138,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
-            HFInstanceProvider = this.HfInstanceProviderId,
+            HFInferenceProvider = this.HFInferenceProviderId,
         };
     }
 
