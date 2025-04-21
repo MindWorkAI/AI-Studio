@@ -19,7 +19,7 @@ public sealed partial class UpdateMetadataCommands
             return;
         
         // Prepare the metadata for the next release:
-        await this.Prepare(action);
+        await this.PerformPrepare(action, true);
         
         // Build once to allow the Rust compiler to read the changed metadata
         // and to update all .NET artifacts:
@@ -59,14 +59,31 @@ public sealed partial class UpdateMetadataCommands
             return;
 
         Console.WriteLine("==============================");
+        Console.Write("- Are you trying to prepare a new release? (y/n) ");
+        var userAnswer = Console.ReadLine();
+        if (userAnswer?.ToLowerInvariant() == "y")
+        {
+            Console.WriteLine("- Please use the 'release' command instead");
+            return;
+        }
+        
+        await this.PerformPrepare(action, false);
+    }
+
+    private async Task PerformPrepare(PrepareAction action, bool internalCall)
+    {
+        if(internalCall)
+            Console.WriteLine("==============================");
+        
         Console.WriteLine("- Prepare the metadata for the next release ...");
         
         var appVersion = await this.UpdateAppVersion(action);
-        if (!string.IsNullOrWhiteSpace(appVersion))
+        if (!string.IsNullOrWhiteSpace(appVersion.VersionText))
         {
             var buildNumber = await this.IncreaseBuildNumber();
             var buildTime = await this.UpdateBuildTime();
-            await this.UpdateChangelog(buildNumber, appVersion, buildTime);
+            await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTime);
+            await this.CreateNextChangelog(buildNumber, appVersion);
             await this.UpdateDotnetVersion();
             await this.UpdateRustVersion();
             await this.UpdateMudBlazorVersion();
@@ -219,14 +236,59 @@ public sealed partial class UpdateMetadataCommands
         }
     }
 
+    private async Task CreateNextChangelog(int currentBuildNumber, AppVersion currentAppVersion)
+    {
+        Console.Write("- Create the next changelog ...");
+        var pathChangelogs = Path.Combine(Environment.GetAIStudioDirectory(), "wwwroot", "changelog");
+        var nextBuildNumber = currentBuildNumber + 1;
+        
+        //
+        // We assume that most of the time, there will be patch releases:
+        //
+        var nextMajor = currentAppVersion.Major;
+        var nextMinor = currentAppVersion.Minor;
+        var nextPatch = currentAppVersion.Patch + 1;
+        
+        var nextAppVersion = $"{nextMajor}.{nextMinor}.{nextPatch}";
+        var nextChangelogFilename = $"v{nextAppVersion}.md";
+        var nextChangelogFilePath = Path.Combine(pathChangelogs, nextChangelogFilename);
+        
+        //
+        // Regarding the next build time: We assume that the next release will take place in one week from now.
+        // Thus, we check how many days this month has left. In the end, we want to predict the year and month
+        // for the next build. Day, hour, minute and second are all set to x.
+        //
+        var nextBuildMonth = (DateTime.Today + TimeSpan.FromDays(7)).Month;
+        var nextBuildYear = (DateTime.Today + TimeSpan.FromDays(7)).Year;
+        var nextBuildTimeString = $"{nextBuildYear}-{nextBuildMonth:00}-xx xx:xx UTC";
+
+        var changelogHeader = $"""
+                               # v{nextAppVersion}, build {nextBuildNumber} ({nextBuildTimeString})
+                               
+                               """;
+        
+        if(!File.Exists(nextChangelogFilePath))
+        {
+            await File.WriteAllTextAsync(nextChangelogFilePath, changelogHeader, Environment.UTF8_NO_BOM);
+            Console.WriteLine($" done. Changelog '{nextChangelogFilename}' created.");
+        }
+        else
+        {
+            Console.WriteLine(" failed.");
+            Console.WriteLine("- Error: The changelog file already exists.");
+        }
+    }
+
     private async Task UpdateChangelog(int buildNumber, string appVersion, string buildTime)
     {
+        Console.Write("- Updating the in-app changelog list ...");
         var pathChangelogs = Path.Combine(Environment.GetAIStudioDirectory(), "wwwroot", "changelog");
         var expectedLogFilename = $"v{appVersion}.md";
         var expectedLogFilePath = Path.Combine(pathChangelogs, expectedLogFilename);
         
         if(!File.Exists(expectedLogFilePath))
         {
+            Console.WriteLine(" failed.");
             Console.WriteLine($"- Error: The changelog file '{expectedLogFilename}' does not exist.");
             return;
         }
@@ -250,6 +312,7 @@ public sealed partial class UpdateMetadataCommands
         
         changelogCode = changelogCode.Replace(CODE_START, updatedCode);
         await File.WriteAllTextAsync(changelogCodePath, changelogCode, Environment.UTF8_NO_BOM);
+        Console.WriteLine(" done.");
     }
 
     private async Task UpdateArchitecture(RID rid)
@@ -282,14 +345,14 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
 
-    private async Task<string> UpdateAppVersion(PrepareAction action)
+    private async Task<AppVersion> UpdateAppVersion(PrepareAction action)
     {
         const int APP_VERSION_INDEX = 0;
         
         if (action == PrepareAction.NONE)
         {
             Console.WriteLine("- No action specified. Skipping app version update.");
-            return string.Empty;
+            return new(string.Empty, 0, 0, 0);
         }
         
         var pathMetadata = Environment.GetMetadataPath();
@@ -323,7 +386,8 @@ public sealed partial class UpdateMetadataCommands
         
         lines[APP_VERSION_INDEX] = updatedAppVersion;
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
-        return updatedAppVersion;
+        
+        return new(updatedAppVersion, currentMajor, currentMinor, currentPatch);
     }
 
     private async Task UpdateLicenceYear(string licenceFilePath)
