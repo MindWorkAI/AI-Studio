@@ -143,7 +143,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                         };
                         config.Action = "Show details";
                         config.ActionVariant = Variant.Filled;
-                        config.ActionColor = Color.Dark;
                     });
                 }
                 
