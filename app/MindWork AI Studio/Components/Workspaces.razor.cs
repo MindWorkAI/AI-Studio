@@ -77,7 +77,7 @@ public partial class Workspaces : ComponentBase
             {
                 Depth = 0,
                 Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                Text = "Temporary chats",
+                Text = "Disappearing Chats",
                 Icon = Icons.Material.Filled.Timer,
                 Expandable = true,
                 Path = "temp",
