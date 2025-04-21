@@ -25,6 +25,8 @@ public partial class About : ComponentBase
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitecture META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitecture>()!;
     
+    private string osLanguage = string.Empty;
+    
     private static string VersionDotnetRuntime => $"Used .NET runtime: v{META_DATA.DotnetVersion}";
     
     private static string VersionDotnetSdk => $"Used .NET SDK: v{META_DATA.DotnetSdkVersion}";
@@ -38,10 +40,10 @@ public partial class About : ComponentBase
     private static string MudBlazorVersion => $"MudBlazor: v{META_DATA.MudBlazorVersion}";
     
     private static string TauriVersion => $"Tauri: v{META_DATA.TauriVersion}";
+    
+    private string OSLanguage => $"User-language provided by the OS: '{this.osLanguage}'";
 
     private GetLogPathsResponse logPaths;
-
-    #region Overrides of ComponentBase
 
     private async Task CopyStartupLogPath()
     {
@@ -53,8 +55,11 @@ public partial class About : ComponentBase
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
     }
     
+    #region Overrides of ComponentBase
+    
     protected override async Task OnInitializedAsync()
     {
+        this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
         await base.OnInitializedAsync();
     }
