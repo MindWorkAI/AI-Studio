@@ -23,7 +23,7 @@ public static class ILangExtensions
             return text;
         }
 
-        LOGGER.LogWarning($"Missing translation key '{key}' for content '{fallbackEN}'.");
+        LOGGER.LogDebug($"Missing translation key '{key}' for content '{fallbackEN}'.");
         return fallbackEN;
     }
 }
