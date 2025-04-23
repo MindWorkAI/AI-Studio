@@ -121,14 +121,14 @@ public static partial class PluginFactory
                         #endif
                         continue;
 
-                case { IsMaintained: false }:
-                    LOG.LogWarning($"The plugin '{pluginMainFile}' is not maintained anymore. Please consider to disable it.");
-                    break;
-            }
+                    case { IsMaintained: false }:
+                        LOG.LogWarning($"The plugin '{pluginMainFile}' is not maintained anymore. Please consider to disable it.");
+                        break;
+                }
             
-            LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
-            AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
-        }
+                LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
+                AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
+            }
         
             // Start or restart all plugins:
             await RestartAllPlugins(cancellationToken);
