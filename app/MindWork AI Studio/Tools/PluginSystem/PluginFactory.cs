@@ -13,7 +13,8 @@ public static partial class PluginFactory
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
     private static readonly List<PluginBase> RUNNING_PLUGINS = [];
-
+    private static readonly SemaphoreSlim PLUGIN_LOAD_SEMAPHORE = new(1, 1);
+    
     private static bool IS_INITIALIZED;
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
@@ -73,39 +74,44 @@ public static partial class PluginFactory
             return;
         }
         
-        LOG.LogInformation("Start loading plugins.");
-        if (!Directory.Exists(PLUGINS_ROOT))
-        {
-            LOG.LogInformation("No plugins found.");
+        if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
             return;
-        }
-        
-        AVAILABLE_PLUGINS.Clear();
-        
-        //
-        // The easiest way to load all plugins is to find all `plugin.lua` files and load them.
-        // By convention, each plugin is enforced to have a `plugin.lua` file.
-        //
-        var pluginMainFiles = Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories);
-        foreach (var pluginMainFile in pluginMainFiles)
+
+        try
         {
-            if (cancellationToken.IsCancellationRequested)
-                break;
-            
-            LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
-            var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
-            var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
-            var plugin = await Load(pluginPath, code, cancellationToken);
-            
-            switch (plugin)
+            LOG.LogInformation("Start loading plugins.");
+            if (!Directory.Exists(PLUGINS_ROOT))
             {
-                case NoPlugin noPlugin when noPlugin.Issues.Any():
-                    LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: {noPlugin.Issues.First()}");
-                    continue;
+                LOG.LogInformation("No plugins found.");
+                return;
+            }
+        
+            AVAILABLE_PLUGINS.Clear();
+        
+            //
+            // The easiest way to load all plugins is to find all `plugin.lua` files and load them.
+            // By convention, each plugin is enforced to have a `plugin.lua` file.
+            //
+            var pluginMainFiles = Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories);
+            foreach (var pluginMainFile in pluginMainFiles)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+            
+                LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
+                var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
+                var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
+                var plugin = await Load(pluginPath, code, cancellationToken);
+            
+                switch (plugin)
+                {
+                    case NoPlugin noPlugin when noPlugin.Issues.Any():
+                        LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: {noPlugin.Issues.First()}");
+                        continue;
                 
-                case NoPlugin:
-                    LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: Unknown.");
-                    continue;
+                    case NoPlugin:
+                        LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: Unknown.");
+                        continue;
                 
                 case { IsValid: false }:
                     LOG.LogError($"Was not able to load plugin '{pluginMainFile}', because the Lua code is not a valid AI Studio plugin. There are {plugin.Issues.Count()} issues to fix.");
@@ -124,8 +130,14 @@ public static partial class PluginFactory
             AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
         }
         
-        // Start or restart all plugins:
-        await RestartAllPlugins(cancellationToken);
+            // Start or restart all plugins:
+            await RestartAllPlugins(cancellationToken);
+        }
+        finally
+        {
+            PLUGIN_LOAD_SEMAPHORE.Release();
+            LOG.LogInformation("Finished loading plugins.");
+        }
     }
 
     private static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
