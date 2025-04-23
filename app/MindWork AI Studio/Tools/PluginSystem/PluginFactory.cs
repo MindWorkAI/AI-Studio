@@ -39,6 +39,9 @@ public static partial class PluginFactory
     /// </summary>
     public static void Setup()
     {
+        if(IS_INITIALIZED)
+            return;
+        
         DATA_DIR = SettingsManager.DataDirectory!;
         PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
         INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
