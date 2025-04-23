@@ -1,6 +1,9 @@
+using System.Text;
+
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -14,6 +17,9 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
     
+    [Inject]
+    private RustService RustService { get; init; } = null!;
+    
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
     
@@ -22,6 +28,7 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     private ChatThread? chatThread;
     private bool isStreaming;
     private string userInput = string.Empty;
+    private List<WriterChunk> chunks = new();
     private string userDirection = string.Empty;
     private string suggestion = string.Empty;
     
@@ -46,6 +53,39 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     #endregion
     
     private bool IsProviderSelected => this.providerSettings.UsedLLMProvider != LLMProviders.NONE;
+
+    private async Task LoadTextFile()
+    {
+        var result = await this.RustService.SelectFile("Load a text file");
+        if(result.UserCancelled)
+            return;
+        
+        if(!File.Exists(result.SelectedFilePath))
+            return;
+        
+        var text = await File.ReadAllTextAsync(result.SelectedFilePath, Encoding.UTF8);
+        this.userInput = text;
+        this.ChunkText();
+    }
+
+    private void ChunkText()
+    {
+        this.chunks.Clear();
+        var startIndex = 0;
+        var contentSpan = this.userInput.AsSpan();
+        for (var index = 0; index < contentSpan.Length; index++)
+        {
+            if (contentSpan[index] is '\n')
+            {
+                var endIndex = index;
+                var lineMemory = this.userInput.AsMemory(startIndex..endIndex);
+                this.chunks.Add(new WriterChunk(lineMemory, false, false));
+                startIndex = endIndex + 1;
+            }
+        }
+
+        this.StateHasChanged();
+    }
     
     private async Task InputKeyEvent(KeyboardEventArgs keyEvent)
     {
