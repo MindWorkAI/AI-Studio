@@ -61,7 +61,7 @@
 
             @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
             {
-                <MudSelect Disabled="@(!this.DataLLMProvider.IsHFInstanceProviderNeeded())" @bind-Value="@this.HFInferenceProviderId" Label="HF Inference Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                <MudSelect @bind-Value="@this.HFInferenceProviderId" Label="Hugging Face Inference Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                     @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                     {
                         <MudSelectItem Value="@inferenceProvider">
