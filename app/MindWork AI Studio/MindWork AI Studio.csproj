@@ -61,10 +61,6 @@
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Assistants\I18N\" />
-    </ItemGroup>
-
     <!-- Read the meta data file -->
     <Target Name="ReadMetaData" BeforeTargets="BeforeBuild">
         <Error Text="The ../../metadata.txt file was not found!" Condition="!Exists('../../metadata.txt')" />

@@ -50,6 +50,13 @@
                 <AssistantBlock TSettings="SettingsDialogERIServer" Name="@T("ERI Server")" Description="@T("Generate an ERI server to integrate business systems.")" Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
             }
         </MudStack>
+        
+        <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
+            AI Studio Development
+        </MudText>
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantBlock TSettings="SettingsDialogI18N" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
+        </MudStack>
             
     </InnerScrolling>
 </div>
