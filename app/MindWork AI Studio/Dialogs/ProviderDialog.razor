@@ -73,33 +73,49 @@
                 <MudJustifiedText Class="mb-3"> Please double-check if your model name matches the curl specifications provided by the inference provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.</MudJustifiedText>
             }
 
-            <MudStack Row="@true" AlignItems="AlignItems.Center">
-                @if (this.DataLLMProvider.IsLLMModelProvidedManually())
-                {
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId)" Target="_blank">Show available models</MudButton>
-                    <MudTextField
-                        T="string"
-                        @bind-Text="@this.dataManuallyModel"
-                        Label="Model"
-                        Class="mb-3"
-                        Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
-                        AdornmentColor="Color.Info"
-                        Validation="@this.ValidateManuallyModel"
-                        UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                    />
-                }
-                else
-                {
-                    <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">Load</MudButton>
-                    <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="Model" Class="mb-3" OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingModel">
-                        @foreach (var model in this.availableModels)
+            <MudField FullWidth="true" Label="Model selection" Variant="Variant.Outlined" Class="mb-3">
+                <MudStack Row="@true" AlignItems="AlignItems.Baseline" StretchItems="StretchItems.End">
+                    @if (this.DataLLMProvider.IsLLMModelProvidedManually())
+                    {
+                        <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId)" Target="_blank">
+                            Show available models
+                        </MudButton>
+                        <MudTextField
+                            T="string"
+                            @bind-Text="@this.dataManuallyModel"
+                            Label="Model"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                            AdornmentColor="Color.Info"
+                            Validation="@this.ValidateManuallyModel"
+                            UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                        />
+                    }
+                    else
+                    {
+                        <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">
+                            Load models
+                        </MudButton>
+                        @if(this.availableModels.Count is 0)
                         {
-                            <MudSelectItem Value="@model">@model</MudSelectItem>
+                            <MudText Typo="Typo.body1">
+                                No models loaded or available.
+                            </MudText>
                         }
-                    </MudSelect>
-                }
-            </MudStack>
+                        else
+                        {
+                            <MudSelect @bind-Value="@this.DataModel"
+                                       OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
+                                       Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingModel">
+                                @foreach (var model in this.availableModels)
+                                {
+                                    <MudSelectItem Value="@model">@model</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                    }
+                </MudStack>
+            </MudField>
 
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
