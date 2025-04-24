@@ -272,6 +272,4 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         LLMProviders.SELF_HOSTED => "(Optional) API Key",
         _ => "API Key",
     };
-    
-    private bool IsNoneProvider => this.DataLLMProvider is LLMProviders.NONE;
 }
