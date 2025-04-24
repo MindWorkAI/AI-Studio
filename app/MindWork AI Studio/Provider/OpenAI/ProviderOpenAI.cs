@@ -120,15 +120,20 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(["gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
+        var models = await this.LoadModels(["gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
+        return models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(["dall-e-"], token, apiKeyProvisional);
+        return this.LoadModels(["dall-e-", "gpt-image"], token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
