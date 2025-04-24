@@ -40,7 +40,6 @@ public partial class About : MSGComponentBase
     private string VersionDotnetSdk => $"{T("Used .NET SDK")}: v{META_DATA.DotnetSdkVersion}";
     
     private string BuildTime => $"{T("Build time")}: {META_DATA.BuildTime}";
-    
 
     private GetLogPathsResponse logPaths;
     
