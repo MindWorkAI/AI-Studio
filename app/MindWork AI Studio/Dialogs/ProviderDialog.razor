@@ -75,7 +75,7 @@
             }
 
             <MudField FullWidth="true" Label="Model selection" Variant="Variant.Outlined" Class="mb-3">
-                <MudStack Row="@true" AlignItems="AlignItems.Baseline" StretchItems="StretchItems.End">
+                <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
                     @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                     {
                         <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId)" Target="_blank">
