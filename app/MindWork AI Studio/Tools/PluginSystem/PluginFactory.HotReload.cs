@@ -2,6 +2,8 @@ namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
+    private static readonly SemaphoreSlim HOT_RELOAD_SEMAPHORE = new(1, 1);
+    
     public static void SetUpHotReloading()
     {
         if (!IS_INITIALIZED)
@@ -20,7 +22,13 @@ public static partial class PluginFactory
             HOT_RELOAD_WATCHER.Filter = "*.lua";
             HOT_RELOAD_WATCHER.Changed += async (_, args) =>
             {
-                LOG.LogInformation($"File changed: {args.FullPath}");
+                if (!await HOT_RELOAD_SEMAPHORE.WaitAsync(0))
+                {
+                    LOG.LogInformation($"File changed ({args.ChangeType}): {args.FullPath}. Already processing another change.");
+                    return;
+                }
+                
+                LOG.LogInformation($"File changed ({args.ChangeType}): {args.FullPath}. Reloading plugins...");
                 await LoadAll();
                 await messageBus.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
             };

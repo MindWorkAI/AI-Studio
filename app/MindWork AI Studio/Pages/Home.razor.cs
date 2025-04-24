@@ -24,7 +24,7 @@ public partial class Home : MSGComponentBase
         
         this.itemsAdvantages = [
             new(T("Free of charge"), T("The app is free to use, both for personal and commercial purposes.")),
-            new(T("Independence"), T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")), 
+            new(T("Independence"), T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), Hugging Face, and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")), 
             new(T("Assistants"), T("You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.")),
             new(T("Unrestricted usage"), T("Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.")),
             new(T("Cost-effective"), T("You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.")),
@@ -44,7 +44,7 @@ public partial class Home : MSGComponentBase
         using var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
         this.LastChangeContent = await response.Content.ReadAsStringAsync();
     }
-
+    
     private const string QUICK_START_GUIDE =
         """
         Ready to dive in and get started with MindWork AI Studio? This quick start guide will help you set up everything you need to start using the app.

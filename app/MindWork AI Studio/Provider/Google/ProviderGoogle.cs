@@ -98,7 +98,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             return [];
         
         return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/gemini-", StringComparison.InvariantCultureIgnoreCase))
+                model.Name.StartsWith("models/gemini-", StringComparison.OrdinalIgnoreCase))
             .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
 

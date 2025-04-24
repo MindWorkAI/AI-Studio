@@ -31,7 +31,7 @@ public partial class About : MSGComponentBase
     
     private static string TauriVersion => $"Tauri: v{META_DATA.TauriVersion}";
     
-    private string OSLanguage => $"{this.T("User-language provided by the OS")}: '{this.osLanguage}'";
+    private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     

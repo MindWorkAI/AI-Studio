@@ -130,7 +130,7 @@ internal sealed class Program
             .AddHubOptions(options =>
             {
                 options.MaximumReceiveMessageSize = null;
-                options.ClientTimeoutInterval = TimeSpan.FromSeconds(1_200);
+                options.ClientTimeoutInterval = TimeSpan.FromDays(14);
                 options.HandshakeTimeout = TimeSpan.FromSeconds(30);
             });
 

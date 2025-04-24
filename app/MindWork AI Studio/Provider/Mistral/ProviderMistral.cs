@@ -99,8 +99,9 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             return [];
         
         return modelResponse.Data.Where(n => 
-            !n.Id.StartsWith("code", StringComparison.InvariantCulture) &&
-            !n.Id.Contains("embed", StringComparison.InvariantCulture))
+            !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
+            !n.Id.Contains("embed", StringComparison.OrdinalIgnoreCase) &&
+            !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase))
             .Select(n => new Provider.Model(n.Id, null));
     }
     

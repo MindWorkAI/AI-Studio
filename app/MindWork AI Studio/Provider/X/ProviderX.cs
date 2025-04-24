@@ -93,9 +93,10 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(["grok-"], token, apiKeyProvisional);
+        var models = await this.LoadModels(["grok-"], token, apiKeyProvisional);
+        return models.Where(n => !n.Id.Contains("-image", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />

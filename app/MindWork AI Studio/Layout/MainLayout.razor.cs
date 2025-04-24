@@ -155,7 +155,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                         };
                         config.Action = T("Show details");
                         config.ActionVariant = Variant.Filled;
-                        config.ActionColor = Color.Dark;
                     });
                 }
                 
@@ -188,17 +187,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     _ = Task.Run(async () =>
                     {
                         // Set up the plugin system:
-                        PluginFactory.Setup();
-                        
-                        // Ensure that all internal plugins are present:
-                        await PluginFactory.EnsureInternalPlugins();
-            
-                        // Load (but not start) all plugins, without waiting for them:
-                        var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                        await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
-            
-                        // Set up hot reloading for plugins:
-                        PluginFactory.SetUpHotReloading();
+                        if (PluginFactory.Setup())
+                        {
+                            // Ensure that all internal plugins are present:
+                            await PluginFactory.EnsureInternalPlugins();
+
+                            // Load (but not start) all plugins, without waiting for them:
+                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+
+                            // Set up hot reloading for plugins:
+                            PluginFactory.SetUpHotReloading();
+                        }
                     });
                 }
                 

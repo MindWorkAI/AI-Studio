@@ -25,7 +25,7 @@ public readonly record struct Provider(
     bool IsSelfHosted = false,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    HFInstanceProvider HFInstanceProvider = HFInstanceProvider.NONE) : ISecretId
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ISecretId
 {
     #region Overrides of ValueType
 
