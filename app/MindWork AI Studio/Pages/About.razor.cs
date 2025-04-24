@@ -23,11 +23,15 @@ public partial class About : MSGComponentBase
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitecture META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitecture>()!;
 
+    private string osLanguage = string.Empty;
+    
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
     private static string MudBlazorVersion => $"MudBlazor: v{META_DATA.MudBlazorVersion}";
     
     private static string TauriVersion => $"Tauri: v{META_DATA.TauriVersion}";
+    
+    private string OSLanguage => $"{this.T("User-language provided by the OS")}: '{this.osLanguage}'";
     
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
@@ -39,8 +43,17 @@ public partial class About : MSGComponentBase
     
 
     private GetLogPathsResponse logPaths;
-
+    
     #region Overrides of ComponentBase
+    
+    protected override async Task OnInitializedAsync()
+    {
+        this.osLanguage = await this.RustService.ReadUserLanguage();
+        this.logPaths = await this.RustService.GetLogPaths();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
 
     private async Task CopyStartupLogPath()
     {
@@ -51,14 +64,6 @@ public partial class About : MSGComponentBase
     {
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
     }
-    
-    protected override async Task OnInitializedAsync()
-    {
-        this.logPaths = await this.RustService.GetLogPaths();
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
     
     private const string LICENSE = """
         # Functional Source License, Version 1.1, MIT Future License
