@@ -1,10 +1,16 @@
 # Building
 You just want to use the app? Then simply [download the appropriate setup for your operating system](Setup.md). This chapter is intended for developers who want to modify and customize the code.
 
+## Prefaces regarding Linux development systems
+Unfortunately, we have to provide a note regarding development on Linux systems. MindWork AI Studio consists of a Rust and a .NET part. Compiling the .NET code works smoothly on all operating systems. However, this is not the case for our Rust part. More specifically, it is not the Rust code itself that is problematic, but rather the Tauri framework on which we base our work. Tauri has certain dependencies that depend on the operating system. The specific dependencies vary between different Linux distributions and between versions of distributions.
+
+Therefore, we cannot provide a static list here that is valid for all Linux systems. Unfortunately, the situation is even more complex: Tauri requires dependencies that are not available in current Linux distributions because they already include newer versions. **For these reasons, we currently advise against developing AI Studio on Linux.** In case you still want to try, you will need a lot of patience and willingness to experiment. We ask for your understanding. Thank you very much.
+
 ## Prerequisites
 1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
 3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
+4. The core team uses [JetBrains](https://www.jetbrains.com/) [Rider](https://www.jetbrains.com/rider/) and [RustRover](https://www.jetbrains.com/rust/) for development. Both IDEs are free to use for open-source projects for non-commercial use. They are available for macOS, Linux, and Windows systems. Profiles are provided for these IDEs, so you can get started right away. However, you can also use a different IDE.
 4. Clone the repository.
 
 ## One-time mandatory steps
