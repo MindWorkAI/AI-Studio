@@ -20,10 +20,10 @@ public static partial class PluginFactory
     /// Set up the plugin factory. We will read the data directory from the settings manager.
     /// Afterward, we will create the plugins directory and the internal plugin directory.
     /// </summary>
-    public static void Setup()
+    public static bool Setup()
     {
         if(IS_INITIALIZED)
-            return;
+            return false;
         
         DATA_DIR = SettingsManager.DataDirectory!;
         PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
@@ -34,6 +34,8 @@ public static partial class PluginFactory
         
         HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
         IS_INITIALIZED = true;
+        
+        return true;
     }
     
     public static void Dispose()
