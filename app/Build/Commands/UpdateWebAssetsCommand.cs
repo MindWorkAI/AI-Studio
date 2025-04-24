@@ -2,8 +2,6 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
 
-using Build.Tools;
-
 using SharedTools;
 
 namespace Build.Commands;

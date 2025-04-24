@@ -43,6 +43,7 @@
     <ItemGroup>
         <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
@@ -58,6 +59,10 @@
     <ItemGroup>
       <ProjectReference Include="..\SharedTools\SharedTools.csproj" />
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Assistants\I18N\" />
     </ItemGroup>
 
     <!-- Read the meta data file -->

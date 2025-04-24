@@ -15,7 +15,9 @@
                         <MudNavMenu>
                             @foreach (var navBarItem in this.navItems)
                             {
-                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">@navBarItem.Name</MudNavLink>
+                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
+                                    @navBarItem.Name
+                                </MudNavLink>
                             }
                         </MudNavMenu>
                     </MudDrawer>
@@ -51,7 +53,7 @@
                 }
                 
                 <MudOverlay Visible="@this.performingUpdate" DarkBackground="@true" LockScroll="@true">
-                    <MudText Typo="Typo.h3">Please wait for the update to complete...</MudText>
+                    <MudText Typo="Typo.h3">@T("Please wait for the update to complete...")</MudText>
                     <MudProgressLinear Color="Color.Primary" Indeterminate="@true" Size="Size.Large" Rounded="@true"/>
                 </MudOverlay>
             </MudContainer>

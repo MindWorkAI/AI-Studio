@@ -5,24 +5,26 @@
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
             <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
-            Assistant: Rewrite & Improve Text Options
+            @T("Assistant: Rewrite & Improve Text Options")
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
             <ConfigurationOption OptionDescription="Preselect rewrite & improve text options?" LabelOn="Rewrite & improve text options are preselected" LabelOff="No rewrite & improve text options are preselected" State="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the rewrite & improve text options. This is might be useful when you prefer a specific language or LLM model."/>
-            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which target language should be preselected?")"/>
             @if (this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedTargetLanguage is CommonLanguages.OTHER)
             {
-                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage = updatedText)"/>
+                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedOtherLanguage = updatedText)"/>
             }
-            <ConfigurationSelect OptionDescription="Preselect a writing style" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle)" Data="@ConfigurationSelectDataFactory.GetWritingStyles4RewriteData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle = selectedValue)" OptionHelp="Which writing style should be preselected?"/>
-            <ConfigurationSelect OptionDescription="Preselect a sentence structure" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedSentenceStructure)" Data="@ConfigurationSelectDataFactory.GetSentenceStructureData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedSentenceStructure = selectedValue)" OptionHelp="Which voice should be preselected for the sentence structure?"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect a writing style")" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle)" Data="@ConfigurationSelectDataFactory.GetWritingStyles4RewriteData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedWritingStyle = selectedValue)" OptionHelp="@T("Which writing style should be preselected?")"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect a sentence structure")" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedSentenceStructure)" Data="@ConfigurationSelectDataFactory.GetSentenceStructureData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedSentenceStructure = selectedValue)" OptionHelp="@T("Which voice should be preselected for the sentence structure?")"/>
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.REWRITE_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider = selectedValue)"/>
         </MudPaper>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
     </DialogActions>
 </MudDialog>

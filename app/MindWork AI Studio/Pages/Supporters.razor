@@ -1,22 +1,27 @@
 @attribute [Route(Routes.SUPPORTERS)]
+@inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-2">Supporters</MudText>
+    <MudText Typo="Typo.h3" Class="mb-2">
+        @T("Supporters")
+    </MudText>
     <InnerScrolling>
 
         <MudExpansionPanels>
             
-            <ExpansionPanel HeaderText="Financial Support" IsExpanded="@true" HeaderIcon="@Icons.Material.Filled.AttachMoney">
+            <ExpansionPanel HeaderText="@T("Financial Support")" IsExpanded="@true" HeaderIcon="@Icons.Material.Filled.AttachMoney">
                 <div class="border-solid border-2 rounded-lg pa-3 mb-6">
-                    <MudText Typo="Typo.h4" Class="mb-2">Our Titans</MudText>
-                    <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
-                        In this section, we highlight the titan supporters of MindWork AI Studio. Titans are prestigious companies that provide significant support to our mission.
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        @T("Our Titans")
                     </MudText>
                     <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
-                        For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
+                        @T("In this section, we highlight the titan supporters of MindWork AI Studio. Titans are prestigious companies that provide significant support to our mission.")
+                    </MudText>
+                    <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
+                        @T("For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.")
                     </MudText>
                     <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
-                        Become our first Titan
+                        @T("Become our first Titan")
                     </MudButton>
                 </div>
 
@@ -25,27 +30,27 @@
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
-                                Individual Contributors
+                                @T("Individual Contributors")
                             </MudText>
 
                             <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Target="_blank">
-                                Become a contributor
+                                @T("Become a contributor")
                             </MudButton>
 
                             <MudText Typo="Typo.h6" Class="mt-8">
-                                The first 10 supporters who make a monthly contribution:
+                                @T("The first 10 supporters who make a monthly contribution:")
                             </MudText>
                             <MudList T="string">
-                                <Supporter Name="richard-stanton" Type="SupporterType.INDIVIDUAL" URL="https://github.com/richard-stanton" Acknowledgment="Thank you, Richard, for being the first."/>
-                                <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="Thank you, Peer, for your courage in being the second person to support the project financially."/>
-                                <Supporter Name="donework" Type="SupporterType.INDIVIDUAL" URL="https://github.com/donework" Acknowledgment="Thanks Dominic for being the third supporter."/>
+                                <Supporter Name="richard-stanton" Type="SupporterType.INDIVIDUAL" URL="https://github.com/richard-stanton" Acknowledgment="@T("Thank you, Richard, for being the first.")"/>
+                                <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="@T("Thank you, Peer, for your courage in being the second person to support the project financially.")"/>
+                                <Supporter Name="donework" Type="SupporterType.INDIVIDUAL" URL="https://github.com/donework" Acknowledgment="@T("Thanks Dominic for being the third supporter.")"/>
                             </MudList>
 
                             <MudText Typo="Typo.h6" Class="mt-8">
-                                The first 10 supporters who make a one-time contribution:
+                                @T("The first 10 supporters who make a one-time contribution:")
                             </MudText>
                             <MudList T="string">
-                                <Supporter Name="Bessieres" Type="SupporterType.INDIVIDUAL" URL="https://github.com/Bessieres" Acknowledgment="Thank you for being the first to contribute a one-time donation."/>
+                                <Supporter Name="Bessieres" Type="SupporterType.INDIVIDUAL" URL="https://github.com/Bessieres" Acknowledgment="@T("Thank you for being the first to contribute a one-time donation.")"/>
                             </MudList>
                         </MudPaper>
                     </MudItem>
@@ -54,11 +59,11 @@
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
-                                Business Contributors
+                                @T("Business Contributors")
                             </MudText>
 
                             <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
-                                Become a contributor
+                                @T("Become a contributor")
                             </MudButton>
                         </MudPaper>
                     </MudItem>
@@ -72,14 +77,14 @@
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" class="mr-2"/>
-                                Code Contributions
+                                @T("Code Contributions")
                             </MudText>
 
                             <MudList T="string">
-                                <Supporter Name="DevNullx64" Type="SupporterType.INDIVIDUAL" URL="https://github.com/DevNullx64" Acknowledgment="Thanks Luc for your build script contribution."/>
-                                <Supporter Name="SolsticeSpectrum" Type="SupporterType.INDIVIDUAL" URL="https://github.com/SolsticeSpectrum" Acknowledgment="Thanks for your build script contribution."/>
-                                <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="Thank you, Peer, for familiarizing yourself with C#, providing excellent contributions like the Alibaba and Hugging Face providers, and revising the settings management."/>
-                                <Supporter Name="nilskruthoff" Type="SupporterType.INDIVIDUAL" URL="https://github.com/nilskruthoff" Acknowledgment="Thanks, Nils, for taking the time to learn Rust and build the foundation for local retrieval."/>
+                                <Supporter Name="DevNullx64" Type="SupporterType.INDIVIDUAL" URL="https://github.com/DevNullx64" Acknowledgment="@T("Thanks Luc for your build script contribution.")"/>
+                                <Supporter Name="SolsticeSpectrum" Type="SupporterType.INDIVIDUAL" URL="https://github.com/SolsticeSpectrum" Acknowledgment="@T("Thanks for your build script contribution.")"/>
+                                <Supporter Name="peerschuett" Type="SupporterType.INDIVIDUAL" URL="https://github.com/peerschuett" Acknowledgment="@T("Thank you, Peer, for familiarizing yourself with C#, providing excellent contributions like the Alibaba and Hugging Face providers, and revising the settings management.")"/>
+                                <Supporter Name="nilskruthoff" Type="SupporterType.INDIVIDUAL" URL="https://github.com/nilskruthoff" Acknowledgment="@T("Thanks, Nils, for taking the time to learn Rust and build the foundation for local retrieval.")"/>
                             </MudList>
                         </MudPaper>
                     </MudItem>
@@ -88,11 +93,11 @@
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
                                 <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" class="mr-2"/>
-                                Moderation, Design, Wiki, and Documentation
+                                @T("Moderation, Design, Wiki, and Documentation")
                             </MudText>
 
                             <MudList T="string">
-                                <Supporter Name="KeSah001" Type="SupporterType.INDIVIDUAL" URL="https://github.com/KeSah001" Acknowledgment="Thank you very much, Kerstin, for taking care of creating the Wiki."/>
+                                <Supporter Name="KeSah001" Type="SupporterType.INDIVIDUAL" URL="https://github.com/KeSah001" Acknowledgment="@T("Thank you very much, Kerstin, for taking care of creating the Wiki.")"/>
                             </MudList>
                         </MudPaper>
                     </MudItem>

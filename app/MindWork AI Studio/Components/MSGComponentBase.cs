@@ -3,8 +3,6 @@ using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
-using SharedTools;
-
 namespace AIStudio.Components;
 
 public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver, ILang
@@ -16,7 +14,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     protected MessageBus MessageBus { get; init; } = null!;
 
     [Inject]
-    private ILogger<PluginLanguage> Logger { get; init; } = null!;
+    private ILogger<MSGComponentBase> Logger { get; init; } = null!;
 
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
@@ -35,24 +33,11 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     #region Implementation of ILang
 
     /// <inheritdoc />
-    public string T(string fallbackEN)
-    {
-        var type = this.GetType();
-        var ns = $"{type.Namespace!}::{type.Name}".ToUpperInvariant().Replace(".", "::");
-        var key = $"root::{ns}::T{fallbackEN.ToFNV32()}";
-        
-        if(this.Lang.TryGetText(key, out var text, logWarning: false))
-            return text;
-        
-        this.Logger.LogWarning($"Missing translation key '{key}' for content '{fallbackEN}'.");
-        return fallbackEN;
-    }
+    public string T(string fallbackEN) => this.GetText(this.Lang, fallbackEN);
 
     #endregion
 
     #region Implementation of IMessageBusReceiver
-
-    public abstract string ComponentName { get; }
 
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
@@ -66,11 +51,9 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
                 this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
-            
-            default:
-                await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
-                break;
         }
+        
+        await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     public async Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
@@ -109,7 +92,12 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
         return await this.MessageBus.SendMessageUseFirstResult<TPayload, TResult>(this, triggeredEvent, data);
     }
     
-    protected void ApplyFilters(ComponentBase[] components, Event[] events)
+    /// <summary>
+    /// Define for which components and events you want to receive messages.
+    /// </summary>
+    /// <param name="filterComponents">A list of components for which you want to receive messages. Use an empty list to receive messages from all components.</param>
+    /// <param name="events">A list of events for which you want to receive messages.</param>
+    protected void ApplyFilters(ComponentBase[] filterComponents, Event[] events)
     {
         // Append the color theme changed event to the list of events:
         var eventsList = new List<Event>(events)
@@ -118,6 +106,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
             Event.PLUGINS_RELOADED,
         };
         
-        this.MessageBus.ApplyFilters(this, components, eventsList.ToArray());
+        this.MessageBus.ApplyFilters(this, filterComponents, eventsList.ToArray());
     }
 }
