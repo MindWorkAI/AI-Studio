@@ -165,6 +165,9 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     
     /// <inheritdoc />
     public string LangName => this.langName;
+    
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, string> Content => this.content.AsReadOnly();
 
     #endregion
 }

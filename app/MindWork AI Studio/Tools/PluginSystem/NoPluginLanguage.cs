@@ -22,5 +22,7 @@ public sealed class NoPluginLanguage : PluginBase, ILanguagePlugin
     
     public string LangName => string.Empty;
 
+    public IReadOnlyDictionary<string, string> Content => new Dictionary<string, string>();
+
     #endregion
 }
