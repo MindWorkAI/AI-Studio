@@ -31,8 +31,8 @@ Things we are currently working on:
   - [x] ~~Plan & implement the base plugin system ([PR #322](https://github.com/MindWorkAI/AI-Studio/pull/322))~~
   - [x] ~~Start the plugin system ([PR #372](https://github.com/MindWorkAI/AI-Studio/pull/372))~~
   - [x] ~~Added hot-reload support for plugins ([PR #377](https://github.com/MindWorkAI/AI-Studio/pull/377), [PR #391](https://github.com/MindWorkAI/AI-Studio/pull/391))~~
-  - [ ] Add support for other languages (I18N) to AI Studio (~~[PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400)~~, [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404))
-  - [ ] Add an I18N assistant to translate all AI Studio texts to a certain language & culture
+  - [ ] Add support for other languages (I18N) to AI Studio (~~[PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404))~~
+  - [ ] Add an I18N assistant to translate all AI Studio texts to a certain language & culture ([PR #422](https://github.com/MindWorkAI/AI-Studio/pull/422))
   - [ ] Provide MindWork AI Studio in German ([#31](https://github.com/MindWorkAI/Planning/issues/31))
   - [ ] Add configuration plugins, which allow pre-defining some LLM providers in organizations
   - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
