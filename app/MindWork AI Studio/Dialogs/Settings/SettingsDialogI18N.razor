@@ -16,6 +16,7 @@
             {
                 <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage = updatedText)"/>
             }
+            <ConfigurationSelect OptionDescription="Language plugin used for comparision" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId = selectedValue)" OptionHelp="Select the language plugin used for comparision."/>
             <ConfigurationProviderSelection Component="Components.I18N_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider = selectedValue)"/>
         </MudPaper>
     </DialogContent>

@@ -6,6 +6,11 @@ public class DataI18N
     /// Preselect any I18N options?
     /// </summary>
     public bool PreselectOptions { get; set; }
+    
+    /// <summary>
+    /// Preselect a language plugin to where the new content should compare to?
+    /// </summary>
+    public Guid PreselectedLanguagePluginId { get; set; }
 
     /// <summary>
     /// Preselect the target language?
