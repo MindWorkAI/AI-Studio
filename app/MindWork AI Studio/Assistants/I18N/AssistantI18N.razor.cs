@@ -22,10 +22,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         """;
     
     protected override bool AllowProfiles => false;
+
+    protected override bool ShowResult => false;
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Localize AI Studio";
+    protected override string SubmitText => "Localize AI Studio & generate the Lua code";
     
     protected override Func<Task> SubmitAction => this.LocalizeText;
 
@@ -39,6 +41,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
         }
+
+        _ = this.OnChangedLanguage();
     }
     
     protected override bool MightPreselectValues()
@@ -61,6 +65,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private bool localizationPossible;
     private string searchString = string.Empty;
     private Guid selectedLanguagePluginId;
+    private ILanguagePlugin? selectedLanguagePlugin;
+    private bool isTranslationNeeded;
     private Dictionary<string, string> addedKeys = [];
     private Dictionary<string, string> removedKeys = [];
 
@@ -69,20 +75,45 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        await this.OnLanguagePluginChanged(this.selectedLanguagePluginId);
         await this.LoadData();
     }
 
     #endregion
-
+    
     private async Task OnLanguagePluginChanged(Guid pluginId)
     {
         this.selectedLanguagePluginId = pluginId;
-        await this.LoadData();
+        await this.OnChangedLanguage();
+    }
+
+    private async Task OnChangedLanguage()
+    {
+        if (PluginFactory.RunningPlugins.FirstOrDefault(n => n is PluginLanguage && n.Id == this.selectedLanguagePluginId) is not PluginLanguage comparisonPlugin)
+            this.loadingIssue = $"Was not able to load the language plugin for comparison ({this.selectedLanguagePluginId}). Please select a valid, loaded & running language plugin.";
+        else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
+            this.loadingIssue = $"The selected language plugin for comparison uses the IETF tag '{comparisonPlugin.IETFTag}' which does not match the selected target language '{this.selectedTargetLanguage.ToIETFTag()}'. Please select a valid, loaded & running language plugin which matches the target language.";
+        else
+        {
+            this.selectedLanguagePlugin = comparisonPlugin;
+            this.loadingIssue = string.Empty;
+            await this.LoadData();
+        }
+        
         this.StateHasChanged();
     }
     
     private async Task LoadData()
     {
+        if (this.selectedLanguagePlugin is null)
+        {
+            this.loadingIssue = "Please select a language plugin for comparison.";
+            this.localizationPossible = false;
+            this.isLoading = false;
+            this.StateHasChanged();
+            return;
+        }
+        
         this.isLoading = true;
         this.StateHasChanged();
         
@@ -124,17 +155,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             case PluginLanguage pluginLanguage:
                 this.loadingIssue = string.Empty;
                 var newI18NContent = pluginLanguage.Content;
-
-                if(PluginFactory.RunningPlugins.FirstOrDefault(n => n is PluginLanguage && n.Id == this.selectedLanguagePluginId) is not PluginLanguage comparisonPlugin)
-                {
-                    this.loadingIssue = $"Was not able to load the language plugin for comparison ({this.selectedLanguagePluginId}). Please select a valid, loaded & running language plugin.";
-                    break;
-                }
                 
-                var currentI18NContent = comparisonPlugin.Content;
+                var currentI18NContent = this.selectedLanguagePlugin.Content;
                 this.addedKeys = newI18NContent.ExceptBy(currentI18NContent.Keys, n => n.Key).ToDictionary();
                 this.removedKeys = currentI18NContent.ExceptBy(newI18NContent.Keys, n => n.Key).ToDictionary();
                 this.localizationPossible = true;
+                this.isTranslationNeeded = this.selectedTargetLanguage is not CommonLanguages.EN_US;
                 break;
         }
         
