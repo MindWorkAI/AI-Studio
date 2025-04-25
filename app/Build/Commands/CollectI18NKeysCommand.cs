@@ -59,7 +59,7 @@ public sealed partial class CollectI18NKeysCommand
         Console.WriteLine($" {counter:###,###} files processed, {allI18NContent.Count:###,###} keys found.");
         
         Console.Write("- Creating Lua code ...");
-        var luaCode = this.ExportToLuaTable(allI18NContent);
+        var luaCode = this.ExportToLuaAssignments(allI18NContent);
         
         // Build the path, where we want to store the Lua code:
         var luaPath = Path.Join(cwd, "Assistants", "I18N", "allTexts.lua");
@@ -70,6 +70,97 @@ public sealed partial class CollectI18NKeysCommand
         Console.WriteLine(" done.");
     }
     
+    private static string EscapeLuaString(string value)
+    {
+        // Ersetze Backslash und Doppel-Anführungszeichen
+        return value.Replace("\\", @"\\").Replace("\"", "\\\"");
+    }
+
+    private string ExportToLuaAssignments(Dictionary<string, string> keyValuePairs)
+    {
+        var sb = new StringBuilder();
+
+        // Add the mandatory plugin metadata:
+        sb.AppendLine(
+            """
+            -- The ID for this plugin:
+            ID = "77c2688a-a68f-45cc-820e-fa8f3038a146"
+            
+            -- The icon for the plugin:
+            ICON_SVG = ""
+            
+            -- The name of the plugin:
+            NAME = "Collected I18N keys"
+            
+            -- The description of the plugin:
+            DESCRIPTION = "This plugin is not meant to be used directly. Its a collection of all I18N keys found in the project."
+            
+            -- The version of the plugin:
+            VERSION = "1.0.0"
+            
+            -- The type of the plugin:
+            TYPE = "LANGUAGE"
+            
+            -- The authors of the plugin:
+            AUTHORS = {"MindWork AI Community"}
+            
+            -- The support contact for the plugin:
+            SUPPORT_CONTACT = "MindWork AI Community"
+            
+            -- The source URL for the plugin:
+            SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio"
+            
+            -- The categories for the plugin:
+            CATEGORIES = { "CORE" }
+            
+            -- The target groups for the plugin:
+            TARGET_GROUPS = { "EVERYONE" }
+            
+            -- The flag for whether the plugin is maintained:
+            IS_MAINTAINED = true
+            
+            -- When the plugin is deprecated, this message will be shown to users:
+            DEPRECATION_MESSAGE = ""
+            
+            -- The IETF BCP 47 tag for the language. It's the ISO 639 language
+            -- code followed by the ISO 3166-1 country code:
+            IETF_TAG = "en-US"
+            
+            -- The language name in the user's language:
+            LANG_NAME = "English (United States)"
+            
+            """
+        );
+        
+        //
+        // Add the UI_TEXT_CONTENT table:
+        //
+        sb.AppendLine("UI_TEXT_CONTENT = {}");
+        foreach (var kvp in keyValuePairs.OrderBy(x => x.Key))
+        {
+            var key = kvp.Key;
+            var value = kvp.Value.Replace("\n", " ").Trim();
+
+            // Remove the "UI_TEXT_CONTENT." prefix from the key:
+            const string UI_TEXT_CONTENT = "UI_TEXT_CONTENT.";
+            var keyWithoutPrefix = key.StartsWith(UI_TEXT_CONTENT, StringComparison.OrdinalIgnoreCase) ? key[UI_TEXT_CONTENT.Length..] : key;
+
+            // Replace all dots in the key with colons:
+            keyWithoutPrefix = keyWithoutPrefix.Replace('.', ':');
+            
+            // Add a comment with the original text content:
+            sb.AppendLine();
+            sb.AppendLine($"-- {value}");
+            
+            // Add the assignment to the UI_TEXT_CONTENT table:
+            sb.AppendLine($"""
+                       UI_TEXT_CONTENT["{keyWithoutPrefix}"] = "{EscapeLuaString(value)}"
+                       """);
+        }
+
+        return sb.ToString();
+    }
+
     private string ExportToLuaTable(Dictionary<string, string> keyValuePairs)
     {
         // Collect all nodes:
