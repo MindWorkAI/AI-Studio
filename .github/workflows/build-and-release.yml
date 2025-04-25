@@ -107,7 +107,7 @@ jobs:
             rust_target: 'aarch64-unknown-linux-gnu'
             dotnet_runtime: 'linux-arm64'
             dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
-            tauri_bundle: 'appimage deb'
+            tauri_bundle: 'appimage deb updater'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
@@ -506,6 +506,7 @@ jobs:
             # - platform=darwin-aarch64 when path contains 'aarch64-apple-darwin'
             # - platform=darwin-x86_64 when path contains 'x86_64-apple-darwin'
             # - platform=linux-x86_64 when path contains 'x86_64-unknown-linux-'
+            # - platform=linux-aarch64 when path contains 'aarch64-unknown-linux-'
             # - platform=windows-x86_64 when path contains 'x86_64-pc-windows-'
             # - platform=windows-aarch64 when path contains 'aarch64-pc-windows-'
             #
@@ -515,6 +516,8 @@ jobs:
               platform="darwin-x86_64"
             elif [[ "$sig_file" == *"amd64.AppImage"* ]]; then
               platform="linux-x86_64"
+            elif [[ "$sig_file" == *"aarch64.AppImage"* ]]; then
+              platform="linux-aarch64"
             elif [[ "$sig_file" == *"x64-setup.nsis"* ]]; then
               platform="windows-x86_64"
             elif [[ "$sig_file" == *"arm64-setup.nsis"* ]]; then
