@@ -107,7 +107,7 @@ jobs:
             rust_target: 'aarch64-unknown-linux-gnu'
             dotnet_runtime: 'linux-arm64'
             dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
-            tauri_bundle: 'deb'
+            tauri_bundle: 'appimage deb'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
