@@ -1,5 +1,81 @@
 @attribute [Route(Routes.ASSISTANT_AI_STUDIO_I18N)]
+@using AIStudio.Settings
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogI18N>
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+<ConfigurationSelect OptionDescription="Language plugin used for comparision" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="Select the language plugin used for comparision."/>
+@if (this.isLoading)
+{
+    <MudText Typo="Typo.body1" Class="mb-6">
+        The data is being loaded, please wait...
+    </MudText>
+} else if (!this.isLoading && !string.IsNullOrWhiteSpace(this.loadingIssue))
+{
+    <MudText Typo="Typo.body1" Class="mb-6">
+        While loading the I18N data, an issue occurred: @this.loadingIssue
+    </MudText>
+}
+else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
+{
+    <MudText Typo="Typo.h6">
+        Added Content (@this.addedKeys.Count entries)
+    </MudText>
+    <MudTable Items="@this.addedKeys" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+        <ToolBarContent>
+            <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Key</MudTh>
+            <MudTh>Text</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <pre style="font-size: 0.8em;">
+                    @context.Key
+                </pre>
+            </MudTd>
+            <MudTd>
+                @context.Value
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    
+    <MudText Typo="Typo.h6">
+        Removed Content (@this.removedKeys.Count entries)
+    </MudText>
+    <MudTable Items="@this.removedKeys" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+        <ToolBarContent>
+            <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Key</MudTh>
+            <MudTh>Text</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <pre style="font-size: 0.8em;">
+                    @context.Key
+                </pre>
+            </MudTd>
+            <MudTd>
+                @context.Value
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    
+    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
+    <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+}
