@@ -146,7 +146,7 @@ public sealed partial class CollectI18NKeysCommand
             var keyWithoutPrefix = key.StartsWith(UI_TEXT_CONTENT, StringComparison.OrdinalIgnoreCase) ? key[UI_TEXT_CONTENT.Length..] : key;
 
             // Replace all dots in the key with colons:
-            keyWithoutPrefix = keyWithoutPrefix.Replace('.', ':');
+            keyWithoutPrefix = keyWithoutPrefix.Replace(".", "::");
             
             // Add a comment with the original text content:
             sb.AppendLine();
