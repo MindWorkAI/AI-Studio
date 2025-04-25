@@ -66,7 +66,6 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string searchString = string.Empty;
     private Guid selectedLanguagePluginId;
     private ILanguagePlugin? selectedLanguagePlugin;
-    private bool isTranslationNeeded;
     private Dictionary<string, string> addedKeys = [];
     private Dictionary<string, string> removedKeys = [];
 
@@ -160,7 +159,6 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
                 this.addedKeys = newI18NContent.ExceptBy(currentI18NContent.Keys, n => n.Key).ToDictionary();
                 this.removedKeys = currentI18NContent.ExceptBy(newI18NContent.Keys, n => n.Key).ToDictionary();
                 this.localizationPossible = true;
-                this.isTranslationNeeded = this.selectedTargetLanguage is not CommonLanguages.EN_US;
                 break;
         }
         

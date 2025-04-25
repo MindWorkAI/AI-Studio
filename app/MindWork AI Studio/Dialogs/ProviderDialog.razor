@@ -68,11 +68,12 @@
                         <MudSelectItem Value="@inferenceProvider">
                             @inferenceProvider.ToName()
                         </MudSelectItem>
-                    }
+                    }             
                 </MudSelect>
-                
+                @* ReSharper disable Asp.Entity *@
                 <MudJustifiedText Class="mb-3"> Please double-check if your model name matches the curl specifications provided by the inference provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.</MudJustifiedText>
-            }
+                @* ReSharper restore Asp.Entity *@
+            }       
 
             <MudField FullWidth="true" Label="Model selection" Variant="Variant.Outlined" Class="mb-3">
                 <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">

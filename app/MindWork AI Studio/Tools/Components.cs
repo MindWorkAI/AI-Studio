@@ -18,7 +18,10 @@ public enum Components
     JOB_POSTING_ASSISTANT,
     BIAS_DAY_ASSISTANT,
     ERI_ASSISTANT,
+    
+    // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,
+    // ReSharper restore InconsistentNaming
     
     CHAT,
     APP_SETTINGS,
