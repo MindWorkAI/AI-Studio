@@ -92,7 +92,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     {
         <hr style="width: 100%; border-width: 0.25ch;" class="mt-6 mb-6"/>
         <MudText Typo="Typo.h6">
-            Localized Content (@this.localizedContent.Count entries of @this.addedContent.Count)
+            Localized Content (@this.localizedContent.Count entries of @this.NumTotalItems)
         </MudText>
         <MudTable Items="@this.localizedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
             <ToolBarContent>

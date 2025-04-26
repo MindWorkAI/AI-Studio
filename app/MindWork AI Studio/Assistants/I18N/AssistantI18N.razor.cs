@@ -248,7 +248,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         
         return null;
     }
-    
+
+    private int NumTotalItems => (this.selectedLanguagePlugin?.Content.Count ?? 0) + this.addedContent.Count - this.removedContent.Count;
+
     private async Task LocalizeTextContent()
     {
         await this.form!.Validate();
