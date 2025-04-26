@@ -29,4 +29,9 @@ public interface ILanguagePlugin
     /// Gets the name of the language.
     /// </summary>
     public string LangName { get; }
+
+    /// <summary>
+    /// Get all keys and texts from the language plugin.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Content { get; }
 }

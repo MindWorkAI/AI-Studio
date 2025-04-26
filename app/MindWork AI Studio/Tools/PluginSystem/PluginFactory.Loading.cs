@@ -101,16 +101,18 @@ public static partial class PluginFactory
         }
     }
 
-    private static async Task<PluginBase> Load(string pluginPath, string code, CancellationToken cancellationToken = default)
+    public static async Task<PluginBase> Load(string? pluginPath, string code, CancellationToken cancellationToken = default)
     {
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
         
         var state = LuaState.Create();
-        
-        // Add the module loader so that the plugin can load other Lua modules:
-        state.ModuleLoader = new PluginLoader(pluginPath);
-        
+        if (!string.IsNullOrWhiteSpace(pluginPath))
+        {
+            // Add the module loader so that the plugin can load other Lua modules:
+            state.ModuleLoader = new PluginLoader(pluginPath);
+        }
+
         // Add some useful libraries:
         state.OpenModuleLibrary();
         state.OpenStringLibrary();
@@ -141,7 +143,7 @@ public static partial class PluginFactory
         if(type is PluginType.NONE)
             return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
-        var isInternal = pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
+        var isInternal = !string.IsNullOrWhiteSpace(pluginPath) && pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
         return type switch
         {
             PluginType.LANGUAGE => new PluginLanguage(isInternal, state, type),

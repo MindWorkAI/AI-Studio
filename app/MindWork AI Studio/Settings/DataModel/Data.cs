@@ -100,4 +100,6 @@ public sealed class Data
     public DataJobPostings JobPostings { get; init; } = new();
     
     public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
+    
+    public DataI18N I18N { get; init; } = new();
 }

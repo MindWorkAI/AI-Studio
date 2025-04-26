@@ -20,6 +20,24 @@ public static class CommonLanguageExtensions
         _ => "Other",
     };
     
+    public static string ToIETFTag(this CommonLanguages language) => language switch
+    {
+        CommonLanguages.AS_IS => string.Empty,
+        
+        CommonLanguages.EN_US => "en-US",
+        CommonLanguages.EN_GB => "en-GB",
+        CommonLanguages.ZH_CN => "zh-CN",
+        CommonLanguages.HI_IN => "hi-IN",
+        CommonLanguages.ES_ES => "es-ES",
+        CommonLanguages.FR_FR => "fr-FR",
+        CommonLanguages.DE_DE => "de-DE",
+        CommonLanguages.DE_AT => "de-AT",
+        CommonLanguages.DE_CH => "de-CH",
+        CommonLanguages.JA_JP => "ja-JP",
+
+        _ => string.Empty,
+    };
+    
     public static string PromptSummarizing(this CommonLanguages language, string customLanguage) => language switch
     {
         CommonLanguages.AS_IS => "Do not change the language of the text.",

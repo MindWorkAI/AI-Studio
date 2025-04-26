@@ -59,7 +59,7 @@ public sealed partial class CollectI18NKeysCommand
         Console.WriteLine($" {counter:###,###} files processed, {allI18NContent.Count:###,###} keys found.");
         
         Console.Write("- Creating Lua code ...");
-        var luaCode = this.ExportToLuaTable(allI18NContent);
+        var luaCode = this.ExportToLuaAssignments(allI18NContent);
         
         // Build the path, where we want to store the Lua code:
         var luaPath = Path.Join(cwd, "Assistants", "I18N", "allTexts.lua");
@@ -69,134 +69,68 @@ public sealed partial class CollectI18NKeysCommand
         
         Console.WriteLine(" done.");
     }
-    
-    private string ExportToLuaTable(Dictionary<string, string> keyValuePairs)
-    {
-        // Collect all nodes:
-        var root = new Dictionary<string, object>();
-        
-        //
-        // Split all collected keys into nodes:
-        //
-        foreach (var key in keyValuePairs.Keys.Order())
-        {
-            var path = key.Split('.');
-            var current = root;
-            for (var i = 0; i < path.Length - 1; i++)
-            {
-                // We ignore the AISTUDIO segment of the path:
-                if(path[i] == "AISTUDIO")
-                    continue;
-                
-                if (!current.TryGetValue(path[i], out var child) || child is not Dictionary<string, object> childDict)
-                {
-                    childDict = new Dictionary<string, object>();
-                    current[path[i]] = childDict;
-                }
-                
-                current = childDict;
-            }
-            
-            current[path.Last()] = keyValuePairs[key];
-        }
 
-        //
-        // Inner method to build Lua code from the collected nodes:
-        //
-        void ToLuaTable(StringBuilder sb, Dictionary<string, object> innerDict, int indent = 0)
-        {
-            sb.AppendLine("{");
-            var prefix = new string(' ', indent * 4);
-            foreach (var kvp in innerDict)
-            {
-                if (kvp.Value is Dictionary<string, object> childDict)
-                {
-                    sb.Append($"{prefix}    {kvp.Key}");
-                    sb.Append(" = ");
-                    
-                    ToLuaTable(sb, childDict, indent + 1);
-                }
-                else if (kvp.Value is string s)
-                {
-                    sb.AppendLine($"{prefix}    -- {s.Trim().Replace("\n", " ")}");
-                    sb.Append($"{prefix}    {kvp.Key}");
-                    sb.Append(" = ");
-                    sb.Append($"""
-                               "{s}"
-                               """);
-                    sb.AppendLine(",");
-                    sb.AppendLine();
-                }
-            }
+    private string ExportToLuaAssignments(Dictionary<string, string> keyValuePairs)
+    {
+        var sb = new StringBuilder();
+
+        // Add the mandatory plugin metadata:
+        sb.AppendLine(
+            """
+            -- The ID for this plugin:
+            ID = "77c2688a-a68f-45cc-820e-fa8f3038a146"
             
-            sb.AppendLine(prefix + "},");
-            sb.AppendLine();
-        }
+            -- The icon for the plugin:
+            ICON_SVG = ""
+            
+            -- The name of the plugin:
+            NAME = "Collected I18N keys"
+            
+            -- The description of the plugin:
+            DESCRIPTION = "This plugin is not meant to be used directly. Its a collection of all I18N keys found in the project."
+            
+            -- The version of the plugin:
+            VERSION = "1.0.0"
+            
+            -- The type of the plugin:
+            TYPE = "LANGUAGE"
+            
+            -- The authors of the plugin:
+            AUTHORS = {"MindWork AI Community"}
+            
+            -- The support contact for the plugin:
+            SUPPORT_CONTACT = "MindWork AI Community"
+            
+            -- The source URL for the plugin:
+            SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio"
+            
+            -- The categories for the plugin:
+            CATEGORIES = { "CORE" }
+            
+            -- The target groups for the plugin:
+            TARGET_GROUPS = { "EVERYONE" }
+            
+            -- The flag for whether the plugin is maintained:
+            IS_MAINTAINED = true
+            
+            -- When the plugin is deprecated, this message will be shown to users:
+            DEPRECATION_MESSAGE = ""
+            
+            -- The IETF BCP 47 tag for the language. It's the ISO 639 language
+            -- code followed by the ISO 3166-1 country code:
+            IETF_TAG = "en-US"
+            
+            -- The language name in the user's language:
+            LANG_NAME = "English (United States)"
+            
+            """
+        );
         
-        //
-        // Write the Lua code:
-        //
-        var sbLua = new StringBuilder();
-        
-        // To make the later parsing easier, we add the mandatory plugin
-        // metadata:
-        sbLua.AppendLine(
-        """
-        -- The ID for this plugin:
-        ID = "77c2688a-a68f-45cc-820e-fa8f3038a146"
-        
-        -- The icon for the plugin:
-        ICON_SVG = ""
-        
-        -- The name of the plugin:
-        NAME = "Collected I18N keys"
-        
-        -- The description of the plugin:
-        DESCRIPTION = "This plugin is not meant to be used directly. Its a collection of all I18N keys found in the project."
-        
-        -- The version of the plugin:
-        VERSION = "1.0.0"
-        
-        -- The type of the plugin:
-        TYPE = "LANGUAGE"
-        
-        -- The authors of the plugin:
-        AUTHORS = {"MindWork AI Community"}
-        
-        -- The support contact for the plugin:
-        SUPPORT_CONTACT = "MindWork AI Community"
-        
-        -- The source URL for the plugin:
-        SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio"
-        
-        -- The categories for the plugin:
-        CATEGORIES = { "CORE" }
-        
-        -- The target groups for the plugin:
-        TARGET_GROUPS = { "EVERYONE" }
-        
-        -- The flag for whether the plugin is maintained:
-        IS_MAINTAINED = true
-        
-        -- When the plugin is deprecated, this message will be shown to users:
-        DEPRECATION_MESSAGE = ""
-        
-        -- The IETF BCP 47 tag for the language. It's the ISO 639 language
-        -- code followed by the ISO 3166-1 country code:
-        IETF_TAG = "en-US"
-        
-        -- The language name in the user's language:
-        LANG_NAME = "English (United States)"
-        
-        """);
-        
-        sbLua.Append("UI_TEXT_CONTENT = ");
-        if(root["UI_TEXT_CONTENT"] is Dictionary<string, object> dict)
-            ToLuaTable(sbLua, dict);
-        
-        return sbLua.ToString();
+        // Add the UI_TEXT_CONTENT table:
+        LuaTable.Create(ref sb, "UI_TEXT_CONTENT", keyValuePairs);
+        return sb.ToString();
     }
-    
+
     private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent)
     {
         const string START_TAG = """

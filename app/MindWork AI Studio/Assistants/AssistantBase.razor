@@ -29,7 +29,7 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="async () => await this.Start()" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.isProcessing && this.cancellationTokenSource is not null)
@@ -97,14 +97,14 @@
                     {
                         case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
                             <MudTooltip Text="@buttonData.Tooltip">
-                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                     @buttonData.Text
                                 </MudButton>
                             </MudTooltip>
                             break;
 
                         case ButtonData buttonData:
-                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                 @buttonData.Text
                             </MudButton>
                             break;
