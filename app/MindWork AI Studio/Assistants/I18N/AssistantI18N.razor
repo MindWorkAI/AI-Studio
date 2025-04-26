@@ -18,9 +18,9 @@
 else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
 {
     <MudText Typo="Typo.h6">
-        Added Content (@this.addedKeys.Count entries)
+        Added Content (@this.addedContent.Count entries)
     </MudText>
-    <MudTable Items="@this.addedKeys" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+    <MudTable Items="@this.addedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
         <ToolBarContent>
             <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
         </ToolBarContent>
@@ -48,9 +48,9 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     </MudTable>
     
     <MudText Typo="Typo.h6">
-        Removed Content (@this.removedKeys.Count entries)
+        Removed Content (@this.removedContent.Count entries)
     </MudText>
-    <MudTable Items="@this.removedKeys" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+    <MudTable Items="@this.removedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
         <ToolBarContent>
             <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
         </ToolBarContent>

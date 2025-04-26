@@ -29,7 +29,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     protected override string SubmitText => "Localize AI Studio & generate the Lua code";
     
-    protected override Func<Task> SubmitAction => this.LocalizeText;
+    protected override Func<Task> SubmitAction => this.LocalizeTextConntent;
 
     protected override bool SubmitDisabled => !this.localizationPossible;
     
@@ -66,8 +66,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string searchString = string.Empty;
     private Guid selectedLanguagePluginId;
     private ILanguagePlugin? selectedLanguagePlugin;
-    private Dictionary<string, string> addedKeys = [];
-    private Dictionary<string, string> removedKeys = [];
+    private Dictionary<string, string> addedContent = [];
+    private Dictionary<string, string> removedContent = [];
 
     #region Overrides of AssistantBase<SettingsDialogI18N>
 
@@ -119,7 +119,6 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         //
         // Read the file `Assistants\I18N\allTexts.lua`:
         //
-        
         #if DEBUG
         var filePath = Path.Join(Environment.CurrentDirectory, "Assistants", "I18N");
         var resourceFileProvider = new PhysicalFileProvider(filePath);
@@ -156,8 +155,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
                 var newI18NContent = pluginLanguage.Content;
                 
                 var currentI18NContent = this.selectedLanguagePlugin.Content;
-                this.addedKeys = newI18NContent.ExceptBy(currentI18NContent.Keys, n => n.Key).ToDictionary();
-                this.removedKeys = currentI18NContent.ExceptBy(newI18NContent.Keys, n => n.Key).ToDictionary();
+                this.addedContent = newI18NContent.ExceptBy(currentI18NContent.Keys, n => n.Key).ToDictionary();
+                this.removedContent = currentI18NContent.ExceptBy(newI18NContent.Keys, n => n.Key).ToDictionary();
                 this.localizationPossible = true;
                 break;
         }
@@ -196,7 +195,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         return null;
     }
     
-    private async Task LocalizeText()
+    private async Task LocalizeTextConntent()
     {
     }
 }
