@@ -4,7 +4,7 @@ namespace SharedTools;
 
 public static class LuaTable
 {
-    public static string Create(ref StringBuilder sb, string tableVariableName, IReadOnlyDictionary<string, string> keyValuePairs, CancellationToken cancellationToken = default)
+    public static string Create(ref StringBuilder sb, string tableVariableName, IReadOnlyDictionary<string, string> keyValuePairs, IReadOnlyDictionary<string, string>? commentContent = null, CancellationToken cancellationToken = default)
     {
         //
         // Add the UI_TEXT_CONTENT table:
@@ -17,6 +17,7 @@ public static class LuaTable
             
             var key = kvp.Key;
             var value = kvp.Value.Replace("\n", " ").Trim();
+            var commentValue = commentContent is null ? value : commentContent.GetValueOrDefault(key, value);
 
             // Remove the "UI_TEXT_CONTENT." prefix from the key:
             const string UI_TEXT_CONTENT = "UI_TEXT_CONTENT.";
@@ -27,7 +28,7 @@ public static class LuaTable
             
             // Add a comment with the original text content:
             sb.AppendLine();
-            sb.AppendLine($"-- {value}");
+            sb.AppendLine($"-- {commentContent}");
             
             // Add the assignment to the UI_TEXT_CONTENT table:
             sb.AppendLine($"""
