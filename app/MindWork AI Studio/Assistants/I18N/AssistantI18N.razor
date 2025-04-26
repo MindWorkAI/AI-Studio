@@ -87,4 +87,38 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     {
         <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
     }
+    
+    @if (this.localizedContent.Count > 0)
+    {
+        <hr style="width: 100%; border-width: 0.25ch;" class="mt-6 mb-6"/>
+        <MudText Typo="Typo.h6">
+            Localized Content (@this.localizedContent.Count entries of @this.addedContent.Count)
+        </MudText>
+        <MudTable Items="@this.localizedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+            <ToolBarContent>
+                <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </ToolBarContent>
+            <ColGroup>
+                <col/>
+                <col/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>Key</MudTh>
+                <MudTh>Text</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <pre style="font-size: 0.8em;">
+                    @context.Key
+                </pre>
+                </MudTd>
+                <MudTd>
+                    @context.Value
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    }
 }
