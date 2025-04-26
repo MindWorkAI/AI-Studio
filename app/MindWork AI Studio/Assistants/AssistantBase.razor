@@ -29,7 +29,7 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="async () => await this.Start()" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.isProcessing && this.cancellationTokenSource is not null)

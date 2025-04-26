@@ -97,10 +97,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     protected Profile currentProfile = Profile.NO_PROFILE;
     protected ChatThread? chatThread;
     protected IContent? lastUserPrompt;
+    protected CancellationTokenSource? cancellationTokenSource;
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
-    
-    private CancellationTokenSource? cancellationTokenSource;
+
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -177,6 +177,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
             return "Please select a provider.";
         
         return null;
+    }
+
+    private async Task Start()
+    {
+        using (this.cancellationTokenSource = new())
+        {
+            await this.SubmitAction();
+        }
+        
+        this.cancellationTokenSource = null;
     }
 
     private void TriggerFormChange(FormFieldChangedEventArgs _)
@@ -286,16 +296,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
 
         this.isProcessing = true;
         this.StateHasChanged();
-
-        using (this.cancellationTokenSource = new())
-        {
-            // Use the selected provider to get the AI response.
-            // By awaiting this line, we wait for the entire
-            // content to be streamed.
-            this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource.Token);
-        }
-
-        this.cancellationTokenSource = null;
+        
+        // Use the selected provider to get the AI response.
+        // By awaiting this line, we wait for the entire
+        // content to be streamed.
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
+        
         this.isProcessing = false;
         this.StateHasChanged();
         
