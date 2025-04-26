@@ -134,16 +134,17 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 
     private async Task OnChangedLanguage()
     {
+        this.finalLuaCode.Clear();
+        this.localizedContent.Clear();
+        this.localizationPossible = false;
         if (PluginFactory.RunningPlugins.FirstOrDefault(n => n is PluginLanguage && n.Id == this.selectedLanguagePluginId) is not PluginLanguage comparisonPlugin)
         {
             this.loadingIssue = $"Was not able to load the language plugin for comparison ({this.selectedLanguagePluginId}). Please select a valid, loaded & running language plugin.";
-            this.localizationPossible = false;
             this.selectedLanguagePlugin = null;
         }
         else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
         {
             this.loadingIssue = $"The selected language plugin for comparison uses the IETF tag '{comparisonPlugin.IETFTag}' which does not match the selected target language '{this.selectedTargetLanguage.ToIETFTag()}'. Please select a valid, loaded & running language plugin which matches the target language.";
-            this.localizationPossible = false;
             this.selectedLanguagePlugin = null;
         }
         else
