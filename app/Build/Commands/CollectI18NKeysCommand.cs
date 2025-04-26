@@ -126,32 +126,8 @@ public sealed partial class CollectI18NKeysCommand
             """
         );
         
-        //
         // Add the UI_TEXT_CONTENT table:
-        //
-        sb.AppendLine("UI_TEXT_CONTENT = {}");
-        foreach (var kvp in keyValuePairs.OrderBy(x => x.Key))
-        {
-            var key = kvp.Key;
-            var value = kvp.Value.Replace("\n", " ").Trim();
-
-            // Remove the "UI_TEXT_CONTENT." prefix from the key:
-            const string UI_TEXT_CONTENT = "UI_TEXT_CONTENT.";
-            var keyWithoutPrefix = key.StartsWith(UI_TEXT_CONTENT, StringComparison.OrdinalIgnoreCase) ? key[UI_TEXT_CONTENT.Length..] : key;
-
-            // Replace all dots in the key with colons:
-            keyWithoutPrefix = keyWithoutPrefix.Replace(".", "::");
-            
-            // Add a comment with the original text content:
-            sb.AppendLine();
-            sb.AppendLine($"-- {value}");
-            
-            // Add the assignment to the UI_TEXT_CONTENT table:
-            sb.AppendLine($"""
-                       UI_TEXT_CONTENT["{keyWithoutPrefix}"] = "{EscapeLuaString(value)}"
-                       """);
-        }
-
+        LuaTable.Create(ref sb, "UI_TEXT_CONTENT", keyValuePairs);
         return sb.ToString();
     }
 
