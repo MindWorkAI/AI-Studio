@@ -28,7 +28,7 @@ public static class LuaTable
             
             // Add a comment with the original text content:
             sb.AppendLine();
-            sb.AppendLine($"-- {commentContent}");
+            sb.AppendLine($"-- {commentValue}");
             
             // Add the assignment to the UI_TEXT_CONTENT table:
             sb.AppendLine($"""
