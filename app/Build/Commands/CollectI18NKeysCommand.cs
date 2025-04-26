@@ -69,12 +69,6 @@ public sealed partial class CollectI18NKeysCommand
         
         Console.WriteLine(" done.");
     }
-    
-    private static string EscapeLuaString(string value)
-    {
-        // Ersetze Backslash und Doppel-Anführungszeichen
-        return value.Replace("\\", @"\\").Replace("\"", "\\\"");
-    }
 
     private string ExportToLuaAssignments(Dictionary<string, string> keyValuePairs)
     {
