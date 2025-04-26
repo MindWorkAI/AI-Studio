@@ -345,6 +345,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private void Phase2CreateLuaCode()
     {
         this.finalLuaCode.Clear();
-        LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, this.cancellationTokenSource!.Token);
+        var commentContent = this.addedContent.Concat(PluginFactory.BaseLanguage.Content).ToDictionary();
+        LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, commentContent, this.cancellationTokenSource!.Token);
     }
 }
