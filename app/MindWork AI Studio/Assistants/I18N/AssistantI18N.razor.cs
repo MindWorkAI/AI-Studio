@@ -8,6 +8,10 @@ using Microsoft.Extensions.FileProviders;
 
 using SharedTools;
 
+#if RELEASE
+using System.Reflection;
+#endif
+
 namespace AIStudio.Assistants.I18N;
 
 public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
