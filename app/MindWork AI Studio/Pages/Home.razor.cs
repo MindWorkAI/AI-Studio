@@ -12,7 +12,7 @@ public partial class Home : MSGComponentBase
     private HttpClient HttpClient { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
-
+    
     private TextItem[] itemsAdvantages = [];
     
     #region Overrides of ComponentBase
@@ -22,18 +22,36 @@ public partial class Home : MSGComponentBase
         await this.ReadLastChangeAsync();
         await base.OnInitializedAsync();
         
+        this.InitializeAdvantagesItems();
+    }
+
+    private void InitializeAdvantagesItems()
+    {
         this.itemsAdvantages = [
-            new(T("Free of charge"), T("The app is free to use, both for personal and commercial purposes.")),
-            new(T("Independence"), T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), Hugging Face, and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")), 
-            new(T("Assistants"), T("You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.")),
-            new(T("Unrestricted usage"), T("Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.")),
-            new(T("Cost-effective"), T("You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.")),
-            new(T("Privacy"), T("You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.")),
-            new(T("Flexibility"), T("Choose the provider and model best suited for your current task.")),
-            new(T("No bloatware"), T("The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.")),
+            new(this.T("Free of charge"), this.T("The app is free to use, both for personal and commercial purposes.")),
+            new(this.T("Independence"), this.T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), Hugging Face, and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")), 
+            new(this.T("Assistants"), this.T("You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.")),
+            new(this.T("Unrestricted usage"), this.T("Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.")),
+            new(this.T("Cost-effective"), this.T("You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.")),
+            new(this.T("Privacy"), this.T("You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.")),
+            new(this.T("Flexibility"), this.T("Choose the provider and model best suited for your current task.")),
+            new(this.T("No bloatware"), this.T("The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.")),
         ];
-        
-        this.StateHasChanged();
+    }
+
+    #endregion
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                this.InitializeAdvantagesItems();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
     }
 
     #endregion

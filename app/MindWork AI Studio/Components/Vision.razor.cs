@@ -1,10 +1,20 @@
+using Microsoft.AspNetCore.Components;
+
 namespace AIStudio.Components;
 
 public partial class Vision : MSGComponentBase
 {
-    private readonly TextItem[] itemsVision;
+    private TextItem[] itemsVision = [];
 
-    public Vision()
+    #region Overrides of MSGComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        this.InitializeVisionItems();
+    }
+
+    private void InitializeVisionItems()
     {
         this.itemsVision =
         [
@@ -20,4 +30,17 @@ public partial class Vision : MSGComponentBase
             new(T("Browser usage"), T("We're working on offering AI Studio features in your browser via a plugin, allowing, e.g., for spell-checking or text rewriting directly in the browser.")),
         ];
     }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                this.InitializeVisionItems();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+    }
+
+    #endregion
 }
