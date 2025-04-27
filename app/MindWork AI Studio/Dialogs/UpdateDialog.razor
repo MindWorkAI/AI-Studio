@@ -1,13 +1,18 @@
+@inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.h4" Class="d-inline-flex align-center">
             <MudIcon Icon="@Icons.Material.Filled.Update" Size="Size.Large" Class="mr-3"/>
-            Update from v@(META_DATA.Version) to v@(this.UpdateResponse.NewVersion)
+            @this.HeaderText
         </MudText>
         <MudMarkdown Value="@this.UpdateResponse.Changelog" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Install later</MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info">Install now</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Install later")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info">
+            @T("Install now")
+        </MudButton>
     </DialogActions>
 </MudDialog>

@@ -1,3 +1,5 @@
+using AIStudio.Components;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
@@ -5,7 +7,7 @@ namespace AIStudio.Dialogs;
 /// <summary>
 /// A confirmation dialog that can be used to ask the user for confirmation.
 /// </summary>
-public partial class ConfirmDialog : ComponentBase
+public partial class ConfirmDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;

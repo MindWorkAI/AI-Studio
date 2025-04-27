@@ -9,7 +9,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, IDisposable
+public partial class DataSourceSelection : MSGComponentBase
 {
     [Parameter]
     public DataSourceSelectionMode SelectionMode { get; set; } = DataSourceSelectionMode.SELECTION_MODE;
@@ -39,12 +39,6 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
     public bool AutoSaveAppSettings { get; set; }
     
     [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
-    
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
-    
-    [Inject]
     private DataSourceService DataSourceService { get; init; } = null!;
     
     [Inject]
@@ -63,8 +57,7 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
 
     protected override async Task OnInitializedAsync()
     {
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED, Event.RAG_AUTO_DATA_SOURCES_SELECTED ]);
+        this.ApplyFilters([], [ Event.RAG_AUTO_DATA_SOURCES_SELECTED ]);
         
         //
         // Load the settings:
@@ -253,19 +246,12 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
     
     private void HideDataSourceSelection() => this.showDataSourceSelection = false;
 
-    #region Implementation of IMessageBusReceiver
+    #region Overrides of MSGComponentBase
 
-    public string ComponentName => nameof(ConfidenceInfo);
-    
-    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
-            case Event.COLOR_THEME_CHANGED:
-                this.showDataSourceSelection = false;
-                this.StateHasChanged();
-                break;
-            
             case Event.RAG_AUTO_DATA_SOURCES_SELECTED:
                 if(data is IReadOnlyList<DataSourceAgentSelected> aiSelectedDataSources)
                     this.DataSourcesAISelected = aiSelectedDataSources;
@@ -273,22 +259,8 @@ public partial class DataSourceSelection : ComponentBase, IMessageBusReceiver, I
                 this.StateHasChanged();
                 break;
         }
-        
+
         return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
-    
-    #region Implementation of IDisposable
-
-    public void Dispose()
-    {
-        this.MessageBus.Unregister(this);
     }
 
     #endregion

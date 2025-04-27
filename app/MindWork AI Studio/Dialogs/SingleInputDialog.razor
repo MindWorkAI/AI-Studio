@@ -1,10 +1,17 @@
+@inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
-        <MudText Typo="Typo.body1">@this.Message</MudText>
-        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="Chat name" AutoFocus="@true" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudText Typo="Typo.body1">
+            @this.Message
+        </MudText>
+        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="@T("Chat name")" AutoFocus="@true" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="@this.ConfirmColor">@this.ConfirmText</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="@this.ConfirmColor">
+            @this.ConfirmText
+        </MudButton>
     </DialogActions>
 </MudDialog>

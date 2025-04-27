@@ -1,12 +1,13 @@
 using System.Text;
 
+using AIStudio.Components;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class WorkspaceSelectionDialog : ComponentBase
+public partial class WorkspaceSelectionDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
