@@ -29,10 +29,7 @@ public sealed record Confidence
     public static readonly Confidence NONE = new()
     {
         Level = ConfidenceLevel.NONE,
-        Description = 
-            """
-            No provider selected. Please select a provider to get see its confidence level.
-            """,
+        Description = "No provider selected. Please select a provider to get see its confidence level.",
     };
     
     public static readonly Confidence USA_HUB = new()

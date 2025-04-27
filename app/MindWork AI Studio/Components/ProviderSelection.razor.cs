@@ -2,13 +2,12 @@ using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Assistants;
 using AIStudio.Provider;
-using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ProviderSelection : ComponentBase
+public partial class ProviderSelection : MSGComponentBase
 {
     [CascadingParameter]
     public AssistantBase<NoComponent>? AssistantBase { get; set; }
@@ -21,9 +20,6 @@ public partial class ProviderSelection : ComponentBase
     
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private async Task SelectionChanged(AIStudio.Settings.Provider provider)
     {

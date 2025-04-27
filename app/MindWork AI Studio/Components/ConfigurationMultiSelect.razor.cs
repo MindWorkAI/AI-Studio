@@ -7,28 +7,28 @@ namespace AIStudio.Components;
 /// <summary>
 /// Configuration component for selecting many values from a list.
 /// </summary>
-/// <typeparam name="T">The type of the value to select.</typeparam>
-public partial class ConfigurationMultiSelect<T> : ConfigurationBase
+/// <typeparam name="TData">The type of the value to select.</typeparam>
+public partial class ConfigurationMultiSelect<TData> : ConfigurationBase
 {
     /// <summary>
     /// The data to select from.
     /// </summary>
     [Parameter]
-    public IEnumerable<ConfigurationSelectData<T>> Data { get; set; } = [];
+    public IEnumerable<ConfigurationSelectData<TData>> Data { get; set; } = [];
     
     /// <summary>
     /// The selected values.
     /// </summary>
     [Parameter]
-    public Func<HashSet<T>> SelectedValues { get; set; } = () => [];
+    public Func<HashSet<TData>> SelectedValues { get; set; } = () => [];
     
     /// <summary>
     /// An action that is called when the selection changes.
     /// </summary>
     [Parameter]
-    public Action<HashSet<T>> SelectionUpdate { get; set; } = _ => { };
+    public Action<HashSet<TData>> SelectionUpdate { get; set; } = _ => { };
     
-    private async Task OptionChanged(IEnumerable<T?>? updatedValues)
+    private async Task OptionChanged(IEnumerable<TData?>? updatedValues)
     {
         if(updatedValues is null)
             this.SelectionUpdate([]);
@@ -41,14 +41,14 @@ public partial class ConfigurationMultiSelect<T> : ConfigurationBase
     
     private static string GetClass => $"{MARGIN_CLASS} rounded-lg";
     
-    private string GetMultiSelectionText(List<T?>? selectedValues)
+    private string GetMultiSelectionText(List<TData?>? selectedValues)
     {
         if(selectedValues is null || selectedValues.Count == 0)
-            return "No preview features selected.";
+            return T("No preview features selected.");
         
         if(selectedValues.Count == 1)
-            return $"You have selected 1 preview feature.";
+            return T("You have selected 1 preview feature.");
         
-        return $"You have selected {selectedValues.Count} preview features.";
+        return string.Format(T("You have selected {0} preview features."), selectedValues.Count);
     }
 }

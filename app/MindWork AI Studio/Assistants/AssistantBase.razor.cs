@@ -13,11 +13,8 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants;
 
-public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
+public abstract partial class AssistantBase<TSettings> : AssistantLowerBase where TSettings : IComponent
 {
-    [Inject]
-    protected SettingsManager SettingsManager { get; init; } = null!;
-    
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
@@ -41,9 +38,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
-    
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
     
     protected abstract string Title { get; }
     
@@ -119,10 +113,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED ]);
-        
         await base.OnInitializedAsync();
     }
 
@@ -142,29 +132,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
             this.form?.ResetValidation();
         
         await base.OnAfterRenderAsync(firstRender);
-    }
-
-    #endregion
-    
-    #region Implementation of IMessageBusReceiver
-
-    public string ComponentName => nameof(AssistantBase<TSettings>);
-    
-    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
-    {
-        switch (triggeredEvent)
-        {
-            case Event.COLOR_THEME_CHANGED:
-                this.StateHasChanged();
-                break;
-        }
-        
-        return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
     }
 
     #endregion
@@ -226,7 +193,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
-            Name = $"Assistant - {this.Title}",
+            Name = string.Format(T("Assistant - {0}"), this.Title),
             Seed = this.RNG.Next(),
             Blocks = [],
         };
@@ -399,11 +366,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
         false => $"background-color: {this.ColorTheme.GetCurrentPalette(this.SettingsManager).InfoLighten}",
     };
 
-    #region Implementation of IDisposable
+    #region Overrides of MSGComponentBase
 
-    public void Dispose()
+    protected override void DisposeResources()
     {
-        this.MessageBus.Unregister(this);
         this.formChangeTimer.Dispose();
     }
 

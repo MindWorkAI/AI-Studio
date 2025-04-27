@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ProfileFormSelection : ComponentBase
+public partial class ProfileFormSelection : MSGComponentBase
 {
     [Parameter]
     public Profile Profile { get; set; } = Profile.NO_PROFILE;
@@ -14,9 +14,6 @@ public partial class ProfileFormSelection : ComponentBase
     
     [Parameter]
     public Func<Profile, string?> Validation { get; set; } = _ => null;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private async Task SelectionChanged(Profile profile)
     {

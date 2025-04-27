@@ -1,6 +1,6 @@
 @using AIStudio.Tools
 @using MudBlazor
-
+@inherits AIStudio.Components.MSGComponentBase
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -9,34 +9,36 @@
             </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
-            <MudText Typo="Typo.body1">@this.Role.ToName() (@this.Time)</MudText>
+            <MudText Typo="Typo.body1">
+                @this.Role.ToName() (@this.Time)
+            </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
             @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
             {
-                <MudTooltip Text="Edit" Placement="Placement.Bottom">
+                <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastUserBlock"/>
                 </MudTooltip>
             }
             @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
             {
-                <MudTooltip Text="Edit" Placement="Placement.Bottom">
+                <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastBlock"/>
                 </MudTooltip>
             }
             @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
             {
-                <MudTooltip Text="Regenerate" Placement="Placement.Bottom">
+                <MudTooltip Text="@T("Regenerate")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
                 </MudTooltip>
             }
             @if (this.RemoveBlockFunc is not null)
             {
-                <MudTooltip Text="Removes this block" Placement="Placement.Bottom">
+                <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
                 </MudTooltip>
             }
-            <MudTooltip Text="Copies the content to the clipboard" Placement="Placement.Bottom">
+            <MudTooltip Text="@T("Copies the content to the clipboard")" Placement="Placement.Bottom">
                 <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" OnClick="@this.CopyToClipboard"/>
             </MudTooltip>
         </CardHeaderActions>
@@ -87,7 +89,7 @@
 
                 default:
                     <MudText Typo="Typo.body2">
-                        Cannot render content of type @this.Type yet.
+                        @string.Format(T("Cannot render content of type {0} yet."), this.Type)
                     </MudText>
                     break;
             }

@@ -83,14 +83,14 @@
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
-                <MudTooltip Text="Delete this chat & start a new one" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true)" Disabled="@(!this.CanThreadBeSaved)"/>
                 </MudTooltip>
             }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
             {
-                <MudTooltip Text="Move the chat to a workspace, or to another if it is already in one." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
                 </MudTooltip>
             }
@@ -116,7 +116,7 @@
             
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="The selected provider is not allowed in this chat due to data security reasons." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security reasons.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }

@@ -255,13 +255,22 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private bool IsProviderSelected => this.Provider.UsedLLMProvider != LLMProviders.NONE;
     
-    private string ProviderPlaceholder => this.IsProviderSelected ? "Type your input here..." : "Select a provider first";
+    private string ProviderPlaceholder => this.IsProviderSelected ? T("Type your input here...") : T("Select a provider first");
 
-    private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.Provider.InstanceName}', provider '{this.Provider.UsedLLMProvider.ToName()}')" : "Select a provider first";
-    
+    private string InputLabel
+    {
+        get
+        {
+            if (this.IsProviderSelected)
+                return string.Format(T("Your Prompt (use selected instance '{0}', provider '{1}')"), this.Provider.InstanceName, this.Provider.UsedLLMProvider.ToName());
+            
+            return this.T("Select a provider first");
+        }
+    }
+
     private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Count > 0;
     
-    private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
+    private string TooltipAddChatToWorkspace => string.Format(T(@"Start new chat in workspace ""{0}"""), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
     
@@ -653,7 +662,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             var confirmationDialogParameters = new DialogParameters
             {
-                { "Message", "Are you sure you want to move this chat? All unsaved changes will be lost." },
+                { "Message", T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
             };
         
             var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
@@ -664,12 +673,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         var dialogParameters = new DialogParameters
         {
-            { "Message", "Please select the workspace where you want to move the chat to." },
+            { "Message", T("Please select the workspace where you want to move the chat to.") },
             { "SelectedWorkspace", this.ChatThread?.WorkspaceId },
-            { "ConfirmText", "Move chat" },
+            { "ConfirmText", T("Move chat") },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -878,7 +887,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        this.MessageBus.Unregister(this);
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

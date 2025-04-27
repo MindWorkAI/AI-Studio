@@ -1,11 +1,10 @@
 using AIStudio.Provider;
-using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationMinConfidenceSelection : ComponentBase
+public partial class ConfigurationMinConfidenceSelection : MSGComponentBase
 {
     /// <summary>
     /// The selected value.
@@ -30,9 +29,6 @@ public partial class ConfigurationMinConfidenceSelection : ComponentBase
     /// </summary>
     [Parameter]
     public bool RestrictToGlobalMinimumConfidence { get; set; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
 
     private ConfidenceLevel FilteredSelectedValue()
     {

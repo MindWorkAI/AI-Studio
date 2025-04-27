@@ -7,12 +7,9 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
 {
     public override Tools.Components Component => Tools.Components.SYNONYMS_ASSISTANT;
     
-    protected override string Title => "Synonyms";
+    protected override string Title => T("Synonyms");
     
-    protected override string Description =>
-        """
-        Find synonyms for words or phrases.
-        """;
+    protected override string Description => T("Find synonyms for words or phrases.");
     
     protected override string SystemPrompt => 
         $"""
@@ -52,7 +49,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Find synonyms";
+    protected override string SubmitText => T("Find synonyms");
 
     protected override Func<Task> SubmitAction => this.FindSynonyms;
 
@@ -105,7 +102,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide a word or phrase as input.";
+            return T("Please provide a word or phrase as input.");
         
         return null;
     }
@@ -113,7 +110,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }

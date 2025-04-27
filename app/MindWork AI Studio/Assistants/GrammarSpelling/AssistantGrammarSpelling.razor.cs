@@ -7,12 +7,9 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
 {
     public override Tools.Components Component => Tools.Components.GRAMMAR_SPELLING_ASSISTANT;
     
-    protected override string Title => "Grammar & Spelling Checker";
+    protected override string Title => T("Grammar & Spelling Checker");
     
-    protected override string Description =>
-        """
-        Check the grammar and spelling of a text.
-        """;
+    protected override string Description => T("Check the grammar and spelling of a text.");
     
     protected override string SystemPrompt => 
         $"""
@@ -40,7 +37,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
         },
     ];
     
-    protected override string SubmitText => "Proofread";
+    protected override string SubmitText => T("Proofread");
 
     protected override Func<Task> SubmitAction => this.ProofreadText;
 
@@ -93,7 +90,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide a text as input. You might copy the desired text from a document or a website.";
+            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -101,7 +98,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }

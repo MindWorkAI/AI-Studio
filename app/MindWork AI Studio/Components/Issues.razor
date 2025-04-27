@@ -1,7 +1,10 @@
+@inherits MSGComponentBase
 @if (this.IssuesData.Any())
 {
     <MudPaper Class="pa-3 mr-3 mt-3 border-dashed border rounded-lg mud-alert-outlined-error">
-        <MudText Typo="Typo.h6">Issues</MudText>
+        <MudText Typo="Typo.h6">
+            @T("Issues")
+        </MudText>
         <MudList T="string">
             @foreach (var issue in this.IssuesData)
             {

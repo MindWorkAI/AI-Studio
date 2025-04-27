@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ProfileSelection : ComponentBase
+public partial class ProfileSelection : MSGComponentBase
 {
     [Parameter]
     public Profile CurrentProfile { get; set; } = Profile.NO_PROFILE;
@@ -17,9 +17,6 @@ public partial class ProfileSelection : ComponentBase
 
     [Parameter]
     public string MarginRight { get; set; } = string.Empty;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
     
