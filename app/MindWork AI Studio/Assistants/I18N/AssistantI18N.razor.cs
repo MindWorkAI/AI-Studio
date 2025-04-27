@@ -306,8 +306,23 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         if(this.cancellationTokenSource!.IsCancellationRequested)
             return;
         
-        // Phase 2: Create the Lua code
-        this.Phase2CreateLuaCode();
+        //
+        // Phase 2: Create the Lua code. We want to use the base language
+        // for the comments, though:
+        //
+        var commentContent = new Dictionary<string, string>(this.addedContent);
+        foreach (var keyValuePair in PluginFactory.BaseLanguage.Content)
+        {
+            if  (this.cancellationTokenSource!.IsCancellationRequested)  
+                break;
+            
+            if (this.removedContent.ContainsKey(keyValuePair.Key))
+                continue;
+            
+            commentContent.TryAdd(keyValuePair.Key, keyValuePair.Value);
+        }
+        
+        this.Phase2CreateLuaCode(commentContent);
     }
 
     private async Task Phase1TranslateAddedContent()
@@ -346,10 +361,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         }
     }
 
-    private void Phase2CreateLuaCode()
+    private void Phase2CreateLuaCode(IReadOnlyDictionary<string, string> commentContent)
     {
         this.finalLuaCode.Clear();
-        var commentContent = this.addedContent.Concat(PluginFactory.BaseLanguage.Content).ToDictionary();
         LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, commentContent, this.cancellationTokenSource!.Token);
         
         // Next, we must remove the `root::` prefix from the keys:
