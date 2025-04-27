@@ -76,20 +76,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     {
         return Task.FromResult<TResult?>(default);
     }
-
-    protected virtual void DisposeResources()
-    {
-    }
-
-    #region Implementation of IDisposable
-
-    public void Dispose()
-    {
-        this.MessageBus.Unregister(this);
-        this.DisposeResources();
-    }
-
-    #endregion
     
     protected async Task SendMessage<T>(Event triggeredEvent, T? data = default)
     {
@@ -117,4 +103,18 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
         
         this.MessageBus.ApplyFilters(this, filterComponents, eventsList.ToArray());
     }
+    
+    protected virtual void DisposeResources()
+    {
+    }
+    
+    #region Implementation of IDisposable
+
+    public void Dispose()
+    {
+        this.MessageBus.Unregister(this);
+        this.DisposeResources();
+    }
+
+    #endregion
 }
