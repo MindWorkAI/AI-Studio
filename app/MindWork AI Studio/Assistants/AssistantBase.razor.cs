@@ -103,6 +103,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         this.formChangeTimer.AutoReset = false;
         this.formChangeTimer.Elapsed += async (_, _) =>
         {
@@ -113,7 +115,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        await base.OnInitializedAsync();
     }
 
     protected override async Task OnParametersSetAsync()
