@@ -28,6 +28,7 @@ public abstract class SettingsDialogBase : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        this.MudDialog.StateHasChanged();
         
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         
