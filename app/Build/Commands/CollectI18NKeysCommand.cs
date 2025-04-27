@@ -146,14 +146,23 @@ public sealed partial class CollectI18NKeysCommand
         var content = fileContent;
         while (startIdx > -1)
         {
+            //
+            // In some cases, after the initial " there follow more " characters.
+            // We need to skip them:
+            //
             content = content[(startIdx + START_TAG.Length)..];
+            while(content[0] == '"')
+                content = content[1..];
+            
             var endIdx = content.IndexOf(END_TAG);
             if (endIdx == -1)
                 break;
             
             var match = content[..endIdx];
-            matches.Add(match.ToString());
+            while (match[^1] == '"')
+                match = match[..^1];
             
+            matches.Add(match.ToString());
             startIdx = content.IndexOf(START_TAG);
         }
         
