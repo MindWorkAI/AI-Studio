@@ -27,11 +27,13 @@ public abstract class SettingsDialogBase : MSGComponentBase
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        this.MudDialog.StateHasChanged();
+        
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         
         this.UpdateProviders();
         this.UpdateEmbeddingProviders();
-        await base.OnInitializedAsync();
     }
 
     #endregion

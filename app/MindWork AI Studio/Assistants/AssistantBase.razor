@@ -34,7 +34,7 @@
                         </MudButton>
                         @if (this.isProcessing && this.cancellationTokenSource is not null)
                         {
-                            <MudTooltip Text="Stop generation">
+                            <MudTooltip Text="@TB("Stop generation")">
                                 <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
                             </MudTooltip>
                         }
@@ -80,7 +80,7 @@
                 {
                     @if (this.ShowSendTo)
                     {
-                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                             @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                             {
                                 <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
@@ -110,7 +110,7 @@
                             break;
 
                         case SendToButton sendToButton:
-                            <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                            <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                                 @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                                 {
                                     <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
@@ -125,14 +125,14 @@
                 @if (this.ShowCopyResult)
                 {
                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
-                        Copy result
+                        @TB("Copy result")
                     </MudButton>
                 }
 
                 @if (this.ShowReset)
                 {
                     <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
-                        Reset
+                        @TB("Reset")
                     </MudButton>
                 }
 

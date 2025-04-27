@@ -39,6 +39,8 @@ public partial class Workspaces : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         //
         // Notice: In order to get the server-based loading to work, we need to respect the following rules:
         // - We must have initial tree items
@@ -46,7 +48,6 @@ public partial class Workspaces : MSGComponentBase
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
         await this.LoadTreeItems();
-        await base.OnInitializedAsync();
     }
 
     #endregion
@@ -504,4 +505,19 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadChat(chatPath, switchToChat: true);
         await this.LoadTreeItems();
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                await this.LoadTreeItems();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+    }
+
+    #endregion
 }

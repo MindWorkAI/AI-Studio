@@ -1,10 +1,11 @@
+using AIStudio.Components;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class ProfileDialog : ComponentBase
+public partial class ProfileDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -44,9 +45,6 @@ public partial class ProfileDialog : ComponentBase
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -129,10 +127,10 @@ public partial class ProfileDialog : ComponentBase
     private string? ValidateNeedToKnow(string text)
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
-            return "Please enter what the LLM should know about you and/or what actions it should take.";
+            return T("Please enter what the LLM should know about you and/or what actions it should take.");
         
         if(text.Length > 444)
-            return "The text must not exceed 444 characters.";
+            return T("The text must not exceed 444 characters.");
         
         return null;
     }
@@ -140,10 +138,10 @@ public partial class ProfileDialog : ComponentBase
     private string? ValidateActions(string text)
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
-            return "Please enter what the LLM should know about you and/or what actions it should take.";
+            return T("Please enter what the LLM should know about you and/or what actions it should take.");
         
         if(text.Length > 256)
-            return "The text must not exceed 256 characters.";
+            return T("The text must not exceed 256 characters.");
         
         return null;
     }
@@ -151,15 +149,15 @@ public partial class ProfileDialog : ComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return "Please enter a profile name.";
+            return T("Please enter a profile name.");
         
         if (name.Length > 40)
-            return "The profile name must not exceed 40 characters.";
+            return T("The profile name must not exceed 40 characters.");
         
         // The instance name must be unique:
         var lowerName = name.ToLowerInvariant();
         if (lowerName != this.dataEditingPreviousName && this.UsedNames.Contains(lowerName))
-            return "The profile name must be unique; the chosen name is already in use.";
+            return T("The profile name must be unique; the chosen name is already in use.");
         
         return null;
     }

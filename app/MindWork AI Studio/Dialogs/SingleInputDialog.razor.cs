@@ -1,10 +1,10 @@
-using AIStudio.Settings;
+using AIStudio.Components;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class SingleInputDialog : ComponentBase
+public partial class SingleInputDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -20,9 +20,6 @@ public partial class SingleInputDialog : ComponentBase
 
     [Parameter]
     public Color ConfirmColor { get; set; } = Color.Error;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
     
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 

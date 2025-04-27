@@ -133,24 +133,48 @@ public sealed partial class CollectI18NKeysCommand
 
     private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent)
     {
-        const string START_TAG = """
+        const string START_TAG1 = """
                                  T("
+                                 """;
+        
+        const string START_TAG2 = """
+                                 TB("
                                  """;
         
         const string END_TAG = """
                                ")
                                """;
 
+        (int Index, int Len) FindNextStart(ReadOnlySpan<char> content)
+        {
+            var startIdx1 = content.IndexOf(START_TAG1);
+            var startIdx2 = content.IndexOf(START_TAG2);
+            
+            if (startIdx1 == -1 && startIdx2 == -1)
+                return (-1, 0);
+            
+            if (startIdx1 == -1)
+                return (startIdx2, START_TAG2.Length);
+            
+            if (startIdx2 == -1)
+                return (startIdx1, START_TAG1.Length);
+            
+            if (startIdx1 < startIdx2)
+                return (startIdx1, START_TAG1.Length);
+            
+            return (startIdx2, START_TAG2.Length);
+        }
+        
         var matches = new List<string>();
-        var startIdx = fileContent.IndexOf(START_TAG);
+        var startIdx = FindNextStart(fileContent);
         var content = fileContent;
-        while (startIdx > -1)
+        while (startIdx.Index > -1)
         {
             //
             // In some cases, after the initial " there follow more " characters.
             // We need to skip them:
             //
-            content = content[(startIdx + START_TAG.Length)..];
+            content = content[(startIdx.Index + startIdx.Len)..];
             while(content[0] == '"')
                 content = content[1..];
             
@@ -163,7 +187,7 @@ public sealed partial class CollectI18NKeysCommand
                 match = match[..^1];
             
             matches.Add(match.ToString());
-            startIdx = content.IndexOf(START_TAG);
+            startIdx = FindNextStart(content);
         }
         
         return matches;

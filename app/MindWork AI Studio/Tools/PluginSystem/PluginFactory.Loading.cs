@@ -55,39 +55,54 @@ public static partial class PluginFactory
             var pluginMainFiles = Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories);
             foreach (var pluginMainFile in pluginMainFiles)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-            
-                LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
-                var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
-                var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
-                var plugin = await Load(pluginPath, code, cancellationToken);
-            
-                switch (plugin)
+                try
                 {
-                    case NoPlugin noPlugin when noPlugin.Issues.Any():
-                        LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: {noPlugin.Issues.First()}");
-                        continue;
-                
-                    case NoPlugin:
-                        LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: Unknown.");
-                        continue;
-                
-                    case { IsValid: false }:
-                        LOG.LogError($"Was not able to load plugin '{pluginMainFile}', because the Lua code is not a valid AI Studio plugin. There are {plugin.Issues.Count()} issues to fix. First issue is: {plugin.Issues.FirstOrDefault()}");
-                        #if DEBUG
-                        foreach (var pluginIssue in plugin.Issues)
-                            LOG.LogError($"Plugin issue: {pluginIssue}");
-                        #endif
-                        continue;
-
-                    case { IsMaintained: false }:
-                        LOG.LogWarning($"The plugin '{pluginMainFile}' is not maintained anymore. Please consider to disable it.");
+                    if (cancellationToken.IsCancellationRequested)
                         break;
-                }
             
-                LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
-                AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
+                    LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
+                    var fileInfo = new FileInfo(pluginMainFile);
+                    string code;
+                    await using(var fileStream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        using var reader = new StreamReader(fileStream, Encoding.UTF8);
+                        code = await reader.ReadToEndAsync(cancellationToken);
+                    }
+                    
+                    var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
+                    var plugin = await Load(pluginPath, code, cancellationToken);
+            
+                    switch (plugin)
+                    {
+                        case NoPlugin noPlugin when noPlugin.Issues.Any():
+                            LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: {noPlugin.Issues.First()}");
+                            continue;
+                
+                        case NoPlugin:
+                            LOG.LogError($"Was not able to load plugin: '{pluginMainFile}'. Reason: Unknown.");
+                            continue;
+                
+                        case { IsValid: false }:
+                            LOG.LogError($"Was not able to load plugin '{pluginMainFile}', because the Lua code is not a valid AI Studio plugin. There are {plugin.Issues.Count()} issues to fix. First issue is: {plugin.Issues.FirstOrDefault()}");
+                            #if DEBUG
+                            foreach (var pluginIssue in plugin.Issues)
+                                LOG.LogError($"Plugin issue: {pluginIssue}");
+                            #endif
+                            continue;
+
+                        case { IsMaintained: false }:
+                            LOG.LogWarning($"The plugin '{pluginMainFile}' is not maintained anymore. Please consider to disable it.");
+                            break;
+                    }
+            
+                    LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
+                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
+                }
+                catch (Exception e)
+                {
+                    LOG.LogError($"Was not able to load plugin '{pluginMainFile}'. Issue: {e.Message}");
+                    LOG.LogDebug(e.StackTrace);
+                }
             }
         
             // Start or restart all plugins:

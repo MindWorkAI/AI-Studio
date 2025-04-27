@@ -58,7 +58,7 @@
         // Case: Sidebar can be toggled and is currently hidden
         <MudStack Row="@true" Style="width: 100%; overflow: hidden; height: 100%; flex-grow: 1; min-height: 0;">
             <MudPaper Class="border border-solid rounded-lg mb-3">
-                <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
                 </MudTooltip>
             </MudPaper>

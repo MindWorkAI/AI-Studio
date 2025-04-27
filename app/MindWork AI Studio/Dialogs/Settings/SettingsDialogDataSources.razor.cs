@@ -12,13 +12,13 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         {
             var matchedEmbedding = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == internalDataSource.EmbeddingId);
             if(matchedEmbedding == default)
-                return "T(No valid embedding)";
+                return T("No valid embedding");
             
             return matchedEmbedding.Name;
         }
         
         if(dataSource is IExternalDataSource)
-            return "T(External (ERI))";
+            return T("External (ERI)");
         
         return T("Unknown");
     }

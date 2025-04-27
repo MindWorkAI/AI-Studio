@@ -123,7 +123,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     #region Implementation of ILang
 
+    /// <inheritdoc />
     public string T(string fallbackEN) => this.GetText(this.Lang, fallbackEN);
+
+    /// <inheritdoc />
+    public string T(string fallbackEN, string? typeNamespace, string? typeName) => this.GetText(this.Lang, fallbackEN, typeNamespace, typeName);
 
     #endregion
 
