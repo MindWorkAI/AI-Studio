@@ -48,8 +48,20 @@ LANG_NAME = "English (United States)"
 
 UI_TEXT_CONTENT = {}
 
+-- Stop generation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Stop generation"
+
+-- Reset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Reset"
+
 -- Assistant - {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T3043922"] = "Assistant - {0}"
+
+-- Send to ...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Send to ..."
+
+-- Copy result
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Copy result"
 
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input."
@@ -399,6 +411,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Move chat
 -- Are you sure you want to move this chat? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1142475422"] = "Are you sure you want to move this chat? All unsaved changes will be lost."
 
+-- Save chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Save chat"
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Type your input here..."
 
@@ -417,11 +432,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3403290862"] = "The selec
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Select a provider first"
 
+-- Start temporary chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Start temporary chat"
+
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Please select the workspace where you want to move the chat to."
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the chat to a workspace, or to another if it is already in one."
+
+-- Show your workspaces
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your workspaces"
 
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
@@ -464,6 +485,69 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T14699849
 
 -- Use app default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T3672477670"] = "Use app default"
+
+-- Yes, let the AI decide which data sources are needed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Yes, let the AI decide which data sources are needed."
+
+-- Yes, let the AI validate & filter the retrieved data.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Yes, let the AI validate & filter the retrieved data."
+
+-- Data Source Selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Data Source Selection"
+
+-- AI-Selected Data Sources
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T168406579"] = "AI-Selected Data Sources"
+
+-- AI-based data validation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1744745490"] = "AI-based data validation"
+
+-- Yes, I want to use data sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1975014927"] = "Yes, I want to use data sources."
+
+-- You haven't configured any data sources. To grant the AI access to your data, you need to add such a source. However, if you wish to use data from your device, you first have to set up a so-called embedding. This embedding is necessary so the AI can effectively search your data, find and retrieve the correct information required for each task. In addition to local data, you can also incorporate your company's data. To do so, your company must provide the data through an ERI (External Retrieval Interface).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2113594442"] = "You haven't configured any data sources. To grant the AI access to your data, you need to add such a source. However, if you wish to use data from your device, you first have to set up a so-called embedding. This embedding is necessary so the AI can effectively search your data, find and retrieve the correct information required for each task. In addition to local data, you can also incorporate your company's data. To do so, your company must provide the data through an ERI (External Retrieval Interface)."
+
+-- Select the data you want to use here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T21181525"] = "Select the data you want to use here."
+
+-- Manage your data sources
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2149927097"] = "Manage your data sources"
+
+-- Select data
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T274155039"] = "Select data"
+
+-- Read more about ERI
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3095532189"] = "Read more about ERI"
+
+-- AI-based data source selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3100256862"] = "AI-based data source selection"
+
+-- No, I don't want to use data sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3135725655"] = "No, I don't want to use data sources."
+
+-- Your data sources cannot be used with the LLM provider you selected due to data privacy, or they are currently unavailable.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3215374102"] = "Your data sources cannot be used with the LLM provider you selected due to data privacy, or they are currently unavailable."
+
+-- No, I manually decide which data source to use.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3440789294"] = "No, I manually decide which data source to use."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3448155331"] = "Close"
+
+-- The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3574254516"] = "The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source."
+
+-- No, use all data retrieved from the data sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3751463241"] = "No, use all data retrieved from the data sources."
+
+-- Are data sources enabled?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T396683085"] = "Are data sources enabled?"
+
+-- Manage Data Sources
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Manage Data Sources"
+
+-- Available Data Sources
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Available Data Sources"
 
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Issues"
@@ -1044,6 +1128,117 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Please select
 -- Delete Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Workspace"
 
+-- No
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "No"
+
+-- Yes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Yes"
+
+-- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1847791252"] = "Update"
+
+-- Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2119274961"] = "Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?"
+
+-- What should the AI do for you?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2261456575"] = "What should the AI do for you?"
+
+-- Please enter a profile name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2386844536"] = "Please enter a profile name."
+
+-- The text must not exceed 256 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2560188276"] = "The text must not exceed 256 characters."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2646845972"] = "Add"
+
+-- The profile name must not exceed 40 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3243902394"] = "The profile name must not exceed 40 characters."
+
+-- The text must not exceed 444 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3253349421"] = "The text must not exceed 444 characters."
+
+-- Profile Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3392578705"] = "Profile Name"
+
+-- Please enter what the LLM should know about you and/or what actions it should take.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3708405102"] = "Please enter what the LLM should know about you and/or what actions it should take."
+
+-- The name of the profile is mandatory. Each profile must have a unique name. Whether you provide information about yourself or only fill out the actions is up to you. Only one of these pieces is required.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4061896123"] = "The name of the profile is mandatory. Each profile must have a unique name. Whether you provide information about yourself or only fill out the actions is up to you. Only one of these pieces is required."
+
+-- Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4125557797"] = "Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role."
+
+-- What should the AI know about you?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4227846635"] = "What should the AI know about you?"
+
+-- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T56359901"] = "Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T900713019"] = "Cancel"
+
+-- The profile name must be unique; the chosen name is already in use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T911748898"] = "The profile name must be unique; the chosen name is already in use."
+
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
+
+-- Failed to store the API key in the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1122745046"] = "Failed to store the API key in the operating system. The message was: {0}. Please try again."
+
+-- API Key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1324664716"] = "API Key"
+
+-- Create account
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Create account"
+
+-- Load models
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Load models"
+
+-- Hostname
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1727440780"] = "Hostname"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1847791252"] = "Update"
+
+-- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1870831108"] = "Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."
+
+-- Please enter a model name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Please enter a model name."
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Model"
+
+-- (Optional) API Key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2646845972"] = "Add"
+
+-- No models loaded or available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2810182573"] = "No models loaded or available."
+
+-- Instance Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instance Name"
+
+-- Show available models
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Show available models"
+
+-- Host
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Provider"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900713019"] = "Cancel"
+
 -- There is no social event
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1222800281"] = "There is no social event"
 
@@ -1272,6 +1467,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T145419
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1469573738"] = "Delete"
 
+-- External (ERI)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1652430727"] = "External (ERI)"
+
 -- Local File
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1687345358"] = "Local File"
 
@@ -1292,6 +1490,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T262437
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T266367750"] = "Name"
+
+-- No valid embedding
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2698203405"] = "No valid embedding"
 
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2838542994"] = "Embedding"
@@ -1686,6 +1887,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T103037
 -- When enabled, you can preselect the translator options. This is might be useful when you prefer a specific target language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1111006275"] = "When enabled, you can preselect the translator options. This is might be useful when you prefer a specific target language or LLM model."
 
+-- milliseconds
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1275514075"] = "milliseconds"
+
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1417990312"] = "Preselect the target language"
 
@@ -1793,6 +1997,24 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832
 
 -- Preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T4004501229"] = "Preselect one of your profiles?"
+
+-- Chat name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T1746586282"] = "Chat name"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Cancel"
+
+-- Install now
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T2366359512"] = "Install now"
+
+-- Update from v{0} to v{1}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T25417398"] = "Update from v{0} to v{1}"
+
+-- Install later
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T2936430090"] = "Install later"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T900713019"] = "Cancel"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1258653480"] = "Settings"
@@ -1995,8 +2217,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "For some data transfers
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
 
+-- Business
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
+
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Legal Check"
+
+-- General
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "General"
+
+-- Grammar & Spelling
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1514925962"] = "Grammar & Spelling"
+
+-- Assistants
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1614176092"] = "Assistants"
 
 -- Coding
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1617786407"] = "Coding"
@@ -2028,14 +2262,26 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2547582747"] = "Synonyms"
 -- Find synonyms for a given word or phrase.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2712131461"] = "Find synonyms for a given word or phrase."
 
+-- AI Studio Development
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Development"
+
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Generate a job posting for a given job description."
 
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "My Tasks"
 
+-- E-Mail
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3026443472"] = "E-Mail"
+
 -- Translate AI Studio text content into other languages
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3181803840"] = "Translate AI Studio text content into other languages"
+
+-- Software Engineering
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3260960011"] = "Software Engineering"
+
+-- Rewrite & Improve
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3309133329"] = "Rewrite & Improve"
 
 -- Icon Finder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3693102312"] = "Icon Finder"
@@ -2064,6 +2310,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T613888204"] = "Translation"
 -- Rewrite and improve a given text for a chosen style.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T722167136"] = "Rewrite and improve a given text for a chosen style."
 
+-- Learning
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T755590027"] = "Learning"
+
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T782102948"] = "Bias of the Day"
 
@@ -2085,6 +2334,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468"] = "Your workspaces"
 -- Chat in Workspace
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T582100343"] = "Chat in Workspace"
 
+-- Show your workspaces
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Show your workspaces"
+
 -- Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1009708591"] = "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."
 
@@ -2105,6 +2357,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1614176092"] = "Assistants"
 
 -- Unrestricted usage
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1686815996"] = "Unrestricted usage"
+
+-- Introduction
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1702902297"] = "Introduction"
 
 -- Vision
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1892426825"] = "Vision"
@@ -2198,6 +2453,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "The first 10 supp
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Supporters"
+
+-- Content Contributors
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3060804484"] = "Content Contributors"
 
 -- Financial Support
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Financial Support"
