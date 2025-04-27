@@ -95,7 +95,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T2471325767"] = "B
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T2582330385"] = "Ihre Stichpunkte"
 
 -- Yes, I provide the previous conversation
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T2652980489"] = "Ja, ich stelle das vorherige Gespräch zur Verfügung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T2652980489"] = "Ja, ich stelle den bisherigen Mail-Verlauf zur Verfügung."
 
 -- Please select a writing style for the e-mail.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T2969942806"] = "Bitte wählen Sie einen Schreibstil für die E-Mail aus."
@@ -104,7 +104,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T2969942806"] = "B
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3026443472"] = "E-Mail"
 
 -- (Optional) The greeting phrase to use
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T306513209"] = "(Optional) Die zu verwendende Grußformel"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T306513209"] = "(Optional) Die zu verwendende Begrüßung"
 
 -- Bullet list the content of the e-mail roughly. Use dashes (-) to separate the items.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3259604530"] = "Fasse den Inhalt der E-Mail stichpunktartig zusammen. Verwende dafür Striche (-), um die Punkte zu trennen."
@@ -116,7 +116,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3438127996"] = "G
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3706154604"] = "Stellen Sie die vorherige Unterhaltung bereit, z. B. die letzte E-Mail, den letzten Chat usw."
 
 -- No, I don't provide a previous conversation
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3823693145"] = "Nein, ich stelle kein vorheriges Gespräch bereit."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3823693145"] = "Nein, ich stelle keinen Mail-Verlauf zur Verfügung."
 
 -- (Optional) Are any of your points particularly important?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T3843104162"] = "(Optional) Sind einige Ihrer Punkte besonders wichtig?"
@@ -296,7 +296,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Webseite kopieren."
 
 -- Text Summarizer
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T1907192403"] = "Textzusammenfasser"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T1907192403"] = "Texte zusammenfassen"
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T237828418"] = "Zielsprache"
@@ -411,6 +411,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Chat vers
 
 -- Are you sure you want to move this chat? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1142475422"] = "Sind Sie sicher, dass Sie diesen Chat verschieben möchten? Alle ungespeicherten Änderungen gehen verloren."
+
+-- Stop generation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Generierung stoppen"
 
 -- Save chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Chat speichern"
@@ -1121,7 +1124,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4019509364"] = "Leerer Chat"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4048389951"] = "Arbeitsbereiche"
 
 -- Disappearing Chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4201703117"] = "Verschwindende Chats"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4201703117"] = "Selbstlöschende Chats"
 
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Bitte wählen Sie den Arbeitsbereich aus, in den Sie den Chat verschieben möchten."
@@ -2219,7 +2222,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "Für einige Datenübert
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Erhalte Unterstützung beim Programmieren und Debuggen durch ein KI-Modell."
 
 -- Business
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Geschäft"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
 
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Rechtliche Prüfung"
@@ -2240,7 +2243,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1617786407"] = "Programmieren"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analysiere einen Text oder eine E-Mail nach Aufgaben, die du erledigen musst."
 
 -- Text Summarizer
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Textzusammenfasser"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Texte zusammenfassen"
 
 -- Check grammar and spelling of a given text.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1934717573"] = "Rechtschreibung und Grammatik eines gegebenen Textes überprüfen."
@@ -2327,7 +2330,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Arbeitsbereiche ausblenden"
 
 -- Disappearing Chat
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Verschwindender Chat"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Selbstlöschender Chat"
 
 -- Your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468"] = "Ihre Arbeitsbereiche"
