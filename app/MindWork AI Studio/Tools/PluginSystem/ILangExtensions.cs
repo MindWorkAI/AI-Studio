@@ -12,6 +12,10 @@ public static class ILangExtensions
         typeName ??= type.Name;
         typeNamespace ??= type.Namespace!;
         
+        // When the type's name ends with `1 or 2`, etc. (i.e., generic classes), remove it:
+        if(typeName.Contains("`"))
+            typeName = typeName[..typeName.IndexOf('`')];
+        
         var ns = $"{typeNamespace}::{typeName}".ToUpperInvariant().Replace(".", "::");
         var key = $"root::{ns}::T{fallbackEN.ToFNV32()}";
         
