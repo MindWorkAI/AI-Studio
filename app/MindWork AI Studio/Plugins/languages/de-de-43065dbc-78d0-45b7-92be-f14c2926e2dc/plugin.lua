@@ -1,4 +1,3 @@
-require("contentHome")
 require("icon")
 
 -- The ID for this plugin:
