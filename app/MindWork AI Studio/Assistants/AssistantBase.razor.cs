@@ -136,6 +136,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     #endregion
 
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
+
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
