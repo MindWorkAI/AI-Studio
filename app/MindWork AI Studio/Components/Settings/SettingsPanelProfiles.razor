@@ -1,18 +1,15 @@
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Person4" HeaderText="Configure Profiles">
-    <MudText Typo="Typo.h4" Class="mb-3">Your Profiles</MudText>
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Person4" HeaderText="@T("Configure Profiles")">
+    <MudText Typo="Typo.h4" Class="mb-3">
+        @T("Your Profiles")
+    </MudText>
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        Store personal data about yourself in various profiles so that the AIs know your personal context.
-        This saves you from having to explain your context each time, for example, in every chat. When you
-        have different roles, you can create a profile for each role.
+        @T("Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.")
     </MudJustifiedText>
 
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        Are you a project manager in a research facility? You might want to create a profile for your project
-        management activities, one for your scientific work, and a profile for when you need to write program
-        code. In these profiles, you can record how much experience you have or which methods you like or
-        dislike using. Later, you can choose when and where you want to use each profile.
+        @T("Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.")
     </MudJustifiedText>
     <MudTable Items="@this.SettingsManager.ConfigurationData.Profiles" Hover="@true" Class="border-dashed border rounded-lg">
         <ColGroup>
@@ -22,8 +19,8 @@
         </ColGroup>
         <HeaderContent>
             <MudTh>#</MudTh>
-            <MudTh>Profile Name</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@T("Profile Name")</MudTh>
+            <MudTh>@T("Actions")</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Num</MudTd>
@@ -31,10 +28,10 @@
             <MudTd>
                 <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                     <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditProfile(context)">
-                        Edit
+                        @T("Edit")
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteProfile(context)">
-                        Delete
+                        @T("Delete")
                     </MudButton>
                 </MudStack>
             </MudTd>
@@ -43,10 +40,12 @@
 
     @if(this.SettingsManager.ConfigurationData.Profiles.Count == 0)
     {
-        <MudText Typo="Typo.h6" Class="mt-3">No profiles configured yet.</MudText>
+        <MudText Typo="Typo.h6" Class="mt-3">
+            @T("No profiles configured yet.")
+        </MudText>
     }
 
     <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddProfile">
-        Add Profile
+        @T("Add Profile")
     </MudButton>
 </ExpansionPanel>

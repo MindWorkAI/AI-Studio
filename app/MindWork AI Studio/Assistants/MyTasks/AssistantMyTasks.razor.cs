@@ -8,15 +8,9 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
 {
     public override Tools.Components Component => Tools.Components.MY_TASKS_ASSISTANT;
     
-    protected override string Title => "My Tasks";
+    protected override string Title => T("My Tasks");
     
-    protected override string Description =>
-        """
-        You received a cryptic email that was sent to many recipients and you are now wondering
-        if you need to do something? Copy the email into the input field. You also need to select
-        a personal profile. In this profile, you should describe your role in the organization.
-        The AI will then try to give you hints on what your tasks might be.
-        """;
+    protected override string Description => T("You received a cryptic email that was sent to many recipients and you are now wondering if you need to do something? Copy the email into the input field. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
     
     protected override string SystemPrompt => 
         $"""
@@ -31,7 +25,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Analyze text";
+    protected override string SubmitText => T("Analyze text");
 
     protected override Func<Task> SubmitAction => this.AnalyzeText;
 
@@ -84,7 +78,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide some text as input. For example, an email.";
+            return T("Please provide some text as input. For example, an email.");
         
         return null;
     }
@@ -92,7 +86,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidateProfile(Profile profile)
     {
         if(profile == default || profile == Profile.NO_PROFILE)
-            return "Please select one of your profiles.";
+            return T("Please select one of your profiles.");
         
         return null;
     }
@@ -100,7 +94,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }

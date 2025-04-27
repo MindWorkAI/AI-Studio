@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class Changelog : ComponentBase
+public partial class Changelog : MSGComponentBase
 {
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;

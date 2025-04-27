@@ -24,8 +24,7 @@ public static partial class PluginFactory
     /// - Check for forbidden plugins<br/>
     /// - Creating a new instance of the allowed plugin<br/>
     /// - Read the plugin metadata<br/>
-    /// <br/>
-    /// Loading a plugin does not mean to start the plugin, though.
+    /// - Start the plugin<br/>
     /// </remarks>
     public static async Task LoadAll(CancellationToken cancellationToken = default)
     {

@@ -351,5 +351,10 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         this.finalLuaCode.Clear();
         var commentContent = this.addedContent.Concat(PluginFactory.BaseLanguage.Content).ToDictionary();
         LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, commentContent, this.cancellationTokenSource!.Token);
+        
+        // Next, we must remove the `root::` prefix from the keys:
+        this.finalLuaCode.Replace("""UI_TEXT_CONTENT["root::""", """
+                                                                 UI_TEXT_CONTENT["
+                                                                 """);
     }
 }

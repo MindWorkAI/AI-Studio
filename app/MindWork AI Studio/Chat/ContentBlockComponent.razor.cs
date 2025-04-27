@@ -1,4 +1,4 @@
-using AIStudio.Settings;
+using AIStudio.Components;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -8,7 +8,7 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The UI component for a chat content block, i.e., for any IContent.
 /// </summary>
-public partial class ContentBlockComponent : ComponentBase
+public partial class ContentBlockComponent : MSGComponentBase
 {
     /// <summary>
     /// The role of the chat content block.
@@ -66,9 +66,6 @@ public partial class ContentBlockComponent : ComponentBase
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -132,7 +129,7 @@ public partial class ContentBlockComponent : ComponentBase
                 break;
             
             default:
-                this.Snackbar.Add("Cannot copy this content type to clipboard!", Severity.Error, config =>
+                this.Snackbar.Add(T("Cannot copy this content type to clipboard!"), Severity.Error, config =>
                 {
                     config.Icon = Icons.Material.Filled.ContentCopy;
                     config.IconSize = Size.Large;
@@ -152,10 +149,10 @@ public partial class ContentBlockComponent : ComponentBase
             return;
         
         var remove = await this.DialogService.ShowMessageBox(
-            "Remove Message",
-            "Do you really want to remove this message?",
-            "Yes, remove it",
-            "No, keep it");
+            T("Remove Message"),
+            T("Do you really want to remove this message?"),
+            T("Yes, remove it"),
+            T("No, keep it"));
         
         if (remove.HasValue && remove.Value)
             await this.RemoveBlockFunc(this.Content);
@@ -170,10 +167,10 @@ public partial class ContentBlockComponent : ComponentBase
             return;
         
         var regenerate = await this.DialogService.ShowMessageBox(
-            "Regenerate Message",
-            "Do you really want to regenerate this message?",
-            "Yes, regenerate it",
-            "No, keep it");
+            T("Regenerate Message"),
+            T("Do you really want to regenerate this message?"),
+            T("Yes, regenerate it"),
+            T("No, keep it"));
         
         if (regenerate.HasValue && regenerate.Value)
             await this.RegenerateFunc(this.Content);
@@ -199,10 +196,10 @@ public partial class ContentBlockComponent : ComponentBase
             return;
         
         var edit = await this.DialogService.ShowMessageBox(
-            "Edit Message",
-            "Do you really want to edit this message? In order to edit this message, the AI response will be deleted.",
-            "Yes, remove the AI response and edit it",
-            "No, keep it");
+            T("Edit Message"),
+            T("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
+            T("Yes, remove the AI response and edit it"),
+            T("No, keep it"));
         
         if (edit.HasValue && edit.Value)
             await this.EditLastUserBlockFunc(this.Content);

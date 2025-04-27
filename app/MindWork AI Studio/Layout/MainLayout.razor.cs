@@ -107,9 +107,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Send a message to start the plugin system:
         await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
-        // Load the language plugin:
-        this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
-        
         await this.themeProvider.WatchSystemPreference(this.SystemeThemeChanged);
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();

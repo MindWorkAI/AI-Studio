@@ -7,12 +7,9 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
 {
     public override Tools.Components Component => Tools.Components.REWRITE_ASSISTANT;
     
-    protected override string Title => "Rewrite & Improve Text";
+    protected override string Title => T("Rewrite & Improve Text");
     
-    protected override string Description =>
-        """
-        Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.
-        """;
+    protected override string Description => T("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
     
     protected override string SystemPrompt =>
         $"""
@@ -41,7 +38,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         },
     ];
     
-    protected override string SubmitText => "Improve";
+    protected override string SubmitText => T("Improve your text");
 
     protected override Func<Task> SubmitAction => this.RewriteText;
 
@@ -100,7 +97,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide a text as input. You might copy the desired text from a document or a website.";
+            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -108,7 +105,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }

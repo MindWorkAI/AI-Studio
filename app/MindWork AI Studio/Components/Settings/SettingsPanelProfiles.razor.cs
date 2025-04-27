@@ -14,7 +14,7 @@ public partial class SettingsPanelProfiles : SettingsPanelBase
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>("Add Profile", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Add Profile"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -40,7 +40,7 @@ public partial class SettingsPanelProfiles : SettingsPanelBase
             { x => x.IsEditing, true },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>("Edit Profile", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Edit Profile"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -56,10 +56,10 @@ public partial class SettingsPanelProfiles : SettingsPanelBase
     {
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete the profile '{profile.Name}'?" },
+            { "Message", string.Format(T("Are you sure you want to delete the profile '{0}'?"), profile.Name) },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Profile", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Profile"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;

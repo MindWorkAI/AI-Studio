@@ -1,21 +1,17 @@
 using AIStudio.Agents;
 using AIStudio.Chat;
-using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ReadWebContent : ComponentBase
+public partial class ReadWebContent : MSGComponentBase
 {
     [Inject]
     private HTMLParser HTMLParser { get; init; } = null!;
     
     [Inject]
     private AgentTextContentCleaner AgentTextContentCleaner { get; init; } = null!;
-    
-    [Inject]
-    protected SettingsManager SettingsManager { get; set; } = null!;
 
     [Parameter]
     public string Content { get; set; } = string.Empty;
@@ -156,7 +152,7 @@ public partial class ReadWebContent : ComponentBase
         if(shouldUseAgent && this.providerSettings == default)
         {
             this.isProviderValid = false;
-            return "Please select a provider to use the cleanup agent.";
+            return T("Please select a provider to use the cleanup agent.");
         }
 
         this.isProviderValid = true;
@@ -168,20 +164,20 @@ public partial class ReadWebContent : ComponentBase
         if(string.IsNullOrWhiteSpace(url))
         {
             this.urlIsValid = false;
-            return "Please provide a URL to load the content from.";
+            return T("Please provide a URL to load the content from.");
         }
 
         var urlParsingResult = Uri.TryCreate(url, UriKind.Absolute, out var uriResult);
         if(!urlParsingResult)
         {
             this.urlIsValid = false;
-            return "Please provide a valid URL.";
+            return T("Please provide a valid URL.");
         }
 
         if(uriResult is not { Scheme: "http" or "https" })
         {
             this.urlIsValid = false;
-            return "Please provide a valid HTTP or HTTPS URL.";
+            return T("Please provide a valid HTTP or HTTPS URL.");
         }
 
         this.urlIsValid = true;

@@ -7,14 +7,9 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
 {
     public override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
     
-    protected override string Title => "Legal Check";
+    protected override string Title => T("Legal Check");
     
-    protected override string Description =>
-        """
-        Provide a legal document and ask a question about it. This assistant does not
-        replace legal advice. Consult a lawyer to get professional advice. Remember
-        that LLMs can invent answers and facts. Please do not rely on this answers.
-        """;
+    protected override string Description => T("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
     
     protected override string SystemPrompt => 
         """
@@ -27,7 +22,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Ask your questions";
+    protected override string SubmitText => T("Ask your questions");
 
     protected override Func<Task> SubmitAction => this.AksQuestions;
 
@@ -67,7 +62,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private string? ValidatingLegalDocument(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide a legal document as input. You might copy the desired text from a document or a website.";
+            return T("Please provide a legal document as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -75,7 +70,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private string? ValidatingQuestions(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide your questions as input.";
+            return T("Please provide your questions as input.");
         
         return null;
     }

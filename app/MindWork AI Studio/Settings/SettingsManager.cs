@@ -163,11 +163,17 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger, RustService
                 var languageCode = await this.rustService.ReadUserLanguage();
                 var languagePlugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x is ILanguagePlugin langPlug && langPlug.IETFTag == languageCode);
                 if (languagePlugin is null)
+                {
+                    this.logger.LogWarning($"The language plugin for the language '{languageCode}' is not available.");
                     return PluginFactory.BaseLanguage;
-            
+                }
+
                 if (languagePlugin is ILanguagePlugin langPlugin)
+                {
+                    this.logger.LogDebug($"The used language plugin is {languagePlugin.Id} ({langPlugin.IETFTag})");
                     return langPlugin;
-            
+                }
+
                 this.logger.LogError("The language plugin is not a language plugin.");
                 return PluginFactory.BaseLanguage;
             
@@ -181,8 +187,11 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger, RustService
                 }
 
                 if (plugin is ILanguagePlugin chosenLangPlugin)
+                {
+                    this.logger.LogDebug($"The chosen language plugin is {plugin.Id} ({chosenLangPlugin.IETFTag})");
                     return chosenLangPlugin;
-                
+                }
+
                 this.logger.LogError("The chosen language plugin is not a language plugin.");
                 return PluginFactory.BaseLanguage;
         }

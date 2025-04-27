@@ -1,21 +1,18 @@
+@inherits MSGComponentBase
 <MudTooltip Placement="Placement.Bottom" Arrow="@true" Class="@this.Classes">
     <ChildContent>
         <MudChip T="string" Icon="@Icons.Material.Filled.Science" Color="Color.Error" Class="mb-3">
-            Experimental
+            @T("Experimental")
         </MudChip>
     </ChildContent>
     <TooltipContent>
         <div style="max-width: 26em;">
             <MudText Typo="Typo.body2" Class="mb-3">
-                This feature is currently in the experimental phase.
-                Expect bugs, unfinished work, changes in future
-                versions, and more.
+                @T("This feature is currently in the experimental phase. Expect bugs, unfinished work, changes in future versions, and more.")
             </MudText>
 
             <MudText Typo="Typo.body2">
-                Experimental phase means that we have a vision for a feature
-                but not a clear plan yet. We are still exploring the 
-                possibilities.
+                @T("Experimental phase means that we have a vision for a feature but not a clear plan yet. We are still exploring the possibilities.")
             </MudText>
         </div>
     </TooltipContent>

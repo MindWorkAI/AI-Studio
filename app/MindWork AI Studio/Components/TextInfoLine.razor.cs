@@ -1,11 +1,10 @@
-using AIStudio.Settings;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class TextInfoLine : ComponentBase
+public partial class TextInfoLine : MSGComponentBase
 {
     [Parameter]
     public string Label { get; set; } = string.Empty;
@@ -27,9 +26,6 @@ public partial class TextInfoLine : ComponentBase
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
 
     #region Overrides of ComponentBase
 
@@ -45,7 +41,7 @@ public partial class TextInfoLine : ComponentBase
 
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
-    private string ClipboardTooltip => $"Copy {this.ClipboardTooltipSubject} to the clipboard";
+    private string ClipboardTooltip => string.Format(T("Copy {0} to the clipboard"), this.ClipboardTooltipSubject);
     
     private async Task CopyToClipboard(string content) => await this.RustService.CopyText2Clipboard(this.Snackbar, content);
 }

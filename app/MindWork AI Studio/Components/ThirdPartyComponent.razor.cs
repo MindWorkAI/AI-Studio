@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ThirdPartyComponent : ComponentBase
+public partial class ThirdPartyComponent : MSGComponentBase
 {
     [Parameter]
     public string Name { get; set; } = string.Empty;
