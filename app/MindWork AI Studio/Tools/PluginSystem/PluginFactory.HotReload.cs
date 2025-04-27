@@ -22,15 +22,23 @@ public static partial class PluginFactory
             HOT_RELOAD_WATCHER.Filter = "*.lua";
             HOT_RELOAD_WATCHER.Changed += async (_, args) =>
             {
+                var changeType = args.ChangeType.ToString().ToLowerInvariant();
                 if (!await HOT_RELOAD_SEMAPHORE.WaitAsync(0))
                 {
-                    LOG.LogInformation($"File changed ({args.ChangeType}): {args.FullPath}. Already processing another change.");
+                    LOG.LogInformation($"File changed ({changeType}): {args.FullPath}. Already processing another change.");
                     return;
                 }
-                
-                LOG.LogInformation($"File changed ({args.ChangeType}): {args.FullPath}. Reloading plugins...");
-                await LoadAll();
-                await messageBus.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
+
+                try
+                {
+                    LOG.LogInformation($"File changed ({changeType}): {args.FullPath}. Reloading plugins...");
+                    await LoadAll();
+                    await messageBus.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
+                }
+                finally
+                {
+                    HOT_RELOAD_SEMAPHORE.Release();
+                }
             };
             
             HOT_RELOAD_WATCHER.EnableRaisingEvents = true;
