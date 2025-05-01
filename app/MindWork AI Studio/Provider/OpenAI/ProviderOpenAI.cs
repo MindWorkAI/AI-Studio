@@ -127,7 +127,8 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                                      !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
                                      !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
                                      !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase));
+                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("o1-pro", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />
