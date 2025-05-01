@@ -111,6 +111,7 @@ internal sealed class Program
             config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
         });
 
+        builder.Services.AddMemoryCache(); // Needed for the Markdown library
         builder.Services.AddMudMarkdownServices();
         builder.Services.AddSingleton(new MudTheme());
         builder.Services.AddSingleton(MessageBus.INSTANCE);
