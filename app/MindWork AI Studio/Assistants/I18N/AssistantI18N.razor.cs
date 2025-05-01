@@ -182,7 +182,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         var filePath = Path.Join(Environment.CurrentDirectory, "Assistants", "I18N");
         var resourceFileProvider = new PhysicalFileProvider(filePath);
         #else
-        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants.I18N");
+        var resourceFileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "Assistants/I18N");
         #endif
 
         var file = resourceFileProvider.GetFileInfo("allTexts.lua");
