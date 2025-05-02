@@ -633,6 +633,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier ka
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Anbieter"
 
+-- Use PDF content as input
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READPDFCONTENT::T2849276709"] = "PDF-Inhalt als Eingabe verwenden"
+
+-- Select PDF file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READPDFCONTENT::T63272795"] = "PDF-Datei auswählen"
+
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "Der Inhalt wird mithilfe eines LLM-Agents bereinigt: Der Hauptinhalt wird extrahiert, Werbung und andere irrelevante Elemente werden nach Möglichkeit entfernt. Relative Links werden nach Möglichkeit in absolute Links umgewandelt, damit sie verwendet werden können."
 

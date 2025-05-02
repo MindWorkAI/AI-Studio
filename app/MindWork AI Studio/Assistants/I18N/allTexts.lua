@@ -631,6 +631,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
 
+-- Use PDF content as input
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READPDFCONTENT::T2849276709"] = "Use PDF content as input"
+
+-- Select PDF file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READPDFCONTENT::T63272795"] = "Select PDF file"
+
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used."
 
