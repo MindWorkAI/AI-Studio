@@ -2,7 +2,7 @@
 namespace AIStudio.Tools.Metadata;
 
 [AttributeUsage(AttributeTargets.Assembly)]
-public class MetaDataArchitecture(string architecture) : Attribute
+public class MetaDataArchitectureAttribute(string architecture) : Attribute
 {
     public string Architecture => architecture;
 }
