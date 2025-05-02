@@ -55,14 +55,14 @@ public static class Pdfium
         }
         
         var pdfiumLibSourcePath = Path.Join(pdfiumTmpExtractPath.FullName, library.Path);
-        var pdfiumLibTargetPath = Path.Join(cwd, "target", "resources", library.Filename);
+        var pdfiumLibTargetPath = Path.Join(cwd, "resources", "libraries", library.Filename);
         if (!File.Exists(pdfiumLibSourcePath))
         {
             Console.WriteLine($" failed to find the library file '{pdfiumLibSourcePath}'");
             return;
         }
         
-        Directory.CreateDirectory(Path.Join(cwd, "target", "resources"));
+        Directory.CreateDirectory(Path.Join(cwd, "resources", "libraries"));
         if (File.Exists(pdfiumLibTargetPath))
             File.Delete(pdfiumLibTargetPath);
         
