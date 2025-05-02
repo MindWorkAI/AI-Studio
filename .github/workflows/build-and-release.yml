@@ -167,6 +167,12 @@ jobs:
             sed -i '' "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
           fi
           
+          # Next line is the necessary PDFium version.
+          # The format is '137.0.7123.0'. What we need
+          # is the '7123' part:
+          pdfium_version=$(sed -n '11p' metadata.txt)
+          pdfium_version=$(echo $pdfium_version | cut -d'.' -f3)
+          
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
@@ -178,6 +184,7 @@ jobs:
           echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
           echo "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $GITHUB_ENV
+          echo "PDFIUM_VERSION=${pdfium_version}" >> $GITHUB_ENV
 
           # Log the metadata:
           echo "App version: '${formatted_app_version}'"
@@ -189,6 +196,7 @@ jobs:
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
           echo "Architecture: '${{ matrix.dotnet_runtime }}'"
+          echo "PDFium version: '${pdfium_version}'"
           
       - name: Read and format metadata (Windows)
         if: matrix.platform == 'windows-latest'
@@ -227,6 +235,12 @@ jobs:
           # Write the changed metadata back to the file:
           Set-Content -Path metadata.txt -Value $metadata
           
+          # Next line is the necessary PDFium version.
+          # The format is '137.0.7123.0'. What we need
+          # is the '7123' part:
+          $pdfium_version = $metadata[10]
+          $pdfium_version = $pdfium_version.Split('.')[2]
+          
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
           Write-Output "FORMATTED_APP_VERSION=${formatted_app_version}" >> $env:GITHUB_ENV
@@ -237,6 +251,7 @@ jobs:
           Write-Output "RUST_VERSION=${rust_version}" >> $env:GITHUB_ENV
           Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
           Write-Output "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $env:GITHUB_ENV
+          Write-Output "PDFIUM_VERSION=${pdfium_version}" >> $env:GITHUB_ENV
           
           # Log the metadata:
           Write-Output "App version: '${formatted_app_version}'"
@@ -248,6 +263,7 @@ jobs:
           Write-Output "MudBlazor version: '${mud_blazor_version}'"
           Write-Output "Tauri version: '${tauri_version}'"
           Write-Output "Architecture: '${{ matrix.dotnet_runtime }}'"
+          Write-Output "PDFium version: '${pdfium_version}'"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -255,6 +271,117 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+
+      - name: Deploy PDFium (Unix)
+        if: matrix.platform != 'windows-latest'
+        env:
+          PDFIUM_VERSION: ${{ env.PDFIUM_VERSION }}
+          DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+        run: |
+          set -e
+
+          # Target directory:
+          TLIB_DIR="runtime/resources/libraries"
+          mkdir -p "$TLIB_DIR"
+
+          case "${DOTNET_RUNTIME}" in
+            linux-x64)
+              PDFIUM_FILE="linux-x64.tgz"
+              LIB_SOURCE="lib/libpdfium.so"
+              LIB_TARGET="libpdfium.so"
+              ;;
+            linux-arm64)
+              PDFIUM_FILE="linux-arm64.tgz"
+              LIB_SOURCE="lib/libpdfium.so"
+              LIB_TARGET="libpdfium.so"
+              ;;
+            osx-x64)
+              PDFIUM_FILE="mac-x64.tgz"
+              LIB_SOURCE="lib/libpdfium.dylib"
+              LIB_TARGET="libpdfium.dylib"
+              ;;
+            osx-arm64)
+              PDFIUM_FILE="mac-arm64.tgz"
+              LIB_SOURCE="lib/libpdfium.dylib"
+              LIB_TARGET="libpdfium.dylib"
+              ;;
+            *)
+              echo "Unknown platform: ${DOTNET_RUNTIME}"
+              exit 1
+              ;;
+          esac
+
+          PDFIUM_URL="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-${PDFIUM_FILE}"
+
+          echo "Download PDFium $PDFIUM_URL ..."
+          TMP=$(mktemp -d)
+          ARCHIVE="${TMP}/pdfium.tgz"
+
+          curl -fsSL -o "$ARCHIVE" "$PDFIUM_URL"
+
+          echo "Extracting PDFium ..."
+          tar xzf "$ARCHIVE" -C "$TMP"
+          SRC="${TMP}/${LIB_SOURCE}"
+
+          if [ ! -f "$SRC" ]; then
+            echo "Was not able to find PDFium source: $SRC"
+            exit 1
+          fi
+
+          echo "Copy PDFium from ${LIB_TARGET} to ${TLIB_DIR}/"
+          cp -f "$SRC" "$TLIB_DIR/$LIB_TARGET"
+
+          echo "Cleaning up ..."
+          rm -fr "$TMP"
+          
+      - name: Install PDFium (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          PDFIUM_VERSION: ${{ env.PDFIUM_VERSION }}
+          DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+        run: |
+          $TLIB_DIR = "runtime\resources\libraries"
+          New-Item -ItemType Directory -Force -Path $TLIB_DIR | Out-Null
+      
+          switch ($env:DOTNET_RUNTIME) {
+            "win-x64" {
+              $PDFIUM_FILE = "win-x64.tgz"
+              $LIB_SOURCE = "bin\pdfium.dll"
+              $LIB_TARGET = "pdfium.dll"
+            }
+            "win-arm64" {
+              $PDFIUM_FILE = "win-arm64.tgz"
+              $LIB_SOURCE = "bin\pdfium.dll"
+              $LIB_TARGET = "pdfium.dll"
+            }
+            default {
+              Write-Error "Unknown platform: $($env:DOTNET_RUNTIME)"
+              exit 1
+            }
+          }
+      
+          $PDFIUM_URL = "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F$($env:PDFIUM_VERSION)/pdfium-$PDFIUM_FILE"
+          Write-Host "Download $PDFIUM_URL ..."
+          $TMP = New-TemporaryFile | Split-Path
+          $ARCHIVE = Join-Path $TMP "pdfium.tgz"
+      
+          Invoke-WebRequest -Uri $PDFIUM_URL -OutFile $ARCHIVE
+      
+          Write-Host "Extracting PDFium ..."
+          tar -xzf $ARCHIVE -C $TMP
+      
+          $SRC = Join-Path $TMP $LIB_SOURCE
+          if (!(Test-Path $SRC)) {
+            Write-Error "Cannot find PDFium source: $SRC"
+            exit 1
+          }
+      
+          $DEST = Join-Path $TLIB_DIR $LIB_TARGET
+          Copy-Item -Path $SRC -Destination $DEST -Force
+      
+          Write-Host "Cleaning up ..."
+          Remove-Item $ARCHIVE -Force
+          Remove-Item $TMP -Recurse -Force
       
       - name: Build .NET project
         run: |

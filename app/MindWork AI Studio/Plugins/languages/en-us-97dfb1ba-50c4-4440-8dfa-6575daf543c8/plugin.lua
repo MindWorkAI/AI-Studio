@@ -633,6 +633,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
 
+-- Use PDF content as input
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READPDFCONTENT::T2849276709"] = "Use PDF content as input"
+
+-- Select PDF file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READPDFCONTENT::T63272795"] = "Select PDF file"
+
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used."
 
@@ -2118,6 +2124,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T228561878"] = "In order to use any LLM
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2329884315"] = "The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."
 
+-- Used PDFium version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2368247719"] = "Used PDFium version"
+
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
 
@@ -2519,3 +2528,4 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T3948127789"] = "Suggestion"
 
 -- Your stage directions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Your stage directions"
+

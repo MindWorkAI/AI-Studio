@@ -80,6 +80,7 @@
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
             <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
+            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             
@@ -103,6 +104,9 @@
             </AssemblyAttribute>
             <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataArchitecture">
                 <_Parameter1>$(MetaArchitecture)</_Parameter1>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataLibraries">
+                <_Parameter1>$(MetaPdfiumVersion)</_Parameter1>
             </AssemblyAttribute>
         </ItemGroup>
         

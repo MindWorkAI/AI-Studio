@@ -1,3 +1,8 @@
+# Ignore pdfium library:
+libpdfium.dylib
+libpdfium.so
+libpdfium.dll
+
 # User-specific files
 *.rsuser
 *.suo

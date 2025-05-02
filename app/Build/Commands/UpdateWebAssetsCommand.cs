@@ -17,7 +17,7 @@ public sealed class UpdateWebAssetsCommand
         Console.WriteLine("=========================");
         Console.Write("- Updating web assets ...");
         
-        var rid = Environment.GetRidsForCurrentOS().First();
+        var rid = Environment.GetCurrentRid();
         var cwd = Environment.GetAIStudioDirectory();
         var contentPath = Path.Join(cwd, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", "wwwroot", "_content");
         var isMudBlazorDirectoryPresent = Directory.Exists(Path.Join(contentPath, "MudBlazor"));

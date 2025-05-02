@@ -7,13 +7,14 @@ use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
 use tauri::updater::UpdateResponse;
-use tauri::{Manager, Window};
+use tauri::{Manager, PathResolver, Window};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::time;
 use crate::api_token::APIToken;
 use crate::dotnet::stop_dotnet_server;
 use crate::environment::{is_prod, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
+use crate::metadata::META_DATA;
 
 /// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
@@ -39,6 +40,7 @@ pub fn start_tauri() {
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
 
+            deploy_pdfium(app.path_resolver());
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -319,4 +321,50 @@ pub struct PreviousFile {
 pub struct FileSelectionResponse {
     user_cancelled: bool,
     selected_file_path: String,
+}
+
+fn deploy_pdfium(path_resolver: PathResolver) {
+    info!(Source = "Bootloader Tauri"; "Deploy PDFium from the resources...");
+    let working_directory = std::env::current_dir().unwrap();
+    let pdfium_target_path = working_directory;
+    let metadata = &META_DATA;
+    let metadata = metadata.lock().unwrap();
+    let arch = metadata.clone().unwrap().architecture;
+    let pdfium_filename = match arch.as_str() {
+        "linux-x64" => Some("libpdfium.so"),
+        "linux-arm64" => Some("libpdfium.so"),
+
+        "win-x64" => Some("pdfium.dll"),
+        "win-arm64" => Some("pdfium.dll"),
+
+        "osx-x64" => Some("libpdfium.dylib"),
+        "osx-arm64" => Some("libpdfium.dylib"),
+
+        _ => None,
+    };
+
+    if pdfium_filename.is_none() {
+        error!(Source = "Bootloader Tauri"; "Failed to find the PDFium library for the current platform.");
+        return;
+    }
+
+    let pdfium_filename = pdfium_filename.unwrap();
+    let pdfium_relative_source_path = String::from("resources/libraries/") + pdfium_filename;
+    let pdfium_source_path = path_resolver.resolve_resource(pdfium_relative_source_path);
+    if pdfium_source_path.is_none() {
+        error!(Source = "Bootloader Tauri"; "Failed to find the PDFium library for the current platform.");
+        return;
+    }
+
+    let pdfium_source_path = pdfium_source_path.unwrap();
+    let pdfium_target_path = pdfium_target_path.join(pdfium_filename);
+
+    info!(Source = "Bootloader Tauri"; "Detected platform: {arch:?}, expected PDFium filename: {pdfium_filename:?}, source path: {pdfium_source_path:?}, target path: {pdfium_target_path:?}");
+
+    if let Err(e) = std::fs::copy(pdfium_source_path, pdfium_target_path) {
+        error!(Source = "Bootloader Tauri"; "Failed to copy the PDFium library for the current platform: {e}");
+        return;
+    }
+
+    info!(Source = "Bootloader Tauri"; "Successfully deployed PDFium.");
 }

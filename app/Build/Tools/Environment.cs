@@ -76,4 +76,38 @@ public static class Environment
         Console.WriteLine($"Error: Unsupported OS '{RuntimeInformation.OSDescription}'");
         return [];
     }
+    
+    public static RID GetCurrentRid()
+    {
+        var arch = RuntimeInformation.ProcessArchitecture;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return arch switch
+            {
+                Architecture.X64 => RID.WIN_X64,
+                Architecture.Arm64 => RID.WIN_ARM64,
+                
+                _ => RID.NONE,
+            };
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return arch switch
+            {
+                Architecture.X64 => RID.OSX_X64,
+                Architecture.Arm64 => RID.OSX_ARM64,
+                
+                _ => RID.NONE,
+            };
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return arch switch
+            {
+                Architecture.X64 => RID.LINUX_X64,
+                Architecture.Arm64 => RID.LINUX_ARM64,
+                
+                _ => RID.NONE,
+            };
+        
+        Console.WriteLine($"Error: Unsupported OS '{RuntimeInformation.OSDescription}'");
+        return RID.NONE;
+    }
 }

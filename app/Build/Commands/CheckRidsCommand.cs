@@ -17,5 +17,10 @@ public sealed class CheckRidsCommand
         {
             Console.WriteLine($"- {rid}");
         }
+
+        Console.WriteLine();
+        Console.WriteLine("The RID for the current OS and CPU is:");
+        var currentRid = Environment.GetCurrentRid();
+        Console.WriteLine($"- {currentRid}");
     }
 }

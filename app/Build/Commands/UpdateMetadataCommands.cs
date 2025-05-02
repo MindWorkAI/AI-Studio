@@ -105,105 +105,102 @@ public sealed partial class UpdateMetadataCommands
         // Build the .NET project:
         //
         var pathApp = Environment.GetAIStudioDirectory();
-        var rids = Environment.GetRidsForCurrentOS();
-        foreach (var rid in rids)
-        {
-            Console.WriteLine("==============================");
-            await this.UpdateArchitecture(rid);
-            
-            Console.Write($"- Start .NET build for '{rid.AsMicrosoftRid()}' ...");
-            await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
-            var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
-            var dotnetBuildOutputLines = dotnetBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
-            var foundIssue = false;
-            foreach (var buildOutputLine in dotnetBuildOutputLines)
-            {
-                if(buildOutputLine.Contains(" error ") || buildOutputLine.Contains("#warning"))
-                {
-                    if(!foundIssue)
-                    {
-                        foundIssue = true;
-                        Console.WriteLine();
-                        Console.WriteLine("- Build has issues:");
-                    }
-
-                    Console.Write("   - ");
-                    Console.WriteLine(buildOutputLine);
-                }
-            }
-            
-            if(foundIssue)
-                Console.WriteLine();
-            else
-            {
-                Console.WriteLine(" completed successfully.");
-            }
-            
-            //
-            // Prepare the .NET artifact to be used by Tauri as sidecar:
-            //
-            var os = Environment.GetOS();
-            var tauriSidecarArtifactName = rid switch
-            {
-                RID.WIN_X64 => "mindworkAIStudioServer-x86_64-pc-windows-msvc.exe",
-                RID.WIN_ARM64 => "mindworkAIStudioServer-aarch64-pc-windows-msvc.exe",
-                
-                RID.LINUX_X64 => "mindworkAIStudioServer-x86_64-unknown-linux-gnu",
-                RID.LINUX_ARM64 => "mindworkAIStudioServer-aarch64-unknown-linux-gnu",
-                
-                RID.OSX_ARM64 => "mindworkAIStudioServer-aarch64-apple-darwin",
-                RID.OSX_X64 => "mindworkAIStudioServer-x86_64-apple-darwin",
-                
-                _ => string.Empty,
-            };
-
-            if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
-            {
-                Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
-                return;
-            }
+        var rid = Environment.GetCurrentRid();
         
-            var dotnetArtifactPath = Path.Combine(pathApp, "bin", "dist");
-            if(!Directory.Exists(dotnetArtifactPath))
-                Directory.CreateDirectory(dotnetArtifactPath);
-            
-            var dotnetArtifactFilename = os switch
+        Console.WriteLine("==============================");
+        await this.UpdateArchitecture(rid);
+        
+        var pdfiumVersion = await this.ReadPdfiumVersion();
+        await Pdfium.InstallAsync(rid, pdfiumVersion);
+        
+        Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
+        await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
+        var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
+        var dotnetBuildOutputLines = dotnetBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+        var foundIssue = false;
+        foreach (var buildOutputLine in dotnetBuildOutputLines)
+        {
+            if(buildOutputLine.Contains(" error ") || buildOutputLine.Contains("#warning"))
             {
-                "windows" => "mindworkAIStudio.exe",
-                _ => "mindworkAIStudio",
-            };
-            
-            var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", dotnetArtifactFilename);
-            var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
-            
-            if(File.Exists(dotnetPublishedPath))
-                Console.WriteLine("- Published .NET artifact found.");
-            else
-            {
-                Console.WriteLine($"- Error: Published .NET artifact not found: '{dotnetPublishedPath}'.");
-                return;
-            }
+                if(!foundIssue)
+                {
+                    foundIssue = true;
+                    Console.WriteLine();
+                    Console.WriteLine("- Build has issues:");
+                }
 
-            Console.Write($"- Move the .NET artifact to the Tauri sidecar destination ...");
-            try
-            {
-                File.Move(dotnetPublishedPath, finalDestination, true);
-                Console.WriteLine(" done.");
+                Console.Write("   - ");
+                Console.WriteLine(buildOutputLine);
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(" failed.");
-                Console.WriteLine($"   - Error: {e.Message}");
-            }
-            
+        }
+        
+        if(foundIssue)
             Console.WriteLine();
+        else
+        {
+            Console.WriteLine(" completed successfully.");
+        }
+        
+        //
+        // Prepare the .NET artifact to be used by Tauri as sidecar:
+        //
+        var os = Environment.GetOS();
+        var tauriSidecarArtifactName = rid switch
+        {
+            RID.WIN_X64 => "mindworkAIStudioServer-x86_64-pc-windows-msvc.exe",
+            RID.WIN_ARM64 => "mindworkAIStudioServer-aarch64-pc-windows-msvc.exe",
+            
+            RID.LINUX_X64 => "mindworkAIStudioServer-x86_64-unknown-linux-gnu",
+            RID.LINUX_ARM64 => "mindworkAIStudioServer-aarch64-unknown-linux-gnu",
+            
+            RID.OSX_ARM64 => "mindworkAIStudioServer-aarch64-apple-darwin",
+            RID.OSX_X64 => "mindworkAIStudioServer-x86_64-apple-darwin",
+            
+            _ => string.Empty,
+        };
+
+        if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
+        {
+            Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
+            return;
+        }
+    
+        var dotnetArtifactPath = Path.Combine(pathApp, "bin", "dist");
+        if(!Directory.Exists(dotnetArtifactPath))
+            Directory.CreateDirectory(dotnetArtifactPath);
+        
+        var dotnetArtifactFilename = os switch
+        {
+            "windows" => "mindworkAIStudio.exe",
+            _ => "mindworkAIStudio",
+        };
+        
+        var dotnetPublishedPath = Path.Combine(pathApp, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", dotnetArtifactFilename);
+        var finalDestination = Path.Combine(dotnetArtifactPath, tauriSidecarArtifactName);
+        
+        if(File.Exists(dotnetPublishedPath))
+            Console.WriteLine("- Published .NET artifact found.");
+        else
+        {
+            Console.WriteLine($"- Error: Published .NET artifact not found: '{dotnetPublishedPath}'.");
+            return;
         }
 
+        Console.Write($"- Move the .NET artifact to the Tauri sidecar destination ...");
+        try
+        {
+            File.Move(dotnetPublishedPath, finalDestination, true);
+            Console.WriteLine(" done.");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(" failed.");
+            Console.WriteLine($"   - Error: {e.Message}");
+        }
+        
         //
         // Build the Rust project / runtime:
         //
-        
-        Console.WriteLine("==============================");
         Console.WriteLine("- Start building the Rust runtime ...");
         
         var pathRuntime = Environment.GetRustRuntimeDirectory();
@@ -314,6 +311,18 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllTextAsync(changelogCodePath, changelogCode, Environment.UTF8_NO_BOM);
         Console.WriteLine(" done.");
     }
+    
+    private async Task<string> ReadPdfiumVersion()
+    {
+        const int PDFIUM_VERSION_INDEX = 10;
+        
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        var currentPdfiumVersion = lines[PDFIUM_VERSION_INDEX].Trim();
+        var shortVersion = currentPdfiumVersion.Split('.')[2];
+        
+        return shortVersion;
+    }
 
     private async Task UpdateArchitecture(RID rid)
     {
@@ -321,7 +330,7 @@ public sealed partial class UpdateMetadataCommands
         
         var pathMetadata = Environment.GetMetadataPath();
         var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
-        Console.Write("- Updating architecture ...");
+        Console.Write($"- Updating architecture to {rid.ToUserFriendlyName()} ...");
         lines[ARCHITECTURE_INDEX] = rid.AsMicrosoftRid();
         
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);

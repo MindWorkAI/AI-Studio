@@ -79,6 +79,7 @@ pub fn start_runtime_api() {
                 crate::environment::get_config_directory,
                 crate::environment::read_user_language,
                 crate::file_data::extract_data,
+                crate::file_data::read_pdf,
                 crate::log::get_log_paths,
             ])
             .ignite().await.unwrap()

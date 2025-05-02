@@ -1,5 +1,5 @@
 @inherits MSGComponentBase
-<MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
     <MudTextSwitch Label="@T("Read content from web?")" Disabled="@this.AgentIsRunning" @bind-Value="@this.showWebContentReader" LabelOn="@T("Show web content options")" LabelOff="@T("Hide web content options")" />
     @if (this.showWebContentReader)
     {
