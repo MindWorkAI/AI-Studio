@@ -110,7 +110,10 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine("==============================");
         await this.UpdateArchitecture(rid);
         
-        Console.Write($"- Start .NET build for '{rid.AsMicrosoftRid()}' ...");
+        var pdfiumVersion = await this.ReadPdfiumVersion();
+        await Pdfium.InstallAsync(rid, pdfiumVersion);
+        
+        Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
         await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
         var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
         var dotnetBuildOutputLines = dotnetBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
@@ -308,6 +311,18 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllTextAsync(changelogCodePath, changelogCode, Environment.UTF8_NO_BOM);
         Console.WriteLine(" done.");
     }
+    
+    private async Task<string> ReadPdfiumVersion()
+    {
+        const int PDFIUM_VERSION_INDEX = 10;
+        
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        var currentPdfiumVersion = lines[PDFIUM_VERSION_INDEX].Trim();
+        var shortVersion = currentPdfiumVersion.Split('.')[2];
+        
+        return shortVersion;
+    }
 
     private async Task UpdateArchitecture(RID rid)
     {
@@ -315,7 +330,7 @@ public sealed partial class UpdateMetadataCommands
         
         var pathMetadata = Environment.GetMetadataPath();
         var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
-        Console.Write("- Updating architecture ...");
+        Console.Write($"- Updating architecture to {rid.ToUserFriendlyName()} ...");
         lines[ARCHITECTURE_INDEX] = rid.AsMicrosoftRid();
         
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
