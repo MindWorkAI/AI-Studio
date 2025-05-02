@@ -16,7 +16,27 @@ public static partial class PluginFactory
             return;
         }
         
+        // A plugin update might remove some resources. Even worse, a plugin
+        // might have changed its name, etc. Thus, we delete the internal
+        // plugin directories before copying the new resources:
+        LOG.LogInformation("Try to delete the internal plugins directory for maintenance.");
+        if (Directory.Exists(INTERNAL_PLUGINS_ROOT))
+        {
+            try
+            {
+                Directory.Delete(INTERNAL_PLUGINS_ROOT, true);
+                LOG.LogInformation("Successfully deleted the internal plugins directory for maintenance.");
+            }
+            catch (Exception e)
+            {
+                LOG.LogError($"Could not delete the internal plugins directory for maintenance: {INTERNAL_PLUGINS_ROOT}. Error: {e}");
+            }
+        }
+        
         LOG.LogInformation("Start ensuring internal plugins.");
+        if(!Directory.Exists(INTERNAL_PLUGINS_ROOT))
+            Directory.CreateDirectory(INTERNAL_PLUGINS_ROOT);
+        
         foreach (var plugin in Enum.GetValues<InternalPlugin>())
         {
             LOG.LogInformation($"Ensure plugin: {plugin}");
