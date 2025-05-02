@@ -146,6 +146,30 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(stream))
 }
 
+#[get("/retrieval/fs/read/pdf?<file_path>")]
+pub fn read_pdf(_token: APIToken, file_path: String) -> String {
+    let pdfium = Pdfium::default();
+    let doc = match pdfium.load_pdf_from_file(&file_path, None) {
+        Ok(document) => document,
+        Err(e) => return e.to_string(),
+    };
+
+    let mut pdf_content = String::new();
+    for page in doc.pages().iter() {
+        let content = match page.text().map(|text_content| text_content.all()) {
+            Ok(content) => content,
+            Err(_) => {
+                continue
+            }
+        };
+
+        pdf_content.push_str(&content);
+        pdf_content.push_str("\n\n");
+    }
+
+    pdf_content
+}
+
 async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
