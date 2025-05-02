@@ -13,4 +13,5 @@ public enum WritingStyles
     MARKETING,
     ACADEMIC,
     LEGAL,
+    CHANGELOG,
 }
