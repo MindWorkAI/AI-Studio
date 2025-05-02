@@ -153,16 +153,16 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     tokio::task::spawn_blocking(move || {
         let pdfium = Pdfium::default();
         let doc = match pdfium.load_pdf_from_file(&path, None) {
-            Ok(d) => d,
+            Ok(document) => document,
             Err(e) => {
                 let _ = tx.blocking_send(Err(e.into()));
                 return;
             }
         };
 
-        for (i, page) in doc.pages().iter().enumerate() {
+        for (num_page, page) in doc.pages().iter().enumerate() {
             let content = match page.text().map(|t| t.all()) {
-                Ok(c) => c,
+                Ok(text_content) => text_content,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(e.into()));
                     continue;
@@ -171,7 +171,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
 
             if tx.blocking_send(Ok(Chunk {
                 content,
-                metadata: Metadata::Pdf { page_number: i + 1 },
+                metadata: Metadata::Pdf { page_number: num_page + 1 },
             })).is_err() {
                 break;
             }
