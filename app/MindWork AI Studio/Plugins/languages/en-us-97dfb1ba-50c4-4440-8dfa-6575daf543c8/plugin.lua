@@ -2124,6 +2124,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T228561878"] = "In order to use any LLM
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2329884315"] = "The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."
 
+-- Used PDFium version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2368247719"] = "Used PDFium version"
+
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
 

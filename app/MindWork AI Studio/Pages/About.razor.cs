@@ -22,6 +22,7 @@ public partial class About : MSGComponentBase
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitecture META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitecture>()!;
+    private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
 
     private string osLanguage = string.Empty;
     
@@ -40,6 +41,8 @@ public partial class About : MSGComponentBase
     private string VersionDotnetSdk => $"{T("Used .NET SDK")}: v{META_DATA.DotnetSdkVersion}";
     
     private string BuildTime => $"{T("Build time")}: {META_DATA.BuildTime}";
+    
+    private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
 
     private GetLogPathsResponse logPaths;
     

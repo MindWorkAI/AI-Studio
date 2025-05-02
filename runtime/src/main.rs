@@ -26,6 +26,7 @@ async fn main() {
     let tauri_version = metadata_lines.next().unwrap();
     let app_commit_hash = metadata_lines.next().unwrap();
     let architecture = metadata_lines.next().unwrap();
+    let pdfium_version = metadata_lines.next().unwrap();
 
     init_logging();
     info!("Starting MindWork AI Studio:");
@@ -40,6 +41,7 @@ async fn main() {
     info!(".. Rust: v{rust_version}");
     info!(".. MudBlazor: v{mud_blazor_version}");
     info!(".. Tauri: v{tauri_version}");
+    info!(".. PDFium: v{pdfium_version}");
 
     if is_dev() {
         warn!("Running in development mode.");
