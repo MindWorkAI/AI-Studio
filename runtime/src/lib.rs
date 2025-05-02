@@ -10,3 +10,4 @@ pub mod clipboard;
 pub mod runtime_api;
 pub mod certificate;
 pub mod file_data;
+pub mod metadata;

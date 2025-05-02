@@ -10,6 +10,7 @@ use mindwork_ai_studio::certificate::{generate_certificate};
 use mindwork_ai_studio::dotnet::start_dotnet_server;
 use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
+use mindwork_ai_studio::metadata::{MetaData, META_DATA};
 use mindwork_ai_studio::runtime_api::start_runtime_api;
 
 #[tokio::main]
@@ -27,6 +28,21 @@ async fn main() {
     let app_commit_hash = metadata_lines.next().unwrap();
     let architecture = metadata_lines.next().unwrap();
     let pdfium_version = metadata_lines.next().unwrap();
+
+    let metadata = MetaData {
+        architecture: architecture.to_string(),
+        app_commit_hash: app_commit_hash.to_string(),
+        app_version: app_version.to_string(),
+        build_number: build_number.to_string(),
+        build_time: build_time.to_string(),
+        dotnet_sdk_version: dotnet_sdk_version.to_string(),
+        dotnet_version: dotnet_version.to_string(),
+        mud_blazor_version: mud_blazor_version.to_string(),
+        rust_version: rust_version.to_string(),
+        tauri_version: tauri_version.to_string(),
+    };
+
+    *META_DATA.lock().unwrap() = Some(metadata);
 
     init_logging();
     info!("Starting MindWork AI Studio:");
