@@ -92,7 +92,7 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
         
         _ => match fmt.kind() {
             Kind::Document => match fmt {
-                FileFormat::PortableDocumentFormat => read_pdf(file_path).await?,
+                FileFormat::PortableDocumentFormat => stream_pdf(file_path).await?,
                 FileFormat::MicrosoftWordDocument => {
                     convert_with_pandoc(file_path, "docx", TO_MARKDOWN).await?
                 }
@@ -146,7 +146,7 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(stream))
 }
 
-async fn read_pdf(file_path: &str) -> Result<ChunkStream> {
+async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
 
