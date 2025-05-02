@@ -134,7 +134,7 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     let mut line_number = 0;
 
     let stream = stream! {
-        while let Ok(Some(line)) = lines.next_line().await { // Korrektur hier
+        while let Ok(Some(line)) = lines.next_line().await {
             line_number += 1;
             yield Ok(Chunk {
                 content: line,
