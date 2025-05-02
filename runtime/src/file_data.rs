@@ -79,7 +79,7 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
         FileFormat::from_file(&file_path_clone)
     }).await??;
 
-    let ext = file_path.split('.').last().unwrap_or("");
+    let ext = file_path.split('.').next_back().unwrap_or("");
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
