@@ -13,7 +13,7 @@ namespace AIStudio.Settings;
 /// <summary>
 /// The settings manager.
 /// </summary>
-public sealed class SettingsManager(ILogger<SettingsManager> logger, RustService rustService)
+public sealed class SettingsManager
 {
     private const string SETTINGS_FILENAME = "settings.json";
     
@@ -23,9 +23,19 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger, RustService
         Converters = { new TolerantEnumConverter() },
     };
 
-    private readonly ILogger<SettingsManager> logger = logger;
-    private readonly RustService rustService = rustService;
-    
+    private readonly ILogger<SettingsManager> logger;
+    private readonly RustService rustService;
+
+    /// <summary>
+    /// The settings manager.
+    /// </summary>
+    public SettingsManager(ILogger<SettingsManager> logger, RustService rustService)
+    {
+        this.logger = logger;
+        this.rustService = rustService;
+        this.logger.LogInformation("Settings manager created.");
+    }
+
     /// <summary>
     /// The directory where the configuration files are stored.
     /// </summary>
