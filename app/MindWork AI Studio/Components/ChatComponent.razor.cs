@@ -293,6 +293,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // We select the first 10 words of the user input:
         var words = firstUserInput.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var threadName = string.Join(' ', words.Take(10));
+        threadName = threadName.Trim();
+        
+        // Remove all line breaks:
+        threadName = threadName.Replace("\r", string.Empty);
+        threadName = threadName.Replace("\n", " ");
+        threadName = threadName.Replace("\t", " ");
         
         // If the thread name is empty, we use a default name:
         if (string.IsNullOrWhiteSpace(threadName))
