@@ -16,6 +16,7 @@ use rocket::tokio::select;
 use rocket::serde::Serialize;
 use rocket::get;
 use crate::api_token::APIToken;
+use crate::pdfium::PdfiumInit;
 
 #[derive(Debug, Serialize)]
 pub struct Chunk {
@@ -148,7 +149,7 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
 
 #[get("/retrieval/fs/read/pdf?<file_path>")]
 pub fn read_pdf(_token: APIToken, file_path: String) -> String {
-    let pdfium = Pdfium::default();
+    let pdfium = Pdfium::ai_studio_init();
     let doc = match pdfium.load_pdf_from_file(&file_path, None) {
         Ok(document) => document,
         Err(e) => return e.to_string(),
@@ -175,7 +176,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     let (tx, rx) = mpsc::channel(10);
 
     tokio::task::spawn_blocking(move || {
-        let pdfium = Pdfium::default();
+        let pdfium = Pdfium::ai_studio_init();
         let doc = match pdfium.load_pdf_from_file(&path, None) {
             Ok(document) => document,
             Err(e) => {
