@@ -10,6 +10,29 @@ namespace Build.Commands;
 
 public sealed partial class CollectI18NKeysCommand
 {
+    private const string START_TAG1 = """
+                              T("
+                              """;
+        
+    private const string START_TAG2 = """
+                              TB("
+                              """;
+        
+    private const string START_TAG3 = """
+                              T(@"
+                              """;
+        
+    private const string END_TAG = """
+                           ")
+                           """;
+        
+    private static readonly (string Tag, int Length)[] START_TAGS =
+    [
+        (START_TAG1, START_TAG1.Length),
+        (START_TAG2, START_TAG2.Length),
+        (START_TAG3, START_TAG3.Length)
+    ];
+    
     [Command("collect-i18n", Description = "Collect I18N keys")]
     public async Task CollectI18NKeys()
     {
@@ -133,36 +156,22 @@ public sealed partial class CollectI18NKeysCommand
 
     private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent)
     {
-        const string START_TAG1 = """
-                                 T("
-                                 """;
-        
-        const string START_TAG2 = """
-                                 TB("
-                                 """;
-        
-        const string END_TAG = """
-                               ")
-                               """;
-
         (int Index, int Len) FindNextStart(ReadOnlySpan<char> content)
         {
-            var startIdx1 = content.IndexOf(START_TAG1);
-            var startIdx2 = content.IndexOf(START_TAG2);
-            
-            if (startIdx1 == -1 && startIdx2 == -1)
-                return (-1, 0);
-            
-            if (startIdx1 == -1)
-                return (startIdx2, START_TAG2.Length);
-            
-            if (startIdx2 == -1)
-                return (startIdx1, START_TAG1.Length);
-            
-            if (startIdx1 < startIdx2)
-                return (startIdx1, START_TAG1.Length);
-            
-            return (startIdx2, START_TAG2.Length);
+            var bestIndex = -1;
+            var bestLength = 0;
+
+            foreach (var (tag, length) in START_TAGS)
+            {
+                var index = content.IndexOf(tag);
+                if (index != -1 && (bestIndex == -1 || index < bestIndex))
+                {
+                    bestIndex = index;
+                    bestLength = length;
+                }
+            }
+
+            return (bestIndex, bestLength);
         }
         
         var matches = new List<string>();
