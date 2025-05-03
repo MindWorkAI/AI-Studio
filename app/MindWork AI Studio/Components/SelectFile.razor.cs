@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -21,6 +22,9 @@ public partial class SelectFile : ComponentBase
 
     [Parameter]
     public string FileDialogTitle { get; set; } = "Select File";
+    
+    [Parameter]
+    public FileTypeFilter? Filter { get; set; }
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
@@ -55,7 +59,7 @@ public partial class SelectFile : ComponentBase
 
     private async Task OpenFileDialog()
     {
-        var response = await this.RustService.SelectFile(this.FileDialogTitle, string.IsNullOrWhiteSpace(this.File) ? null : this.File);
+        var response = await this.RustService.SelectFile(this.FileDialogTitle, this.Filter, string.IsNullOrWhiteSpace(this.File) ? null : this.File);
         this.Logger.LogInformation($"The user selected the file '{response.SelectedFilePath}'.");
 
         if (!response.UserCancelled)

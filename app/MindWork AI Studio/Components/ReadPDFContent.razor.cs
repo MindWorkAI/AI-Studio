@@ -1,3 +1,4 @@
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -17,11 +18,8 @@ public partial class ReadPDFContent : MSGComponentBase
     
     private async Task SelectFile()
     {
-        var pdfFile = await this.RustService.SelectFile(T("Select PDF file"));
+        var pdfFile = await this.RustService.SelectFile(T("Select PDF file"), FileTypeFilter.PDF);
         if (pdfFile.UserCancelled)
-            return;
-
-        if (!pdfFile.SelectedFilePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             return;
         
         if(!File.Exists(pdfFile.SelectedFilePath))
