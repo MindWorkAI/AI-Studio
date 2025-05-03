@@ -447,6 +447,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Verschiebe
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Zeige deine Arbeitsbereiche"
 
+-- Start new chat in workspace "{0}"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T896906391"] = "Neuen Chat im Arbeitsbereich \"{0}\" starten"
+
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
 
@@ -2059,7 +2062,7 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2864211629"] = "Bitte warten Sie
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2929332068"] = "Unterstützer"
 
 -- Writer
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Schreiber"
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Schreiben"
 
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Details anzeigen"
@@ -2528,3 +2531,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T3948127789"] = "Vorschlag"
 
 -- Your stage directions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Ihre Regieanweisungen"
+
+-- Unknown option
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T3964902774"] = "Unbekannte Option"
+
+-- Choose the language manually.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T3988034966"] = "Sprache manuell auswählen."
+
+-- Choose the language automatically, based on your system language.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T485389934"] = "Sprache automatisch anhand Ihrer Systemsprache auswählen."

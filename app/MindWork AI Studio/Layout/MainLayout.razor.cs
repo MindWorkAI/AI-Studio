@@ -206,6 +206,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 break;
             
             case Event.PLUGINS_RELOADED:
+                this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
+                I18N.Init(this.Lang);
+                this.LoadNavItems();
+                
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }

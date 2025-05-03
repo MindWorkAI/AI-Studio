@@ -11,16 +11,16 @@ namespace Build.Commands;
 public sealed partial class CollectI18NKeysCommand
 {
     private const string START_TAG1 = """
-                              T("
-                              """;
+                                      T("
+                                      """;
         
     private const string START_TAG2 = """
-                              TB("
-                              """;
+                                      TB("
+                                      """;
         
     private const string START_TAG3 = """
-                              T(@"
-                              """;
+                                      T(@"
+                                      """;
         
     private const string END_TAG = """
                            ")
