@@ -267,6 +267,19 @@ pub struct PreviousDirectory {
     path: String,
 }
 
+#[derive(Clone, Deserialize)]
+pub struct FileTypeFilter {
+    filter_name: String,
+    filter_extensions: Vec<String>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct SelectFileOptions {
+    title: String,
+    previous_file: Option<PreviousFile>,
+    filter: Option<FileTypeFilter>,
+}
+
 #[derive(Serialize)]
 pub struct DirectorySelectionResponse {
     user_cancelled: bool,
@@ -274,24 +287,36 @@ pub struct DirectorySelectionResponse {
 }
 
 /// Let the user select a file.
-#[post("/select/file?<title>", data = "<previous_file>")]
-pub fn select_file(_token: APIToken, title: &str, previous_file: Option<Json<PreviousFile>>) -> Json<FileSelectionResponse> {
-    let file_path = match previous_file {
-        Some(previous) => {
-            let previous_path = previous.file_path.as_str();
-            FileDialogBuilder::new()
-                .set_title(title)
-                .set_directory(previous_path)
-                .pick_file()
+#[post("/select/file", data = "<payload>")]
+pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FileSelectionResponse> {
+
+    // Create a new file dialog builder:
+    let file_dialog = FileDialogBuilder::new();
+
+    // Set the title of the file dialog:
+    let file_dialog = file_dialog.set_title(&payload.title);
+
+    // Set the file type filter if provided:
+    let file_dialog = match &payload.filter {
+        Some(filter) => {
+            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
         },
 
-        None => {
-            FileDialogBuilder::new()
-                .set_title(title)
-                .pick_file()
-        },
+        None => file_dialog,
     };
 
+    // Set the previous file path if provided:
+    let file_dialog = match &payload.previous_file {
+        Some(previous) => {
+            let previous_path = previous.file_path.as_str();
+            file_dialog.set_directory(previous_path)
+        },
+
+        None => file_dialog,
+    };
+
+    // Show the file dialog and get the selected file path:
+    let file_path = file_dialog.pick_file();
     match file_path {
         Some(path) => {
             info!("User selected file: {path:?}");
