@@ -2,20 +2,22 @@ namespace AIStudio.Assistants.RewriteImprove;
 
 public static class WritingStylesExtensions
 {
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(WritingStylesExtensions).Namespace, nameof(WritingStylesExtensions));
+    
     public static string Name(this WritingStyles style) => style switch
     {
-        WritingStyles.EVERYDAY => "Everyday (personal texts, social media)",
-        WritingStyles.BUSINESS => "Business (business emails, reports, presentations)",
-        WritingStyles.SCIENTIFIC => "Scientific (scientific papers, research reports)",
-        WritingStyles.JOURNALISTIC => "Journalistic (magazines, newspapers, news)",
-        WritingStyles.LITERARY => "Literary (fiction, poetry)",
-        WritingStyles.TECHNICAL => "Technical (manuals, documentation)",
-        WritingStyles.MARKETING => "Marketing (advertisements, sales texts)",
-        WritingStyles.ACADEMIC => "Academic (essays, seminar papers)",
-        WritingStyles.LEGAL => "Legal (legal texts, contracts)",
-        WritingStyles.CHANGELOG => "Changelog (release notes, version history)",
+        WritingStyles.EVERYDAY => TB("Everyday (personal texts, social media)"),
+        WritingStyles.BUSINESS => TB("Business (business emails, reports, presentations)"),
+        WritingStyles.SCIENTIFIC => TB("Scientific (scientific papers, research reports)"),
+        WritingStyles.JOURNALISTIC => TB("Journalistic (magazines, newspapers, news)"),
+        WritingStyles.LITERARY => TB("Literary (fiction, poetry)"),
+        WritingStyles.TECHNICAL => TB("Technical (manuals, documentation)"),
+        WritingStyles.MARKETING => TB("Marketing (advertisements, sales texts)"),
+        WritingStyles.ACADEMIC => TB("Academic (essays, seminar papers)"),
+        WritingStyles.LEGAL => TB("Legal (legal texts, contracts)"),
+        WritingStyles.CHANGELOG => TB("Changelog (release notes, version history)"),
         
-        _ => "Not specified",
+        _ => TB("Not specified"),
     };
 
     public static string Prompt(this WritingStyles style) => style switch

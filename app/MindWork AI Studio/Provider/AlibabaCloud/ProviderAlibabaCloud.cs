@@ -142,7 +142,6 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
 
     #endregion
     
-    
     private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch

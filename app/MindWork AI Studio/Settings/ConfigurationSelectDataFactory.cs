@@ -26,6 +26,8 @@ public readonly record struct ConfigurationSelectData<T>(string Name, T Value);
 /// </summary>
 public static class ConfigurationSelectDataFactory
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSelectDataFactory).Namespace, nameof(ConfigurationSelectDataFactory));
+    
     public static IEnumerable<ConfigurationSelectData<LangBehavior>> GetLangBehaviorData()
     {
         foreach (var behavior in Enum.GetValues<LangBehavior>())
@@ -43,65 +45,65 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<LoadingChatProviderBehavior>> GetLoadingChatProviderBehavior()
     {
-        yield return new("When possible, use the LLM provider which was used for each chat in the first place", LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);
-        yield return new("Use the latest LLM provider, which was used before; use the default chat provider initially", LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER);
-        yield return new("Always use the default chat provider when loading chats", LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER);
+        yield return new(TB("When possible, use the LLM provider which was used for each chat in the first place"), LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);
+        yield return new(TB("Use the latest LLM provider, which was used before; use the default chat provider initially"), LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER);
+        yield return new(TB("Always use the default chat provider when loading chats"), LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER);
     }
     
     public static IEnumerable<ConfigurationSelectData<AddChatProviderBehavior>> GetAddChatProviderBehavior()
     {
-        yield return new("Use the latest LLM provider, which was used before; use the default chat provider initially", AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER);
-        yield return new("Always use the default chat provider for new chats", AddChatProviderBehavior.ADDED_CHATS_USE_DEFAULT_PROVIDER);
+        yield return new(TB("Use the latest LLM provider, which was used before; use the default chat provider initially"), AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER);
+        yield return new(TB("Always use the default chat provider for new chats"), AddChatProviderBehavior.ADDED_CHATS_USE_DEFAULT_PROVIDER);
     }
     
     public static IEnumerable<ConfigurationSelectData<SendBehavior>> GetSendBehaviorData()
     {
-        yield return new("No key is sending the input", SendBehavior.NO_KEY_IS_SENDING);
-        yield return new("Modifier key + enter is sending the input", SendBehavior.MODIFER_ENTER_IS_SENDING);
-        yield return new("Enter is sending the input", SendBehavior.ENTER_IS_SENDING);
+        yield return new(TB("No key is sending the input"), SendBehavior.NO_KEY_IS_SENDING);
+        yield return new(TB("Modifier key + enter is sending the input"), SendBehavior.MODIFER_ENTER_IS_SENDING);
+        yield return new(TB("Enter is sending the input"), SendBehavior.ENTER_IS_SENDING);
     }
     
     public static IEnumerable<ConfigurationSelectData<UpdateBehavior>> GetUpdateBehaviorData()
     {
-        yield return new("No automatic update checks", UpdateBehavior.NO_CHECK);
-        yield return new("Once at startup", UpdateBehavior.ONCE_STARTUP);
-        yield return new("Check every hour", UpdateBehavior.HOURLY);
-        yield return new("Check every day", UpdateBehavior.DAILY);
-        yield return new ("Check every week", UpdateBehavior.WEEKLY);
+        yield return new(TB("No automatic update checks"), UpdateBehavior.NO_CHECK);
+        yield return new(TB("Once at startup"), UpdateBehavior.ONCE_STARTUP);
+        yield return new(TB("Check every hour"), UpdateBehavior.HOURLY);
+        yield return new(TB("Check every day"), UpdateBehavior.DAILY);
+        yield return new (TB("Check every week"), UpdateBehavior.WEEKLY);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetWorkspaceStorageBehaviorData()
     {
-        yield return new("Disable workspaces", WorkspaceStorageBehavior.DISABLE_WORKSPACES);
-        yield return new("Store chats automatically", WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
-        yield return new("Store chats manually", WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
+        yield return new(TB("Disable workspaces"), WorkspaceStorageBehavior.DISABLE_WORKSPACES);
+        yield return new(TB("Store chats automatically"), WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY);
+        yield return new(TB("Store chats manually"), WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceStorageTemporaryMaintenancePolicy>> GetWorkspaceStorageTemporaryMaintenancePolicyData()
     {
-        yield return new("No automatic maintenance for temporary chats", WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE);
-        yield return new("Delete temporary chats older than 7 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS);
-        yield return new("Delete temporary chats older than 30 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
-        yield return new("Delete temporary chats older than 90 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS);
-        yield return new("Delete temporary chats older than 180 days", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
-        yield return new("Delete temporary chats older than 1 year", WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
+        yield return new(TB("No automatic maintenance for disappearing chats; old chats will never be deleted"), WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE);
+        yield return new(TB("Delete disappearing chats older than 7 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_7_DAYS);
+        yield return new(TB("Delete disappearing chats older than 30 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_30_DAYS);
+        yield return new(TB("Delete disappearing chats older than 90 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_90_DAYS);
+        yield return new(TB("Delete disappearing chats older than 180 days"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_180_DAYS);
+        yield return new(TB("Delete disappearing chats older than 1 year"), WorkspaceStorageTemporaryMaintenancePolicy.DELETE_OLDER_THAN_365_DAYS);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceDisplayBehavior>> GetWorkspaceDisplayBehaviorData()
     {
-        yield return new("Toggle the overlay: the chat uses all the space, workspaces are temporarily shown", WorkspaceDisplayBehavior.TOGGLE_OVERLAY);
-        yield return new("Toggle the sidebar: show the workspaces next to the chat when desired", WorkspaceDisplayBehavior.TOGGLE_SIDEBAR);
-        yield return new("Sidebar is always visible: show the workspaces next to the chat all the time", WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
+        yield return new(TB("Toggle the overlay: the chat uses all the space, workspaces are temporarily shown"), WorkspaceDisplayBehavior.TOGGLE_OVERLAY);
+        yield return new(TB("Toggle the sidebar: show the workspaces next to the chat when desired"), WorkspaceDisplayBehavior.TOGGLE_SIDEBAR);
+        yield return new(TB("Sidebar is always visible: show the workspaces next to the chat all the time"), WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
     }
 
     public static IEnumerable<ConfigurationSelectData<PreviewVisibility>> GetPreviewVisibility()
     {
-        yield return new("All preview features are hidden", PreviewVisibility.NONE);
-        yield return new("Also show features ready for release; these should be stable", PreviewVisibility.RELEASE_CANDIDATE);
-        yield return new("Also show features in beta: these are almost ready for release; expect some bugs", PreviewVisibility.BETA);
-        yield return new("Also show features in alpha: these are in development; expect bugs and missing features", PreviewVisibility.ALPHA);
-        yield return new("Show also prototype features: these are works in progress; expect bugs and missing features", PreviewVisibility.PROTOTYPE);
-        yield return new("Show also experimental features: these are experimental; expect bugs, missing features, many changes", PreviewVisibility.EXPERIMENTAL);
+        yield return new(TB("All preview features are hidden"), PreviewVisibility.NONE);
+        yield return new(TB("Also show features ready for release; these should be stable"), PreviewVisibility.RELEASE_CANDIDATE);
+        yield return new(TB("Also show features in beta: these are almost ready for release; expect some bugs"), PreviewVisibility.BETA);
+        yield return new(TB("Also show features in alpha: these are in development; expect bugs and missing features"), PreviewVisibility.ALPHA);
+        yield return new(TB("Show also prototype features: these are works in progress; expect bugs and missing features"), PreviewVisibility.PROTOTYPE);
+        yield return new(TB("Show also experimental features: these are experimental; expect bugs, missing features, many changes"), PreviewVisibility.EXPERIMENTAL);
     }
     
     public static IEnumerable<ConfigurationSelectData<PreviewFeatures>> GetPreviewFeaturesData(SettingsManager settingsManager)
@@ -118,10 +120,10 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<NavBehavior>> GetNavBehaviorData()
     {
-        yield return new("Navigation expands on mouse hover", NavBehavior.EXPAND_ON_HOVER);
-        yield return new("Navigation never expands, but there are tooltips", NavBehavior.NEVER_EXPAND_USE_TOOLTIPS);
-        yield return new("Navigation never expands, no tooltips", NavBehavior.NEVER_EXPAND_NO_TOOLTIPS);
-        yield return new("Always expand navigation", NavBehavior.ALWAYS_EXPAND);
+        yield return new(TB("Navigation expands on mouse hover"), NavBehavior.EXPAND_ON_HOVER);
+        yield return new(TB("Navigation never expands, but there are tooltips"), NavBehavior.NEVER_EXPAND_USE_TOOLTIPS);
+        yield return new(TB("Navigation never expands, no tooltips"), NavBehavior.NEVER_EXPAND_NO_TOOLTIPS);
+        yield return new(TB("Always expand navigation"), NavBehavior.ALWAYS_EXPAND);
     }
 
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
@@ -140,7 +142,7 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var language in Enum.GetValues<CommonLanguages>())
             if(language is CommonLanguages.AS_IS)
-                yield return new("Not yet specified", language);
+                yield return new(TB("Not yet specified"), language);
             else
                 yield return new(language.Name(), language);
     }
@@ -149,7 +151,7 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var language in Enum.GetValues<CommonLanguages>())
             if(language is CommonLanguages.AS_IS)
-                yield return new("Do not specify the language", language);
+                yield return new(TB("Do not specify the language"), language);
             else
                 yield return new(language.Name(), language);
     }
@@ -211,7 +213,7 @@ public static class ConfigurationSelectDataFactory
         foreach (var level in Enum.GetValues<ConfidenceLevel>())
         {
             if(level is ConfidenceLevel.NONE)
-                yield return new("No minimum confidence level chosen", level);
+                yield return new(TB("No minimum confidence level chosen"), level);
             
             if(level < minimumLevel)
                 continue;

@@ -3,21 +3,24 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 
 public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AgenticSrcSelWithDynHeur).Namespace, nameof(AgenticSrcSelWithDynHeur));
+    
     #region Implementation of IDataSourceSelectionProcess
 
     /// <inheritdoc />
     public string TechnicalName => "AgenticSrcSelWithDynHeur";
 
     /// <inheritdoc />
-    public string UIName => "Automatic AI data source selection with heuristik source reduction";
+    public string UIName => TB("Automatic AI data source selection with heuristik source reduction");
 
     /// <inheritdoc />
-    public string Description => "Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.";
+    public string Description => TB("Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.");
     
     /// <inheritdoc />
     public async Task<DataSelectionResult> SelectDataSourcesAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default)

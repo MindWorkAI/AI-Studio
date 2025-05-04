@@ -2,18 +2,20 @@ namespace AIStudio.Assistants.TextSummarizer;
 
 public static class ComplexityExtensions
 {
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(ComplexityExtensions).Namespace, nameof(ComplexityExtensions));
+    
     public static string Name(this Complexity complexity) => complexity switch
     {
-        Complexity.NO_CHANGE => "No change in complexity",
+        Complexity.NO_CHANGE => TB("No change in complexity"),
         
-        Complexity.SIMPLE_LANGUAGE => "Simple language, e.g., for children",
-        Complexity.TEEN_LANGUAGE => "Teen language, e.g., for teenagers",
-        Complexity.EVERYDAY_LANGUAGE => "Everyday language, e.g., for adults",
-        Complexity.POPULAR_SCIENCE_LANGUAGE => "Popular science language, e.g., for people interested in science",
-        Complexity.SCIENTIFIC_LANGUAGE_FIELD_EXPERTS => "Scientific language for experts in this field",
-        Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS => "Scientific language for experts from other fields (interdisciplinary)",
+        Complexity.SIMPLE_LANGUAGE => TB("Simple language, e.g., for children"),
+        Complexity.TEEN_LANGUAGE => TB("Teen language, e.g., for teenagers"),
+        Complexity.EVERYDAY_LANGUAGE => TB("Everyday language, e.g., for adults"),
+        Complexity.POPULAR_SCIENCE_LANGUAGE => TB("Popular science language, e.g., for people interested in science"),
+        Complexity.SCIENTIFIC_LANGUAGE_FIELD_EXPERTS => TB("Scientific language for experts in this field"),
+        Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS => TB("Scientific language for experts from other fields (interdisciplinary)"),
         
-        _ => "No change in complexity",
+        _ => TB("No change in complexity"),
     };
     
     public static string Prompt(this Complexity complexity, string expertInField) => complexity switch

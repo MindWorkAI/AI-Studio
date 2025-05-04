@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.AugmentationProcesses;
 using AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 using AIStudio.Tools.Services;
@@ -10,16 +11,18 @@ namespace AIStudio.Tools.RAG.RAGProcesses;
 
 public sealed class AISrcSelWithRetCtxVal : IRagProcess
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AISrcSelWithRetCtxVal).Namespace, nameof(AISrcSelWithRetCtxVal));
+    
     #region Implementation of IRagProcess
 
     /// <inheritdoc />
     public string TechnicalName => "AISrcSelWithRetCtxVal";
 
     /// <inheritdoc />
-    public string UIName => "AI source selection with AI retrieval context validation";
+    public string UIName => TB("AI source selection with AI retrieval context validation");
     
     /// <inheritdoc />
-    public string Description => "This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.";
+    public string Description => TB("This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.");
 
     /// <inheritdoc />
     public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, CancellationToken token = default)
