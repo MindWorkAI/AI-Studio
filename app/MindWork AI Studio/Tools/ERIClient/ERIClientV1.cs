@@ -3,12 +3,15 @@ using System.Text.Json;
 
 using AIStudio.Settings;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ERIClient;
 
 public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource), IERIClient
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ERIClientV1).Namespace, nameof(ERIClientV1));
+    
     #region Implementation of IERIClient
 
     public async Task<APIResponse<List<AuthScheme>>> GetAuthMethodsAsync(CancellationToken cancellationToken = default)
@@ -21,7 +24,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = $"Failed to retrieve the authentication methods: there was an issue communicating with the ERI server. Code: {response.StatusCode}, Reason: {response.ReasonPhrase}"
+                    Message = string.Format(TB("Failed to retrieve the authentication methods: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}"), response.StatusCode, response.ReasonPhrase)
                 };
             }
 
@@ -31,7 +34,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = "Failed to retrieve the authentication methods: the ERI server did not return a valid response."
+                    Message = TB("Failed to retrieve the authentication methods: the ERI server did not return a valid response.")
                 };
             }
 
@@ -46,7 +49,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to retrieve the authentication methods: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to retrieve the authentication methods: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -54,7 +57,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to retrieve the authentication methods due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to retrieve the authentication methods due to an exception: {0}"), e.Message)
             };
         }
     }
@@ -76,7 +79,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = $"Failed to authenticate with the ERI server. Code: {noneAuthResponse.StatusCode}, Reason: {noneAuthResponse.ReasonPhrase}"
+                                Message = string.Format(TB("Failed to authenticate with the ERI server. Code: {0}, Reason: {1}"), noneAuthResponse.StatusCode, noneAuthResponse.ReasonPhrase)
                             };
                         }
                     
@@ -86,7 +89,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = "Failed to authenticate with the ERI server: the response was invalid."
+                                Message = TB("Failed to authenticate with the ERI server: the response was invalid.")
                             };
                         }
                     
@@ -108,7 +111,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = "Failed to retrieve the password."
+                                Message = TB("Failed to retrieve the password.")
                             };
                         }
 
@@ -130,7 +133,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = $"Failed to authenticate with the ERI server. Code: {usernamePasswordAuthResponse.StatusCode}, Reason: {usernamePasswordAuthResponse.ReasonPhrase}"
+                                Message = string.Format(TB("Failed to authenticate with the ERI server. Code: {0}, Reason: {1}"), usernamePasswordAuthResponse.StatusCode, usernamePasswordAuthResponse.ReasonPhrase)
                             };
                         }
                     
@@ -140,7 +143,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = "Failed to authenticate with the server: the response was invalid."
+                                Message = TB("Failed to authenticate with the server: the response was invalid.")
                             };
                         }
                     
@@ -162,7 +165,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = "Failed to retrieve the access token."
+                                Message = TB("Failed to retrieve the access token.")
                             };
                         }
 
@@ -181,7 +184,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = $"Failed to authenticate with the ERI server. Code: {tokenAuthResponse.StatusCode}, Reason: {tokenAuthResponse.ReasonPhrase}"
+                                Message = string.Format(TB("Failed to authenticate with the ERI server. Code: {0}, Reason: {1}"), tokenAuthResponse.StatusCode, tokenAuthResponse.ReasonPhrase)
                             };
                         }
                     
@@ -191,7 +194,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             return new()
                             {
                                 Successful = false,
-                                Message = "Failed to authenticate with the ERI server: the response was invalid."
+                                Message = TB("Failed to authenticate with the ERI server: the response was invalid.")
                             };
                         }
                     
@@ -208,7 +211,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     return new()
                     {
                         Successful = false,
-                        Message = "The authentication method is not supported yet."
+                        Message = TB("The authentication method is not supported yet.")
                     };
             }
         }
@@ -217,7 +220,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to authenticate with the ERI server: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to authenticate with the ERI server: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -225,7 +228,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to authenticate with the ERI server due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to authenticate with the ERI server due to an exception: {0}"), e.Message)
             };
         }
     }
@@ -243,7 +246,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = $"Failed to retrieve the data source information: there was an issue communicating with the ERI server. Code: {response.StatusCode}, Reason: {response.ReasonPhrase}"
+                    Message = string.Format(TB("Failed to retrieve the data source information: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}"), response.StatusCode, response.ReasonPhrase)
                 };
             }
         
@@ -253,7 +256,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = "Failed to retrieve the data source information: the ERI server did not return a valid response."
+                    Message = TB("Failed to retrieve the data source information: the ERI server did not return a valid response.")
                 };
             }
         
@@ -268,7 +271,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to retrieve the data source information: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to retrieve the data source information: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -276,7 +279,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to retrieve the data source information due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to retrieve the data source information due to an exception: {0}"), e.Message)
             };
         }
     }
@@ -294,7 +297,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = $"Failed to retrieve the embedding information: there was an issue communicating with the ERI server. Code: {response.StatusCode}, Reason: {response.ReasonPhrase}"
+                    Message = string.Format(TB("Failed to retrieve the embedding information: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}"), response.StatusCode, response.ReasonPhrase)
                 };
             }
         
@@ -304,7 +307,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = "Failed to retrieve the embedding information: the ERI server did not return a valid response."
+                    Message = TB("Failed to retrieve the embedding information: the ERI server did not return a valid response.")
                 };
             }
         
@@ -319,7 +322,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to retrieve the embedding information: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to retrieve the embedding information: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -327,7 +330,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to retrieve the embedding information due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to retrieve the embedding information due to an exception: {0}"), e.Message)
             };
         }
     }
@@ -345,7 +348,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = $"Failed to retrieve the retrieval information: there was an issue communicating with the ERI server. Code: {response.StatusCode}, Reason: {response.ReasonPhrase}"
+                    Message = string.Format(TB("Failed to retrieve the retrieval information: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}"), response.StatusCode, response.ReasonPhrase)
                 };
             }
         
@@ -355,7 +358,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = "Failed to retrieve the retrieval information: the ERI server did not return a valid response."
+                    Message = TB("Failed to retrieve the retrieval information: the ERI server did not return a valid response.")
                 };
             }
         
@@ -370,7 +373,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to retrieve the retrieval information: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to retrieve the retrieval information: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -378,7 +381,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to retrieve the retrieval information due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to retrieve the retrieval information due to an exception: {0}"), e.Message)
             };
         }
     }
@@ -399,7 +402,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = $"Failed to execute the retrieval request: there was an issue communicating with the ERI server. Code: {response.StatusCode}, Reason: {response.ReasonPhrase}"
+                    Message = string.Format(TB("Failed to execute the retrieval request: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}"), response.StatusCode, response.ReasonPhrase)
                 };
             }
         
@@ -409,7 +412,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = "Failed to execute the retrieval request: the ERI server did not return a valid response."
+                    Message = TB("Failed to execute the retrieval request: the ERI server did not return a valid response.")
                 };
             }
         
@@ -424,7 +427,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to execute the retrieval request: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to execute the retrieval request: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -432,7 +435,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to execute the retrieval request due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to execute the retrieval request due to an exception: {0}"), e.Message)
             };
         }
     }
@@ -450,7 +453,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = $"Failed to retrieve the security requirements: there was an issue communicating with the ERI server. Code: {response.StatusCode}, Reason: {response.ReasonPhrase}"
+                    Message = string.Format(TB("Failed to retrieve the security requirements: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}"), response.StatusCode, response.ReasonPhrase)
                 };
             }
         
@@ -460,7 +463,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                 return new()
                 {
                     Successful = false,
-                    Message = "Failed to retrieve the security requirements: the ERI server did not return a valid response."
+                    Message = TB("Failed to retrieve the security requirements: the ERI server did not return a valid response.")
                 };
             }
         
@@ -475,7 +478,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = "Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout."
+                Message = TB("Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout.")
             };
         }
         catch (Exception e)
@@ -483,7 +486,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
             return new()
             {
                 Successful = false,
-                Message = $"Failed to retrieve the security requirements due to an exception: {e.Message}"
+                Message = string.Format(TB("Failed to retrieve the security requirements due to an exception: {0}"), e.Message)
             };
         }
     }

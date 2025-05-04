@@ -1,23 +1,27 @@
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Tools;
 
 public static class CommonLanguageExtensions
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CommonLanguageExtensions).Namespace, nameof(CommonLanguageExtensions));
+    
     public static string Name(this CommonLanguages language) => language switch
     {
-        CommonLanguages.AS_IS => "Do not change the language",
+        CommonLanguages.AS_IS => TB("Do not change the language"),
         
-        CommonLanguages.EN_US => "English (US)",
-        CommonLanguages.EN_GB => "English (UK)",
-        CommonLanguages.ZH_CN => "Chinese (Simplified)",
-        CommonLanguages.HI_IN => "Hindi (India)",
-        CommonLanguages.ES_ES => "Spanish (Spain)",
-        CommonLanguages.FR_FR => "French (France)",
-        CommonLanguages.DE_DE => "German (Germany)",
-        CommonLanguages.DE_AT => "German (Austria)",
-        CommonLanguages.DE_CH => "German (Switzerland)",
-        CommonLanguages.JA_JP => "Japanese (Japan)",
+        CommonLanguages.EN_US => TB("English (US)"),
+        CommonLanguages.EN_GB => TB("English (UK)"),
+        CommonLanguages.ZH_CN => TB("Chinese (Simplified)"),
+        CommonLanguages.HI_IN => TB("Hindi (India)"),
+        CommonLanguages.ES_ES => TB("Spanish (Spain)"),
+        CommonLanguages.FR_FR => TB("French (France)"),
+        CommonLanguages.DE_DE => TB("German (Germany)"),
+        CommonLanguages.DE_AT => TB("German (Austria)"),
+        CommonLanguages.DE_CH => TB("German (Switzerland)"),
+        CommonLanguages.JA_JP => TB("Japanese (Japan)"),
             
-        _ => "Other",
+        _ => TB("Other"),
     };
     
     public static string ToIETFTag(this CommonLanguages language) => language switch
@@ -56,7 +60,7 @@ public static class CommonLanguageExtensions
     public static string NameSelecting(this CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return "Please select the target language";
+            return TB("Please select the target language");
         
         return language.Name();
     }
@@ -64,7 +68,7 @@ public static class CommonLanguageExtensions
     public static string NameSelectingOptional(this CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return "Do not specify the language";
+            return TB("Do not specify the language");
         
         return language.Name();
     }

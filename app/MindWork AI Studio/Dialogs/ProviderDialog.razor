@@ -79,7 +79,7 @@
                 @* ReSharper restore Asp.Entity *@
             }       
 
-            <MudField FullWidth="true" Label="Model selection" Variant="Variant.Outlined" Class="mb-3">
+            <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                 <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
                     @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                     {

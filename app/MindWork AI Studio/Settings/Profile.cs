@@ -1,10 +1,14 @@
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Settings;
 
 public readonly record struct Profile(uint Num, string Id, string Name, string NeedToKnow, string Actions)
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Profile).Namespace, nameof(Profile));
+    
     public static readonly Profile NO_PROFILE = new()
     {
-        Name = "Use no profile",
+        Name = TB("Use no profile"),
         NeedToKnow = string.Empty,
         Actions = string.Empty,
         Id = Guid.Empty.ToString(),

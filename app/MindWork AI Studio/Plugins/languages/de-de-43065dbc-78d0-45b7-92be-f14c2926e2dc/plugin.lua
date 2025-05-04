@@ -135,6 +135,21 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T759263763"] = "Li
 -- Please select a target language for the e-mail.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T891073054"] = "Bitte wählen Sie eine Zielsprache für die E-Mail aus."
 
+-- Personal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T1851428013"] = "Persönlich"
+
+-- Academic
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T2055733914"] = "Akademisch"
+
+-- Business informal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T4031465193"] = "Geschäftlich informell"
+
+-- Business formal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T477550214"] = "Geschäftlich formell"
+
+-- Not specified
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T641241064"] = "Nicht angegeben"
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
@@ -258,8 +273,50 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
+-- Passive voice
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T132535068"] = "Passive Sprache"
+
+-- Active voice
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T3548001825"] = "Aktive Sprache"
+
+-- Not Specified
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T4281286216"] = "Nicht angegeben"
+
+-- Scientific (scientific papers, research reports)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T1488581017"] = "Wissenschaftlich (wissenschaftliche Arbeiten, Forschungsberichte)"
+
+-- Technical (manuals, documentation)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T1577933546"] = "Technisch (Handbücher, Dokumentation)"
+
+-- Changelog (release notes, version history)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T1755311660"] = "Änderungsprotokoll (Versionshinweise, Versionsverlauf)"
+
+-- Literary (fiction, poetry)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T1823468337"] = "Literarisch (Belletristik, Lyrik)"
+
+-- Journalistic (magazines, newspapers, news)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T302304243"] = "Journalistisch (Zeitschriften, Zeitungen, Nachrichten)"
+
+-- Everyday (personal texts, social media)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T3607558508"] = "Alltag (persönliche Texte, soziale Medien)"
+
+-- Business (business emails, reports, presentations)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T3674741297"] = "Geschäftlich (geschäftliche E-Mails, Berichte, Präsentationen)"
+
+-- Legal (legal texts, contracts)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T3749505397"] = "Rechtlich (rechtliche Texte, Verträge)"
+
+-- Academic (essays, seminar papers)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T4090727535"] = "Akademisch (Essays, Seminararbeiten)"
+
+-- Not specified
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T641241064"] = "Nicht angegeben"
+
+-- Marketing (advertisements, sales texts)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T945714286"] = "Marketing (Werbung, Verkaufstexte)"
+
 -- Your word or phrase
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1847246020"] = "Ihr Wort oder Ausdruck"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1847246020"] = "Ihr Wort oder Phrase"
 
 -- (Optional) The context for the given word or phrase
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T2250963999"] = "(Optional) Der Kontext für das angegebene Wort oder die Phrase"
@@ -317,6 +374,27 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 
 -- Your expertise
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T970222193"] = "Ihre Fachkenntnisse"
+
+-- No change in complexity
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T1001090711"] = "Keine Änderung der Komplexität"
+
+-- Teen language, e.g., for teenagers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T1177455058"] = "Jugendsprache, z. B. für Teenager"
+
+-- Scientific language for experts in this field
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T2687197281"] = "Wissenschaftliche Fachsprache für Experten auf diesem Gebiet"
+
+-- Scientific language for experts from other fields (interdisciplinary)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T2931193867"] = "Wissenschaftliche Sprache für Experten aus anderen Disziplinen"
+
+-- Popular science language, e.g., for people interested in science
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T3161914110"] = "Populärwissenschaftliche Sprache, z. B. für wissenschaftlich Interessierte"
+
+-- Everyday language, e.g., for adults
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T3382050522"] = "Alltagssprache, z. B. für Erwachsene"
+
+-- Simple language, e.g., for children
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T530584375"] = "Einfache Sprache, zum Beispiel für Kinder"
 
 -- Please select a target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1173859091"] = "Bitte wählen Sie eine Zielsprache aus."
@@ -435,8 +513,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3403290862"] = "Der ausge
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Wähle zuerst einen Anbieter aus"
 
--- Start temporary chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Temporären Chat starten"
+-- New disappearing chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Neuen selbstlöschenden Chat starten"
 
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Bitte wählen Sie den Arbeitsbereich aus, in den Sie den Chat verschieben möchten."
@@ -1241,6 +1319,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instanzname
 
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Verfügbare Modelle anzeigen"
+
+-- Model selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T416738168"] = "Modellauswahl"
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
@@ -2061,7 +2142,7 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2864211629"] = "Bitte warten Sie
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2929332068"] = "Unterstützer"
 
--- Writer
+-- Writing
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Schreiben"
 
 -- Show details
@@ -2532,11 +2613,888 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T3948127789"] = "Vorschlag"
 -- Your stage directions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Ihre Regieanweisungen"
 
+-- Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1073493061"] = "Es wurde versucht mit dem LLM-Anbieter '{0}' zu kommunizieren. Der API-Schlüssel könnte ungültig sein. Die Anbietermeldung lautet: '{1}'"
+
+-- Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1487597412"] = "Beim Versuch, die Antwort des LLM-Anbieters '{0}' zu streamen, sind Probleme aufgetreten. Die Meldung lautet: '{1}'"
+
+-- Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1674355816"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Das erforderliche Nachrichtenformat könnte sich geändert haben. Die Mitteilung des Anbieters lautet: '{1}'"
+
+-- Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1856278860"] = "Der Versuch, die Antwort des LLM-Anbieters '{0}' zu streamen, ist fehlgeschlagen. Der Stream konnte nicht gelesen werden. Die Meldung lautet: '{1}'"
+
+-- Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2249520705"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Auch nach {1} Versuchen gab es Probleme mit der Anfrage. Die Nachricht des Anbieters lautet: '{2}'"
+
+-- Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2780552614"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Etwas wurde nicht gefunden. Die Meldung des Anbieters lautet: '{1}'"
+
+-- Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3573577433"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Dabei sind Probleme bei der Anfrage aufgetreten. Die Meldung des Anbieters lautet: '{1}'"
+
+-- Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3806716694"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Der Server ist möglicherweise nicht erreichbar oder hat Probleme. Die Anbietermeldung lautet: '{1}'"
+
+-- Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4179546180"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Der Anbieter ist überlastet. Die Meldung lautet: '{1}'"
+
+-- Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T862369179"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Möglicherweise können Sie diesen Anbieter von Ihrem Standort aus nicht nutzen. Die Mitteilung des Anbieters lautet: '{1}'"
+
+-- The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob Ihre Daten sicher sind."
+
+-- You or your organization operate the LLM locally or within your trusted network. In terms of data processing and security, this is the best possible way.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder Ihre Organisation betreiben das LLM lokal oder innerhalb Ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
+
+-- The provider is located in the EU and is subject to the **GDPR** (General Data Protection Regulation). Additionally, the provider states that **your data is not used for training**.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3010553924"] = "Der Anbieter hat seinen Sitz in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Außerdem gibt der Anbieter an, dass **Ihre Daten nicht zum Training verwendet werden**."
+
+-- No provider selected. Please select a provider to get see its confidence level.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3368531176"] = "Kein Anbieter ausgewählt. Bitte wählen Sie einen Anbieter aus, um dessen Vertrauensniveau zu sehen."
+
+-- The provider operates its service from the USA and is subject to **US jurisdiction**. In case of suspicion, authorities in the USA can access your data. However, **your data is not used for training** purposes.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3528165925"] = "Der Anbieter betreibt seinen Dienst aus den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Bei Verdacht können US-Behörden auf Ihre Daten zugreifen. **Ihre Daten werden jedoch nicht für Trainingszwecke** verwendet."
+
+-- The provider operates its service from the USA and is subject to **U.S. jurisdiction**. In case of suspicion, authorities in the USA can access your data. Please inform yourself about the use of your data. We do not know if your data is safe.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3788466789"] = "Der Anbieter betreibt seinen Service in den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Im Verdachtsfall können US-Behörden auf Ihre Daten zugreifen. Bitte informieren Sie sich über die Verwendung Ihrer Daten. Wir wissen nicht, ob Ihre Daten sicher sind."
+
+-- The provider operates its service from China. In case of suspicion, authorities in the respective countries of operation may access your data. However, **your data is not used for training** purposes.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T991875725"] = "Der Anbieter betreibt seinen Dienst von China aus. Im Verdachtsfall können Behörden in den jeweiligen Ländern auf Ihre Daten zugreifen. **Ihre Daten werden jedoch nicht zum Trainieren** verwendet."
+
+-- Medium
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T163471254"] = "Mittel"
+
+-- Moderate
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T177463328"] = "Mäßig"
+
+-- Unknown confidence level
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T1811522309"] = "Unbekanntes Vertrauensniveau"
+
+-- No provider selected
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T2897045472"] = "Kein Anbieter ausgewählt"
+
+-- Low
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T2984088865"] = "Niedrig"
+
+-- Untrusted
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3063224793"] = "Nicht vertrauenswürdig"
+
+-- High
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3188327965"] = "Hoch"
+
+-- Very Low
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T786675843"] = "Sehr niedrig"
+
+-- Self-hosted
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T146444217"] = "Selbst gehostet"
+
+-- No provider selected
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T2897045472"] = "Kein Anbieter ausgewählt"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- Navigation never expands, but there are tooltips
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033"] = "Die Navigation wird nie ausgeklappt, aber es gibt Tooltips"
+
+-- Check every day
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1112287590"] = "Täglich überprüfen"
+
+-- Toggle the overlay: the chat uses all the space, workspaces are temporarily shown
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1114668646"] = "Overlay umschalten: Der Chat nutzt den gesamten Platz, Arbeitsbereiche werden vorübergehend angezeigt"
+
+-- Sidebar is always visible: show the workspaces next to the chat all the time
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1149606444"] = "Seitenleiste ist immer sichtbar: Arbeitsbereiche werden stets neben dem Chat angezeigt"
+
+-- Always use the default chat provider when loading chats
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1188453609"] = "Beim Laden von Chats immer den Standard-Anbieter verwenden"
+
+-- Show also prototype features: these are works in progress; expect bugs and missing features
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245257804"] = "Auch Prototyp-Funktionen anzeigen: Diese befinden sich noch in der Entwicklung; Fehler und fehlende Funktionen sind zu erwarten"
+
+-- No key is sending the input; you have to click the send button
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1311973034"] = "Keine Taste sendet die Eingabe; Sie müssen auf die Schaltfläche klicken, um zu senden"
+
+-- Navigation never expands, no tooltips; there are only icons
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1402851833"] = "Navigation wird nie erweitert, keine Tooltips; es werden nur Icons angezeigt"
+
+-- Store chats automatically
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1664293672"] = "Chats automatisch speichern"
+
+-- Once at startup
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T184455356"] = "Einmal beim Start"
+
+-- No automatic update checks
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1874928511"] = "Keine automatische Update-Prüfung"
+
+-- Always expand navigation
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1991359958"] = "Navigation immer ausklappen"
+
+-- Show also experimental features: these are experimental; expect bugs, missing features, many changes
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2091731959"] = "Zeige auch experimentelle Funktionen: Diese Funktionen sind experimentell; Fehler, fehlende Funktionen und viele Änderungen sind zu erwarten."
+
+-- Use the latest LLM provider, which was used before; use the default chat provider initially
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2128088682"] = "Den zuletzt verwendeten LLM-Anbieter verwenden; anfangs den Standard-Anbieter auswählen"
+
+-- Navigation expands on mouse hover
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2195945406"] = "Navigation erweitert sich, wenn sich die Maus darüber befindet"
+
+-- Also show features ready for release; these should be stable
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2301448762"] = "Auch Funktionen anzeigen, die bereit für die Veröffentlichung sind; diese sollten stabil sein."
+
+-- Check every week
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T238099712"] = "Jede Woche prüfen"
+
+-- Disappearing chats: delete chats older than 1 year
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2405705561"] = "Selbstlöschende Chats: lösche Chats die älter als 1 Jahr sind"
+
+-- Store chats manually
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2520325466"] = "Chats manuell speichern"
+
+-- Enter is sending the input
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2537778562"] = "Die Enter- bzw. Eingabetaste sendet die Eingabe"
+
+-- Not yet specified
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2566503670"] = "Noch nicht angegeben"
+
+-- No minimum confidence level chosen
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2828607242"] = "Kein Mindestvertrauensniveau ausgewählt"
+
+-- Do not specify the language
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2960082609"] = "Sprache nicht festlegen"
+
+-- Disappearing chats: delete chats older than 7 days
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2975140581"] = "Selbstlöschende Chats: lösche Chats die älter als 7 Tage sind"
+
+-- Always use the default chat provider for new chats
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2976921892"] = "Immer den Standard-Anbieter für neue Chats verwenden"
+
+-- Also show features in beta: these are almost ready for release; expect some bugs
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3061414822"] = "Auch Beta-Funktionen anzeigen: Diese sind fast fertig zur Veröffentlichung; es können jedoch noch Fehler auftreten."
+
+-- Check every hour
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3137986690"] = "Jede Stunde überprüfen"
+
+-- Disappearing chats: delete chats older than 180 days
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3491430707"] = "Selbstlöschende Chats: lösche Chats die älter als 180 Tage sind"
+
+-- Disable workspaces
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3612390107"] = "Arbeitsbereiche deaktivieren"
+
+-- Toggle the sidebar: show the workspaces on demand next to the chat
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3711207137"] = "Seitenleiste umschalten: Arbeitsbereiche bei Bedarf neben dem Chat anzeigen"
+
+-- Also show features in alpha: these are in development; expect bugs and missing features
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4146964761"] = "Zeige auch Funktionen im Alpha-Stadium an: Diese befinden sich in der Entwicklung; es werden Fehler und fehlende Funktionen auftreten."
+
+-- All preview features are hidden
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4289410063"] = "Alle Vorschaufunktionen sind ausgeblendet"
+
+-- When possible, use the LLM provider which was used for each chat in the first place
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T75376144"] = "Wenn möglich, verwende den LLM-Anbieter, der ursprünglich für jeden Chat verwendet wurde."
+
+-- Disappearing chats: no automatic maintenance; old chats will never be deleted
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T803751240"] = "Selbstlöschende Chats: keine automatische Wartung; alte Chats werden nie gelöscht"
+
+-- Disappearing chats: delete chats older than 90 days
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T869922627"] = "Selbstlöschende Chats: lösche Chats die älter als 90 Tage sind"
+
+-- Modifier key + enter is sending the input
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T870850829"] = "Mit gedrückter Modifikatortaste (z.B. Alt oder Strg) + Enter- bzw. Eingabe-Taste wird die Eingabe gesendet"
+
+-- Disappearing chats: delete chats older than 30 days
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T937754037"] = "Selbstlöschende Chats: lösche Chats die älter als 30 Tage sind"
+
+-- This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1531417967"] = "Diese Datenquelle kann mit jedem LLM-Anbieter verwendet werden. Ihre Daten können an einen cloudbasierten Anbieter gesendet werden."
+
+-- This data source can only be used with a self-hosted LLM provider. Your data will not be sent to any cloud-based provider.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T3187068849"] = "Diese Datenquelle kann nur mit einem selbst gehosteten LLM-Anbieter verwendet werden. Ihre Daten werden nicht an einen cloudbasierten Anbieter gesendet."
+
+-- Please select a security policy
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T3511915070"] = "Bitte wählen Sie eine Sicherheitsrichtlinie aus."
+
+-- The security of the data source is not specified yet. You cannot use this data source until you specify a security policy.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T4056804813"] = "Die Sicherheit der Datenquelle ist noch nicht festgelegt. Sie können diese Datenquelle erst verwenden, wenn Sie eine Sicherheitsrichtlinie angeben."
+
+-- Unknown security policy
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T4277536697"] = "Unbekannte Sicherheitsrichtlinie"
+
+-- Local File
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCETYPEEXTENSION::T1687345358"] = "Lokale Datei"
+
+-- External ERI Server (v1)
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCETYPEEXTENSION::T3020093889"] = "Externer ERI-Server (v1)"
+
+-- No data source
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCETYPEEXTENSION::T810547195"] = "Keine Datenquelle"
+
+-- Local Directory
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCETYPEEXTENSION::T926703547"] = "Lokales Verzeichnis"
+
 -- Unknown option
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T3964902774"] = "Unbekannte Option"
 
--- Choose the language manually.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T3988034966"] = "Sprache manuell auswählen."
+-- Choose the language manually
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T3988034966"] = "Sprache manuell auswählen"
 
--- Choose the language automatically, based on your system language.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T485389934"] = "Sprache automatisch anhand Ihrer Systemsprache auswählen."
+-- Choose the language automatically, based on your system language
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T485389934"] = "Sprache automatisch anhand Ihrer Systemsprache auswählen"
+
+-- Writer Mode: Experiments about how to write long texts using AI
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T158702544"] = "Schreibmodus: Experimente zum Verfassen langer Texte mit KI"
+
+-- Read PDF: Preview of our PDF reading system where you can read and extract text from PDF files
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1847148141"] = "PDF-Dateien einlesen: Vorschau unseres PDF-Lesesystems, mit dem Sie Text aus PDF-Dateien einlesen können"
+
+-- Plugins: Preview of our plugin system where you can extend the functionality of the app
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2056842933"] = "Plugins: Vorschau auf unser Pluginsystems, mit dem Sie die Funktionalität der App erweitern können"
+
+-- RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2708939138"] = "RAG: Vorschau auf unsere RAG-Implementierung, mit der Sie auf Ihre Dateien zugreifen oder Unternehmensdaten in Ihrem Unternehmen integrieren können"
+
+-- Unknown preview feature
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2722827307"] = "Unbekannte Vorschau-Funktion"
+
+-- Use no data sources, when sending an assistant result to a chat
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::SENDTOCHATDATASOURCEBEHAVIOREXTENSIONS::T1223925477"] = "Keine Datenquellen vorauswählen, wenn ein Ergebnis von einem Assistenten an einen neuen Chat gesendet wird"
+
+-- Unknown behavior
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::SENDTOCHATDATASOURCEBEHAVIOREXTENSIONS::T1394162669"] = "Unbekanntes Verhalten"
+
+-- Apply standard chat data source options, when sending an assistant result to a chat
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::SENDTOCHATDATASOURCEBEHAVIOREXTENSIONS::T2129722199"] = "Standard-Optionen für Datenquellen anwenden, wenn ein Ergebnis von einem Assistenten an einen neuen Chat gesendet wird"
+
+-- Always use dark theme
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T197192304"] = "Immer dunkles Design verwenden"
+
+-- Synchronized with the operating system settings
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T1987547483"] = "Mit den Einstellungen des Betriebssystems synchronisiert"
+
+-- Unknown setting
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T4107955313"] = "Unbekannte Einstellung"
+
+-- Always use light theme
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T534715610"] = "Immer das helle Design verwenden"
+
+-- Use no profile
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::PROFILE::T2205839602"] = "Kein Profil verwenden"
+
+-- SSO (Kerberos)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T268552140"] = "SSO (Kerberos)"
+
+-- Access Token
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T2891154022"] = "Zugangstoken"
+
+-- Unknown authentication method
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T3296465240"] = "Unbekannte Authentifizierungsmethode"
+
+-- No authentication
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T810547195"] = "Keine Authentifizierung"
+
+-- Username & Password
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T863358904"] = "Benutzername & Passwort"
+
+-- Spanish (Spain)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1269145091"] = "Spanisch (Spanien)"
+
+-- German (Germany)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T133055431"] = "Deutsch (Deutschland)"
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1849229205"] = "Andere"
+
+-- German (Switzerland)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1914931075"] = "Deutsch (Schweiz)"
+
+-- German (Austria)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1992157553"] = "Deutsch (Österreich)"
+
+-- Japanese (Japan)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T2064802889"] = "Japanisch (Japan)"
+
+-- French (France)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T2496010681"] = "Französisch (Frankreich)"
+
+-- Please select the target language
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T2536245199"] = "Bitte wählen Sie die Zielsprache aus"
+
+-- Do not specify the language
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T2960082609"] = "Sprache nicht angeben"
+
+-- Hindi (India)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T3245596873"] = "Hindi (Indien)"
+
+-- Chinese (Simplified)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T3441562249"] = "Chinesisch (vereinfacht)"
+
+-- English (US)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T3729684486"] = "Englisch (US)"
+
+-- English (UK)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T3730964414"] = "Englisch (UK)"
+
+-- Do not change the language
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T658789330"] = "Sprache nicht ändern"
+
+-- Coding Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1082499335"] = "Programmierassistent"
+
+-- E-Mail Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1185802704"] = "E-Mail-Assistent"
+
+-- My Tasks Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1546040625"] = "Meine Aufgaben-Assistent"
+
+-- Grammar & Spelling Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammatik- & Rechtschreibassistent"
+
+-- Legal Check Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Assistent für rechtliche Prüfungen"
+
+-- Job Posting Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2212811874"] = "Assistent für Stellenanzeigen"
+
+-- Icon Finder Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2457005512"] = "Icon Finder-Assistent"
+
+-- Text Summarizer Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2684676843"] = "Assistent zur Textzusammenfassung"
+
+-- Synonym Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2921123194"] = "Synonym-Assistent"
+
+-- Translation Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3887962308"] = "Übersetzungsassistent"
+
+-- Agenda Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T4034795997"] = "Agenda-Assistent"
+
+-- ERI Server
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T4204533420"] = "ERI-Server"
+
+-- Rewrite Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T4262148639"] = "Assistent zum Umformulieren & Verbessern"
+
+-- Localization Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T446674624"] = "Lokalisierungs-Assistent"
+
+-- New Chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T826248509"] = "Neuer Chat"
+
+-- Trust LLM providers from the USA
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T1748300640"] = "LLM-Anbieter aus den USA vertrauen"
+
+-- Configure your own confidence scheme
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T2017415465"] = "Konfigurieren Sie Ihr eigenes Vertrauensschema"
+
+-- Trust LLM providers from the USA and Europe
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T2498514901"] = "Vertraue LLM-Anbietern aus den USA und Europa"
+
+-- Unknown confidence scheme
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T292756058"] = "Unbekanntes Vertrauensschema"
+
+-- Trust LLM providers from Asia
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T3016210842"] = "Vertraue LLM-Anbietern aus Asien"
+
+-- Trust LLM providers from Europe
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T357239630"] = "Vertrauen Sie LLM-Anbietern aus Europa"
+
+-- Trust only self-hosted providers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T3893997203"] = "Nur selbst gehosteten LLM-Anbietern vertrauen"
+
+-- Trust all LLM providers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T4107860491"] = "Allen LLM-Anbietern vertrauen"
+
+-- The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T1555790630"] = "Die zugehörigen Daten dürfen an keinen LLM-Anbieter gesendet werden. Das bedeutet, dass diese Datenquelle momentan nicht verwendet werden kann."
+
+-- The related data can be sent to any provider, regardless of where it is hosted (cloud or self-hosted).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T2031831095"] = "Die zugehörigen Daten können an jeden Anbieter gesendet werden, unabhängig davon, ob dieser in der Cloud oder selbst gehostet wird."
+
+-- The related data can be sent to a provider that is hosted by the same organization, either on-premises or locally. Cloud-based providers are not allowed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T2943101676"] = "Die entsprechenden Daten können an einen Anbieter gesendet werden, der von derselben Organisation betrieben wird – entweder auf Ihrem Gerät oder im Unternehmens-Netzwerk. Cloud-basierte Anbieter sind nicht zulässig."
+
+-- Unknown configuration. This data source cannot be used at the moment.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T647911863"] = "Unbekannte Konfiguration. Diese Datenquelle kann derzeit nicht verwendet werden."
+
+-- Failed to execute the retrieval request: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1270753490"] = "Die Abrufanfrage konnte nicht ausgeführt werden: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitlimits fehlgeschlagen."
+
+-- Failed to retrieve the embedding information: the ERI server did not return a valid response.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1368217771"] = "Abrufen der Einbettungsinformationen fehlgeschlagen: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- Failed to retrieve the password.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1460025425"] = "Das Passwort konnte nicht abgerufen werden."
+
+-- Failed to authenticate with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1741376192"] = "Authentifizierung beim ERI-Server fehlgeschlagen. Code: {0}, Grund: {1}"
+
+-- Failed to retrieve the security requirements: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1931074357"] = "Die Sicherheitsanforderungen konnten nicht abgerufen werden: Es gab ein Problem bei der Kommunikation mit dem ERI-Server. Code: {0}, Grund: {1}"
+
+-- Failed to execute the retrieval request due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1951868505"] = "Die Abrufanfrage konnte aufgrund eines Problems nicht ausgeführt werden: {0}"
+
+-- Failed to execute the retrieval request: the ERI server did not return a valid response.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T1978354870"] = "Die Abrufanfrage konnte nicht ausgeführt werden: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- Failed to retrieve the security requirements: the ERI server did not return a valid response.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T231684456"] = "Die Sicherheitsanforderungen konnten nicht abgerufen werden: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- Failed to authenticate with the server: the response was invalid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2332248448"] = "Authentifizierung mit dem Server fehlgeschlagen: Die Antwort war ungültig."
+
+-- Failed to retrieve the embedding information: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2368384424"] = "Die Einbettungsinformationen konnten nicht abgerufen werden: Es gab ein Problem bei der Kommunikation mit dem ERI-Server. Code: {0}, Grund: {1}"
+
+-- Failed to retrieve the authentication methods: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2482165925"] = "Authentifizierungsmethoden konnten nicht abgerufen werden: Es gab ein Problem bei der Kommunikation mit dem ERI-Server. Code: {0}, Grund: {1}"
+
+-- The authentication method is not supported yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2536034936"] = "Die Authentifizierungsmethode wird noch nicht unterstützt."
+
+-- Failed to authenticate with the ERI server: the response was invalid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2549452166"] = "Authentifizierung beim ERI-Server fehlgeschlagen: Die Antwort war ungültig."
+
+-- Failed to retrieve the retrieval information: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2558778293"] = "Fehler beim Abrufen der Suchinformationen: Es gab ein Problem bei der Kommunikation mit dem ERI-Server. Code: {0}, Grund: {1}"
+
+-- Failed to authenticate with the ERI server: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2673501628"] = "Authentifizierung beim ERI-Server fehlgeschlagen: Die Anfrage wurde entweder vom Benutzer abgebrochen oder aufgrund eines Zeitlimits beendet."
+
+-- Failed to authenticate with the ERI server due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2858189239"] = "Authentifizierung beim ERI-Server aufgrund eines Problems fehlgeschlagen: {0}"
+
+-- Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T286437836"] = "Die Sicherheitsanforderungen konnten nicht abgerufen werden: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitüberschreitungsfehlers fehlgeschlagen."
+
+-- Failed to retrieve the security requirements due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3221004295"] = "Die Sicherheitsanforderungen konnten wegen eines Problems nicht abgerufen werden: {0}"
+
+-- Failed to retrieve the data source information: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3290521480"] = "Abrufen der Datenquelleninformationen fehlgeschlagen: Es gab ein Problem bei der Kommunikation mit dem ERI-Server. Code: {0}, Grund: {1}"
+
+-- Failed to retrieve the data source information due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3354496288"] = "Abrufen der Datenquelleninformationen aufgrund eines Problems fehlgeschlagen: {0}"
+
+-- Failed to retrieve the authentication methods due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3366487415"] = "Abrufen der Authentifizierungsmethoden aufgrund eines Problems fehlgeschlagen: {0}"
+
+-- Failed to retrieve the authentication methods: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3654094460"] = "Abrufen der Authentifizierungsmethoden fehlgeschlagen: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitlimits abgelaufen."
+
+-- Failed to retrieve the retrieval information: the ERI server did not return a valid response.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3721797352"] = "Abrufen der Suchinformationen fehlgeschlagen: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- Failed to retrieve the retrieval information: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3809548876"] = "Fehler beim Abrufen der Suchinformationen: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist wegen eines Zeitlimits fehlgeschlagen."
+
+-- Failed to retrieve the retrieval information due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3862033799"] = "Abrufen der Informationen ist aufgrund eines Problems fehlgeschlagen: {0}"
+
+-- Failed to retrieve the data source information: the ERI server did not return a valid response.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T4006612619"] = "Fehler beim Abrufen der Datenquelleninformationen: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- Failed to retrieve the embedding information: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T469891013"] = "Die Einbettungsinformationen konnten nicht abgerufen werden: Die Anfrage wurde entweder vom Nutzer abgebrochen oder ist wegen eines Zeitlimits fehlgeschlagen."
+
+-- Failed to execute the retrieval request: there was an issue communicating with the ERI server. Code: {0}, Reason: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T615338311"] = "Ausführen der Abrufanfrage fehlgeschlagen: Es gab ein Problem bei der Kommunikation mit dem ERI-Server. Code: {0}, Grund: {1}"
+
+-- Failed to retrieve the data source information: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T690733413"] = "Fehler beim Abrufen der Datenquelleninformationen: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitlimits fehlgeschlagen."
+
+-- Failed to retrieve the embedding information due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T765050112"] = "Fehler beim Abrufen der Embedding-Informationen aufgrund einer Ausnahme: {0}"
+
+-- Failed to retrieve the access token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T816853779"] = "Fehler beim Abrufen des Zugriffstokens."
+
+-- Failed to retrieve the authentication methods: the ERI server did not return a valid response.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T984407320"] = "Fehler beim Abrufen der Authentifizierungsmethoden: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- The table AUTHORS does not exist or is using an invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
+
+-- The field NAME does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1340447036"] = "Das Feld NAME existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The field SOURCE_URL does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1421846488"] = "Das Feld SOURCE_URL existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The field VERSION does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T148801541"] = "Das Feld VERSION existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The table CATEGORIES does not exist or is using an invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1505723383"] = "Die Tabelle CATEGORIES existiert nicht oder verwendet eine ungültige Syntax."
+
+-- The table TARGET_GROUPS is empty or is not a valid table of strings. Valid target groups are: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1619769690"] = "Die Tabelle TARGET_GROUPS ist leer oder keine gültige Tabelle mit Zeichenfolgen. Gültige Zielgruppen sind: {0}."
+
+-- The field ID is empty. The ID must be formatted in the 8-4-4-4-12 format (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1733171739"] = "Das Feld ID ist leer. Die ID muss im Format 8-4-4-4-12 angegeben werden (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX)."
+
+-- The field VERSION is empty. The version number must be formatted as string in the major.minor.patch format (X.X.X).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2115845776"] = "Das Feld VERSION ist leer. Die Versionsnummer muss als Zeichenkette im Format Hauptversion.Nebenversion.Patch (X.X.X) angegeben werden."
+
+-- The field ID does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2203072274"] = "Das Feld ID existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The field DESCRIPTION is empty. The description must be a non-empty string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2262604281"] = "Das Feld DESCRIPTION ist leer. Die Beschreibung muss ein nicht-leerer Text sein."
+
+-- The field DESCRIPTION does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T229488255"] = "Das Feld DESCRIPTION existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The field SOURCE_URL is not a valid URL. The URL must start with 'http://' or 'https://'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2320984047"] = "Das Feld SOURCE_URL ist keine gültige URL. Die URL muss mit 'http://' oder 'https://' beginnen."
+
+-- The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2538827536"] = "Das Feld VERSION ist keine gültige Versionsnummer. Die Versionsnummer muss als Zeichenkette im Format major.minor.patch (X.X.X) angegeben werden."
+
+-- The table AUTHORS is empty. At least one author must be specified.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2981832540"] = "Die Tabelle AUTHORS ist leer. Es muss mindestens ein Autor angegeben werden."
+
+-- The field SUPPORT_CONTACT is empty. The support contact must be a non-empty string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3524814526"] = "Das Feld SUPPORT_CONTACT ist leer. Der Support-Kontakt muss eine nicht-leere Zeichenkette sein."
+
+-- The UI_TEXT_CONTENT table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3667396132"] = "Die Tabelle UI_TEXT_CONTENT existiert nicht oder ist keine gültige Tabelle."
+
+-- The field NAME is empty. The name must be a non-empty string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3763759727"] = "Das Feld NAME ist leer. Der Name darf nicht leer sein."
+
+-- The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3890922974"] = "Das Feld DEPRECATION_MESSAGE existiert nicht und ist keine gültige Zeichenkette. Diese Nachricht ist optional: Verwenden Sie eine leere Zeichenkette, um anzugeben, dass das Plugin nicht veraltet ist."
+
+-- The field SUPPORT_CONTACT does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4189964941"] = "Das Feld SUPPORT_CONTACT existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The table TARGET_GROUPS does not exist or is using an invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T447530369"] = "Die Tabelle TARGET_GROUPS existiert nicht oder verwendet eine ungültige Syntax."
+
+-- The field ID is not a valid GUID / UUID. The ID must be formatted in the 8-4-4-4-12 format (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T471697173"] = "Das Feld ID ist keine gültige GUID/UUID. Die ID muss im 8-4-4-4-12-Format geschrieben werden (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX)."
+
+-- The table CATEGORIES is empty. At least one category is necessary. Valid categories are: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T529114360"] = "Die Tabelle CATEGORIES ist leer. Es wird mindestens eine Kategorie benötigt. Gültige Kategorien sind: {0}."
+
+-- The field IS_MAINTAINED does not exist or is not a valid boolean.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T773237915"] = "Das Feld IS_MAINTAINED existiert nicht oder ist kein gültiger boolescher Wert."
+
+-- Writing
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1011777007"] = "Schreiben"
+
+-- Software Development
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1025369409"] = "Softwareentwicklung"
+
+-- Business
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T131837803"] = "Business"
+
+-- Music
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1481252212"] = "Musik"
+
+-- Unknown plugin category
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1585885320"] = "Unbekannte Plugin-Kategorie"
+
+-- Weather
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1726658099"] = "Wetter"
+
+-- Industry
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T208409567"] = "Industrie"
+
+-- Art
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2449163306"] = "Kunst"
+
+-- Sports
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2465108186"] = "Sport"
+
+-- Technology
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2499534031"] = "Technologie"
+
+-- Health
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2556511663"] = "Gesundheit"
+
+-- Utility
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2587055103"] = "Dienstprogramm"
+
+-- Shopping
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2704337693"] = "Einkaufen"
+
+-- Fitness
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2892517655"] = "Fitness"
+
+-- Food
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3179069417"] = "Essen"
+
+-- Gaming
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3246118672"] = "Spiele"
+
+-- News
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3421767782"] = "Nachrichten"
+
+-- Entertainment
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3562575449"] = "Unterhaltung"
+
+-- Education
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T379048501"] = "Bildung"
+
+-- AI Studio Core
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T4005865962"] = "AI Studio Kern"
+
+-- Social
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T4177547506"] = "Soziales"
+
+-- Political
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T4245273692"] = "Politisch"
+
+-- Fiction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T616807299"] = "Fiktion"
+
+-- Travel
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T745861401"] = "Reisen"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T810547195"] = "Keine"
+
+-- Party
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T850565431"] = "Party"
+
+-- Science
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T904504157"] = "Wissenschaft"
+
+-- Content Creation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T914642375"] = "Inhalte erstellen"
+
+-- The field IETF_TAG does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T1796010240"] = "Das Feld IETF_TAG existiert nicht oder ist keine gültige Zeichenkette."
+
+-- The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T3376221777"] = "Das Feld IETF_TAG ist kein gültiges IETF-Tag. Verwenden Sie ein gültiges IETF-Tag wie 'en-US'. Der erste Teil steht für die Sprache, der zweite Teil ist der Ländercode."
+
+-- The field IETF_TAG is empty. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T3877047896"] = "Das Feld IETF_TAG ist leer. Verwenden Sie einen gültigen IETF-Tag wie 'de-DE'. Der erste Teil steht für die Sprache, der zweite Teil für den Ländercode."
+
+-- The field LANG_NAME is empty. Use a valid language name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T4112586014"] = "Das Feld LANG_NAME ist leer. Bitte geben Sie einen gültigen Sprachennamen ein."
+
+-- The field LANG_NAME does not exist or is not a valid string.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T4204700759"] = "Das Feld LANG_NAME existiert nicht oder ist keine gültige Zeichenkette."
+
+-- Artists
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T1142248183"] = "Künstler"
+
+-- Children
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T188567026"] = "Kinder"
+
+-- Industrial workers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T2520336817"] = "Industriearbeiter"
+
+-- Students
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T2905889225"] = "Studierende"
+
+-- Scientists
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T332785734"] = "Wissenschaftler"
+
+-- Adults
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T3335941460"] = "Erwachsene"
+
+-- No target group
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T3644477204"] = "Keine Zielgruppe"
+
+-- Business professionals
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T3670621687"] = "Geschäftsleute"
+
+-- Teenagers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T3696960735"] = "Teenager"
+
+-- Unknown target group
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T384321997"] = "Unbekannte Zielgruppe"
+
+-- Office workers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T3873911022"] = "Büroangestellte"
+
+-- Teachers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T48460338"] = "Lehrkräfte"
+
+-- Everyone
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T622959000"] = "Jeder"
+
+-- Software developers
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T831424531"] = "Softwareentwickler"
+
+-- Theme plugin
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T1682350097"] = "Theme-Plugin"
+
+-- Unknown plugin type
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T2313808600"] = "Unbekannter Plugin-Typ"
+
+-- Assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T2321563994"] = "Assistenten-Plugin"
+
+-- Language plugin
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T2370593926"] = "Sprach-Plugin"
+
+-- Configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T3353383632"] = "Konfigurations-Plugin"
+
+-- Standard augmentation process
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standardmäßiger Erweiterungsprozess"
+
+-- This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T3240406069"] = "Dies ist der Standard-Erweiterungsprozess, bei dem alle abgerufenen Kontexte verwendet werden, um den Chatverlauf zu ergänzen."
+
+-- Automatic AI data source selection with heuristik source reduction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T2339257645"] = "Automatische Auswahl der Datenquellen mittels KI und mit heuristischer Datenquellen-Reduktion"
+
+-- Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T648937779"] = "Wählt automatisch die passenden Datenquellen basierend auf der letzten Eingabe aus. Wendet am Ende eine heuristische Reduzierung an, um die Anzahl der Datenquellen zu verringern."
+
+-- This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3047786484"] = "Dieser RAG-Prozess filtert Datenquellen, wählt automatisch passende Quellen aus, ermöglicht optional die manuelle Auswahl von Quellen, ruft Daten ab und überprüft den Abrufkontext automatisch."
+
+-- AI-based data source selection with AI retrieval context validation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "KI-basierte Datenquellen-Auswahl mit Validierung des Abrufkontexts"
+
+-- PDF Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T3108466742"] = "PDF-Dateien"
+
+-- All Image Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T4086723714"] = "Alle Bilddateien"
+
+-- Text Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T639143005"] = "Textdateien"
+
+-- All Office Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T709668067"] = "Alle Office-Dateien"
+
+-- Failed to delete the API key due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::APIKEYS::T3658273365"] = "Das API-Schlüssel konnte aufgrund eines API-Problems nicht gelöscht werden."
+
+-- Failed to get the API key due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::APIKEYS::T3875720022"] = "Der API-Schlüssel konnte aufgrund eines API-Problems nicht abgerufen werden."
+
+-- Successfully copied the text to your clipboard
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::CLIPBOARD::T3351807428"] = "Der Text wurde erfolgreich in die Zwischenablage kopiert."
+
+-- Failed to copy the text to your clipboard.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::CLIPBOARD::T3724548108"] = "Der Text konnte nicht in die Zwischenablage kopiert werden."
+
+-- Failed to delete the secret data due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::SECRETS::T2303057928"] = "Das Löschen der geheimen Daten ist aufgrund eines API-Problems fehlgeschlagen."
+
+-- Failed to get the secret data due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::SECRETS::T4007657575"] = "Abrufen der geheimen Daten aufgrund eines API-Problems fehlgeschlagen."
+
+-- No update found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "Kein Update gefunden."
+
+-- The hostname is not a valid HTTP(S) URL.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"] = "Der Hostname ist keine gültige HTTP(S)-URL."
+
+-- The connection test failed. Please check the connection settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T132896331"] = "Der Verbindungstest ist fehlgeschlagen. Bitte überprüfe die Verbindungseinstellungen."
+
+-- Please select an embedding provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1461238528"] = "Bitte wählen Sie einen Embedding-Anbieter aus."
+
+-- The file does not exist. Please select a valid file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T148464502"] = "Die Datei existiert nicht. Bitte wähle eine gültige Datei aus."
+
+-- Please select one retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1515898234"] = "Bitte wählen Sie einen Abrufprozess aus."
+
+-- This data source can only be used with a self-hosted LLM provider. Please change the security policy.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1728967730"] = "Diese Datenquelle kann nur mit einem selbst gehosteten LLM-Anbieter verwendet werden. Bitte ändern Sie die Sicherheitsrichtlinie."
+
+-- The username must not be empty.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1829419906"] = "Der Benutzername darf nicht leer sein."
+
+-- The hostname must start with either http:// or https://
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T193387467"] = "Der Hostname muss mit entweder http:// oder https:// beginnen."
+
+-- Please enter a hostname, e.g., http://localhost
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1990396672"] = "Bitte geben Sie einen Hostnamen ein, z. B. http://localhost"
+
+-- Please select one valid authentication method.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2025964684"] = "Bitte wählen Sie eine gültige Authentifizierungsmethode aus."
+
+-- The name must not exceed 40 characters.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2160507967"] = "Der Name darf maximal 40 Zeichen lang sein."
+
+-- Please select your security policy.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2250909198"] = "Bitte wählen Sie Ihre Sicherheitsrichtlinie aus."
+
+-- Please test the connection before saving.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T285470497"] = "Bitte testen Sie die Verbindung, bevor Sie speichern."
+
+-- Please enter your secure access token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3086932434"] = "Bitte geben Sie Ihren sicheren Zugangstoken ein."
+
+-- The path does not exist. Please select a valid directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3146272446"] = "Der Pfad existiert nicht. Bitte wählen Sie ein gültiges Verzeichnis aus."
+
+-- The path must not be empty. Please select a directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3202118305"] = "Der Pfad darf nicht leer sein. Bitte wählen Sie ein Verzeichnis aus."
+
+-- The name must not be empty.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3243861903"] = "Der Name darf nicht leer sein."
+
+-- Please enter your password.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3888492477"] = "Bitte geben Sie Ihr Passwort ein."
+
+-- The port must be between 1 and 65535.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3965971107"] = "Der Port muss zwischen 1 und 65535 liegen."
+
+-- The name is already used by another data source. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T4001510395"] = "Der Name wird bereits von einer anderen Datenquelle verwendet. Bitte wählen Sie einen anderen Namen."
+
+-- Please acknowledge that you are aware of the cloud embedding implications.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T490875633"] = "Bitte bestätigen Sie, dass Ihnen die Auswirkungen der Cloud-Einbettung bewusst sind."
+
+-- The file path must not be empty. Please select a file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T878007824"] = "Der Dateipfad darf nicht leer sein. Bitte wählen Sie eine Datei aus."
+
+-- Please enter the secret necessary for authentication.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"] = "Bitte geben Sie das für die Authentifizierung benötigte Geheimnis ein."
+
+-- The hostname is not a valid HTTP(S) URL.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1013354736"] = "Der Hostname ist keine gültige HTTP(S)-URL."
+
+-- The instance name must not exceed 40 characters.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1117188308"] = "Der Instanzname darf nicht länger als 40 Zeichen sein."
+
+-- Please enter a hostname, e.g., http://localhost:1234
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T125334762"] = "Bitte geben Sie einen Hostnamen ein, z. B. http://localhost:1234"
+
+-- The instance name must be unique; the chosen name is already in use.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1301966140"] = "Der Instanzname muss eindeutig sein; der gewählte Name wird bereits verwendet."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
+
+-- The hostname must start with either http:// or https://
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T193387467"] = "Der Hostname muss mit http:// oder https:// beginnen."
+
+-- Please select a host.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T2257097222"] = "Bitte wählen Sie einen Host aus."
+
+-- Please enter an API key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3550629491"] = "Bitte geben Sie einen API-Schlüssel ein."
+
+-- Please enter an instance name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3999823516"] = "Bitte geben Sie einen Instanznamen ein."
+
+-- Please select an Hugging Face inference provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] = "Bitte wählen Sie einen Hugging Face-Inferenzanbieter aus."
+
+-- Please select a model.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Bitte wählen Sie ein Modell aus."
+
+-- Delete Chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
+

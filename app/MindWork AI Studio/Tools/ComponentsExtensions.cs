@@ -2,11 +2,14 @@ using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
 public static class ComponentsExtensions
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ComponentsExtensions).Namespace, nameof(ComponentsExtensions));
+    
     public static bool AllowSendTo(this Components component) => component switch
     {
         Components.NONE => false,
@@ -26,22 +29,22 @@ public static class ComponentsExtensions
     
     public static string Name(this Components component) => component switch
     {
-        Components.GRAMMAR_SPELLING_ASSISTANT => "Grammar & Spelling Assistant",
-        Components.TEXT_SUMMARIZER_ASSISTANT => "Text Summarizer Assistant",
-        Components.ICON_FINDER_ASSISTANT => "Icon Finder Assistant",
-        Components.TRANSLATION_ASSISTANT => "Translation Assistant",
-        Components.REWRITE_ASSISTANT => "Rewrite Assistant",
-        Components.AGENDA_ASSISTANT => "Agenda Assistant",
-        Components.CODING_ASSISTANT => "Coding Assistant",
-        Components.EMAIL_ASSISTANT => "E-Mail Assistant",
-        Components.LEGAL_CHECK_ASSISTANT => "Legal Check Assistant",
-        Components.SYNONYMS_ASSISTANT => "Synonym Assistant",
-        Components.MY_TASKS_ASSISTANT => "My Tasks Assistant",
-        Components.JOB_POSTING_ASSISTANT => "Job Posting Assistant",
-        Components.ERI_ASSISTANT => "ERI Server",
-        Components.I18N_ASSISTANT => "Localization Assistant",
+        Components.GRAMMAR_SPELLING_ASSISTANT => TB("Grammar & Spelling Assistant"),
+        Components.TEXT_SUMMARIZER_ASSISTANT => TB("Text Summarizer Assistant"),
+        Components.ICON_FINDER_ASSISTANT => TB("Icon Finder Assistant"),
+        Components.TRANSLATION_ASSISTANT => TB("Translation Assistant"),
+        Components.REWRITE_ASSISTANT => TB("Rewrite Assistant"),
+        Components.AGENDA_ASSISTANT => TB("Agenda Assistant"),
+        Components.CODING_ASSISTANT => TB("Coding Assistant"),
+        Components.EMAIL_ASSISTANT => TB("E-Mail Assistant"),
+        Components.LEGAL_CHECK_ASSISTANT => TB("Legal Check Assistant"),
+        Components.SYNONYMS_ASSISTANT => TB("Synonym Assistant"),
+        Components.MY_TASKS_ASSISTANT => TB("My Tasks Assistant"),
+        Components.JOB_POSTING_ASSISTANT => TB("Job Posting Assistant"),
+        Components.ERI_ASSISTANT => TB("ERI Server"),
+        Components.I18N_ASSISTANT => TB("Localization Assistant"),
         
-        Components.CHAT => "New Chat",
+        Components.CHAT => TB("New Chat"),
         
         _ => Enum.GetName(typeof(Components), component)!,
     };

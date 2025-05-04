@@ -4,21 +4,24 @@ using AIStudio.Agents;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.RAG.AugmentationProcesses;
 
 public sealed class AugmentationOne : IAugmentationProcess
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AugmentationOne).Namespace, nameof(AugmentationOne));
+    
     #region Implementation of IAugmentationProcess
 
     /// <inheritdoc />
     public string TechnicalName => "AugmentationOne";
     
     /// <inheritdoc />
-    public string UIName => "Standard augmentation process";
+    public string UIName => TB("Standard augmentation process");
     
     /// <inheritdoc />
-    public string Description => "This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.";
+    public string Description => TB("This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.");
     
     /// <inheritdoc />
     public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)

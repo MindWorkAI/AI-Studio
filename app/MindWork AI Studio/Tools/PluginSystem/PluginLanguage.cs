@@ -4,6 +4,7 @@ namespace AIStudio.Tools.PluginSystem;
 
 public sealed class PluginLanguage : PluginBase, ILanguagePlugin
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginLanguage).Namespace, nameof(PluginLanguage));
     private static readonly ILogger<PluginLanguage> LOGGER = Program.LOGGER_FACTORY.CreateLogger<PluginLanguage>();
     
     private readonly Dictionary<string, string> content = [];
@@ -53,28 +54,28 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     {
         if (!this.state.Environment["IETF_TAG"].TryRead(out readLangCultureTag))
         {
-            message = "The field IETF_TAG does not exist or is not a valid string.";
+            message = TB("The field IETF_TAG does not exist or is not a valid string.");
             readLangCultureTag = string.Empty;
             return false;
         }
         
         if (string.IsNullOrWhiteSpace(readLangCultureTag))
         {
-            message = "The field IETF_TAG is empty. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.";
+            message = TB("The field IETF_TAG is empty. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.");
             readLangCultureTag = string.Empty;
             return false;
         }
         
         if (readLangCultureTag.Length != 5)
         {
-            message = "The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.";
+            message = TB("The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.");
             readLangCultureTag = string.Empty;
             return false;
         }
         
         if (readLangCultureTag[2] != '-')
         {
-            message = "The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.";
+            message = TB("The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.");
             readLangCultureTag = string.Empty;
             return false;
         }
@@ -83,7 +84,7 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         for (var i = 0; i < 2; i++)
             if (!char.IsLower(readLangCultureTag[i]))
             {
-                message = "The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.";
+                message = TB("The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.");
                 readLangCultureTag = string.Empty;
                 return false;
             }
@@ -92,7 +93,7 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
         for (var i = 3; i < 5; i++)
             if (!char.IsUpper(readLangCultureTag[i]))
             {
-                message = "The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.";
+                message = TB("The field IETF_TAG is not a valid IETF tag. Use a valid IETF tag like 'en-US'. The first part is the language, the second part is the country code.");
                 readLangCultureTag = string.Empty;
                 return false;
             }
@@ -105,14 +106,14 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     {
         if (!this.state.Environment["LANG_NAME"].TryRead(out readLangName))
         {
-            message = "The field LANG_NAME does not exist or is not a valid string.";
+            message = TB("The field LANG_NAME does not exist or is not a valid string.");
             readLangName = string.Empty;
             return false;
         }
         
         if (string.IsNullOrWhiteSpace(readLangName))
         {
-            message = "The field LANG_NAME is empty. Use a valid language name.";
+            message = TB("The field LANG_NAME is empty. Use a valid language name.");
             readLangName = string.Empty;
             return false;
         }

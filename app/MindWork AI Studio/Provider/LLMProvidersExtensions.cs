@@ -12,6 +12,7 @@ using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Provider.X;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -19,6 +20,8 @@ namespace AIStudio.Provider;
 
 public static class LLMProvidersExtensions
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LLMProvidersExtensions).Namespace, nameof(LLMProvidersExtensions));
+    
     /// <summary>
     /// Returns the human-readable name of the provider.
     /// </summary>
@@ -26,7 +29,7 @@ public static class LLMProvidersExtensions
     /// <returns>The human-readable name of the provider.</returns>
     public static string ToName(this LLMProviders llmProvider) => llmProvider switch
     {
-        LLMProviders.NONE => "No provider selected",
+        LLMProviders.NONE => TB("No provider selected"),
         
         LLMProviders.OPEN_AI => "OpenAI",
         LLMProviders.ANTHROPIC => "Anthropic",
@@ -40,12 +43,12 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => "Fireworks.ai",
         LLMProviders.HUGGINGFACE => "Hugging Face",
         
-        LLMProviders.SELF_HOSTED => "Self-hosted",
+        LLMProviders.SELF_HOSTED => TB("Self-hosted"),
         
         LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
         LLMProviders.GWDG => "GWDG SAIA",
         
-        _ => "Unknown",
+        _ => TB("Unknown"),
     };
     
     /// <summary>
