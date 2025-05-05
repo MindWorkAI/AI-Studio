@@ -25,7 +25,7 @@ public static class Pdfium
             var response = await client.GetAsync(pdfiumUrl);
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($" failed to download Pdfium {version} for {rid.ToUserFriendlyName()}");
+                Console.WriteLine($" failed to download Pdfium {version} for {rid.ToUserFriendlyName()} from {pdfiumUrl}");
                 return;
             }
 
@@ -98,8 +98,8 @@ public static class Pdfium
             RID.OSX_ARM64 => $"{baseUrl}mac-arm64.tgz",
             RID.OSX_X64 => $"{baseUrl}mac-x64.tgz",
             
-            RID.WIN_ARM64 => $"{baseUrl}win-arm64.zip",
-            RID.WIN_X64 => $"{baseUrl}win-x64.zip",
+            RID.WIN_ARM64 => $"{baseUrl}win-arm64.tgz",
+            RID.WIN_X64 => $"{baseUrl}win-x64.tgz",
             
             _ => string.Empty,
         };
