@@ -26,9 +26,14 @@ public enum Capability
     AUDIO_INPUT,
     
     /// <summary>
-    /// The AI model can perform image input, such as photos or drawings.
+    /// The AI model can perform one image input, such as one photo or drawing.
     /// </summary>
-    IMAGE_INPUT,
+    SINGLE_IMAGE_INPUT,
+    
+    /// <summary>
+    /// The AI model can perform multiple images as input, such as multiple photos or drawings.
+    /// </summary>
+    MULTIPLE_IMAGE_INPUT,
     
     /// <summary>
     /// The AI model can perform speech input.
@@ -68,7 +73,12 @@ public enum Capability
     /// <summary>
     /// The AI model can perform reasoning tasks.
     /// </summary>
-    REASONING,
+    OPTIONAL_REASONING,
+    
+    /// <summary>
+    /// The AI model always performs reasoning.
+    /// </summary>
+    ALWAYS_REASONING,
     
     /// <summary>
     /// The AI model can embed information or data.
