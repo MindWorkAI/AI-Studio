@@ -121,7 +121,59 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
-
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        // Pixtral models are able to do process images:
+        if (modelName.IndexOf("pixtral") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+            ];
+        
+        // Mistral medium:
+        if (modelName.IndexOf("mistral-medium-") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+            ];
+        
+        // Mistral small:
+        if (modelName.IndexOf("mistral-small-") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+            ];
+        
+        // Mistral saba:
+        if (modelName.IndexOf("mistral-saba-") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+            ];
+        
+        // Default:
+        return
+        [
+            Capability.TEXT_INPUT,
+            Capability.TEXT_OUTPUT,
+            
+            Capability.FUNCTION_CALLING,
+        ];
+    }
+    
     #endregion
     
     private async Task<ModelsResponse> LoadModelList(string? apiKeyProvisional, CancellationToken token)
