@@ -48,6 +48,198 @@ LANG_NAME = "Deutsch (Deutschland)"
 
 UI_TEXT_CONTENT = {}
 
+-- Ziel
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Ziel"
+
+-- Dieser Agenda-Planer hilft Ihnen, eine strukturierte Tagesordnung für Ihr Meeting oder Seminar zu erstellen. Geben Sie einfach einige grundlegende Informationen zur Veranstaltung an, und der Assistent erstellt eine Agenda für Sie. Sie können außerdem die Dauer, die Startzeit, den Ort, die Zielsprache und weitere Details festlegen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1193269953"] = "Dieser Agenda-Planer hilft Ihnen, eine strukturierte Tagesordnung für Ihr Meeting oder Seminar zu erstellen. Geben Sie einfach einige grundlegende Informationen zur Veranstaltung an, und der Assistent erstellt eine Agenda für Sie. Sie können außerdem die Dauer, die Startzeit, den Ort, die Zielsprache und weitere Details festlegen."
+
+-- Beschreiben Sie das Thema des Treffens, Seminars usw. Geht es um Quantencomputing, Softwareentwicklung oder handelt es sich um ein allgemeines Geschäftstreffen?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T12079368"] = "Beschreiben Sie das Thema des Treffens, Seminars usw. Geht es um Quantencomputing, Softwareentwicklung oder handelt es sich um ein allgemeines Geschäftstreffen?"
+
+-- Sollte es eine soziale Aktivität geben?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1222794463"] = "Sollte es eine soziale Aktivität geben?"
+
+-- Handelt es sich um eine virtuelle Veranstaltung, z. B. einen Anruf oder ein Webinar?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T123591568"] = "Handelt es sich um eine virtuelle Veranstaltung, z. B. einen Anruf oder ein Webinar?"
+
+-- Aktive Teilnahme, wie zum Beispiel World Café, Diskussionen usw.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1276489759"] = "Aktive Teilnahme, wie zum Beispiel World Café, Diskussionen usw."
+
+-- Projektbesprechung
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1307971935"] = "Projektbesprechung"
+
+-- Wer wird das Meeting, Seminar usw. moderieren?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1328622016"] = "Wer wird das Meeting, Seminar usw. moderieren?"
+
+-- Passive Teilnahme, wie Präsentationen, Vorlesungen usw.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1331274154"] = "Passive Teilnahme, wie Präsentationen, Vorlesungen usw."
+
+-- Bitte stellen Sie einen Moderator für das Meeting oder Seminar zur Verfügung. Wer wird die Diskussion leiten?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1345848634"] = "Bitte stellen Sie einen Moderator für das Meeting oder Seminar zur Verfügung. Wer wird die Diskussion leiten?"
+
+-- Bitte beginnen Sie jede Zeile Ihrer Inhaltsliste mit einem Strich (-), um eine Aufzählungsliste zu erstellen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1384718254"] = "Bitte beginnen Sie jede Zeile Ihrer Inhaltsliste mit einem Strich (-), um eine Aufzählungsliste zu erstellen."
+
+-- Beschreiben Sie das Ziel bzw. die Ziele des Treffens, Seminars usw. Was soll erreicht werden?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T142537978"] = "Beschreiben Sie das Ziel bzw. die Ziele des Treffens, Seminars usw. Was soll erreicht werden?"
+
+-- Standort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1539345862"] = "Standort"
+
+-- Besprechungsname
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1581597965"] = "Besprechungsname"
+
+-- Thema
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1750080356"] = "Thema"
+
+-- Bitte geben Sie einen Ort für das Meeting oder Seminar an.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1812212200"] = "Bitte geben Sie einen Ort für das Meeting oder Seminar an."
+
+-- Inhaltsverzeichnis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1823782898"] = "Inhaltsverzeichnis"
+
+-- Bitte geben Sie ein Thema für die Tagesordnung an. Worum geht es in dem Meeting oder Seminar?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1862110661"] = "Bitte geben Sie ein Thema für die Tagesordnung an. Worum geht es in dem Meeting oder Seminar?"
+
+-- Agenda erstellen
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1974034983"] = "Agenda erstellen"
+
+-- Anzahl der Teilnehmer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2155351093"] = "Anzahl der Teilnehmer"
+
+-- Bitte geben Sie ein Ziel für das Meeting oder Seminar an. Was möchten Sie erreichen?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2162394691"] = "Bitte geben Sie ein Ziel für das Meeting oder Seminar an. Was möchten Sie erreichen?"
+
+-- Besprechen Sie den aktuellen Projektstatus und planen Sie die nächsten Schritte.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2213481631"] = "Besprechen Sie den aktuellen Projektstatus und planen Sie die nächsten Schritte."
+
+-- Bitte geben Sie eine Startzeit für das Meeting oder Seminar an. Wenn es sich um eine mehrtägige Veranstaltung handelt, nennen Sie bitte die Startzeit für jeden Tag, z. B. „9:00 Uhr, 10:00 Uhr“ usw.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2231343846"] = "Bitte geben Sie eine Startzeit für das Meeting oder Seminar an. Wenn es sich um eine mehrtägige Veranstaltung handelt, nennen Sie bitte die Startzeit für jeden Tag, z. B. „9:00 Uhr, 10:00 Uhr“ usw."
+
+-- Bitte geben Sie Inhalte für die Agenda an. Was sind die wichtigsten Punkte des Treffens oder Seminars?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2263830489"] = "Bitte geben Sie Inhalte für die Agenda an. Was sind die wichtigsten Punkte des Treffens oder Seminars?"
+
+-- Benennen Sie das Meeting, Seminar usw.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2295548803"] = "Benennen Sie das Meeting, Seminar usw."
+
+-- Zielsprache
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T237828418"] = "Zielsprache"
+
+-- 9:00 Uhr
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2380198832"] = "9:00 Uhr"
+
+-- Agenda-Planer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2435638853"] = "Agenda-Planer"
+
+-- Wann beginnt das Meeting, Seminar usw.? Zum Beispiel: „9:00 Uhr“ oder „9:00 Uhr (MEZ)“ usw. Wenn das Meeting eine mehrtägige Veranstaltung ist, geben Sie bitte die Startzeit für jeden Tag an.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2446959989"] = "Wann beginnt das Meeting, Seminar usw.? Zum Beispiel: „9:00 Uhr“ oder „9:00 Uhr (MEZ)“ usw. Wenn das Meeting eine mehrtägige Veranstaltung ist, geben Sie bitte die Startzeit für jeden Tag an."
+
+-- Müssen sich die Teilnehmer zuerst kennenlernen?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2463643444"] = "Müssen sich die Teilnehmer zuerst kennenlernen?"
+
+-- Wie lange dauert das Meeting, Seminar usw.? Zum Beispiel: „2 Stunden“ oder „2 Tage (erster Tag 8 Stunden, dann 4 Stunden)“ usw.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2545969476"] = "Wie lange dauert das Meeting, Seminar usw.? Zum Beispiel: „2 Stunden“ oder „2 Tage (erster Tag 8 Stunden, dann 4 Stunden)“ usw."
+
+-- Nein, es sollte keine sozialen Aktivitäten geben.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2563466975"] = "Nein, es sollte keine sozialen Aktivitäten geben."
+
+-- (Optional) Welche Themen sollten nur kurz angesprochen werden?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2604490939"] = "(Optional) Welche Themen sollten nur kurz angesprochen werden?"
+
+-- Wöchentlicher Jour fixe
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2610771512"] = "Wöchentlicher Jour fixe"
+
+-- Hamburg, Deutschland
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2771142216"] = "Hamburg, Deutschland"
+
+-- Bitte wählen Sie die Anzahl der Teilnehmer aus.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T279660796"] = "Bitte wählen Sie die Anzahl der Teilnehmer aus."
+
+-- Moderator
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T283265988"] = "Moderator"
+
+-- Fassen Sie den Inhalt des Treffens, Seminars usw. stichpunktartig zusammen. Verwenden Sie Bindestriche (-), um die einzelnen Punkte zu trennen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2882624953"] = "Fassen Sie den Inhalt des Treffens, Seminars usw. stichpunktartig zusammen. Verwenden Sie Bindestriche (-), um die einzelnen Punkte zu trennen."
+
+-- Nein, das ist eine Präsenzveranstaltung.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2903581470"] = "Nein, das ist eine Präsenzveranstaltung."
+
+-- Minuten
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2914829806"] = "Minuten"
+
+-- (Optional) Listen Sie die Personen auf, die beim Meeting, Seminar usw. präsentieren werden. Trennen Sie die einzelnen Einträge mit Bindestrichen (-).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3037376304"] = "(Optional) Listen Sie die Personen auf, die beim Meeting, Seminar usw. präsentieren werden. Trennen Sie die einzelnen Einträge mit Bindestrichen (-)."
+
+-- (Optional) Wer präsentiert?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3063488920"] = "(Optional) Wer präsentiert?"
+
+-- Ja, Teilnehmer vorstellen
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3277432669"] = "Ja, Teilnehmer vorstellen"
+
+-- (Optional) Auf welche Themen sollte der Fokus liegen?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3292480692"] = "(Optional) Auf welche Themen sollte der Fokus liegen?"
+
+-- Ungefähre Dauer der Kaffee- oder Teepausen
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3310841480"] = "Ungefähre Dauer der Kaffee- oder Teepausen"
+
+-- Bitte geben Sie eine Dauer für das Meeting oder Seminar an, z. B. „2 Stunden“ oder „2 Tage (8 Stunden und 4 Stunden)“ usw.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3535835316"] = "Bitte geben Sie eine Dauer für das Meeting oder Seminar an, z. B. „2 Stunden“ oder „2 Tage (8 Stunden und 4 Stunden)“ usw."
+
+-- Dauer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3569830189"] = "Dauer"
+
+-- 2 Stunden
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3689752318"] = "2 Stunden"
+
+-- Nein, die Teilnehmer müssen nicht anreisen oder abreisen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3704775613"] = "Nein, die Teilnehmer müssen nicht anreisen oder abreisen."
+
+-- Bitte geben Sie einen Namen für das Meeting oder Seminar an.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3717566228"] = "Bitte geben Sie einen Namen für das Meeting oder Seminar an."
+
+-- Nein, die Teilnehmer kennen sich untereinander.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3771122854"] = "Nein, die Teilnehmer kennen sich untereinander."
+
+-- Benutzerdefinierte Zielsprache
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Ja, es sollte eine soziale Aktivität geben.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3973813377"] = "Ja, es sollte eine soziale Aktivität geben."
+
+-- Ja, es sollte ein gemeinsames Abendessen geben.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4001248011"] = "Ja, es sollte ein gemeinsames Abendessen geben."
+
+-- Nein, es sollte kein gemeinsames Abendessen geben.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4150931417"] = "Nein, es sollte kein gemeinsames Abendessen geben."
+
+-- Wo findet das Treffen, Seminar usw. statt?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4155424204"] = "Wo findet das Treffen, Seminar usw. statt?"
+
+-- Bitte wählen Sie eine Zielsprache für die Agenda aus.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4163183653"] = "Bitte wählen Sie eine Zielsprache für die Agenda aus."
+
+-- Ja, die Teilnehmenden müssen anreisen und abreisen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4266648123"] = "Ja, die Teilnehmenden müssen anreisen und abreisen."
+
+-- Soll es ein gemeinsames Abendessen geben?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T553265703"] = "Soll es ein gemeinsames Abendessen geben?"
+
+-- Bitte wählen Sie eine benutzerdefinierte Sprache aus.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T656744944"] = "Bitte wählen Sie eine benutzerdefinierte Sprache aus."
+
+-- Sollten die Teilnehmer passiv oder aktiv eingebunden werden?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T749354834"] = "Sollten die Teilnehmer passiv oder aktiv eingebunden werden?"
+
+-- Ja, dies ist eine virtuelle Veranstaltung.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T829874736"] = "Ja, dies ist eine virtuelle Veranstaltung."
+
+-- Ca. Dauer der Mittagspause
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T92038124"] = "Ca. Dauer der Mittagspause"
+
+-- Müssen die Teilnehmenden anreisen und abreisen?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T945792620"] = "Müssen die Teilnehmenden anreisen und abreisen?"
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Generierung stoppen"
 
@@ -62,6 +254,36 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Senden an
 
 -- Copy result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Ergebnis kopieren"
+
+-- Erweitertes Bias-Poster
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Erweitertes Bias-Poster"
+
+-- Bitte wählen Sie eine Zielsprache für die Voreingenommenheit aus.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1380819730"] = "Bitte wählen Sie eine Zielsprache für die Voreingenommenheit aus."
+
+-- Zielsprache
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T237828418"] = "Zielsprache"
+
+-- Blogbeitrag von Buster Benson:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T2524573984"] = "Blogbeitrag von Buster Benson:"
+
+-- Lerne jeden Tag einen neuen kognitiven Bias kennen. Du kannst dem LLM auch deine eigenen Fragen stellen. Die Idee hinter „Bias des Tages” basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Biases gruppiert, und die Originaltexte stammen aus Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag einen Bias anhand von Johns Poster kennenzulernen, stammt von Drew Nelson.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T2698749816"] = "Lerne jeden Tag einen neuen kognitiven Bias kennen. Du kannst dem LLM auch deine eigenen Fragen stellen. Die Idee hinter „Bias des Tages” basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Biases gruppiert, und die Originaltexte stammen aus Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag einen Bias anhand von Johns Poster kennenzulernen, stammt von Drew Nelson."
+
+-- Wikipedia-Liste kognitiver Verzerrungen
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3097054642"] = "Wikipedia-Liste kognitiver Verzerrungen"
+
+-- Zeig mir das Vorurteil des Tages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3489946962"] = "Zeig mir das Vorurteil des Tages"
+
+-- Benutzerdefinierte Zielsprache
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Bitte geben Sie eine benutzerdefinierte Sprache an.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
+
+-- Vorurteil des Tages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Vorurteil des Tages"
 
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage Ihrer Angaben."
@@ -566,6 +788,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T3513450626"] =
 
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Vorausgewählter Anbieter"
+
+-- Wählen Sie einen vorausgewählten Anbieter aus.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T20906218"] = "Wählen Sie einen vorausgewählten Anbieter aus."
 
 -- Use app default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T3672477670"] = "App-Standard verwenden"
@@ -1552,7 +1777,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T108494
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1096979935"] = "Möchten Sie die Datenquelle „{0}“ vom Typ {1} wirklich löschen?"
 
 -- Edit Local Directory Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1215599168"] = "Lokale Ordner-Datenquelle bearbeiten" 
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1215599168"] = "Lokale Ordner-Datenquelle bearbeiten"
 
 -- Add Local Directory as Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1454193397"] = "Lokalen Ordner als Datenquelle hinzufügen"
@@ -1662,6 +1887,18 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T14
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1462295644"] = "Eine andere Zielsprache vorauswählen"
 
+-- Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1672258211"] = "Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen?"
+
+-- Keine Optionen für die Grammatik- und Rechtschreibprüfung sind vorausgewählt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T2041367384"] = "Keine Optionen für die Grammatik- und Rechtschreibprüfung sind vorausgewählt"
+
+-- Wenn aktiviert, können Sie die Einstellungen für Grammatik- und Rechtschreibprüfung im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T2515603280"] = "Wenn aktiviert, können Sie die Einstellungen für Grammatik- und Rechtschreibprüfung im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+
+-- Optionen für Grammatik- und Rechtschreibprüfung sind vorausgewählt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T2843193933"] = "Optionen für Grammatik- und Rechtschreibprüfung sind vorausgewählt"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T3448155331"] = "Schließen"
 
@@ -1677,14 +1914,32 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T1417990312"] 
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T1462295644"] = "Wähle eine andere Zielsprache aus"
 
+-- Wählen Sie das Sprach-Plugin für den Vergleich aus.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T1523568309"] = "Wählen Sie das Sprach-Plugin für den Vergleich aus."
+
+-- Lokalisierungsoptionen sind vorausgewählt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T2246008228"] = "Lokalisierungsoptionen sind vorausgewählt"
+
 -- Assistant: Localization
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T2573041664"] = "Assistent: Lokalisierung"
+
+-- Sprach-Plugin zum Vergleichen verwendet
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T263317578"] = "Sprach-Plugin zum Vergleichen verwendet"
+
+-- Lokalisierungsoptionen vorauswählen?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3080941742"] = "Lokalisierungsoptionen vorauswählen?"
+
+-- Es sind keine Spracheinstellungen vorausgewählt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3287437171"] = "Es sind keine Spracheinstellungen vorausgewählt."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3448155331"] = "Schließen"
 
 -- Which target language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
+
+-- Wenn diese Option aktiviert ist, können Sie die Spracheinstellungen im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T4022795859"] = "Wenn diese Option aktiviert ist, können Sie die Spracheinstellungen im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
 -- Preselect the icon source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1116652851"] = "Wählen Sie die Iconquelle aus"
@@ -1846,7 +2101,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T711745239"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Welcher Schreibstil soll standardmäßig ausgewählt werden?"
 
 -- Preselect the target language
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1417990312"] = "Ziellsprache vorauswählen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1417990312"] = "Zielsprache vorauswählen"
 
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1462295644"] = "Eine andere Zielsprache vorauswählen"
@@ -1863,14 +2118,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T2661599097
 -- Preselect a writing style
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T28456020"] = "Wählen Sie einen Schreibstil aus"
 
+-- Rewrite & improve text options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3303192024"] = "Optionen für „Text umschreiben & verbessern“ sind bereits vorausgewählt."
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3448155331"] = "Schließen"
 
 -- Which target language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
+-- When enabled, you can preselect the rewrite & improve text options. This is might be useful when you prefer a specific language or LLM model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3657121735"] = "Wenn diese Option aktiviert ist, können Sie Optionen für „Text umschreiben & verbessern“ im Voraus auswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+
+-- Preselect rewrite & improve text options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3745021518"] = "Vorauswahl von Optionen für „Text umschreiben & verbessern“?"
+
+-- No rewrite & improve text options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T553954963"] = "Keine Optionen für „Text umschreiben & verbessern“ sind vorausgewählt"
+
 -- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "Wenn diese Option aktiviert ist, können Sie Synonym-Vorschläge im Voraus auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "Wenn diese Option aktiviert ist, können Sie Synonymoptionen im Voraus auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
 -- No synonym options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2183758387"] = "Es sind keine Synonymoptionen vorausgewählt"
@@ -1882,7 +2149,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T234516261
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2382415529"] = "Wähle eine andere Sprache aus"
 
 -- Synonym options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2390458990"] = "Synonym-Optionen sind vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2390458990"] = "Synonymoptionen sind vorausgewählt"
 
 -- Preselect the language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2571465005"] = "Sprache vorauswählen"
@@ -2263,7 +2530,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3294830584"] = "Entdecken Sie die Miss
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3334355246"] = "Vom Betriebssystem bereitgestellte Sprache"
 
 -- The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3405978777"] = "Die folgende Liste zeigt die Versionen von MindWork AI Studio und des verwendeten Compilerd, den Build-Zeitpunkt und weitere Informationen:"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3405978777"] = "Die folgende Liste zeigt die Versionen von MindWork AI Studio und des verwendeten Compilers, den Build-Zeitpunkt und weitere Informationen:"
 
 -- Used Rust compiler
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3440211747"] = "Verwendeter Rust-Compiler"
@@ -3497,4 +3764,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] =
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
-
