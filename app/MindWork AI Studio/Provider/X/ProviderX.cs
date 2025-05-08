@@ -110,7 +110,44 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
     {
         return Task.FromResult<IEnumerable<Model>>([]);
     }
-
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        if(modelName.IndexOf("-vision-") is not -1)
+            return 
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                ];
+        
+        if(modelName.StartsWith("grok-3-mini"))
+            return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                ];
+        
+        if(modelName.StartsWith("grok-3"))
+            return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                ];
+        
+        // Default capabilities:
+        return 
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+            ];
+    }
+    
     #endregion
     
     private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
