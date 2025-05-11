@@ -4,9 +4,9 @@
     "net9.0": {
       "CodeBeam.MudBlazor.Extensions": {
         "type": "Direct",
-        "requested": "[8.1.0, )",
-        "resolved": "8.1.0",
-        "contentHash": "6f6K8Qr+cjk419URr8+b9nkSr0y300n/DaB0tJdYVRtDsWwoVCvgPwf9kENdDg1HIiYPL524+Q5a9QraL6hAvw==",
+        "requested": "[8.2.0, )",
+        "resolved": "8.2.0",
+        "contentHash": "MgaQKoKmOnZb2lGKr5EpiGrI2aU+siMVLXWCU4FZLAiZiusfWocq1KRnOhWPyl1mXsU8ROQQgjeSEDrQ4//Yew==",
         "dependencies": {
           "BuildBundlerMinifier": "3.2.449",
           "CsvHelper": "33.0.1",
@@ -56,13 +56,13 @@
       },
       "MudBlazor.Markdown": {
         "type": "Direct",
-        "requested": "[8.5.1.1, )",
-        "resolved": "8.5.1.1",
-        "contentHash": "3FQaHlpLV54W77aVl58JCH2HX0p2QcqGNamtxyVzMKeMa92x+MYm4DFcqqhfbEvNEWTRZ6q22ZCx/NG0UX422Q==",
+        "requested": "[8.6.0, )",
+        "resolved": "8.6.0",
+        "contentHash": "TIrR6QqXXBmHRx/L66Jxl9UlVtom8jK46iVpPkTi8C7TjsUUylI5zBzmKPiVYp8bKDhgLzOcQH0o01xuHlKJEw==",
         "dependencies": {
-          "Markdig": "0.41.0",
+          "Markdig": "0.41.1",
           "Microsoft.Extensions.Caching.Memory": "9.0.4",
-          "MudBlazor": "8.5.1"
+          "MudBlazor": "8.6.0"
         }
       },
       "ReverseMarkdown": {
@@ -86,8 +86,8 @@
       },
       "Markdig": {
         "type": "Transitive",
-        "resolved": "0.41.0",
-        "contentHash": "nEGSjfQ2i+MzJjvCZqoIBqW2x0iBALhhVogud48oPA/39a0n0jOhghdTYdm4xaDFBXmc4MxsVJAP5gtdvADvWQ=="
+        "resolved": "0.41.1",
+        "contentHash": "e9QXUg2agxd9iWV3hO5fA4Qp2avMuXFiElatzD8hp69yIEgESrdhKvDFf9y9NOlPe9jO7AA6W1JAnntLmqwRwA=="
       },
       "Microsoft.AspNetCore.Authorization": {
         "type": "Transitive",
