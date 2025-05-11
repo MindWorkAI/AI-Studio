@@ -1120,6 +1120,57 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T492357592"]
 -- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
 
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Delete"
+
+-- Add Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Add Embedding"
+
+-- Are you sure you want to delete the embedding provider '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1825371968"] = "Are you sure you want to delete the embedding provider '{0}'?"
+
+-- Add Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Add Embedding Provider"
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2189814010"] = "Model"
+
+-- Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and 'joyful' would be more alike than those for 'happy' and 'sad'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2419962612"] = "Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and 'joyful' would be more alike than those for 'happy' and 'sad'."
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T266367750"] = "Name"
+
+-- This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3251217940"] = "This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words."
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3267849393"] = "Edit"
+
+-- Configured Embeddings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3526613453"] = "Configured Embeddings"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Actions"
+
+-- No embeddings configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T4068015588"] = "No embeddings configured yet."
+
+-- Edit Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T4264602229"] = "Edit Embedding Provider"
+
+-- Delete Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T511304264"] = "Delete Embedding Provider"
+
+-- Open Dashboard
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T78223861"] = "Open Dashboard"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T900237532"] = "Provider"
+
+-- Configure Embeddings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T970042679"] = "Configure Embeddings"
+
 -- Edit Profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T1143111468"] = "Edit Profile"
 
@@ -1446,6 +1497,60 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "No"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Yes"
+
+-- Failed to store the API key in the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1122745046"] = "Failed to store the API key in the operating system. The message was: {0}. Please try again."
+
+-- API Key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1324664716"] = "API Key"
+
+-- Create account
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1356621346"] = "Create account"
+
+-- Please enter an embedding model name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1661085403"] = "Please enter an embedding model name."
+
+-- Hostname
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1727440780"] = "Hostname"
+
+-- Load
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1756340745"] = "Load"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Update"
+
+-- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1870831108"] = "Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Model"
+
+-- (Optional) API Key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
+
+-- Currently, we cannot query the embedding models of self-hosted systems. Therefore, enter the model name manually.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2615586687"] = "Currently, we cannot query the embedding models of self-hosted systems. Therefore, enter the model name manually."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2646845972"] = "Add"
+
+-- No models loaded or available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2810182573"] = "No models loaded or available."
+
+-- Instance Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2842060373"] = "Instance Name"
+
+-- Model selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T416738168"] = "Model selection"
+
+-- Host
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T808120719"] = "Host"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Provider"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Cancel"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
@@ -2961,6 +3066,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T2897045472"] = "No
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Unknown"
+
+-- no model selected
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "no model selected"
 
 -- Navigation never expands, but there are tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033"] = "Navigation never expands, but there are tooltips"

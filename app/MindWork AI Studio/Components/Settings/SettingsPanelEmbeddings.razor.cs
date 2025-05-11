@@ -39,7 +39,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>("Add Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -69,7 +69,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
             { x => x.DataHost, embeddingProvider.Host },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>("Edit Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -92,10 +92,10 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
     {
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete the embedding provider '{provider.Name}'?" },
+            { "Message", string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name) },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Embedding Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;

@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -9,7 +10,7 @@ using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Dialogs;
 
-public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
+public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -67,9 +68,6 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -175,7 +173,7 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
                 this.dataAPIKey = string.Empty;
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
                 {
-                    this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
+                    this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
                 }
             }
@@ -224,7 +222,7 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
             var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey);
             if (!storeResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.Validate();
                 return;
             }
@@ -236,7 +234,7 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     private string? ValidateManuallyModel(string manuallyModel)
     {
         if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
-            return "Please enter an embedding model name.";
+            return T("Please enter an embedding model name.");
         
         return null;
     }
@@ -261,8 +259,8 @@ public partial class EmbeddingProviderDialog : ComponentBase, ISecretId
     
     private string APIKeyText => this.DataLLMProvider switch
     {
-        LLMProviders.SELF_HOSTED => "(Optional) API Key",
-        _ => "API Key",
+        LLMProviders.SELF_HOSTED => T("(Optional) API Key"),
+        _ => T("API Key"),
     };
     
     private bool IsNoneProvider => this.DataLLMProvider is LLMProviders.NONE;
