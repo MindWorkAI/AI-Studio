@@ -48,196 +48,196 @@ LANG_NAME = "Deutsch (Deutschland)"
 
 UI_TEXT_CONTENT = {}
 
--- Ziel
+-- Objective
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Ziel"
 
--- Dieser Agenda-Planer hilft Ihnen, eine strukturierte Tagesordnung für Ihr Meeting oder Seminar zu erstellen. Geben Sie einfach einige grundlegende Informationen zur Veranstaltung an, und der Assistent erstellt eine Agenda für Sie. Sie können außerdem die Dauer, die Startzeit, den Ort, die Zielsprache und weitere Details festlegen.
+-- This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1193269953"] = "Dieser Agenda-Planer hilft Ihnen, eine strukturierte Tagesordnung für Ihr Meeting oder Seminar zu erstellen. Geben Sie einfach einige grundlegende Informationen zur Veranstaltung an, und der Assistent erstellt eine Agenda für Sie. Sie können außerdem die Dauer, die Startzeit, den Ort, die Zielsprache und weitere Details festlegen."
 
--- Beschreiben Sie das Thema des Treffens, Seminars usw. Geht es um Quantencomputing, Softwareentwicklung oder handelt es sich um ein allgemeines Geschäftstreffen?
+-- Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T12079368"] = "Beschreiben Sie das Thema des Treffens, Seminars usw. Geht es um Quantencomputing, Softwareentwicklung oder handelt es sich um ein allgemeines Geschäftstreffen?"
 
--- Sollte es eine soziale Aktivität geben?
+-- Should there be a social activity?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1222794463"] = "Sollte es eine soziale Aktivität geben?"
 
--- Handelt es sich um eine virtuelle Veranstaltung, z. B. einen Anruf oder ein Webinar?
+-- Is this a virtual event, e.g., a call or webinar?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T123591568"] = "Handelt es sich um eine virtuelle Veranstaltung, z. B. einen Anruf oder ein Webinar?"
 
--- Aktive Teilnahme, wie zum Beispiel World Café, Diskussionen usw.
+-- Active participation, like world café, discussions, etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1276489759"] = "Aktive Teilnahme, wie zum Beispiel World Café, Diskussionen usw."
 
--- Projektbesprechung
+-- Project meeting
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1307971935"] = "Projektbesprechung"
 
--- Wer wird das Meeting, Seminar usw. moderieren?
+-- Who will moderate the meeting, seminar, etc.?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1328622016"] = "Wer wird das Meeting, Seminar usw. moderieren?"
 
--- Passive Teilnahme, wie Präsentationen, Vorlesungen usw.
+-- Passive participation, like presentations, lectures, etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1331274154"] = "Passive Teilnahme, wie Präsentationen, Vorlesungen usw."
 
--- Bitte stellen Sie einen Moderator für das Meeting oder Seminar zur Verfügung. Wer wird die Diskussion leiten?
+-- Please provide a moderator for the meeting or the seminar. Who will lead the discussion?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1345848634"] = "Bitte stellen Sie einen Moderator für das Meeting oder Seminar zur Verfügung. Wer wird die Diskussion leiten?"
 
--- Bitte beginnen Sie jede Zeile Ihrer Inhaltsliste mit einem Strich (-), um eine Aufzählungsliste zu erstellen.
+-- Please start each line of your content list with a dash (-) to create a bullet point list.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1384718254"] = "Bitte beginnen Sie jede Zeile Ihrer Inhaltsliste mit einem Strich (-), um eine Aufzählungsliste zu erstellen."
 
--- Beschreiben Sie das Ziel bzw. die Ziele des Treffens, Seminars usw. Was soll erreicht werden?
+-- Describe the objective(s) of the meeting, seminar, etc. What should be achieved?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T142537978"] = "Beschreiben Sie das Ziel bzw. die Ziele des Treffens, Seminars usw. Was soll erreicht werden?"
 
--- Standort
+-- Location
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1539345862"] = "Standort"
 
--- Besprechungsname
+-- Meeting Name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1581597965"] = "Besprechungsname"
 
--- Thema
+-- Topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1750080356"] = "Thema"
 
--- Bitte geben Sie einen Ort für das Meeting oder Seminar an.
+-- Please provide a location for the meeting or the seminar.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1812212200"] = "Bitte geben Sie einen Ort für das Meeting oder Seminar an."
 
--- Inhaltsverzeichnis
+-- Content list
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1823782898"] = "Inhaltsverzeichnis"
 
--- Bitte geben Sie ein Thema für die Tagesordnung an. Worum geht es in dem Meeting oder Seminar?
+-- Please provide a topic for the agenda. What is the meeting or the seminar about?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1862110661"] = "Bitte geben Sie ein Thema für die Tagesordnung an. Worum geht es in dem Meeting oder Seminar?"
 
--- Agenda erstellen
+-- Create Agenda
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1974034983"] = "Agenda erstellen"
 
--- Anzahl der Teilnehmer
+-- Number of participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2155351093"] = "Anzahl der Teilnehmer"
 
--- Bitte geben Sie ein Ziel für das Meeting oder Seminar an. Was möchten Sie erreichen?
+-- Please provide an objective for the meeting or the seminar. What do you want to achieve?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2162394691"] = "Bitte geben Sie ein Ziel für das Meeting oder Seminar an. Was möchten Sie erreichen?"
 
--- Besprechen Sie den aktuellen Projektstatus und planen Sie die nächsten Schritte.
+-- Discuss the current project status and plan the next steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2213481631"] = "Besprechen Sie den aktuellen Projektstatus und planen Sie die nächsten Schritte."
 
--- Bitte geben Sie eine Startzeit für das Meeting oder Seminar an. Wenn es sich um eine mehrtägige Veranstaltung handelt, nennen Sie bitte die Startzeit für jeden Tag, z. B. „9:00 Uhr, 10:00 Uhr“ usw.
+-- Please provide a start time for the meeting or the seminar. When the meeting is a multi-day event, specify the start time for each day, e.g. '9:00 AM, 10:00 AM', etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2231343846"] = "Bitte geben Sie eine Startzeit für das Meeting oder Seminar an. Wenn es sich um eine mehrtägige Veranstaltung handelt, nennen Sie bitte die Startzeit für jeden Tag, z. B. „9:00 Uhr, 10:00 Uhr“ usw."
 
--- Bitte geben Sie Inhalte für die Agenda an. Was sind die wichtigsten Punkte des Treffens oder Seminars?
+-- Please provide some content for the agenda. What are the main points of the meeting or the seminar?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2263830489"] = "Bitte geben Sie Inhalte für die Agenda an. Was sind die wichtigsten Punkte des Treffens oder Seminars?"
 
--- Benennen Sie das Meeting, Seminar usw.
+-- Name the meeting, seminar, etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2295548803"] = "Benennen Sie das Meeting, Seminar usw."
 
--- Zielsprache
+-- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T237828418"] = "Zielsprache"
 
--- 9:00 Uhr
+-- 9:00 AM
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2380198832"] = "9:00 Uhr"
 
--- Agenda-Planer
+-- Agenda Planner
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2435638853"] = "Agenda-Planer"
 
--- Wann beginnt das Meeting, Seminar usw.? Zum Beispiel: „9:00 Uhr“ oder „9:00 Uhr (MEZ)“ usw. Wenn das Meeting eine mehrtägige Veranstaltung ist, geben Sie bitte die Startzeit für jeden Tag an.
+-- When will the meeting, seminar, etc. start? E.g., '9:00 AM', or '9:00 AM (CET)', etc. When the meeting is a multi-day event, specify the start time for each day.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2446959989"] = "Wann beginnt das Meeting, Seminar usw.? Zum Beispiel: „9:00 Uhr“ oder „9:00 Uhr (MEZ)“ usw. Wenn das Meeting eine mehrtägige Veranstaltung ist, geben Sie bitte die Startzeit für jeden Tag an."
 
--- Müssen sich die Teilnehmer zuerst kennenlernen?
+-- Do the participants need to get to know each other first?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2463643444"] = "Müssen sich die Teilnehmer zuerst kennenlernen?"
 
--- Wie lange dauert das Meeting, Seminar usw.? Zum Beispiel: „2 Stunden“ oder „2 Tage (erster Tag 8 Stunden, dann 4 Stunden)“ usw.
+-- How long will the meeting, seminar, etc. last? E.g., '2 hours', or '2 days (first day 8 hours, then 4 hours)', etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2545969476"] = "Wie lange dauert das Meeting, Seminar usw.? Zum Beispiel: „2 Stunden“ oder „2 Tage (erster Tag 8 Stunden, dann 4 Stunden)“ usw."
 
--- Nein, es sollte keine sozialen Aktivitäten geben.
+-- No, there should be no social activity
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2563466975"] = "Nein, es sollte keine sozialen Aktivitäten geben."
 
--- (Optional) Welche Themen sollten nur kurz angesprochen werden?
+-- (Optional) What topics should only be briefly addressed?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2604490939"] = "(Optional) Welche Themen sollten nur kurz angesprochen werden?"
 
--- Wöchentlicher Jour fixe
+-- Weekly jour fixe
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2610771512"] = "Wöchentlicher Jour fixe"
 
--- Hamburg, Deutschland
+-- Hamburg, Germany
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2771142216"] = "Hamburg, Deutschland"
 
--- Bitte wählen Sie die Anzahl der Teilnehmer aus.
+-- Please select the number of participants.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T279660796"] = "Bitte wählen Sie die Anzahl der Teilnehmer aus."
 
 -- Moderator
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T283265988"] = "Moderator"
 
--- Fassen Sie den Inhalt des Treffens, Seminars usw. stichpunktartig zusammen. Verwenden Sie Bindestriche (-), um die einzelnen Punkte zu trennen.
+-- Bullet list the content of the meeting, seminar, etc. roughly. Use dashes (-) to separate the items.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2882624953"] = "Fassen Sie den Inhalt des Treffens, Seminars usw. stichpunktartig zusammen. Verwenden Sie Bindestriche (-), um die einzelnen Punkte zu trennen."
 
--- Nein, das ist eine Präsenzveranstaltung.
+-- No, this is a physical event
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2903581470"] = "Nein, das ist eine Präsenzveranstaltung."
 
--- Minuten
+-- minutes
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2914829806"] = "Minuten"
 
--- (Optional) Listen Sie die Personen auf, die beim Meeting, Seminar usw. präsentieren werden. Trennen Sie die einzelnen Einträge mit Bindestrichen (-).
+-- (Optional) List the persons who will present at the meeting, seminar, etc. Use dashes (-) to separate the items.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3037376304"] = "(Optional) Listen Sie die Personen auf, die beim Meeting, Seminar usw. präsentieren werden. Trennen Sie die einzelnen Einträge mit Bindestrichen (-)."
 
--- (Optional) Wer präsentiert?
+-- (Optional) Who is presenting?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3063488920"] = "(Optional) Wer präsentiert?"
 
--- Ja, Teilnehmer vorstellen
+-- Yes, introduce participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3277432669"] = "Ja, Teilnehmer vorstellen"
 
--- (Optional) Auf welche Themen sollte der Fokus liegen?
+-- (Optional) What topics should be the focus?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3292480692"] = "(Optional) Auf welche Themen sollte der Fokus liegen?"
 
--- Ungefähre Dauer der Kaffee- oder Teepausen
+-- Approx. duration of the coffee or tea breaks
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3310841480"] = "Ungefähre Dauer der Kaffee- oder Teepausen"
 
--- Bitte geben Sie eine Dauer für das Meeting oder Seminar an, z. B. „2 Stunden“ oder „2 Tage (8 Stunden und 4 Stunden)“ usw.
+-- Please provide a duration for the meeting or the seminar, e.g. '2 hours', or '2 days (8 hours and 4 hours)', etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3535835316"] = "Bitte geben Sie eine Dauer für das Meeting oder Seminar an, z. B. „2 Stunden“ oder „2 Tage (8 Stunden und 4 Stunden)“ usw."
 
--- Dauer
+-- Duration
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3569830189"] = "Dauer"
 
--- 2 Stunden
+-- 2 hours
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3689752318"] = "2 Stunden"
 
--- Nein, die Teilnehmer müssen nicht anreisen oder abreisen.
+-- No, participants do not need to arrive and depart
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3704775613"] = "Nein, die Teilnehmer müssen nicht anreisen oder abreisen."
 
--- Bitte geben Sie einen Namen für das Meeting oder Seminar an.
+-- Please provide a name for the meeting or the seminar.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3717566228"] = "Bitte geben Sie einen Namen für das Meeting oder Seminar an."
 
--- Nein, die Teilnehmer kennen sich untereinander.
+-- No, participants know each other
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3771122854"] = "Nein, die Teilnehmer kennen sich untereinander."
 
--- Benutzerdefinierte Zielsprache
+-- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
--- Ja, es sollte eine soziale Aktivität geben.
+-- Yes, there should be a social activity
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3973813377"] = "Ja, es sollte eine soziale Aktivität geben."
 
--- Ja, es sollte ein gemeinsames Abendessen geben.
+-- Yes, there should be a joint dinner
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4001248011"] = "Ja, es sollte ein gemeinsames Abendessen geben."
 
--- Nein, es sollte kein gemeinsames Abendessen geben.
+-- No, there should be no joint dinner
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4150931417"] = "Nein, es sollte kein gemeinsames Abendessen geben."
 
--- Wo findet das Treffen, Seminar usw. statt?
+-- Where will the meeting, seminar, etc. take place?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4155424204"] = "Wo findet das Treffen, Seminar usw. statt?"
 
--- Bitte wählen Sie eine Zielsprache für die Agenda aus.
+-- Please select a target language for the agenda.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4163183653"] = "Bitte wählen Sie eine Zielsprache für die Agenda aus."
 
--- Ja, die Teilnehmenden müssen anreisen und abreisen.
+-- Yes, participants need to arrive and depart
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4266648123"] = "Ja, die Teilnehmenden müssen anreisen und abreisen."
 
--- Soll es ein gemeinsames Abendessen geben?
+-- Should there be a joint dinner?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T553265703"] = "Soll es ein gemeinsames Abendessen geben?"
 
--- Bitte wählen Sie eine benutzerdefinierte Sprache aus.
+-- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T656744944"] = "Bitte wählen Sie eine benutzerdefinierte Sprache aus."
 
--- Sollten die Teilnehmer passiv oder aktiv eingebunden werden?
+-- Should the participants be involved passively or actively?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T749354834"] = "Sollten die Teilnehmer passiv oder aktiv eingebunden werden?"
 
--- Ja, dies ist eine virtuelle Veranstaltung.
+-- Yes, this is a virtual event
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T829874736"] = "Ja, dies ist eine virtuelle Veranstaltung."
 
--- Ca. Dauer der Mittagspause
+-- Approx. duration of the lunch break
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T92038124"] = "Ca. Dauer der Mittagspause"
 
--- Müssen die Teilnehmenden anreisen und abreisen?
+-- Do participants need to arrive and depart?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T945792620"] = "Müssen die Teilnehmenden anreisen und abreisen?"
 
 -- Stop generation
@@ -255,34 +255,34 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Senden an
 -- Copy result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Ergebnis kopieren"
 
--- Erweitertes Bias-Poster
+-- Extended bias poster
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Erweitertes Bias-Poster"
 
--- Bitte wählen Sie eine Zielsprache für die Voreingenommenheit aus.
+-- Please select a target language for the bias.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1380819730"] = "Bitte wählen Sie eine Zielsprache für die Voreingenommenheit aus."
 
--- Zielsprache
+-- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T237828418"] = "Zielsprache"
 
--- Blogbeitrag von Buster Benson:
+-- Blog post of Buster Benson:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T2524573984"] = "Blogbeitrag von Buster Benson:"
 
--- Lerne jeden Tag einen neuen kognitiven Bias kennen. Du kannst dem LLM auch deine eigenen Fragen stellen. Die Idee hinter „Bias des Tages” basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Biases gruppiert, und die Originaltexte stammen aus Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag einen Bias anhand von Johns Poster kennenzulernen, stammt von Drew Nelson.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T2698749816"] = "Lerne jeden Tag einen neuen kognitiven Bias kennen. Du kannst dem LLM auch deine eigenen Fragen stellen. Die Idee hinter „Bias des Tages” basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Biases gruppiert, und die Originaltexte stammen aus Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag einen Bias anhand von Johns Poster kennenzulernen, stammt von Drew Nelson."
-
--- Wikipedia-Liste kognitiver Verzerrungen
+-- Wikipedia list of cognitive biases
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3097054642"] = "Wikipedia-Liste kognitiver Verzerrungen"
 
--- Zeig mir das Vorurteil des Tages
+-- Show me the bias of the day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3489946962"] = "Zeig mir das Vorurteil des Tages"
 
--- Benutzerdefinierte Zielsprache
+-- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
--- Bitte geben Sie eine benutzerdefinierte Sprache an.
+-- Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3882885376"] = "Lerne jeden Tag einen neuen kognitiven Bias kennen. Du kannst dem LLM auch deine eigenen Fragen stellen. Die Idee hinter „Bias des Tages” basiert auf der Arbeit von Buster Benson, John Manoogian III und Brian Rene Morrissette. Buster Benson hat die Biases gruppiert, und die Originaltexte stammen aus der Wikipedia. Brian Rene Morrissette hat sie in einer kürzeren Version zusammengefasst. Schließlich hat John Manoogian III auf Grundlage von Bensons Arbeit und den Texten von Morrissette das Original-Poster erstellt. Thorsten Sommer hat alle Texte für die Integration in AI Studio mit den aktuellen Wikipedia-Versionen verglichen, sie aktualisiert und Quellenangaben hinzugefügt. Die Idee, jeden Tag einen Bias anhand von Johns Poster kennenzulernen, stammt von Drew Nelson."
+
+-- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
--- Vorurteil des Tages
+-- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Vorurteil des Tages"
 
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
@@ -789,7 +789,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T3513450626"] =
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Vorausgewählter Anbieter"
 
--- Wählen Sie einen vorausgewählten Anbieter aus.
+-- Select a provider that is preselected.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T20906218"] = "Wählen Sie einen vorausgewählten Anbieter aus."
 
 -- Use app default
@@ -1122,6 +1122,57 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T492357592"]
 -- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T582516016"] = "Wenn diese Option aktiviert ist, wird nach dem Laden eines Chats die neueste Nachricht angezeigt. Wenn sie deaktiviert ist, wird die erste (älteste) Nachricht angezeigt."
 
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Löschen"
+
+-- Add Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Einbettung hinzufügen"
+
+-- Are you sure you want to delete the embedding provider '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1825371968"] = "Sind Sie sicher, dass Sie den Einbettungsanbieter '{0}' löschen möchten?"
+
+-- Add Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Einbettungsanbieter hinzufügen"
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2189814010"] = "Modell"
+
+-- Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and 'joyful' would be more alike than those for 'happy' and 'sad'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2419962612"] = "Einbettungen sind eine Methode, um Wörter, Sätze, ganze Dokumente oder sogar Bilder und Videos als digitale Fingerabdrücke darzustellen. So wie jeder Mensch einen einzigartigen Fingerabdruck hat, erzeugen Einbetttungs-Modelle einzigartige digitale Muster, die die Bedeutung und Eigenschaften der von ihnen analysierten Inhalte erfassen. Wenn zwei Dinge sich in ihrer Bedeutung oder ihrem Inhalt ähneln, sehen auch ihre digitalen Fingerabdrücke sehr ähnlich aus. Zum Beispiel wären die Fingerabdrücke für „glücklich“ und „freudig“ einander ähnlicher als die für „glücklich“ und „traurig“."
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T266367750"] = "Name"
+
+-- This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3251217940"] = "Dies hilft AI Studio, Dinge auf eine Art und Weise zu verstehen und zu vergleichen, die der menschlichen Denkweise ähnelt. Wenn Sie an etwas arbeiten, kann AI Studio automatisch verwandte Dokumente und Daten erkennen, indem es ihre digitalen Fingerabdrücke vergleicht. Wenn Sie zum Beispiel über Kundenservice schreiben, kann AI Studio sofort andere Dokumente in Ihren Daten finden, die über ähnliche Themen oder Erfahrungen sprechen – selbst wenn sie andere Begriffe verwenden."
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3267849393"] = "Bearbeiten"
+
+-- Configured Embeddings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3526613453"] = "Konfigurierte Einbettungen"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Aktionen"
+
+-- No embeddings configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T4068015588"] = "Es wurden bislang keine Einbettungen konfiguriert."
+
+-- Edit Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T4264602229"] = "Einbettungsanbieter bearbeiten"
+
+-- Delete Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T511304264"] = "Einbettungsanbieter löschen"
+
+-- Open Dashboard
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T78223861"] = "Dashboard öffnen"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T900237532"] = "Anbieter"
+
+-- Configure Embeddings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T970042679"] = "Einbettungen konfigurieren"
+
 -- Edit Profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T1143111468"] = "Profil bearbeiten"
 
@@ -1448,6 +1499,60 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "Nein"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Ja"
+
+-- Failed to store the API key in the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
+
+-- API Key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1324664716"] = "API-Schlüssel"
+
+-- Create account
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1356621346"] = "Konto erstellen"
+
+-- Please enter an embedding model name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1661085403"] = "Bitte geben Sie einen Modellnamen für die Einbettung ein."
+
+-- Hostname
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1727440780"] = "Hostname"
+
+-- Load
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1756340745"] = "Laden"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Aktualisieren"
+
+-- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1870831108"] = "Der API-Schlüssel konnte nicht vom Betriebssystem geladen werden. Die Meldung war: {0}. Sie können diese Meldung ignorieren und den API-Schlüssel erneut eingeben."
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Modell"
+
+-- (Optional) API Key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(Optional) API-Schlüssel"
+
+-- Currently, we cannot query the embedding models of self-hosted systems. Therefore, enter the model name manually.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2615586687"] = "Derzeit können wir die Einbettungs-Modelle von selbst gehosteten Systemen nicht abfragen. Bitte geben Sie daher den Modellnamen manuell ein."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2646845972"] = "Hinzufügen"
+
+-- No models loaded or available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2810182573"] = "Keine Modelle geladen oder verfügbar."
+
+-- Instance Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2842060373"] = "Instanzname"
+
+-- Model selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T416738168"] = "Modellauswahl"
+
+-- Host
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T808120719"] = "Host"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Anbieter"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Abbrechen"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teile der KI mit, was sie für dich tun soll. Was sind deine Ziele oder was möchtest du erreichen? Zum Beispiel, dass die KI dich duzt."
@@ -1887,16 +1992,16 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T14
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1462295644"] = "Eine andere Zielsprache vorauswählen"
 
--- Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen?
+-- Preselect grammar & spell checker options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1672258211"] = "Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen?"
 
--- Keine Optionen für die Grammatik- und Rechtschreibprüfung sind vorausgewählt
+-- No grammar & spell checker options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T2041367384"] = "Keine Optionen für die Grammatik- und Rechtschreibprüfung sind vorausgewählt"
 
--- Wenn aktiviert, können Sie die Einstellungen für Grammatik- und Rechtschreibprüfung im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen.
+-- When enabled, you can preselect the grammar & spell checker options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T2515603280"] = "Wenn aktiviert, können Sie die Einstellungen für Grammatik- und Rechtschreibprüfung im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
--- Optionen für Grammatik- und Rechtschreibprüfung sind vorausgewählt
+-- Grammar & spell checker options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T2843193933"] = "Optionen für Grammatik- und Rechtschreibprüfung sind vorausgewählt"
 
 -- Close
@@ -1914,22 +2019,22 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T1417990312"] 
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T1462295644"] = "Wähle eine andere Zielsprache aus"
 
--- Wählen Sie das Sprach-Plugin für den Vergleich aus.
+-- Select the language plugin used for comparision.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T1523568309"] = "Wählen Sie das Sprach-Plugin für den Vergleich aus."
 
--- Lokalisierungsoptionen sind vorausgewählt
+-- Localization options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T2246008228"] = "Lokalisierungsoptionen sind vorausgewählt"
 
 -- Assistant: Localization
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T2573041664"] = "Assistent: Lokalisierung"
 
--- Sprach-Plugin zum Vergleichen verwendet
+-- Language plugin used for comparision
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T263317578"] = "Sprach-Plugin zum Vergleichen verwendet"
 
--- Lokalisierungsoptionen vorauswählen?
+-- Preselect localization options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3080941742"] = "Lokalisierungsoptionen vorauswählen?"
 
--- Es sind keine Spracheinstellungen vorausgewählt.
+-- No localization options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3287437171"] = "Es sind keine Spracheinstellungen vorausgewählt."
 
 -- Close
@@ -1938,7 +2043,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3448155331"] 
 -- Which target language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
--- Wenn diese Option aktiviert ist, können Sie die Spracheinstellungen im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen.
+-- When enabled, you can preselect the localization options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T4022795859"] = "Wenn diese Option aktiviert ist, können Sie die Spracheinstellungen im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
 -- Preselect the icon source
@@ -2964,6 +3069,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T2897045472"] = "Ke
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Unbekannt"
 
+-- no model selected
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "Kein Modell ausgewählt"
+
 -- Navigation never expands, but there are tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033"] = "Die Navigationsleiste wird nie ausgeklappt, aber es gibt Tooltips"
 
@@ -3764,3 +3872,5 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] =
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
+
+

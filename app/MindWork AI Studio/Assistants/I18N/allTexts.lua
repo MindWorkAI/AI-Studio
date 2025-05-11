@@ -265,9 +265,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T23782841
 -- Blog post of Buster Benson:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T2524573984"] = "Blog post of Buster Benson:"
 
--- Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind           "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster           Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them           into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and           Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia           versions, updated them, and added source references. The idea of learning about one bias each day based on John's           poster comes from Drew Nelson.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T2698749816"] = "Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind           \"Bias of the Day\" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster           Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them           into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and           Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia           versions, updated them, and added source references. The idea of learning about one bias each day based on John's           poster comes from Drew Nelson."
-
 -- Wikipedia list of cognitive biases
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3097054642"] = "Wikipedia list of cognitive biases"
 
@@ -276,6 +273,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T34899469
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3848935911"] = "Custom target language"
+
+-- Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind  "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T3882885376"] = "Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind  \"Bias of the Day\" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T656744944"] = "Please provide a custom language."
