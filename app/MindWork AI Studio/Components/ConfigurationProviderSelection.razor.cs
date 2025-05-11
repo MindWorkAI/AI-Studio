@@ -2,13 +2,15 @@ using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
-
+using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
 public partial class ConfigurationProviderSelection : MSGComponentBase
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationProviderSelection).Namespace, nameof(ConfigurationProviderSelection));
+    
     [Parameter]
     public Func<string> SelectedValue { get; set; } = () => string.Empty;
     
@@ -25,7 +27,7 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     public Func<bool> Disabled { get; set; } = () => false;
     
     [Parameter]
-    public Func<string> HelpText { get; set; } = () => "Select a provider that is preselected.";
+    public Func<string> HelpText { get; set; } = () => TB("Select a provider that is preselected.");
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
