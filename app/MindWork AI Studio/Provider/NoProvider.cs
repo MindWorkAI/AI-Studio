@@ -31,5 +31,7 @@ public class NoProvider : IProvider
         yield break;
     }
 
+    public IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => [ Capability.NONE ];
+
     #endregion
 }
