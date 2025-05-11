@@ -109,6 +109,8 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
 

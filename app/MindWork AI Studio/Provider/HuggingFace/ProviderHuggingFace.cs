@@ -110,6 +110,8 @@ public sealed class ProviderHuggingFace : BaseProvider
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
 }

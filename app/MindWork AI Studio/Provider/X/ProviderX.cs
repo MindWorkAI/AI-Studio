@@ -110,6 +110,8 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
     {
         return Task.FromResult<IEnumerable<Model>>([]);
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
     

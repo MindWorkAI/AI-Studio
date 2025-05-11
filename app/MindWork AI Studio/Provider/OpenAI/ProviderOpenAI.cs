@@ -142,7 +142,70 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     {
         return this.LoadModels(["text-embedding-"], token, apiKeyProvisional);
     }
-
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        if (modelName.StartsWith("o1-mini"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING,
+                ];
+        
+        if (modelName.StartsWith("o3-mini"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
+                ];
+        
+        if (modelName.StartsWith("o4-mini") || modelName.StartsWith("o1") || modelName.StartsWith("o3"))
+            return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
+                ];
+        
+        if(modelName.StartsWith("gpt-3.5"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                ];
+        
+        if(modelName.StartsWith("gpt-4-turbo"))
+            return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING
+                ];
+        
+        if(modelName is "gpt-4" || modelName.StartsWith("gpt-4-"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                ];
+        
+        return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+            ];
+    }
+    
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)

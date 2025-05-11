@@ -118,7 +118,89 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                 model.Name.StartsWith("models/text-embedding-", StringComparison.InvariantCultureIgnoreCase))
             .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
 
+        if (modelName.IndexOf("gemini-") is not -1)
+        {
+            // Reasoning models:
+            if (modelName.IndexOf("gemini-2.5") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
+                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
+                    
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                ];
+
+            // Image generation:
+            if(modelName.IndexOf("-2.0-flash-preview-image-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
+                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
+                    
+                    Capability.TEXT_OUTPUT, Capability.IMAGE_OUTPUT,
+                ];
+            
+            // Realtime model:
+            if(modelName.IndexOf("-2.0-flash-live-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.AUDIO_INPUT, Capability.SPEECH_INPUT,
+                    Capability.VIDEO_INPUT,
+                    
+                    Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                ];
+            
+            // The 2.0 flash models cannot call functions:
+            if(modelName.IndexOf("-2.0-flash-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
+                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
+                    
+                    Capability.TEXT_OUTPUT,
+                ];
+            
+            // The old 1.0 pro vision model:
+            if(modelName.IndexOf("pro-vision") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    
+                    Capability.TEXT_OUTPUT,
+                ];
+            
+            // Default to all other Gemini models:
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
+                Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
+                
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+            ];
+        }
+        
+        // Default for all other models:
+        return
+        [
+            Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+            
+            Capability.TEXT_OUTPUT,
+            
+            Capability.FUNCTION_CALLING,
+        ];
+    }
+    
     #endregion
 
     private async Task<ModelsResponse> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

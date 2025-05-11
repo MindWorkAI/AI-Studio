@@ -87,8 +87,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
-
+    
     public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
@@ -139,7 +138,9 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             return [];
         }
     }
-
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model) => CapabilitiesOpenSource.GetCapabilities(model);
+    
     #endregion
 
     private async Task<IEnumerable<Provider.Model>> LoadModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
