@@ -98,7 +98,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             return [];
         
         return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/gemini-", StringComparison.OrdinalIgnoreCase))
+                model.Name.StartsWith("models/gemini-", StringComparison.OrdinalIgnoreCase) && !model.Name.Contains("embed"))
             .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
 
@@ -115,7 +115,8 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             return [];
         
         return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/text-embedding-", StringComparison.InvariantCultureIgnoreCase))
+                model.Name.StartsWith("models/text-embedding-", StringComparison.OrdinalIgnoreCase) ||
+                model.Name.StartsWith("models/gemini-embed", StringComparison.OrdinalIgnoreCase))
             .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
     
