@@ -165,13 +165,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             ];
         
         // Default:
-        return
-        [
-            Capability.TEXT_INPUT,
-            Capability.TEXT_OUTPUT,
-            
-            Capability.FUNCTION_CALLING,
-        ];
+        return CapabilitiesOpenSource.GetCapabilities(model);
     }
     
     #endregion

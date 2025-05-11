@@ -111,6 +111,8 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
             model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) ||
             model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase));
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
 

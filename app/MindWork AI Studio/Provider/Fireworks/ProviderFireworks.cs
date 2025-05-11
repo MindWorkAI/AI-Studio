@@ -106,6 +106,8 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
 }

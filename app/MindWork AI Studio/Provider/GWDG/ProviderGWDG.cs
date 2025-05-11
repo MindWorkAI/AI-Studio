@@ -107,6 +107,8 @@ public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai
         var models = await this.LoadModels(token, apiKeyProvisional);
         return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
 
