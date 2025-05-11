@@ -6,10 +6,10 @@
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudSelect @bind-Value="@this.DataLLMProvider" Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
+                <MudSelect @bind-Value="@this.DataLLMProvider"  Label="Provider" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
-                        if (provider.ProvideEmbeddings())
+                        if (provider.ProvideEmbeddings() || provider is LLMProviders.NONE)
                         {
                             <MudSelectItem Value="@provider">
                                 @provider.ToName()
@@ -32,6 +32,7 @@
                     AdornmentIcon="@Icons.Material.Filled.VpnKey"
                     AdornmentColor="Color.Info"
                     InputType="InputType.Password"
+                    Immediate="true"
                     Validation="@this.providerValidation.ValidatingAPIKey"/>
             }
 
