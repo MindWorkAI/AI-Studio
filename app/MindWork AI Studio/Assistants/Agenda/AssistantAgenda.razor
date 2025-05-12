@@ -9,7 +9,9 @@
     {
         @if(!this.justBriefly.Contains(contentLine))
         {
-            <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+            <MudSelectItem T="string" Value="@contentLine">
+                @contentLine
+            </MudSelectItem>
         }
     }
 </MudSelect>
@@ -19,7 +21,9 @@
     {
         @if(!this.selectedFoci.Contains(contentLine))
         {
-            <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+            <MudSelectItem T="string" Value="@contentLine">
+                @contentLine
+            </MudSelectItem>
         }
     }
 </MudSelect>
