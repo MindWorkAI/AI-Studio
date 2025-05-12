@@ -52,7 +52,7 @@ UI_TEXT_CONTENT = {}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Objective"
 
 -- This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1193269953"] = "This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T3470940329"] = "This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details."
 
 -- Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T12079368"] = "Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?"
@@ -748,7 +748,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the c
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your workspaces"
 
 -- Start new chat in workspace "{0}"
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T896906391"] = "Start new chat in workspace \"{0}\""
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2759239455"] = "Start new chat in workspace \"{0}\""
 
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
@@ -1315,7 +1315,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T853225
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237532"] = "Provider"
 
 -- If and when should we delete your temporary chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELWORKSPACES::T1014418451"] = "If and when should we delete your temporary chats?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELWORKSPACES::T1014418451"] = "If and when should we delete your disappearing chats?"
 
 -- Workspace display behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELWORKSPACES::T2151409362"] = "Workspace display behavior"
@@ -1459,7 +1459,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2244038752"] = "Delete Chat"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "Move to workspace"
 
 -- Are you sure you want to delete the temporary chat '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3043761007"] = "Are you sure you want to delete the temporary chat '{0}'?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3043761007"] = "Are you sure you want to delete the disappearing chat '{0}'?"
 
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Move Chat to Workspace"
@@ -2922,6 +2922,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "The first 10 supp
 -- We would like to thank the DLR for its courage in supporting MindWork AI Studio at an early stage. The DLR not only uses AI Studio in various projects but also supports its further development with personnel resources.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2438064678"] = "We would like to thank the DLR for its courage in supporting MindWork AI Studio at an early stage. The DLR not only uses AI Studio in various projects but also supports its further development with personnel resources."
 
+-- Become one of our titans
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Become one of our titans"
+
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Supporters"
 
@@ -2954,9 +2957,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4106820759"] = "Thank you, Peer, 
 
 -- Code Contributions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4135925647"] = "Code Contributions"
-
--- Become our first Titan
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T414428338"] = "Become our first Titan"
 
 -- Become a contributor
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T414604046"] = "Become a contributor"
