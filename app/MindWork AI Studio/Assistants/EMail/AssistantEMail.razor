@@ -10,7 +10,7 @@
 }
 
 <MudTextField T="string" @bind-Text="@this.inputGreeting" Label="@T("(Optional) The greeting phrase to use")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Placeholder="@T("Dear Colleagues")" Class="mb-3"/>
-<MudTextField T="string" @bind-Text="@this.inputBulletPoints" Validation="@this.ValidateBulletPoints" AdornmentIcon="@Icons.Material.Filled.ListAlt" Adornment="Adornment.Start" Label="@T("Your bullet points")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Bullet list the content of the e-mail roughly. Use dashes (-) to separate the items.")" Immediate="@false" DebounceInterval="1_000" OnDebounceIntervalElapsed="@this.OnContentChanged" Placeholder="@PLACEHOLDER_BULLET_POINTS"/>
+<DebouncedTextField @bind-Text="@this.inputBulletPoints" ValidationFunc="@this.ValidateBulletPoints" Icon="@Icons.Material.Filled.ListAlt" Label="@T("Your bullet points")" Lines="6" MaxLines="12" Attributes="@USER_INPUT_ATTRIBUTES" HelpText="@T("Bullet list the content of the e-mail roughly. Use dashes (-) to separate the items.")" DebounceTime="TimeSpan.FromSeconds(1)" WhenTextCanged="@this.OnContentChanged" Placeholder="@PLACEHOLDER_BULLET_POINTS"/>
 <MudSelect T="string" Label="@T("(Optional) Are any of your points particularly important?")" MultiSelection="@true" @bind-SelectedValues="@this.selectedFoci" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt">
     @foreach (var contentLine in this.bulletPointsLines)
     {
