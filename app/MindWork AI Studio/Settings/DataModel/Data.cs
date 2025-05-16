@@ -35,6 +35,11 @@ public sealed class Data
     /// List of configured profiles.
     /// </summary>
     public List<Profile> Profiles { get; init; } = [];
+    
+    /// <summary>
+    /// List of configured chat templates.
+    /// </summary>
+    public List<ChatTemplate> ChatTemplates { get; init; } = [];
 
     /// <summary>
     /// List of enabled plugins.
@@ -60,6 +65,11 @@ public sealed class Data
     /// The next profile number to use.
     /// </summary>
     public uint NextProfileNum { get; set; } = 1;
+    
+    /// <summary>
+    /// The next chat template number to use.
+    /// </summary>
+    public uint NextChatTemplateNum { get; set; } = 1;
 
     public DataApp App { get; init; } = new();
 

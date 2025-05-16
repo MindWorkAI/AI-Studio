@@ -1,0 +1,130 @@
+@inherits MSGComponentBase
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Store chat templates.")
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Are you always using the same prompts and want a way of automatically using them?")
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("The name of the chat template is mandatory. Each chat template must have a unique name.")
+        </MudJustifiedText>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataName"
+                Label="@T("Chat Template Name")"
+                Class="mb-3"
+                Immediate="@true"
+                MaxLength="40"
+                Counter="40"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Badge"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateName"
+                Variant="Variant.Outlined"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataSystemPrompt"
+                Validation="@this.ValidateSystemPrompt"
+                AdornmentIcon="@Icons.Material.Filled.ListAlt"
+                Adornment="Adornment.Start"
+                Immediate="@true"
+                Label="@T("What system prompt do you want to use?")"
+                Variant="Variant.Outlined"
+                Lines="6"
+                AutoGrow="@true"
+                MaxLines="12"
+                MaxLength="444"
+                Counter="444"
+                Class="mb-3"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                HelperText="@T("Tell the AI your system prompt.")"
+            />
+            
+            
+            <MudTable Items="@additionalMessagesEntries" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" CanCancelEdit="true" CommitEditTooltip="Commit Changes" Elevation="10" Outlined="true">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Additional messages</MudText>
+                    <MudSpacer />
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddInitialMessage" StartIcon="@Icons.Material.Filled.Add" Disabled="@initialAddButtonDisabled">Start using messages</MudButton>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Role</MudTh>
+                    <MudTh>Entry</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Role">@context.Role</MudTd>
+                    <MudTd DataLabel="Message">@context.Entry</MudTd>
+                    <MudTd style="text-align: center">
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" 
+                                       Color="Color.Success" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => AddNewMessageBelow(context))"
+                                       />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                       Color="Color.Error" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => RemoveMessage(context))"
+                                       />
+                    </MudTd>
+                </RowTemplate>
+                <RowEditingTemplate>
+                    <MudTd DataLabel="Role">
+                        <MudSelect @bind-Value="context.Role" Required>
+                            @foreach (var role in availableRoles)
+                            {
+                                <MudSelectItem Value="@role">@role</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudTd>
+                    <MudTd DataLabel="Message">
+                        <MudTextField @bind-Value="context.Entry" Required />
+                    </MudTd>
+                    <MudTd style="text-align: center">
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" 
+                                       Color="Color.Success" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => AddNewMessageBelow(context))"
+                                       />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                       Color="Color.Error" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => RemoveMessage(context))"
+                                       />
+                    </MudTd>
+                </RowEditingTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+            
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+            @if(this.IsEditing)
+            {
+                @T("Update")
+            }
+            else
+            {
+                @T("Add")
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
