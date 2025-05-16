@@ -1,19 +1,19 @@
+using AIStudio.Chat;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Settings;
 
-public readonly record struct ChatTemplate(uint Num, string Id, string Name, string NeedToKnow, string Actions) //, CategoryTypes.List AdditionalMessages)
+public readonly record struct ChatTemplate(uint Num, string Id, string Name, string SystemPrompt, List<ContentBlock> AdditionalMessages)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Profile).Namespace, nameof(Profile));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
-    public static readonly Profile NO_PROFILE = new()
+    public static readonly ChatTemplate NO_CHATTEMPLATE = new()
     {
-        Name = TB("Use no profile"),
-        NeedToKnow = string.Empty,
-        Actions = string.Empty,
+        Name = TB("Use no chat template"),
+        SystemPrompt = string.Empty,
         Id = Guid.Empty.ToString(),
         Num = uint.MaxValue,
-        // AdditionalMessages = [],
+        AdditionalMessages = [],
     };
     
     #region Overrides of ValueType
@@ -31,34 +31,16 @@ public readonly record struct ChatTemplate(uint Num, string Id, string Name, str
         if(this.Num == uint.MaxValue)
             return string.Empty;
         
-        var needToKnow =  
+        var systemPrompt =  
             $"""
-             What should you know about the user?
-
              ```
-             {this.NeedToKnow}
+             {this.SystemPrompt}
              ```
              """;
-        
-        var actions = 
-            $"""
-             The user wants you to consider the following things.
-
-             ```
-             {this.Actions}
-             ```
-             """;
-
-        if (string.IsNullOrWhiteSpace(this.NeedToKnow))
-            return actions;
-
-        if (string.IsNullOrWhiteSpace(this.Actions))
-            return needToKnow;
         
         return $"""
-                {needToKnow}
-
-                {actions}
+                {systemPrompt}
                 """;
     }
+
 }

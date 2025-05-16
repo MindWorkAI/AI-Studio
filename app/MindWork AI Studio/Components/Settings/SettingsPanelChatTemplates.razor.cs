@@ -36,10 +36,10 @@ public partial class SettingsPanelChatTemplates : SettingsPanelBase
             { x => x.DataNum, chatTemplate.Num },
             { x => x.DataId, chatTemplate.Id },
             { x => x.DataName, chatTemplate.Name },
-            { x => x.DataSystemPrompt, chatTemplate.NeedToKnow },
+            { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
             // { x => x.DataActions, chatTemplate.Actions },
             { x => x.IsEditing, true },
-            // {x => x.AdditionalMessages, chatTemplate}, TODO
+            {x => x.AdditionalMessages, chatTemplate.AdditionalMessages},
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);

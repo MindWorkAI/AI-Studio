@@ -42,7 +42,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public bool IsEditing { get; init; }
     
     [Parameter]
-    public List<EntryItem> AdditionalMessages { get; set; } = [];
+    public List<ContentBlock> AdditionalMessages { get; set; } = [];
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -58,10 +58,11 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     
-    private EntryItem messageEntryBeforeEdit;
-    private readonly List<EntryItem> additionalMessagesEntries = [];
-    private readonly List<string> availableRoles = ["User", "Assistant"];
-    private bool initialAddButtonDisabled = false;
+    private ContentBlock messageEntryBeforeEdit;
+    // private readonly List<ContentBlock> additionalMessagesEntries = [];
+    // private readonly List<string> availableRoles = ["User", "Assistant"];
+    private readonly IEnumerable<ChatRole> availableRoles = ChatRoles.ChatTemplateRoles().ToArray();
+    private bool allowProfile = true;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -72,83 +73,77 @@ public partial class ChatTemplateDialog : MSGComponentBase
         Id = this.DataId,
         
         Name = this.DataName,
-        NeedToKnow = this.DataSystemPrompt,
-        // AdditionalMessages = this.additionalMessagesEntries,
-        Actions = string.Empty,
+        SystemPrompt = this.DataSystemPrompt,
+        AdditionalMessages = this.AdditionalMessages,
     };
 
-    private void RemoveMessage(EntryItem item)
+    private void RemoveMessage(ContentBlock item)
     {
-        this.additionalMessagesEntries.Remove(item);
-        this.Snackbar.Add("Entry removed", Severity.Info);
-        this.initialAddButtonDisabled = this.additionalMessagesEntries.Count > 0;
-        
-        // ChatRoles.ChatTemplateRoles()  // TODO:  -> darauf foreach für alle Rollen in der Tabelle
+        this.AdditionalMessages.Remove(item);
+        // this.Snackbar.Add("Entry removed", Severity.Info);
     }
 
-    private void AddInitialMessage()
+    private void AddNewMessageToEnd()
     {
-        var newEntry = new EntryItem
+        var newEntry = new ContentBlock
         {
-            Role = availableRoles[0], // Default to first role ("User")
-            Entry = "Your message"
+            Role = ChatRole.USER, // Default to User
+            Content = new ContentText(),
+            ContentType = ContentType.TEXT,
+            HideFromUser = true,
+            Time = DateTimeOffset.Now,
         };
 
-        this.additionalMessagesEntries.Add(newEntry);
-        this.Snackbar.Add("Initial entry added", Severity.Success);
-        this.initialAddButtonDisabled = this.additionalMessagesEntries.Count > 0;
+        this.AdditionalMessages.Add(newEntry);
+        // this.Snackbar.Add("Initial entry added", Severity.Success);
     }
 
-    private void AddNewMessageBelow(EntryItem currentItem)
+    private void AddNewMessageBelow(ContentBlock currentItem)
     {
         
         // Create new entry with a valid role
-        var newEntry = new EntryItem
+        var newEntry = new ContentBlock
         {
-            Role = availableRoles.FirstOrDefault(role => role != currentItem.Role) ?? availableRoles[0], // Default to role not used in the previous entry
-            Entry = "Your message"
+            Role = ChatRole.USER, // Default to User
+            Content = new ContentText(),
+            ContentType = ContentType.TEXT,
+            HideFromUser = true,
+            Time = DateTimeOffset.Now,
         };
-
+        
         // Rest of the method remains the same
-        var index = this.additionalMessagesEntries.IndexOf(currentItem);
+        var index = this.AdditionalMessages.IndexOf(currentItem);
 
         if (index >= 0)
         {
-            this.additionalMessagesEntries.Insert(index + 1, newEntry);
-            this.Snackbar.Add("New entry added", Severity.Success);
+            this.AdditionalMessages.Insert(index + 1, newEntry);
+            // this.Snackbar.Add("New entry added", Severity.Success);
         }
         else
         {
-            this.additionalMessagesEntries.Add(newEntry);
-            this.Snackbar.Add("New entry added", Severity.Success);
+            this.AdditionalMessages.Add(newEntry);
+            // this.Snackbar.Add("New entry added", Severity.Success);
         }
-        this.initialAddButtonDisabled = this.additionalMessagesEntries.Count > 0;
     }
     
     private void BackupItem(object element)
     {
-        this.messageEntryBeforeEdit = new()
+        this.messageEntryBeforeEdit = new ContentBlock
         {
-            Role = ((EntryItem)element).Role,
-            Entry = ((EntryItem)element).Entry
+            Role = ((ContentBlock)element).Role,
+            Content = ((ContentBlock)element).Content,
         };
     }
 
     private void ItemHasBeenCommitted(object element)
     {
-        this.Snackbar.Add("Changes saved", Severity.Success);
+        // this.Snackbar.Add("Changes saved", Severity.Success);
     }
 
     private void ResetItemToOriginalValues(object element)
     {
-        ((EntryItem)element).Role = this.messageEntryBeforeEdit.Role;
-        ((EntryItem)element).Entry = this.messageEntryBeforeEdit.Entry;
-    }
-
-    public class EntryItem
-    {
-        public required string Role { get; set; }
-        public required string Entry { get; set; }
+        ((ContentBlock)element).Role = this.messageEntryBeforeEdit.Role;
+        ((ContentBlock)element).Content = this.messageEntryBeforeEdit.Content;
     }
 
     #region Overrides of ComponentBase

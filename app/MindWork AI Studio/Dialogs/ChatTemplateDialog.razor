@@ -1,3 +1,5 @@
+@using AIStudio.Chat
+@using MudBlazor.Extensions
 @inherits MSGComponentBase
 @inject ISnackbar Snackbar
 
@@ -51,37 +53,41 @@
                 HelperText="@T("Tell the AI your system prompt.")"
             />
             
+            <MudSwitch @bind-Value="allowProfile" Color="Color.Primary" Label="@T("Allow using profiles together with this chat template?")"/>
             
-            <MudTable Items="@additionalMessagesEntries" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" CanCancelEdit="true" CommitEditTooltip="Commit Changes" Elevation="10" Outlined="true">
+            <MudText> What should you know about the additional messages? TODO</MudText>
+            
+            <MudTable FixedHeader="true" Items="@AdditionalMessages" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" CanCancelEdit="true" CommitEditTooltip="@T("Commit Changes")" Elevation="10" Outlined="true" >
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">Additional messages</MudText>
-                    <MudSpacer />
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddInitialMessage" StartIcon="@Icons.Material.Filled.Add" Disabled="@initialAddButtonDisabled">Start using messages</MudButton>
                 </ToolBarContent>
+                <ColGroup>
+                    <col style="width: 20%;" />
+                    <col style="width: 65%;" />
+                    <col style="width: 15%;" />
+                </ColGroup>
                 <HeaderContent>
                     <MudTh>Role</MudTh>
                     <MudTh>Entry</MudTh>
-                    <MudTh>Actions</MudTh>
+                    <MudTh Style="text-align:center">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Role">@context.Role</MudTd>
-                    <MudTd DataLabel="Message">@context.Entry</MudTd>
+                    <MudTd DataLabel="@T("Role")">@context.Role</MudTd>
+                    <MudTd DataLabel="@T("Message")">@context.Content</MudTd>
                     <MudTd style="text-align: center">
-                        <MudIconButton Icon="@Icons.Material.Filled.Add" 
-                                       Color="Color.Success" 
-                                       Size="Size.Small" 
-                                       OnClick="@(() => AddNewMessageBelow(context))"
-                                       />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                       Color="Color.Error" 
-                                       Size="Size.Small" 
-                                       OnClick="@(() => RemoveMessage(context))"
-                                       />
+                        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Success"
+                                       Size="Size.Small"
+                                       OnClick="@(() => AddNewMessageBelow(context))"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="@(() => RemoveMessage(context))"/>
                     </MudTd>
                 </RowTemplate>
                 <RowEditingTemplate>
                     <MudTd DataLabel="Role">
-                        <MudSelect @bind-Value="context.Role" Required>
+                        <MudSelect Label="Role" @bind-Value="context.Role" Required>
                             @foreach (var role in availableRoles)
                             {
                                 <MudSelectItem Value="@role">@role</MudSelectItem>
@@ -89,27 +95,29 @@
                         </MudSelect>
                     </MudTd>
                     <MudTd DataLabel="Message">
-                        <MudTextField @bind-Value="context.Entry" Required />
+                        <MudTextField Label="Your message" AutoGrow="true" MaxLines="10" @bind-Value="context.Content.As<ContentText>()!.Text" Required />
                     </MudTd>
                     <MudTd style="text-align: center">
                         <MudIconButton Icon="@Icons.Material.Filled.Add" 
                                        Color="Color.Success" 
                                        Size="Size.Small" 
                                        OnClick="@(() => AddNewMessageBelow(context))"
-                                       />
+                        />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                        Color="Color.Error" 
                                        Size="Size.Small" 
                                        OnClick="@(() => RemoveMessage(context))"
-                                       />
+                        />
                     </MudTd>
                 </RowEditingTemplate>
                 <PagerContent>
-                    <MudTablePager />
+                    <MudTablePager RowsPerPageString="Messages per page"  PageSizeOptions="[20,50,100]"/>
                 </PagerContent>
             </MudTable>
-            
         </MudForm>
+        
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewMessageToEnd" StartIcon="@Icons.Material.Filled.Add">@T("Add additional message")</MudButton>
+        
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
