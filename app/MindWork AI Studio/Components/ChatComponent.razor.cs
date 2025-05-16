@@ -46,6 +46,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
+    private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
@@ -76,6 +77,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Get the preselected profile:
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+        
+        // Get the preselected chat template:
+        // this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT); // TODO
         
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -320,6 +324,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
+    
+    private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
+    {
+        this.currentChatTemplate = chatTemplate;
+        if(this.ChatThread is null)
+            return;
+
+        this.ChatThread = this.ChatThread with
+        {
+            SelectedChatTemplate = this.currentChatTemplate.Id,
+        };
+        
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
     {
@@ -415,6 +433,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             {
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
+                SelectedChatTemplate = this.currentChatTemplate.Id,
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -432,9 +451,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
                 this.ChatThread.Name = this.ExtractThreadName(this.userInput);
             
-            // Update provider and profile:
+            // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
             this.ChatThread.SelectedProfile = this.currentProfile.Id;
+            this.ChatThread.SelectedChatTemplate = this.currentChatTemplate.Id;
         }
 
         var time = DateTimeOffset.Now;
@@ -645,6 +665,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             {
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
+                SelectedChatTemplate = this.currentChatTemplate.Id,
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -756,6 +777,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
         var chatProfile = this.ChatThread?.SelectedProfile;
+        var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
         switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
         {
@@ -782,6 +804,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile);
             if(this.currentProfile == default)
                 this.currentProfile = Profile.NO_PROFILE;
+        }
+        
+        // Try to select the chat template:
+        if (!string.IsNullOrWhiteSpace(chatChatTemplate))
+        {
+            this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
+            if(this.currentChatTemplate == default)
+                this.currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
         }
     }
 

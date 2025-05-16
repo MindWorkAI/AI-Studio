@@ -62,7 +62,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     // private readonly List<ContentBlock> additionalMessagesEntries = [];
     // private readonly List<string> availableRoles = ["User", "Assistant"];
     private readonly IEnumerable<ChatRole> availableRoles = ChatRoles.ChatTemplateRoles().ToArray();
-    private bool allowProfile = true;
+    private bool allowProfileUsage = true;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -75,6 +75,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
         AdditionalMessages = this.AdditionalMessages,
+        AllowProfileUsage = allowProfileUsage,
     };
 
     private void RemoveMessage(ContentBlock item)
