@@ -242,6 +242,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
     {
+        var manageCancellationLocally = this.cancellationTokenSource is null;
+        this.cancellationTokenSource ??= new CancellationTokenSource();
+        
         var aiText = new ContentText
         {
             // We have to wait for the remote
@@ -274,6 +277,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         this.isProcessing = false;
         this.StateHasChanged();
+        
+        if(manageCancellationLocally)
+        {
+            this.cancellationTokenSource.Dispose();
+            this.cancellationTokenSource = null;
+        }
         
         // Return the AI response:
         return aiText.Text;
