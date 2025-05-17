@@ -25,14 +25,14 @@ internal sealed class Program
     public static IServiceProvider SERVICE_PROVIDER = null!;
     public static ILoggerFactory LOGGER_FACTORY = null!;
     
-    public static async Task Main(string[] args)
+    public static async Task Main()
     {
-        if(args.Length == 0)
-        {
-            Console.WriteLine("Error: Please provide the port of the runtime API.");
-            return;
-        }
-
+        #if DEBUG
+        // Read the environment variables from the .env file:
+        var envFilePath = Path.Combine("..", "..", "startup.env");
+        await EnvFile.Apply(envFilePath);
+        #endif
+        
         // Read the secret key for the IPC from the AI_STUDIO_SECRET_KEY environment variable:
         var secretPasswordEncoded = Environment.GetEnvironmentVariable("AI_STUDIO_SECRET_PASSWORD");
         if(string.IsNullOrWhiteSpace(secretPasswordEncoded))
@@ -58,6 +58,13 @@ internal sealed class Program
             return;
         }
         
+        var rustApiPort = Environment.GetEnvironmentVariable("AI_STUDIO_API_PORT");
+        if(string.IsNullOrWhiteSpace(rustApiPort))
+        {
+            Console.WriteLine("Error: The AI_STUDIO_API_PORT environment variable is not set.");
+            return;
+        }
+        
         var apiToken = Environment.GetEnvironmentVariable("AI_STUDIO_API_TOKEN");
         if(string.IsNullOrWhiteSpace(apiToken))
         {
@@ -67,7 +74,6 @@ internal sealed class Program
         
         API_TOKEN = apiToken;
         
-        var rustApiPort = args[0];
         using var rust = new RustService(rustApiPort, certificateFingerprint);
         var appPort = await rust.GetAppPort();
         if(appPort == 0)
