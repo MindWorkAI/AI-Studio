@@ -144,7 +144,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return "Please select a provider.";
+            return this.TB("Please select a provider.");
         
         return null;
     }
@@ -196,7 +196,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
-            Name = string.Format(T("Assistant - {0}"), this.Title),
+            Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Seed = this.RNG.Next(),
             Blocks = [],
         };
