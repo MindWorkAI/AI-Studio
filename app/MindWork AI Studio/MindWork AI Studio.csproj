@@ -47,9 +47,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.2.0" />
+      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.2.1" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.4" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.5" />
       <PackageReference Include="MudBlazor" Version="8.6.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.6.0" />
       <PackageReference Include="ReverseMarkdown" Version="4.6.0" />
