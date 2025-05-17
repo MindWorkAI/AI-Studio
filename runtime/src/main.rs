@@ -49,6 +49,7 @@ async fn main() {
     start_runtime_api();
     
     if is_dev() {
+        #[cfg(debug_assertions)]
         create_startup_env_file();
     } else {
         start_dotnet_server();
