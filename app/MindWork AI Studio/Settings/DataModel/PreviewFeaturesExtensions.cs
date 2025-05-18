@@ -17,5 +17,26 @@ public static class PreviewFeaturesExtensions
         _ => TB("Unknown preview feature")
     };
     
-    public static bool IsEnabled(this PreviewFeatures feature, SettingsManager settingsManager) => settingsManager.ConfigurationData.App.EnabledPreviewFeatures.Contains(feature);
+    /// <summary>
+    /// Check if the preview feature is released or not.
+    /// </summary>
+    /// <remarks>
+    /// This metadata is necessary because we cannot remove the enum values from the list.
+    /// Otherwise, we could not deserialize old settings files that may contain these values.
+    /// </remarks>
+    /// <param name="feature">The preview feature to check.</param>
+    /// <returns>True when the preview feature is released, false otherwise.</returns>
+    public static bool IsReleased(this PreviewFeatures feature) => feature switch
+    {
+        PreviewFeatures.PRE_READ_PDF_2025 => true,
+        _ => false
+    };
+    
+    public static bool IsEnabled(this PreviewFeatures feature, SettingsManager settingsManager)
+    {
+        if(feature.IsReleased())
+            return true;
+        
+        return settingsManager.ConfigurationData.App.EnabledPreviewFeatures.Contains(feature);
+    }
 }
