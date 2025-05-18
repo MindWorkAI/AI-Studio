@@ -1,5 +1,7 @@
 @using AIStudio.Settings.DataModel
 @using AIStudio.Tools.ERIClient.DataModel
+@inherits MSGComponentBase
+
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
@@ -7,7 +9,7 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.dataName"
-                Label="Data Source Name"
+                Label="@T("Data Source Name")"
                 Class="mb-6"
                 MaxLength="40"
                 Counter="40"
@@ -24,7 +26,7 @@
                 <MudTextField
                     T="string"
                     @bind-Text="@this.dataHostname"
-                    Label="ERI v1 Server Hostname"
+                    Label="@T("ERI v1 Server Hostname")"
                     Class="mb-6"
                     Immediate="@true"
                     Validation="@this.dataSourceValidation.ValidatingHostname"
@@ -35,7 +37,7 @@
                     UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                 
                 <MudNumericField
-                    Label="Port"
+                    Label="@T("Port")"
                     Immediate="@true"
                     Min="1" Max="65535"
                     Validation="@this.dataSourceValidation.ValidatePort"
@@ -47,9 +49,7 @@
             @if (!this.IsConnectionEncrypted())
             {
                 <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                    Please note: the connection to the ERI v1 server is not encrypted. This means that all
-                    data sent to the server is transmitted in plain text. Please ask the ERI server administrator
-                    to enable encryption.
+                    @T("Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.")
                 </MudJustifiedText>
             }
             
@@ -57,7 +57,7 @@
             {
                 <MudStack Row="@true" AlignItems="AlignItems.Center">
                     <MudButton Variant="Variant.Filled" Color="@this.GetTestResultColor()" StartIcon="@this.GetTestResultIcon()" Class="mb-3" OnClick="@this.TestConnection">
-                        Test connection & read available metadata
+                        @T("Test connection & read available metadata")
                     </MudButton>
                     <MudText Typo="Typo.body1" Class="mb-3">
                         @this.GetTestResultText()
@@ -70,7 +70,9 @@
                 <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName()" Label="Authentication Method" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
                     @foreach (var authMethod in this.availableAuthMethods)
                     {
-                        <MudSelectItem Value="@authMethod">@authMethod.DisplayName()</MudSelectItem>
+                        <MudSelectItem Value="@authMethod">
+                            @authMethod.DisplayName()
+                        </MudSelectItem>
                     }
                 </MudSelect>
             }
@@ -83,7 +85,7 @@
                     <MudTextField
                         T="string"
                         @bind-Text="@this.dataUsername"
-                        Label="Username"
+                        Label="@T("Username")"
                         Class="mb-6"
                         Immediate="@true"
                         Validation="@this.dataSourceValidation.ValidateUsername"
@@ -112,7 +114,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="Select one retrieval process" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
@@ -122,7 +124,7 @@
                 </MudSelect>
             }
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="Your security policy" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
                     <MudSelectItem Value="@policy">
@@ -135,15 +137,17 @@
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
         <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
             @if(this.IsEditing)
             {
-                @:Update
+                @T("Update")
             }
             else
             {
-                @:Add
+                @T("Add")
             }
         </MudButton>
     </DialogActions>

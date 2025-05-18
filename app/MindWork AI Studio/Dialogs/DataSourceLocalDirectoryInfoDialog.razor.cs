@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
@@ -9,16 +10,13 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceLocalDirectoryInfoDialog : ComponentBase, IAsyncDisposable
+public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsyncDisposable
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public DataSourceLocalDirectory DataSource { get; set; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
 
     private readonly Timer refreshTimer = new(TimeSpan.FromSeconds(1.6))
     {

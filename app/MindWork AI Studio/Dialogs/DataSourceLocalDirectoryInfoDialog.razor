@@ -1,56 +1,58 @@
 @using AIStudio.Settings.DataModel
+@inherits MSGComponentBase
 
 <MudDialog>
     <DialogContent>
-        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="Data source name" Value="@this.DataSource.Name" ClipboardTooltipSubject="the data source name"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
         
-        <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="Path" Value="@this.DataSource.Path" ClipboardTooltipSubject="this path"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
         @if (!this.IsDirectoryAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                The directory chosen for the data source does not exist anymore. Please edit the data source and correct the path.
+                @T("The directory chosen for the data source does not exist anymore. Please edit the data source and correct the path.")
             </MudJustifiedText>
         }
         else
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                The directory chosen for the data source exists.
+                @T("The directory chosen for the data source exists.")
             </MudJustifiedText>
         }
 
-        <TextInfoLine Icon="@Icons.Material.Filled.Layers" Label="Embedding name" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="the embedding name"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.Layers" Label="@T("Embedding name")" Value="@this.embeddingProvider.Name" ClipboardTooltipSubject="@T("the embedding name")"/>
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                The embedding runs in the cloud. All your data from the folder '@this.DataSource.Path' and all its subdirectories
-                will be sent to the cloud.
+                @string.Format(T("The embedding runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud."), this.DataSource.Path)
             </MudJustifiedText>
         }
         else
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                The embedding runs locally or in your organization. Your data is not sent to the cloud.
+                @T("The embedding runs locally or in your organization. Your data is not sent to the cloud.")
             </MudJustifiedText>
         }
 
-        <TextInfoLines Label="Your security policy" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="your security policy"/>
+        <TextInfoLines Label="@T("Your security policy")" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="@T("your security policy")"/>
 
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="Number of files" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="the number of files in the directory"/>
-        <TextInfoLines Label="Files list" MaxLines="14" Value="@this.directoryFiles.ToString()" ClipboardTooltipSubject="the files list"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Number of files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of files in the directory")"/>
+        <TextInfoLines Label="@T("Files list")" MaxLines="14" Value="@this.directoryFiles.ToString()" ClipboardTooltipSubject="@T("the files list")"/>
         @if (this.directorySizeNumFiles > 100)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Warning" Class="mb-3">
-                For performance reasons, only the first 100 files are shown. The directory contains @this.NumberFilesInDirectory files in total.
+                @string.Format(T("For performance reasons, only the first 100 files are shown. The directory contains {0} files in total."), this.NumberFilesInDirectory)
             </MudJustifiedText>
         }
         
-        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="Total directory size" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="the total directory size"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Total directory size")" Value="@this.directorySizeBytes.FileSize()" ClipboardTooltipSubject="@T("the total directory size")"/>
     </DialogContent>
     <DialogActions>
         @if (this.IsOperationInProgress)
         {
             <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ml-5 mr-5"/>
         }
-        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
     </DialogActions>
 </MudDialog>

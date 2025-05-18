@@ -1,4 +1,5 @@
 using AIStudio.Assistants.ERI;
+using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
@@ -13,7 +14,7 @@ using RetrievalInfo = AIStudio.Tools.ERIClient.DataModel.RetrievalInfo;
 // ReSharper disable InconsistentNaming
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
+public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -23,9 +24,6 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
     
     [Parameter]
     public DataSourceERI_V1 DataSource { get; set; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -195,7 +193,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
                 await this.form.Validate();
                 
                 Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
-                this.dataIssues[^1] = "Failed to connect to the ERI v1 server. The server is not supported.";
+                this.dataIssues[^1] = T("Failed to connect to the ERI v1 server. The server is not supported.");
                 return;
             }
             
@@ -254,7 +252,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             await this.form.Validate();
             
             Array.Resize(ref this.dataIssues, this.dataIssues.Length + 1);
-            this.dataIssues[^1] = $"Failed to connect to the ERI v1 server. The message was: {e.Message}";
+            this.dataIssues[^1] = string.Format(T("Failed to connect to the ERI v1 server. The message was: {0}"), e.Message);
             this.Logger.LogError($"Failed to connect to the ERI v1 server. Message: {e.Message}");
             
             this.connectionTested = true;
@@ -265,9 +263,9 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
     private string GetTestResultText()
     {
         if(!this.connectionTested)
-            return "Not tested yet.";
+            return T("Not tested yet.");
         
-        return this.connectionSuccessfulTested ? "Connection successful." : "Connection failed.";
+        return this.connectionSuccessfulTested ? T("Connection successful.") : T("Connection failed.");
     }
     
     private Color GetTestResultColor()
@@ -290,9 +288,9 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
 
     private string GetSecretLabel() => this.dataAuthMethod switch
     {
-        AuthMethod.TOKEN => "Access Token",
-        AuthMethod.USERNAME_PASSWORD => "Password",
-        _ => "Secret",
+        AuthMethod.TOKEN => T("Access Token"),
+        AuthMethod.USERNAME_PASSWORD => T("Password"),
+        _ => T("Secret"),
     };
 
     private async Task Store()
@@ -320,7 +318,7 @@ public partial class DataSourceERI_V1Dialog : ComponentBase, ISecretId
             var storeResponse = await this.RustService.SetSecret(this, this.dataSecret);
             if (!storeResponse.Success)
             {
-                this.dataSecretStorageIssue = $"Failed to store the auth. secret in the operating system. The message was: {storeResponse.Issue}. Please try again.";
+                this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.Validate();
                 return;
             }
