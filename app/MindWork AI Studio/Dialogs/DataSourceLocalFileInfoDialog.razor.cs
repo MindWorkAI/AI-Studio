@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
@@ -5,16 +6,13 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceLocalFileInfoDialog : ComponentBase
+public partial class DataSourceLocalFileInfoDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
     public DataSourceLocalFile DataSource { get; set; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
 
     #region Overrides of ComponentBase
 

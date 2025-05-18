@@ -1,11 +1,12 @@
 using AIStudio.Assistants.ERI;
+using AIStudio.Components;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class EmbeddingMethodDialog : ComponentBase
+public partial class EmbeddingMethodDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -52,9 +53,6 @@ public partial class EmbeddingMethodDialog : ComponentBase
     [Parameter]
     public bool IsEditing { get; init; }
     
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
-    
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private bool dataIsValid;
@@ -90,13 +88,13 @@ public partial class EmbeddingMethodDialog : ComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return "The embedding name must not be empty. Please name the embedding.";
+            return T("The embedding name must not be empty. Please name the embedding.");
         
         if (name.Length > 26)
-            return "The embedding name must not be longer than 26 characters.";
+            return T("The embedding name must not be longer than 26 characters.");
         
         if (this.UsedEmbeddingMethodNames.Contains(name))
-            return $"The embedding method name '{name}' is already used. Please choose a unique name.";
+            return string.Format(T("The embedding method name '{0}' is already used. Please choose a unique name."), name);
         
         return null;
     }
@@ -104,10 +102,10 @@ public partial class EmbeddingMethodDialog : ComponentBase
     private string? ValidateType(string type)
     {
         if (string.IsNullOrWhiteSpace(type))
-            return "The embedding type must not be empty. Please specify the embedding type.";
+            return T("The embedding type must not be empty. Please specify the embedding type.");
         
         if (type.Length > 56)
-            return "The embedding type must not be longer than 56 characters.";
+            return T("The embedding type must not be longer than 56 characters.");
         
         return null;
     }
@@ -115,7 +113,7 @@ public partial class EmbeddingMethodDialog : ComponentBase
     private string? ValidateDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return "The description must not be empty. Please describe the embedding method.";
+            return T("The description must not be empty. Please describe the embedding method.");
         
         return null;
     }
@@ -123,7 +121,7 @@ public partial class EmbeddingMethodDialog : ComponentBase
     private string? ValidateUsedWhen(string usedWhen)
     {
         if (string.IsNullOrWhiteSpace(usedWhen))
-            return "Please describe when the embedding is used. Might be anytime or when certain keywords are present, etc.";
+            return T("Please describe when the embedding is used. Might be anytime or when certain keywords are present, etc.");
         
         return null;
     }

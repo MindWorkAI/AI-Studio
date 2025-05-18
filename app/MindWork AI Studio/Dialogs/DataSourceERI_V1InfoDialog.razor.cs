@@ -3,6 +3,7 @@
 using System.Text;
 
 using AIStudio.Assistants.ERI;
+using AIStudio.Components;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
@@ -14,7 +15,7 @@ using RetrievalInfo = AIStudio.Tools.ERIClient.DataModel.RetrievalInfo;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposable, ISecretId
+public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, IAsyncDisposable, ISecretId
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -29,8 +30,8 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
 
     protected override async Task OnInitializedAsync()
     {
-        this.eriServerTasks.Add(this.GetERIMetadata());
         await base.OnInitializedAsync();
+        this.eriServerTasks.Add(this.GetERIMetadata());
     }
 
     #endregion
@@ -59,21 +60,21 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
             return $"[{retrievalInfo.Id}] {retrievalInfo.Name}";
         
         if (hasId)
-            return $"[{retrievalInfo.Id}] Unnamed retrieval process";
+            return string.Format(T("[{0}] Unnamed retrieval process"), retrievalInfo.Id);
         
-        return hasName ? retrievalInfo.Name : "Unnamed retrieval process";
+        return hasName ? retrievalInfo.Name : T("Unnamed retrieval process");
     }
     
     private string RetrievalParameters(RetrievalInfo retrievalInfo)
     {
         var parameters = retrievalInfo.ParametersDescription;
         if (parameters is null || parameters.Count == 0)
-            return "This retrieval process has no parameters.";
+            return T("This retrieval process has no parameters.");
         
         var sb = new StringBuilder();
         foreach (var (paramName, description) in parameters)
         {
-            sb.Append("Parameter: ");
+            sb.Append(T("Parameter: "));
             sb.AppendLine(paramName);
             sb.AppendLine(description);
             sb.AppendLine();
@@ -94,7 +95,7 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
             using var client = ERIClientFactory.Get(ERIVersion.V1, this.DataSource);
             if(client is null)
             {
-                this.dataIssues.Add("Failed to connect to the ERI v1 server. The server is not supported.");
+                this.dataIssues.Add(T("Failed to connect to the ERI v1 server. The server is not supported."));
                 return;
             }
             
@@ -136,7 +137,7 @@ public partial class DataSourceERI_V1InfoDialog : ComponentBase, IAsyncDisposabl
         }
         catch (Exception e)
         {
-            this.dataIssues.Add($"Failed to connect to the ERI v1 server. The message was: {e.Message}");
+            this.dataIssues.Add(string.Format(T("Failed to connect to the ERI v1 server. The message was: {0}"), e.Message));
         }
         finally
         {

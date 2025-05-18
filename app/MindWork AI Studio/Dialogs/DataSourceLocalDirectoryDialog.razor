@@ -1,4 +1,5 @@
 @using AIStudio.Settings.DataModel
+@inherits MSGComponentBase
 
 <MudDialog>
     <DialogContent>
@@ -7,7 +8,7 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.dataName"
-                Label="Data Source Name"
+                Label="@T("Data Source Name")"
                 Class="mb-6"
                 MaxLength="40"
                 Counter="40"
@@ -20,19 +21,19 @@
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                Select a root directory for this data source. All data in this directory and all
-                its subdirectories will be processed for this data source.
+                @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
             </MudJustifiedText>
-            <SelectDirectory @bind-Directory="@this.dataPath" Label="Selected base directory for this data source" DirectoryDialogTitle="Select the base directory" Validation="@this.dataSourceValidation.ValidatePath" />
+            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                In order for the AI to be able to determine the appropriate data at any time, you must
-                choose an embedding method.
+                @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="Embedding" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
+            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
                 @foreach (var embedding in this.AvailableEmbeddings)
                 {
-                    <MudSelectItem Value="@embedding.Value">@embedding.Name</MudSelectItem>
+                    <MudSelectItem Value="@embedding.Value">
+                        @embedding.Name
+                    </MudSelectItem>
                 }
             </MudSelect>
             
@@ -43,45 +44,46 @@
                     <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
                         @if (string.IsNullOrWhiteSpace(this.dataPath))
                         {
-                            @: Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud.
-                            @: Please confirm that you have read and understood this.
+                            @T("Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.")
                         }
                         else
                         {
-                            @: Please note: the embedding you selected runs in the cloud. All your data from the
-                            @: folder '@this.dataPath' and all its subdirectories will be sent to the cloud. Please
-                            @: confirm that you have read and understood this.
+                            @string.Format(T("Please note: the embedding you selected runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud. Please confirm that you have read and understood this."), this.dataPath)
                         }
                     </MudJustifiedText>
-                    <MudTextSwitch @bind-Value="@this.dataUserAcknowledgedCloudEmbedding" Label="I confirm that I have read and understood the above" LabelOn="Yes, please send my data to the cloud" LabelOff="No, I will chose another embedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+                    <MudTextSwitch @bind-Value="@this.dataUserAcknowledgedCloudEmbedding" Label="@T("I confirm that I have read and understood the above")" LabelOn="@T("Yes, please send my data to the cloud")" LabelOff="@T("No, I will chose another embedding")" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
                 }
                 else
                 {
                     <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                        The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
+                        @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                     </MudJustifiedText>
                 }
             }
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="Your security policy" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
-                    <MudSelectItem Value="@policy">@policy.ToSelectionText()</MudSelectItem>
+                    <MudSelectItem Value="@policy">
+                        @policy.ToSelectionText()
+                    </MudSelectItem>
                 }
             </MudSelect>
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
         <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
             @if(this.IsEditing)
             {
-                @:Update
+                @T("Update")
             }
             else
             {
-                @:Add
+                @T("Add")
             }
         </MudButton>
     </DialogActions>
