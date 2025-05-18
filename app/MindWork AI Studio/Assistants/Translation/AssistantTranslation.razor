@@ -1,5 +1,4 @@
 @attribute [Route(Routes.ASSISTANT_TRANSLATION)]
-@using AIStudio.Settings.DataModel
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogTranslation>
 
 @if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
@@ -7,11 +6,7 @@
     <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent)"/>
 }
 
-@if (PreviewFeatures.PRE_READ_PDF_2025.IsEnabled(this.SettingsManager))
-{
-    <ReadPDFContent @bind-PDFContent="@this.inputText"/>
-}
-
+<ReadPDFContent @bind-PDFContent="@this.inputText"/>
 <MudTextSwitch Label="@T("Live translation")" @bind-Value="@this.liveTranslation" LabelOn="@T("Live translation")" LabelOff="@T("No live translation")"/>
 @if (this.liveTranslation)
 {
