@@ -1,6 +1,5 @@
 using AIStudio.Assistants.ERI;
 using AIStudio.Components;
-using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
