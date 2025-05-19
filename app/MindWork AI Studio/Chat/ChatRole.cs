@@ -60,4 +60,18 @@ public static class ExtensionsChatRole
         
         _ => Icons.Material.Filled.Help,
     };
+    
+    /// <summary>
+    /// Returns the specific name of the role for the chat template.
+    /// </summary>
+    /// <param name="role">The role.</param>
+    /// <returns>The name of the role.</returns>
+    public static string ToChatTemplateName(this ChatRole role) => role switch
+    {
+        ChatRole.SYSTEM => "System",
+        ChatRole.USER => "User",
+        ChatRole.AI => "Assistant",
+        
+        _ => "Unknown",
+    };
 }

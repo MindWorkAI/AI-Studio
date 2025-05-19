@@ -29,4 +29,16 @@ public class ContentBlock
     /// Should the content block be hidden from the user?
     /// </summary>
     public bool HideFromUser { get; set; }
+
+    public ContentBlock DeepClone()
+    {
+        return new()
+        {
+            Time = this.Time,
+            ContentType = this.ContentType,
+            Content = this.Content?.DeepClone(),
+            Role = this.Role,
+            HideFromUser = this.HideFromUser,
+        };
+    }
 }

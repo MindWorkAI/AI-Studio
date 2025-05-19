@@ -93,7 +93,7 @@ public sealed record ChatThread
     {
         
         //
-        // Prepare the prompts using the chatTemplate:
+        // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
         string systemPromptTextWithChatTemplate;
         var logMessage = $"Using no chat template for chat thread '{chatThread.Name}'.";
@@ -125,6 +125,9 @@ public sealed record ChatThread
         }
         logger.LogInformation(logMessage);
         
+        //
+        // Add augmented data, if available:
+        //
         var isAugmentedDataAvailable = !string.IsNullOrWhiteSpace(chatThread.AugmentedData);
         var systemPromptWithAugmentedData = isAugmentedDataAvailable switch
         {
@@ -144,7 +147,7 @@ public sealed record ChatThread
         
         
         //
-        // Prepare the system prompt:
+        // Add information from profile if available and allowed:
         //
         string systemPromptText;
         logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
