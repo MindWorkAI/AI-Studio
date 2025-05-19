@@ -1,0 +1,11 @@
+﻿<MudTabs @bind-ActivePanelIndex="selectedIndex" PanelClass="code-block">
+    @foreach (var block in blocks)
+    {
+        <MudTabPanel Text="@block.Title">
+            @block.Fragment
+        </MudTabPanel>
+    }
+</MudTabs>
+<CascadingValue Value="this">
+    @this.ChildContent
+</CascadingValue>
