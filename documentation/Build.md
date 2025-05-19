@@ -8,7 +8,7 @@ Therefore, we cannot provide a static list here that is valid for all Linux syst
 
 ## Prerequisites
 1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
-2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest version.
+2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest stable version.
 3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
 4. The core team uses [JetBrains](https://www.jetbrains.com/) [Rider](https://www.jetbrains.com/rider/) and [RustRover](https://www.jetbrains.com/rust/) for development. Both IDEs are free to use for open-source projects for non-commercial use. They are available for macOS, Linux, and Windows systems. Profiles are provided for these IDEs, so you can get started right away. However, you can also use a different IDE.
 4. Clone the repository.
@@ -29,18 +29,23 @@ In order to build MindWork AI Studio from source instead of using the pre-built 
 2. Open a terminal.
 3. Navigate to the `/app/Build` directory within the repository.
 4. To build the current version, run `dotnet run build` to build the entire app.
-    - This will build the app for the current operating system, for both x64 (Intel, AMD) and ARM64 (e.g., Apple Silicon, Raspberry Pi).
+    - This will build the app for the current operating system and CPU architecture (x64, or ARM64).
     - The final setup program will be located in `runtime/target/release` afterward.
 
 ## Run the app locally with all your changes
 Do you want to test your changes before creating a PR? Follow these steps:
 1. Ensure you have met all the prerequisites.
-2. At least once, you have to run the `dotnet run build` command (see above, "Build instructions"). This is necessary because the Tauri framework checks whether the .NET app as so-called "sidecar" is available. Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development.
+2. At least once, you have to run the `dotnet run build` command (see above, "One-time mandatory steps"). This is necessary because the Tauri framework checks whether the .NET app as so-called "sidecar" is available. Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development.
 3. Open a terminal.
 4. Navigate to the `runtime` directory within the repository, e.g. `cd repos/mindwork-ai-studio/runtime`.
 5. Run `cargo tauri dev --no-watch`.
+6. Now you have to wait until the Rust code is compiled. Afterward, the Tauri runtime will be started and the app window will appear. This may take a while, especially the first time you run it.
+7. Open another terminal or tab.
+8. Navigate to the `app/MindWork AI Studio` directory within the repository.
+9. Execute the command `dotnet run`.
+10. After compiling the .NET code, the app will finally start inside the Tauri runtime window.
 
-Cargo will compile the Rust code and start the runtime. The runtime will then start the .NET compiler. When the .NET source code is compiled, the app will start. You can now test your changes.
+You can now test your changes.
 
 ## Create a release
 In order to create a release:

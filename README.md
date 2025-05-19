@@ -31,9 +31,9 @@ Things we are currently working on:
   - [x] ~~Plan & implement the base plugin system ([PR #322](https://github.com/MindWorkAI/AI-Studio/pull/322))~~
   - [x] ~~Start the plugin system ([PR #372](https://github.com/MindWorkAI/AI-Studio/pull/372))~~
   - [x] ~~Added hot-reload support for plugins ([PR #377](https://github.com/MindWorkAI/AI-Studio/pull/377), [PR #391](https://github.com/MindWorkAI/AI-Studio/pull/391))~~
-  - [ ] Add support for other languages (I18N) to AI Studio (~~[PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404), [PR #429](https://github.com/MindWorkAI/AI-Studio/pull/429), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446))~~
+  - [ ] Add support for other languages (I18N) to AI Studio (~~[PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404), [PR #429](https://github.com/MindWorkAI/AI-Studio/pull/429), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469))~~
   - [x] ~~Add an I18N assistant to translate all AI Studio texts to a certain language & culture ([PR #422](https://github.com/MindWorkAI/AI-Studio/pull/422))~~
-  - [ ] Provide MindWork AI Studio in German (~~[PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446)~~)
+  - [ ] Provide MindWork AI Studio in German (~~[PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469)~~)
   - [ ] Add configuration plugins, which allow pre-defining some LLM providers in organizations
   - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
   - [ ] Add assistant plugins
@@ -47,6 +47,7 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.44: Added PDF import to the text summarizer, translation, and legal check assistants, allowing you to import PDF files and use them as input for the assistants.
 - v0.9.40: Added support for the `o4` models from OpenAI. Also, we added Alibaba Cloud & Hugging Face as LLM providers.
 - v0.9.39: Added the plugin system as a preview feature.
 - v0.9.31: Added Helmholtz & GWDG as LLM providers. This is a huge improvement for many researchers out there who can use these providers for free. We added DeepSeek as a provider as well.
@@ -55,7 +56,6 @@ Features we have recently released:
 - v0.9.25: Added [xAI](https://x.ai/) as a new provider. xAI provides their Grok models for generating content.
 - v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
 - v0.9.22: Added options for preview features; added embedding provider configuration for RAG (preview) and writer mode (experimental preview).
-- v0.9.18: Added the new Anthropic Heiku model; added Groq and Google Gemini as provider options.
 
 ## What is AI Studio?
 
