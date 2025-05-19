@@ -106,8 +106,9 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
                 </MudTooltip>
             }
-
+            
             <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
+            
             <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))

@@ -5,17 +5,15 @@
 
 <MudDialog>
     <DialogContent>
-        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Store chat templates.")
-        </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Are you always using the same prompts and want a way of automatically using them?")
+            @T("Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide example exchanges to design an AI experience perfectly suited to your requirements.")
         </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("The name of the chat template is mandatory. Each chat template must have a unique name.")
         </MudJustifiedText>
+        
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -51,14 +49,17 @@
                 HelperText="@T("Tell the AI your system prompt.")"
             />
             
-            <MudSwitch @bind-Value="allowProfileUsage" Color="Color.Primary" Label="@T("Allow using profiles together with this chat template?")"/>
+            <MudSwitch @bind-Value="allowProfileUsage" Color="Color.Primary" Class="mb-3" Label="@T("Allow the use of profiles together with this chat template?")" ThumbIcon="@Icons.Material.Filled.Person4" ThumbIconColor="Color.Default"/>
             
-            <MudText> What should you know about the additional messages? TODO</MudText>
+            <MudText Typo="Typo.h6" Class="mb-3">
+                @T("Example Exchanges")
+            </MudText>
             
-            <MudTable FixedHeader="true" Items="@AdditionalMessages" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" CanCancelEdit="true" CommitEditTooltip="@T("Commit Changes")" Elevation="10" Outlined="true" >
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6">Additional messages</MudText>
-                </ToolBarContent>
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("Add example exchanges (user prompt followed by assistant response) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.")
+            </MudJustifiedText>
+            
+            <MudTable FixedHeader="true" Items="@AdditionalMessages" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" CanCancelEdit="true" CommitEditTooltip="@T("Commit Changes")" Elevation="10" Outlined="true" Class="mt-3 mb-6">
                 <ColGroup>
                     <col style="width: 20%;" />
                     <col style="width: 65%;" />
@@ -70,7 +71,7 @@
                     <MudTh Style="text-align:center">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="@T("Role")">@context.Role</MudTd>
+                    <MudTd DataLabel="@T("Role")">@context.Role.ToChatTemplateName()</MudTd>
                     <MudTd DataLabel="@T("Message")">
                         @(context.Content is ContentText textContent ? textContent.Text : context.Content?.ToString())
                     </MudTd>
@@ -101,12 +102,12 @@
                     </MudTd>
                 </RowEditingTemplate>
                 <PagerContent>
-                    <MudTablePager RowsPerPageString="Messages per page"  PageSizeOptions="[20,50,100]"/>
+                    <MudTablePager RowsPerPageString="Messages per page"  PageSizeOptions="[10,20,50,100]"/>
                 </PagerContent>
             </MudTable>
         </MudForm>
         
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewMessageToEnd" StartIcon="@Icons.Material.Filled.Add">@T("Add additional message")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Class="mb-3">@T("Add additional message")</MudButton>
         
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>

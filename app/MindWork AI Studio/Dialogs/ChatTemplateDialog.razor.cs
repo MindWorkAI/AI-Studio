@@ -200,8 +200,8 @@ public partial class ChatTemplateDialog : MSGComponentBase
     
     private string? ValidateSystemPrompt(string text)
     {
-        if (string.IsNullOrWhiteSpace(this.DataSystemPrompt))// && string.IsNullOrWhiteSpace(this.DataActions))
-            return T("Please enter the system prompt.");
+        // if (string.IsNullOrWhiteSpace(this.DataSystemPrompt))// && string.IsNullOrWhiteSpace(this.DataActions))
+        //    return T("Please enter the system prompt.");
         
         if(text.Length > 444)
             return T("The text must not exceed 444 characters.");

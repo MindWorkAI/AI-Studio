@@ -1,16 +1,18 @@
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Person4" HeaderText="@T("Configure Chat Templates")">
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.RateReview" HeaderText="@T("Configure Chat Templates")">
     <MudText Typo="Typo.h4" Class="mb-3">
         @T("Your Chat Templates")
     </MudText>
+    
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        @T("Explain chat Templates TODO")
+        @T("Customize your AI experience with our Chat Templates! Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to OpenAI's playground, you can define your own system prompts and leverage assistant prompts for providers that support them.")
+    </MudJustifiedText>
+
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @T("Note: This advanced feature is designed for users familiar with prompt engineering concepts.")
     </MudJustifiedText>
     
-    <MudJustifiedText Typo="Typo.body1" Class="mb-3"> 
-        @T("Explain chat Templates TODO") 
-    </MudJustifiedText>
     <MudTable Items="@this.SettingsManager.ConfigurationData.ChatTemplates" Hover="@true" Class="border-dashed border rounded-lg">
         <ColGroup>
             <col style="width: 3em;"/>

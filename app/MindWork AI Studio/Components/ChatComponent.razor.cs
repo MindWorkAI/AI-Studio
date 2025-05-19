@@ -60,6 +60,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
+    private bool disableProfile = false; // TODO
     
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -328,6 +329,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
         this.currentChatTemplate = chatTemplate;
+        this.disableProfile = !chatTemplate.AllowProfileUsage;
         if(this.ChatThread is null)
             return;
 
@@ -813,6 +815,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
             if(this.currentChatTemplate == default)
                 this.currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
+            this.disableProfile = !this.currentChatTemplate.AllowProfileUsage;
         }
     }
 
