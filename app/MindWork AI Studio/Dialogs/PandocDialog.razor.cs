@@ -27,7 +27,6 @@ public partial class PandocDialog : ComponentBase
 
     private async Task CheckPandocAvailabilityAsync()
     {
-        await Task.Delay(2500);
         this.isPandocAvailable = await Pandoc.CheckAvailabilityAsync();
         this.showSkeleton = false;
         await this.InvokeAsync(this.StateHasChanged);

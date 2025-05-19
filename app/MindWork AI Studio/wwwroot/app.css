@@ -110,3 +110,32 @@
 .inner-scrolling-context > .mud-splitter > .mud-slider > .mud-slider-container {
     padding-bottom: 12px;
 }
+
+.code-block {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: 6px !important;
+    overflow: auto !important;
+    font-family: Consolas, "Courier New", monospace  !important;
+    text-align: left !important;
+}
+.code-block pre {
+    margin: 0 !important;
+}
+.code-block code {
+    font-family: inherit !important;
+}
+
+.inline-code-block {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: 6px;
+    font-family: Consolas, "Courier New", monospace;
+    text-align: left;
+    padding: 4px 6px;
+    margin: 0 2px;
+}
+
+.no-elevation {
+    box-shadow: none !important;
+}

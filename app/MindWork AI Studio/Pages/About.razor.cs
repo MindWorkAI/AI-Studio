@@ -1,5 +1,5 @@
 using System.Reflection;
-
+using AIStudio.Dialogs;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -17,6 +17,9 @@ public partial class About : ComponentBase
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
@@ -204,5 +207,10 @@ public partial class About : ComponentBase
     private async Task LatestVersion()
     {
         await Pandoc.FetchLatestVersionAsync();
+    }
+
+    private async Task OpenDialog()
+    {
+        await this.DialogService.ShowAsync<PandocDialog>("install dialog");
     }
 }
