@@ -10,14 +10,14 @@
     </MudJustifiedText>
 
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        @T("Note: This advanced feature is designed for users familiar with prompt engineering concepts.")
+        @T("Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.")
     </MudJustifiedText>
     
     <MudTable Items="@this.SettingsManager.ConfigurationData.ChatTemplates" Hover="@true" Class="border-dashed border rounded-lg">
         <ColGroup>
             <col style="width: 3em;"/>
             <col/>
-            <col style="width: 20em;"/>
+            <col style="width: 16em;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>#</MudTh>
@@ -30,10 +30,10 @@
             <MudTd>
                 <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                     <MudTooltip Text="@T("Edit")">
-                        <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditChatTemplate(context)"/>
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditChatTemplate(context)"/>
                     </MudTooltip> 
                     <MudTooltip Text="@T("Delete")">
-                        <MudIconButton Variant="Variant.Filled" Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteChatTemplate(context)"/>
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteChatTemplate(context)"/>
                     </MudTooltip> 
                 </MudStack>
             </MudTd>
