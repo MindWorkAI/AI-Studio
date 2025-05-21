@@ -1065,66 +1065,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence."
 
--- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T172255919"] = "Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat."
-
--- Chat Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T1757092713"] = "Chat Options"
-
--- Shortcut to send input
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T1773585398"] = "Shortcut to send input"
-
--- Provider selection when creating new chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T189306836"] = "Provider selection when creating new chats"
-
--- Would you like to set one of your profiles as the default for chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T1933521846"] = "Would you like to set one of your profiles as the default for chats?"
-
--- Apply default data source option when sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2510376349"] = "Apply default data source option when sending assistant results to chat"
-
--- Control how the LLM provider for added chats is selected.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
-
--- Provider selection when loading a chat and sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
-
--- Show the latest message after loading?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2913693228"] = "Show the latest message after loading?"
-
--- Do you want to use any shortcut to send your input?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
-
--- No chat options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3383186996"] = "No chat options are preselected"
-
--- First (oldest) message is shown, after loading a chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
-
--- Preselect chat options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3728624759"] = "Preselect chat options?"
-
--- Chat options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3730599555"] = "Chat options are preselected"
-
--- Latest message is shown, after loading a chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3755993611"] = "Latest message is shown, after loading a chat"
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T4004501229"] = "Preselect one of your profiles?"
-
--- Do you want to apply the default data source options when sending assistant results to chat?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
-
--- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
-
--- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T492357592"] = "You can set default data sources and options for new chats. You can change these settings later for each individual chat."
-
--- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
-
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Delete"
 
@@ -2283,6 +2223,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3175009548"
 -- Preselect an objective?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3439476935"] = "Preselect an objective?"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3448155331"] = "Close"
+
 -- Preselect a moderator?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3482798491"] = "Preselect a moderator?"
 
@@ -2387,6 +2330,69 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
+
+-- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T172255919"] = "Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat."
+
+-- Chat Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1757092713"] = "Chat Options"
+
+-- Shortcut to send input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1773585398"] = "Shortcut to send input"
+
+-- Provider selection when creating new chats
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T189306836"] = "Provider selection when creating new chats"
+
+-- Would you like to set one of your profiles as the default for chats?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1933521846"] = "Would you like to set one of your profiles as the default for chats?"
+
+-- Apply default data source option when sending assistant results to chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Apply default data source option when sending assistant results to chat"
+
+-- Control how the LLM provider for added chats is selected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
+
+-- Provider selection when loading a chat and sending assistant results to chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
+
+-- Show the latest message after loading?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] = "Show the latest message after loading?"
+
+-- Do you want to use any shortcut to send your input?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
+
+-- No chat options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3383186996"] = "No chat options are preselected"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3448155331"] = "Close"
+
+-- First (oldest) message is shown, after loading a chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
+
+-- Preselect chat options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3728624759"] = "Preselect chat options?"
+
+-- Chat options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] = "Chat options are preselected"
+
+-- Latest message is shown, after loading a chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Latest message is shown, after loading a chat"
+
+-- Preselect one of your profiles?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4004501229"] = "Preselect one of your profiles?"
+
+-- Do you want to apply the default data source options when sending assistant results to chat?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
+
+-- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
+
+-- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592"] = "You can set default data sources and options for new chats. You can change these settings later for each individual chat."
+
+-- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
 
 -- Which programming language should be preselected for added contexts?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Which programming language should be preselected for added contexts?"
@@ -3344,6 +3350,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
 
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Hide your workspaces"
+
+-- Open Chat Options
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2813205227"] = "Open Chat Options"
 
 -- Disappearing Chat
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Disappearing Chat"

@@ -4,23 +4,20 @@
 
 <div class="inner-scrolling-context">
 
-    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-        @(this.Title)
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+        <MudText Typo="Typo.h3">
+            @(this.Title)
+        </MudText>
+        
+        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
+    </MudStack>
 
     <InnerScrolling>
         <ChildContent>
             <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
-                <MudGrid Class="mb-2">
-                    <MudItem xs="10">
-                        <MudText Typo="Typo.body1" Align="Align.Justify">
-                            @this.Description
-                        </MudText>
-                    </MudItem>
-                    <MudItem xs="2" Class="d-flex justify-end align-start">
-                        <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
-                    </MudItem>
-                </MudGrid>
+                <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-2">
+                    @this.Description
+                </MudText>
 
                 @if (this.Body is not null)
                 {
