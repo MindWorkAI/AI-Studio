@@ -1,11 +1,20 @@
+@using AIStudio.Settings
 @inherits MSGComponentBase
-<MudTooltip Text="@T("You can switch between your chat templates here")" Placement="Placement.Top">
-    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.RateReview" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentChatTemplate.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass">
-        @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates.GetAllChatTemplates())
-        {
-            <MudMenuItem OnClick="() => this.SelectionChanged(chatTemplate)">
-                @chatTemplate.Name
-            </MudMenuItem>
-        }
+
+<MudTooltip Placement="Placement.Top" Text="@T("Start a new chat with a chat template.")">
+    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass">
+        <ActivatorContent>
+            <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.RateReview">
+                @(this.CurrentChatTemplate != ChatTemplate.NO_CHATTEMPLATE ? this.CurrentChatTemplate.Name : "")
+            </MudButton>
+        </ActivatorContent>
+        <ChildContent>
+            @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates.GetAllChatTemplates())
+            {
+                <MudMenuItem OnClick="() => this.SelectionChanged(chatTemplate)">
+                    @chatTemplate.Name
+                </MudMenuItem>
+            }
+        </ChildContent>
     </MudMenu>
 </MudTooltip>

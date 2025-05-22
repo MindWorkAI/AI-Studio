@@ -18,6 +18,9 @@ public partial class ProfileSelection : MSGComponentBase
     [Parameter]
     public string MarginRight { get; set; } = string.Empty;
     
+    [Parameter]
+    public bool Disabled { get; set; }
+    
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
     
     private async Task SelectionChanged(Profile profile)

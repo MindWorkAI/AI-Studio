@@ -339,7 +339,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             Blocks = this.currentChatTemplate.AdditionalMessages.Select(x => x.DeepClone()).ToList(),
         };
         
-        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        // await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+
+        await this.StartNewChat(true, false);
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()

@@ -6,11 +6,11 @@
 <MudDialog>
     <DialogContent>
 
-        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        <MudJustifiedText Class="mb-3" Typo="Typo.body1">
             @T("Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.")
         </MudJustifiedText>
 
-        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        <MudJustifiedText Class="mb-3" Typo="Typo.body1">
             @T("The name of the chat template is mandatory. Each chat template must have a unique name.")
         </MudJustifiedText>
         
@@ -51,7 +51,7 @@
             />
             
             <MudTooltip Text="@T("Are you unsure which system prompt to use? You can simply start with the default system prompt that AI Studio uses for all chats.")">
-                <MudButton Class="mb-3" Color="Color.Primary" OnClick="@this.UseDefaultSystemPrompt" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">@T("Use the default system prompt")</MudButton>
+                <MudButton Class="mb-3" Color="Color.Primary" OnClick="@this.UseDefaultSystemPrompt" Size="Size.Small" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">@T("Use the default system prompt")</MudButton>
             </MudTooltip>
             
             <MudTooltip Text="@T("Using some chat templates in tandem with profiles might cause issues. Therefore, you can preliminarily block the usage of profiles here.")">

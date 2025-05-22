@@ -13,7 +13,7 @@ public partial class ChatTemplateSelection : MSGComponentBase
     public EventCallback<ChatTemplate> CurrentChatTemplateChanged { get; set; }
 
     [Parameter]
-    public string MarginLeft { get; set; } = "ml-3";
+    public string MarginLeft { get; set; } = "ml-1";
 
     [Parameter]
     public string MarginRight { get; set; } = string.Empty;

@@ -80,6 +80,11 @@
                     <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="() => this.StartNewChat(useSameWorkspace: true)"/>
                 </MudTooltip>
             }
+            
+            @if (this.SettingsManager.ConfigurationData.ChatTemplates.Count > 0)
+            {
+                <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
+            }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
@@ -107,12 +112,7 @@
                 </MudTooltip>
             }
             
-            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
-            
-            @if (this.SettingsManager.ConfigurationData.ChatTemplates.Count > 0)
-            {
-                <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
-            }
+            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)"/>
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
