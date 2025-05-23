@@ -43,6 +43,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
     
     [Parameter]
     public List<ContentBlock> ExampleConversation { get; set; } = [];
+
+    [Parameter] 
+    public bool AllowProfileUsage { get; set; } = true;
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -57,12 +60,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
-    
+
     private ContentBlock messageEntryBeforeEdit;
-    // private readonly List<ContentBlock> additionalMessagesEntries = [];
-    // private readonly List<string> availableRoles = ["User", "Assistant"];
     private readonly IEnumerable<ChatRole> availableRoles = ChatRoles.ChatTemplateRoles().ToArray();
-    private bool allowProfileUsage = true;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -75,7 +75,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
         ExampleConversation = this.ExampleConversation,
-        AllowProfileUsage = allowProfileUsage,
+        AllowProfileUsage = this.AllowProfileUsage,
     };
 
     private void RemoveMessage(ContentBlock item)
@@ -85,6 +85,8 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private void AddNewMessageToEnd()
     {
+        this.ExampleConversation ??= new List<ContentBlock>();
+        
         var newEntry = new ContentBlock
         {
             Role = ChatRole.USER, // Default to User

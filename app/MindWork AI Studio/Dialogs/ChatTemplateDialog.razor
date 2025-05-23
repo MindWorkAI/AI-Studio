@@ -55,7 +55,7 @@
             </MudTooltip>
             
             <MudTooltip Text="@T("Using some chat templates in tandem with profiles might cause issues. Therefore, you can preliminarily block the usage of profiles here.")">
-                <MudSwitch @bind-Value="allowProfileUsage" Class="mb-3" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" ThumbIcon="@Icons.Material.Filled.Person4" ThumbIconColor="Color.Default" />
+                <MudSwitch @bind-Value="@this.AllowProfileUsage" Class="mb-3" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" ThumbIcon="@Icons.Material.Filled.Person4" ThumbIconColor="Color.Default" />
             </MudTooltip>
             
             <MudText Typo="Typo.h6" Class="mb-3">

@@ -91,7 +91,6 @@ public sealed record ChatThread
     /// <returns>The prepared system prompt.</returns>
     public string PrepareSystemPrompt(SettingsManager settingsManager, ChatThread chatThread, ILogger logger)
     {
-        
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
