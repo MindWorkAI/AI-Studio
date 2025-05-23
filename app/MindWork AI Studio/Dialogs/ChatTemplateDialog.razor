@@ -66,7 +66,7 @@
                 @T("Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.")
             </MudJustifiedText>
             
-            <MudTable CanCancelEdit="true" Class="mt-3 mb-6" CommitEditTooltip="@T("Commit Changes")" Elevation="10" FixedHeader="true" Items="@AdditionalMessages" Outlined="true" RowEditCancel="@this.ResetItemToOriginalValues" RowEditPreview="@this.BackupItem">
+            <MudTable CanCancelEdit="true" Class="mt-3 mb-6" CommitEditTooltip="@T("Commit Changes")" Elevation="10" FixedHeader="true" Items="@ExampleConversation" Outlined="true" RowEditCancel="@this.ResetItemToOriginalValues" RowEditPreview="@this.BackupItem">
                 <ColGroup>
                     <col style="width: 16em;" />
                     <col/>

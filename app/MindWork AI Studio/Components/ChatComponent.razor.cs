@@ -435,7 +435,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
                 Seed = this.RNG.Next(),
-                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.AdditionalMessages.Select(x => x.DeepClone()).ToList(),
+                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -666,7 +666,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
                 Seed = this.RNG.Next(),
-                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.AdditionalMessages.Select(x => x.DeepClone()).ToList(),
+                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
         

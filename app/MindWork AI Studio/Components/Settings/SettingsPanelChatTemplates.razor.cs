@@ -37,7 +37,7 @@ public partial class SettingsPanelChatTemplates : SettingsPanelBase
             { x => x.DataName, chatTemplate.Name },
             { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
             { x => x.IsEditing, true },
-            {x => x.AdditionalMessages, chatTemplate.AdditionalMessages},
+            {x => x.ExampleConversation, chatTemplate.ExampleConversation},
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);

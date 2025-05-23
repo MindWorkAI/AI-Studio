@@ -42,7 +42,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public bool IsEditing { get; init; }
     
     [Parameter]
-    public List<ContentBlock> AdditionalMessages { get; set; } = [];
+    public List<ContentBlock> ExampleConversation { get; set; } = [];
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -74,13 +74,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
-        AdditionalMessages = this.AdditionalMessages,
+        ExampleConversation = this.ExampleConversation,
         AllowProfileUsage = allowProfileUsage,
     };
 
     private void RemoveMessage(ContentBlock item)
     {
-        this.AdditionalMessages.Remove(item);
+        this.ExampleConversation.Remove(item);
     }
 
     private void AddNewMessageToEnd()
@@ -94,7 +94,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             Time = DateTimeOffset.Now,
         };
 
-        this.AdditionalMessages.Add(newEntry);
+        this.ExampleConversation.Add(newEntry);
     }
 
     private void AddNewMessageBelow(ContentBlock currentItem)
@@ -111,15 +111,15 @@ public partial class ChatTemplateDialog : MSGComponentBase
         };
         
         // Rest of the method remains the same
-        var index = this.AdditionalMessages.IndexOf(currentItem);
+        var index = this.ExampleConversation.IndexOf(currentItem);
 
         if (index >= 0)
         {
-            this.AdditionalMessages.Insert(index + 1, newEntry);
+            this.ExampleConversation.Insert(index + 1, newEntry);
         }
         else
         {
-            this.AdditionalMessages.Add(newEntry);
+            this.ExampleConversation.Add(newEntry);
         }
     }
     
