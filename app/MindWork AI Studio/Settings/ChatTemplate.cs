@@ -32,16 +32,7 @@ public readonly record struct ChatTemplate(uint Num, string Id, string Name, str
         if(this.Num == uint.MaxValue)
             return string.Empty;
         
-        var systemPrompt =  
-            $"""
-             ```
-             {this.SystemPrompt}
-             ```
-             """;
-        
-        return $"""
-                {systemPrompt}
-                """;
+        return this.SystemPrompt;
     }
 
 }

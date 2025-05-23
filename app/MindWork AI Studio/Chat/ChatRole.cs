@@ -1,3 +1,5 @@
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Chat;
 
 /// <summary>
@@ -19,6 +21,8 @@ public enum ChatRole
 /// </summary>
 public static class ExtensionsChatRole
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatRole).Namespace, nameof(ChatRole));
+    
     /// <summary>
     /// Returns the name of the role.
     /// </summary>
@@ -26,11 +30,11 @@ public static class ExtensionsChatRole
     /// <returns>The name of the role.</returns>
     public static string ToName(this ChatRole role) => role switch
     {
-        ChatRole.SYSTEM => "System",
-        ChatRole.USER => "You",
-        ChatRole.AI => "AI",
+        ChatRole.SYSTEM => TB("System"),
+        ChatRole.USER => TB("You"),
+        ChatRole.AI => TB("AI"),
         
-        _ => "Unknown",
+        _ => TB("Unknown"),
     };
     
     /// <summary>
@@ -68,10 +72,10 @@ public static class ExtensionsChatRole
     /// <returns>The name of the role.</returns>
     public static string ToChatTemplateName(this ChatRole role) => role switch
     {
-        ChatRole.SYSTEM => "System",
-        ChatRole.USER => "User",
-        ChatRole.AI => "Assistant",
+        ChatRole.SYSTEM => TB("System"),
+        ChatRole.USER => TB("User"),
+        ChatRole.AI => TB("Assistant"),
         
-        _ => "Unknown",
+        _ => TB("Unknown"),
     };
 }

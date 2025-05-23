@@ -81,7 +81,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private void RemoveMessage(ContentBlock item)
     {
         this.AdditionalMessages.Remove(item);
-        // this.Snackbar.Add("Entry removed", Severity.Info);
     }
 
     private void AddNewMessageToEnd()
@@ -96,7 +95,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
         };
 
         this.AdditionalMessages.Add(newEntry);
-        // this.Snackbar.Add("Initial entry added", Severity.Success);
     }
 
     private void AddNewMessageBelow(ContentBlock currentItem)
@@ -118,12 +116,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if (index >= 0)
         {
             this.AdditionalMessages.Insert(index + 1, newEntry);
-            // this.Snackbar.Add("New entry added", Severity.Success);
         }
         else
         {
             this.AdditionalMessages.Add(newEntry);
-            // this.Snackbar.Add("New entry added", Severity.Success);
         }
     }
     
@@ -134,11 +130,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
             Role = ((ContentBlock)element).Role,
             Content = ((ContentBlock)element).Content,
         };
-    }
-
-    private void ItemHasBeenCommitted(object element)
-    {
-        // this.Snackbar.Add("Changes saved", Severity.Success);
     }
 
     private void ResetItemToOriginalValues(object element)
@@ -200,9 +191,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
     
     private string? ValidateSystemPrompt(string text)
     {
-        // if (string.IsNullOrWhiteSpace(this.DataSystemPrompt))// && string.IsNullOrWhiteSpace(this.DataActions))
-        //    return T("Please enter the system prompt.");
-        
         if(text.Length > 444)
             return T("The text must not exceed 444 characters.");
         

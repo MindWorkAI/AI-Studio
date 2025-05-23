@@ -30,14 +30,12 @@ public partial class SettingsPanelChatTemplates : SettingsPanelBase
     
     private async Task EditChatTemplate(ChatTemplate chatTemplate)
     {
-        // TODO: additionall messages übergeben
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.DataNum, chatTemplate.Num },
             { x => x.DataId, chatTemplate.Id },
             { x => x.DataName, chatTemplate.Name },
             { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
-            // { x => x.DataActions, chatTemplate.Actions },
             { x => x.IsEditing, true },
             {x => x.AdditionalMessages, chatTemplate.AdditionalMessages},
         };

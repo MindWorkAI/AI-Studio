@@ -112,7 +112,7 @@
                 </MudTooltip>
             }
             
-            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)"/>
+            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("The profile is disabled according to your chat template settings.")"/>
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {

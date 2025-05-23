@@ -1,6 +1,6 @@
 @inherits MSGComponentBase
-<MudTooltip Text="@T("You can switch between your profiles here")" Placement="Placement.Top">
-    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" disabled="@this.Disabled">
+<MudTooltip Text="@this.ToolTipText" Placement="Placement.Top">
+    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" Disabled="@this.Disabled">
         @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
         {
             <MudMenuItem OnClick="() => this.SelectionChanged(profile)">

@@ -60,8 +60,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
-    private bool disableProfile = false; // TODO
-    
+
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
     private MudTextField<string> inputField = null!;
@@ -80,7 +79,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
         
         // Get the preselected chat template:
-        // this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT); // TODO
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -329,17 +328,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
         this.currentChatTemplate = chatTemplate;
-        this.disableProfile = !chatTemplate.AllowProfileUsage;
         if(this.ChatThread is null)
             return;
-
-        this.ChatThread = this.ChatThread with
-        {
-            SelectedChatTemplate = this.currentChatTemplate.Id,
-            Blocks = this.currentChatTemplate.AdditionalMessages.Select(x => x.DeepClone()).ToList(),
-        };
-        
-        // await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
 
         await this.StartNewChat(true, false);
     }
@@ -817,7 +807,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
             if(this.currentChatTemplate == default)
                 this.currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
-            this.disableProfile = !this.currentChatTemplate.AllowProfileUsage;
         }
     }
 

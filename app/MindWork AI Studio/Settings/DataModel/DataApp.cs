@@ -57,4 +57,10 @@ public sealed class DataApp
     /// Should we preselect a profile for the entire app?
     /// </summary>
     public string PreselectedProfile { get; set; } = string.Empty;
+    
+    
+    /// <summary>
+    /// Should we preselect a chat template for the entire app?
+    /// </summary>
+    public string PreselectedChatTemplate { get; set; } = string.Empty;
 }

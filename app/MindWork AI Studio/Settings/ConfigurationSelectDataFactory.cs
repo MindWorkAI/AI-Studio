@@ -198,6 +198,12 @@ public static class ConfigurationSelectDataFactory
             yield return new(profile.Name, profile.Id);
     }
     
+    public static IEnumerable<ConfigurationSelectData<string>> GetChatTemplatesData(IEnumerable<ChatTemplate> chatTemplates)
+    {
+        foreach (var chatTemplate in chatTemplates.GetAllChatTemplates())
+            yield return new(chatTemplate.Name, chatTemplate.Id);
+    }
+    
     public static IEnumerable<ConfigurationSelectData<ConfidenceSchemes>> GetConfidenceSchemesData()
     {
         foreach (var scheme in Enum.GetValues<ConfidenceSchemes>())
