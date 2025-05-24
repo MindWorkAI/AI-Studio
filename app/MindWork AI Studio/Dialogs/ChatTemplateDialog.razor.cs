@@ -116,7 +116,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.dataExampleConversation.Remove(item);
     }
 
-    private void AddNewMessageToEnd()
+    private void AddMessageToEnd()
     {
         this.ExampleConversation ??= new List<ContentBlock>();
         
@@ -132,7 +132,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.dataExampleConversation.Add(newEntry);
     }
 
-    private void AddNewMessageBelow(ContentBlock currentItem)
+    private void AddMessageBelow(ContentBlock currentItem)
     {
         
         // Create new entry with a valid role
