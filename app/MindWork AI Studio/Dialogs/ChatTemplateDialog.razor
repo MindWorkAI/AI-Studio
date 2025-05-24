@@ -49,9 +49,12 @@
                 HelperText="@T("Tell the AI your system prompt.")"
             />
             
-            <MudTooltip Text="@T("Are you unsure which system prompt to use? You can simply start with the default system prompt that AI Studio uses for all chats.")">
-                <MudButton Class="mb-3" Color="Color.Primary" OnClick="@this.UseDefaultSystemPrompt" Size="Size.Small" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">@T("Use the default system prompt")</MudButton>
-            </MudTooltip>
+            <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                @T("Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.")
+            </MudJustifiedText>
+            <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">
+                @T("Use the default system prompt")
+            </MudButton>
             
             <MudTooltip Text="@T("Using some chat templates in tandem with profiles might cause issues. Therefore, you can preliminarily block the usage of profiles here.")">
                 <MudSwitch @bind-Value="@this.AllowProfileUsage" Class="mb-3" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" ThumbIcon="@Icons.Material.Filled.Person4" ThumbIconColor="Color.Default" />
