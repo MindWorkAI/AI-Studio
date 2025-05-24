@@ -32,6 +32,18 @@ public sealed class ContentImage : IContent, IImageSource
     {
         throw new NotImplementedException();
     }
+    
+    /// <inheritdoc />
+    public IContent DeepClone()
+    {
+        return new ContentImage
+        {
+            Source = this.Source,
+            InitialRemoteWait = this.InitialRemoteWait,
+            IsStreaming = this.IsStreaming,
+            SourceType = this.SourceType,
+        };
+    }
 
     #endregion
 

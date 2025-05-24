@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -128,6 +127,13 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProfile) : default,
 
         Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProfile) : default,
+        
+        _ => default,
+    };
+    
+    public static ChatTemplate PreselectedChatTemplate(this Components component, SettingsManager settingsManager) => component switch
+    {
+        Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) : default,
         
         _ => default,
     };

@@ -265,6 +265,16 @@ public sealed class SettingsManager
         preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProfile);
         return preselection != default ? preselection : Profile.NO_PROFILE;
     }
+    
+    public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
+    {
+        var preselection = component.PreselectedChatTemplate(this);
+        if (preselection != default)
+            return preselection;
+        
+        preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedChatTemplate);
+        return preselection != default ? preselection : ChatTemplate.NO_CHATTEMPLATE;
+    }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
     {

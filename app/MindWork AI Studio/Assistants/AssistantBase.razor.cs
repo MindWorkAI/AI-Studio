@@ -89,6 +89,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
+    protected ChatTemplate currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
     protected ChatThread? chatThread;
     protected IContent? lastUserPrompt;
     protected CancellationTokenSource? cancellationTokenSource;
@@ -115,6 +116,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
     }
 
     protected override async Task OnParametersSetAsync()

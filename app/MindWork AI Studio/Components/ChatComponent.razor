@@ -80,6 +80,11 @@
                     <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="() => this.StartNewChat(useSameWorkspace: true)"/>
                 </MudTooltip>
             }
+            
+            @if (this.SettingsManager.ConfigurationData.ChatTemplates.Count > 0)
+            {
+                <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
+            }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
@@ -106,9 +111,9 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
                 </MudTooltip>
             }
-
-            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
             
+            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
+
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" PopoverButtonClasses="ma-3" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>

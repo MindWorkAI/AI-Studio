@@ -29,6 +29,11 @@ public sealed record ChatThread
     /// Specifies the profile selected for the chat thread.
     /// </summary>
     public string SelectedProfile { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Specifies the profile selected for the chat thread.
+    /// </summary>
+    public string SelectedChatTemplate { get; set; } = string.Empty;
 
     /// <summary>
     /// The data source options for this chat thread.
@@ -69,6 +74,8 @@ public sealed record ChatThread
     /// The content blocks of the chat thread.
     /// </summary>
     public List<ContentBlock> Blocks { get; init; } = [];
+    
+    private bool allowProfile = true;
 
     /// <summary>
     /// Prepares the system prompt for the chat thread.
@@ -84,16 +91,52 @@ public sealed record ChatThread
     /// <returns>The prepared system prompt.</returns>
     public string PrepareSystemPrompt(SettingsManager settingsManager, ChatThread chatThread, ILogger logger)
     {
+        //
+        // Use the information from the chat template, if provided. Otherwise, use the default system prompt
+        //
+        string systemPromptTextWithChatTemplate;
+        var logMessage = $"Using no chat template for chat thread '{chatThread.Name}'.";
+        if (string.IsNullOrWhiteSpace(chatThread.SelectedChatTemplate))
+            systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+        else
+        {
+            if(!Guid.TryParse(chatThread.SelectedChatTemplate, out var chatTeamplateId))
+                systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+            else
+            {
+                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHATTEMPLATE.Id || chatTeamplateId == Guid.Empty)
+                    systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+                else
+                {
+                    var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatThread.SelectedChatTemplate);
+                    if(chatTemplate == default)
+                        systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+                    else
+                    {
+                        logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{chatThread.Name}'.";
+                        this.allowProfile = chatTemplate.AllowProfileUsage;
+                        systemPromptTextWithChatTemplate = $"""
+                                                            {chatTemplate.ToSystemPrompt()}
+                                                            """;
+                    }
+                }
+            }
+        }
+        logger.LogInformation(logMessage);
+        
+        //
+        // Add augmented data, if available:
+        //
         var isAugmentedDataAvailable = !string.IsNullOrWhiteSpace(chatThread.AugmentedData);
         var systemPromptWithAugmentedData = isAugmentedDataAvailable switch
         {
             true => $"""
-                     {chatThread.SystemPrompt}
+                     {systemPromptTextWithChatTemplate}
                      
                      {chatThread.AugmentedData}
                      """,
 
-            false => chatThread.SystemPrompt,
+            false => systemPromptTextWithChatTemplate,
         };
         
         if(isAugmentedDataAvailable)
@@ -101,12 +144,13 @@ public sealed record ChatThread
         else
             logger.LogInformation("No augmented data is available for the chat thread.");
         
+        
         //
-        // Prepare the system prompt:
+        // Add information from profile if available and allowed:
         //
         string systemPromptText;
-        var logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
-        if (string.IsNullOrWhiteSpace(chatThread.SelectedProfile))
+        logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
+        if ((string.IsNullOrWhiteSpace(chatThread.SelectedProfile)) || (this.allowProfile is false))
             systemPromptText = systemPromptWithAugmentedData;
         else
         {
