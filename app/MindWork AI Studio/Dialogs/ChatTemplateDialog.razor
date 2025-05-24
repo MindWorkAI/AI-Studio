@@ -78,11 +78,9 @@
                 <HeaderContent>
                     <MudTh>@T("Role")</MudTh>
                     <MudTh>@T("Entry")</MudTh>
-                    <MudTh Style="text-align:center">@T("Actions")</MudTh>
+                    <MudTh>@T("Actions")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="@T("Role")">@context.Role.ToChatTemplateName()</MudTd>
-                    <MudTd DataLabel="@T("Message")">
                         @(context.Content is ContentText textContent ? textContent.Text : context.Content?.ToString())
                     </MudTd>
                     <MudTd style="text-align: center">
@@ -91,7 +89,6 @@
                     </MudTd>
                 </RowTemplate>
                 <RowEditingTemplate>
-                    <MudTd DataLabel="Role">
                         <MudSelect Label="Role" @bind-Value="context.Role" Required>
                             @foreach (var role in availableRoles)
                             {
@@ -99,7 +96,6 @@
                             }
                         </MudSelect>
                     </MudTd>
-                    <MudTd DataLabel="Message">
                         <MudTextField AutoGrow="true" @bind-Value="context.Content.As<ContentText>()!.Text" Label="@T("Your message")" Required />
                     </MudTd>
                 </RowEditingTemplate>
