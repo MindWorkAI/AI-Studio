@@ -144,8 +144,13 @@
             </MudTable>
         </MudForm>
         
-        <MudButton Class="mb-3" Color="Color.Primary" OnClick="@this.AddNewMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">@T("Add additional message")</MudButton>
-        
+        @if (!this.isInlineEditOnGoing)
+        {
+            <MudButton Class="mb-6" Color="Color.Primary" OnClick="@this.AddMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">
+                @T("Add a message")
+            </MudButton>
+        }
+
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
