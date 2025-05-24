@@ -42,7 +42,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public bool IsEditing { get; init; }
     
     [Parameter]
-    public List<ContentBlock> ExampleConversation { get; set; } = [];
+    public IReadOnlyCollection<ContentBlock> ExampleConversation { get; init; } = [];
 
     [Parameter] 
     public bool AllowProfileUsage { get; set; } = true;
@@ -62,7 +62,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
 
-    private ContentBlock messageEntryBeforeEdit;
+    private ContentBlock? messageEntryBeforeEdit;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -154,11 +154,20 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // When editing, we need to load the data:
         if(this.IsEditing)
         this.isInlineEditOnGoing = false;
+        switch (element)
         {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
+            case ContentBlock block:
+                if (this.messageEntryBeforeEdit is null)
+                    return; // No backup to restore from
+                
+                block.Content = this.messageEntryBeforeEdit.Content?.DeepClone();
+                block.Role = this.messageEntryBeforeEdit.Role;
+                break;
         }
         
         await base.OnInitializedAsync();
+        this.StateHasChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
