@@ -56,9 +56,10 @@
                 @T("Use the default system prompt")
             </MudButton>
             
-            <MudTooltip Text="@T("Using some chat templates in tandem with profiles might cause issues. Therefore, you can preliminarily block the usage of profiles here.")">
-                <MudSwitch @bind-Value="@this.AllowProfileUsage" Class="mb-3" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" ThumbIcon="@Icons.Material.Filled.Person4" ThumbIconColor="Color.Default" />
-            </MudTooltip>
+            <MudJustifiedText Class="mt-6" Typo="Typo.body1">
+                @T("Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.")
+            </MudJustifiedText>
+            <MudTextSwitch @bind-Value="@this.AllowProfileUsage" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" LabelOn="@T("Yes, allow profiles when using this template")" LabelOff="@T("No, prohibit profile use for this template")" />
             
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Example Conversation")
