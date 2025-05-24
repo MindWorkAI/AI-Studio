@@ -148,7 +148,7 @@ public sealed record ChatThread
         //
         string systemPromptText;
         logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
-        if ((string.IsNullOrWhiteSpace(chatThread.SelectedProfile)) || (this.allowProfile is false))
+        if (string.IsNullOrWhiteSpace(chatThread.SelectedProfile) || this.allowProfile is false)
             systemPromptText = systemPromptWithAugmentedData;
         else
         {
