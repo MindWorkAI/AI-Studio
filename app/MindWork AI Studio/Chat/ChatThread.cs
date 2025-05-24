@@ -145,7 +145,7 @@ public sealed record ChatThread
         
         
         //
-        // Add information from profile if available and allowed:
+        // Add information from the profile if available and allowed:
         //
         string systemPromptText;
         logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
