@@ -118,8 +118,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private void AddMessageToEnd()
     {
-        this.ExampleConversation ??= new List<ContentBlock>();
-        
         var newEntry = new ContentBlock
         {
             Role = ChatRole.USER, // Default to User
