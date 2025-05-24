@@ -1,8 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 using Timer = System.Timers.Timer;
 
@@ -14,6 +16,9 @@ namespace AIStudio.Pages;
 public partial class Chat : MSGComponentBase
 {
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Bottom;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings;
@@ -78,6 +83,13 @@ public partial class Chat : MSGComponentBase
     {
         this.currentWorkspaceName = workspaceName;
         this.StateHasChanged();
+    }
+
+    private async Task OpenSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        
+        await this.DialogService.ShowAsync<SettingsDialogChat>(T("Open Chat Options"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
     #region Overrides of MSGComponentBase

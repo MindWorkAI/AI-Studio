@@ -26,7 +26,7 @@
         var availablePreviewFeatures = ConfigurationSelectDataFactory.GetPreviewFeaturesData(this.SettingsManager).ToList();
         if (availablePreviewFeatures.Count > 0)
         {
-            <ConfigurationMultiSelect OptionDescription="@T("Select preview features")" SelectedValues="@(() => this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures)" Data="@availablePreviewFeatures" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedValue)" OptionHelp="@T("Which preview features would you like to enable?")"/>
+            <ConfigurationMultiSelect OptionDescription="@T("Select preview features")" SelectedValues="@(() => this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased()).ToHashSet())" Data="@availablePreviewFeatures" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedValue)" OptionHelp="@T("Which preview features would you like to enable?")"/>
         }
     }
 

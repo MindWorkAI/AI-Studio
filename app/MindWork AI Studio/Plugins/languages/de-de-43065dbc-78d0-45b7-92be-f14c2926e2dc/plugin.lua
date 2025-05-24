@@ -51,9 +51,6 @@ UI_TEXT_CONTENT = {}
 -- Objective
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Ziel"
 
--- This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1193269953"] = "Dieser Agenda-Planer hilft Ihnen, eine strukturierte Tagesordnung für Ihr Meeting oder Seminar zu erstellen. Geben Sie einfach einige grundlegende Informationen zur Veranstaltung an, und der Assistent erstellt eine Agenda für Sie. Sie können außerdem die Dauer, die Startzeit, den Ort, die Zielsprache und weitere Details festlegen."
-
 -- Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T12079368"] = "Beschreiben Sie das Thema des Treffens, Seminars usw. Geht es um Quantencomputing, Softwareentwicklung oder handelt es sich um ein allgemeines Geschäftstreffen?"
 
@@ -130,7 +127,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T237828418"] = "
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2380198832"] = "9:00 Uhr"
 
 -- Agenda Planner
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2435638853"] = "Agenda-Planer"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2435638853"] = "Agenda-Assistent"
 
 -- When will the meeting, seminar, etc. start? E.g., '9:00 AM', or '9:00 AM (CET)', etc. When the meeting is a multi-day event, specify the start time for each day.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T2446959989"] = "Wann beginnt das Meeting, Seminar usw.? Zum Beispiel: „9:00 Uhr“ oder „9:00 Uhr (MEZ)“ usw. Wenn das Meeting eine mehrtägige Veranstaltung ist, geben Sie bitte die Startzeit für jeden Tag an."
@@ -219,6 +216,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4155424204"] = 
 -- Please select a target language for the agenda.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4163183653"] = "Bitte wählen Sie eine Zielsprache für die Agenda aus."
 
+-- This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4178438053"] = "Dieser Agenda-Assistent hilft Ihnen, eine strukturierte Tagesordnung für Ihr Meeting oder Seminar zu erstellen. Geben Sie einfach einige grundlegende Informationen zur Veranstaltung an, und der Assistent erstellt eine Agenda für Sie. Sie können außerdem die Dauer, die Startzeit, den Ort, die Zielsprache und weitere Details festlegen."
+
 -- Yes, participants need to arrive and depart
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T4266648123"] = "Ja, die Teilnehmenden müssen anreisen und abreisen."
 
@@ -245,6 +245,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Generieru
 
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Zurücksetzen"
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
 
 -- Assistant - {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T3043922"] = "Assistent – {0}"
@@ -735,6 +738,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3403290862"] = "Der ausge
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Wähle zuerst einen Anbieter aus"
 
+-- Start new chat in workspace "{0}"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Chat im Arbeitsbereich \"{0}\" starten"
+
 -- New disappearing chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Neuen selbstlöschenden Chat starten"
 
@@ -746,9 +752,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Verschiebe
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Ihre Arbeitsbereiche anzeigen"
-
--- Start new chat in workspace "{0}"
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T896906391"] = "Neuen Chat im Arbeitsbereich \"{0}\" starten"
 
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
@@ -814,7 +817,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1744745490"] = "KI-
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1975014927"] = "Ja, ich möchte Datenquellen verwenden."
 
 -- You haven't configured any data sources. To grant the AI access to your data, you need to add such a source. However, if you wish to use data from your device, you first have to set up a so-called embedding. This embedding is necessary so the AI can effectively search your data, find and retrieve the correct information required for each task. In addition to local data, you can also incorporate your company's data. To do so, your company must provide the data through an ERI (External Retrieval Interface).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2113594442"] = "Sie haben noch keine Datenquellen konfiguriert. Um der KI Zugriff auf Ihre Daten zu ermöglichen, müssen Sie zunächst eine solche Quelle hinzufügen. Wenn Sie jedoch Daten von Ihrem Gerät verwenden möchten, müssen Sie zuerst ein sogenanntes Embedding einrichten. Dieses Embedding ist notwendig, damit die KI Ihre Daten effektiv durchsuchen, die passenden Informationen finden und für jede Aufgabe bereitstellen kann. Neben lokalen Daten können Sie auch die Daten Ihres Unternehmens einbinden. Dafür muss Ihr Unternehmen die Daten über eine ERI (External Retrieval Interface) bereitstellen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2113594442"] = "Sie haben noch keine Datenquellen konfiguriert. Um der KI Zugriff auf Ihre Daten zu ermöglichen, müssen Sie zunächst eine solche Quelle hinzufügen. Wenn Sie jedoch Daten von Ihrem Gerät verwenden möchten, müssen Sie zuerst eine sogenannte Einbettung einrichten. Diese Einbettung ist notwendig, damit die KI Ihre Daten effektiv durchsuchen, die passenden Informationen finden und für jede Aufgabe bereitstellen kann. Neben lokalen Daten können Sie auch die Daten Ihres Unternehmens einbinden. Dafür muss Ihr Unternehmen die Daten über eine ERI (External Retrieval Interface) bereitstellen."
 
 -- Select the data you want to use here.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T21181525"] = "Wählen Sie hier die Daten aus, die Sie verwenden möchten."
@@ -1062,66 +1065,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Möchten Sie einen Anbieter als Standard für die gesamte App festlegen? Wenn Sie einen anderen Anbieter für einen Assistenten konfigurieren, hat dieser immer Vorrang."
 
--- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T172255919"] = "Legen Sie fest, wie der LLM-Anbieter für geladene Chats ausgewählt wird und wann Assistenten-Ergebnisse an den Chat gesendet werden."
-
--- Chat Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T1757092713"] = "Chat-Optionen"
-
--- Shortcut to send input
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T1773585398"] = "Tastenkombination zum Senden der Eingabe"
-
--- Provider selection when creating new chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T189306836"] = "Anbieterauswahl beim Erstellen neuer Chats"
-
--- Would you like to set one of your profiles as the default for chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T1933521846"] = "Möchten Sie eines Ihrer Profile als Standardprofil für Chats festlegen?"
-
--- Apply default data source option when sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2510376349"] = "Standarddatenquelle verwenden, wenn Assistentenergebnisse in den Chat gesendet werden"
-
--- Control how the LLM provider for added chats is selected.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T263621180"] = "Steuern Sie, wie der LLM-Anbieter für hinzugefügte Chats ausgewählt wird."
-
--- Provider selection when loading a chat and sending assistant results to chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2868379953"] = "Anbieterauswahl beim Laden eines Chats und beim Senden von Assistentenergebnissen in den Chat"
-
--- Show the latest message after loading?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2913693228"] = "Die neueste Nachricht nach dem Laden anzeigen?"
-
--- Do you want to use any shortcut to send your input?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T2936560092"] = "Möchten Sie eine Tastenkombination verwenden, um Ihre Eingabe zu senden?"
-
--- No chat options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3383186996"] = "Keine Chat-Optionen sind vorausgewählt"
-
--- First (oldest) message is shown, after loading a chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3507181366"] = "Die erste (älteste) Nachricht wird nach dem Laden eines Chats angezeigt."
-
--- Preselect chat options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3728624759"] = "Chat-Optionen vorauswählen?"
-
--- Chat options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3730599555"] = "Chat-Optionen sind vorausgewählt"
-
--- Latest message is shown, after loading a chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T3755993611"] = "Die neueste Nachricht wird nach dem Laden eines Chats angezeigt."
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T4004501229"] = "Eines Ihrer Profile vorauswählen?"
-
--- Do you want to apply the default data source options when sending assistant results to chat?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T4033153439"] = "Möchten Sie die Standardoptionen für Datenquellen verwenden, wenn die Ergebnisse des Assistenten an den Chat gesendet werden?"
-
--- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T477675197"] = "Wenn aktiviert, können Sie Chat-Optionen im Voraus auswählen. Das kann nützlich sein, wenn Sie einen bestimmten Anbieter bevorzugen."
-
--- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T492357592"] = "Sie können Standarddatenquellen und -optionen für neue Chats festlegen. Diese Einstellungen lassen sich später für jeden einzelnen Chat anpassen."
-
--- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHAT::T582516016"] = "Wenn diese Option aktiviert ist, wird nach dem Laden eines Chats die neueste Nachricht angezeigt. Wenn sie deaktiviert ist, wird die erste (älteste) Nachricht angezeigt."
-
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Löschen"
 
@@ -1314,8 +1257,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T853225
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237532"] = "Anbieter"
 
--- If and when should we delete your temporary chats?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELWORKSPACES::T1014418451"] = "Sollen Ihre temporären Chats gelöscht werden, und wenn ja, wann?"
+-- If and when should we delete your disappearing chats?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELWORKSPACES::T1014418451"] = "Sollen Ihre selbstlöschenden Chats gelöscht werden, und wenn ja, wann?"
 
 -- Workspace display behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELWORKSPACES::T2151409362"] = "Verhalten der Arbeitsbereichsanzeige"
@@ -1458,8 +1401,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2244038752"] = "Chat lösche
 -- Move to workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "In einen Arbeitsbereich verschieben"
 
--- Are you sure you want to delete the temporary chat '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3043761007"] = "Sind Sie sicher, dass Sie den temporären Chat „{0}“ löschen möchten?"
+-- Are you sure you want to delete the chat '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3043761007"] = "Sind Sie sicher, dass Sie den Chat „{0}“ löschen möchten?"
 
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Chat in den Arbeitsbereich verschieben"
@@ -1499,6 +1442,441 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "Nein"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Ja"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1847791252"] = "Aktualisieren"
+
+-- Failed to connect to the ERI v1 server. The message was: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2150703468"] = "Verbindung zum ERI v1-Server fehlgeschlagen. Die Meldung war: {0}"
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2646845972"] = "Hinzufügen"
+
+-- Failed to store the auth. secret in the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2772567701"] = "Das Authentifizierungsgeheimnis konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
+
+-- Connection successful.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T279774933"] = "Verbindung erfolgreich."
+
+-- Access Token
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2891154022"] = "Zugangstoken"
+
+-- Secret
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2895110961"] = "Geheimnis"
+
+-- Select one retrieval process
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2916077548"] = "Wählen Sie einen Abrufprozess aus"
+
+-- Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T299279954"] = "Bitte beachten Sie: Die Verbindung zum ERI v1-Server ist nicht verschlüsselt. Das bedeutet, dass alle an den Server gesendeten Daten im Klartext übertragen werden. Bitte wenden Sie sich an den Administrator des ERI-Servers und bitten Sie ihn, die Verschlüsselung zu aktivieren."
+
+-- ERI v1 Server Hostname
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3494933602"] = "ERI v1 Server-Hostname"
+
+-- Port
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3804576966"] = "Port"
+
+-- Connection failed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T3820825672"] = "Verbindung fehlgeschlagen."
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- Not tested yet.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T417002657"] = "Noch nicht getestet."
+
+-- Failed to connect to the ERI v1 server. The server is not supported.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T449168182"] = "Verbindung zum ERI v1-Server fehlgeschlagen. Der Server wird nicht unterstützt."
+
+-- Username
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T470340825"] = "Benutzername"
+
+-- Password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T750979128"] = "Passwort"
+
+-- Data Source Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T813773421"] = "Name der Datenquelle"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T900713019"] = "Abbrechen"
+
+-- Test connection & read available metadata
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T988671749"] = "Verbindung testen & verfügbare Metadaten auslesen"
+
+-- the ERI server port
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T103013936"] = "den ERI-Server-Port"
+
+-- Unnamed retrieval process
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1038776502"] = "Unbenannter Abrufprozess"
+
+-- the retrieval parameters
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1497074068"] = "die Abrufparameter"
+
+-- [{0}] Unnamed retrieval process
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1501892586"] = "[{0}] Unbenannter Abrufprozess"
+
+-- the embedding type
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T16293243"] = "den Einbettungstyp"
+
+-- the embedding description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1657824119"] = "die Einbettungsbeschreibung"
+
+-- Data source name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T171124909"] = "Name der Datenquelle"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1725856265"] = "Beschreibung"
+
+-- the retrieval description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1752127658"] = "die Abruf-Beschreibung"
+
+-- Security requirements of the data provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1891090932"] = "Sicherheitsanforderungen des Datenanbieters"
+
+-- Parameter:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1917353274"] = "Parameter:"
+
+-- the server description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T1966565081"] = "Die Serverbeschreibung"
+
+-- Failed to connect to the ERI v1 server. The message was: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2150703468"] = "Verbindung zum ERI v1-Server fehlgeschlagen. Die Meldung war: {0}"
+
+-- ERI server hostname
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T215899701"] = "ERI-Server-Hostname"
+
+-- Server description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2562330120"] = "Serverbeschreibung"
+
+-- the data source name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2717738728"] = "den Namen der Datenquelle"
+
+-- the ERI server hostname
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2753279450"] = "den Hostnamen des ERI-Servers"
+
+-- This retrieval process has no parameters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2863339893"] = "Dieser Abrufprozess hat keine Parameter."
+
+-- your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2879113658"] = "Ihre Sicherheitsrichtlinie"
+
+-- Open web link, show more information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2968752071"] = "Weblink öffnen & mehr Informationen anzeigen"
+
+-- the username
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2991677780"] = "den Benutzernamen"
+
+-- Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T299279954"] = "Bitte beachten Sie: Die Verbindung zum ERI v1-Server ist nicht verschlüsselt. Das bedeutet, dass alle an den Server gesendeten Daten im Klartext übertragen werden. Bitten Sie den Administrator des ERI-Servers, die Verschlüsselung zu aktivieren."
+
+-- The data source does not provide any retrieval information.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T306340560"] = "Die Datenquelle stellt keine Abrufinformationen bereit."
+
+-- Common data source information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3206517471"] = "Allgemeine Informationen zur Datenquelle"
+
+-- when is the embedding used
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3259327370"] = "Wann wird diese Einbettung verwendet?"
+
+-- The data source does not provide any embedding information.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3425007227"] = "Die Datenquelle stellt keine Einbettungsinformationen zur Verfügung."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3448155331"] = "Schließen"
+
+-- ERI server port
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T3843835535"] = "ERI-Server-Port"
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- Reload
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T440640172"] = "Neu laden"
+
+-- Failed to connect to the ERI v1 server. The server is not supported.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T449168182"] = "Verbindung zum ERI v1-Server fehlgeschlagen. Der Server wird nicht unterstützt."
+
+-- Username
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T470340825"] = "Benutzername"
+
+-- the security requirements of the data provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T503852885"] = "Die Sicherheitsanforderungen des Datenanbieters"
+
+-- When to use
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T629595477"] = "Wann verwenden"
+
+-- Retrieval information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T742006305"] = "Abrufinformationen"
+
+-- Embeddings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T951463987"] = "Einbettungen"
+
+-- Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1265737624"] = "Wählen Sie ein Stammverzeichnis für diese Datenquelle aus. Alle Daten in diesem Verzeichnis und in allen Unterverzeichnissen werden für diese Datenquelle verarbeitet."
+
+-- Selected base directory for this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1312296210"] = "Ausgewähltes Stammverzeichnis für diese Datenquelle"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1847791252"] = "Aktualisieren"
+
+-- Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1922618794"] = "Bitte beachten Sie: Die von Ihnen ausgewählte Einbettung läuft in der Cloud. Alle Ihre Daten werden in die Cloud gesendet. Bitte bestätigen Sie, dass Sie dies gelesen und verstanden haben."
+
+-- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1948697886"] = "Damit die KI jederzeit die passenden Daten ermitteln kann, müssen Sie eine Einbettungsmethode auswählen."
+
+-- Please note: the embedding you selected runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud. Please confirm that you have read and understood this.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2403121734"] = "Bitte beachten Sie: Die von Ihnen ausgewählte Einbettung wird in der Cloud ausgeführt. Alle Ihre Daten aus dem Ordner „{0}“ sowie aus allen Unterordnern werden in die Cloud gesendet. Bitte bestätigen Sie, dass Sie dies gelesen und verstanden haben."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Hinzufügen"
+
+-- The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb Ihrer Organisation. Ihre Daten werden nicht in die Cloud übertragen."
+
+-- Embedding
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"] = "Einbettung"
+
+-- Yes, please send my data to the cloud
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3572613009"] = "Ja, bitte senden Sie meine Daten in die Cloud"
+
+-- I confirm that I have read and understood the above
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3683380716"] = "Ich bestätige, dass ich das oben Genannte gelesen und verstanden habe"
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- No, I will chose another embedding
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T4253147533"] = "Nein, ich wähle eine andere Einbettung aus"
+
+-- Select the base directory
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T562479068"] = "Wählen Sie das Stammverzeichnis aus"
+
+-- Data Source Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T813773421"] = "Name der Datenquelle"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T900713019"] = "Abbrechen"
+
+-- the total directory size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1082241458"] = "die Gesamtgröße des Verzeichnisses"
+
+-- Total directory size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1101400963"] = "Gesamte Verzeichnisgröße"
+
+-- Data source name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T171124909"] = "Name der Datenquellen"
+
+-- the number of files in the directory
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1795263412"] = "die Anzahl der Dateien im Verzeichnis"
+
+-- The embedding runs locally or in your organization. Your data is not sent to the cloud.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1950544032"] = "Die Einbettung läuft lokal oder in Ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
+
+-- the files list
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2072700997"] = "Die Dateiliste"
+
+-- the data source name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
+
+-- The directory chosen for the data source does not exist anymore. Please edit the data source and correct the path.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2875614207"] = "Das für die Datenquelle gewählte Verzeichnis existiert nicht mehr. Bitte bearbeiten Sie die Datenquelle und korrigieren Sie den Pfad."
+
+-- your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2879113658"] = "Ihre Sicherheitsrichtlinie"
+
+-- the embedding name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2937209992"] = "den Namen der Einbettung"
+
+-- this path
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2944855252"] = "diesen Pfad"
+
+-- Embedding name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3153201045"] = "Name der Einbettung"
+
+-- Files list
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3238813368"] = "Dateiliste"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3448155331"] = "Schließen"
+
+-- For performance reasons, only the first 100 files are shown. The directory contains {0} files in total.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T360238400"] = "Aus Leistungsgründen werden nur die ersten 100 Dateien angezeigt. Das Verzeichnis enthält insgesamt {0} Dateien."
+
+-- Path
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T3949388886"] = "Pfad"
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- Number of files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T417749210"] = "Anzahl der Dateien"
+
+-- The embedding runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T443873444"] = "Das Einbetten erfolgt in der Cloud. Alle Ihre Daten aus dem Ordner '{0}' und allen seinen Unterordnern werden in die Cloud gesendet."
+
+-- The directory chosen for the data source exists.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T445858624"] = "Das ausgewählte Verzeichnis für die Datenquelle ist vorhanden."
+
+-- Select a file for this data source. The content of this file will be processed for the data source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1190880267"] = "Wählen Sie eine Datei für diese Datenquelle aus. Der Inhalt dieser Datei wird für die Datenquelle verarbeitet."
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Aktualisieren"
+
+-- Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1922618794"] = "Bitte beachten Sie: Die von Ihnen ausgewählte Einbettung läuft in der Cloud. Alle Ihre Daten werden in die Cloud gesendet. Bitte bestätigen Sie, dass Sie dies gelesen und verstanden haben."
+
+-- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1948697886"] = "Damit die KI jederzeit die passenden Daten ermitteln kann, müssen Sie eine Methode für die Einbettung auswählen."
+
+-- Please note: the embedding you selected runs in the cloud. All your data within the file '{0}' will be sent to the cloud. Please confirm that you have read and understood this.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2090178026"] = "Bitte beachten Sie: Die von Ihnen ausgewählte Einbettung läuft in der Cloud. Alle Ihre Daten aus der Datei „{0}“ werden in die Cloud übertragen. Bitte bestätigen Sie, dass Sie dies gelesen und verstanden haben."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2646845972"] = "Hinzufügen"
+
+-- The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb Ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
+
+-- Embedding
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "Einbettung"
+
+-- Yes, please send my data to the cloud
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3572613009"] = "Ja, bitte senden Sie meine Daten in die Cloud."
+
+-- I confirm that I have read and understood the above
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3683380716"] = "Ich bestätige, dass ich das oben Genannte gelesen und verstanden habe."
+
+-- Select the file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Datei auswählen"
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- No, I will chose another embedding
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4253147533"] = "Nein, ich wähle eine andere Einbettung aus."
+
+-- Data Source Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T813773421"] = "Name der Datenquelle"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T900713019"] = "Abbrechen"
+
+-- Selected file path for this data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T939749563"] = "Ausgewählter Dateipfad für diese Datenquelle"
+
+-- The file chosen for the data source exists.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1294177559"] = "Die für die Datenquelle ausgewählte Datei ist vorhanden."
+
+-- Data source name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T171124909"] = "Name der Datenquelle"
+
+-- The embedding runs locally or in your organization. Your data is not sent to the cloud.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1950544032"] = "Die Einbettung erfolgt lokal oder in Ihrem Unternehmen. Ihre Daten werden nicht in die Cloud gesendet."
+
+-- The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2235729121"] = "Die für die Datenquelle ausgewählte Datei existiert nicht mehr. Bitte bearbeiten Sie die Datenquelle und wählen Sie eine andere Datei aus oder korrigieren Sie den Pfad."
+
+-- the data source name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
+
+-- the file size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2837935239"] = "die Dateigröße"
+
+-- your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2879113658"] = "Ihre Sicherheitsrichtlinie"
+
+-- File path
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2879895266"] = "Dateipfad"
+
+-- the embedding name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2937209992"] = "den Namen der Einbettung"
+
+-- this path
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2944855252"] = "diesen Pfad"
+
+-- Embedding name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3153201045"] = "Name der Einbettung"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3448155331"] = "Schließen"
+
+-- File size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3650018664"] = "Dateigröße"
+
+-- The embedding runs in the cloud. All your data within the file '{0}' will be sent to the cloud.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"] = "Das Einbetten erfolgt in der Cloud. Alle Ihre Daten in der Datei „{0}“ werden in die Cloud gesendet."
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- Embedding Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T1427271797"] = "Name der Einbettung"
+
+-- Embedding Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T1625164424"] = "Beschreibung der Einbettung"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T1847791252"] = "Aktualisieren"
+
+-- Please describe when the embedding is used. Might be anytime or when certain keywords are present, etc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T2346653528"] = "Bitte beschreiben Sie, wann die Einbettung verwendet wird. Zum Beispiel jederzeit oder nur, wenn bestimmte Schlüsselwörter vorhanden sind, usw."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T2646845972"] = "Hinzufügen"
+
+-- Embedding Type
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T2764429350"] = "Typ der Einbettung"
+
+-- Embedding Link
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T290945550"] = "Link zur Einbettung"
+
+-- Used when
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3229398952"] = "Verwenden, wenn"
+
+-- The embedding type must not be longer than 56 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T32602319"] = "Der Typ der Einbettung darf nicht länger als 56 Zeichen sein."
+
+-- The name of the embedding method.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3415350123"] = "Die Bezeichnung der Methode zur Einbettung."
+
+-- A short description of the embedding method.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3588690510"] = "Eine kurze Beschreibung der Methode zur Einbettung."
+
+-- The embedding name must not be longer than 26 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T359150945"] = "Die Bezeichnung der Einbettung darf nicht länger als 26 Zeichen sein."
+
+-- The embedding method name '{0}' is already used. Please choose a unique name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3601888052"] = "Die Bezeichnung der Methode zur Einbettung '{0}' wird bereits verwendet. Bitte wähle einen eindeutigen Namen."
+
+-- When is this embedding used? When you define multiple embeddings, it is helpful to know when to use which one.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3779802582"] = "Wann wird diese Einbettung verwendet? Wenn Sie mehrere Einbettungen definiert haben, ist es hilfreich zu wissen, wann welche verwendet wird."
+
+-- See Wikipedia for more information about word embeddings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3806477732"] = "Weitere Informationen zu Wort-Einbettung finden Sie auf Wikipedia"
+
+-- The embedding type must not be empty. Please specify the embedding type.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3902812924"] = "Der Typ der Einbettung darf nicht leer sein. Bitte geben Sie den Typ an."
+
+-- See Wikipedia for more information about knowledge graph embeddings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T3928412408"] = "Siehe Wikipedia für weitere Informationen über Wissensgraph-Einbettungen"
+
+-- The embedding name must not be empty. Please name the embedding.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T4242514061"] = "Der Name der Einbettung darf nicht leer sein. Bitte geben Sie der Einbettung einen Namen."
+
+-- What kind of embedding is used. For example, Transformer Embedding, Contextual Word Embedding, Graph Embedding, etc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T4263395074"] = "Welche Art von Einbettung wird verwendet? Zum Beispiel Transformer-Einbettung, kontextbezogene Wort-Einbettung, Graph-Einbettung usw."
+
+-- The description must not be empty. Please describe the embedding method.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T4268946588"] = "Die Beschreibung darf nicht leer sein. Bitte beschreiben Sie die Methode der Einbettung."
+
+-- A link to the embedding, e.g., to the model, the source code, the paper, it's Wikipedia page, etc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T662524223"] = "Ein Link zur Einbettung, z. B. zum Modell, dem Quellcode, der wissenschaftlichen Veröffentlichung, der Wikipedia-Seite usw."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T900713019"] = "Abbrechen"
 
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
@@ -1662,6 +2040,120 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Anbieter"
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900713019"] = "Abbrechen"
 
+-- The parameter name. It must be unique within the retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T100726215"] = "Der Parametername. Er muss innerhalb des Abrufprozesses eindeutig sein."
+
+-- New Parameter {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1064532992"] = "Neuer Parameter {0}"
+
+-- Add Parameter
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1082847843"] = "Parameter hinzufügen"
+
+-- Parameter Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1093935834"] = "Parameterbeschreibung"
+
+-- The retrieval process name must not be empty. Please name your retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1133451355"] = "Der Name des Abrufprozesses darf nicht leer sein. Bitte benennen Sie Ihren Abrufvorgang."
+
+-- The parameter name must not be empty. Please name the parameter.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1359500913"] = "Der Parametername darf nicht leer sein. Bitte geben Sie einen Namen für den Parameter ein."
+
+-- A short description of the parameter. What data type is it? What is it used for? What are the possible values?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1519220950"] = "Eine kurze Beschreibung des Parameters. Welcher Datentyp ist es? Wofür wird er verwendet? Welche Werte sind möglich?"
+
+-- Update
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1847791252"] = "Aktualisieren"
+
+-- Optional. Select the embedding methods that are used for this retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1869391009"] = "Optional. Wählen Sie die Methoden zur Einbettung aus, die für diesen Abrufprozess verwendet werden."
+
+-- Retrieval Process Link
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1936369410"] = "Link zum Abrufprozess"
+
+-- Here you can select which embedding methods are used for this retrieval process. Embeddings are optional; if your retrieval process works without embedding, you can ignore this part. You can only choose the embedding methods you have previously defined.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2076115062"] = "Hier können Sie auswählen, welche Methoden zur Einbettung für diesen Abrufprozess verwendet werden. Einbettungen sind optional; wenn Ihr Abrufprozess ohne Einbettung funktioniert, können Sie diesen Abschnitt ignorieren. Sie können nur die Methoden zur Einbettung auswählen, die Sie zuvor definiert haben."
+
+-- The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2139013415"] = "Die Parameterbeschreibung darf nicht leer sein. Bitte beschreiben Sie den Parameter „{0}“. Welchen Datentyp hat er? Wofür wird er verwendet? Welche Werte sind möglich?"
+
+-- A link to the retrieval process, e.g., the source code, the paper, it's Wikipedia page, etc. Make sense for common retrieval processes. Leave empty if not applicable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2352603560"] = "Ein Link zum Abrufprozess, z. B. zum Quellcode, zur wissenschaftlichen Veröffentlichung, zur Wikipedia-Seite usw. Dies ist sinnvoll für gängige Abrufprozesse. Lassen Sie dieses Feld leer, falls dies nicht zutreffend ist."
+
+-- No embedding methods selected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2508820480"] = "Keine Methoden zur Einbettung ausgewählt."
+
+-- Add a parameter first, then select it to edit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2534894635"] = "Fügen Sie zuerst einen Parameter hinzu und wählen Sie ihn anschließend aus, um ihn zu bearbeiten."
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2646845972"] = "Hinzufügen"
+
+-- You have selected {0} embedding methods.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2933579640"] = "Sie haben {0} Methoden zur Einbettung ausgewählt."
+
+-- Please provide some general information about your retrieval process first. This data may be displayed to the users.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3015844908"] = "Bitte geben Sie zunächst einige allgemeine Informationen über Ihren Abrufprozess an. Diese Angaben können den Nutzern angezeigt werden."
+
+-- The name of your retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3207262684"] = "Der Name Ihres Abrufprozesses."
+
+-- You may want to parameterize your retrieval process. However, this is optional. You can specify any parameters that can be set by the user or the system during the call. Nevertheless, you should use sensible default values in your code so that users are not forced to set the parameters manually.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3292152705"] = "Möglicherweise möchten Sie Ihren Abrufprozess parameterisieren. Dies ist jedoch optional. Sie können beliebige Parameter angeben, die vom Benutzer oder vom System während des Aufrufs festgelegt werden können. Dennoch sollten Sie sinnvolle Standardwerte in Ihrem Code verwenden, damit Benutzer die Parameter nicht manuell einstellen müssen."
+
+-- Select a parameter to show and edit it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3300669027"] = "Wählen Sie einen Parameter aus, um ihn anzuzeigen und zu bearbeiten."
+
+-- The parameter name '{0}' must be unique. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3378166475"] = "Der Parametername „{0}“ muss eindeutig sein. Bitte wählen Sie einen anderen Namen."
+
+-- The retrieval process name '{0}' must be unique. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3387731069"] = "Der Name des Abrufvorgangs „{0}“ muss eindeutig sein. Bitte wähle einen anderen Namen."
+
+-- Delete this parameter
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3464622501"] = "Diesen Parameter löschen"
+
+-- Retrieval Process Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3481092305"] = "Name des Abrufprozesses"
+
+-- A short description of the retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3524519535"] = "Eine kurze Beschreibung des Abrufprozesses."
+
+-- Currently, you have not defined any embedding methods. If your retrieval process does not require embedding, you can ignore this part. Otherwise, you can define one or more embedding methods in the previous view to assign them to your retrieval process here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3821108204"] = "Derzeit haben Sie keine Methoden zur Einbettung definiert. Falls Ihr Abrufprozess keine Einbettungen benötigt, können Sie diesen Abschnitt ignorieren. Andernfalls können Sie im vorherigen Bereich eine oder mehrere Methoden zur Einbettung festlegen, die Sie hier Ihrem Abrufprozess zuweisen können."
+
+-- Retrieval Process Parameters
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3894388618"] = "Parameter für den Abrufprozess"
+
+-- The description must not be empty. Please describe the retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T40530321"] = "Die Beschreibung darf nicht leer sein. Bitte beschreiben Sie den Abrufprozess."
+
+-- Embeddings methods
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T4119328701"] = "Methoden zur Einbettung"
+
+-- General Information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T4286878385"] = "Allgemeine Informationen"
+
+-- Retrieval Process Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T546772364"] = "Beschreibung des Abrufprozesses"
+
+-- You have selected 1 embedding method.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T673052164"] = "Sie haben 1 Methode zur Einbettung ausgewählt."
+
+-- The retrieval process name must not be longer than 26 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T769031589"] = "Der Name des Abrufprozesses darf nicht länger als 26 Zeichen sein."
+
+-- Parameter Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T873729811"] = "Parametername"
+
+-- The parameter name must not be longer than 26 characters.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T898422027"] = "Der Parametername darf nicht länger als 26 Zeichen sein."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T900713019"] = "Abbrechen"
+
+-- Embeddings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T951463987"] = "Einbettungen"
+
 -- There is no social event
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1222800281"] = "Es gibt keine gesellschaftliche Veranstaltung."
 
@@ -1730,6 +2222,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3175009548"
 
 -- Preselect an objective?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3439476935"] = "Ein Ziel vorauswählen?"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3448155331"] = "Schließen"
 
 -- Preselect a moderator?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3482798491"] = "Einen Moderator vorauswählen?"
@@ -1835,6 +2330,69 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "Wenn diese Option aktiviert ist, kannst du Voreinstellungen treffen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+
+-- Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T172255919"] = "Legen Sie fest, wie der LLM-Anbieter für geladene Chats ausgewählt wird und wann Assistenten-Ergebnisse an den Chat gesendet werden."
+
+-- Chat Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1757092713"] = "Chat-Optionen"
+
+-- Shortcut to send input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1773585398"] = "Tastenkombination zum Senden der Eingabe"
+
+-- Provider selection when creating new chats
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T189306836"] = "Anbieterauswahl beim Erstellen neuer Chats"
+
+-- Would you like to set one of your profiles as the default for chats?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1933521846"] = "Möchten Sie eines Ihrer Profile als Standardprofil für Chats festlegen?"
+
+-- Apply default data source option when sending assistant results to chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Standarddatenquelle verwenden, wenn Assistentenergebnisse in den Chat gesendet werden"
+
+-- Control how the LLM provider for added chats is selected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Steuern Sie, wie der LLM-Anbieter für hinzugefügte Chats ausgewählt wird."
+
+-- Provider selection when loading a chat and sending assistant results to chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Anbieterauswahl beim Laden eines Chats und beim Senden von Assistentenergebnissen in den Chat"
+
+-- Show the latest message after loading?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] = "Die neueste Nachricht nach dem Laden anzeigen?"
+
+-- Do you want to use any shortcut to send your input?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Möchten Sie eine Tastenkombination verwenden, um Ihre Eingabe zu senden?"
+
+-- No chat options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3383186996"] = "Keine Chat-Optionen sind vorausgewählt"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3448155331"] = "Schließen"
+
+-- First (oldest) message is shown, after loading a chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3507181366"] = "Die erste (älteste) Nachricht wird nach dem Laden eines Chats angezeigt."
+
+-- Preselect chat options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3728624759"] = "Chat-Optionen vorauswählen?"
+
+-- Chat options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] = "Chat-Optionen sind vorausgewählt"
+
+-- Latest message is shown, after loading a chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Die neueste Nachricht wird nach dem Laden eines Chats angezeigt."
+
+-- Preselect one of your profiles?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4004501229"] = "Eines Ihrer Profile vorauswählen?"
+
+-- Do you want to apply the default data source options when sending assistant results to chat?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Möchten Sie die Standardoptionen für Datenquellen verwenden, wenn die Ergebnisse des Assistenten an den Chat gesendet werden?"
+
+-- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T477675197"] = "Wenn aktiviert, können Sie Chat-Optionen im Voraus auswählen. Das kann nützlich sein, wenn Sie einen bestimmten Anbieter bevorzugen."
+
+-- You can set default data sources and options for new chats. You can change these settings later for each individual chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592"] = "Sie können Standarddatenquellen und -optionen für neue Chats festlegen. Diese Einstellungen lassen sich später für jeden einzelnen Chat anpassen."
+
+-- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "Wenn diese Option aktiviert ist, wird nach dem Laden eines Chats die neueste Nachricht angezeigt. Wenn sie deaktiviert ist, wird die erste (älteste) Nachricht angezeigt."
 
 -- Which programming language should be preselected for added contexts?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Welche Programmiersprache soll für hinzugefügte Kontexte vorausgewählt werden?"
@@ -2296,7 +2854,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T170
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1767527569"] = "Assistent: Optionen zur Textzusammenfassung"
 
 -- Content cleaner agent is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1969816694"] = "Agent zur Inhaltsbereinigungs ist nicht vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
 
 -- Hide the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2090693677"] = "Web-Content-Reader ausblenden?"
@@ -2341,7 +2899,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T511
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T629158142"] = "Tool zum Lesen von Webinhalten vorauswählen?"
 
 -- Content cleaner agent is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1013787967"] = "Agent zur Inhaltsbereinigungs ist vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
 
 -- Assistant: Translator Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1016384269"] = "Assistent: Übersetzer-Optionen"
@@ -2371,7 +2929,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T170112
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1825690873"] = "Live-Übersetzung ist nicht vorausgewählt"
 
 -- Content cleaner agent is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1969816694"] = "Agent zur Inhaltsbereinigungs ist nicht vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
 
 -- Preselect translator options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1989346399"] = "Übersetzeroptionen vorauswählen?"
@@ -2599,7 +3157,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2644379659"] = "Um die Antworten des L
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2689995864"] = "Nutzungsprotokolldatei"
 
 -- Logbook
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2706940196"] = "Logbuch"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2706940196"] = "Protokolldateien"
 
 -- This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2726131107"] = "Diese Komponente wird verwendet, um Markdown-Text darzustellen. Das ist wichtig, weil das LLM häufig mit im Markdown-Format formatiertem Text antwortet. Dadurch können wir die Antworten besser lesbar anzeigen."
@@ -2722,7 +3280,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2383649630"] = "Erstellen Sie ein
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2406168562"] = "Erstellen Sie eine Tagesordnung für eine bestimmte Besprechung, ein Seminar usw."
 
 -- Agenda Planner
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2435638853"] = "Terminplaner"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2435638853"] = "Agenda-Assistent"
 
 -- Synonyms
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2547582747"] = "Synonyme"
@@ -2792,6 +3350,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
 
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Arbeitsbereiche ausblenden"
+
+-- Open Chat Options
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2813205227"] = "Chat-Optionen öffnen"
 
 -- Disappearing Chat
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Selbstlöschender Chat"
@@ -2911,7 +3472,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1470916504"] = "Vielen Dank, dass
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1714878838"] = "Danke, Peer, für deinen Mut, als zweite Person das Projekt finanziell zu unterstützen."
 
 -- Individual Contributors
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1874835680"] = "Einzelne Unterstützer"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1874835680"] = "Einzelspender"
 
 -- Thanks, Nils, for taking the time to learn Rust and build the foundation for local retrieval.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2355807535"] = "Danke, Nils, dass du dir die Zeit genommen hast, Rust zu lernen und die Grundlage für die lokale Suche zu schaffen."
@@ -2921,6 +3482,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2410456125"] = "Die ersten 10 Spe
 
 -- We would like to thank the DLR for its courage in supporting MindWork AI Studio at an early stage. The DLR not only uses AI Studio in various projects but also supports its further development with personnel resources.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2438064678"] = "Wir bedanken uns beim DLR, dass es so mutig war, MindWork AI Studio in einem frühen Stadium zu unterstützen. Das DLR setzt AI Studio nicht nur im Rahmen verschiedener Projekte ein, sondern unterstützt die Weiterentwicklung mit Personalressourcen."
+
+-- Become one of our titans
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Werde einer unserer Titanen"
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Unterstützer"
@@ -2944,7 +3508,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3660718138"] = "Danke, Richard, d
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3664780201"] = "Danke, Dominic, dass du als dritter Unterstützer dabei bist."
 
 -- Our Titans
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3805270964"] = "Unsere Titans"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3805270964"] = "Unsere Titanen"
 
 -- Moderation, Design, Wiki, and Documentation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3821668394"] = "Moderation, Design, Wiki und Dokumentation"
@@ -2955,14 +3519,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4106820759"] = "Vielen Dank, Peer
 -- Code Contributions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4135925647"] = "Code-Beiträge"
 
--- Become our first Titan
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T414428338"] = "Werden Sie unser erster Titan"
-
 -- Become a contributor
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T414604046"] = "Werden Sie Spender"
 
 -- In this section, we highlight the titan supporters of MindWork AI Studio. Titans are prestigious companies that provide significant support to our mission.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4270177642"] = "In diesem Abschnitt stellen wir die Titan-Unterstützer von MindWork AI Studio vor. Titans sind renommierte Unternehmen, die unsere Mission maßgeblich unterstützen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T4270177642"] = "In diesem Abschnitt stellen wir die Titanen-Unterstützer von MindWork AI Studio vor. Titanen sind renommierte Unternehmen, die unsere Mission maßgeblich unterstützen."
 
 -- Thanks Luc for your build script contribution.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T432023389"] = "Danke, Luc, für deinen Beitrag zum Build-Skript."
@@ -2974,7 +3535,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T68519158"] = "Für Unternehmen is
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T686206269"] = "Vielen Dank für deinen Beitrag zum Build-Skript."
 
 -- Business Contributors
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T838479287"] = "Unternehmenspartner"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T838479287"] = "Spenden von Unternehmen"
 
 -- Thank you very much, Kerstin, for taking care of creating the Wiki.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T991294232"] = "Vielen herzlichen Dank, Kerstin, dass du dich um die Erstellung des Wikis gekümmert hast."
@@ -3490,7 +4051,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T615338311"] = "Ausfü
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T690733413"] = "Fehler beim Abrufen der Datenquelleninformationen: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitlimits fehlgeschlagen."
 
 -- Failed to retrieve the embedding information due to an exception: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T765050112"] = "Fehler beim Abrufen der Embedding-Informationen aufgrund einer Ausnahme: {0}"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T765050112"] = "Fehler beim Abrufen der Informationen über die Einbettung aufgrund einer Ausnahme: {0}"
 
 -- Failed to retrieve the access token.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T816853779"] = "Fehler beim Abrufen des Zugriffstokens."
@@ -3781,7 +4342,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T132896331"] = "Der Verbindungstest ist fehlgeschlagen. Bitte überprüfe die Verbindungseinstellungen."
 
 -- Please select an embedding provider.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1461238528"] = "Bitte wählen Sie einen Embedding-Anbieter aus."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1461238528"] = "Bitte wählen Sie einen Anbieter für die Einbettung aus."
 
 -- The file does not exist. Please select a valid file.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T148464502"] = "Die Datei existiert nicht. Bitte wähle eine gültige Datei aus."
@@ -3878,5 +4439,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] =
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
-
-

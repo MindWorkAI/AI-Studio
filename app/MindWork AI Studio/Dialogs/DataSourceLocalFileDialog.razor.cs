@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Validation;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceLocalFileDialog : ComponentBase
+public partial class DataSourceLocalFileDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -19,9 +20,6 @@ public partial class DataSourceLocalFileDialog : ComponentBase
     
     [Parameter]
     public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     

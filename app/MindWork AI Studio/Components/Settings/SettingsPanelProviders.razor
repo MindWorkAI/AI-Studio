@@ -16,7 +16,7 @@
             <col style="width: 12em;"/>
             <col style="width: 12em;"/>
             <col/>
-            <col style="width: 34em;"/>
+            <col style="width: 16em;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>#</MudTh>
@@ -44,16 +44,16 @@
                 }
             </MudTd>
             <MudTd>
-                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())">
-                        @T("Open Dashboard")
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditLLMProvider(context)">
-                        @T("Edit")
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteLLMProvider(context)">
-                        @T("Delete")
-                    </MudButton>
+                <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                    <MudTooltip Text="@T("Open Dashboard")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Edit")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditLLMProvider(context)"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Delete")">
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteLLMProvider(context)"/>
+                    </MudTooltip>
                 </MudStack>
             </MudTd>
         </RowTemplate>

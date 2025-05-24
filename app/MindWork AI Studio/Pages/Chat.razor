@@ -4,16 +4,20 @@
 
 <div class="inner-scrolling-context">
     
-    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-        @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
-        {
-            @(T("Chat in Workspace") + $" \"{this.currentWorkspaceName}\"")
-        }
-        else
-        {
-            @(T("Disappearing Chat"))
-        }
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+        <MudText Typo="Typo.h3">
+            @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
+            {
+                @(T("Chat in Workspace") + $" \"{this.currentWorkspaceName}\"")
+            }
+            else
+            {
+                @T("Disappearing Chat")
+            }
+        </MudText>
+        
+        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
+    </MudStack>
 
     <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
     @if (this.AreWorkspacesVisible)

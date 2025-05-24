@@ -1,5 +1,4 @@
 @attribute [Route(Routes.ASSISTANT_LEGAL_CHECK)]
-@using AIStudio.Settings.DataModel
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogLegalCheck>
 
 @if (!this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)
@@ -7,11 +6,7 @@
     <ReadWebContent @bind-Content="@this.inputLegalDocument" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions && this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions && this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent)"/>
 }
 
-@if (PreviewFeatures.PRE_READ_PDF_2025.IsEnabled(this.SettingsManager))
-{
-    <ReadPDFContent @bind-PDFContent="@this.inputLegalDocument"/>
-}
-
+<ReadPDFContent @bind-PDFContent="@this.inputLegalDocument"/>
 <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputLegalDocument" Validation="@this.ValidatingLegalDocument" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Legal document")" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputQuestions" Validation="@this.ValidatingQuestions" AdornmentIcon="@Icons.Material.Filled.QuestionAnswer" Adornment="Adornment.Start" Label="@T("Your questions")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

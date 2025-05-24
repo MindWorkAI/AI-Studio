@@ -344,6 +344,13 @@ public partial class Workspaces : MSGComponentBase
             return;
 
         chat.Name = (dialogResult.Data as string)!;
+        if(this.CurrentChatThread?.ChatId == chat.ChatId)
+        {
+            this.CurrentChatThread.Name = chat.Name;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
+        }
+        
         await this.StoreChat(chat);
         await this.LoadTreeItems();
     }

@@ -274,9 +274,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Count > 0;
     
-    private string TooltipAddChatToWorkspace => string.Format(T("""
-                                                                Start new chat in workspace "{0}"
-                                                                """), this.currentWorkspaceName);
+    private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
     

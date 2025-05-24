@@ -146,7 +146,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return "Please select a provider.";
+            return this.TB("Please select a provider.");
         
         return null;
     }
@@ -198,7 +198,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
-            Name = string.Format(T("Assistant - {0}"), this.Title),
+            Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Seed = this.RNG.Next(),
             Blocks = [],
         };
@@ -244,6 +244,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
     {
+        var manageCancellationLocally = this.cancellationTokenSource is null;
+        this.cancellationTokenSource ??= new CancellationTokenSource();
+        
         var aiText = new ContentText
         {
             // We have to wait for the remote
@@ -276,6 +279,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         this.isProcessing = false;
         this.StateHasChanged();
+        
+        if(manageCancellationLocally)
+        {
+            this.cancellationTokenSource.Dispose();
+            this.cancellationTokenSource = null;
+        }
         
         // Return the AI response:
         return aiText.Text;

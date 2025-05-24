@@ -108,7 +108,7 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<PreviewFeatures>> GetPreviewFeaturesData(SettingsManager settingsManager)
     {
-        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures())
+        foreach (var source in settingsManager.ConfigurationData.App.PreviewVisibility.GetPreviewFeatures().Where(x => !x.IsReleased()))
             yield return new(source.GetPreviewDescription(), source);
     }
     

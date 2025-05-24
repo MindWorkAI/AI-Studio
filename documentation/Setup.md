@@ -58,47 +58,13 @@ When you are confident in the app's safety, follow these steps:
 The AI Studio app should now open without any issues. Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
 
 ## Linux
-AI Studio is available for modern 64-bit Linux systems. The app is provided as an AppImage and a DEB package. We test our app using Ubuntu 22.04, but it should work on other distributions as well.
+MindWork AI Studio is available for modern 64-bit Linux systems. The app is provided as an `AppImage`. We test our app using Ubuntu 22.04 and Raspberry Pi OS 12 (64-bit), but it should work on other distributions as well.
 
-1. **Choosing between the AppImage and DEB package:**
-   - **AppImage:** This is a single file that you can run without installation. It is a bit larger than the DEB package. Main advantage is that automatic updates are supported. When a new version is available, the app will prompt you to download and install it. Unfortunately, the AppImage version is not yet supported for ARM systems.
+We have to figure out if you have an Intel/AMD or a modern ARM system on your Linux machine. Open a terminal and run the command `uname -m`. When the output is `x86_64`, you have an Intel/AMD system. When the output is `aarch64`, you have an ARM system.
 
-   - **DEB package:** This is a traditional Debian package that you can install using your package manager. It is smaller than the AppImage. The main disadvantage is that you have to check for updates manually. Unfortunately, we don't have a Debian repository for automatic updates yet. That means:
-     - You won't get a notification when a new version is available.
-     - You have to download any updated DEB package from our [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest) and install it manually again.
+- **Intel/AMD:** [Download the Intel/AMD AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.AppImage) of AI Studio.
 
-    Another issue is that the DEB package is only compatible with Debian-based distributions. For other distributions, you have to use the AppImage version.
-
-2. **Choosing CPU architecture:**
-    Next, we have to figure out if you have an Intel/AMD or a modern ARM system on your Linux machine. Open a terminal and run the command `uname -m`. When the output is `x86_64`, you have an Intel/AMD system. If the output is `aarch64`, you have an ARM system.
-
-   - **Intel/AMD:** [Download the AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.AppImage) (recommended) or [DEB package](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.deb) of AI Studio.
-
-   - **ARM:** Unfortunately, the AppImage version is not yet supported for ARM systems. [Download the DEB package](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_arm64.deb) of AI Studio instead.
-
-### DEB Package Installation
-
-**Install the app using the desktop environment:**
-1. Download the DEB package from the link above.
-2. Open your file manager and navigate to the Downloads folder.
-3. Right-click on the DEB package and select "Open with other application":
-   ![Linux Installation 1](Ubuntu%20DEB%20Open.png)
-4. Choose your package manager, e.g., "Software Install":
-   ![Linux Installation 2](Ubuntu%20DEB%20Install%201.png)
-5. Click on "Install":
-   ![Linux Installation 3](Ubuntu%20DEB%20Install%202.png)
-6. Enter your password and click on "Authenticate."
-7. Wait for the installation to finish.
-8. Close the package manager.
-9. You can now find the app in your application menu.
-
-**Install the app using the terminal:**
-1. Download the DEB package from the link above.
-2. Open a terminal and navigate to the Downloads folder: `cd Downloads`.
-3. Install the DEB package: `sudo apt install ./mind-work-ai-studio_amd64.deb`.
-4. Enter your password and press Enter.
-5. Wait for the installation to finish.
-6. You can now find the app in your application menu.
+- **ARM:** [Download the ARM AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_aarch64.AppImage) of AI Studio.
 
 ### AppImage Installation
 

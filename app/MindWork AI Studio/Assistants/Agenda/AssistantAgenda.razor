@@ -3,13 +3,15 @@
 
 <MudTextField T="string" @bind-Text="@this.inputName" Validation="@this.ValidateName" Label="@T("Meeting Name")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Tag" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Name the meeting, seminar, etc.")" Placeholder="@T("Weekly jour fixe")" Class="mb-3"/>
 <MudTextField T="string" @bind-Text="@this.inputTopic" Validation="@this.ValidateTopic" Label="@T("Topic")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.EventNote" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Describe the topic of the meeting, seminar, etc. Is it about quantum computing, software engineering, or is it a general business meeting?")" Placeholder="@T("Project meeting")" Class="mb-3"/>
-<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidateContent" Label="@T("Content list")" Variant="Variant.Outlined" Lines="6" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Bullet list the content of the meeting, seminar, etc. roughly. Use dashes (-) to separate the items.")" Placeholder="@PLACEHOLDER_CONTENT" Class="mb-3" Immediate="@false" DebounceInterval="1_000" OnDebounceIntervalElapsed="@this.OnContentChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt"/>
+<DebouncedTextField @bind-Text="@this.inputContent" ValidationFunc="@this.ValidateContent" DebounceTime="TimeSpan.FromSeconds(1)" Label="@T("Content list")" Lines="6" Attributes="@USER_INPUT_ATTRIBUTES" HelpText="@T("Bullet list the content of the meeting, seminar, etc. roughly. Use dashes (-) to separate the items.")" Placeholder="@PLACEHOLDER_CONTENT" WhenTextCanged="@this.OnContentChanged" Icon="@Icons.Material.Filled.ListAlt"/>
 <MudSelect T="string" Label="@T("(Optional) What topics should be the focus?")" MultiSelection="@true" @bind-SelectedValues="@this.selectedFoci" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt">
     @foreach (var contentLine in this.contentLines)
     {
         @if(!this.justBriefly.Contains(contentLine))
         {
-            <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+            <MudSelectItem T="string" Value="@contentLine">
+                @contentLine
+            </MudSelectItem>
         }
     }
 </MudSelect>
@@ -19,7 +21,9 @@
     {
         @if(!this.selectedFoci.Contains(contentLine))
         {
-            <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+            <MudSelectItem T="string" Value="@contentLine">
+                @contentLine
+            </MudSelectItem>
         }
     }
 </MudSelect>
