@@ -46,7 +46,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
-    private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
+    private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
@@ -804,7 +804,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
             if(this.currentChatTemplate == default)
-                this.currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
+                this.currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
         }
     }
 

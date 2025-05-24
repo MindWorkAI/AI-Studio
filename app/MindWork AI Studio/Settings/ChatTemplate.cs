@@ -7,7 +7,7 @@ public readonly record struct ChatTemplate(uint Num, string Id, string Name, str
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
-    public static readonly ChatTemplate NO_CHATTEMPLATE = new()
+    public static readonly ChatTemplate NO_CHAT_TEMPLATE = new()
     {
         Name = TB("Use no chat template"),
         SystemPrompt = string.Empty,
@@ -34,5 +34,4 @@ public readonly record struct ChatTemplate(uint Num, string Id, string Name, str
         
         return this.SystemPrompt;
     }
-
 }

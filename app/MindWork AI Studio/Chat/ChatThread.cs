@@ -104,7 +104,7 @@ public sealed record ChatThread
                 systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
             else
             {
-                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHATTEMPLATE.Id || chatTeamplateId == Guid.Empty)
+                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTeamplateId == Guid.Empty)
                     systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
                 else
                 {

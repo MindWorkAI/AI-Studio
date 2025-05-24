@@ -7,7 +7,7 @@ namespace AIStudio.Components;
 public partial class ChatTemplateSelection : MSGComponentBase
 {
     [Parameter]
-    public ChatTemplate CurrentChatTemplate { get; set; } = ChatTemplate.NO_CHATTEMPLATE;
+    public ChatTemplate CurrentChatTemplate { get; set; } = ChatTemplate.NO_CHAT_TEMPLATE;
     
     [Parameter]
     public EventCallback<ChatTemplate> CurrentChatTemplateChanged { get; set; }
