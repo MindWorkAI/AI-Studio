@@ -117,7 +117,9 @@
                         <MudSelect Label="@T("Role")" @bind-Value="@context.Role" Required="true">
                             @foreach (var role in ChatRoles.ChatTemplateRoles())
                             {
-                                <MudSelectItem Value="@role">@role.ToChatTemplateName()</MudSelectItem>
+                                <MudSelectItem Value="@role">
+                                    @role.ToChatTemplateName()
+                                </MudSelectItem>
                             }
                         </MudSelect>
                     </MudTd>
