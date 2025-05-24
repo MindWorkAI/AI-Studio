@@ -123,7 +123,19 @@
                             }
                         </MudSelect>
                     </MudTd>
-                        <MudTextField AutoGrow="true" @bind-Value="context.Content.As<ContentText>()!.Text" Label="@T("Your message")" Required />
+                    <MudTd>
+                        @switch(context.Content)
+                        {
+                            case ContentText textContent:
+                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Placeholder="@T("Enter a message")"/>
+                                break;
+                                
+                            default:
+                                <MudText Typo="Typo.body2">
+                                    @T("Only text content is supported in the editing mode yet.")
+                                </MudText>
+                                break;
+                        }
                     </MudTd>
                 </RowEditingTemplate>
                 <PagerContent>
