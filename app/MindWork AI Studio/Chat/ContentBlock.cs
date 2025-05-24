@@ -28,7 +28,7 @@ public class ContentBlock
     /// <summary>
     /// Should the content block be hidden from the user?
     /// </summary>
-    public bool HideFromUser { get; set; }
+    public bool HideFromUser { get; init; }
 
     public ContentBlock DeepClone()
     {
