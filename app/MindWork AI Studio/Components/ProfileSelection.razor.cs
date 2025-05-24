@@ -6,7 +6,7 @@ namespace AIStudio.Components;
 
 public partial class ProfileSelection : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationProviderSelection).Namespace, nameof(ConfigurationProviderSelection));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProfileSelection).Namespace, nameof(ProfileSelection));
     
     [Parameter]
     public Profile CurrentProfile { get; set; } = Profile.NO_PROFILE;
