@@ -132,9 +132,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private void AddMessageBelow(ContentBlock currentItem)
     {
-        
-        // Create new entry with a valid role
-        var newEntry = new ContentBlock
+        var insertedEntry = new ContentBlock
         {
             Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(),
             Content = new ContentText(),
