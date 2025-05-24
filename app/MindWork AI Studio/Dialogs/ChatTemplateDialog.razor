@@ -81,7 +81,24 @@
                     <MudTh>@T("Actions")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                        @(context.Content is ContentText textContent ? textContent.Text : context.Content?.ToString())
+                    <MudTd>
+                        @context.Role.ToChatTemplateName()
+                    </MudTd>
+                    <MudTd>
+                        @switch(context.Content)
+                        {
+                            case ContentText textContent:
+                                <MudTextField AutoGrow="true" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
+                                break;
+                                
+                            case ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent:
+                                <MudImage Src="@imageContent.Source" Alt="@T("Image content")" Fluid="true" />
+                                break;
+                            
+                            default:
+                                @T("Unsupported content type")
+                                break;
+                        }
                     </MudTd>
                     <MudTd style="text-align: center">
                         <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddNewMessageBelow(context))" />
