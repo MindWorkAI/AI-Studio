@@ -329,7 +329,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.ChatThread is null)
             return;
 
-        await this.StartNewChat(true, false);
+        await this.StartNewChat(true);
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()

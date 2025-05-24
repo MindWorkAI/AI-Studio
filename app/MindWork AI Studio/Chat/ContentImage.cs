@@ -13,11 +13,11 @@ public sealed class ContentImage : IContent, IImageSource
 
     /// <inheritdoc />
     [JsonIgnore]
-    public bool InitialRemoteWait { get; set; } = false;
+    public bool InitialRemoteWait { get; set; }
 
     /// <inheritdoc />
     [JsonIgnore]
-    public bool IsStreaming { get; set; } = false;
+    public bool IsStreaming { get; set; }
 
     /// <inheritdoc />
     [JsonIgnore]

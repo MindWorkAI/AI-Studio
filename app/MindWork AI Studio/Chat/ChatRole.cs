@@ -1,5 +1,3 @@
-using AIStudio.Tools.PluginSystem;
-
 namespace AIStudio.Chat;
 
 /// <summary>
