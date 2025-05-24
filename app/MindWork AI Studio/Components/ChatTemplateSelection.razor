@@ -4,9 +4,16 @@
 <MudTooltip Placement="Placement.Top" Text="@T("Start a new chat with a chat template")">
     <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass">
         <ActivatorContent>
-            <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.RateReview">
-                @(this.CurrentChatTemplate != ChatTemplate.NO_CHATTEMPLATE ? this.CurrentChatTemplate.Name : "")
-            </MudButton>
+            @if (this.CurrentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
+            {
+                <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.RateReview" IconColor="Color.Default">
+                    @this.CurrentChatTemplate.Name
+                </MudButton>
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.RateReview" />
+            }
         </ActivatorContent>
         <ChildContent>
             @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates.GetAllChatTemplates())
