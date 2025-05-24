@@ -48,7 +48,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public bool AllowProfileUsage { get; set; } = true;
     
     [Inject]
-    private ILogger<ProviderDialog> Logger { get; init; } = null!;
+    private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
