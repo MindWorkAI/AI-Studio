@@ -125,19 +125,16 @@ public partial class ChatTemplateDialog : MSGComponentBase
         }
     }
     
-    private void BackupItem(object element)
+    private void BackupItem(object? element)
     {
-        this.messageEntryBeforeEdit = new ContentBlock
         this.isInlineEditOnGoing = true;
+        this.messageEntryBeforeEdit = element switch
         {
-            Role = ((ContentBlock)element).Role,
-            Content = ((ContentBlock)element).Content,
+            ContentBlock block => block.DeepClone(),
+            _ => null,
         };
-    }
-
-    {
-        ((ContentBlock)element).Role = this.messageEntryBeforeEdit.Role;
-        ((ContentBlock)element).Content = this.messageEntryBeforeEdit.Content;
+        
+        this.StateHasChanged();
     }
 
     #region Overrides of ComponentBase
