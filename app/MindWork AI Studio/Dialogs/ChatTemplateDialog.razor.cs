@@ -208,10 +208,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.MudDialog.Close(DialogResult.Ok(addedChatTemplateSettings));
     }
     
-    private string? ValidateSystemPrompt(string text)
+    private string? ValidateExampleTextMessage(string message)
     {
-        if(text.Length > 444)
-            return T("The text must not exceed 444 characters.");
+        if (string.IsNullOrWhiteSpace(message))
+            return T("Please enter a message for the example conversation.");
         
         return null;
     }
