@@ -115,9 +115,7 @@ public sealed record ChatThread
                     {
                         logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{chatThread.Name}'.";
                         this.allowProfile = chatTemplate.AllowProfileUsage;
-                        systemPromptTextWithChatTemplate = $"""
-                                                            {chatTemplate.ToSystemPrompt()}
-                                                            """;
+                        systemPromptTextWithChatTemplate = chatTemplate.ToSystemPrompt();
                     }
                 }
             }
