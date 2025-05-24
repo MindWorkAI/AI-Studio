@@ -63,7 +63,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool isInlineEditOnGoing;
 
     private ContentBlock messageEntryBeforeEdit;
-    private readonly IEnumerable<ChatRole> availableRoles = ChatRoles.ChatTemplateRoles().ToArray();
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
