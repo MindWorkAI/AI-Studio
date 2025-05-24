@@ -447,7 +447,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
             this.ChatThread.SelectedProfile = this.currentProfile.Id;
-            this.ChatThread.SelectedChatTemplate = this.currentChatTemplate.Id;
+            
+            //
+            // Remark: We do not update the chat template here
+            // because the chat template is only used when starting a new chat.
+            // Updating the chat template afterward is not supported.
+            //
         }
 
         var time = DateTimeOffset.Now;
