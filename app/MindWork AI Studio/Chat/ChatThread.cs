@@ -120,6 +120,7 @@ public sealed record ChatThread
                 }
             }
         }
+        
         logger.LogInformation(logMessage);
         
         //
