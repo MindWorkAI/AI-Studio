@@ -127,7 +127,7 @@
                         @switch(context.Content)
                         {
                             case ContentText textContent:
-                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Placeholder="@T("Enter a message")"/>
+                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")"/>
                                 break;
                                 
                             default:
