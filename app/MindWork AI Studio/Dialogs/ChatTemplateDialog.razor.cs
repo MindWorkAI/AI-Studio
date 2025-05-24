@@ -120,7 +120,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     {
         var newEntry = new ContentBlock
         {
-            Role = ChatRole.USER, // Default to User
+            Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(), 
             Content = new ContentText(),
             ContentType = ContentType.TEXT,
             HideFromUser = true,
@@ -136,7 +136,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // Create new entry with a valid role
         var newEntry = new ContentBlock
         {
-            Role = ChatRole.USER, // Default to User
+            Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(),
             Content = new ContentText(),
             ContentType = ContentType.TEXT,
             HideFromUser = true,
