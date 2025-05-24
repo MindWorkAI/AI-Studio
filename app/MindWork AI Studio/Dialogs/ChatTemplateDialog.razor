@@ -69,7 +69,7 @@
                 @T("Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.")
             </MudJustifiedText>
             
-            <MudTable CanCancelEdit="true" Class="mt-3 mb-6" CommitEditTooltip="@T("Commit Changes")" Elevation="10" FixedHeader="true" Items="@ExampleConversation" Outlined="true" RowEditCancel="@this.ResetItemToOriginalValues" RowEditPreview="@this.BackupItem">
+            <MudTable Items="@this.dataExampleConversation" FixedHeader="true" Hover="true" Class="mt-3 mb-3" CanCancelEdit="true" CancelEditTooltip="@T("Cancel")" CommitEditTooltip="@T("Commit Changes")" Outlined="true" RowEditCancel="@this.ResetItem" RowEditPreview="@this.BackupItem" EditTrigger="TableEditTrigger.RowClick" IsEditRowSwitchingBlocked="false" RowEditCommit="@this.CommitInlineEdit">
                 <ColGroup>
                     <col style="width: 10em;" />
                     <col/>
@@ -100,9 +100,16 @@
                                 break;
                         }
                     </MudTd>
-                    <MudTd style="text-align: center">
-                        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddNewMessageBelow(context))" />
-                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveMessage(context))" />
+                    <MudTd>
+                        @if (!this.isInlineEditOnGoing)
+                        {
+                            <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                                <MudTooltip Text="@T("Add a new message below")">
+                                    <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(() => this.AddMessageBelow(context))"/>
+                                </MudTooltip>
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.RemoveMessage(context))"/>
+                            </MudStack>
+                        }
                     </MudTd>
                 </RowTemplate>
                 <RowEditingTemplate>
@@ -130,15 +137,19 @@
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
-            @if(this.IsEditing)
-            {
-                @T("Update")
-            }
-            else
-            {
-                @T("Add")
-            }
-        </MudButton>
+        
+        @if (!this.isInlineEditOnGoing)
+        {
+            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                @if (this.IsEditing)
+                {
+                    @T("Update")
+                }
+                else
+                {
+                    @T("Add")
+                }
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>

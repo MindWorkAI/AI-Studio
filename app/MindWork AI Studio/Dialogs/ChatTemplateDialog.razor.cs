@@ -60,6 +60,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
+    private bool isInlineEditOnGoing;
 
     private ContentBlock messageEntryBeforeEdit;
     private readonly IEnumerable<ChatRole> availableRoles = ChatRoles.ChatTemplateRoles().ToArray();
@@ -128,13 +129,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private void BackupItem(object element)
     {
         this.messageEntryBeforeEdit = new ContentBlock
+        this.isInlineEditOnGoing = true;
         {
             Role = ((ContentBlock)element).Role,
             Content = ((ContentBlock)element).Content,
         };
     }
 
-    private void ResetItemToOriginalValues(object element)
     {
         ((ContentBlock)element).Role = this.messageEntryBeforeEdit.Role;
         ((ContentBlock)element).Content = this.messageEntryBeforeEdit.Content;
@@ -143,6 +144,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
+    private void ResetItem(object? element)
     {
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
@@ -152,6 +154,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         // When editing, we need to load the data:
         if(this.IsEditing)
+        this.isInlineEditOnGoing = false;
         {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
         }
@@ -160,6 +163,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void CommitInlineEdit(object? element)
     {
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
@@ -167,6 +171,8 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.form.ResetValidation();
         
         await base.OnAfterRenderAsync(firstRender);
+        this.isInlineEditOnGoing = false;
+        this.StateHasChanged();
     }
 
     #endregion
@@ -177,6 +183,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
+            return;
+        
+        // When an inline edit is ongoing, we cannot store the data:
+        if (this.isInlineEditOnGoing)
             return;
         
         // Use the data model to store the chat template.
