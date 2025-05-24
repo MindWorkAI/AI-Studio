@@ -13,11 +13,11 @@ public sealed class ContentImage : IContent, IImageSource
 
     /// <inheritdoc />
     [JsonIgnore]
-    public bool InitialRemoteWait { get; set; } = false;
+    public bool InitialRemoteWait { get; set; }
 
     /// <inheritdoc />
     [JsonIgnore]
-    public bool IsStreaming { get; set; } = false;
+    public bool IsStreaming { get; set; }
 
     /// <inheritdoc />
     [JsonIgnore]
@@ -34,16 +34,13 @@ public sealed class ContentImage : IContent, IImageSource
     }
     
     /// <inheritdoc />
-    public IContent DeepClone()
+    public IContent DeepClone() => new ContentImage
     {
-        return new ContentImage
-        {
-            Source = this.Source,
-            InitialRemoteWait = this.InitialRemoteWait,
-            IsStreaming = this.IsStreaming,
-            SourceType = this.SourceType,
-        };
-    }
+        Source = this.Source,
+        InitialRemoteWait = this.InitialRemoteWait,
+        IsStreaming = this.IsStreaming,
+        SourceType = this.SourceType,
+    };
 
     #endregion
 

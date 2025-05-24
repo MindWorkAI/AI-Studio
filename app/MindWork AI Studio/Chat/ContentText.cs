@@ -126,15 +126,12 @@ public sealed class ContentText : IContent
     }
 
     /// <inheritdoc />
-    public IContent DeepClone()
+    public IContent DeepClone() => new ContentText
     {
-        return new ContentText
-        {
-            Text = this.Text,
-            InitialRemoteWait = this.InitialRemoteWait,
-            IsStreaming = this.IsStreaming,
-        };
-    }
+        Text = this.Text,
+        InitialRemoteWait = this.InitialRemoteWait,
+        IsStreaming = this.IsStreaming,
+    };
 
     #endregion
     

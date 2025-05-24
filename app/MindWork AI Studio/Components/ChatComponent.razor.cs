@@ -46,7 +46,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
-    private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
+    private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
@@ -329,7 +329,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.ChatThread is null)
             return;
 
-        await this.StartNewChat(true, false);
+        await this.StartNewChat(true);
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
@@ -447,7 +447,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
             this.ChatThread.SelectedProfile = this.currentProfile.Id;
-            this.ChatThread.SelectedChatTemplate = this.currentChatTemplate.Id;
+            
+            //
+            // Remark: We do not update the chat template here
+            // because the chat template is only used when starting a new chat.
+            // Updating the chat template afterward is not supported.
+            //
         }
 
         var time = DateTimeOffset.Now;
@@ -804,7 +809,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
             if(this.currentChatTemplate == default)
-                this.currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
+                this.currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
         }
     }
 

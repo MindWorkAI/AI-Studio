@@ -89,7 +89,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
-    protected ChatTemplate currentChatTemplate = ChatTemplate.NO_CHATTEMPLATE;
+    protected ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     protected ChatThread? chatThread;
     protected IContent? lastUserPrompt;
     protected CancellationTokenSource? cancellationTokenSource;

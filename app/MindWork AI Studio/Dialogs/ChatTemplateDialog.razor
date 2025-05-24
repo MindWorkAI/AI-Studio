@@ -1,11 +1,8 @@
 @using AIStudio.Chat
-@using MudBlazor.Extensions
 @inherits MSGComponentBase
-@inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
-
         <MudJustifiedText Class="mb-3" Typo="Typo.body1">
             @T("Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.")
         </MudJustifiedText>
@@ -31,34 +28,40 @@
                 Variant="Variant.Outlined"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
+            
+            <MudText Typo="Typo.h6" Class="mb-3 mt-3">
+                @T("System Prompt")
+            </MudText>
 
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataSystemPrompt"
-                Validation="@this.ValidateSystemPrompt"
                 AdornmentIcon="@Icons.Material.Filled.ListAlt"
                 Adornment="Adornment.Start"
                 Immediate="@true"
                 Label="@T("What system prompt do you want to use?")"
                 Variant="Variant.Outlined"
                 Lines="6"
-                AutoGrow="@true"
                 MaxLines="12"
+                AutoGrow="@true"
                 Class="mb-3"
-                MaxLength="444"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your system prompt.")"
             />
             
-            <MudTooltip Text="@T("Are you unsure which system prompt to use? You can simply start with the default system prompt that AI Studio uses for all chats.")">
-                <MudButton Class="mb-3" Color="Color.Primary" OnClick="@this.UseDefaultSystemPrompt" Size="Size.Small" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">@T("Use the default system prompt")</MudButton>
-            </MudTooltip>
+            <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                @T("Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.")
+            </MudJustifiedText>
+            <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">
+                @T("Use the default system prompt")
+            </MudButton>
             
-            <MudTooltip Text="@T("Using some chat templates in tandem with profiles might cause issues. Therefore, you can preliminarily block the usage of profiles here.")">
-                <MudSwitch @bind-Value="@this.AllowProfileUsage" Class="mb-3" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" ThumbIcon="@Icons.Material.Filled.Person4" ThumbIconColor="Color.Default" />
-            </MudTooltip>
+            <MudJustifiedText Class="mt-6" Typo="Typo.body1">
+                @T("Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.")
+            </MudJustifiedText>
+            <MudTextSwitch @bind-Value="@this.AllowProfileUsage" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" LabelOn="@T("Yes, allow profiles when using this template")" LabelOff="@T("No, prohibit profile use for this template")" />
             
-            <MudText Typo="Typo.h6" Class="mb-3">
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Example Conversation")
             </MudText>
             
@@ -66,38 +69,73 @@
                 @T("Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.")
             </MudJustifiedText>
             
-            <MudTable CanCancelEdit="true" Class="mt-3 mb-6" CommitEditTooltip="@T("Commit Changes")" Elevation="10" FixedHeader="true" Items="@ExampleConversation" Outlined="true" RowEditCancel="@this.ResetItemToOriginalValues" RowEditPreview="@this.BackupItem">
+            <MudTable Items="@this.dataExampleConversation" FixedHeader="true" Hover="true" Class="mt-3 mb-3" CanCancelEdit="true" CancelEditTooltip="@T("Cancel")" CommitEditTooltip="@T("Commit Changes")" Outlined="true" RowEditCancel="@this.ResetItem" RowEditPreview="@this.BackupItem" EditTrigger="TableEditTrigger.RowClick" IsEditRowSwitchingBlocked="false" RowEditCommit="@this.CommitInlineEdit">
                 <ColGroup>
-                    <col style="width: 16em;" />
+                    <col style="width: 10em;" />
                     <col/>
-                    <col style="width: 16em;" />
+                    <col style="width: 10em;" />
                 </ColGroup>
                 <HeaderContent>
                     <MudTh>@T("Role")</MudTh>
                     <MudTh>@T("Entry")</MudTh>
-                    <MudTh Style="text-align:center">@T("Actions")</MudTh>
+                    <MudTh>@T("Actions")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="@T("Role")">@context.Role.ToChatTemplateName()</MudTd>
-                    <MudTd DataLabel="@T("Message")">
-                        @(context.Content is ContentText textContent ? textContent.Text : context.Content?.ToString())
+                    <MudTd>
+                        @context.Role.ToChatTemplateName()
                     </MudTd>
-                    <MudTd style="text-align: center">
-                        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(() => AddNewMessageBelow(context))" />
-                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveMessage(context))" />
+                    <MudTd>
+                        @switch(context.Content)
+                        {
+                            case ContentText textContent:
+                                <MudTextField AutoGrow="true" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
+                                break;
+                                
+                            case ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent:
+                                <MudImage Src="@imageContent.Source" Alt="@T("Image content")" Fluid="true" />
+                                break;
+                            
+                            default:
+                                @T("Unsupported content type")
+                                break;
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (!this.isInlineEditOnGoing)
+                        {
+                            <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                                <MudTooltip Text="@T("Add a new message below")">
+                                    <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Add" OnClick="@(() => this.AddMessageBelow(context))"/>
+                                </MudTooltip>
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.RemoveMessage(context))"/>
+                            </MudStack>
+                        }
                     </MudTd>
                 </RowTemplate>
                 <RowEditingTemplate>
-                    <MudTd DataLabel="Role">
-                        <MudSelect Label="Role" @bind-Value="context.Role" Required>
-                            @foreach (var role in availableRoles)
+                    <MudTd>
+                        <MudSelect Label="@T("Role")" @bind-Value="@context.Role" Required="true">
+                            @foreach (var role in ChatRoles.ChatTemplateRoles())
                             {
-                                <MudSelectItem Value="@role">@role.ToChatTemplateName()</MudSelectItem>
+                                <MudSelectItem Value="@role">
+                                    @role.ToChatTemplateName()
+                                </MudSelectItem>
                             }
                         </MudSelect>
                     </MudTd>
-                    <MudTd DataLabel="Message">
-                        <MudTextField AutoGrow="true" @bind-Value="context.Content.As<ContentText>()!.Text" Label="@T("Your message")" Required />
+                    <MudTd>
+                        @switch(context.Content)
+                        {
+                            case ContentText textContent:
+                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")"/>
+                                break;
+                                
+                            default:
+                                <MudText Typo="Typo.body2">
+                                    @T("Only text content is supported in the editing mode yet.")
+                                </MudText>
+                                break;
+                        }
                     </MudTd>
                 </RowEditingTemplate>
                 <PagerContent>
@@ -106,23 +144,32 @@
             </MudTable>
         </MudForm>
         
-        <MudButton Class="mb-3" Color="Color.Primary" OnClick="@this.AddNewMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">@T("Add additional message")</MudButton>
-        
+        @if (!this.isInlineEditOnGoing)
+        {
+            <MudButton Class="mb-6" Color="Color.Primary" OnClick="@this.AddMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">
+                @T("Add a message")
+            </MudButton>
+        }
+
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
-            @if(this.IsEditing)
-            {
-                @T("Update")
-            }
-            else
-            {
-                @T("Add")
-            }
-        </MudButton>
+        
+        @if (!this.isInlineEditOnGoing)
+        {
+            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                @if (this.IsEditing)
+                {
+                    @T("Update")
+                }
+                else
+                {
+                    @T("Add")
+                }
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>

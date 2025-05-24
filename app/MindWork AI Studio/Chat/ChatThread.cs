@@ -104,7 +104,7 @@ public sealed record ChatThread
                 systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
             else
             {
-                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHATTEMPLATE.Id || chatTeamplateId == Guid.Empty)
+                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTeamplateId == Guid.Empty)
                     systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
                 else
                 {
@@ -115,13 +115,12 @@ public sealed record ChatThread
                     {
                         logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{chatThread.Name}'.";
                         this.allowProfile = chatTemplate.AllowProfileUsage;
-                        systemPromptTextWithChatTemplate = $"""
-                                                            {chatTemplate.ToSystemPrompt()}
-                                                            """;
+                        systemPromptTextWithChatTemplate = chatTemplate.ToSystemPrompt();
                     }
                 }
             }
         }
+        
         logger.LogInformation(logMessage);
         
         //
@@ -146,11 +145,11 @@ public sealed record ChatThread
         
         
         //
-        // Add information from profile if available and allowed:
+        // Add information from the profile if available and allowed:
         //
         string systemPromptText;
         logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
-        if ((string.IsNullOrWhiteSpace(chatThread.SelectedProfile)) || (this.allowProfile is false))
+        if (string.IsNullOrWhiteSpace(chatThread.SelectedProfile) || this.allowProfile is false)
             systemPromptText = systemPromptWithAugmentedData;
         else
         {

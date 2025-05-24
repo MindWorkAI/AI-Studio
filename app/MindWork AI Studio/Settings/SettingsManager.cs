@@ -273,7 +273,7 @@ public sealed class SettingsManager
             return preselection;
         
         preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedChatTemplate);
-        return preselection != default ? preselection : ChatTemplate.NO_CHATTEMPLATE;
+        return preselection != default ? preselection : ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)

@@ -42,13 +42,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public bool IsEditing { get; init; }
     
     [Parameter]
-    public List<ContentBlock> ExampleConversation { get; set; } = [];
+    public IReadOnlyCollection<ContentBlock> ExampleConversation { get; init; } = [];
 
     [Parameter] 
     public bool AllowProfileUsage { get; set; } = true;
     
     [Inject]
-    private ILogger<ProviderDialog> Logger { get; init; } = null!;
+    private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -58,88 +58,16 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private List<string> UsedNames { get; set; } = [];
     
     private bool dataIsValid;
+    private List<ContentBlock> dataExampleConversation = [];
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
+    private bool isInlineEditOnGoing;
 
-    private ContentBlock messageEntryBeforeEdit;
-    private readonly IEnumerable<ChatRole> availableRoles = ChatRoles.ChatTemplateRoles().ToArray();
+    private ContentBlock? messageEntryBeforeEdit;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
-
-    private ChatTemplate CreateChatTemplateSettings() => new()
-    {
-        Num = this.DataNum,
-        Id = this.DataId,
-        
-        Name = this.DataName,
-        SystemPrompt = this.DataSystemPrompt,
-        ExampleConversation = this.ExampleConversation,
-        AllowProfileUsage = this.AllowProfileUsage,
-    };
-
-    private void RemoveMessage(ContentBlock item)
-    {
-        this.ExampleConversation.Remove(item);
-    }
-
-    private void AddNewMessageToEnd()
-    {
-        this.ExampleConversation ??= new List<ContentBlock>();
-        
-        var newEntry = new ContentBlock
-        {
-            Role = ChatRole.USER, // Default to User
-            Content = new ContentText(),
-            ContentType = ContentType.TEXT,
-            HideFromUser = true,
-            Time = DateTimeOffset.Now,
-        };
-
-        this.ExampleConversation.Add(newEntry);
-    }
-
-    private void AddNewMessageBelow(ContentBlock currentItem)
-    {
-        
-        // Create new entry with a valid role
-        var newEntry = new ContentBlock
-        {
-            Role = ChatRole.USER, // Default to User
-            Content = new ContentText(),
-            ContentType = ContentType.TEXT,
-            HideFromUser = true,
-            Time = DateTimeOffset.Now,
-        };
-        
-        // Rest of the method remains the same
-        var index = this.ExampleConversation.IndexOf(currentItem);
-
-        if (index >= 0)
-        {
-            this.ExampleConversation.Insert(index + 1, newEntry);
-        }
-        else
-        {
-            this.ExampleConversation.Add(newEntry);
-        }
-    }
     
-    private void BackupItem(object element)
-    {
-        this.messageEntryBeforeEdit = new ContentBlock
-        {
-            Role = ((ContentBlock)element).Role,
-            Content = ((ContentBlock)element).Content,
-        };
-    }
-
-    private void ResetItemToOriginalValues(object element)
-    {
-        ((ContentBlock)element).Role = this.messageEntryBeforeEdit.Role;
-        ((ContentBlock)element).Content = this.messageEntryBeforeEdit.Content;
-    }
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -154,6 +82,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if(this.IsEditing)
         {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
+            this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
         }
         
         await base.OnInitializedAsync();
@@ -170,6 +99,90 @@ public partial class ChatTemplateDialog : MSGComponentBase
     }
 
     #endregion
+
+    private ChatTemplate CreateChatTemplateSettings() => new()
+    {
+        Num = this.DataNum,
+        Id = this.DataId,
+        
+        Name = this.DataName,
+        SystemPrompt = this.DataSystemPrompt,
+        ExampleConversation = this.dataExampleConversation,
+        AllowProfileUsage = this.AllowProfileUsage,
+    };
+
+    private void RemoveMessage(ContentBlock item)
+    {
+        this.dataExampleConversation.Remove(item);
+    }
+
+    private void AddMessageToEnd()
+    {
+        var newEntry = new ContentBlock
+        {
+            Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(), 
+            Content = new ContentText(),
+            ContentType = ContentType.TEXT,
+            HideFromUser = true,
+            Time = DateTimeOffset.Now,
+        };
+
+        this.dataExampleConversation.Add(newEntry);
+    }
+
+    private void AddMessageBelow(ContentBlock currentItem)
+    {
+        var insertedEntry = new ContentBlock
+        {
+            Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(),
+            Content = new ContentText(),
+            ContentType = ContentType.TEXT,
+            HideFromUser = true,
+            Time = DateTimeOffset.Now,
+        };
+        
+        // The rest of the method remains the same:
+        var index = this.dataExampleConversation.IndexOf(currentItem);
+        if (index >= 0)
+            this.dataExampleConversation.Insert(index + 1, insertedEntry);
+        else
+            this.dataExampleConversation.Add(insertedEntry);
+    }
+    
+    private void BackupItem(object? element)
+    {
+        this.isInlineEditOnGoing = true;
+        this.messageEntryBeforeEdit = element switch
+        {
+            ContentBlock block => block.DeepClone(),
+            _ => null,
+        };
+        
+        this.StateHasChanged();
+    }
+
+    private void ResetItem(object? element)
+    {
+        this.isInlineEditOnGoing = false;
+        switch (element)
+        {
+            case ContentBlock block:
+                if (this.messageEntryBeforeEdit is null)
+                    return; // No backup to restore from
+                
+                block.Content = this.messageEntryBeforeEdit.Content?.DeepClone();
+                block.Role = this.messageEntryBeforeEdit.Role;
+                break;
+        }
+        
+        this.StateHasChanged();
+    }
+
+    private void CommitInlineEdit(object? element)
+    {
+        this.isInlineEditOnGoing = false;
+        this.StateHasChanged();
+    }
     
     private async Task Store()
     {
@@ -177,6 +190,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
+            return;
+        
+        // When an inline edit is ongoing, we cannot store the data:
+        if (this.isInlineEditOnGoing)
             return;
         
         // Use the data model to store the chat template.
@@ -191,10 +208,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.MudDialog.Close(DialogResult.Ok(addedChatTemplateSettings));
     }
     
-    private string? ValidateSystemPrompt(string text)
+    private string? ValidateExampleTextMessage(string message)
     {
-        if(text.Length > 444)
-            return T("The text must not exceed 444 characters.");
+        if (string.IsNullOrWhiteSpace(message))
+            return T("Please enter a message for the example conversation.");
         
         return null;
     }
