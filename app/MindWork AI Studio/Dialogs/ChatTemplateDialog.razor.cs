@@ -58,6 +58,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private List<string> UsedNames { get; set; } = [];
     
     private bool dataIsValid;
+    private List<ContentBlock> dataExampleConversation = [];
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -106,13 +107,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
-        ExampleConversation = this.ExampleConversation,
+        ExampleConversation = this.dataExampleConversation,
         AllowProfileUsage = this.AllowProfileUsage,
     };
 
     private void RemoveMessage(ContentBlock item)
     {
-        this.ExampleConversation.Remove(item);
+        this.dataExampleConversation.Remove(item);
     }
 
     private void AddNewMessageToEnd()
@@ -128,7 +129,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             Time = DateTimeOffset.Now,
         };
 
-        this.ExampleConversation.Add(newEntry);
+        this.dataExampleConversation.Add(newEntry);
     }
 
     private void AddNewMessageBelow(ContentBlock currentItem)
@@ -144,17 +145,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
             Time = DateTimeOffset.Now,
         };
         
-        // Rest of the method remains the same
-        var index = this.ExampleConversation.IndexOf(currentItem);
-
+        // The rest of the method remains the same:
+        var index = this.dataExampleConversation.IndexOf(currentItem);
         if (index >= 0)
-        {
-            this.ExampleConversation.Insert(index + 1, newEntry);
-        }
+            this.dataExampleConversation.Insert(index + 1, insertedEntry);
         else
-        {
-            this.ExampleConversation.Add(newEntry);
-        }
+            this.dataExampleConversation.Add(insertedEntry);
     }
     
     private void BackupItem(object? element)
