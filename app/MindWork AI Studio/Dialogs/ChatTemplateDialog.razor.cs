@@ -66,6 +66,38 @@ public partial class ChatTemplateDialog : MSGComponentBase
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
+    
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Configure the spellchecking for the instance name input:
+        this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
+        
+        // Load the used instance names:
+        this.UsedNames = this.SettingsManager.ConfigurationData.ChatTemplates.Select(x => x.Name.ToLowerInvariant()).ToList();
+        
+        // When editing, we need to load the data:
+        if(this.IsEditing)
+        {
+            this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
+            this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Reset the validation when not editing and on the first render.
+        // We don't want to show validation errors when the user opens the dialog.
+        if(!this.IsEditing && firstRender)
+            this.form.ResetValidation();
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    #endregion
 
     private ChatTemplate CreateChatTemplateSettings() => new()
     {
@@ -137,23 +169,11 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.StateHasChanged();
     }
 
-    #region Overrides of ComponentBase
-
-    protected override async Task OnInitializedAsync()
     private void ResetItem(object? element)
     {
-        // Configure the spellchecking for the instance name input:
-        this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
-        
-        // Load the used instance names:
-        this.UsedNames = this.SettingsManager.ConfigurationData.ChatTemplates.Select(x => x.Name.ToLowerInvariant()).ToList();
-        
-        // When editing, we need to load the data:
-        if(this.IsEditing)
         this.isInlineEditOnGoing = false;
         switch (element)
         {
-            this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
             case ContentBlock block:
                 if (this.messageEntryBeforeEdit is null)
                     return; // No backup to restore from
@@ -163,24 +183,14 @@ public partial class ChatTemplateDialog : MSGComponentBase
                 break;
         }
         
-        await base.OnInitializedAsync();
         this.StateHasChanged();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
     private void CommitInlineEdit(object? element)
     {
-        // Reset the validation when not editing and on the first render.
-        // We don't want to show validation errors when the user opens the dialog.
-        if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
-        
-        await base.OnAfterRenderAsync(firstRender);
         this.isInlineEditOnGoing = false;
         this.StateHasChanged();
     }
-
-    #endregion
     
     private async Task Store()
     {
