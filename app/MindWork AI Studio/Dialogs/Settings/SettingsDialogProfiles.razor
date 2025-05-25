@@ -1,0 +1,61 @@
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Person4" Class="mr-2" />
+            @T("Your Profiles")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.")
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.")
+        </MudJustifiedText>
+        <MudTable Items="@this.SettingsManager.ConfigurationData.Profiles" Hover="@true" Class="border-dashed border rounded-lg">
+            <ColGroup>
+                <col style="width: 3em;"/>
+                <col/>
+                <col style="width: 16em;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>@T("Profile Name")</MudTh>
+                <MudTh>@T("Actions")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Num</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>
+                    <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                        <MudTooltip Text="@T("Edit")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditProfile(context)"/>
+                        </MudTooltip>
+                        <MudTooltip Text="@T("Delete")">
+                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteProfile(context)"/>
+                        </MudTooltip>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if(this.SettingsManager.ConfigurationData.Profiles.Count == 0)
+        {
+            <MudText Typo="Typo.h6" Class="mt-3">
+                @T("No profiles configured yet.")
+            </MudText>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddProfile">
+            @T("Add Profile")
+        </MudButton>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

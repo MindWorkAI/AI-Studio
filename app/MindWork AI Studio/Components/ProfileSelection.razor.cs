@@ -1,6 +1,9 @@
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
@@ -25,6 +28,9 @@ public partial class ProfileSelection : MSGComponentBase
     
     [Parameter]
     public string DisabledText { get; set; } = string.Empty;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
 
     private readonly string defaultToolTipText = TB("You can switch between your profiles here");
 
@@ -36,5 +42,11 @@ public partial class ProfileSelection : MSGComponentBase
     {
         this.CurrentProfile = profile;
         await this.CurrentProfileChanged.InvokeAsync(profile);
+    }
+
+    private async Task OpenSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        await this.DialogService.ShowAsync<SettingsDialogProfiles>(T("Open Profile Options"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 }
