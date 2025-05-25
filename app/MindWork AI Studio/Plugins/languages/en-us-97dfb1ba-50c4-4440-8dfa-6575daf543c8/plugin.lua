@@ -966,6 +966,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PREVIEWRELEASECANDIDATE::T696585888"] = "
 -- Select one of your profiles
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEFORMSELECTION::T2003449133"] = "Select one of your profiles"
 
+-- Manage your profiles
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3609533889"] = "Manage your profiles"
+
+-- Open Profile Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3654011106"] = "Open Profile Options"
+
 -- You can switch between your profiles here
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can switch between your profiles here"
 
@@ -1151,45 +1157,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T90023
 
 -- Configure Embeddings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T970042679"] = "Configure Embeddings"
-
--- Edit Profile
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T1143111468"] = "Edit Profile"
-
--- Configure Profiles
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T1352823555"] = "Configure Profiles"
-
--- No profiles configured yet.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T1433534732"] = "No profiles configured yet."
-
--- Delete
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T1469573738"] = "Delete"
-
--- Your Profiles
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T2378610256"] = "Your Profiles"
-
--- Edit
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T3267849393"] = "Edit"
-
--- Profile Name
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T3392578705"] = "Profile Name"
-
--- Delete Profile
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T3804515427"] = "Delete Profile"
-
--- Actions
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T3865031940"] = "Actions"
-
--- Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T4125557797"] = "Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role."
-
--- Add Profile
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T4248067241"] = "Add Profile"
-
--- Are you sure you want to delete the profile '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T55364659"] = "Are you sure you want to delete the profile '{0}'?"
-
--- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROFILES::T56359901"] = "Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile."
 
 -- Show provider's confidence level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1052533048"] = "Show provider's confidence level?"
@@ -2562,9 +2529,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T32678
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3448155331"] = "Close"
 
--- Chat Template Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3448709717"] = "Chat Template Options"
-
 -- Edit Chat Template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3596030597"] = "Edit Chat Template"
 
@@ -2942,6 +2906,45 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T42672465"]
 
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
+
+-- Edit Profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1143111468"] = "Edit Profile"
+
+-- No profiles configured yet.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1433534732"] = "No profiles configured yet."
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1469573738"] = "Delete"
+
+-- Your Profiles
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T2378610256"] = "Your Profiles"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T3267849393"] = "Edit"
+
+-- Profile Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T3392578705"] = "Profile Name"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T3448155331"] = "Close"
+
+-- Delete Profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T3804515427"] = "Delete Profile"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T3865031940"] = "Actions"
+
+-- Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4125557797"] = "Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role."
+
+-- Add Profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4248067241"] = "Add Profile"
+
+-- Are you sure you want to delete the profile '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T55364659"] = "Are you sure you want to delete the profile '{0}'?"
+
+-- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile."
 
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Which writing style should be preselected?"
