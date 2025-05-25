@@ -96,20 +96,7 @@
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
                 }
                 
-                @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudTextField
-                    T="string"
-                    @bind-Text="@this.dataSecret"
-                    Label="@this.GetSecretLabel()"
-                    Class="mb-6"
-                    Immediate="@true"
-                    Validation="@this.dataSourceValidation.ValidatingSecret"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Security"
-                    AdornmentColor="Color.Info"
-                    Variant="Variant.Text"
-                    InputType="InputType.Password"
-                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                <SecretInputField @bind-Secret="@this.dataSecret" Label="@this.GetSecretLabel()" Validation="@this.dataSourceValidation.ValidatingSecret" Class="mb-6"/>
             }
             
             @if (this.availableRetrievalProcesses.Count > 0)
