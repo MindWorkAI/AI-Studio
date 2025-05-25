@@ -25,18 +25,7 @@
             
             @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
             {
-                @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudTextField
-                    T="string"
-                    @bind-Text="@this.dataAPIKey"
-                    Label="@this.APIKeyText"
-                    Class="mb-3"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.VpnKey"
-                    AdornmentColor="Color.Info"
-                    InputType="InputType.Password"
-                    Immediate="true"
-                    Validation="@this.providerValidation.ValidatingAPIKey"/>
+                <SecretInputField @bind-Secret="@this.dataAPIKey" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
             }
 
             @if (this.DataLLMProvider.IsHostnameNeeded())
