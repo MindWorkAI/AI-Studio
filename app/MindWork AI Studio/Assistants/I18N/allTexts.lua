@@ -775,6 +775,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your 
 -- Start a new chat with a chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1333844707"] = "Start a new chat with a chat template"
 
+-- Open Chat Template Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1335399555"] = "Open Chat Template Options"
+
+-- Manage your templates
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T3058934130"] = "Manage your templates"
+
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
 
@@ -1086,45 +1092,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] 
 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence."
-
--- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T1172171653"] = "Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them."
-
--- Delete
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T1469573738"] = "Delete"
-
--- Add Chat Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T1548314416"] = "Add Chat Template"
-
--- Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T1909110760"] = "Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts."
-
--- No chat templates configured yet.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T2319860307"] = "No chat templates configured yet."
-
--- Configure Chat Templates
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T2453567568"] = "Configure Chat Templates"
-
--- Chat Template Name
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T275026390"] = "Chat Template Name"
-
--- Are you sure you want to delete the chat template '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T3102555824"] = "Are you sure you want to delete the chat template '{0}'?"
-
--- Edit
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T3267849393"] = "Edit"
-
--- Edit Chat Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T3596030597"] = "Edit Chat Template"
-
--- Your Chat Templates
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T3824122683"] = "Your Chat Templates"
-
--- Actions
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T3865031940"] = "Actions"
-
--- Delete Chat Template
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCHATTEMPLATES::T4025180906"] = "Delete Chat Template"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Delete"
@@ -2559,6 +2526,48 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592"] =
 
 -- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
+
+-- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them."
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1469573738"] = "Delete"
+
+-- Add Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1548314416"] = "Add Chat Template"
+
+-- Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1909110760"] = "Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts."
+
+-- No chat templates configured yet.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2319860307"] = "No chat templates configured yet."
+
+-- Chat Template Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T275026390"] = "Chat Template Name"
+
+-- Are you sure you want to delete the chat template '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3102555824"] = "Are you sure you want to delete the chat template '{0}'?"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3267849393"] = "Edit"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3448155331"] = "Close"
+
+-- Chat Template Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3448709717"] = "Chat Template Options"
+
+-- Edit Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3596030597"] = "Edit Chat Template"
+
+-- Your Chat Templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3824122683"] = "Your Chat Templates"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3865031940"] = "Actions"
+
+-- Delete Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T4025180906"] = "Delete Chat Template"
 
 -- Which programming language should be preselected for added contexts?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Which programming language should be preselected for added contexts?"

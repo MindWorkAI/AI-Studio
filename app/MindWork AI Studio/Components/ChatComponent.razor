@@ -81,11 +81,7 @@
                 </MudTooltip>
             }
             
-            @if (this.SettingsManager.ConfigurationData.ChatTemplates.Count > 0)
-            {
-                <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
-            }
-
+            <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">

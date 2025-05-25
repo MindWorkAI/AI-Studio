@@ -16,9 +16,11 @@
             }
         </ActivatorContent>
         <ChildContent>
+            <MudMenuItem Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your templates")" OnClick="async () => await this.OpenSettingsDialog()" />
+            <MudDivider/>
             @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates.GetAllChatTemplates())
             {
-                <MudMenuItem OnClick="() => this.SelectionChanged(chatTemplate)">
+                <MudMenuItem Icon="@Icons.Material.Filled.RateReview" OnClick="async () => await this.SelectionChanged(chatTemplate)">
                     @chatTemplate.Name
                 </MudMenuItem>
             }
