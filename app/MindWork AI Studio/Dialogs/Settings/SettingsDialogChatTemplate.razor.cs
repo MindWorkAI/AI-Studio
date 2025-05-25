@@ -1,11 +1,8 @@
-using AIStudio.Dialogs;
 using AIStudio.Settings;
 
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
+namespace AIStudio.Dialogs.Settings;
 
-namespace AIStudio.Components.Settings;
-
-public partial class SettingsPanelChatTemplates : SettingsPanelBase
+public partial class SettingsDialogChatTemplate : SettingsDialogBase
 {
     private async Task AddChatTemplate()
     {
