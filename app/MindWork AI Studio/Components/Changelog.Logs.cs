@@ -13,6 +13,7 @@ public partial class Changelog
     
     public static readonly Log[] LOGS = 
     [
+        new (220, "v0.9.45, build 220 (2025-05-25 13:56 UTC)", "v0.9.45.md"),
         new (219, "v0.9.44, build 219 (2025-05-18 19:33 UTC)", "v0.9.44.md"),
         new (218, "v0.9.43, build 218 (2025-05-11 17:22 UTC)", "v0.9.43.md"),
         new (217, "v0.9.42, build 217 (2025-05-04 13:03 UTC)", "v0.9.42.md"),
