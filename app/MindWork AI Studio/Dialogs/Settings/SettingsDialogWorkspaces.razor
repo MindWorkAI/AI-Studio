@@ -1,0 +1,26 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.FindInPage" Class="mr-2" />
+            @T("Your Workspaces Configuration")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <ConfigurationSelect OptionDescription="@T("Workspace behavior")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = selectedValue)" OptionHelp="@T("Should we store your chats?")"/>
+            
+        @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+        {
+            <ConfigurationSelect OptionDescription="@T("Workspace maintenance")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy)" Data="@ConfigurationSelectDataFactory.GetWorkspaceStorageTemporaryMaintenancePolicyData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy = selectedValue)" OptionHelp="@T("If and when should we delete your temporary chats?")"/>
+            <ConfigurationSelect OptionDescription="@T("Workspace display behavior")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior)" Data="@ConfigurationSelectDataFactory.GetWorkspaceDisplayBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior = selectedValue)" OptionHelp="@T("How should we display your workspaces?")"/>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
