@@ -14,6 +14,7 @@ public enum CommonLanguages
     DE_CH,
     DE_AT,
     JA_JP,
+    RU_RU,
     
     OTHER,
 }

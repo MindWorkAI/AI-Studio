@@ -20,6 +20,7 @@ public static class CommonLanguageExtensions
         CommonLanguages.DE_AT => TB("German (Austria)"),
         CommonLanguages.DE_CH => TB("German (Switzerland)"),
         CommonLanguages.JA_JP => TB("Japanese (Japan)"),
+        CommonLanguages.RU_RU => TB("Russian (Russia)"),
             
         _ => TB("Other"),
     };
@@ -38,6 +39,7 @@ public static class CommonLanguageExtensions
         CommonLanguages.DE_AT => "de-AT",
         CommonLanguages.DE_CH => "de-CH",
         CommonLanguages.JA_JP => "ja-JP",
+        CommonLanguages.RU_RU => "ru-RU",
 
         _ => string.Empty,
     };
