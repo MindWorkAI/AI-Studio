@@ -85,11 +85,17 @@ public partial class Chat : MSGComponentBase
         this.StateHasChanged();
     }
 
-    private async Task OpenSettingsDialog()
+    private async Task OpenChatSettingsDialog()
     {
         var dialogParameters = new DialogParameters();
         
         await this.DialogService.ShowAsync<SettingsDialogChat>(T("Open Chat Options"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+    
+    private async Task OpenWorkspacesSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        await this.DialogService.ShowAsync<SettingsDialogWorkspaces>(T("Open Workspaces Configuration"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
     #region Overrides of MSGComponentBase
