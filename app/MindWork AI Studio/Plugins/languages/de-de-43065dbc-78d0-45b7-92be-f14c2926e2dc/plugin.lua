@@ -1527,6 +1527,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "Nein"
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Ja"
 
+-- How many matches do you want at most per query?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
+
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1847791252"] = "Aktualisieren"
 
@@ -1629,6 +1632,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2150703468"] = 
 -- ERI server hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T215899701"] = "ERI-Server-Hostname"
 
+-- the maximum number of matches per query
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2479753122"] = "die maximale Anzahl an Treffern pro Abfrage"
+
 -- Server description
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2562330120"] = "Serverbeschreibung"
 
@@ -1643,6 +1649,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2863339893"] = 
 
 -- your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2879113658"] = "Ihre Sicherheitsrichtlinie"
+
+-- Maximum matches per query
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2889706179"] = "Maximale Treffer pro Abfrage"
 
 -- Open web link, show more information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2968752071"] = "Weblink öffnen & mehr Informationen anzeigen"
@@ -1700,6 +1709,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1265737624"
 
 -- Selected base directory for this data source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1312296210"] = "Ausgewähltes Stammverzeichnis für diese Datenquelle"
+
+-- How many matches do you want at most per query?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1847791252"] = "Aktualisieren"
@@ -1761,6 +1773,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1950544
 -- the files list
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2072700997"] = "Die Dateiliste"
 
+-- the maximum number of matches per query
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2479753122"] = "die maximale Anzahl an Treffern pro Abfrage"
+
 -- the data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
 
@@ -1769,6 +1784,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2875614
 
 -- your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2879113658"] = "Ihre Sicherheitsrichtlinie"
+
+-- Maximum matches per query
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2889706179"] = "Maximale Treffer pro Abfrage"
 
 -- the embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2937209992"] = "den Namen der Einbettung"
@@ -1805,6 +1823,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T4458586
 
 -- Select a file for this data source. The content of this file will be processed for the data source.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1190880267"] = "Wählen Sie eine Datei für diese Datenquelle aus. Der Inhalt dieser Datei wird für die Datenquelle verarbeitet."
+
+-- How many matches do you want at most per query?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Aktualisieren"
@@ -1863,6 +1884,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1950544032"]
 -- The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2235729121"] = "Die für die Datenquelle ausgewählte Datei existiert nicht mehr. Bitte bearbeiten Sie die Datenquelle und wählen Sie eine andere Datei aus oder korrigieren Sie den Pfad."
 
+-- the maximum number of matches per query
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2479753122"] = "die maximale Anzahl an Treffern pro Abfrage"
+
 -- the data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
 
@@ -1874,6 +1898,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2879113658"]
 
 -- File path
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2879895266"] = "Dateipfad"
+
+-- Maximum matches per query
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2889706179"] = "Maximale Treffer pro Abfrage"
 
 -- the embedding name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2937209992"] = "den Namen der Einbettung"

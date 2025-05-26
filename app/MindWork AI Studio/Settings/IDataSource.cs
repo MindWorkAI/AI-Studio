@@ -41,6 +41,11 @@ public interface IDataSource
     public DataSourceSecurity SecurityPolicy { get; init; }
     
     /// <summary>
+    /// The maximum number of matches to return when retrieving data from the ERI server.
+    /// </summary>
+    public ushort MaxMatches { get; init; }
+    
+    /// <summary>
     /// Perform the data retrieval process.
     /// </summary>
     /// <param name="lastPrompt">The last prompt from the chat.</param>

@@ -40,6 +40,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private bool dataUserAcknowledgedCloudEmbedding;
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
+    private ushort dataMaxMatches = 10;
     private DataSourceSecurity dataSecurityPolicy;
     
     // We get the form reference from Blazor code to validate it manually:
@@ -75,6 +76,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
+            this.dataMaxMatches = this.DataSource.MaxMatches;
         }
         
         await base.OnInitializedAsync();
@@ -103,6 +105,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         EmbeddingId = this.dataEmbeddingId,
         Path = this.dataPath,
         SecurityPolicy = this.dataSecurityPolicy,
+        MaxMatches = this.dataMaxMatches,
     };
 
     private async Task Store()

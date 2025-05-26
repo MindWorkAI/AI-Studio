@@ -47,6 +47,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
     private SecurityRequirements dataSourceSecurityRequirements;
+    private ushort dataMaxMatches = 10;
     private bool connectionTested;
     private bool connectionSuccessfulTested;
     
@@ -104,6 +105,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             this.dataAuthMethod = this.DataSource.AuthMethod;
             this.dataUsername = this.DataSource.Username;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
+            this.dataMaxMatches = this.DataSource.MaxMatches;
 
             if (this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD)
             {
@@ -164,6 +166,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
             SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
+            MaxMatches = this.dataMaxMatches,
         };
     }
     

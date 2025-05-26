@@ -120,6 +120,8 @@
                 }
             </MudSelect>
             
+            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
+            
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
