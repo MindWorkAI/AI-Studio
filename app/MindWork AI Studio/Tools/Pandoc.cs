@@ -10,7 +10,7 @@ namespace AIStudio.Tools;
 public static partial class Pandoc
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
-    private static readonly string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download/";
+    private static readonly string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private static readonly string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
     private static readonly Version MINIMUM_REQUIRED_VERSION = new (3, 6);
     private static readonly Version FALLBACK_VERSION = new (3, 6, 4);
@@ -20,7 +20,7 @@ public static partial class Pandoc
     /// Checks if pandoc is available on the system and can be started as a process
     /// </summary>
     /// <returns>True, if pandoc is available and the minimum required version is met, else False.</returns>
-    public static async Task<bool> CheckAvailabilityAsync()
+    public static async Task<bool> CheckAvailabilityAsync(bool showMessages = true)
     {
         try
         {
@@ -35,7 +35,8 @@ public static partial class Pandoc
             using var process = Process.Start(startInfo);
             if (process == null)
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, "The pandoc process could not be started."));
+                if (showMessages)
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, "The pandoc process could not be started."));
                 LOG.LogInformation("The pandoc process was not started, it was null");
                 return false;
             }
@@ -44,7 +45,8 @@ public static partial class Pandoc
             await process.WaitForExitAsync();
             if (process.ExitCode != 0)
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, $"The pandoc process exited unexpectedly."));
+                if (showMessages)
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, $"The pandoc process exited unexpectedly."));
                 LOG.LogError("The pandoc process was exited with code {ProcessExitCode}", process.ExitCode);
                 return false;
             }
@@ -52,7 +54,8 @@ public static partial class Pandoc
             var versionMatch = PandocRegex().Match(output);
             if (!versionMatch.Success)
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"pandoc --version returned an invalid format."));
+                if (showMessages)
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"pandoc --version returned an invalid format."));
                 LOG.LogError("pandoc --version returned an invalid format:\n {Output}", output);
                 return false;
             }
@@ -63,18 +66,21 @@ public static partial class Pandoc
 
             if (installedVersion >= MINIMUM_REQUIRED_VERSION)
             {
-                await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {installedVersion.ToString()} is installed."));
+                if (showMessages)
+                    await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {installedVersion.ToString()} is installed."));
                 return true;
             }
             
-            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Build, $"Pandoc {installedVersion.ToString()} is installed, but it doesn't match the required version ({MINIMUM_REQUIRED_VERSION.ToString()})."));
+            if (showMessages)
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Build, $"Pandoc {installedVersion.ToString()} is installed, but it doesn't match the required version ({MINIMUM_REQUIRED_VERSION.ToString()})."));
             LOG.LogInformation("Pandoc {Installed} is installed, but it does not match the required version ({Requirement})", installedVersion.ToString(), MINIMUM_REQUIRED_VERSION.ToString());
             return false;
 
         }
         catch (Exception e)
         {
-            await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, "Pandoc is not installed."));
+            if (showMessages)
+                await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, "Pandoc is not installed."));
             LOG.LogError("Pandoc is not installed and threw an exception:\n {Message}", e.Message);
             return false;
         }
@@ -177,7 +183,7 @@ public static partial class Pandoc
     }
 
     // win arm not available
-    private static async Task<string> GenerateUriAsync()
+    public static async Task<string> GenerateUriAsync()
     {
         var version = await FetchLatestVersionAsync();
         var baseUri = $"{DOWNLOAD_URL}/{version}/pandoc-{version}-";
@@ -191,6 +197,25 @@ public static partial class Pandoc
             _ => string.Empty,
         };
     }
+    
+    public static async Task<string> GenerateInstallerUriAsync()
+    {
+        var version = await FetchLatestVersionAsync();
+        var baseUri = $"{DOWNLOAD_URL}/{version}/pandoc-{version}-";
+
+        switch (CPU_ARCHITECTURE)
+        {
+            case "win-x64":
+                return $"{baseUri}windows-x86_64.msi";
+            case "osx-x64":
+                return $"{baseUri}x86_64-macOS.pkg";
+            case "osx-arm64":
+                return $"{baseUri}arm64-macOS.pkg\n";
+            default:
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"Installers are not available on {CPU_ARCHITECTURE} systems."));
+                return string.Empty;
+        }
+    }
 
     /// <summary>
     /// Returns the name of the pandoc executable based on the running operating system
@@ -200,6 +225,6 @@ public static partial class Pandoc
     [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+)")]
     private static partial Regex PandocRegex();
     
-    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+\.[0-9]+)")]
+    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?)")]
     private static partial Regex VersionRegex();
 }

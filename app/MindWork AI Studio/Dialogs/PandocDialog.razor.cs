@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using AIStudio.Tools.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
@@ -7,10 +8,17 @@ public partial class PandocDialog : ComponentBase
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
     
+    [Inject]
+    private RustService RustService { get; init; } = null!;
+    
+    [Inject]
+    protected IJSRuntime JsRuntime { get; init; } = null!;
+    
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
     private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/master/COPYRIGHT";
+    private static string PANDOC_VERSION = "1.0.0";
 
     private bool isPandocAvailable;
     private bool showSkeleton;
@@ -25,6 +33,7 @@ public partial class PandocDialog : ComponentBase
         await base.OnInitializedAsync();
         this.showSkeleton = true;
         await this.CheckPandocAvailabilityAsync();
+        PANDOC_VERSION = await Pandoc.FetchLatestVersionAsync();
     }
 
     #endregion
@@ -33,13 +42,36 @@ public partial class PandocDialog : ComponentBase
 
     private async Task CheckPandocAvailabilityAsync()
     {
-        this.isPandocAvailable = await Pandoc.CheckAvailabilityAsync();
+        this.isPandocAvailable = await Pandoc.CheckAvailabilityAsync(false);
         this.showSkeleton = false;
         await this.InvokeAsync(this.StateHasChanged);
     }
 
+    private async Task InstallPandocAsync() => await Pandoc.InstallAsync(this.RustService);
+
     private void ProceedToInstallation() => this.showInstallPage = true;
-    
+
+    private async Task GetInstaller()
+    {
+        var uri = await Pandoc.GenerateInstallerUriAsync();
+        var filename = this.FilenameFromUri(uri);
+        await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
+
+    }
+
+    private async Task GetArchive()
+    {
+        var uri = await Pandoc.GenerateUriAsync();
+        var filename = this.FilenameFromUri(uri);
+        await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
+    }
+
+    private string FilenameFromUri(string uri)
+    {
+        var index = uri.LastIndexOf('/');
+        return uri[(index + 1)..];
+    }
+
     private async Task OnExpandedChanged(bool newVal)
     {
         if (newVal)
@@ -53,8 +85,7 @@ public partial class PandocDialog : ComponentBase
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler beim Laden des Lizenztexts: {ex.Message}");
-                this.licenseText = "Fehler beim Laden des Lizenztexts.";
+                this.licenseText = "Error loading license text, please consider following the links to the GPL.";
             }
             finally
             {
