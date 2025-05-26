@@ -31,6 +31,9 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
     
     /// <inheritdoc />
+    public ushort MaxMatches { get; init; } = 10;
+    
+    /// <inheritdoc />
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
     {
         IReadOnlyList<IRetrievalContext> retrievalContext = new List<IRetrievalContext>();

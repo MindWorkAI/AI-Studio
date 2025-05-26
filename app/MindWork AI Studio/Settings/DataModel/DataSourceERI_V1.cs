@@ -53,6 +53,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     
     /// <inheritdoc />
     public string SelectedRetrievalId { get; init; } = string.Empty;
+
+    /// <inheritdoc />
+    public ushort MaxMatches { get; init; } = 10;
     
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
@@ -76,7 +79,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 },
                 
                 Thread = await thread.ToERIChatThread(token),
-                MaxMatches = 10,
+                MaxMatches = this.MaxMatches,
                 RetrievalProcessId = string.IsNullOrWhiteSpace(this.SelectedRetrievalId) ? null : this.SelectedRetrievalId,
                 Parameters = null, // The ERI server selects useful default parameters
             };

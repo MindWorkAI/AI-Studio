@@ -27,6 +27,7 @@
         <TextInfoLines Label="@T("Server description")" MaxLines="14" Value="@this.serverDescription" ClipboardTooltipSubject="@T("the server description")"/>
         <TextInfoLines Label="@T("Security requirements of the data provider")" MaxLines="3" Value="@this.securityRequirements.Explain()" ClipboardTooltipSubject="@T("the security requirements of the data provider")"/>
         <TextInfoLines Label="@T("Your security policy")" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="@T("your security policy")"/>
+        <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
 
         <MudText Typo="Typo.h5" Class="mt-6">
             @T("Retrieval information")

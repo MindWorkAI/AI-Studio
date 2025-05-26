@@ -4,7 +4,6 @@
 <MudDialog>
     <DialogContent>
         <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
-        
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("File path")" Value="@this.DataSource.FilePath" ClipboardTooltipSubject="@T("this path")"/>
         @if (!this.IsFileAvailable)
         {
@@ -34,6 +33,7 @@
         }
 
         <TextInfoLines Label="@T("Your security policy")" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="@T("your security policy")"/>
+        <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("File size")" Value="@this.FileSize" ClipboardTooltipSubject="@T("the file size")"/>
     </DialogContent>
     <DialogActions>
