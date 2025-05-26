@@ -1,106 +1,157 @@
-﻿@using ReverseMarkdown.Converters
-<MudDialog>
+﻿<MudDialog>
     <TitleContent>
         Install Pandoc
     </TitleContent>
     <DialogContent>
         @if (this.showInstallPage)
         {
-        <div class="mb-4">
-            <MudText Class="mb-2">
-                AI Studio relies on the third-party app <strong>Pandoc</strong> to process and retrieve data from local
-                Office files (ex. <strong>Word</strong>) and later other text formats like LaTeX.
-            </MudText>
-            <MudText>
-                Unfortunately Pandocs GPL license is not compatible with AI Studios licences.
-                Therefore you have to accept Pandocs GPL license before we can download and install Pandoc automatically for you (recommended).
-                However you can download it yourself manually with the instructions below.
-            </MudText>
-        </div> 
-        <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoFixHigh" HeaderText="Automatic Installation">
-                <MudText Typo="Typo.caption">
-                    Pandoc is distributed under the <MudLink Typo="Typo.caption" Href="https://github.com/jgm/pandoc/blob/main/COPYRIGHT" Target="_blank">GNU General Public License v2 (GPL)</MudLink>.
-                    By clicking "Accept GPL and Install", you agree to the terms of the GPL license <br/> and Pandoc will be installed automatically for you.<br/>
+            <div class="mb-4">
+                <MudText Class="mb-2">
+                    AI Studio relies on the third-party app <strong>Pandoc</strong> to process and retrieve data from
+                    local
+                    Office files (ex. <strong>Word</strong>) and later other text formats like LaTeX.
                 </MudText>
-                <MudButton Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.InstallDesktop">Accept GPL and Install</MudButton>
-            </ExpansionPanel>
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="Manual Installation">
                 <MudText>
-                    If you prefer to install Pandoc yourself, please follow these steps:
+                    Unfortunately Pandocs GPL license is not compatible with AI Studios licences.
+                    Therefore you have to accept Pandocs GPL license before we can download and install Pandoc
+                    automatically for you (recommended).
+                    However you can download it yourself manually with the instructions below.
                 </MudText>
-                <MudList T="string">
-                    <MudListItem T="string">
-                        Accept the terms of the GPL license and download the latest archive with the button below.
-                    </MudListItem>
-                    <MudListItem T="string">
-                        Extract the archive to a folder of your choice.
-                        <CodeTabs>
-                            <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc</CodeBlock>
-                            <CodeBlock Title="Mac OS">/usr/local/bin/pandoc</CodeBlock>
-                            <CodeBlock Title="Linux">/usr/local/bin/pandoc</CodeBlock>
-                        </CodeTabs>
-                    </MudListItem>
-                    <MudListItem T="string">
-                        Open the folder and copy the full path to the <code>pandoc.exe</code> file into you clipboard.
-                        <CodeTabs>
-                            <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-3.7.0-windows-x86_64\pandoc-3.7.0</CodeBlock>
-                            <CodeBlock Title="Mac OS">/usr/local/bin/pandoc/pandoc-3.7.0-x86_64-macOS/pandoc-3.7.0</CodeBlock>
-                            <CodeBlock Title="Linux">/usr/local/bin/pandoc/pandoc-3.7.0-linux-amd64/pandoc-3.7.0</CodeBlock>
-                        </CodeTabs>
-                    </MudListItem>
-                    <MudListItem T="string">
-                        Add the copied path to your systems environment variables and check the installation by typing
-                        <CodeBlock IsInline="@true">pandoc --version</CodeBlock> into your command line interface.
-                        <CodeTabs>
-                            <CodeBlock Title="Windows">pandoc.exe --version<br/>pandoc.exe 3.7.0</CodeBlock>
-                            <CodeBlock Title="Mac OS">pandoc --version<br/>pandoc.exe 3.7.0</CodeBlock>
-                            <CodeBlock Title="Linux">pandoc --version<br/>pandoc.exe 3.7.0</CodeBlock>
-                        </CodeTabs>
-                    </MudListItem>
-                </MudList>
-                <MudText Class="mb-3" Typo="Typo.caption">
-                    Pandoc is distributed under the <MudLink Typo="Typo.caption" Href="https://github.com/jgm/pandoc/blob/main/COPYRIGHT" Target="_blank">GNU General Public License v2 (GPL)</MudLink>.
-                    By clicking "Accept GPL and Download", you agree to the terms of the GPL license.
-                </MudText>
-                <MudButton Color="Color.Secondary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">Accept GPL and Download</MudButton>
-            </ExpansionPanel>
-        </MudExpansionPanels>
-        <div class="mt-2">
-            <MudButton Variant="Variant.Text" Color="Color.Default">Reject GPL licence</MudButton>
-        </div>
+                <MudExpansionPanels>
+                    <MudExpansionPanel Text="GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="OnExpandedChanged">
+                        @if (this.isLoading)
+                        {
+                            <MudSkeleton />
+                            <MudSkeleton Animation="Animation.Wave" />
+                            <MudSkeleton />
+                        }
+                        else if (!string.IsNullOrEmpty(this.licenseText))
+                        {
+                            <div>@this.licenseText</div>
+                        }
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </div>
+            <MudExpansionPanels Class="mb-3" MultiExpansion="@false" Outlined="false" Elevation="0">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoFixHigh" HeaderText="Automatic Installation" IsExpanded="true">
+                    <MudText Typo="Typo.caption">
+                        Pandoc is distributed under the
+                        <MudLink Typo="Typo.caption" Href="https://github.com/jgm/pandoc/blob/main/COPYRIGHT"
+                                 Target="_blank">GNU General Public License v2 (GPL)
+                        </MudLink>
+                        .
+                        By clicking "Accept GPL and Install", you agree to the terms of the GPL license <br/> and Pandoc
+                        will be installed automatically for you.<br/>
+                    </MudText>
+                    <MudButton Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.InstallDesktop">Accept GPL and Install
+                    </MudButton>
+                </ExpansionPanel>
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="Manual Installation">
+                    <MudText Class="mb-2">
+                        If you prefer to install Pandoc yourself, please follow one of these two guides. Installers are only available for Windows and Mac.
+                    </MudText>
+                    <MudExpansionPanels Outlined="false" Elevation="0">
+                        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AppRegistration" HeaderText="Download with Installer" IsExpanded="true">
+                            <MudList T="string">
+                                <MudListItem T="string" Class="mb-4">
+                                    Accept the terms of the GPL license and download the latest installer with the download button below.
+                                    <CodeTabs>
+                                        <CodeBlock Title="Windows">pandoc-3.7.0-windows-x86_64.msi</CodeBlock>
+                                        <CodeBlock Title="Mac OS x86">pandoc-3.7.0.1-x86_64-macOS.pkg</CodeBlock>
+                                        <CodeBlock Title="Mac OS ARM">pandoc-3.7.0.1-arm64-macOS.pkg</CodeBlock>
+                                    </CodeTabs>
+                                </MudListItem>
+                                <MudListItem T="string">
+                                    Execute the installer and follow the instructions.
+                                </MudListItem>
+                            </MudList>
+                        </ExpansionPanel>
+                        <ExpansionPanel HeaderIcon="@Icons.Material.Outlined.Archive" HeaderText="Download with archive">
+                            <MudList T="string">
+                                <MudListItem T="string" Class="mb-4">
+                                    Accept the terms of the GPL license and download the latest archive with the download button below.
+                                </MudListItem>
+                                <MudListItem T="string" Class="mb-4">
+                                    Extract the archive to a folder of your choice.
+                                    <CodeTabs>
+                                        <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc</CodeBlock>
+                                        <CodeBlock Title="Mac OS">/usr/local/bin/pandoc</CodeBlock>
+                                        <CodeBlock Title="Linux">/usr/local/bin/pandoc</CodeBlock>
+                                    </CodeTabs>
+                                </MudListItem>
+                                <MudListItem T="string" Class="mb-4">
+                                    Open the folder and copy the full path to the <code>pandoc.exe</code> file into you
+                                    clipboard.
+                                    <CodeTabs>
+                                        <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-3.7.0-windows-x86_64\pandoc-3.7.0</CodeBlock>
+                                        <CodeBlock Title="Mac OS">/usr/local/bin/pandoc/pandoc-3.7.0-x86_64-macOS/pandoc-3.7.0</CodeBlock>
+                                        <CodeBlock Title="Linux">/usr/local/bin/pandoc/pandoc-3.7.0-linux-amd64/pandoc-3.7.0</CodeBlock>
+                                    </CodeTabs>
+                                </MudListItem>
+                                <MudListItem T="string">
+                                    Add the copied path to your systems environment variables and check the installation
+                                    by typing
+                                    <CodeBlock IsInline="@true">pandoc --version</CodeBlock>
+                                    into your command line interface.
+                                    <CodeTabs>
+                                        <CodeBlock Title="Windows">> pandoc.exe --version<br/>> pandoc.exe 3.7.0</CodeBlock>
+                                        <CodeBlock Title="Mac OS">> pandoc --version<br/>> pandoc.exe 3.7.0</CodeBlock>
+                                        <CodeBlock Title="Linux">> pandoc --version<br/>> pandoc.exe 3.7.0</CodeBlock>
+                                    </CodeTabs>
+                                </MudListItem>
+                            </MudList>
+                            <MudText Class="mb-3" Typo="Typo.caption">
+                                Pandoc is distributed under the
+                                <MudLink Typo="Typo.caption" Href="https://github.com/jgm/pandoc/blob/main/COPYRIGHT"
+                                         Target="_blank">GNU General Public License v2 (GPL)
+                                </MudLink>
+                                .
+                                By clicking "Accept GPL and Download", you agree to the terms of the GPL license.
+                            </MudText>
+                            <MudButton Color="Color.Secondary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
+                                Accept GPL and Download
+                            </MudButton>
+                        </ExpansionPanel>
+                    </MudExpansionPanels>
+                </ExpansionPanel>
+            </MudExpansionPanels>
+            <div class="mt-2">
+                <MudButton Variant="Variant.Text" Color="Color.Default">Reject GPL licence</MudButton>
+            </div>
         }
         else
         {
-        <MudItem Class="pa-6"
-                 Style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            @if (showSkeleton)
-            {
-                <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Class="mb-4"
-                             Style="width: 4em; height: 4em;"/>
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Pulse" Width="230px"
-                             Height="35px"/>
-            }
-            else if (isPandocAvailable)
-            {
-                <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check"
-                         Color="Color.Success"/>
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">
-                    Pandoc ist auf Ihrem System verfügbar
-                </MudText>
-            }
-            else
-            {
-                <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Error"
-                         Color="Color.Error"/>
-                <MudText Class="mb-2" Typo="Typo.subtitle1" Align="Align.Center">
-                    Pandoc ist auf Ihrem System nicht verfügbar
-                </MudText>
-                <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled">Proceed
-                    to installation
-                </MudButton>
-            }
-        </MudItem>
+            <MudItem Class="pa-6"
+                     Style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                @if (showSkeleton)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Class="mb-4"
+                                 Style="width: 4em; height: 4em;"/>
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Pulse" Width="230px"
+                                 Height="35px"/>
+                }
+                else if (isPandocAvailable)
+                {
+                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check"
+                             Color="Color.Success"/>
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center">
+                        Pandoc ist auf Ihrem System verfügbar
+                    </MudText>
+                }
+                else
+                {
+                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Error"
+                             Color="Color.Error"/>
+                    <MudText Class="mb-2" Typo="Typo.subtitle1" Align="Align.Center">
+                        Pandoc ist auf Ihrem System nicht verfügbar
+                    </MudText>
+                    <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled">
+                        Proceed
+                        to installation
+                    </MudButton>
+                }
+            </MudItem>
         }
     </DialogContent>
     <DialogActions>
