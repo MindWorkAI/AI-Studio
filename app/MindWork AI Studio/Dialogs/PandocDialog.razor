@@ -35,20 +35,27 @@
                     </MudListItem>
                     <MudListItem T="string">
                         Extract the archive to a folder of your choice.
-                        (ex. <code>C:\Users\%USERNAME%\pandoc</code>)
+                        <CodeTabs>
+                            <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc</CodeBlock>
+                            <CodeBlock Title="Mac OS">/usr/local/bin/pandoc</CodeBlock>
+                            <CodeBlock Title="Linux">/usr/local/bin/pandoc</CodeBlock>
+                        </CodeTabs>
                     </MudListItem>
                     <MudListItem T="string">
-                        Open the folder and copy the path to the <code>pandoc.exe</code> file into you clipboard.
-                        (ex. <code></code>)
-                        <CodeBlock>C:\Users\%USERNAME%\pandoc</CodeBlock>
-                        
+                        Open the folder and copy the full path to the <code>pandoc.exe</code> file into you clipboard.
+                        <CodeTabs>
+                            <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-3.7.0-windows-x86_64\pandoc-3.7.0</CodeBlock>
+                            <CodeBlock Title="Mac OS">/usr/local/bin/pandoc/pandoc-3.7.0-x86_64-macOS/pandoc-3.7.0</CodeBlock>
+                            <CodeBlock Title="Linux">/usr/local/bin/pandoc/pandoc-3.7.0-linux-amd64/pandoc-3.7.0</CodeBlock>
+                        </CodeTabs>
                     </MudListItem>
                     <MudListItem T="string">
                         Add the copied path to your systems environment variables and check the installation by typing
                         <CodeBlock IsInline="@true">pandoc --version</CodeBlock> into your command line interface.
                         <CodeTabs>
-                            <CodeBlock Title="Windows">pandoc.exe --version<br/>Der Befehl "pandoc.exe" ist entweder falsch geschrieben oder<br/>konnte nicht gefunden werden.</CodeBlock>
-                            <CodeBlock Title="Mac OS">pandoc --version</CodeBlock>
+                            <CodeBlock Title="Windows">pandoc.exe --version<br/>pandoc.exe 3.7.0</CodeBlock>
+                            <CodeBlock Title="Mac OS">pandoc --version<br/>pandoc.exe 3.7.0</CodeBlock>
+                            <CodeBlock Title="Linux">pandoc --version<br/>pandoc.exe 3.7.0</CodeBlock>
                         </CodeTabs>
                     </MudListItem>
                 </MudList>
