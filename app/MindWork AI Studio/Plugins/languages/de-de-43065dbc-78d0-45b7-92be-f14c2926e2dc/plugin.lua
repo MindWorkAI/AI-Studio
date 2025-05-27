@@ -450,6 +450,72 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T5968021
 -- Please provide a context. This will help the AI to find the right icon. You might type just a keyword or copy a sentence from your text, e.g., from a slide where you want to use the icon.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T653229070"] = "Bitte geben Sie einen Kontext an. Das hilft der KI, das passende Icon zu finden. Sie können einfach ein Stichwort eingeben oder einen Satz aus ihrem Text kopieren, zum Beispiel von einer Folie, auf der Sie das Icon verwenden möchten."
 
+-- (Optional) The company name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1134022609"] = "(Optional) Unternehmensname"
+
+-- (Optional) Provide mandatory information
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1206803170"] = "(Optional) Pflichtangaben"
+
+-- Please provide the country where the job is posted (legal framework).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1257297967"] = "Bitte geben Sie das Land an, in dem die Stelle ausgeschrieben ist (rechtlicher Rahmen)."
+
+-- (Optional) Provide necessary job qualifications
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1288034407"] = "(Optional) Erforderliche Qualifikationen angeben"
+
+-- Describe the responsibilities the person should take on in the company.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1289043339"] = "Beschreiben Sie die Aufgaben, welche die Person im Unternehmen übernehmen wird."
+
+-- Please provide a custom target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1330607941"] = "Bitte geben Sie die benutzerdefinierte Zielsprache an."
+
+-- Create the job posting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1348170275"] = "Stellenanzeige erstellen"
+
+-- This is important to consider the legal framework of the country.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1652348489"] = "Diese Angabe ist wichtig, um den rechtlichen Rahmen des jeweiligen Landes berücksichtigen zu können."
+
+-- Mandatory information that your company requires for all job postings. This can include the company description, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1860534017"] = "Pflichtangaben, die Ihr Unternehmen für alle Stellenanzeigen verlangt. Dazu kann auch die Unternehmensbeschreibung gehören."
+
+-- (Optional) Provide the entry date
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1911333264"] = "(Optional) Geben Sie das Datum der Einstellung an"
+
+-- Describe what the person is supposed to do in the company. This might be just short bullet points.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1965813611"] = "Beschreiben Sie, was die Person im Unternehmen machen soll. Das können auch kurze Stichpunkte sein."
+
+-- Describe what the person should bring to the table. This might be just short bullet points.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T2223185050"] = "Beschreiben Sie, welche Fähigkeiten die Person haben sollte. Das können auch kurze Stichpunkte sein."
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T237828418"] = "Zielsprache"
+
+-- Please provide a job description.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3056799310"] = "Bitte beschreiben Sie die Stelle."
+
+-- Job description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3063567486"] = "Stellenbeschreibung"
+
+-- Provide the country, where the company is located
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3414839564"] = "Geben Sie das Land an, in dem sich das Unternehmen befindet"
+
+-- (Optional) Provide the date until the job posting is valid
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3471426808"] = "(Optional) Geben Sie das Ablaufdatum der Stellenausschreibung an"
+
+-- Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3644893573"] = "Nennen Sie einige wichtige Punkte zu dem Job, den Sie ausschreiben möchten. Die KI wird daraus einen Vorschlag formulieren, den Sie anschließend anpassen können."
+
+-- (Optional) Provide job responsibilities
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3657997222"] = "(Optional) Geben Sie an, welche Verantwortlichkeiten die Person haben wird"
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Job Posting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3930052338"] = "Stellenausschreibung"
+
+-- (Optional) Provide the work location
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3972042680"] = "(Optional) Geben Sie den Arbeitsort an"
+
 -- Please provide a legal document as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T1160217683"] = "Bitte geben Sie ein rechtliches Dokument ein. Sie können den gewünschten Text aus einem Dokument oder von einer Website kopieren."
 
