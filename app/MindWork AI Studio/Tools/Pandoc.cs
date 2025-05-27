@@ -20,8 +20,27 @@ public static partial class Pandoc
     /// Checks if pandoc is available on the system and can be started as a process
     /// </summary>
     /// <returns>True, if pandoc is available and the minimum required version is met, else False.</returns>
-    public static async Task<bool> CheckAvailabilityAsync(bool showMessages = true)
+    public static async Task<bool> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
     {
+        var installDir = await GetPandocDataFolder(rustService);
+        var subdirectories = Directory.GetDirectories(installDir);
+
+        if (subdirectories.Length > 1)
+        {
+            await InstallAsync(rustService);
+            return true;
+        }
+
+        var hasPandoc = false;
+        foreach (var subdirectory in subdirectories)
+        {
+            if (subdirectory.Contains("pandoc"))
+                hasPandoc = true;
+        }
+        
+        if (hasPandoc)
+            return true;
+        
         try
         {
             var startInfo = new ProcessStartInfo
@@ -88,9 +107,8 @@ public static partial class Pandoc
 
     public static async Task InstallAsync(RustService rustService)
     {
-        var dataDir = await rustService.GetDataDirectory();
-        await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, $"{dataDir}"));
-        var installDir = Path.Join(dataDir, "pandoc");
+        var installDir = await GetPandocDataFolder(rustService);
+        ClearFolder(installDir);
         
         try
         {
@@ -126,35 +144,31 @@ public static partial class Pandoc
                 LOG.LogError("Pandoc was not installed, the download archive is unknown:\n {Uri}", uri);
                 return;
             }
-            
-
-            var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
-            var pandocDir = Path.Join(currentPath, "pandoc-3.6.4");
-            if (currentPath != null && !currentPath.Contains(pandocDir))
-            {
-                Environment.SetEnvironmentVariable(
-                    "PATH",
-                    $"{currentPath};{pandocDir}",
-                    EnvironmentVariableTarget.Machine);
-                Console.WriteLine("Pandoc-Verzeichnis zum PATH hinzugefügt.");
-            }
-            else
-            {
-                Console.WriteLine("Pandoc-Verzeichnis ist bereits im PATH.");
-            }
 
             await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle,
-                $"Pandoc {MINIMUM_REQUIRED_VERSION.ToString()} was installed successfully."));
+                $"Pandoc {await FetchLatestVersionAsync()} was installed successfully."));
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Fehler: {ex.Message}");
         }
     }
-
-    private static async Task ExtractZipAsync(string zipPath, string targetDir)
+    
+    private static void ClearFolder(string path)
     {
+        if (!Directory.Exists(path)) return;
         
+        try
+        {
+            foreach (var dir in Directory.GetDirectories(path))
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            LOG.LogError(ex, "Error clearing pandoc folder.");
+        }
     }
     
     public static async Task<string> FetchLatestVersionAsync() {
@@ -222,6 +236,8 @@ public static partial class Pandoc
     /// </summary>
     private static string GetPandocExecutableName() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pandoc.exe" : "pandoc";
 
+    private static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");
+    
     [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+)")]
     private static partial Regex PandocRegex();
     
