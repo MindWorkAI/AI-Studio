@@ -18,12 +18,9 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 {
     public override Tools.Components Component => Tools.Components.I18N_ASSISTANT;
     
-    protected override string Title => "Localization";
+    protected override string Title => T("Localization");
     
-    protected override string Description =>
-        """
-        Translate MindWork AI Studio text content into another language.
-        """;
+    protected override string Description => T("Translate MindWork AI Studio text content into another language.");
     
     protected override string SystemPrompt => 
         $"""
@@ -59,7 +56,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     [
         new ButtonData
         {
-            Text = "Copy Lua code to clipboard",
+            Text = T("Copy Lua code to clipboard"),
             Icon = Icons.Material.Filled.Extension,
             Color = Color.Default,
             AsyncAction = async () => await this.RustService.CopyText2Clipboard(this.Snackbar, this.finalLuaCode.ToString()),
@@ -67,7 +64,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         },
     ];
     
-    protected override string SubmitText => "Localize AI Studio & generate the Lua code";
+    protected override string SubmitText => T("Localize AI Studio & generate the Lua code");
     
     protected override Func<Task> SubmitAction => this.LocalizeTextContent;
 
@@ -143,12 +140,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         this.localizationPossible = false;
         if (PluginFactory.RunningPlugins.FirstOrDefault(n => n is PluginLanguage && n.Id == this.selectedLanguagePluginId) is not PluginLanguage comparisonPlugin)
         {
-            this.loadingIssue = $"Was not able to load the language plugin for comparison ({this.selectedLanguagePluginId}). Please select a valid, loaded & running language plugin.";
+            this.loadingIssue = string.Format(T("Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."), this.selectedLanguagePluginId);
             this.selectedLanguagePlugin = null;
         }
         else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
         {
-            this.loadingIssue = $"The selected language plugin for comparison uses the IETF tag '{comparisonPlugin.IETFTag}' which does not match the selected target language '{this.selectedTargetLanguage.ToIETFTag()}'. Please select a valid, loaded & running language plugin which matches the target language.";
+            this.loadingIssue = string.Format(T("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.ToIETFTag());
             this.selectedLanguagePlugin = null;
         }
         else
@@ -165,7 +162,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     {
         if (this.selectedLanguagePlugin is null)
         {
-            this.loadingIssue = "Please select a language plugin for comparison.";
+            this.loadingIssue = T("Please select a language plugin for comparison.");
             this.localizationPossible = false;
             this.isLoading = false;
             this.StateHasChanged();
@@ -202,7 +199,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
                 break;
             
             case NoPlugin:
-                this.loadingIssue = "Was not able to load the I18N plugin. Please check the plugin code.";
+                this.loadingIssue = T("Was not able to load the I18N plugin. Please check the plugin code.");
                 break;
             
             case { IsValid: false } plugin when plugin.Issues.Any():
@@ -241,7 +238,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string? ValidatingTargetLanguage(CommonLanguages language)
     {
         if(language == CommonLanguages.AS_IS)
-            return "Please select a target language.";
+            return T("Please select a target language.");
         
         return null;
     }
@@ -249,13 +246,19 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }
 
     private int NumTotalItems => (this.selectedLanguagePlugin?.Content.Count ?? 0) + this.addedContent.Count - this.removedContent.Count;
 
+    private string AddedContentText => string.Format(T("Added Content ({0} entries)"), this.addedContent.Count);
+    
+    private string RemovedContentText => string.Format(T("Removed Content ({0} entries)"), this.removedContent.Count);
+
+    private string LocalizedContentText => string.Format(T("Localized Content ({0} entries of {1})"), this.localizedContent.Count, this.NumTotalItems);
+    
     private async Task LocalizeTextContent()
     {
         await this.form!.Validate();
