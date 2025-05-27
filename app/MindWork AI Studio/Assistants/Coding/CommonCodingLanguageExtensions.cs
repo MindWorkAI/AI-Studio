@@ -2,9 +2,11 @@
 
 public static class CommonCodingLanguageExtensions
 {
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(CommonCodingLanguageExtensions).Namespace, nameof(CommonCodingLanguageExtensions));
+    
     public static string Name(this CommonCodingLanguages language) => language switch
     { 
-        CommonCodingLanguages.NONE => "None",
+        CommonCodingLanguages.NONE => TB("None"),
         
         CommonCodingLanguages.BASH => "Bash",
         CommonCodingLanguages.BLAZOR => ".NET Blazor",
@@ -37,7 +39,7 @@ public static class CommonCodingLanguageExtensions
         CommonCodingLanguages.TYPESCRIPT => "TypeScript",
         CommonCodingLanguages.XML => "XML",
         
-        CommonCodingLanguages.OTHER => "Other",
-        _ => "Unknown"
+        CommonCodingLanguages.OTHER => TB("Other"),
+        _ => TB("Unknown")
     };
 }

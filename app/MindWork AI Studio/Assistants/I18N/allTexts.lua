@@ -316,6 +316,72 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T65674494
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Bias of the Day"
 
+-- Coding Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1082499335"] = "Coding Assistant"
+
+-- Yes, provide compiler messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1267219550"] = "Yes, provide compiler messages"
+
+-- Compiler messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2339992872"] = "Compiler messages"
+
+-- Do you want to provide compiler messages?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2479378307"] = "Do you want to provide compiler messages?"
+
+-- Get Support
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2694436440"] = "Get Support"
+
+-- Context {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3205224990"] = "Context {0}"
+
+-- Delete context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3491455017"] = "Delete context"
+
+-- Your question(s)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3576319998"] = "Your question(s)"
+
+-- Please provide your questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4120171174"] = "Please provide your questions."
+
+-- No, there are no compiler messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T412437274"] = "No, there are no compiler messages"
+
+-- Please provide the compiler messages.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4225294332"] = "Please provide the compiler messages."
+
+-- This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T566604388"] = "This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well."
+
+-- Add context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T882607103"] = "Add context"
+
+-- Language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T2591284123"] = "Language"
+
+-- Your code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3144719651"] = "Your code"
+
+-- {0}: Please provide your input.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3160504659"] = "{0}: Please provide your input."
+
+-- (Optional) Identifier
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3208138853"] = "(Optional) Identifier"
+
+-- Other language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3374524465"] = "Other language"
+
+-- Please specify the language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3406207295"] = "Please specify the language."
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T1849229205"] = "Other"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T3424652889"] = "Unknown"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T810547195"] = "None"
+
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input."
 

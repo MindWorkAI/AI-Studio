@@ -1,19 +1,16 @@
-﻿using AIStudio.Settings;
+﻿using AIStudio.Components;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Assistants.Coding;
 
-public partial class CodingContextItem : ComponentBase
+public partial class CodingContextItem : MSGComponentBase
 {
     [Parameter]
     public CodingContext CodingContext { get; set; } = new();
 
     [Parameter]
     public EventCallback<CodingContext> CodingContextChanged { get; set; }
-    
-    [Inject]
-    protected SettingsManager SettingsManager { get; set; } = null!;
 
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     
@@ -32,7 +29,7 @@ public partial class CodingContextItem : ComponentBase
     private string? ValidatingCode(string code)
     {
         if(string.IsNullOrWhiteSpace(code))
-            return $"{this.CodingContext.Id}: Please provide your input.";
+            return string.Format(T("{0}: Please provide your input."), this.CodingContext.Id);
         
         return null;
     }
@@ -43,7 +40,7 @@ public partial class CodingContextItem : ComponentBase
             return null;
         
         if(string.IsNullOrWhiteSpace(language))
-            return "Please specify the language.";
+            return T("Please specify the language.");
         
         return null;
     }
