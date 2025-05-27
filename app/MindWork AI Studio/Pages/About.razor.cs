@@ -18,9 +18,6 @@ public partial class About : ComponentBase
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
     
-    [Inject]
-    private IDialogService DialogService { get; init; } = null!;
-    
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     
@@ -176,41 +173,5 @@ public partial class About : ComponentBase
     private async Task CheckForUpdate()
     {
         await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
-    }
-    
-    // TODO: DELETE FOR DEBUGGING ONLY
-    private bool isChecking;
-    private string statusMessage = string.Empty;
-    private async Task CheckPandoc()
-    {
-        this.isChecking = true;
-        this.statusMessage = "Überprüfe die Verfügbarkeit von Pandoc...";
-        this.StateHasChanged(); // Aktualisiere die UI
-        var isPandocAvailable = await Pandoc.CheckAvailabilityAsync();
-        if (isPandocAvailable)
-        {
-            this.statusMessage = "Pandoc ist verfügbar und erfüllt die Mindestversion.";
-        }
-        else
-        {
-            this.statusMessage = "Pandoc ist nicht verfügbar oder die installierte Version ist zu niedrig.";
-        }
-        this.isChecking = false;
-        this.StateHasChanged(); // Aktualisiere die UI
-    }
-
-    private async Task InstallPandoc()
-    {
-        var installPandoc = Pandoc.InstallAsync(this.RustService);
-    }
-
-    private async Task LatestVersion()
-    {
-        await Pandoc.FetchLatestVersionAsync();
-    }
-
-    private async Task OpenDialog()
-    {
-        await this.DialogService.ShowAsync<PandocDialog>("install dialog");
     }
 }

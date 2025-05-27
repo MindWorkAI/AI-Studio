@@ -3,36 +3,6 @@
 <div class="inner-scrolling-context">
     <MudText Typo="Typo.h3" Class="mb-2">About MindWork AI Studio</MudText>
 
-    <!-- TODO: DELETE FOR DEBUGGING ONLY -->
-    <MudItem>
-        <h3>Pandoc Verfügbarkeit prüfen</h3>
-        <MudButton OnClick="CheckPandoc" Disabled="@isChecking">
-            @(isChecking ? "Überprüfe..." : "Pandoc überprüfen")
-        </MudButton>
-        <p>@statusMessage</p>
-    </MudItem>
-
-    <MudItem Class="my-9">
-        <h3>Pandoc Installation</h3>
-        <MudButton OnClick="InstallPandoc">
-            Install Pandoc
-        </MudButton>
-    </MudItem>
-
-    <MudItem Class="my-9">
-        <h3>Latest Version</h3>
-        <MudButton OnClick="LatestVersion">
-            Version
-        </MudButton>
-    </MudItem>
-
-    <MudItem Class="my-9">
-        <h3>Pandoc dialog</h3>
-        <MudButton OnClick="OpenDialog">
-            Open dialog
-        </MudButton>
-    </MudItem>
-
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="Versions" IsExpanded="@true">
