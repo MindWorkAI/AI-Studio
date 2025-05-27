@@ -9,16 +9,18 @@ namespace AIStudio.Tools;
 
 public static partial class Pandoc
 {
-    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PluginFactory");
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocService");
     private static readonly string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private static readonly string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
     private static readonly Version MINIMUM_REQUIRED_VERSION = new (3, 6);
-    private static readonly Version FALLBACK_VERSION = new (3, 6, 4);
+    private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 1);
     private static readonly string CPU_ARCHITECTURE = "win-x64";
     
     /// <summary>
-    /// Checks if pandoc is available on the system and can be started as a process
+    /// Checks if pandoc is available on the system and can be started as a process or present in AiStudio's data dir
     /// </summary>
+    /// <param name="rustService">Global rust service to access file system and data dir</param>
+    /// <param name="showMessages">Controls if snackbars are shown to the user</param>
     /// <returns>True, if pandoc is available and the minimum required version is met, else False.</returns>
     public static async Task<bool> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
     {
@@ -30,16 +32,8 @@ public static partial class Pandoc
             await InstallAsync(rustService);
             return true;
         }
-
-        var hasPandoc = false;
-        foreach (var subdirectory in subdirectories)
-        {
-            if (subdirectory.Contains("pandoc"))
-                hasPandoc = true;
-        }
         
-        if (hasPandoc)
-            return true;
+        if (HasPandoc(installDir)) return true;
         
         try
         {
@@ -70,7 +64,7 @@ public static partial class Pandoc
                 return false;
             }
 
-            var versionMatch = PandocRegex().Match(output);
+            var versionMatch = PandocCmdRegex().Match(output);
             if (!versionMatch.Success)
             {
                 if (showMessages)
@@ -78,11 +72,9 @@ public static partial class Pandoc
                 LOG.LogError("pandoc --version returned an invalid format:\n {Output}", output);
                 return false;
             }
-            var versions = versionMatch.Groups[1].Value.Split('.');
-            var major = int.Parse(versions[0]);
-            var minor = int.Parse(versions[1]);
-            var installedVersion = new Version(major, minor);
-
+            var versions = versionMatch.Groups[1].Value;
+            var installedVersion = Version.Parse(versions);
+            
             if (installedVersion >= MINIMUM_REQUIRED_VERSION)
             {
                 if (showMessages)
@@ -104,7 +96,36 @@ public static partial class Pandoc
             return false;
         }
     }
+    
+    private static bool HasPandoc(string pandocDirectory)
+    {
+        try
+        {
+            var subdirectories = Directory.GetDirectories(pandocDirectory);
+        
+            foreach (var subdirectory in subdirectories)
+            {
+                var pandocPath = Path.Combine(subdirectory, "pandoc.exe");
+                if (File.Exists(pandocPath))
+                {
+                    return true;
+                }
+            }
+        
+            return false;
+        }
+        catch (Exception ex)
+        {
+            LOG.LogInformation("Pandoc is not installed in the data directory and might have thrown and error:\n{ErrorMessage}", ex.Message);
+            return false;
+        }
+    }
 
+    /// <summary>
+    /// Automatically decompresses the latest pandoc archive into AiStudio's data directory
+    /// </summary>
+    /// <param name="rustService">Global rust service to access file system and data dir</param>
+    /// <returns>None</returns>
     public static async Task InstallAsync(RustService rustService)
     {
         var installDir = await GetPandocDataFolder(rustService);
@@ -136,7 +157,10 @@ public static partial class Pandoc
             }
             else if (uri.Contains(".tar.gz"))
             {
-                Console.WriteLine("is zip");
+                var tempTarPath = Path.Join(Path.GetTempPath(), "pandoc.tar.gz");
+                await File.WriteAllBytesAsync(tempTarPath, fileBytes);
+                ZipFile.ExtractToDirectory(tempTarPath, installDir);
+                File.Delete(tempTarPath);
             }
             else
             {
@@ -171,20 +195,25 @@ public static partial class Pandoc
         }
     }
     
+    /// <summary>
+    /// Asynchronously fetch the content from Pandoc's latest release page and extract the latest version number
+    /// </summary>
+    /// <remarks>Version numbers can have the following formats: x.x, x.x.x or x.x.x.x</remarks>
+    /// <returns>Latest Pandoc version number</returns>
     public static async Task<string> FetchLatestVersionAsync() {
         using var client = new HttpClient();
         var response = await client.GetAsync(LATEST_URL);
 
         if (!response.IsSuccessStatusCode)
         {
-            LOG.LogError("Code {StatusCode}: Could not fetch pandocs latest page:\n {Response}", response.StatusCode, response.RequestMessage);
+            LOG.LogError("Code {StatusCode}: Could not fetch Pandoc's latest page:\n {Response}", response.StatusCode, response.RequestMessage);
             await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
             return FALLBACK_VERSION.ToString();
         }
 
         var htmlContent = await response.Content.ReadAsStringAsync();
 
-        var versionMatch = VersionRegex().Match(htmlContent);
+        var versionMatch = LatestVersionRegex().Match(htmlContent);
         if (!versionMatch.Success)
         {
             LOG.LogError("The latest version regex returned nothing:\n {Value}", versionMatch.Groups.ToString());
@@ -196,7 +225,10 @@ public static partial class Pandoc
         return version;
     }
 
-    // win arm not available
+    /// <summary>
+    /// Reads the systems architecture to find the correct archive
+    /// </summary>
+    /// <returns>Full URI to the right archive in Pandoc's repo</returns>
     public static async Task<string> GenerateUriAsync()
     {
         var version = await FetchLatestVersionAsync();
@@ -212,6 +244,10 @@ public static partial class Pandoc
         };
     }
     
+    /// <summary>
+    /// Reads the systems architecture to find the correct Pandoc installer
+    /// </summary>
+    /// <returns>Full URI to the right installer in Pandoc's repo</returns>
     public static async Task<string> GenerateInstallerUriAsync()
     {
         var version = await FetchLatestVersionAsync();
@@ -232,15 +268,16 @@ public static partial class Pandoc
     }
 
     /// <summary>
-    /// Returns the name of the pandoc executable based on the running operating system
+    /// Reads the os platform to determine the used executable name
     /// </summary>
+    /// <returns>Name of the pandoc executable</returns>
     private static string GetPandocExecutableName() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pandoc.exe" : "pandoc";
 
     private static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");
     
-    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+)")]
-    private static partial Regex PandocRegex();
+    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+)?)")]
+    private static partial Regex PandocCmdRegex();
     
-    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?)")]
-    private static partial Regex VersionRegex();
+    [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+)?)")]
+    private static partial Regex LatestVersionRegex();
 }

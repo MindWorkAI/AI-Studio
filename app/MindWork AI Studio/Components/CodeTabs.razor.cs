@@ -23,6 +23,6 @@ public partial class CodeTabs : ComponentBase
     private class CodeTabItem
     {
         public string Title { get; init; } = string.Empty;
-        public RenderFragment Fragment { get; init; }
+        public RenderFragment Fragment { get; init; } = null!;
     }
 }

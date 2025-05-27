@@ -20,6 +20,7 @@ public partial class PandocDialog : ComponentBase
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocDialog");
     private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/master/COPYRIGHT";
     private static string PANDOC_VERSION = "1.0.0";
 
@@ -110,7 +111,8 @@ public partial class PandocDialog : ComponentBase
             }
             catch (Exception ex)
             {
-                this.licenseText = "Error loading license text, please consider following the links to the GPL.";
+                this.licenseText = "Error loading license text, please consider following the links to read the GPL.";
+                LOG.LogError("Error loading GPL license text:\n{ErrorMessage}", ex.Message);
             }
             finally
             {
