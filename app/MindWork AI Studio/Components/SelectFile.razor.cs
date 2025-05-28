@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class SelectFile : ComponentBase
+public partial class SelectFile : MSGComponentBase
 {
     [Parameter]
     public string File { get; set; } = string.Empty;

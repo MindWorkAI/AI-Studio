@@ -1,3 +1,5 @@
+@inherits MSGComponentBase
+
 <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
     <MudTextField
         T="string"
@@ -12,6 +14,6 @@
     />
     
     <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="this.Disabled" OnClick="@this.OpenDirectoryDialog">
-        Choose Directory
+        @T("Choose Directory")
     </MudButton>
 </MudStack>

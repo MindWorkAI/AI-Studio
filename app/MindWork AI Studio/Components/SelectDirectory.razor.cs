@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class SelectDirectory : ComponentBase
+public partial class SelectDirectory : MSGComponentBase
 {
     [Parameter]
     public string Directory { get; set; } = string.Empty;
