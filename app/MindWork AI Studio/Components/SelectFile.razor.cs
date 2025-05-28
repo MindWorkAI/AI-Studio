@@ -1,4 +1,3 @@
-using AIStudio.Settings;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -6,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class SelectFile : ComponentBase
+public partial class SelectFile : MSGComponentBase
 {
     [Parameter]
     public string File { get; set; } = string.Empty;
@@ -28,9 +27,6 @@ public partial class SelectFile : ComponentBase
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
 
     [Inject]
     public RustService RustService { get; set; } = null!;

@@ -318,6 +318,72 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T65674494
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Vorurteil des Tages"
 
+-- Coding Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1082499335"] = "Assistent zum Programmieren"
+
+-- Yes, provide compiler messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1267219550"] = "Ja, Kompilermeldungen bereitstellen"
+
+-- Compiler messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2339992872"] = "Kompilermeldungen"
+
+-- Do you want to provide compiler messages?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2479378307"] = "Möchten Sie Kompilermeldungen bereitstellen?"
+
+-- Get Support
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2694436440"] = "Support erhalten"
+
+-- Context {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3205224990"] = "Kontext {0}"
+
+-- Delete context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3491455017"] = "Kontext löschen"
+
+-- Your question(s)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3576319998"] = "Ihre Frage(n)"
+
+-- Please provide your questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4120171174"] = "Bitte stellen Sie Ihre Fragen."
+
+-- No, there are no compiler messages
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T412437274"] = "Nein, es gibt keine Kompilermeldungen"
+
+-- Please provide the compiler messages.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4225294332"] = "Bitte geben Sie die Kompilermeldungen an."
+
+-- This coding assistant supports you in writing code. Provide some coding context by pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T566604388"] = "Dieser Assistent zum Programmieren unterstützt Sie beim Schreiben von Code. Geben Sie den Programmierkontext an, indem Sie Ihren Code in die Eingabefelder einfügen. Sie können Ihrem Code eine ID zuweisen, um später leichter auf diesen verweisen zu können. Wenn Sie Kompilermeldungen erhalten haben, können Sie diese ebenfalls einfügen, um Unterstützung beim Debuggen zu erhalten."
+
+-- Add context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T882607103"] = "Kontext hinzufügen"
+
+-- Language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T2591284123"] = "Sprache"
+
+-- Your code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3144719651"] = "Ihr Code"
+
+-- {0}: Please provide your input.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3160504659"] = "{0}: Bitte geben Sie Ihren Inhalt ein."
+
+-- (Optional) Identifier
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3208138853"] = "(Optional) Kennung bzw. ID"
+
+-- Other language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3374524465"] = "Andere Sprache"
+
+-- Please specify the language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3406207295"] = "Bitte geben Sie die Sprache an."
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T1849229205"] = "Andere"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T810547195"] = "Keine"
+
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage ihrer Angaben."
 
@@ -405,6 +471,399 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T47755021
 -- Not specified
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T641241064"] = "Nicht angegeben"
 
+-- Self-hosted LLM providers are allowed: users cannot choose any cloud-based provider
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1196461290"] = "Selbst gehostete LLM-Anbieter sind erlaubt: Nutzer können keinen Cloud-basierten Anbieter auswählen"
+
+-- Please select what kind of LLM provider are allowed for this data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1641796568"] = "Bitte wählen Sie aus, welche Art von LLM-Anbieter für diese Datenquelle zulässig ist."
+
+-- Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T3264558650"] = "Jeder LLM-Anbieter ist erlaubt: Nutzer können einen Cloud-basierten oder einen selbst gehosteten Anbieter wählen."
+
+-- Unknown option was selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T4096790096"] = "Eine unbekannte Option wurde ausgewählt"
+
+-- Please describe at least one retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1035068989"] = "Bitte beschreiben Sie mindestens einen Abrufprozess."
+
+-- Please select which types of LLMs users are allowed to use with the data from this ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1047631678"] = "Bitte wählen Sie aus, welche Typen von LLMs mit den Daten dieses ERI-Servers verwendet werden dürfen."
+
+-- No, I will enter everything again or configure it manually in the settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1051078592"] = "Nein, ich werde alles erneut eingeben oder es manuell in den Einstellungen konfigurieren"
+
+-- ERI server name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1104420863"] = "ERI-Servername"
+
+-- The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1125425983"] = "Die Einbettung „{0}“ wird in einem oder mehreren Abrufprozessen verwendet. Sind Sie sicher, dass Sie sie löschen möchten?"
+
+-- The port of the data source must be between 1 and 65535.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1201129536"] = "Der Port der Datenquelle muss zwischen 1 und 65535 liegen."
+
+-- AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the AI has made in which files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T121294173"] = "AI Studio kann den generierten Code im Dateisystem speichern. Sie können dafür einen Basisordner auswählen. AI Studio stellt sicher, dass keine Dateien außerhalb dieses Basisordners erstellt werden. Außerdem empfehlen wir, in diesem Ordner ein Git-Repository anzulegen. So können Sie nachvollziehen, welche Änderungen die KI in welchen Dateien vorgenommen hat."
+
+-- Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if you are responsible for multiple ERI servers.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1244355152"] = "Hier haben Sie die Möglichkeit, verschiedene Konfigurationen für unterschiedliche ERI-Server zu speichern und zwischen ihnen zu wechseln. Das ist nützlich, wenn Sie für mehrere ERI-Server verantwortlich sind."
+
+-- Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1261836894"] = "Bitte geben Sie einen Namen für Ihren ERI-Server an. Dieser Name wird verwendet, um den Server in AI Studio zu identifizieren."
+
+-- You have not yet added any ERI server presets.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1267931972"] = "Sie haben bislang keine ERI-Server-Voreinstellung hinzugefügt."
+
+-- <b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1287629674"] = "<b>Warnung:</b> Ports unter 1024 sind für Systemdienste reserviert. Ihr ERI-Server muss mit erhöhten Rechten (als Root-Benutzer) ausgeführt werden."
+
+-- The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1302705248"] = "Die Aufgabe, den ERI-Server für Sie zu schreiben, ist sehr komplex. Daher wird ein sehr leistungsfähiges LLM benötigt, um diese Aufgabe erfolgreich zu bewältigen. Kleine lokale Modelle werden dafür wahrscheinlich nicht ausreichen. Versuchen Sie stattdessen, ein großes Cloud-basiertes oder ein großes selbst gehostetes Modell zu verwenden."
+
+-- Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1312468048"] = "Bitte geben Sie Ihrem ERI-Server einen Namen, der Aufschluss über die Datenquelle und/oder den vorgesehenen Zweck gibt. Der Name wird den Nutzern in AI Studio angezeigt."
+
+-- Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1365243213"] = "Bitte beschreiben Sie, wie die ausgewählten Authentifizierungsmethoden verwendet werden sollen. Erklären Sie dabei insbesondere, für welche Daten die Methode KEINE (öffentlicher Zugriff) genutzt wird."
+
+-- No embedding methods configured yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1391635161"] = "Noch keine Einbettungsmethoden konfiguriert."
+
+-- Edit Retrieval Process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1423501360"] = "Abrufprozess bearbeiten"
+
+-- Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1456749976"] = "Bitte wählen Sie das Betriebssystem aus, auf dem der ERI-Server laufen wird. Dies ist erforderlich, wenn SSO mit Kerberos verwendet wird."
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1469573738"] = "Löschen"
+
+-- Related links:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Relevante Links:"
+
+-- Please select an ERI specification version for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Bitte wählen Sie eine Version der ERI-Spezifikation für den ERI-Server aus."
+
+-- Write code to file system
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1717303021"] = "Code in das Dateisystem schreiben"
+
+-- Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1729922656"] = "Hinweis: Damit dieser Assistent Ihre Änderungen automatisch speichern kann, müssen Sie in den Einstellungen die Vorauswahl von Optionen aktivieren."
+
+-- You have selected {0} authentication methods
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1755088321"] = "Sie haben {0} Authentifizierungsmethoden ausgewählt"
+
+-- Select the target directory for the ERI server
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T175742733"] = "Wählen Sie das Zielverzeichnis für den ERI-Server aus"
+
+-- Data source: port
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T179799739"] = "Datenquelle: Port"
+
+-- Delete Retrieval Process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T180938091"] = "Abrufprozess löschen"
+
+-- Provider selection for generation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1840198821"] = "Anbieterauswahl für die Generierung"
+
+-- Should we automatically save any input made?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1980659256"] = "Sollen wir sämtliche Eingaben automatisch speichern?"
+
+-- Auto save
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1997164591"] = "Automatisches Speichern"
+
+-- An ERI server preset with this name already exists. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2031461801"] = "Ein ERI-Server-Voreinstellung mit diesem Namen existiert bereits. Bitte wählen Sie einen anderen Namen."
+
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2034620186"] = "Datenquelle"
+
+-- Interactive documentation aka Swagger UI
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2064957876"] = "Interaktive Dokumentation (auch bekannt als Swagger UI)"
+
+-- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2155983785"] = "Wenn Sie den ERI-Server-Code neu erstellen oder generieren, geht AI Studio wie folgt vor: Alle beim letzten Mal generierten Dateien werden gelöscht. Alle anderen von ihnen erstellten Dateien bleiben erhalten. Anschließend generiert die KI die neuen Dateien. <b>Aber Vorsicht:</b> Es kann passieren, dass die KI diesmal eine Datei generiert, die Sie beim letzten Mal manuell erstellt haben. In diesem Fall wird ihre manuell erstellte Datei überschrieben. Sie sollten daher immer ein Git-Repository anlegen und alle Änderungen vor der Nutzung dieses Assistenten committen oder gegebenenfalls zurücksetzen. Mit einer Diff-Ansicht können Sie sofort erkennen, wo die KI Änderungen vorgenommen hat. Am besten nutzen Sie dafür eine IDE, die für die von ihnen gewählte Programmiersprache geeignet ist."
+
+-- Add Embedding Method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2176833082"] = "Einbettungsmethode hinzufügen"
+
+-- For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process. You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows you to test with beta users which process works better. Or you might generally want to give users the choice so they can select the process that best suits their circumstances.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T218617347"] = "Für ihren ERI-Server müssen Sie Daten abrufen, die in irgendeiner Weise zu einem Chat oder einem Prompt passen. Diesen Vorgang nennen wir „Retrieval-Prozess“ (Abrufprozess). Sie müssen mindestens einen solchen Prozess beschreiben. Sie können auch mehrere Abrufprozesse anbieten, aus denen die Nutzer wählen können. So können Sie mit Beta-Nutzern testen, welcher Prozess besser funktioniert. Oder Sie möchten den Nutzern grundsätzlich die Wahl lassen, damit sie den Prozess auswählen können, der am besten zu ihren Bedürfnissen passt."
+
+-- You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2202387805"] = "Sie können mehr als eine Einbettungsmethode angeben. Das ist nützlich, wenn Sie unterschiedliche Einbettungen für verschiedene Abfragen oder Datentypen verwenden möchten. Zum Beispiel eine Einbettung für Texte, eine andere für Bilder und eine dritte für Videos usw."
+
+-- Operating system on which your ERI server will run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Betriebssystem, auf dem ihr ERI-Server ausgeführt wird"
+
+-- You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2241311898"] = "Sie können zusätzliche Bibliotheken integrieren. Vielleicht möchten Sie die Prompts im Voraus mit einer Machine-Learning-Methode auswerten oder sie mithilfe eines Text-Mining-Ansatzes analysieren? Oder möchten Sie vielleicht Bilder in den Prompts vorverarbeiten? Für solche erweiterten Szenarien können Sie hier angeben, welche Bibliotheken Sie verwenden möchten. Beschreiben Sie am besten, welche Bibliothek Sie für welchen Zweck einbinden möchten. So kann das LLM, das den ERI-Server für Sie erstellt, versuchen, diese Bibliotheken effektiv zu nutzen. Dadurch sollte weniger Nacharbeit nötig sein. Falls Sie die benötigten Bibliotheken nicht kennen, können Sie stattdessen versuchen, den geplanten Einsatzzweck zu beschreiben. Das LLM kann dann versuchen, passende Bibliotheken auszuwählen. Allerdings können dabei Halluzinationen auftreten und fiktive Bibliotheken gewählt werden."
+
+-- The ERI specification could not be loaded. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2265640084"] = "Die ERI-Spezifikation konnte nicht geladen werden. Bitte versuchen Sie es später erneut."
+
+-- You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2299793803"] = "Sie können es sich so vorstellen: Hypothetisch gesehen würde die Wikipedia beim Einsatz von ERI alle Seiten mithilfe einer Einbettungsmethode „vektorisieren“. Alle Daten von Wikipedia, einschließlich der Vektordatenbank, würden bei der Wikipedia bleiben (dezentraler Ansatz). Danach könnte jeder Nutzer von MindWork AI Studio Wikipedia als Datenquelle hinzufügen, um Halluzinationen des LLM bei Wissensfragen deutlich zu reduzieren."
+
+-- Are you sure you want to delete the ERI server preset '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396"] = "Sind Sie sicher, dass Sie die ERI-Server-Voreinstellung '{0}' löschen möchten?"
+
+-- Data source settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2440619931"] = "Datenquellen-Einstellungen"
+
+-- Yes, please write or update all generated code to the file system
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T252707279"] = "Ja, bitte schreibe oder aktualisiere allen erzeugten Code im Dateisystem."
+
+-- Describe how you planned the authentication process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2531113337"] = "Beschreiben Sie, wie Sie den Authentifizierungsprozess geplant haben"
+
+-- Please specify the custom programming language for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T257210674"] = "Bitte geben Sie die benutzerdefinierte Programmiersprache für den ERI-Server an."
+
+-- Edit Embedding Method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T260789321"] = "Einbettungsmethode bearbeiten"
+
+-- Base directory where to write the code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2610795494"] = "Basisverzeichnis, in dem der Code gespeichert wird"
+
+-- Delete ERI server preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2627399122"] = "ERI-Server-Voreinstellung löschen"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T266367750"] = "Name"
+
+-- Create the ERI server
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2903289059"] = "ERI-Server erstellen"
+
+-- Data retrieval settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T295114338"] = "Datenabruf-Einstellungen"
+
+-- Please provide a base directory for the ERI server to write files to.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2989655350"] = "Bitte geben Sie ein Basisverzeichnis an, in das der ERI-Server Dateien schreiben kann."
+
+-- You have selected 1 authentication method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2997584553"] = "Sie haben eine Authentifizierungsmethode ausgewählt"
+
+-- ERI server presets
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3021250792"] = "ERI-Server-Voreinstellungen"
+
+-- Authentication method(s)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3044928058"] = "Authentifizierungsmethode(n)"
+
+-- (Optional) Describe how you planned the authentication process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3052867096"] = "(Optional) Beschreiben Sie, wie Sie den Authentifizierungsprozess geplant haben"
+
+-- Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3088814795"] = "Möchten Sie zusätzliche Bibliotheken einbinden? Nennen Sie diese bitte und beschreiben Sie kurz, was Sie damit erreichen möchten."
+
+-- Add ERI server preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3090449320"] = "ERI-Server-Voreinstellung hinzufügen"
+
+-- Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3105554044"] = "Bitte geben Sie den Produktnamen der Datenquelle an, z. B. „MongoDB“, „Redis“, „PostgreSQL“, „Neo4j“ oder „MinIO“ usw."
+
+-- Embedding settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T315946275"] = "Einbettungs-Einstellungen"
+
+-- Please select at least one authentication method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3178184134"] = "Bitte wählen Sie mindestens eine Authentifizierungsmethode aus."
+
+-- The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be automatically saved. Would you like this?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3203532492"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Sie möchten wahrscheinlich, dass ihr ERI-Server immer auf dem neuesten Stand ist. Das bedeutet, dass Sie den Code für ihren ERI-Server eventuell erneut generieren müssen. Damit Sie nicht jedes Mal alle Eingaben erneut machen müssen, können alle ihre Eingaben und Entscheidungen automatisch gespeichert werden. Möchten Sie das?"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3267849393"] = "Bearbeiten"
+
+-- Programming language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3295594136"] = "Programmiersprache"
+
+-- Data source: product name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3315518334"] = "Datenquelle"
+
+-- No, just show me the code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "Nein, zeig mir einfach den Code."
+
+-- Other language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3374524465"] = "Andere Sprache"
+
+-- ERI Server {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3443687246"] = "ERI-Server {0}"
+
+-- You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3446047228"] = "Sie werden wahrscheinlich eine oder mehrere Einbettungs-Methoden verwenden, um die Bedeutung Ihrer Daten in einen typischerweise hochdimensionalen Vektorraum zu kodieren. In diesem Fall nutzen Sie eine Vektordatenbank, um diese Vektoren (sogenannte Einbettungen) zu speichern und zu durchsuchen. Es ist jedoch nicht zwingend erforderlich, Einbettungs-Methoden zu verwenden. Wenn ihre Suchmethode ohne Einbettungen funktioniert, können Sie diesen Abschnitt ignorieren. Ein Beispiel: Sie speichern Dateien auf einem Dateiserver, und ihre Suchmethode arbeitet ausschließlich mit Dateinamen im Dateisystem – dann benötigen Sie keine Einbettungen."
+
+-- <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3485079498"] = "<b>Wichtig:</b> Das LLM muss möglicherweise viele Dateien generieren. Dadurch wird das Anfrage-Limit der meisten LLM-Anbieter erreicht. In der Regel kann nur eine bestimmte Anzahl von Anfragen pro Minute gestellt werden, und es dürfen nur eine maximale Anzahl von Tokens pro Minute erzeugt werden. AI Studio berücksichtigt dies automatisch. <b>Das Erzeugen aller Dateien benötigt jedoch eine gewisse Zeit.</b> Lokale oder selbst gehostete Modelle funktionieren möglicherweise ohne diese Einschränkungen und können schneller antworten. AI Studio passt sein Verhalten dynamisch an und versucht immer, die Daten so schnell wie möglich zu verarbeiten."
+
+-- Type
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3512062061"] = "Typ"
+
+-- Please describe how the selected authentication methods should be used.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T356079033"] = "Bitte beschreiben Sie, wie die ausgewählten Authentifizierungsmethoden verwendet werden sollen."
+
+-- Authentication settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3565127422"] = "Authentifizierungs-Einstellungen"
+
+-- Add Retrieval Process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3617128581"] = "Abrufprozess hinzufügen"
+
+-- Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3637826231"] = "Bitte geben Sie eine kurze Beschreibung ihres ERI-Servers an. Beschreiben oder erklären Sie, was Ihr ERI-Server macht und welche Daten dafür verwendet werden. Diese Beschreibung wird den Nutzern in AI Studio angezeigt."
+
+-- Please provide the port of the data source.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3641304143"] = "Bitte geben Sie den Port der Datenquelle an."
+
+-- Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3668870799"] = "Bitte geben Sie den Hostnamen der Datenquelle an. Verwenden Sie „localhost“, wenn sich die Datenquelle auf demselben Rechner wie der ERI-Server befindet."
+
+-- Delete Embedding
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3691399003"] = "Einbettung löschen"
+
+-- Yes, please save my inputs
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3709185824"] = "Ja, bitte speichere meine Eingaben."
+
+-- Common ERI server settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T371718034"] = "Allgemeine ERI-Server-Einstellungen"
+
+-- Download specification
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3770339156"] = "Spezifikation herunterladen"
+
+-- Are you sure you want to delete the embedding '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3792084967"] = "Möchten Sie die Einbettung „{0}“ wirklich löschen?"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3865031940"] = "Aktionen"
+
+-- ERI specification version
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3897494556"] = "ERI-Spezifikations-Version"
+
+-- Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3973182416"] = "Bitte geben Sie eine Beschreibung für Ihren ERI-Server an. Welche Daten wird der Server abrufen? Diese Beschreibung wird dazu verwendet, die Nutzer über den Zweck ihres ERI-Servers zu informieren."
+
+-- Please select a data source for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4010020894"] = "Bitte wählen Sie eine Datenquelle für den ERI-Server aus."
+
+-- Please select at least one authentication method for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4027569219"] = "Bitte wählen Sie mindestens eine Authentifizierungsmethode für den ERI-Server aus."
+
+-- Data protection settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4078115997"] = "Datenschutzeinstellungen"
+
+-- Please describe the data source of your ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4156384463"] = "Bitte beschreiben Sie die Datenquelle ihres ERI-Servers."
+
+-- ERI Server
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4204533420"] = "ERI-Server"
+
+-- The name of your ERI server must be between 6 and 60 characters long.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4215418115"] = "Der Name ihres ERI-Servers muss zwischen 6 und 60 Zeichen lang sein."
+
+-- Describe your data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4272497758"] = "Beschreiben Sie ihre Datenquelle"
+
+-- The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T458158948"] = "Das ERI ist die externe Abrufschnittstelle (External Retrieval Interface) für AI Studio und andere Werkzeuge. Das ERI fungiert als Vertrag zwischen dezentralen Datenquellen und beispielsweise AI Studio. Die Implementierung des ERI erfolgt durch die Datenquellen, wodurch diese später in AI Studio integriert werden können. Das bedeutet, dass die Datenquellen die Serverrolle übernehmen und AI Studio (oder ein anderes LLM-Werkzeug) die Rolle des API-Clients einnimmt. Dieser Ansatz dient dazu, einen Retrieval-Augmented Generation (RAG)-Prozess mit externen Daten zu ermöglichen."
+
+-- Allowed LLM providers for this data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T476513814"] = "Zulässige LLM-Anbieter für diese Datenquelle"
+
+-- The description of your ERI server must be between 32 and 512 characters long.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T528250165"] = "Die Beschreibung ihres ERI-Servers muss zwischen 32 und 512 Zeichen lang sein."
+
+-- (Optional) Additional libraries
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T605643256"] = "(Optional) Zusätzliche Bibliotheken"
+
+-- Delete this server preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T662220520"] = "Diese Server-Voreinstellung löschen"
+
+-- No retrieval process configured yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T701892387"] = "Noch kein Abrufprozess konfiguriert."
+
+-- Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T726548639"] = "Hinweis: Damit dieser Assistent mehrere Voreinstellungen verwalten kann, müssen Sie in den Einstellungen die Vorauswahl von Optionen aktivieren."
+
+-- Should we write the generated code to the file system?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T732123150"] = "Sollen wir den erzeugten Code im Dateisystem speichern?"
+
+-- ERI server description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T746826190"] = "ERI-Serverbeschreibung"
+
+-- Are you sure you want to delete the retrieval process '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T748762927"] = "Sind Sie sicher, dass Sie den Abrufvorgang '{0}' löschen möchten?"
+
+-- Data source: hostname
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T761552889"] = "Datenquelle: Hostname"
+
+-- Please select a programming language for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T884206922"] = "Bitte wählen Sie eine Programmiersprache für den ERI-Server aus."
+
+-- The hostname of the data source must not exceed 255 characters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T891356210"] = "Der Hostname der Datenquelle darf nicht länger als 255 Zeichen sein."
+
+-- ERI repository with example implementation in .NET and C#
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T907948048"] = "ERI-Repository mit einer Beispiel-Implementierung in .NET und C#"
+
+-- Login by token: simple to implement and to operate, useful for few users; unusual for many users
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T1080772923"] = "Anmeldung per Token: Einfach zu implementieren und zu bedienen, sinnvoll für wenige Nutzer; unüblich bei vielen Nutzern"
+
+-- Unknown login method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T1650512217"] = "Unbekannte Anmeldemethode"
+
+-- Login by single-sign-on (SSO) using Kerberos: very complex to implement and to operate, useful for many users
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T2755085876"] = "Anmeldung per Single Sign-On (SSO) mit Kerberos: sehr komplex in der Umsetzung und im Betrieb, aber für viele Nutzer hilfreich"
+
+-- Login by username and password: simple to implement and to operate, useful for few users; easy to use for users
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T2776614042"] = "Login per Benutzername und Passwort: einfach zu implementieren und zu bedienen, sinnvoll bei wenigen Nutzern; benutzerfreundlich"
+
+-- No login necessary: useful for public data sources
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T80942322"] = "Kein Login erforderlich: nützlich für öffentliche Datenquellen"
+
+-- Custom description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T1927732460"] = "Benutzerdefinierte Beschreibung"
+
+-- Object storage, like Amazon S3, MinIO, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T1950971562"] = "Objektspeicher wie Amazon S3, MinIO usw."
+
+-- Key-Value store, like Redis, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T206122953"] = "Schlüssel-Werte-Speicher, wie Redis usw."
+
+-- No data source selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T2241819332"] = "Keine Datenquelle ausgewählt"
+
+-- Graph database, like Neo4j, ArangoDB, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T2327735815"] = "Graphdatenbank, wie Neo4j, ArangoDB usw."
+
+-- File system (local or network share)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T2883797032"] = "Dateisystem (lokal oder Netzwerkfreigabe)"
+
+-- Document store, like MongoDB, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T3377619148"] = "Dokumentenspeicher, wie MongoDB usw."
+
+-- Relational database, like MySQL, PostgreSQL, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T3394837922"] = "Relationale Datenbank, wie MySQL, PostgreSQL usw."
+
+-- Unknown data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T752426884"] = "Unbekannte Datenquelle"
+
+-- Windows
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T104858250"] = "Windows"
+
+-- No operating system specified
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T1453731272"] = "Kein Betriebssystem angegeben"
+
+-- Linux
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T2498953917"] = "Linux"
+
+-- Unknown operating system
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T2961688575"] = "Unbekanntes Betriebssystem"
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T1849229205"] = "Sonstiges"
+
+-- No programming language selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T2044057328"] = "Keine Programmiersprache ausgewählt"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T3424652889"] = "Unbekannt"
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
@@ -429,6 +888,75 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1041509726"] = "Text"
+
+-- While loading the I18N data, an issue occurred:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1115416642"] = "Beim Laden der I18N-Daten ist ein Fehler aufgetreten:"
+
+-- Please select a target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1173859091"] = "Bitte wählen Sie eine Zielsprache aus."
+
+-- Removed Content ({0} entries)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1214535771"] = "Entfernte Inhalte ({0} Einträge)"
+
+-- Added Content ({0} entries)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1258080997"] = "Hinzugefügte Inhalte ({0} Einträge)"
+
+-- Localized Content ({0} entries of {1})
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1492071634"] = "Lokalisierte Inhalte ({0} von {1} Einträgen)"
+
+-- Select the language plugin used for comparision.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1523568309"] = "Wählen Sie das Sprach-Plugin für den Vergleich aus."
+
+-- Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1893011391"] = "Das Sprach-Plugin für den Vergleich konnte nicht geladen werden ({0}). Bitte wählen Sie ein gültiges, geladenes und laufendes Sprach-Plugin."
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237828418"] = "Zielsprache"
+
+-- Language plugin used for comparision
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T263317578"] = "Sprach-Plugin für den Vergleich"
+
+-- Localize AI Studio & generate the Lua code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3055634395"] = "Lokalisiere AI Studio & generiere den Lua-Code"
+
+-- Translate MindWork AI Studio text content into another language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3206202961"] = "Übersetze MindWork AI Studio-Textinhalte in eine andere Sprache."
+
+-- Search
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3326517961"] = "Suchen"
+
+-- Key
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3441084684"] = "Schlüssel"
+
+-- Please select a language plugin for comparison.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3505664865"] = "Bitte wählen Sie ein Sprach-Plugin für den Vergleich aus."
+
+-- Was not able to load the I18N plugin. Please check the plugin code.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3687333329"] = "Das I18N-Plugin konnte nicht geladen werden. Bitte überprüfen Sie den Plugin-Code."
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Copy Lua code to clipboard
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3875738742"] = "Lua-Code in die Zwischenablage kopieren"
+
+-- The data is being loaded, please wait...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T453060723"] = "Die Daten werden geladen. Bitte warten ..."
+
+-- The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T458999393"] = "Das ausgewählte Sprach-Plugin für den Vergleich verwendet das IETF-Tag „{0}“, das nicht mit der ausgewählten Zielsprache „{1}“ übereinstimmt. Bitte wähle ein gültiges, geladenes und laufendes Sprach-Plugin aus, das mit der Zielsprache übereinstimmt."
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
+
+-- Please note: neither is a translation needed nor performed for English (USA). Anyway, you might want to generate the related Lua code.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T851515643"] = "Bitte beachten Sie: Für Englisch (USA) ist weder eine Übersetzung erforderlich noch wird eine durchgeführt. Sie können trotzdem den entsprechenden Lua-Code generieren."
+
+-- Localization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T897888480"] = "Lokalisierung"
+
 -- Your icon source
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1302165948"] = "Ihre Icons-Quelle"
 
@@ -449,6 +977,72 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T5968021
 
 -- Please provide a context. This will help the AI to find the right icon. You might type just a keyword or copy a sentence from your text, e.g., from a slide where you want to use the icon.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T653229070"] = "Bitte geben Sie einen Kontext an. Das hilft der KI, das passende Icon zu finden. Sie können einfach ein Stichwort eingeben oder einen Satz aus ihrem Text kopieren, zum Beispiel von einer Folie, auf der Sie das Icon verwenden möchten."
+
+-- (Optional) The company name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1134022609"] = "(Optional) Unternehmensname"
+
+-- (Optional) Provide mandatory information
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1206803170"] = "(Optional) Pflichtangaben"
+
+-- Please provide the country where the job is posted (legal framework).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1257297967"] = "Bitte geben Sie das Land an, in dem die Stelle ausgeschrieben ist (rechtlicher Rahmen)."
+
+-- (Optional) Provide necessary job qualifications
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1288034407"] = "(Optional) Erforderliche Qualifikationen angeben"
+
+-- Describe the responsibilities the person should take on in the company.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1289043339"] = "Beschreiben Sie die Aufgaben, welche die Person im Unternehmen übernehmen wird."
+
+-- Please provide a custom target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1330607941"] = "Bitte geben Sie die benutzerdefinierte Zielsprache an."
+
+-- Create the job posting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1348170275"] = "Stellenanzeige erstellen"
+
+-- This is important to consider the legal framework of the country.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1652348489"] = "Diese Angabe ist wichtig, um den rechtlichen Rahmen des jeweiligen Landes berücksichtigen zu können."
+
+-- Mandatory information that your company requires for all job postings. This can include the company description, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1860534017"] = "Pflichtangaben, die Ihr Unternehmen für alle Stellenanzeigen verlangt. Dazu kann auch die Unternehmensbeschreibung gehören."
+
+-- (Optional) Provide the entry date
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1911333264"] = "(Optional) Geben Sie das Datum der Einstellung an"
+
+-- Describe what the person is supposed to do in the company. This might be just short bullet points.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1965813611"] = "Beschreiben Sie, was die Person im Unternehmen machen soll. Das können auch kurze Stichpunkte sein."
+
+-- Describe what the person should bring to the table. This might be just short bullet points.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T2223185050"] = "Beschreiben Sie, welche Fähigkeiten die Person haben sollte. Das können auch kurze Stichpunkte sein."
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T237828418"] = "Zielsprache"
+
+-- Please provide a job description.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3056799310"] = "Bitte beschreiben Sie die Stelle."
+
+-- Job description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3063567486"] = "Stellenbeschreibung"
+
+-- Provide the country, where the company is located
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3414839564"] = "Geben Sie das Land an, in dem sich das Unternehmen befindet"
+
+-- (Optional) Provide the date until the job posting is valid
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3471426808"] = "(Optional) Geben Sie das Ablaufdatum der Stellenausschreibung an"
+
+-- Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3644893573"] = "Nennen Sie einige wichtige Punkte zu dem Job, den Sie ausschreiben möchten. Die KI wird daraus einen Vorschlag formulieren, den Sie anschließend anpassen können."
+
+-- (Optional) Provide job responsibilities
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3657997222"] = "(Optional) Geben Sie an, welche Verantwortlichkeiten die Person haben wird"
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Job Posting
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3930052338"] = "Stellenausschreibung"
+
+-- (Optional) Provide the work location
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3972042680"] = "(Optional) Geben Sie den Arbeitsort an"
 
 -- Please provide a legal document as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T1160217683"] = "Bitte geben Sie ein rechtliches Dokument ein. Sie können den gewünschten Text aus einem Dokument oder von einer Website kopieren."
@@ -816,6 +1410,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T3058934130"] = "V
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
 
+-- Source {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1700986546"] = "Quelle {0}"
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1725856265"] = "Beschreibung"
 
@@ -1061,6 +1658,84 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T1273315904"] = "Inhalt
 
 -- Show content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T2891011873"] = "Inhalt anzeigen"
+
+-- Choose Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T4256489763"] = "Verzeichnis auswählen"
+
+-- Choose File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Datei auswählen"
+
+-- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+
+-- Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1299550589"] = "Anwendungsfall: Dieser Agent wird verwendet, um Textinhalte zu bereinigen. Er extrahiert den Hauptinhalt, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit diese verwendet werden können."
+
+-- No options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T354528094"] = "Keine Optionen sind vorausgewählt"
+
+-- Preselect text content cleaner options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3659087305"] = "Textbereinigungs-Optionen vorauswählen?"
+
+-- Options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3875604319"] = "Optionen sind vorausgewählt"
+
+-- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann hilfreich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+
+-- Use Case: this agent is used to select the appropriate data sources for the current prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Anwendungsfall: Dieser Assistent wird verwendet, um die passenden Datenquellen für die aktuelle Eingabe auszuwählen."
+
+-- Agent: Data Source Selection Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Auswahlmöglichkeiten für Datenquellen"
+
+-- No options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T354528094"] = "Keine Optionen sind vorausgewählt"
+
+-- Options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3875604319"] = "Optionen sind vorausgewählt"
+
+-- Preselect data source selection options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T991598424"] = "Datenquellen-Auswahloptionen vorauswählen?"
+
+-- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Dies kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+
+-- Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1326813386"] = "Anwendungsfall: Dieser Agent wird verwendet, um beliebige Abrufkontexte in jedem Abrufprozess zu validieren. Möglicherweise gibt es viele solcher Abrufkontexte, und Sie möchten sie alle überprüfen. Daher empfiehlt es sich, für diese Aufgabe ein günstiges und schnelles LLM zu verwenden. Wenn Sie ein lokales oder selbst gehostetes LLM nutzen, sollten Sie auf ein kleines (z. B. 3B) und schnelles Modell achten."
+
+-- The validation agent is enabled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2274149855"] = "Der Validierungs-Agent ist aktiviert"
+
+-- Enable the retrieval context validation agent?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663872937"] = "Den Validierungs-Agenten für den Abrufkontext aktivieren?"
+
+-- Preselect retrieval context validation options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Vorauswahl der Optionen zur Überprüfung des Abrufkontexts?"
+
+-- agents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2669785679"] = "Agenten"
+
+-- When enabled, the retrieval context validation agent will check each retrieval context of any retrieval process, whether a context makes sense for the given prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T298440039"] = "Wenn aktiviert, prüft der Validierungs-Agent für Abrufkontexte bei jedem Abrufprozess, ob der jeweilige Kontext zum eingegebenen Prompt passt."
+
+-- How many validation agents should work simultaneously?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3431541788"] = "Wie viele Validierungs-Agenten sollten gleichzeitig arbeiten?"
+
+-- No options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T354528094"] = "Keine Optionen sind vorausgewählt"
+
+-- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890"] = "Mehr aktive Agenten bedeuten auch, dass entsprechend viele Anfragen gleichzeitig gestellt werden. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Agenten."
+
+-- Options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Optionen sind vorausgewählt"
+
+-- Agent: Retrieval Context Validation Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T928989804"] = "Agent: Optionen zur Überprüfung des Abruf-Kontexts"
+
+-- No validation is performed
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Überprüfung statt"
 
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
