@@ -351,7 +351,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T412437274"] = "
 -- Please provide the compiler messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4225294332"] = "Please provide the compiler messages."
 
--- This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
+-- This coding assistant supports you in writing code. Provide some coding context by pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T566604388"] = "This coding assistant supports you in writing code. Provide some coding context by pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well."
 
 -- Add context
@@ -470,6 +470,399 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T47755021
 
 -- Not specified
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T641241064"] = "Not specified"
+
+-- Self-hosted LLM providers are allowed: users cannot choose any cloud-based provider
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1196461290"] = "Self-hosted LLM providers are allowed: users cannot choose any cloud-based provider"
+
+-- Please select what kind of LLM provider are allowed for this data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1641796568"] = "Please select what kind of LLM provider are allowed for this data source"
+
+-- Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T3264558650"] = "Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider"
+
+-- Unknown option was selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T4096790096"] = "Unknown option was selected"
+
+-- Please describe at least one retrieval process.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1035068989"] = "Please describe at least one retrieval process."
+
+-- Please select which types of LLMs users are allowed to use with the data from this ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1047631678"] = "Please select which types of LLMs users are allowed to use with the data from this ERI server."
+
+-- No, I will enter everything again or configure it manually in the settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1051078592"] = "No, I will enter everything again or configure it manually in the settings"
+
+-- ERI server name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1104420863"] = "ERI server name"
+
+-- The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1125425983"] = "The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"
+
+-- The port of the data source must be between 1 and 65535.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1201129536"] = "The port of the data source must be between 1 and 65535."
+
+-- AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the AI has made in which files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T121294173"] = "AI Studio can save the generated code to the file system. You can select a base folder for this. AI Studio ensures that no files are created outside of this base folder. Furthermore, we recommend that you create a Git repository in this folder. This way, you can see what changes the AI has made in which files."
+
+-- Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if you are responsible for multiple ERI servers.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1244355152"] = "Here you have the option to save different configurations for various ERI servers and switch between them. This is useful if you are responsible for multiple ERI servers."
+
+-- Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1261836894"] = "Please provide a name for your ERI server. This name will be used to identify the server in AI Studio."
+
+-- You have not yet added any ERI server presets.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1267931972"] = "You have not yet added any ERI server presets."
+
+-- <b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1287629674"] = "<b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."
+
+-- The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1302705248"] = "The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model."
+
+-- Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1312468048"] = "Please give your ERI server a name that provides information about the data source and/or its intended purpose. The name will be displayed to users in AI Studio."
+
+-- Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1365243213"] = "Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used."
+
+-- No embedding methods configured yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1391635161"] = "No embedding methods configured yet."
+
+-- Edit Retrieval Process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1423501360"] = "Edit Retrieval Process"
+
+-- Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1456749976"] = "Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos."
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1469573738"] = "Delete"
+
+-- Related links:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Related links:"
+
+-- Please select an ERI specification version for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Please select an ERI specification version for the ERI server."
+
+-- Write code to file system
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1717303021"] = "Write code to file system"
+
+-- Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1729922656"] = "Hint: to allow this assistant to automatically save your changes, you must enable the preselection of values in the settings."
+
+-- You have selected {0} authentication methods
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1755088321"] = "You have selected {0} authentication methods"
+
+-- Select the target directory for the ERI server
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T175742733"] = "Select the target directory for the ERI server"
+
+-- Data source: port
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T179799739"] = "Data source: port"
+
+-- Delete Retrieval Process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T180938091"] = "Delete Retrieval Process"
+
+-- Provider selection for generation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1840198821"] = "Provider selection for generation"
+
+-- Should we automatically save any input made?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1980659256"] = "Should we automatically save any input made?"
+
+-- Auto save
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1997164591"] = "Auto save"
+
+-- An ERI server preset with this name already exists. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2031461801"] = "An ERI server preset with this name already exists. Please choose a different name."
+
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2034620186"] = "Data source"
+
+-- Interactive documentation aka Swagger UI
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2064957876"] = "Interactive documentation aka Swagger UI"
+
+-- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2155983785"] = "When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose."
+
+-- Add Embedding Method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2176833082"] = "Add Embedding Method"
+
+-- For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process. You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows you to test with beta users which process works better. Or you might generally want to give users the choice so they can select the process that best suits their circumstances.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T218617347"] = "For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process. You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows you to test with beta users which process works better. Or you might generally want to give users the choice so they can select the process that best suits their circumstances."
+
+-- You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2202387805"] = "You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc."
+
+-- Operating system on which your ERI will run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Operating system on which your ERI server will run"
+
+-- You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2241311898"] = "You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected."
+
+-- The ERI specification could not be loaded. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2265640084"] = "The ERI specification could not be loaded. Please try again later."
+
+-- You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2299793803"] = "You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions."
+
+-- Are you sure you want to delete the ERI server preset '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396"] = "Are you sure you want to delete the ERI server preset '{0}'?"
+
+-- Data source settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2440619931"] = "Data source settings"
+
+-- Yes, please write or update all generated code to the file system
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T252707279"] = "Yes, please write or update all generated code to the file system"
+
+-- Describe how you planned the authentication process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2531113337"] = "Describe how you planned the authentication process"
+
+-- Please specify the custom programming language for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T257210674"] = "Please specify the custom programming language for the ERI server."
+
+-- Edit Embedding Method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T260789321"] = "Edit Embedding Method"
+
+-- Base directory where to write the code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2610795494"] = "Base directory where to write the code"
+
+-- Delete ERI server preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2627399122"] = "Delete ERI server preset"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T266367750"] = "Name"
+
+-- Create the ERI server
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2903289059"] = "Create the ERI server"
+
+-- Data retrieval settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T295114338"] = "Data retrieval settings"
+
+-- Please provide a base directory for the ERI server to write files to.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2989655350"] = "Please provide a base directory for the ERI server to write files to."
+
+-- You have selected 1 authentication method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2997584553"] = "You have selected 1 authentication method"
+
+-- ERI server presets
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3021250792"] = "ERI server presets"
+
+-- Authentication method(s)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3044928058"] = "Authentication method(s)"
+
+-- (Optional) Describe how you planned the authentication process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3052867096"] = "(Optional) Describe how you planned the authentication process"
+
+-- Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3088814795"] = "Do you want to include additional libraries? Then name them and briefly describe what you want to achieve with them."
+
+-- Add ERI server preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3090449320"] = "Add ERI server preset"
+
+-- Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3105554044"] = "Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc."
+
+-- Embedding settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T315946275"] = "Embedding settings"
+
+-- Please select at least one authentication method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3178184134"] = "Please select at least one authentication method"
+
+-- The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be automatically saved. Would you like this?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3203532492"] = "The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be automatically saved. Would you like this?"
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3267849393"] = "Edit"
+
+-- Programming language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3295594136"] = "Programming language"
+
+-- Data source: product name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3315518334"] = "Data source: product name"
+
+-- No, just show me the code
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "No, just show me the code"
+
+-- Other language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3374524465"] = "Other language"
+
+-- ERI Server {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3443687246"] = "ERI Server {0}"
+
+-- You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3446047228"] = "You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings."
+
+-- <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3485079498"] = "<b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing."
+
+-- Type
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3512062061"] = "Type"
+
+-- Please describe how the selected authentication methods should be used.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T356079033"] = "Please describe how the selected authentication methods should be used."
+
+-- Authentication settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3565127422"] = "Authentication settings"
+
+-- Add Retrieval Process
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3617128581"] = "Add Retrieval Process"
+
+-- Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3637826231"] = "Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio."
+
+-- Please provide the port of the data source.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3641304143"] = "Please provide the port of the data source."
+
+-- Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3668870799"] = "Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server."
+
+-- Delete Embedding
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3691399003"] = "Delete Embedding"
+
+-- Yes, please save my inputs
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3709185824"] = "Yes, please save my inputs"
+
+-- Common ERI server settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T371718034"] = "Common ERI server settings"
+
+-- Download specification
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3770339156"] = "Download specification"
+
+-- Are you sure you want to delete the embedding '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3792084967"] = "Are you sure you want to delete the embedding '{0}'?"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3865031940"] = "Actions"
+
+-- ERI specification version
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3897494556"] = "ERI specification version"
+
+-- Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3973182416"] = "Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server."
+
+-- Please select a data source for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4010020894"] = "Please select a data source for the ERI server."
+
+-- Please select at least one authentication method for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4027569219"] = "Please select at least one authentication method for the ERI server."
+
+-- Data protection settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4078115997"] = "Data protection settings"
+
+-- Please describe the data source of your ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4156384463"] = "Please describe the data source of your ERI server."
+
+-- ERI Server
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4204533420"] = "ERI Server"
+
+-- The name of your ERI server must be between 6 and 60 characters long.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4215418115"] = "The name of your ERI server must be between 6 and 60 characters long."
+
+-- Describe your data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4272497758"] = "Describe your data source"
+
+-- The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T458158948"] = "The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data."
+
+-- Allowed LLM providers for this data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T476513814"] = "Allowed LLM providers for this data source"
+
+-- The description of your ERI server must be between 32 and 512 characters long.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T528250165"] = "The description of your ERI server must be between 32 and 512 characters long."
+
+-- (Optional) Additional libraries
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T605643256"] = "(Optional) Additional libraries"
+
+-- Delete this server preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T662220520"] = "Delete this server preset"
+
+-- No retrieval process configured yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T701892387"] = "No retrieval process configured yet."
+
+-- Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T726548639"] = "Hint: to allow this assistant to manage multiple presets, you must enable the preselection of values in the settings."
+
+-- Should we write the generated code to the file system?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T732123150"] = "Should we write the generated code to the file system?"
+
+-- ERI server description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T746826190"] = "ERI server description"
+
+-- Are you sure you want to delete the retrieval process '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T748762927"] = "Are you sure you want to delete the retrieval process '{0}'?"
+
+-- Data source: hostname
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T761552889"] = "Data source: hostname"
+
+-- Please select a programming language for the ERI server.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T884206922"] = "Please select a programming language for the ERI server."
+
+-- The hostname of the data source must not exceed 255 characters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T891356210"] = "The hostname of the data source must not exceed 255 characters."
+
+-- ERI repository with example implementation in .NET and C#
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T907948048"] = "ERI repository with example implementation in .NET and C#"
+
+-- Login by token: simple to implement and to operate, useful for few users; unusual for many users
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T1080772923"] = "Login by token: simple to implement and to operate, useful for few users; unusual for many users"
+
+-- Unknown login method
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T1650512217"] = "Unknown login method"
+
+-- Login by single-sign-on (SSO) using Kerberos: very complex to implement and to operate, useful for many users
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T2755085876"] = "Login by single-sign-on (SSO) using Kerberos: very complex to implement and to operate, useful for many users"
+
+-- Login by username and password: simple to implement and to operate, useful for few users; easy to use for users
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T2776614042"] = "Login by username and password: simple to implement and to operate, useful for few users; easy to use for users"
+
+-- No login necessary: useful for public data sources
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::AUTHEXTENSIONS::T80942322"] = "No login necessary: useful for public data sources"
+
+-- Custom description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T1927732460"] = "Custom description"
+
+-- Object storage, like Amazon S3, MinIO, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T1950971562"] = "Object storage, like Amazon S3, MinIO, etc."
+
+-- Key-Value store, like Redis, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T206122953"] = "Key-Value store, like Redis, etc."
+
+-- No data source selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T2241819332"] = "No data source selected"
+
+-- Graph database, like Neo4j, ArangoDB, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T2327735815"] = "Graph database, like Neo4j, ArangoDB, etc."
+
+-- File system (local or network share)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T2883797032"] = "File system (local or network share)"
+
+-- Document store, like MongoDB, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T3377619148"] = "Document store, like MongoDB, etc."
+
+-- Relational database, like MySQL, PostgreSQL, etc.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T3394837922"] = "Relational database, like MySQL, PostgreSQL, etc."
+
+-- Unknown data source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::DATASOURCESEXTENSIONS::T752426884"] = "Unknown data source"
+
+-- Windows
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T104858250"] = "Windows"
+
+-- No operating system specified
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T1453731272"] = "No operating system specified"
+
+-- Linux
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T2498953917"] = "Linux"
+
+-- Unknown operating system
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::OPERATINGSYSTEMEXTENSIONS::T2961688575"] = "Unknown operating system"
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T1849229205"] = "Other"
+
+-- No programming language selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T2044057328"] = "No programming language selected"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T3424652889"] = "Unknown"
 
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
