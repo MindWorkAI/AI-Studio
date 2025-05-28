@@ -44,7 +44,7 @@ public partial class ConfidenceInfo : MSGComponentBase
     {
         var index = 0;
         foreach (var source in this.currentConfidence.Sources)
-            yield return ($"Source {++index}", source);
+            yield return (string.Format(T("Source {0}"), ++index), source);
     }
 
     private string GetCurrentConfidenceColor() => $"color: {this.currentConfidence.Level.GetColor(this.SettingsManager)};";
