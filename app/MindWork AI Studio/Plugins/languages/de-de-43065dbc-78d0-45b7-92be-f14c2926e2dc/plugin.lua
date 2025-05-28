@@ -1659,6 +1659,84 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T1273315904"] = "Inhalt
 -- Show content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T2891011873"] = "Inhalt anzeigen"
 
+-- Choose Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T4256489763"] = "Verzeichnis auswählen"
+
+-- Choose File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Datei auswählen"
+
+-- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+
+-- Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1299550589"] = "Anwendungsfall: Dieser Agent wird verwendet, um Textinhalte zu bereinigen. Er extrahiert den Hauptinhalt, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit diese verwendet werden können."
+
+-- No options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T354528094"] = "Keine Optionen sind vorausgewählt"
+
+-- Preselect text content cleaner options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3659087305"] = "Textbereinigungs-Optionen vorauswählen?"
+
+-- Options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3875604319"] = "Optionen sind vorausgewählt"
+
+-- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann hilfreich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+
+-- Use Case: this agent is used to select the appropriate data sources for the current prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Anwendungsfall: Dieser Assistent wird verwendet, um die passenden Datenquellen für die aktuelle Eingabe auszuwählen."
+
+-- Agent: Data Source Selection Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Auswahlmöglichkeiten für Datenquellen"
+
+-- No options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T354528094"] = "Keine Optionen sind vorausgewählt"
+
+-- Options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3875604319"] = "Optionen sind vorausgewählt"
+
+-- Preselect data source selection options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T991598424"] = "Datenquellen-Auswahloptionen vorauswählen?"
+
+-- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Dies kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+
+-- Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1326813386"] = "Anwendungsfall: Dieser Agent wird verwendet, um beliebige Abrufkontexte in jedem Abrufprozess zu validieren. Möglicherweise gibt es viele solcher Abrufkontexte, und Sie möchten sie alle überprüfen. Daher empfiehlt es sich, für diese Aufgabe ein günstiges und schnelles LLM zu verwenden. Wenn Sie ein lokales oder selbst gehostetes LLM nutzen, sollten Sie auf ein kleines (z. B. 3B) und schnelles Modell achten."
+
+-- The validation agent is enabled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2274149855"] = "Der Validierungs-Agent ist aktiviert"
+
+-- Enable the retrieval context validation agent?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663872937"] = "Den Validierungs-Agenten für den Abrufkontext aktivieren?"
+
+-- Preselect retrieval context validation options?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Vorauswahl der Optionen zur Überprüfung des Abrufkontexts?"
+
+-- agents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2669785679"] = "Agenten"
+
+-- When enabled, the retrieval context validation agent will check each retrieval context of any retrieval process, whether a context makes sense for the given prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T298440039"] = "Wenn aktiviert, prüft der Validierungs-Agent für Abrufkontexte bei jedem Abrufprozess, ob der jeweilige Kontext zum eingegebenen Prompt passt."
+
+-- How many validation agents should work simultaneously?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3431541788"] = "Wie viele Validierungs-Agenten sollten gleichzeitig arbeiten?"
+
+-- No options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T354528094"] = "Keine Optionen sind vorausgewählt"
+
+-- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890"] = "Mehr aktive Agenten bedeuten auch, dass entsprechend viele Anfragen gleichzeitig gestellt werden. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Agenten."
+
+-- Options are preselected
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Optionen sind vorausgewählt"
+
+-- Agent: Retrieval Context Validation Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T928989804"] = "Agent: Optionen zur Überprüfung des Abruf-Kontexts"
+
+-- No validation is performed
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Überprüfung statt"
+
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
 
