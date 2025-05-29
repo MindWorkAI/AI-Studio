@@ -59,5 +59,5 @@ public sealed class LocalConstantsAnalyzer : DiagnosticAnalyzer
     }
     
     private static bool IsUpperCase(string name) => name.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_') && 
-                                                    !string.IsNullOrEmpty(name) && name.Any(char.IsLetter);
+                                                    !string.IsNullOrWhiteSpace(name) && name.Any(char.IsLetter);
 }

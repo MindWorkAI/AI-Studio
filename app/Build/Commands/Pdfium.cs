@@ -48,7 +48,7 @@ public static class Pdfium
         //
         Console.Write(" deploying ...");
         var library = GetLibraryPath(rid);
-        if (string.IsNullOrEmpty(library.Path))
+        if (string.IsNullOrWhiteSpace(library.Path))
         {
             Console.WriteLine($" failed to find the library path for {rid.ToUserFriendlyName()}");
             return;
