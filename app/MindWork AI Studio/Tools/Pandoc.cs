@@ -186,7 +186,7 @@ public static partial class Pandoc
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Fehler: {ex.Message}");
+            LOG.LogError(ex, "An error occurred while installing Pandoc.");
         }
     }
     
