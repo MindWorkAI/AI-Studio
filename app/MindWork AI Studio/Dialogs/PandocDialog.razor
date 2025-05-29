@@ -6,31 +6,15 @@
         @if (this.showInstallPage)
         {
             <div class="mb-4">
-                <MudText Class="mb-2">
+                <MudJustifiedText Class="mb-2">
                     AI Studio relies on the <strong>free and open-sourced</strong> third-party app <strong>Pandoc</strong> to process and retrieve data from local
                     Office files (ex. <strong>Word</strong>) and later other text formats like LaTeX.
-                </MudText>
-                <MudText>
+                </MudJustifiedText>
+                <MudJustifiedText>
                     Unfortunately Pandoc's GPL license is not compatible with AI Studios licences, nonetheless software under GPL is generally free to use and 
-                    free of charge as well.
-                    Therefore you have to accept Pandoc's GPL license before we can download and install Pandoc for free
-                    automatically for you <strong>(recommended)</strong>.
-                    However you can download it yourself manually with the instructions below.
-                </MudText>
-                <MudExpansionPanels>
-                    <MudExpansionPanel Text="GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="OnExpandedChanged">
-                        @if (this.isLoading)
-                        {
-                            <MudSkeleton />
-                            <MudSkeleton Animation="Animation.Wave" />
-                            <MudSkeleton />
-                        }
-                        else if (!string.IsNullOrEmpty(this.licenseText))
-                        {
-                            <MudJustifiedText>@this.licenseText</MudJustifiedText>
-                        }
-                    </MudExpansionPanel>
-                </MudExpansionPanels>
+                    free of charge as well. Therefore you have to accept Pandoc's GPL license before we can download and install Pandoc for free
+                    automatically for you <strong>(recommended)</strong>. However you can download it yourself manually with the instructions below.
+                </MudJustifiedText>
             </div>
             <MudExpansionPanels Class="mb-3" MultiExpansion="@false" Outlined="false" Elevation="0">
                 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoFixHigh" HeaderText="Automatic installation" IsExpanded="true">
