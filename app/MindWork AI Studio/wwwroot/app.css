@@ -119,9 +119,11 @@
     font-family: Consolas, "Courier New", monospace  !important;
     text-align: left !important;
 }
+
 .code-block pre {
     margin: 0 !important;
 }
+
 .code-block code {
     font-family: inherit !important;
 }
