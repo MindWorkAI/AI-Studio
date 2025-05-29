@@ -74,7 +74,7 @@ public static partial class Pandoc
             if (process.ExitCode != 0)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, $"The pandoc process exited unexpectedly."));
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "The pandoc process exited unexpectedly."));
                 
                 LOG.LogError("The pandoc process was exited with code {ProcessExitCode}", process.ExitCode);
                 return false;
@@ -84,7 +84,7 @@ public static partial class Pandoc
             if (!versionMatch.Success)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"pandoc --version returned an invalid format."));
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, "pandoc --version returned an invalid format."));
                 
                 LOG.LogError("pandoc --version returned an invalid format:\n {Output}", output);
                 return false;
