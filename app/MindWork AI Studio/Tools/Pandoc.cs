@@ -112,7 +112,7 @@ public static partial class Pandoc
             var subdirectories = Directory.GetDirectories(pandocDirectory);
             foreach (var subdirectory in subdirectories)
             {
-                var pandocPath = Path.Combine(subdirectory, "pandoc.exe");
+                var pandocPath = Path.Combine(subdirectory, PandocExecutableName);
                 if (File.Exists(pandocPath))
                     return true;
             }
