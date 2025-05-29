@@ -185,7 +185,8 @@ public static partial class Pandoc
     
     private static void ClearFolder(string path)
     {
-        if (!Directory.Exists(path)) return;
+        if (!Directory.Exists(path))
+            return;
         
         try
         {
