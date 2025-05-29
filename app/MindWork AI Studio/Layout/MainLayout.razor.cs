@@ -90,7 +90,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED
+            Event.SHOW_ERROR, Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM,
+            Event.PLUGINS_RELOADED
         ]);
         
         // Set the snackbar for the update service:
@@ -176,12 +177,24 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 this.StateHasChanged();
                 break;
             
+            case Event.SHOW_SUCCESS:
+                if (data is DataSuccessMessage success)
+                    success.Show(this.Snackbar);
+                
+                break;
+            
             case Event.SHOW_ERROR:
-                if (data is Error error)
+                if (data is DataErrorMessage error)
                     error.Show(this.Snackbar);
                 
                 break;
             
+            case Event.SHOW_WARNING:
+                if (data is DataWarningMessage warning)
+                    warning.Show(this.Snackbar);
+                
+                break;
+
             case Event.STARTUP_PLUGIN_SYSTEM:
                 if(PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
                 {

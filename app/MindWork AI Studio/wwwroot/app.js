@@ -26,3 +26,13 @@ window.clearDiv = function (divName) {
 window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
+
+window.triggerDownload = function(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', filename);
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}

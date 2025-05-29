@@ -1,0 +1,15 @@
+﻿
+@if (!this.IsInline)
+{
+    @if (this.ParentTabs is null)
+    {
+        <MudPaper Class="code-block no-elevation" Style="@this.BlockPadding()">
+            <pre><code>@this.ChildContent</code></pre>
+        </MudPaper>
+    }
+}
+else
+{
+    <span class="inline-code-block"><kbd>@this.ChildContent</kbd></span>
+}
+
