@@ -131,5 +131,5 @@ public sealed class PandocProcessBuilder
     /// <summary>
     /// Reads the os platform to determine the used executable name.
     /// </summary>
-    private static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
+    public static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
 }
