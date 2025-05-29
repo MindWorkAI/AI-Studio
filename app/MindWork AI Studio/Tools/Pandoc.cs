@@ -36,15 +36,19 @@ public static partial class Pandoc
     /// <param name="outputFormat">The format of the output file (e.g., pdf, docx, etc.).</param>
     /// <param name="additionalArgs">Additional arguments to pass to the pandoc command (optional).</param>
     /// <returns>The ProcessStartInfo object configured to run pandoc with the specified parameters.</returns>
-    public static async Task<ProcessStartInfo> PreparePandocProcess(RustService rustService, string inputFile, string outputFile, string inputFormat, string outputFormat, string? additionalArgs = null) => new()
+    public static async Task<PandocPreparedProcess> PreparePandocProcess(RustService rustService, string inputFile, string outputFile, string inputFormat, string outputFormat, string? additionalArgs = null)
     {
-        FileName = await PandocExecutablePath(rustService),
-        Arguments = $"{inputFile} -f {inputFormat} -t {outputFormat} {additionalArgs ?? string.Empty} -o {outputFile}",
-        RedirectStandardOutput = true,
-        RedirectStandardError = true,
-        UseShellExecute = false,
-        CreateNoWindow = true
-    };
+        var pandocExecutable = await PandocExecutablePath(rustService);
+        return new (new ProcessStartInfo
+        {
+            FileName = pandocExecutable.Executable,
+            Arguments = $"{inputFile} -f {inputFormat} -t {outputFormat} {additionalArgs ?? string.Empty} -o {outputFile}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        }, pandocExecutable.IsLocalInstallation);
+    }
 
     /// <summary>
     /// Checks if pandoc is available on the system and can be started as a process or is present in AI Studio's data dir.
@@ -52,11 +56,12 @@ public static partial class Pandoc
     /// <param name="rustService">Global rust service to access file system and data dir.</param>
     /// <param name="showMessages">Controls if snackbars are shown to the user.</param>
     /// <returns>True, if pandoc is available and the minimum required version is met, else false.</returns>
-    public static async Task<bool> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
+    public static async Task<PandocInstallation> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
     {
         try
         {
-            var startInfo = await PreparePandocProcess(rustService, string.Empty, string.Empty, string.Empty, string.Empty);
+            var preparedProcess = await PreparePandocProcess(rustService, string.Empty, string.Empty, string.Empty, string.Empty);
+            var startInfo = preparedProcess.StartInfo;
             startInfo.Arguments = "--version";
             
             using var process = Process.Start(startInfo);
@@ -66,7 +71,7 @@ public static partial class Pandoc
                     await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, "The pandoc process could not be started."));
                 
                 LOG.LogInformation("The pandoc process was not started, it was null");
-                return false;
+                return new(false, "Was not able to start the pandoc process.", false, string.Empty, preparedProcess.IsLocal);
             }
                 
             var output = await process.StandardOutput.ReadToEndAsync();
@@ -77,7 +82,7 @@ public static partial class Pandoc
                     await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "The pandoc process exited unexpectedly."));
                 
                 LOG.LogError("The pandoc process was exited with code {ProcessExitCode}", process.ExitCode);
-                return false;
+                return new(false, "Pandoc is not available on the system or the process exited unexpectedly.", false, string.Empty, preparedProcess.IsLocal);
             }
 
             var versionMatch = PandocCmdRegex().Match(output);
@@ -87,25 +92,25 @@ public static partial class Pandoc
                     await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, "pandoc --version returned an invalid format."));
                 
                 LOG.LogError("pandoc --version returned an invalid format:\n {Output}", output);
-                return false;
+                return new(false, "Pandoc is not available on the system or the version could not be parsed.", false, string.Empty, preparedProcess.IsLocal);
             }
             var versions = versionMatch.Groups[1].Value;
             var installedVersion = Version.Parse(versions);
+            var installedVersionString = installedVersion.ToString();
             
             if (installedVersion >= MINIMUM_REQUIRED_VERSION)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {installedVersion.ToString()} is installed."));
+                    await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {installedVersionString} is installed."));
                 
-                return true;
+                return new(true, string.Empty, true, installedVersionString, preparedProcess.IsLocal);
             }
             
             if (showMessages)
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Build, $"Pandoc {installedVersion.ToString()} is installed, but it doesn't match the required version ({MINIMUM_REQUIRED_VERSION.ToString()})."));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Build, $"Pandoc {installedVersionString} is installed, but it doesn't match the required version ({MINIMUM_REQUIRED_VERSION.ToString()})."));
             
-            LOG.LogInformation("Pandoc {Installed} is installed, but it does not match the required version ({Requirement})", installedVersion.ToString(), MINIMUM_REQUIRED_VERSION.ToString());
-            return false;
-
+            LOG.LogInformation("Pandoc {Installed} is installed, but it does not match the required version ({Requirement})", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
+            return new(true, $"Pandoc {installedVersionString} is installed, but it does not match the required version ({MINIMUM_REQUIRED_VERSION.ToString()}).", false, installedVersionString, preparedProcess.IsLocal);
         }
         catch (Exception e)
         {
@@ -113,7 +118,7 @@ public static partial class Pandoc
                 await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, "Pandoc is not installed."));
             
             LOG.LogError("Pandoc is not installed and threw an exception: {Message}", e.Message);
-            return false;
+            return new(false, "Pandoc is not installed or could not be started.", false, string.Empty, false);
         }
     }
 
@@ -305,7 +310,7 @@ public static partial class Pandoc
     /// </remarks>
     /// <param name="rustService">Global rust service to access file system and data dir.</param>
     /// <returns>Path to the pandoc executable.</returns>
-    private static async Task<string> PandocExecutablePath(RustService rustService)
+    private static async Task<PandocExecutable> PandocExecutablePath(RustService rustService)
     {
         //
         // First, we try to find the pandoc executable in the data directory.
@@ -320,7 +325,7 @@ public static partial class Pandoc
             {
                 var pandocPath = Path.Combine(subdirectory, executableName);
                 if (File.Exists(pandocPath))
-                    return pandocPath;
+                    return new(pandocPath, true);
             }
         }
         catch
@@ -331,7 +336,7 @@ public static partial class Pandoc
         //
         // When no local installation was found, we assume that the pandoc executable is in the system PATH.
         //
-        return PandocExecutableName;
+        return new(PandocExecutableName, false);
     }
 
     private static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");

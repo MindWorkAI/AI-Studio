@@ -46,7 +46,8 @@ public partial class PandocDialog : ComponentBase
 
     private async Task CheckPandocAvailabilityAsync()
     {
-        this.isPandocAvailable = await Pandoc.CheckAvailabilityAsync(this.RustService);
+        var pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService);
+        this.isPandocAvailable = pandocInstallation.IsAvailable;
         this.showSkeleton = false;
         await this.InvokeAsync(this.StateHasChanged);
     }
