@@ -7,8 +7,8 @@ public partial class CodeTabs : ComponentBase
     [Parameter] 
     public RenderFragment? ChildContent { get; set; }
     
-    private List<CodeTabItem> blocks = new();
-    private int selectedIndex = 0;
+    private readonly List<CodeTabItem> blocks = new();
+    private int selectedIndex;
 
     internal void RegisterBlock(string title, RenderFragment fragment)
     {
@@ -17,12 +17,14 @@ public partial class CodeTabs : ComponentBase
             Title = title,
             Fragment = fragment,
         });
+        
         this.StateHasChanged();
     }
 
     private class CodeTabItem
     {
         public string Title { get; init; } = string.Empty;
+        
         public RenderFragment Fragment { get; init; } = null!;
     }
 }
