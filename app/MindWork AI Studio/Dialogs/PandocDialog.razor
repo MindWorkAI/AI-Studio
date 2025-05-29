@@ -45,7 +45,7 @@
                 
                 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="Manual installation">
                     <MudText Class="mb-2">
-                        If you prefer to install Pandoc yourself, please follow one of these two guides. Installers are only available for Windows and Mac.
+                        If you prefer to install Pandoc yourself, please follow one of these two guides. Installers are only available for Windows and macOS.
                     </MudText>
                     
                     <MudExpansionPanels Outlined="false" Elevation="0">
@@ -56,8 +56,8 @@
                                     Eventually you need to allow the download of the installer in the download window.
                                     <CodeTabs>
                                         <CodeBlock Title="Windows">pandoc-@(PANDOC_VERSION)-windows-x86_64.msi</CodeBlock>
-                                        <CodeBlock Title="Mac OS x86">pandoc-@(PANDOC_VERSION)-x86_64-macOS.pkg</CodeBlock>
-                                        <CodeBlock Title="Mac OS ARM">pandoc-@(PANDOC_VERSION)-arm64-macOS.pkg</CodeBlock>
+                                        <CodeBlock Title="macOS x86">pandoc-@(PANDOC_VERSION)-x86_64-macOS.pkg</CodeBlock>
+                                        <CodeBlock Title="macOS ARM">pandoc-@(PANDOC_VERSION)-arm64-macOS.pkg</CodeBlock>
                                     </CodeTabs>
                                 </MudListItem>
                                 <MudListItem T="string">
@@ -85,7 +85,7 @@
                                     Extract the archive to a folder of your choice.
                                     <CodeTabs>
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc</CodeBlock>
-                                        <CodeBlock Title="Mac OS">/usr/local/bin/pandoc</CodeBlock>
+                                        <CodeBlock Title="macOS">/usr/local/bin/pandoc</CodeBlock>
                                         <CodeBlock Title="Linux">/usr/local/bin/pandoc</CodeBlock>
                                     </CodeTabs>
                                 </MudListItem>
@@ -95,7 +95,7 @@
                                     clipboard.
                                     <CodeTabs>
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-@(PANDOC_VERSION)</CodeBlock>
-                                        <CodeBlock Title="Mac OS">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
+                                        <CodeBlock Title="macOS">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="Linux">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
                                     </CodeTabs>
                                 </MudListItem>
@@ -106,7 +106,7 @@
                                     into your command line interface.
                                     <CodeTabs>
                                         <CodeBlock Title="Windows">> pandoc.exe --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
-                                        <CodeBlock Title="Mac OS">> pandoc --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
+                                        <CodeBlock Title="macOS">> pandoc --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="Linux">> pandoc --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
                                     </CodeTabs>
                                 </MudListItem>
