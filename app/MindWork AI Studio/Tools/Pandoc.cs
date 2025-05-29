@@ -1,15 +1,21 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
+using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Services;
+
+using SharedTools;
 
 namespace AIStudio.Tools;
 
 public static partial class Pandoc
 {
-    private const string CPU_ARCHITECTURE = "win-x64";
+    private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
+    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
+    private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
+    
     private const string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
     
@@ -233,11 +239,26 @@ public static partial class Pandoc
         var baseUri = $"{DOWNLOAD_URL}/{version}/pandoc-{version}-";
         return CPU_ARCHITECTURE switch
         {
-            "win-x64" => $"{baseUri}windows-x86_64.zip",
-            "osx-x64" => $"{baseUri}x86_64-macOS.zip",
-            "osx-arm64" => $"{baseUri}arm64-macOS.zip",
-            "linux-x64" => $"{baseUri}linux-amd64.tar.gz",
-            "linux-arm" => $"{baseUri}linux-arm64.tar.gz",
+            //
+            // Unfortunately, pandoc is not yet available for ARM64 Windows systems,
+            // so we have to use the x86_64 version for now. ARM Windows contains
+            // an x86_64 emulation layer, so it should work fine for now.
+            //
+            // Pandoc would be available for ARM64 Windows, but the Haskell compiler
+            // does not support ARM64 Windows yet. Here are the related issues:
+            //
+            // - Haskell compiler: https://gitlab.haskell.org/ghc/ghc/-/issues/24603
+            // - Haskell ARM MR: https://gitlab.haskell.org/ghc/ghc/-/merge_requests/13856
+            // - Pandoc ARM64: https://github.com/jgm/pandoc/issues/10095
+            //
+            RID.WIN_X64 or RID.WIN_ARM64 => $"{baseUri}windows-x86_64.zip",
+            
+            RID.OSX_X64 => $"{baseUri}x86_64-macOS.zip",
+            RID.OSX_ARM64 => $"{baseUri}arm64-macOS.zip",
+            
+            RID.LINUX_X64 => $"{baseUri}linux-amd64.tar.gz",
+            RID.LINUX_ARM64 => $"{baseUri}linux-arm64.tar.gz",
+            
             _ => string.Empty,
         };
     }
@@ -253,12 +274,27 @@ public static partial class Pandoc
 
         switch (CPU_ARCHITECTURE)
         {
-            case "win-x64":
+            //
+            // Unfortunately, pandoc is not yet available for ARM64 Windows systems,
+            // so we have to use the x86_64 version for now. ARM Windows contains
+            // an x86_64 emulation layer, so it should work fine for now.
+            //
+            // Pandoc would be available for ARM64 Windows, but the Haskell compiler
+            // does not support ARM64 Windows yet. Here are the related issues:
+            //
+            // - Haskell compiler: https://gitlab.haskell.org/ghc/ghc/-/issues/24603
+            // - Haskell ARM MR: https://gitlab.haskell.org/ghc/ghc/-/merge_requests/13856
+            // - Pandoc ARM64: https://github.com/jgm/pandoc/issues/10095
+            //
+            case RID.WIN_X64 or RID.WIN_ARM64:
                 return $"{baseUri}windows-x86_64.msi";
-            case "osx-x64":
+            
+            case RID.OSX_X64:
                 return $"{baseUri}x86_64-macOS.pkg";
-            case "osx-arm64":
-                return $"{baseUri}arm64-macOS.pkg\n";
+            
+            case RID.OSX_ARM64:
+                return $"{baseUri}arm64-macOS.pkg";
+            
             default:
                 await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"Installers are not available on {CPU_ARCHITECTURE} systems."));
                 return string.Empty;
@@ -269,7 +305,7 @@ public static partial class Pandoc
     /// Reads the os platform to determine the used executable name
     /// </summary>
     /// <returns>Name of the pandoc executable</returns>
-    private static string GetPandocExecutableName() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pandoc.exe" : "pandoc";
+    private static string GetPandocExecutableName() => CPU_ARCHITECTURE is RID.WIN_ARM64 ? "pandoc.exe" : "pandoc";
 
     private static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");
     
