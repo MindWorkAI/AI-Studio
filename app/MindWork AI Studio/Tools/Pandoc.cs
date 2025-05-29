@@ -34,7 +34,8 @@ public static partial class Pandoc
             return true;
         }
         
-        if (HasPandoc(installDir)) return true;
+        if (HasPandoc(installDir))
+            return true;
         
         try
         {
@@ -103,21 +104,18 @@ public static partial class Pandoc
         try
         {
             var subdirectories = Directory.GetDirectories(pandocDirectory);
-        
             foreach (var subdirectory in subdirectories)
             {
                 var pandocPath = Path.Combine(subdirectory, "pandoc.exe");
                 if (File.Exists(pandocPath))
-                {
                     return true;
-                }
             }
         
             return false;
         }
         catch (Exception ex)
         {
-            LOG.LogInformation("Pandoc is not installed in the data directory and might have thrown and error:\n{ErrorMessage}", ex.Message);
+            LOG.LogInformation("Pandoc is not installed in the data directory and might have thrown and error:  {0}", ex.Message);
             return false;
         }
     }
@@ -207,17 +205,16 @@ public static partial class Pandoc
 
         if (!response.IsSuccessStatusCode)
         {
-            LOG.LogError("Code {StatusCode}: Could not fetch Pandoc's latest page:\n {Response}", response.StatusCode, response.RequestMessage);
+            LOG.LogError("Code {StatusCode}: Could not fetch Pandoc's latest page: {Response}", response.StatusCode, response.RequestMessage);
             await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
             return FALLBACK_VERSION.ToString();
         }
 
         var htmlContent = await response.Content.ReadAsStringAsync();
-
         var versionMatch = LatestVersionRegex().Match(htmlContent);
         if (!versionMatch.Success)
         {
-            LOG.LogError("The latest version regex returned nothing:\n {Value}", versionMatch.Groups.ToString());
+            LOG.LogError("The latest version regex returned nothing: {Value}", versionMatch.Groups.ToString());
             await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
             return FALLBACK_VERSION.ToString();
         }
