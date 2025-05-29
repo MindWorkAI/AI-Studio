@@ -8,7 +8,7 @@ public partial class CodeTabs : ComponentBase
     public RenderFragment? ChildContent { get; set; }
     
     [Parameter]
-    public int SelectedIndex { get; set; } = 0;
+    public int SelectedIndex { get; set; }
     
     private readonly List<CodeTabItem> blocks = new();
 
