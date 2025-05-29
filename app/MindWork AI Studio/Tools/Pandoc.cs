@@ -32,14 +32,6 @@ public static partial class Pandoc
     public static async Task<bool> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
     {
         var installDir = await GetPandocDataFolder(rustService);
-        var subdirectories = Directory.GetDirectories(installDir);
-
-        if (subdirectories.Length > 1)
-        {
-            await InstallAsync(rustService);
-            return true;
-        }
-        
         if (HasPandoc(installDir))
             return true;
         
