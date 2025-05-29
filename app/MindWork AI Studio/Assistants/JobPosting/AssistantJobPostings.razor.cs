@@ -7,13 +7,9 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
 {
     public override Tools.Components Component => Tools.Components.JOB_POSTING_ASSISTANT;
     
-    protected override string Title => "Job Posting";
+    protected override string Title => T("Job Posting");
     
-    protected override string Description =>
-        """
-        Provide some key points about the job you want to post. The AI will then
-        formulate a suggestion that you can finalize.
-        """;
+    protected override string Description => T("Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.");
     
     protected override string SystemPrompt => 
         $"""
@@ -47,7 +43,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Create the job posting";
+    protected override string SubmitText => T("Create the job posting");
 
     protected override Func<Task> SubmitAction => this.CreateJobPosting;
 
@@ -126,7 +122,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom target language.";
+            return T("Please provide a custom target language.");
         
         return null;
     }
@@ -134,7 +130,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string? ValidateJobDescription(string jobDescription)
     {
         if(string.IsNullOrWhiteSpace(jobDescription))
-            return "Please provide a job description.";
+            return T("Please provide a job description.");
         
         return null;
     }
@@ -142,7 +138,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string? ValidateCountryLegalFramework(string countryLegalFramework)
     {
         if(string.IsNullOrWhiteSpace(countryLegalFramework))
-            return "Please provide the country where the job is posted (legal framework).";
+            return T("Please provide the country where the job is posted (legal framework).");
         
         return null;
     }

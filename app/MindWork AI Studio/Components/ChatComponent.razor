@@ -58,19 +58,19 @@
                 this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                 && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
             {
-                <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.SnippetFolder" OnClick="() => this.ToggleWorkspaceOverlay()"/>
                 </MudTooltip>
             }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
             {
-                <MudTooltip Text="Save chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Save chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="() => this.SaveThread()" Disabled="@(!this.CanThreadBeSaved)"/>
                 </MudTooltip>
             }
 
-            <MudTooltip Text="Start temporary chat" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+            <MudTooltip Text="@T("Start temporary chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudIconButton Icon="@Icons.Material.Filled.AddComment" OnClick="() => this.StartNewChat(useSameWorkspace: false)"/>
             </MudTooltip>
 
@@ -80,17 +80,18 @@
                     <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="() => this.StartNewChat(useSameWorkspace: true)"/>
                 </MudTooltip>
             }
-
+            
+            <ChatTemplateSelection CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
-                <MudTooltip Text="Delete this chat & start a new one" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="() => this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true)" Disabled="@(!this.CanThreadBeSaved)"/>
                 </MudTooltip>
             }
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
             {
-                <MudTooltip Text="Move the chat to a workspace, or to another if it is already in one." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="() => this.MoveChatToWorkspace()"/>
                 </MudTooltip>
             }
@@ -102,13 +103,13 @@
 
             @if (this.isStreaming && this.cancellationTokenSource is not null)
             {
-                <MudTooltip Text="Stop generation" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("Stop generation")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
                 </MudTooltip>
             }
-
-            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged"/>
             
+            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
+
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
                 <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" PopoverButtonClasses="ma-3" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
@@ -116,7 +117,7 @@
             
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="The selected provider is not allowed in this chat due to data security reasons." Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security reasons.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }

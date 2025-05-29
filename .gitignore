@@ -1,3 +1,11 @@
+# Ignore any startup.env file:
+startup.env
+
+# Ignore pdfium library:
+libpdfium.dylib
+libpdfium.so
+libpdfium.dll
+
 # User-specific files
 *.rsuser
 *.suo

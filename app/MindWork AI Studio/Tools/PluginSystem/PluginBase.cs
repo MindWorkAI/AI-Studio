@@ -8,6 +8,8 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 public abstract partial class PluginBase : IPluginMetadata
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
+    
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState state;
 
@@ -155,21 +157,21 @@ public abstract partial class PluginBase : IPluginMetadata
     {
         if (!this.state.Environment["ID"].TryRead<string>(out var idText))
         {
-            message = "The field ID does not exist or is not a valid string.";
+            message = TB("The field ID does not exist or is not a valid string.");
             id = Guid.Empty;
             return false;
         }
 
         if (!Guid.TryParse(idText, out id))
         {
-            message = "The field ID is not a valid GUID / UUID. The ID must be formatted in the 8-4-4-4-12 format (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).";
+            message = TB("The field ID is not a valid GUID / UUID. The ID must be formatted in the 8-4-4-4-12 format (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).");
             id = Guid.Empty;
             return false;
         }
         
         if(id == Guid.Empty)
         {
-            message = "The field ID is empty. The ID must be formatted in the 8-4-4-4-12 format (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).";
+            message = TB("The field ID is empty. The ID must be formatted in the 8-4-4-4-12 format (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).");
             return false;
         }
 
@@ -187,14 +189,14 @@ public abstract partial class PluginBase : IPluginMetadata
     {
         if (!this.state.Environment["NAME"].TryRead(out name))
         {
-            message = "The field NAME does not exist or is not a valid string.";
+            message = TB("The field NAME does not exist or is not a valid string.");
             name = string.Empty;
             return false;
         }
         
         if(string.IsNullOrWhiteSpace(name))
         {
-            message = "The field NAME is empty. The name must be a non-empty string.";
+            message = TB("The field NAME is empty. The name must be a non-empty string.");
             return false;
         }
 
@@ -212,14 +214,14 @@ public abstract partial class PluginBase : IPluginMetadata
     {
         if (!this.state.Environment["DESCRIPTION"].TryRead(out description))
         {
-            message = "The field DESCRIPTION does not exist or is not a valid string.";
+            message = TB("The field DESCRIPTION does not exist or is not a valid string.");
             description = string.Empty;
             return false;
         }
         
         if(string.IsNullOrWhiteSpace(description))
         {
-            message = "The field DESCRIPTION is empty. The description must be a non-empty string.";
+            message = TB("The field DESCRIPTION is empty. The description must be a non-empty string.");
             return false;
         }
         
@@ -237,21 +239,21 @@ public abstract partial class PluginBase : IPluginMetadata
     {
         if (!this.state.Environment["VERSION"].TryRead<string>(out var versionText))
         {
-            message = "The field VERSION does not exist or is not a valid string.";
+            message = TB("The field VERSION does not exist or is not a valid string.");
             version = PluginVersion.NONE;
             return false;
         }
 
         if (!PluginVersion.TryParse(versionText, out version))
         {
-            message = "The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).";
+            message = TB("The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).");
             version = PluginVersion.NONE;
             return false;
         }
         
         if(version == PluginVersion.NONE)
         {
-            message = "The field VERSION is empty. The version number must be formatted as string in the major.minor.patch format (X.X.X).";
+            message = TB("The field VERSION is empty. The version number must be formatted as string in the major.minor.patch format (X.X.X).");
             return false;
         }
         
@@ -270,7 +272,7 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["AUTHORS"].TryRead<LuaTable>(out var authorsTable))
         {
             authors = [];
-            message = "The table AUTHORS does not exist or is using an invalid syntax.";
+            message = TB("The table AUTHORS does not exist or is using an invalid syntax.");
             return false;
         }
         
@@ -282,7 +284,7 @@ public abstract partial class PluginBase : IPluginMetadata
         authors = authorList.ToArray();
         if(authorList.Count == 0)
         {
-            message = "The table AUTHORS is empty. At least one author must be specified.";
+            message = TB("The table AUTHORS is empty. At least one author must be specified.");
             return false;
         }
         
@@ -301,13 +303,13 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["SUPPORT_CONTACT"].TryRead(out contact))
         {
             contact = string.Empty;
-            message = "The field SUPPORT_CONTACT does not exist or is not a valid string.";
+            message = TB("The field SUPPORT_CONTACT does not exist or is not a valid string.");
             return false;
         }
         
         if(string.IsNullOrWhiteSpace(contact))
         {
-            message = "The field SUPPORT_CONTACT is empty. The support contact must be a non-empty string.";
+            message = TB("The field SUPPORT_CONTACT is empty. The support contact must be a non-empty string.");
             return false;
         }
         
@@ -326,14 +328,14 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["SOURCE_URL"].TryRead(out url))
         {
             url = string.Empty;
-            message = "The field SOURCE_URL does not exist or is not a valid string.";
+            message = TB("The field SOURCE_URL does not exist or is not a valid string.");
             return false;
         }
 
         if (!url.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
         {
             url = string.Empty;
-            message = "The field SOURCE_URL is not a valid URL. The URL must start with 'http://' or 'https://'.";
+            message = TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://' or 'https://'.");
             return false;
         }
         
@@ -352,7 +354,7 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["CATEGORIES"].TryRead<LuaTable>(out var categoriesTable))
         {
             categories = [];
-            message = "The table CATEGORIES does not exist or is using an invalid syntax.";
+            message = TB("The table CATEGORIES does not exist or is using an invalid syntax.");
             return false;
         }
         
@@ -365,7 +367,7 @@ public abstract partial class PluginBase : IPluginMetadata
         categories = categoryList.ToArray();
         if(categoryList.Count == 0)
         {
-            message = $"The table CATEGORIES is empty. At least one category is necessary. Valid categories are: {CommonTools.GetAllEnumValues(PluginCategory.NONE)}.";
+            message = string.Format(TB("The table CATEGORIES is empty. At least one category is necessary. Valid categories are: {0}."), CommonTools.GetAllEnumValues(PluginCategory.NONE));
             return false;
         }
         
@@ -384,7 +386,7 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["TARGET_GROUPS"].TryRead<LuaTable>(out var targetGroupsTable))
         {
             targetGroups = [];
-            message = "The table TARGET_GROUPS does not exist or is using an invalid syntax.";
+            message = TB("The table TARGET_GROUPS does not exist or is using an invalid syntax.");
             return false;
         }
 
@@ -397,7 +399,7 @@ public abstract partial class PluginBase : IPluginMetadata
         targetGroups = targetGroupList.ToArray();
         if(targetGroups.Length == 0)
         {
-            message = "The table TARGET_GROUPS is empty or is not a valid table of strings. Valid target groups are: {CommonTools.GetAllEnumValues(PluginTargetGroup.NONE)}.";
+            message = string.Format(TB("The table TARGET_GROUPS is empty or is not a valid table of strings. Valid target groups are: {0}."), CommonTools.GetAllEnumValues(PluginTargetGroup.NONE));
             return false;
         }
         
@@ -416,7 +418,7 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["IS_MAINTAINED"].TryRead(out isMaintained))
         {
             isMaintained = false;
-            message = "The field IS_MAINTAINED does not exist or is not a valid boolean.";
+            message = TB("The field IS_MAINTAINED does not exist or is not a valid boolean.");
             return false;
         }
         
@@ -435,7 +437,7 @@ public abstract partial class PluginBase : IPluginMetadata
         if (!this.state.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
         {
             deprecationMessage = string.Empty;
-            message = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.";
+            message = TB("The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.");
             return false;
         }
         
@@ -453,7 +455,7 @@ public abstract partial class PluginBase : IPluginMetadata
     {
         if (!this.state.Environment["UI_TEXT_CONTENT"].TryRead<LuaTable>(out var textTable))
         {
-            message = "The UI_TEXT_CONTENT table does not exist or is not a valid table.";
+            message = TB("The UI_TEXT_CONTENT table does not exist or is not a valid table.");
             pluginContent = [];
             return false;
         }

@@ -1,8 +1,8 @@
 @attribute [Route(Routes.ASSISTANT_REWRITE)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogRewrite>
 
-<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidateText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="Your input to improve" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom language" />
-<EnumSelection T="WritingStyles" NameFunc="@(style => style.Name())" @bind-Value="@this.selectedWritingStyle" Icon="@Icons.Material.Filled.Edit" Label="Writing style" AllowOther="@false" />
-<EnumSelection T="SentenceStructure" NameFunc="@(voice => voice.Name())" @bind-Value="@this.selectedSentenceStructure" Icon="@Icons.Material.Filled.Person4" Label="Sentence structure" />
+<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidateText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Your input to improve")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language")" />
+<EnumSelection T="WritingStyles" NameFunc="@(style => style.Name())" @bind-Value="@this.selectedWritingStyle" Icon="@Icons.Material.Filled.Edit" Label="@T("Writing style")" AllowOther="@false" />
+<EnumSelection T="SentenceStructure" NameFunc="@(voice => voice.Name())" @bind-Value="@this.selectedSentenceStructure" Icon="@Icons.Material.Filled.Person4" Label="@T("Sentence structure")" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

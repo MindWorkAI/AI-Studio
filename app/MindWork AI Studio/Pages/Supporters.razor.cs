@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Components;
+using AIStudio.Components;
 
 namespace AIStudio.Pages;
 
-public partial class Supporters : ComponentBase
-{
-}
+public partial class Supporters : MSGComponentBase;

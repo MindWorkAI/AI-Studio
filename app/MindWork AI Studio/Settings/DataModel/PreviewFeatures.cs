@@ -10,4 +10,5 @@ public enum PreviewFeatures
     PRE_RAG_2024,
     
     PRE_PLUGINS_2025,
+    PRE_READ_PDF_2025,
 }

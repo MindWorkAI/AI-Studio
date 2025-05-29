@@ -1,9 +1,10 @@
 @using AIStudio.Tools.PluginSystem
+@inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
 <div class="inner-scrolling-context">
     <MudText Typo="Typo.h3" Class="mb-2">
-        Plugins
+        @T("Plugins")
     </MudText>
     <PreviewExperimental ApplyInnerScrollingFix="true"/>
     
@@ -17,8 +18,8 @@
                 <col style="width: 12em;"/>
             </ColGroup>
             <HeaderContent>
-                <MudTh colspan="2">Plugins</MudTh>
-                <MudTh>Actions</MudTh>
+                <MudTh colspan="2">@T("Plugins")</MudTh>
+                <MudTh>@T("Actions")</MudTh>
             </HeaderContent>
             <GroupHeaderTemplate>
                 <MudTh Class="mud-table-cell-custom-group" colspan="3">
@@ -26,19 +27,19 @@
                     {
                         case GROUP_ENABLED:
                             <MudText Typo="Typo.h6" Class="mb-2">
-                                Enabled Plugins
+                                @T("Enabled Plugins")
                             </MudText>
                             break;
                             
                         case GROUP_DISABLED:
                             <MudText Typo="Typo.h6" Class="mb-2">
-                                Disabled Plugins
+                                @T("Disabled Plugins")
                             </MudText>
                             break;
                             
                         case GROUP_INTERNAL:
                             <MudText Typo="Typo.h6" Class="mb-2">
-                                Internal Plugins
+                                @T("Internal Plugins")
                             </MudText>
                             break;
                     }
@@ -66,7 +67,7 @@
                     @if (!context.IsInternal)
                     {
                         var isEnabled = this.SettingsManager.IsPluginEnabled(context);
-                        <MudTooltip Text="@(isEnabled ? "Disable plugin" : "Enable plugin")">
+                        <MudTooltip Text="@(isEnabled ? T("Disable plugin") : T("Enable plugin"))">
                             <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
                         </MudTooltip>
                     }

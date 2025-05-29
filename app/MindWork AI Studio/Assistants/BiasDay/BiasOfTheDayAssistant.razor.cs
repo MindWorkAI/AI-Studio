@@ -10,18 +10,9 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
 {
     public override Tools.Components Component => Tools.Components.BIAS_DAY_ASSISTANT;
     
-    protected override string Title => "Bias of the Day";
+    protected override string Title => T("Bias of the Day");
     
-    protected override string Description =>
-        """
-        Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind
-        "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster
-        Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them
-        into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and
-        Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia
-        versions, updated them, and added source references. The idea of learning about one bias each day based on John's
-        poster comes from Drew Nelson.
-        """;
+    protected override string Description => T("""Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind  "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson.""");
 
     protected override string SystemPrompt => $"""
                                               You are a friendly, helpful expert on cognitive bias. You studied psychology and
@@ -41,7 +32,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Show me the bias of the day";
+    protected override string SubmitText => T("Show me the bias of the day");
 
     protected override Func<Task> SubmitAction => this.TellBias;
 
@@ -79,7 +70,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     private string? ValidateTargetLanguage(CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return "Please select a target language for the bias.";
+            return T("Please select a target language for the bias.");
         
         return null;
     }
@@ -87,7 +78,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }

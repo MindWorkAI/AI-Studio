@@ -125,6 +125,14 @@ public sealed class ContentText : IContent
         return chatThread;
     }
 
+    /// <inheritdoc />
+    public IContent DeepClone() => new ContentText
+    {
+        Text = this.Text,
+        InitialRemoteWait = this.InitialRemoteWait,
+        IsStreaming = this.IsStreaming,
+    };
+
     #endregion
     
     /// <summary>

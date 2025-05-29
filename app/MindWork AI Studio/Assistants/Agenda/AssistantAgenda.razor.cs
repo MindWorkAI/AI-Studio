@@ -9,14 +9,9 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 {
     public override Tools.Components Component => Tools.Components.AGENDA_ASSISTANT;
     
-    protected override string Title => "Agenda Planner";
+    protected override string Title => T("Agenda Planner");
     
-    protected override string Description =>
-        """
-        This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic
-        information about the event, and the assistant will generate an agenda for you. You can also specify the
-        duration, the start time, the location, the target language, and other details.
-        """;
+    protected override string Description => T("This agenda planner helps you create a structured agenda for your meeting or seminar. Just provide some basic information about the event, and the assistant will generate an agenda for you. You can also specify the duration, the start time, the location, the target language, and other details.");
 
     protected override string SystemPrompt =>
         $"""
@@ -98,7 +93,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
 
-    protected override string SubmitText => "Create Agenda";
+    protected override string SubmitText => T("Create Agenda");
 
     protected override Func<Task> SubmitAction => this.CreateAgenda;
 
@@ -235,7 +230,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateLocation(string location)
     {
         if(!this.isMeetingVirtual && string.IsNullOrWhiteSpace(location))
-            return "Please provide a location for the meeting or the seminar.";
+            return T("Please provide a location for the meeting or the seminar.");
         
         return null;
     }
@@ -243,7 +238,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateNumberParticipants(NumberParticipants selectedSize)
     {
         if(selectedSize is NumberParticipants.NOT_SPECIFIED)
-            return "Please select the number of participants.";
+            return T("Please select the number of participants.");
         
         return null;
     }
@@ -251,7 +246,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateTargetLanguage(CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return "Please select a target language for the agenda.";
+            return T("Please select a target language for the agenda.");
         
         return null;
     }
@@ -259,7 +254,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateDuration(string duration)
     {
         if(string.IsNullOrWhiteSpace(duration))
-            return "Please provide a duration for the meeting or the seminar, e.g. '2 hours', or '2 days (8 hours and 4 hours)', etc.";
+            return T("Please provide a duration for the meeting or the seminar, e.g. '2 hours', or '2 days (8 hours and 4 hours)', etc.");
         
         return null;
     }
@@ -267,7 +262,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateStartTime(string startTime)
     {
         if(string.IsNullOrWhiteSpace(startTime))
-            return "Please provide a start time for the meeting or the seminar. When the meeting is a multi-day event, specify the start time for each day, e.g. '9:00 AM, 10:00 AM', etc.";
+            return T("Please provide a start time for the meeting or the seminar. When the meeting is a multi-day event, specify the start time for each day, e.g. '9:00 AM, 10:00 AM', etc.");
         
         return null;
     }
@@ -275,7 +270,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }
@@ -283,7 +278,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateTopic(string topic)
     {
         if(string.IsNullOrWhiteSpace(topic))
-            return "Please provide a topic for the agenda. What is the meeting or the seminar about?";
+            return T("Please provide a topic for the agenda. What is the meeting or the seminar about?");
         
         return null;
     }
@@ -291,7 +286,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateName(string name)
     {
         if(string.IsNullOrWhiteSpace(name))
-            return "Please provide a name for the meeting or the seminar.";
+            return T("Please provide a name for the meeting or the seminar.");
         
         return null;
     }
@@ -299,12 +294,12 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateContent(string content)
     {
         if(string.IsNullOrWhiteSpace(content))
-            return "Please provide some content for the agenda. What are the main points of the meeting or the seminar?";
+            return T("Please provide some content for the agenda. What are the main points of the meeting or the seminar?");
 
         var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
             if(!line.TrimStart().StartsWith('-'))
-                return "Please start each line of your content list with a dash (-) to create a bullet point list.";
+                return T("Please start each line of your content list with a dash (-) to create a bullet point list.");
         
         return null;
     }
@@ -312,7 +307,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateObjective(string objective)
     {
         if(string.IsNullOrWhiteSpace(objective))
-            return "Please provide an objective for the meeting or the seminar. What do you want to achieve?";
+            return T("Please provide an objective for the meeting or the seminar. What do you want to achieve?");
         
         return null;
     }
@@ -320,7 +315,7 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string? ValidateModerator(string moderator)
     {
         if(string.IsNullOrWhiteSpace(moderator))
-            return "Please provide a moderator for the meeting or the seminar. Who will lead the discussion?";
+            return T("Please provide a moderator for the meeting or the seminar. Who will lead the discussion?");
         
         return null;
     }

@@ -1,6 +1,6 @@
 namespace AIStudio.Tools.PluginSystem;
 
-public sealed class PluginMetadata(PluginBase plugin) : IPluginMetadata
+public sealed class PluginMetadata(PluginBase plugin, string localPath) : IAvailablePlugin
 {
     #region Implementation of IPluginMetadata
 
@@ -45,6 +45,12 @@ public sealed class PluginMetadata(PluginBase plugin) : IPluginMetadata
 
     /// <inheritdoc />
     public bool IsInternal { get; } = plugin.IsInternal;
+
+    #endregion
+
+    #region Implementation of IAvailablePlugin
+
+    public string LocalPath { get; } = localPath;
 
     #endregion
 }

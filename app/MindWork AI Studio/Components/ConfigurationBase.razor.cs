@@ -1,5 +1,3 @@
-using AIStudio.Settings;
-
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -7,7 +5,7 @@ namespace AIStudio.Components;
 /// <summary>
 /// A base class for configuration options.
 /// </summary>
-public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver, IDisposable
+public partial class ConfigurationBase : MSGComponentBase
 {
     /// <summary>
     /// The description of the option, i.e., the name. Should be
@@ -28,12 +26,6 @@ public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver, IDi
     [Parameter]
     public Func<bool> Disabled { get; set; } = () => false;
     
-    [Inject]
-    protected SettingsManager SettingsManager { get; init; } = null!;
-    
-    [Inject]
-    protected MessageBus MessageBus { get; init; } = null!;
-    
     protected const string MARGIN_CLASS = "mb-6";
     protected static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -41,25 +33,18 @@ public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver, IDi
 
     protected override async Task OnInitializedAsync()
     {
-        // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
-        
-        // Register this component with the message bus:
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
-        
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         await base.OnInitializedAsync();
     }
 
     #endregion
 
     protected async Task InformAboutChange() => await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    
-    #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(ConfigurationBase);
-    
-    public Task ProcessMessage<TMsg>(ComponentBase? sendingComponent, Event triggeredEvent, TMsg? data)
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -69,20 +54,6 @@ public partial class ConfigurationBase : ComponentBase, IMessageBusReceiver, IDi
         }
 
         return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
-
-    #region Implementation of IDisposable
-
-    public void Dispose()
-    {
-        this.MessageBus.Unregister(this);
     }
 
     #endregion

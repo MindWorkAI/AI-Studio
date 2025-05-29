@@ -13,9 +13,11 @@ public enum LLMProviders
     GOOGLE = 7,
     X = 8,
     DEEP_SEEK = 11,
+    ALIBABA_CLOUD = 12,
     
     FIREWORKS = 5,
     GROQ = 6,
+    HUGGINGFACE = 13,
     
     SELF_HOSTED = 4,
     

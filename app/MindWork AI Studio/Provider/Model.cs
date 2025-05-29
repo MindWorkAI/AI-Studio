@@ -1,3 +1,5 @@
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Provider;
 
 /// <summary>
@@ -7,6 +9,8 @@ namespace AIStudio.Provider;
 /// <param name="DisplayName">The model's display name.</param>
 public readonly record struct Model(string Id, string? DisplayName)
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Model).Namespace, nameof(Model));
+    
     #region Overrides of ValueType
 
     public override string ToString()
@@ -17,7 +21,7 @@ public readonly record struct Model(string Id, string? DisplayName)
         if(!string.IsNullOrWhiteSpace(this.Id))
             return this.Id;
         
-        return "no model selected";
+        return TB("no model selected");
     }
 
     #endregion

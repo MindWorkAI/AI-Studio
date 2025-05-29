@@ -102,6 +102,12 @@ jobs:
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage deb updater'
+            
+          - platform: 'ubuntu-22.04-arm' # for ARM-based Linux
+            rust_target: 'aarch64-unknown-linux-gnu'
+            dotnet_runtime: 'linux-arm64'
+            dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
+            tauri_bundle: 'appimage deb updater'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
@@ -154,6 +160,19 @@ jobs:
           # Format the app version:
           formatted_app_version="v${app_version}"
           
+          # Set the architecture:
+          if sed --version 2>/dev/null | grep -q GNU; then
+            sed -i "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
+          else
+            sed -i '' "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
+          fi
+          
+          # Next line is the necessary PDFium version.
+          # The format is '137.0.7123.0'. What we need
+          # is the '7123' part:
+          pdfium_version=$(sed -n '11p' metadata.txt)
+          pdfium_version=$(echo $pdfium_version | cut -d'.' -f3)
+          
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
@@ -164,6 +183,8 @@ jobs:
           echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
           echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
+          echo "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $GITHUB_ENV
+          echo "PDFIUM_VERSION=${pdfium_version}" >> $GITHUB_ENV
 
           # Log the metadata:
           echo "App version: '${formatted_app_version}'"
@@ -174,6 +195,8 @@ jobs:
           echo "Rust version: '${rust_version}'"
           echo "MudBlazor version: '${mud_blazor_version}'"
           echo "Tauri version: '${tauri_version}'"
+          echo "Architecture: '${{ matrix.dotnet_runtime }}'"
+          echo "PDFium version: '${pdfium_version}'"
           
       - name: Read and format metadata (Windows)
         if: matrix.platform == 'windows-latest'
@@ -206,6 +229,18 @@ jobs:
           # Format the app version:
           $formatted_app_version = "v${app_version}"
           
+          # Set the architecture:
+          $metadata[9] = "${{ matrix.dotnet_runtime }}"
+          
+          # Write the changed metadata back to the file:
+          Set-Content -Path metadata.txt -Value $metadata
+          
+          # Next line is the necessary PDFium version.
+          # The format is '137.0.7123.0'. What we need
+          # is the '7123' part:
+          $pdfium_version = $metadata[10]
+          $pdfium_version = $pdfium_version.Split('.')[2]
+          
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
           Write-Output "FORMATTED_APP_VERSION=${formatted_app_version}" >> $env:GITHUB_ENV
@@ -215,6 +250,8 @@ jobs:
           Write-Output "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $env:GITHUB_ENV
           Write-Output "RUST_VERSION=${rust_version}" >> $env:GITHUB_ENV
           Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
+          Write-Output "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $env:GITHUB_ENV
+          Write-Output "PDFIUM_VERSION=${pdfium_version}" >> $env:GITHUB_ENV
           
           # Log the metadata:
           Write-Output "App version: '${formatted_app_version}'"
@@ -225,6 +262,8 @@ jobs:
           Write-Output "Rust version: '${rust_version}'"
           Write-Output "MudBlazor version: '${mud_blazor_version}'"
           Write-Output "Tauri version: '${tauri_version}'"
+          Write-Output "Architecture: '${{ matrix.dotnet_runtime }}'"
+          Write-Output "PDFium version: '${pdfium_version}'"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -232,6 +271,117 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           cache: true
           cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+
+      - name: Deploy PDFium (Unix)
+        if: matrix.platform != 'windows-latest'
+        env:
+          PDFIUM_VERSION: ${{ env.PDFIUM_VERSION }}
+          DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+        run: |
+          set -e
+
+          # Target directory:
+          TLIB_DIR="runtime/resources/libraries"
+          mkdir -p "$TLIB_DIR"
+
+          case "${DOTNET_RUNTIME}" in
+            linux-x64)
+              PDFIUM_FILE="linux-x64.tgz"
+              LIB_SOURCE="lib/libpdfium.so"
+              LIB_TARGET="libpdfium.so"
+              ;;
+            linux-arm64)
+              PDFIUM_FILE="linux-arm64.tgz"
+              LIB_SOURCE="lib/libpdfium.so"
+              LIB_TARGET="libpdfium.so"
+              ;;
+            osx-x64)
+              PDFIUM_FILE="mac-x64.tgz"
+              LIB_SOURCE="lib/libpdfium.dylib"
+              LIB_TARGET="libpdfium.dylib"
+              ;;
+            osx-arm64)
+              PDFIUM_FILE="mac-arm64.tgz"
+              LIB_SOURCE="lib/libpdfium.dylib"
+              LIB_TARGET="libpdfium.dylib"
+              ;;
+            *)
+              echo "Unknown platform: ${DOTNET_RUNTIME}"
+              exit 1
+              ;;
+          esac
+
+          PDFIUM_URL="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-${PDFIUM_FILE}"
+
+          echo "Download PDFium $PDFIUM_URL ..."
+          TMP=$(mktemp -d)
+          ARCHIVE="${TMP}/pdfium.tgz"
+
+          curl -fsSL -o "$ARCHIVE" "$PDFIUM_URL"
+
+          echo "Extracting PDFium ..."
+          tar xzf "$ARCHIVE" -C "$TMP"
+          SRC="${TMP}/${LIB_SOURCE}"
+
+          if [ ! -f "$SRC" ]; then
+            echo "Was not able to find PDFium source: $SRC"
+            exit 1
+          fi
+
+          echo "Copy PDFium from ${LIB_TARGET} to ${TLIB_DIR}/"
+          cp -f "$SRC" "$TLIB_DIR/$LIB_TARGET"
+
+          echo "Cleaning up ..."
+          rm -fr "$TMP"
+          
+      - name: Install PDFium (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          PDFIUM_VERSION: ${{ env.PDFIUM_VERSION }}
+          DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+        run: |
+          $TLIB_DIR = "runtime\resources\libraries"
+          New-Item -ItemType Directory -Force -Path $TLIB_DIR | Out-Null
+      
+          switch ($env:DOTNET_RUNTIME) {
+            "win-x64" {
+              $PDFIUM_FILE = "win-x64.tgz"
+              $LIB_SOURCE = "bin\pdfium.dll"
+              $LIB_TARGET = "pdfium.dll"
+            }
+            "win-arm64" {
+              $PDFIUM_FILE = "win-arm64.tgz"
+              $LIB_SOURCE = "bin\pdfium.dll"
+              $LIB_TARGET = "pdfium.dll"
+            }
+            default {
+              Write-Error "Unknown platform: $($env:DOTNET_RUNTIME)"
+              exit 1
+            }
+          }
+      
+          $PDFIUM_URL = "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F$($env:PDFIUM_VERSION)/pdfium-$PDFIUM_FILE"
+          Write-Host "Download $PDFIUM_URL ..."
+          $TMP = New-TemporaryFile | Split-Path
+          $ARCHIVE = Join-Path $TMP "pdfium.tgz"
+      
+          Invoke-WebRequest -Uri $PDFIUM_URL -OutFile $ARCHIVE
+      
+          Write-Host "Extracting PDFium ..."
+          tar -xzf $ARCHIVE -C $TMP
+      
+          $SRC = Join-Path $TMP $LIB_SOURCE
+          if (!(Test-Path $SRC)) {
+            Write-Error "Cannot find PDFium source: $SRC"
+            exit 1
+          }
+      
+          $DEST = Join-Path $TLIB_DIR $LIB_TARGET
+          Copy-Item -Path $SRC -Destination $DEST -Force
+      
+          Write-Host "Cleaning up ..."
+          Remove-Item $ARCHIVE -Force
+          Remove-Item $TMP -Recurse -Force
       
       - name: Build .NET project
         run: |
@@ -275,7 +425,13 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04' && contains(matrix.rust_target, 'x86_64')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libfuse2
+          
+      - name: Setup dependencies (Ubuntu-specific, ARM)
+        if: matrix.platform == 'ubuntu-22.04-arm' && contains(matrix.rust_target, 'aarch64')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libfuse2
           
       - name: Setup Tauri (Unix)
         if: matrix.platform != 'windows-latest'
@@ -399,216 +555,11 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
           if-no-files-found: error
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
-          
-  build_linux_arm64:
-    name: Build app (linux-arm64)
-    runs-on: ubuntu-22.04
-    needs: read_metadata
-    env:
-      SKIP: false # allows disabling this long-running job temporarily
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          lfs: false
-          
-      - name: Read and format metadata
-        if: ${{ env.SKIP != 'true' }}
-        id: metadata
-        run: |
-          # Read the lines of the metadata file:
-          app_version=$(sed -n '1p' metadata.txt)
-          build_time=$(sed -n '2p' metadata.txt)
-          build_number=$(sed -n '3p' metadata.txt)
-
-          # Next line is the .NET SDK version.
-          # The format is '8.0.205 (commit 3e1383b780)'.
-          # We extract only the version number, though:
-          dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
-
-          # Next line is the .NET runtime version.
-          # The format is '8.0.5 (commit 087e15321b)'.
-          # We extract only the version number, though:
-          dotnet_runtime_version=$(sed -n '5p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
-
-          # Next line is the Rust version.
-          # The format is '1.78.0 (commit 9b00956e5)'.
-          # We extract only the version number, though:
-          rust_version=$(sed -n '6p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
-
-          # Next line is the MudBlazor version:
-          mud_blazor_version=$(sed -n '7p' metadata.txt)
-
-          # Next line is the Tauri version:
-          tauri_version=$(sed -n '8p' metadata.txt)
-
-          # Format the app version:
-          formatted_app_version="v${app_version}"
-
-          # Write the metadata to the environment:
-          echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
-          echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
-          echo "BUILD_TIME=${build_time}" >> $GITHUB_ENV
-          echo "BUILD_NUMBER=${build_number}" >> $GITHUB_ENV
-          echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
-          echo "DOTNET_RUNTIME_VERSION=${dotnet_runtime_version}" >> $GITHUB_ENV
-          echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
-          echo "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $GITHUB_ENV
-          echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
-
-          # Log the metadata:
-          echo "App version: '${formatted_app_version}'"
-          echo "Build time: '${build_time}'"
-          echo "Build number: '${build_number}'"
-          echo ".NET SDK version: '${dotnet_sdk_version}'"
-          echo ".NET runtime version: '${dotnet_runtime_version}'"
-          echo "Rust version: '${rust_version}'"
-          echo "MudBlazor version: '${mud_blazor_version}'"
-          echo "Tauri version: '${tauri_version}'"
-        
-      - name: Setup .NET
-        if: ${{ env.SKIP != 'true' }}
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSI }}
-          cache: true
-          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
-          
-      - name: Build .NET project
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          cd "app/MindWork AI Studio"
-          dotnet publish --configuration release --runtime linux-arm64 --disable-build-servers --force --output ../../publish/dotnet
-          
-      - name: Move & rename the .NET artifact
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          mkdir -p "app/MindWork AI Studio/bin/dist"
-          cd publish/dotnet
-          mv mindworkAIStudio "../../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-aarch64-unknown-linux-gnu"
-          
-      - name: Cache linux arm64 runner image
-        if: ${{ env.SKIP != 'true' }}
-        uses: actions/cache@v4
-        id: linux_arm_cache
-        with:
-          path: ${{ runner.temp }}/linux_arm_qemu_cache.img
-          key: target-linux-arm64-rust-${{ env.RUST_VERSION }}
-            
-      - name: Build linux arm runner image
-        uses: pguyot/arm-runner-action@v2
-        id: build-linux-arm-runner
-        if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
-        env:
-          RUST_VERSION: ${{ env.RUST_VERSION }}
-          TAURI_VERSION: ${{ env.TAURI_VERSION }}
-          
-        with:
-          base_image: dietpi:rpi_armv8_bullseye
-          cpu: cortex-a53
-          image_additional_mb: 8000 # ~ 8GB
-          optimize_image: false
-          shell: /bin/bash
-          commands: |
-            # Rust complains (rightly) that $HOME doesn't match eid home:
-            export HOME=/root
-            
-            # Workaround to CI worker being stuck on Updating crates.io index:
-            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
-            
-            # Update and upgrade the system:
-            apt-get update --yes --allow-releaseinfo-change
-            apt-get upgrade --yes
-            apt-get autoremove --yes
-            apt-get install curl wget --yes
-            
-            # Install Rust:
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain none -y
-            source "$HOME/.cargo/env"
-            rustup toolchain install $RUST_VERSION
-            
-            # Install build tools and tauri-cli requirements:
-            apt-get install --yes libwebkit2gtk-4.0-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
-            
-            # Setup Tauri:
-            cargo install --version 1.6.2 tauri-cli
-            
-      - name: Add the built runner image to the cache
-        if: ${{ steps.linux_arm_cache.outputs.cache-hit != 'true' && env.SKIP != 'true' }}
-        run: |
-          mv ${{ steps.build-linux-arm-runner.outputs.image }} ${{ runner.temp }}/linux_arm_qemu_cache.img
-      
-      #
-      # This step does not work, because we start a VM with qemu to run the build.
-      #
-      #- name: Delete previous artifact, which may exist due to caching (Linux - Debian Package)
-      #  if: ${{ env.SKIP != 'true' }}
-      #  run: |
-      #    rm -f result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
-            
-      - name: Build Tauri project
-        if: ${{ env.SKIP != 'true' }}
-        uses: pguyot/arm-runner-action@v2
-        id: build-linux-arm
-        
-        with:
-          base_image: file://${{ runner.temp }}/linux_arm_qemu_cache.img
-          cpu: cortex-a53
-          optimize_image: false
-          copy_artifact_path: runtime
-          copy_artifact_dest: result
-          bind_mount_repository: true
-          
-          #
-          # We do not need to set the PRIVATE_PUBLISH_KEY and PRIVATE_PUBLISH_KEY_PASSWORD here,
-          # because we cannot produce the AppImage on arm64. Only the AppImage supports the automatic
-          # update feature. The Debian package does not support this feature.
-          #
-          #PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
-          #PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
-          #
-          
-          shell: /bin/bash
-          commands: |
-            # Delete all previous artifacts, which may exist due to caching:
-            rm -f runtime/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
-            
-            export HOME=/root
-            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
-            source "$HOME/.cargo/env"
-            cd runtime
-            
-            # Try to restore the Rust cache from previous build:
-            mkdir -p /rust-cache/target
-            rm -fr target
-            cp -Rp /rust-cache/target target
-            
-            cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb
-            
-            # Save the built libraries for the next job:
-            rm -fr /rust-cache/target
-            cp -Rp target /rust-cache
-          
-      - name: Update the runner image to cache the Rust runtime build
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          mv ${{ steps.build-linux-arm.outputs.image }} $RUNNER_TEMP/linux_arm_qemu_cache.img
-      
-      - name: Upload artifact (Linux - Debian Package)
-        if: ${{ env.SKIP != 'true' && startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: MindWork AI Studio (Linux - deb linux-arm64)
-          path: |
-            result/target/aarch64-unknown-linux-gnu/release/bundle/deb/mind-work-ai-studio_*.deb
-          if-no-files-found: warn
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
         
   create_release:
     name: Prepare & create release
     runs-on: ubuntu-latest
-    needs: [build_main, read_metadata, build_linux_arm64]
+    needs: [build_main, read_metadata]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Create artifact directory
@@ -682,6 +633,7 @@ jobs:
             # - platform=darwin-aarch64 when path contains 'aarch64-apple-darwin'
             # - platform=darwin-x86_64 when path contains 'x86_64-apple-darwin'
             # - platform=linux-x86_64 when path contains 'x86_64-unknown-linux-'
+            # - platform=linux-aarch64 when path contains 'aarch64-unknown-linux-'
             # - platform=windows-x86_64 when path contains 'x86_64-pc-windows-'
             # - platform=windows-aarch64 when path contains 'aarch64-pc-windows-'
             #
@@ -691,6 +643,8 @@ jobs:
               platform="darwin-x86_64"
             elif [[ "$sig_file" == *"amd64.AppImage"* ]]; then
               platform="linux-x86_64"
+            elif [[ "$sig_file" == *"aarch64.AppImage"* ]]; then
+              platform="linux-aarch64"
             elif [[ "$sig_file" == *"x64-setup.nsis"* ]]; then
               platform="windows-x86_64"
             elif [[ "$sig_file" == *"arm64-setup.nsis"* ]]; then

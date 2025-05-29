@@ -3,6 +3,16 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataApp
 {
     /// <summary>
+    /// The language behavior.
+    /// </summary>
+    public LangBehavior LanguageBehavior { get; set; } = LangBehavior.AUTO;
+    
+    /// <summary>
+    /// The language plugin ID to use.
+    /// </summary>
+    public Guid LanguagePluginId { get; set; } = Guid.Empty;
+    
+    /// <summary>
     /// The preferred theme to use.
     /// </summary>
     public Themes PreferredTheme { get; set; } = Themes.SYSTEM;
@@ -47,4 +57,10 @@ public sealed class DataApp
     /// Should we preselect a profile for the entire app?
     /// </summary>
     public string PreselectedProfile { get; set; } = string.Empty;
+    
+    
+    /// <summary>
+    /// Should we preselect a chat template for the entire app?
+    /// </summary>
+    public string PreselectedChatTemplate { get; set; } = string.Empty;
 }

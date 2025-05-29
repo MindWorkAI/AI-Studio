@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class PreviewPrototype : ComponentBase
+public partial class PreviewPrototype : MSGComponentBase
 {
     [Parameter]
     public bool ApplyInnerScrollingFix { get; set; }

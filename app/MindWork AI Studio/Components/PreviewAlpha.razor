@@ -1,19 +1,18 @@
+@inherits MSGComponentBase
 <MudTooltip Placement="Placement.Bottom" Arrow="@true" Class="@this.Classes">
     <ChildContent>
         <MudChip T="string" Icon="@Icons.Material.Filled.FirstPage" Color="Color.Error" Class="mb-3">
-            Alpha
+            @T("Alpha")
         </MudChip>
     </ChildContent>
     <TooltipContent>
         <div style="max-width: 22em;">
             <MudText Typo="Typo.body2" Class="mb-3">
-                This feature is currently in the alpha phase.
-                Expect bugs and unfinished work.
+                @T("This feature is currently in the alpha phase. Expect bugs and unfinished work.")
             </MudText>
 
             <MudText Typo="Typo.body2">
-                Alpha phase means that we are working on the
-                last details before the beta phase.
+                @T("Alpha phase means that we are working on the last details before the beta phase.")
             </MudText>
         </div>
     </TooltipContent>

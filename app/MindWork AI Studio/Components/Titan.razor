@@ -1,0 +1,16 @@
+<MudListItem T="string" Href="@this.URL" Target="_blank">
+    <AvatarContent>
+        <MudAvatar Variant="Variant.Filled" Size="Size.Large" Style="background-color: white;" Class="mr-6">
+            <MudImage Src="@this.ImageSrc"/>
+        </MudAvatar>
+    </AvatarContent>
+    <ChildContent>
+        <MudText Typo="Typo.h6" Inline="@true">
+            @this.Name
+        </MudText>
+    
+        <MudText Typo="Typo.body1" Class="ml-3" Inline="@true">
+            @this.Acknowledgment
+        </MudText>
+    </ChildContent>
+</MudListItem>

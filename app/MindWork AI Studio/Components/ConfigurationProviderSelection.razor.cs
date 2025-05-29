@@ -2,13 +2,15 @@ using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
-
+using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationProviderSelection : ComponentBase, IMessageBusReceiver, IDisposable
+public partial class ConfigurationProviderSelection : MSGComponentBase
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationProviderSelection).Namespace, nameof(ConfigurationProviderSelection));
+    
     [Parameter]
     public Func<string> SelectedValue { get; set; } = () => string.Empty;
     
@@ -25,25 +27,16 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     public Func<bool> Disabled { get; set; } = () => false;
     
     [Parameter]
-    public Func<string> HelpText { get; set; } = () => "Select a provider that is preselected.";
+    public Func<string> HelpText { get; set; } = () => TB("Select a provider that is preselected.");
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
-    
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        // Register this component with the message bus:
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.CONFIGURATION_CHANGED ]);
-
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         await base.OnParametersSetAsync();
     }
 
@@ -53,7 +46,7 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
-            yield return new("Use app default", string.Empty);
+            yield return new(T("Use app default"), string.Empty);
         
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
         foreach (var providerId in this.Data)
@@ -63,12 +56,10 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
                 yield return providerId;
         }
     }
-    
-    #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(ConfigurationProviderSelection);
-    
-    public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -88,20 +79,6 @@ public partial class ConfigurationProviderSelection : ComponentBase, IMessageBus
                 this.StateHasChanged();
                 break;
         }
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
-
-    #region Implementation of IDisposable
-
-    public void Dispose()
-    {
-        this.MessageBus.Unregister(this);
     }
 
     #endregion

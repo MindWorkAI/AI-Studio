@@ -38,6 +38,11 @@ public sealed class DataChat
     public string PreselectedProfile { get; set; } = string.Empty;
     
     /// <summary>
+    /// Preselect a chat template?
+    /// </summary>
+    public string PreselectedChatTemplate { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Should we preselect data sources options for a created chat?
     /// </summary>
     public DataSourceOptions PreselectedDataSourceOptions { get; set; } = new();

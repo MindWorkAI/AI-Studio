@@ -6,7 +6,7 @@
   },
   "package": {
     "productName": "MindWork AI Studio",
-	"version": "0.9.39"
+	"version": "0.9.45"
   },
   "tauri": {
     "allowlist": {
@@ -29,6 +29,9 @@
         "scope": [
           "http://localhost"
         ]
+      },
+      "fs": {
+        "scope": ["$RESOURCE/resources/*"]
       }
     },
     "windows": [
@@ -56,6 +59,9 @@
       "identifier": "com.github.mindwork-ai.ai-studio",
       "externalBin": [
         "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
+      ],
+      "resources": [
+        "resources/*"
       ],
       "macOS": {
         "exceptionDomain": "localhost"

@@ -9,7 +9,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Pages;
 
-public partial class Writer : MSGComponentBase, IAsyncDisposable
+public partial class Writer : MSGComponentBase
 {
     [Inject]
     private ILogger<Chat> Logger { get; init; } = null!;
@@ -24,33 +24,16 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
     private string userInput = string.Empty;
     private string userDirection = string.Empty;
     private string suggestion = string.Empty;
-
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], []);
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         this.typeTimer.Elapsed += async (_, _) => await this.InvokeAsync(this.GetSuggestions);
         this.typeTimer.AutoReset = false;
         
         await base.OnInitializedAsync();
-    }
-
-    #endregion
-    
-    #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(Writer);
-    
-    public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        return Task.CompletedTask;
-    }
-
-    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
-    {
-        return Task.FromResult(default(TResult));
     }
 
     #endregion
@@ -169,13 +152,4 @@ public partial class Writer : MSGComponentBase, IAsyncDisposable
         this.suggestion = string.Join(' ', words.Skip(1));
         this.StateHasChanged();
     }
-    
-    #region Implementation of IAsyncDisposable
-
-    public ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
-    #endregion
 }

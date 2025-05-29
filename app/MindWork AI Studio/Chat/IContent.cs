@@ -44,6 +44,12 @@ public interface IContent
     public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
 
     /// <summary>
+    /// Creates a deep copy
+    /// </summary>
+    /// <returns>The copy</returns>
+    public IContent DeepClone();
+    
+    /// <summary>
     /// Returns the corresponding ERI content type.
     /// </summary>
     public Tools.ERIClient.DataModel.ContentType ToERIContentType => this switch

@@ -109,6 +109,8 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
 
     #endregion
 
@@ -136,7 +138,8 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
         return modelResponse.Data.Where(n =>
-            !n.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) &&
-            !n.Id.StartsWith("distil-", StringComparison.InvariantCultureIgnoreCase));
+            !n.Id.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) &&
+            !n.Id.StartsWith("distil-", StringComparison.OrdinalIgnoreCase) &&
+            !n.Id.Contains("-tts", StringComparison.OrdinalIgnoreCase));
     }
 }

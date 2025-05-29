@@ -43,19 +43,21 @@
     <ItemGroup>
         <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.0.0" />
-      <PackageReference Include="HtmlAgilityPack" Version="1.12.0" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.3" />
-      <PackageReference Include="MudBlazor" Version="8.5.1" />
-      <PackageReference Include="MudBlazor.Markdown" Version="8.0.0" />
+      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.2.1" />
+      <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.5" />
+      <PackageReference Include="MudBlazor" Version="8.6.0" />
+      <PackageReference Include="MudBlazor.Markdown" Version="8.6.0" />
       <PackageReference Include="ReverseMarkdown" Version="4.6.0" />
       <PackageReference Include="LuaCSharp" Version="0.4.2" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SharedTools\SharedTools.csproj" />
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
@@ -77,6 +79,8 @@
             <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
+            <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
+            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             
@@ -86,7 +90,7 @@
         </PropertyGroup>
         
         <ItemGroup>
-            <AssemblyAttribute Include="AIStudio.MetaDataAttribute">
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaData">
                 <_Parameter1>$(MetaVersion)</_Parameter1>
                 <_Parameter2>$(MetaBuildTime)</_Parameter2>
                 <_Parameter3>$(MetaBuild)</_Parameter3>
@@ -97,6 +101,12 @@
                 <_Parameter7>$(MetaMudBlazorVersion)</_Parameter7>
                 <_Parameter8>$(MetaTauriVersion)</_Parameter8>
                 <_Parameter9>$(MetaAppCommitHash)</_Parameter9>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataArchitecture">
+                <_Parameter1>$(MetaArchitecture)</_Parameter1>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataLibraries">
+                <_Parameter1>$(MetaPdfiumVersion)</_Parameter1>
             </AssemblyAttribute>
         </ItemGroup>
         

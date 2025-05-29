@@ -4,16 +4,22 @@
 
 <div class="inner-scrolling-context">
     
-    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-        @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
-        {
-            @($"Chat in Workspace \"{this.currentWorkspaceName}\"")
-        }
-        else
-        {
-            @("Temporary Chat")
-        }
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" StretchItems="StretchItems.Start">
+        <MudText Typo="Typo.h3">
+            @if (this.chatThread is not null && this.chatThread.WorkspaceId != Guid.Empty)
+            {
+                @(T("Chat in Workspace") + $" \"{this.currentWorkspaceName}\"")
+            }
+            else
+            {
+                @T("Disappearing Chat")
+            }
+        </MudText>
+        
+        <MudTooltip Text="@T("Show the chat options")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+            <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenChatSettingsDialog"/>
+        </MudTooltip>
+    </MudStack>
 
     <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
     @if (this.AreWorkspacesVisible)
@@ -25,9 +31,17 @@
                     // Case: Sidebar can be toggled and is currently visible
                     <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
                         <HeaderContent>
-                            <MudTooltip Text="Hide your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                                <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-                            </MudTooltip>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Spacing="1" Class="mb-0 ms-6 mt-2">
+                                <MudText Typo="Typo.h6">
+                                    @T("Your workspaces")
+                                </MudText>
+                                <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="async () => await this.OpenWorkspacesSettingsDialog()"/>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Size="Size.Medium" Icon="@this.WorkspaceSidebarToggleIcon" Class="me-1" OnClick="() => this.ToggleWorkspaceSidebar()"/>
+                                </MudTooltip>
+                            </MudStack>
                         </HeaderContent>
                         <ChildContent>
                             <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
@@ -38,6 +52,17 @@
                 {
                     // Case: Sidebar is always visible
                     <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3" MinWidth="26em">
+                        <HeaderContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Class="d-flex mb-0 ms-6 mt-2">
+                                <MudText Typo="Typo.h6">
+                                    @T("Your workspaces")
+                                </MudText>
+                                <MudSpacer/>
+                                <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="async () => await this.OpenWorkspacesSettingsDialog()"/>
+                                </MudTooltip>
+                            </MudStack>
+                        </HeaderContent>
                         <ChildContent>
                             <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
                         </ChildContent>
@@ -57,10 +82,18 @@
     {
         // Case: Sidebar can be toggled and is currently hidden
         <MudStack Row="@true" Style="width: 100%; overflow: hidden; height: 100%; flex-grow: 1; min-height: 0;">
-            <MudPaper Class="border border-solid rounded-lg mb-3">
-                <MudTooltip Text="Show your workspaces" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Size="Size.Large" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
-                </MudTooltip>
+            <MudPaper Class="border border-solid rounded-lg mb-3 d-flex">
+                <MudStack Row="false" AlignItems="AlignItems.Center" StretchItems="StretchItems.Middle" Wrap="Wrap.NoWrap">
+                    <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Size="Size.Medium" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="() => this.ToggleWorkspaceSidebar()"/>
+                    </MudTooltip>
+                    <MudText Typo="Typo.h6" Style="writing-mode: vertical-lr; word-spacing: 0.5em;">
+                        @T("Your workspaces")
+                    </MudText>
+                    <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="async () => await this.OpenWorkspacesSettingsDialog()"/>
+                    </MudTooltip>
+                </MudStack>
             </MudPaper>
 
             <ChatComponent
@@ -86,11 +119,15 @@
     {
         <MudDrawer @bind-Open="@this.workspaceOverlayVisible" Width="40em" Height="100%" Anchor="Anchor.Start" Variant="DrawerVariant.Temporary" Elevation="1">
             <MudDrawerHeader>
-                <MudStack Row="@true" AlignItems="AlignItems.Center">
+                <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Style="width: 100%;">
                     <MudText Typo="Typo.h6" Class="mr-3">
-                        Your workspaces
+                        @T("Your workspaces")
                     </MudText>
-                    <MudIconButton Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" OnClick="() => this.ToggleWorkspacesOverlay()"/>
+                    
+                    <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="async () => await this.OpenWorkspacesSettingsDialog()"/>
+                    </MudTooltip>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Medium" OnClick="() => this.ToggleWorkspacesOverlay()"/>
                 </MudStack>
             </MudDrawerHeader>
             <MudDrawerContainer Class="ml-6">

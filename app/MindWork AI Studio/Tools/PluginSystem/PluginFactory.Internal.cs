@@ -10,7 +10,33 @@ public static partial class PluginFactory
 {
     public static async Task EnsureInternalPlugins()
     {
+        if (!IS_INITIALIZED)
+        {
+            LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
+            return;
+        }
+        
+        // A plugin update might remove some resources. Even worse, a plugin
+        // might have changed its name, etc. Thus, we delete the internal
+        // plugin directories before copying the new resources:
+        LOG.LogInformation("Try to delete the internal plugins directory for maintenance.");
+        if (Directory.Exists(INTERNAL_PLUGINS_ROOT))
+        {
+            try
+            {
+                Directory.Delete(INTERNAL_PLUGINS_ROOT, true);
+                LOG.LogInformation("Successfully deleted the internal plugins directory for maintenance.");
+            }
+            catch (Exception e)
+            {
+                LOG.LogError($"Could not delete the internal plugins directory for maintenance: {INTERNAL_PLUGINS_ROOT}. Error: {e}");
+            }
+        }
+        
         LOG.LogInformation("Start ensuring internal plugins.");
+        if(!Directory.Exists(INTERNAL_PLUGINS_ROOT))
+            Directory.CreateDirectory(INTERNAL_PLUGINS_ROOT);
+        
         foreach (var plugin in Enum.GetValues<InternalPlugin>())
         {
             LOG.LogInformation($"Ensure plugin: {plugin}");
@@ -40,15 +66,15 @@ public static partial class PluginFactory
             }
             
             // Ensure that the additional resources exist:
-            foreach (var content in resourceFileProvider.GetDirectoryContents(metaData.ResourcePath))
+            foreach (var contentFilePath in resourceFileProvider.GetDirectoryContents(metaData.ResourcePath))
             {
-                if(content.IsDirectory)
+                if(contentFilePath.IsDirectory)
                 {
                     LOG.LogError("The plugin contains a directory. This is not allowed.");
                     continue;
                 }
                 
-                await CopyInternalPluginFile(content, metaData);
+                await CopyInternalPluginFile(contentFilePath, metaData);
             }
         }
         catch
@@ -57,9 +83,9 @@ public static partial class PluginFactory
         }
     }
 
-    private static async Task CopyInternalPluginFile(IFileInfo resourceInfo, InternalPluginData metaData)
+    private static async Task CopyInternalPluginFile(IFileInfo resourceFilePath, InternalPluginData metaData)
     {
-        await using var inputStream = resourceInfo.CreateReadStream();
+        await using var inputStream = resourceFilePath.CreateReadStream();
         
         var pluginTypeBasePath = Path.Join(INTERNAL_PLUGINS_ROOT, metaData.Type.GetDirectory());
         
@@ -73,7 +99,7 @@ public static partial class PluginFactory
         if (!Directory.Exists(pluginPath))
             Directory.CreateDirectory(pluginPath);
         
-        var pluginFilePath = Path.Join(pluginPath, resourceInfo.Name);
+        var pluginFilePath = Path.Join(pluginPath, resourceFilePath.Name);
             
         await using var outputStream = File.Create(pluginFilePath);
         await inputStream.CopyToAsync(outputStream);

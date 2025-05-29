@@ -34,54 +34,65 @@ pub fn dotnet_port(_token: APIToken) -> String {
     format!("{dotnet_server_port}")
 }
 
+/// Creates the startup environment file for the .NET server in the development
+/// environment. The file is created in the root directory of the repository.
+/// Creating that env file on a production environment would be a security
+/// issue, since it contains the secret password and salt in plain text.
+/// Anyone could read that file and decrypt the secret communication
+/// between the .NET server and the Tauri app.
+///
+/// Therefore, we not only create the file in the development environment
+/// but also remove that code from any production build.
+#[cfg(debug_assertions)]
+pub fn create_startup_env_file() {
+
+    // Get the secret password & salt and convert it to a base64 string:
+    let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
+    let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
+    let api_port = *API_SERVER_PORT;
+
+    warn!(Source = "Bootloader .NET"; "Development environment detected; create the startup env file at '../startup.env'.");
+    let env_file_path = std::path::PathBuf::from("..").join("startup.env");
+    let mut env_file = std::fs::File::create(env_file_path).unwrap();
+    let env_file_content = format!(
+        "AI_STUDIO_SECRET_PASSWORD={secret_password}\n\
+        AI_STUDIO_SECRET_KEY_SALT={secret_key_salt}\n\
+        AI_STUDIO_CERTIFICATE_FINGERPRINT={cert_fingerprint}\n\
+        AI_STUDIO_API_PORT={api_port}\n\
+        AI_STUDIO_API_TOKEN={api_token}",
+
+        cert_fingerprint = CERTIFICATE_FINGERPRINT.get().unwrap(),
+        api_token = API_TOKEN.to_hex_text()
+    );
+
+    std::io::Write::write_all(&mut env_file, env_file_content.as_bytes()).unwrap();
+    info!(Source = "Bootloader .NET"; "The startup env file was created successfully.");
+}
+
 /// Starts the .NET server in a separate process.
 pub fn start_dotnet_server() {
 
     // Get the secret password & salt and convert it to a base64 string:
     let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
     let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
+    let api_port = *API_SERVER_PORT;
 
     let dotnet_server_environment = HashMap::from_iter([
         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
         (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), CERTIFICATE_FINGERPRINT.get().unwrap().to_string()),
+        (String::from("AI_STUDIO_API_PORT"), format!("{api_port}")),
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
     ]);
 
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
     tauri::async_runtime::spawn(async move {
-        let api_port = *API_SERVER_PORT;
-        let (mut rx, child) = match is_dev() {
-            true => {
-                // We are in the development environment, so we try to start a process
-                // with `dotnet run` in the `../app/MindWork AI Studio` directory. But
-                // we cannot issue a sidecar because we cannot use any command for the
-                // sidecar (see Tauri configuration). Thus, we use a standard Rust process:
-                warn!(Source = "Bootloader .NET"; "Development environment detected; start .NET server using 'dotnet run'.");
-                Command::new("dotnet")
-
-                    // Start the .NET server in the `../app/MindWork AI Studio` directory.
-                    // We provide the runtime API server port to the .NET server:
-                    .args(["run", "--project", "../app/MindWork AI Studio", "--", format!("{api_port}").as_str()])
-
-                    .envs(dotnet_server_environment)
-                    .spawn()
-                    .expect("Failed to spawn .NET server process.")
-            }
-
-            false => {
-                Command::new_sidecar("mindworkAIStudioServer")
-                    .expect("Failed to create sidecar")
-
-                    // Provide the runtime API server port to the .NET server:
-                    .args([format!("{api_port}").as_str()])
-
-                    .envs(dotnet_server_environment)
-                    .spawn()
-                    .expect("Failed to spawn .NET server process.")
-            }
-        };
+        let (mut rx, child) = Command::new_sidecar("mindworkAIStudioServer")
+                .expect("Failed to create sidecar")
+                .envs(dotnet_server_environment)
+                .spawn()
+                .expect("Failed to spawn .NET server process.");
 
         let server_pid = child.pid();
         info!(Source = "Bootloader .NET"; "The .NET server process started with PID={server_pid}.");
@@ -140,7 +151,7 @@ pub async fn dotnet_ready(_token: APIToken) {
     // held.
     {
         let mut initialized = DOTNET_INITIALIZED.lock().unwrap();
-        if *initialized {
+        if !is_dev() && *initialized {
             error!("Anyone tried to initialize the runtime twice. This is not intended.");
             return;
         }

@@ -8,14 +8,9 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 {
     public override Tools.Components Component => Tools.Components.CODING_ASSISTANT;
     
-    protected override string Title => "Coding Assistant";
+    protected override string Title => T("Coding Assistant");
     
-    protected override string Description =>
-        """
-        This coding assistant supports you in writing code. Provide some coding context by copying and pasting
-        your code into the input fields. You might assign an ID to your code snippet to easily reference it later.
-        When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
-        """;
+    protected override string Description => T("This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
     
     protected override string SystemPrompt => 
         """
@@ -30,7 +25,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Get Support";
+    protected override string SubmitText => T("Get Support");
 
     protected override Func<Task> SubmitAction => this.GetSupport;
 
@@ -80,7 +75,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             return null;
         
         if(string.IsNullOrWhiteSpace(checkCompilerMessages))
-            return "Please provide the compiler messages.";
+            return T("Please provide the compiler messages.");
         
         return null;
     }
@@ -88,7 +83,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     private string? ValidateQuestions(string checkQuestions)
     {
         if(string.IsNullOrWhiteSpace(checkQuestions))
-            return "Please provide your questions.";
+            return T("Please provide your questions.");
         
         return null;
     }
@@ -97,7 +92,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     {
         this.codingContexts.Add(new()
         {
-            Id = $"Context {this.codingContexts.Count + 1}",
+            Id = string.Format(T("Context {0}"), this.codingContexts.Count + 1),
             Language = this.SettingsManager.ConfigurationData.Coding.PreselectOptions ? this.SettingsManager.ConfigurationData.Coding.PreselectedProgrammingLanguage : default,
             OtherLanguage = this.SettingsManager.ConfigurationData.Coding.PreselectOptions ? this.SettingsManager.ConfigurationData.Coding.PreselectedOtherProgrammingLanguage : string.Empty,
         });

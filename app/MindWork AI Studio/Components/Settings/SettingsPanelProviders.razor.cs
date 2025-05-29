@@ -36,7 +36,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
             { x => x.IsEditing, false },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Add LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Add LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -65,9 +65,10 @@ public partial class SettingsPanelProviders : SettingsPanelBase
             { x => x.IsSelfHosted, provider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, provider.Host },
+            { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>("Edit LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -91,10 +92,10 @@ public partial class SettingsPanelProviders : SettingsPanelBase
     {
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete the provider '{provider.InstanceName}'?" },
+            { "Message", string.Format(T("Are you sure you want to delete the provider '{0}'?"), provider.InstanceName) },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete LLM Provider", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -109,10 +110,10 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         {
             var issueDialogParameters = new DialogParameters
             {
-                { "Message", $"Couldn't delete the provider '{provider.InstanceName}'. The issue: {deleteSecretResponse.Issue}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?" },
+                { "Message", string.Format(T("Couldn't delete the provider '{0}'. The issue: {1}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?"), provider.InstanceName, deleteSecretResponse.Issue) },
             };
         
-            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete LLM Provider", issueDialogParameters, DialogOptions.FULLSCREEN);
+            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete LLM Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);
             var issueDialogResult = await issueDialogReference.Result;
             if (issueDialogResult is null || issueDialogResult.Canceled)
                 return;
@@ -148,7 +149,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
             return level.GetName();
 
-        return "Not yet configured";
+        return T("Not yet configured");
     }
     
     private string SetCurrentConfidenceLevelColorStyle(LLMProviders llmProvider)

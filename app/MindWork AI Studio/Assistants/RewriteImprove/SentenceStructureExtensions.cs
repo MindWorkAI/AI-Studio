@@ -2,12 +2,14 @@ namespace AIStudio.Assistants.RewriteImprove;
 
 public static class SentenceStructureExtensions
 {
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(SentenceStructureExtensions).Namespace, nameof(SentenceStructureExtensions));
+    
     public static string Name(this SentenceStructure sentenceStructure) => sentenceStructure switch
     {
-        SentenceStructure.ACTIVE => "Active voice",
-        SentenceStructure.PASSIVE => "Passive voice",
+        SentenceStructure.ACTIVE => TB("Active voice"),
+        SentenceStructure.PASSIVE => TB("Passive voice"),
         
-        _ => "Not Specified",
+        _ => TB("Not Specified"),
     };
 
     public static string Prompt(this SentenceStructure sentenceStructure) => sentenceStructure switch

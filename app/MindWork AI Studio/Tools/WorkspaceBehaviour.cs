@@ -5,11 +5,14 @@ using System.Text.Json.Serialization;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
 public static class WorkspaceBehaviour
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
+    
     public static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -97,13 +100,13 @@ public static class WorkspaceBehaviour
                 {
                     "Message", (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => $"Are you sure you want to delete the temporary chat '{chat.Name}'?",
-                        false => $"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?",
+                        true => TB($"Are you sure you want to delete the temporary chat '{chat.Name}'?"),
+                        false => TB($"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?"),
                     }
                 },
             };
 
-            var dialogReference = await dialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+            var dialogReference = await dialogService.ShowAsync<ConfirmDialog>(TB("Delete Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
                 return;

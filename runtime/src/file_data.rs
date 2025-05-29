@@ -15,6 +15,8 @@ use rocket::response::stream::{EventStream, Event};
 use rocket::tokio::select;
 use rocket::serde::Serialize;
 use rocket::get;
+use crate::api_token::APIToken;
+use crate::pdfium::PdfiumInit;
 
 #[derive(Debug, Serialize)]
 pub struct Chunk {
@@ -39,7 +41,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
 #[get("/retrieval/fs/extract?<path>")]
-pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
+pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> EventStream![] {
     EventStream! {
         let stream_result = stream_data(&path).await;
         match stream_result {
@@ -78,7 +80,7 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
         FileFormat::from_file(&file_path_clone)
     }).await??;
 
-    let ext = file_path.split('.').last().unwrap_or("");
+    let ext = file_path.split('.').next_back().unwrap_or("");
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
@@ -91,7 +93,7 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
         
         _ => match fmt.kind() {
             Kind::Document => match fmt {
-                FileFormat::PortableDocumentFormat => read_pdf(file_path).await?,
+                FileFormat::PortableDocumentFormat => stream_pdf(file_path).await?,
                 FileFormat::MicrosoftWordDocument => {
                     convert_with_pandoc(file_path, "docx", TO_MARKDOWN).await?
                 }
@@ -133,7 +135,7 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     let mut line_number = 0;
 
     let stream = stream! {
-        while let Ok(Some(line)) = lines.next_line().await { // Korrektur hier
+        while let Ok(Some(line)) = lines.next_line().await {
             line_number += 1;
             yield Ok(Chunk {
                 content: line,
@@ -145,23 +147,47 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(stream))
 }
 
-async fn read_pdf(file_path: &str) -> Result<ChunkStream> {
+#[get("/retrieval/fs/read/pdf?<file_path>")]
+pub fn read_pdf(_token: APIToken, file_path: String) -> String {
+    let pdfium = Pdfium::ai_studio_init();
+    let doc = match pdfium.load_pdf_from_file(&file_path, None) {
+        Ok(document) => document,
+        Err(e) => return e.to_string(),
+    };
+
+    let mut pdf_content = String::new();
+    for page in doc.pages().iter() {
+        let content = match page.text().map(|text_content| text_content.all()) {
+            Ok(content) => content,
+            Err(_) => {
+                continue
+            }
+        };
+
+        pdf_content.push_str(&content);
+        pdf_content.push_str("\n\n");
+    }
+
+    pdf_content
+}
+
+async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
 
     tokio::task::spawn_blocking(move || {
-        let pdfium = Pdfium::default();
+        let pdfium = Pdfium::ai_studio_init();
         let doc = match pdfium.load_pdf_from_file(&path, None) {
-            Ok(d) => d,
+            Ok(document) => document,
             Err(e) => {
                 let _ = tx.blocking_send(Err(e.into()));
                 return;
             }
         };
 
-        for (i, page) in doc.pages().iter().enumerate() {
+        for (num_page, page) in doc.pages().iter().enumerate() {
             let content = match page.text().map(|t| t.all()) {
-                Ok(c) => c,
+                Ok(text_content) => text_content,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(e.into()));
                     continue;
@@ -170,7 +196,7 @@ async fn read_pdf(file_path: &str) -> Result<ChunkStream> {
 
             if tx.blocking_send(Ok(Chunk {
                 content,
-                metadata: Metadata::Pdf { page_number: i + 1 },
+                metadata: Metadata::Pdf { page_number: num_page + 1 },
             })).is_err() {
                 break;
             }

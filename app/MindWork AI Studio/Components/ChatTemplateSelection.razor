@@ -1,0 +1,29 @@
+@using AIStudio.Settings
+@inherits MSGComponentBase
+
+<MudTooltip Placement="Placement.Top" Text="@T("Start a new chat with a chat template")">
+    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass">
+        <ActivatorContent>
+            @if (this.CurrentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
+            {
+                <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.RateReview" IconColor="Color.Default">
+                    @this.CurrentChatTemplate.Name
+                </MudButton>
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.RateReview" />
+            }
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your templates")" OnClick="async () => await this.OpenSettingsDialog()" />
+            <MudDivider/>
+            @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates.GetAllChatTemplates())
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.RateReview" OnClick="async () => await this.SelectionChanged(chatTemplate)">
+                    @chatTemplate.Name
+                </MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>
+</MudTooltip>

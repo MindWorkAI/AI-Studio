@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -7,6 +8,8 @@ namespace AIStudio.Tools.Services;
 
 public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(UpdateService).Namespace, nameof(UpdateService));
+    
     private static bool IS_INITIALIZED;
     private static ISnackbar? SNACKBAR;
     
@@ -118,7 +121,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         {
             if (notifyUserWhenNoUpdate)
             {
-                SNACKBAR!.Add("No update found.", Severity.Normal, config =>
+                SNACKBAR!.Add(TB("No update found."), Severity.Normal, config =>
                 {
                     config.Icon = Icons.Material.Filled.Update;
                     config.IconSize = Size.Large;

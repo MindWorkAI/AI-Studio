@@ -1,21 +1,24 @@
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider;
 
 public static class ConfidenceLevelExtensions
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfidenceLevelExtensions).Namespace, nameof(ConfidenceLevelExtensions));
+    
     public static string GetName(this ConfidenceLevel level) => level switch
     {
-        ConfidenceLevel.NONE => "No provider selected",
+        ConfidenceLevel.NONE => TB("No provider selected"),
         
-        ConfidenceLevel.UNTRUSTED => "Untrusted",
-        ConfidenceLevel.VERY_LOW => "Very Low",
-        ConfidenceLevel.LOW => "Low",
-        ConfidenceLevel.MODERATE => "Moderate",
-        ConfidenceLevel.MEDIUM => "Medium",
-        ConfidenceLevel.HIGH => "High",
+        ConfidenceLevel.UNTRUSTED => TB("Untrusted"),
+        ConfidenceLevel.VERY_LOW => TB("Very Low"),
+        ConfidenceLevel.LOW => TB("Low"),
+        ConfidenceLevel.MODERATE => TB("Moderate"),
+        ConfidenceLevel.MEDIUM => TB("Medium"),
+        ConfidenceLevel.HIGH => TB("High"),
         
-        _ => "Unknown confidence level",
+        _ => TB("Unknown confidence level"),
     };
     
     public static string GetColor(this ConfidenceLevel level, SettingsManager settingsManager) => (level, settingsManager.IsDarkMode) switch

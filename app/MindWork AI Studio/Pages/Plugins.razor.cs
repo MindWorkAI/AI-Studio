@@ -1,21 +1,15 @@
-using AIStudio.Settings;
+using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Pages;
 
-public partial class Plugins : ComponentBase, IMessageBusReceiver
+public partial class Plugins : MSGComponentBase
 {
     private const string GROUP_ENABLED = "Enabled";
     private const string GROUP_DISABLED = "Disabled";
     private const string GROUP_INTERNAL = "Internal";
-    
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private TableGroupDefinition<IPluginMetadata> groupConfig = null!;
 
@@ -23,8 +17,7 @@ public partial class Plugins : ComponentBase, IMessageBusReceiver
 
     protected override async Task OnInitializedAsync()
     {
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.PLUGINS_RELOADED ]);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED ]);
         
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -45,7 +38,7 @@ public partial class Plugins : ComponentBase, IMessageBusReceiver
     }
 
     #endregion
-    
+
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
     {
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
@@ -56,26 +49,17 @@ public partial class Plugins : ComponentBase, IMessageBusReceiver
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
-    #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(Plugins);
-    
-    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
             case Event.PLUGINS_RELOADED:
-                this.InvokeAsync(this.StateHasChanged);
+                await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
-        
-        return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
     }
 
     #endregion

@@ -4,23 +4,20 @@
 
 <div class="inner-scrolling-context">
 
-    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
-        @(this.Title)
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+        <MudText Typo="Typo.h3">
+            @(this.Title)
+        </MudText>
+        
+        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
+    </MudStack>
 
     <InnerScrolling>
         <ChildContent>
             <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
-                <MudGrid Class="mb-2">
-                    <MudItem xs="10">
-                        <MudText Typo="Typo.body1" Align="Align.Justify">
-                            @this.Description
-                        </MudText>
-                    </MudItem>
-                    <MudItem xs="2" Class="d-flex justify-end align-start">
-                        <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
-                    </MudItem>
-                </MudGrid>
+                <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-2">
+                    @this.Description
+                </MudText>
 
                 @if (this.Body is not null)
                 {
@@ -29,12 +26,12 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="() => this.SubmitAction()" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="async () => await this.Start()" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.isProcessing && this.cancellationTokenSource is not null)
                         {
-                            <MudTooltip Text="Stop generation">
+                            <MudTooltip Text="@TB("Stop generation")">
                                 <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
                             </MudTooltip>
                         }
@@ -80,7 +77,7 @@
                 {
                     @if (this.ShowSendTo)
                     {
-                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                        <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                             @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                             {
                                 <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
@@ -97,20 +94,20 @@
                     {
                         case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
                             <MudTooltip Text="@buttonData.Tooltip">
-                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                     @buttonData.Text
                                 </MudButton>
                             </MudTooltip>
                             break;
 
                         case ButtonData buttonData:
-                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
                                 @buttonData.Text
                             </MudButton>
                             break;
 
                         case SendToButton sendToButton:
-                            <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Send to ..." Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                            <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                                 @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                                 {
                                     <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
@@ -125,14 +122,14 @@
                 @if (this.ShowCopyResult)
                 {
                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
-                        Copy result
+                        @TB("Copy result")
                     </MudButton>
                 }
 
                 @if (this.ShowReset)
                 {
                     <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
-                        Reset
+                        @TB("Reset")
                     </MudButton>
                 }
 

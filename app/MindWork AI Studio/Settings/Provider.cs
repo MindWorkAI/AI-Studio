@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
-
+using AIStudio.Provider.HuggingFace;
 using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Settings;
@@ -24,7 +24,8 @@ public readonly record struct Provider(
     Model Model,
     bool IsSelfHosted = false,
     string Hostname = "http://localhost:1234",
-    Host Host = Host.NONE) : ISecretId
+    Host Host = Host.NONE,
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ISecretId
 {
     #region Overrides of ValueType
 

@@ -1,8 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Components;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 using Timer = System.Timers.Timer;
 
@@ -14,6 +16,9 @@ namespace AIStudio.Pages;
 public partial class Chat : MSGComponentBase
 {
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Bottom;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings;
@@ -80,11 +85,22 @@ public partial class Chat : MSGComponentBase
         this.StateHasChanged();
     }
 
+    private async Task OpenChatSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        
+        await this.DialogService.ShowAsync<SettingsDialogChat>(T("Open Chat Options"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+    
+    private async Task OpenWorkspacesSettingsDialog()
+    {
+        var dialogParameters = new DialogParameters();
+        await this.DialogService.ShowAsync<SettingsDialogWorkspaces>(T("Open Workspaces Configuration"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+
     #region Overrides of MSGComponentBase
 
-    public override string ComponentName => nameof(Chat);
-    
-    public override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -94,11 +110,6 @@ public partial class Chat : MSGComponentBase
         }
 
         return Task.CompletedTask;
-    }
-
-    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
-    {
-        return Task.FromResult(default(TResult));
     }
 
     #endregion

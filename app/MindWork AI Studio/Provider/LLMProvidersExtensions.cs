@@ -1,3 +1,4 @@
+using AIStudio.Provider.AlibabaCloud;
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.DeepSeek;
 using AIStudio.Provider.Fireworks;
@@ -5,11 +6,13 @@ using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.GWDG;
 using AIStudio.Provider.Helmholtz;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Provider.X;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -17,6 +20,8 @@ namespace AIStudio.Provider;
 
 public static class LLMProvidersExtensions
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LLMProvidersExtensions).Namespace, nameof(LLMProvidersExtensions));
+    
     /// <summary>
     /// Returns the human-readable name of the provider.
     /// </summary>
@@ -24,7 +29,7 @@ public static class LLMProvidersExtensions
     /// <returns>The human-readable name of the provider.</returns>
     public static string ToName(this LLMProviders llmProvider) => llmProvider switch
     {
-        LLMProviders.NONE => "No provider selected",
+        LLMProviders.NONE => TB("No provider selected"),
         
         LLMProviders.OPEN_AI => "OpenAI",
         LLMProviders.ANTHROPIC => "Anthropic",
@@ -32,16 +37,18 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => "Google",
         LLMProviders.X => "xAI",
         LLMProviders.DEEP_SEEK => "DeepSeek",
+        LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
+        LLMProviders.HUGGINGFACE => "Hugging Face",
         
-        LLMProviders.SELF_HOSTED => "Self-hosted",
+        LLMProviders.SELF_HOSTED => TB("Self-hosted"),
         
         LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
         LLMProviders.GWDG => "GWDG SAIA",
         
-        _ => "Unknown",
+        _ => TB("Unknown"),
     };
     
     /// <summary>
@@ -54,7 +61,10 @@ public static class LLMProvidersExtensions
     {
         LLMProviders.NONE => Confidence.NONE,
         
-        LLMProviders.FIREWORKS => Confidence.USA_NOT_TRUSTED.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        LLMProviders.FIREWORKS => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://fireworks.ai/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
+        // Not trusted, because huggingface only routes you to a third-party-provider and we can't make sure they do not use your data 
+        LLMProviders.HUGGINGFACE => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://huggingface.co/terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)), 
         
         LLMProviders.OPEN_AI => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources(
             "https://platform.openai.com/docs/models/default-usage-policies-by-endpoint",
@@ -74,6 +84,8 @@ public static class LLMProvidersExtensions
         LLMProviders.X => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://x.ai/legal/terms-of-service-enterprise").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.DEEP_SEEK => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        
+        LLMProviders.ALIBABA_CLOUD => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://www.alibabacloud.com/help/en/model-studio/support/faq-about-alibaba-cloud-model-studio").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
@@ -97,6 +109,7 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.GOOGLE => true,
         LLMProviders.HELMHOLTZ => true,
+        LLMProviders.ALIBABA_CLOUD => true,
         
         //
         // Providers that do not support embeddings:
@@ -107,6 +120,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => false,
         LLMProviders.GWDG => false,
         LLMProviders.DEEP_SEEK => false,
+        LLMProviders.HUGGINGFACE => false,
         
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -124,7 +138,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings, ILogger logger)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, logger);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider ,logger);
     }
     
     /// <summary>
@@ -135,10 +149,10 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings, ILogger logger)
     {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, logger);
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE,logger);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, ILogger logger)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider , ILogger logger)
     {
         try
         {
@@ -150,9 +164,11 @@ public static class LLMProvidersExtensions
                 LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = instanceName },
                 LLMProviders.X => new ProviderX(logger) { InstanceName = instanceName },
                 LLMProviders.DEEP_SEEK => new ProviderDeepSeek(logger) { InstanceName = instanceName },
+                LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud(logger) { InstanceName = instanceName },
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger, inferenceProvider, model) { InstanceName = instanceName }, 
                 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
                 
@@ -177,9 +193,11 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => "https://console.cloud.google.com/",
         LLMProviders.X => "https://accounts.x.ai/sign-up",
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
+        LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
+        LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
         
         LLMProviders.HELMHOLTZ => "https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/#step-1-register-on-gitlab",
         LLMProviders.GWDG => "https://docs.hpc.gwdg.de/services/saia/index.html#api-request",
@@ -197,6 +215,8 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => "https://console.cloud.google.com/billing",
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
+        LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
+        LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
         
         _ => string.Empty,
     };
@@ -211,19 +231,23 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => true,
         LLMProviders.GOOGLE => true,
         LLMProviders.DEEP_SEEK => true,
+        LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.HUGGINGFACE => true,
         
         _ => false,
     };
 
-    public static string GetModelsOverviewURL(this LLMProviders provider) => provider switch
+    public static string GetModelsOverviewURL(this LLMProviders provider, HFInferenceProvider inferenceProvider) => provider switch
     {
         LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
+        LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.EndpointsId()}",
         _ => string.Empty,
     };
 
     public static bool IsLLMModelProvidedManually(this LLMProviders provider) => provider switch
     {
         LLMProviders.FIREWORKS => true,
+        LLMProviders.HUGGINGFACE => true,
         _ => false,
     };
     
@@ -253,11 +277,13 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.X => true,
         LLMProviders.DEEP_SEEK => true,
+        LLMProviders.ALIBABA_CLOUD => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GWDG => true,
+        LLMProviders.HUGGINGFACE => true,
         
         LLMProviders.SELF_HOSTED => host is Host.OLLAMA,
         
@@ -272,11 +298,13 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.X => true,
         LLMProviders.DEEP_SEEK => true,
+        LLMProviders.ALIBABA_CLOUD => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GWDG => true,
+        LLMProviders.HUGGINGFACE => true,
         
         _ => false,
     };
@@ -306,4 +334,10 @@ public static class LLMProvidersExtensions
         
         return true;
     }
+    
+    public static bool IsHFInstanceProviderNeeded(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.HUGGINGFACE => true,
+        _ => false,
+    };
 }

@@ -11,7 +11,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class Workspaces : ComponentBase
+public partial class Workspaces : MSGComponentBase
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -39,6 +39,8 @@ public partial class Workspaces : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         //
         // Notice: In order to get the server-based loading to work, we need to respect the following rules:
         // - We must have initial tree items
@@ -46,7 +48,6 @@ public partial class Workspaces : ComponentBase
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
         await this.LoadTreeItems();
-        await base.OnInitializedAsync();
     }
 
     #endregion
@@ -61,7 +62,7 @@ public partial class Workspaces : ComponentBase
             {
                 Depth = 0,
                 Branch = WorkspaceBranch.WORKSPACES,
-                Text = "Workspaces",
+                Text = T("Workspaces"),
                 Icon = Icons.Material.Filled.Folder,
                 Expandable = true,
                 Path = "root",
@@ -77,7 +78,7 @@ public partial class Workspaces : ComponentBase
             {
                 Depth = 0,
                 Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                Text = "Temporary chats",
+                Text = T("Disappearing Chats"),
                 Icon = Icons.Material.Filled.Timer,
                 Expandable = true,
                 Path = "temp",
@@ -178,7 +179,7 @@ public partial class Workspaces : ComponentBase
         workspaces.Add(new TreeItemData<ITreeItem>
         {
             Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, "Add workspace",Icons.Material.Filled.LibraryAdd, this.AddWorkspace),
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"),Icons.Material.Filled.LibraryAdd, this.AddWorkspace),
         });
         return workspaces;
     }
@@ -220,7 +221,7 @@ public partial class Workspaces : ComponentBase
         result.Add(new()
         {
             Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, "Add chat",Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)),
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"),Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)),
         });
         
         return result;
@@ -250,10 +251,10 @@ public partial class Workspaces : ComponentBase
         {
             var dialogParameters = new DialogParameters
             {
-                { "Message", "Are you sure you want to load another chat? All unsaved changes will be lost." },
+                { "Message", T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
             };
         
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Load Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
                 return null;
@@ -294,13 +295,13 @@ public partial class Workspaces : ComponentBase
                 {
                     "Message", (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => $"Are you sure you want to delete the temporary chat '{chat.Name}'?",
-                        false => $"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?",
+                        true => string.Format(T("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
+                        false => string.Format(T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                     }
                 },
             };
 
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Chat"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
                 return;
@@ -331,18 +332,25 @@ public partial class Workspaces : ComponentBase
         
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Please enter a new or edit the name for your chat '{chat.Name}':" },
+            { "Message", string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
             { "UserInput", chat.Name },
-            { "ConfirmText", "Rename" },
+            { "ConfirmText", T("Rename") },
             { "ConfirmColor", Color.Info },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Chat", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Chat"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
 
         chat.Name = (dialogResult.Data as string)!;
+        if(this.CurrentChatThread?.ChatId == chat.ChatId)
+        {
+            this.CurrentChatThread.Name = chat.Name;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
+        }
+        
         await this.StoreChat(chat);
         await this.LoadTreeItems();
     }
@@ -356,13 +364,13 @@ public partial class Workspaces : ComponentBase
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(workspaceId);
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Please enter a new or edit the name for your workspace '{workspaceName}':" },
+            { "Message", string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
             { "UserInput", workspaceName },
-            { "ConfirmText", "Rename" },
+            { "ConfirmText", T("Rename") },
             { "ConfirmColor", Color.Info },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Rename Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -377,13 +385,13 @@ public partial class Workspaces : ComponentBase
     {
         var dialogParameters = new DialogParameters
         {
-            { "Message", "Please name your workspace:" },
+            { "Message", T("Please name your workspace:") },
             { "UserInput", string.Empty },
-            { "ConfirmText", "Add workspace" },
+            { "ConfirmText", T("Add workspace") },
             { "ConfirmColor", Color.Info },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>("Add Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Add Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -411,10 +419,10 @@ public partial class Workspaces : ComponentBase
         
         var dialogParameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete the workspace '{workspaceName}'? This will also delete {chatCount} chat(s) in this workspace." },
+            { "Message", string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -431,17 +439,17 @@ public partial class Workspaces : ComponentBase
         
         var dialogParameters = new DialogParameters
         {
-            { "Message", "Please select the workspace where you want to move the chat to." },
+            { "Message", T("Please select the workspace where you want to move the chat to.") },
             { "SelectedWorkspace", chat.WorkspaceId },
-            { "ConfirmText", "Move chat" },
+            { "ConfirmText", T("Move chat") },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var workspaceId = dialogResult.Data is Guid id ? id : default;
+        var workspaceId = dialogResult.Data is Guid id ? id : Guid.Empty;
         if (workspaceId == Guid.Empty)
             return;
         
@@ -478,10 +486,10 @@ public partial class Workspaces : ComponentBase
         {
             var dialogParameters = new DialogParameters
             {
-                { "Message", "Are you sure you want to create a another chat? All unsaved changes will be lost." },
+                { "Message", T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
             };
         
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Create Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create Chat"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
                 return;
@@ -504,4 +512,19 @@ public partial class Workspaces : ComponentBase
         await this.LoadChat(chatPath, switchToChat: true);
         await this.LoadTreeItems();
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                await this.LoadTreeItems();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+    }
+
+    #endregion
 }

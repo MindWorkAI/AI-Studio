@@ -120,15 +120,21 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(["gpt-", "o1-"], token, apiKeyProvisional);
+        var models = await this.LoadModels(["gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
+        return models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase) &&
+                                     !model.Id.Contains("o1-pro", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(["dall-e-"], token, apiKeyProvisional);
+        return this.LoadModels(["dall-e-", "gpt-image"], token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
@@ -136,7 +142,70 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     {
         return this.LoadModels(["text-embedding-"], token, apiKeyProvisional);
     }
-
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        if (modelName.StartsWith("o1-mini"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING,
+                ];
+        
+        if (modelName.StartsWith("o3-mini"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
+                ];
+        
+        if (modelName.StartsWith("o4-mini") || modelName.StartsWith("o1") || modelName.StartsWith("o3"))
+            return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
+                ];
+        
+        if(modelName.StartsWith("gpt-3.5"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                ];
+        
+        if(modelName.StartsWith("gpt-4-turbo"))
+            return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING
+                ];
+        
+        if(modelName is "gpt-4" || modelName.StartsWith("gpt-4-"))
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                ];
+        
+        return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+            ];
+    }
+    
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)

@@ -1,6 +1,6 @@
 @using AIStudio.Settings
-
-<MudSelect T="Provider" Value="@this.ProviderSettings" ValueChanged="@this.SelectionChanged" Validation="@this.ValidateProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="Provider" Class="mb-3 rounded-lg" OuterClass="flex-grow-0" Variant="Variant.Outlined">
+@inherits MSGComponentBase
+<MudSelect T="Provider" Value="@this.ProviderSettings" ValueChanged="@this.SelectionChanged" Validation="@this.ValidateProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="@T("Provider")" Class="mb-3 rounded-lg" OuterClass="flex-grow-0" Variant="Variant.Outlined">
     @foreach (var provider in this.GetAvailableProviders())
     {
         <MudSelectItem Value="@provider"/>

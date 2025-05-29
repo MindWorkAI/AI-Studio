@@ -1,11 +1,11 @@
 using AIStudio.Assistants.ERI;
-using AIStudio.Settings;
+using AIStudio.Components;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class RetrievalProcessDialog : ComponentBase
+public partial class RetrievalProcessDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -60,9 +60,6 @@ public partial class RetrievalProcessDialog : ComponentBase
     [Parameter]
     public bool IsEditing { get; init; }
     
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
-    
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private bool dataIsValid;
@@ -80,13 +77,13 @@ public partial class RetrievalProcessDialog : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Convert the parameters:
         this.retrievalParameters = this.DataParametersDescription.Select(pair => new RetrievalParameter { Name = pair.Key, Description = pair.Value }).ToList();
-        
-        await base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -104,13 +101,13 @@ public partial class RetrievalProcessDialog : ComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return "The retrieval process name must not be empty. Please name your retrieval process.";
+            return T("The retrieval process name must not be empty. Please name your retrieval process.");
         
         if (name.Length > 26)
-            return "The retrieval process name must not be longer than 26 characters.";
+            return T("The retrieval process name must not be longer than 26 characters.");
         
         if (this.UsedRetrievalProcessNames.Contains(name))
-            return $"The retrieval process name '{name}' must be unique. Please choose a different name.";
+            return string.Format(T("The retrieval process name '{0}' must be unique. Please choose a different name."), name);
         
         return null;
     }
@@ -118,26 +115,26 @@ public partial class RetrievalProcessDialog : ComponentBase
     private string? ValidateDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return "The description must not be empty. Please describe the retrieval process.";
+            return T("The description must not be empty. Please describe the retrieval process.");
         
         return null;
     }
     
     private void AddRetrievalProcessParameter()
     {
-        this.retrievalParameters.Add(new() { Name = $"New Parameter {this.nextParameterId++}", Description = string.Empty });
+        this.retrievalParameters.Add(new() { Name = string.Format(T("New Parameter {0}"), this.nextParameterId++), Description = string.Empty });
     }
     
     private string? ValidateParameterName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return "The parameter name must not be empty. Please name the parameter.";
+            return T("The parameter name must not be empty. Please name the parameter.");
         
         if(name.Length > 26)
-            return "The parameter name must not be longer than 26 characters.";
+            return T("The parameter name must not be longer than 26 characters.");
         
         if (this.retrievalParameters.Count(parameter => parameter.Name == name) > 1)
-            return $"The parameter name '{name}' must be unique. Please choose a different name.";
+            return string.Format(T("The parameter name '{0}' must be unique. Please choose a different name."), name);
         
         return null;
     }
@@ -145,7 +142,7 @@ public partial class RetrievalProcessDialog : ComponentBase
     private string? ValidateParameterDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return $"The parameter description must not be empty. Please describe the parameter '{this.selectedParameter?.Name}'. What data type is it? What is it used for? What are the possible values?";
+            return string.Format(T("The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?"), this.selectedParameter?.Name);
         
         return null;
     }
@@ -156,7 +153,7 @@ public partial class RetrievalProcessDialog : ComponentBase
             return nameIssue;
         
         if (string.IsNullOrWhiteSpace(parameter.Description))
-            return $"The parameter description must not be empty. Please describe the parameter '{parameter.Name}'. What data type is it? What is it used for? What are the possible values?";
+            return string.Format(T("The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?"), parameter.Name);
         
         return null;
     }
@@ -172,12 +169,12 @@ public partial class RetrievalProcessDialog : ComponentBase
     private string GetMultiSelectionText(List<EmbeddingInfo> selectedEmbeddings)
     {
         if(selectedEmbeddings.Count == 0)
-            return "No embedding methods selected.";
+            return T("No embedding methods selected.");
         
         if(selectedEmbeddings.Count == 1)
-            return "You have selected 1 embedding method.";
+            return T("You have selected 1 embedding method.");
         
-        return $"You have selected {selectedEmbeddings.Count} embedding methods.";
+        return string.Format(T("You have selected {0} embedding methods."), selectedEmbeddings.Count);
     }
     
     private void EmbeddingsChanged(IEnumerable<EmbeddingInfo>? updatedEmbeddings)

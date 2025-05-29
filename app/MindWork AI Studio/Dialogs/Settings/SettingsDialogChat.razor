@@ -1,0 +1,36 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Chat" Class="mr-2" />
+            @T("Chat Options")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <ConfigurationSelect OptionDescription="@T("Shortcut to send input")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)" Data="@ConfigurationSelectDataFactory.GetSendBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior = selectedValue)" OptionHelp="@T("Do you want to use any shortcut to send your input?")"/>
+        <ConfigurationOption OptionDescription="@T("Show the latest message after loading?")" LabelOn="@T("Latest message is shown, after loading a chat")" LabelOff="@T("First (oldest) message is shown, after loading a chat")" State="@(() => this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading = updatedState)" OptionHelp="@T("When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.")"/>
+        <ConfigurationSelect OptionDescription="@T("Provider selection when creating new chats")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior)" Data="@ConfigurationSelectDataFactory.GetAddChatProviderBehavior()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.AddChatProviderBehavior = selectedValue)" OptionHelp="@T("Control how the LLM provider for added chats is selected.")"/>
+        <ConfigurationSelect OptionDescription="@T("Provider selection when loading a chat and sending assistant results to chat")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)" Data="@ConfigurationSelectDataFactory.GetLoadingChatProviderBehavior()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior = selectedValue)" OptionHelp="@T("Control how the LLM provider for loaded chats is selected and when assistant results are sent to chat.")"/>
+
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="@T("Preselect chat options?")" LabelOn="@T("Chat options are preselected")" LabelOff="@T("No chat options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.Chat.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.")"/>
+            <ConfigurationProviderSelection Component="Components.CHAT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.PreselectedProvider = selectedValue)"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect one of your profiles?")" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.PreselectedProfile = selectedValue)" OptionHelp="@T("Would you like to set one of your profiles as the default for chats?")"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect one of your chat templates?")" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectedChatTemplate)" Data="@ConfigurationSelectDataFactory.GetChatTemplatesData(this.SettingsManager.ConfigurationData.ChatTemplates)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.PreselectedChatTemplate = selectedValue)" OptionHelp="@T("Would you like to set one of your chat templates as the default for chats?")"/>
+        </MudPaper>
+
+        @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+        {
+            <DataSourceSelection SelectionMode="DataSourceSelectionMode.CONFIGURATION_MODE" AutoSaveAppSettings="@true" @bind-DataSourceOptions="@this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions" ConfigurationHeaderMessage="@T("You can set default data sources and options for new chats. You can change these settings later for each individual chat.")"/>
+            <ConfigurationSelect OptionDescription="@T("Apply default data source option when sending assistant results to chat")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior)" Data="@ConfigurationSelectDataFactory.GetSendToChatDataSourceBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior = selectedValue)" OptionHelp="@T("Do you want to apply the default data source options when sending assistant results to chat?")"/>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

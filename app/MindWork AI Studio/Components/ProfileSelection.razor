@@ -1,10 +1,28 @@
-<MudTooltip Text="You can switch between your profiles here" Placement="Placement.Top">
-    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass">
-        @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
-        {
-            <MudMenuItem OnClick="() => this.SelectionChanged(profile)">
-                @profile.Name
-            </MudMenuItem>
-        }
+@using AIStudio.Settings
+@inherits MSGComponentBase
+<MudTooltip Text="@this.ToolTipText" Placement="Placement.Top">
+    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" Disabled="@this.Disabled">
+        <ActivatorContent>
+            @if (this.CurrentProfile != Profile.NO_PROFILE)
+            {
+                <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Person4" IconColor="Color.Default">
+                    @this.CurrentProfile.Name
+                </MudButton>
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Person4" />
+            }
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your profiles")" OnClick="async () => await this.OpenSettingsDialog()" />
+            <MudDivider/>
+            @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.Person4" OnClick="() => this.SelectionChanged(profile)">
+                    @profile.Name
+                </MudMenuItem>
+            }
+        </ChildContent>
     </MudMenu>
 </MudTooltip>

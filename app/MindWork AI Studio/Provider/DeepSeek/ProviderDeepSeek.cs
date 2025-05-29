@@ -76,7 +76,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Helmholtz", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("DeepSeek", RequestBuilder, token))
             yield return content;
     }
 
@@ -105,6 +105,27 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
+    
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        if(modelName.IndexOf("reasoner") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.ALWAYS_REASONING,
+            ];
+        
+        return
+        [
+            Capability.TEXT_INPUT,
+            Capability.TEXT_OUTPUT,
+        ];
+    }
+
 
     #endregion
 

@@ -7,12 +7,9 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 {
     public override Tools.Components Component => Tools.Components.TRANSLATION_ASSISTANT;
     
-    protected override string Title => "Translation";
+    protected override string Title => T("Translation");
     
-    protected override string Description =>
-        """
-        Translate text from one language to another.
-        """;
+    protected override string Description => T("Translate text from one language to another.");
     
     protected override string SystemPrompt => 
         """
@@ -26,7 +23,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Translate";
+    protected override string SubmitText => T("Translate");
 
     protected override Func<Task> SubmitAction => () => this.TranslateText(true);
 
@@ -85,7 +82,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide a text as input. You might copy the desired text from a document or a website.";
+            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -93,7 +90,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string? ValidatingTargetLanguage(CommonLanguages language)
     {
         if(language == CommonLanguages.AS_IS)
-            return "Please select a target language.";
+            return T("Please select a target language.");
         
         return null;
     }
@@ -101,7 +98,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }

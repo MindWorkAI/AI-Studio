@@ -2,17 +2,48 @@ use std::path::PathBuf;
 
 fn main() {
     tauri_build::build();
-    
-    // Tells Cargo to re-run this script only, when the version.txt file was changed:
-    println!("cargo:rerun-if-changed=../metadata.txt");
-    
+
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     println!("cargo:rustc-env=OUT_DIR={}", out_dir.to_str().unwrap());
 
+    //
+    // When we are in debug mode, we want to set the current RID
+    // to the current architecture. This is necessary, so that
+    // the developers get the right behavior.
+    //
+    // We read the current OS and architecture and overwrite the
+    // current RID in the metadata file (line #10).
+    //
+    // We have to take care of different naming conventions. The
+    // following RIDs are supported: win-x64, win-arm64, linux-x64,
+    // linux-arm64, osx-x64, osx-arm64.
+    //
+    let current_os = std::env::consts::OS;
+    let current_arch = std::env::consts::ARCH;
+    let rid = match (current_os, current_arch) {
+        ("windows", "x86_64") => "win-x64",
+        ("windows", "aarch64") => "win-arm64",
+
+        ("linux", "x86_64") => "linux-x64",
+        ("linux", "aarch64") => "linux-arm64",
+
+        ("macos", "x86_64") => "osx-x64",
+        ("macos", "aarch64") => "osx-arm64",
+
+        _ => panic!("Unsupported OS or architecture: {current_os} {current_arch}"),
+    };
+
     let metadata = include_str!("../metadata.txt");
-    let mut metadata_lines = metadata.lines();
-    let version = metadata_lines.next().unwrap();
-    
+    let mut metadata_lines = metadata.lines().collect::<Vec<_>>();
+    metadata_lines[9] = rid;
+    let new_metadata = metadata_lines.join("\n");
+    std::fs::write("../metadata.txt", new_metadata).unwrap();
+
+    //
+    // Read the current version and update the
+    // Rust and Tauri configuration files:
+    //
+    let version = metadata_lines[0];
     update_cargo_toml("Cargo.toml", version);
     update_tauri_conf("tauri.conf.json", version);
 }

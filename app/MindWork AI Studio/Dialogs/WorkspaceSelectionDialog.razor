@@ -1,6 +1,9 @@
+@inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
-        <MudText Typo="Typo.body1">@this.Message</MudText>
+        <MudText Typo="Typo.body1">
+            @this.Message
+        </MudText>
         <MudList T="Guid" @bind-SelectedValue="@this.selectedWorkspace">
             @foreach (var (workspaceName, workspaceId) in this.workspaces)
             {
@@ -9,7 +12,11 @@
         </MudList>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info">@this.ConfirmText</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info">
+            @this.ConfirmText
+        </MudButton>
     </DialogActions>
 </MudDialog>

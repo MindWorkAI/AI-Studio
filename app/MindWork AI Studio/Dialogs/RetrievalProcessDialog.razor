@@ -1,24 +1,25 @@
 @using AIStudio.Assistants.ERI
 @using MudExtensions
+@inherits MSGComponentBase
+
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
 
             <MudText Typo="Typo.h5" Class="mb-3">
-                General Information
+                @T("General Information")
             </MudText>
 
             <MudText Typo="Typo.body1" Class="mb-3">
-                Please provide some general information about your retrieval process first. This data may be
-                displayed to the users.
+                @T("Please provide some general information about your retrieval process first. This data may be displayed to the users.")
             </MudText>
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataName"
-                Label="Retrieval Process Name"
-                HelperText="The name of your retrieval process."
+                Label="@T("Retrieval Process Name")"
+                HelperText="@T("The name of your retrieval process.")"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Label"
@@ -34,8 +35,8 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataDescription"
-                Label="Retrieval Process Description"
-                HelperText="A short description of the retrieval process."
+                Label="@T("Retrieval Process Description")"
+                HelperText="@T("A short description of the retrieval process.")"
                 Lines="3"
                 AutoGrow="@true"
                 MaxLines="6"
@@ -53,8 +54,8 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataLink"
-                Label="Retrieval Process Link"
-                HelperText="A link to the retrieval process, e.g., the source code, the paper, it's Wikipedia page, etc. Make sense for common retrieval processes. Leave empty if not applicable."
+                Label="@T("Retrieval Process Link")"
+                HelperText="@T("A link to the retrieval process, e.g., the source code, the paper, it's Wikipedia page, etc. Make sense for common retrieval processes. Leave empty if not applicable.")"
                 Class="mb-6"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Link"
@@ -63,13 +64,11 @@
             />
 
             <MudText Typo="Typo.h5" Class="mb-3">
-                Retrieval Process Parameters
+                @T("Retrieval Process Parameters")
             </MudText>
 
             <MudText Typo="Typo.body1" Class="mb-3">
-                You may want to parameterize your retrieval process. However, this is optional. You can specify any
-                parameters that can be set by the user or the system during the call. Nevertheless, you should use
-                sensible default values in your code so that users are not forced to set the parameters manually.
+                @T("You may want to parameterize your retrieval process. However, this is optional. You can specify any parameters that can be set by the user or the system during the call. Nevertheless, you should use sensible default values in your code so that users are not forced to set the parameters manually.")
             </MudText>
             
             <MudStack Row="@true" Spacing="6" AlignItems="AlignItems.Start" StretchItems="StretchItems.None">
@@ -87,7 +86,7 @@
                         </MudList>
                     }
                     <MudButton OnClick="@this.AddRetrievalProcessParameter" Variant="Variant.Filled" Color="Color.Primary" Class="mt-1">
-                        Add Parameter
+                        @T("Add Parameter")
                     </MudButton>
                 </MudStack>
                 
@@ -98,13 +97,13 @@
                         @if(this.retrievalParameters.Count == 0)
                         {
                             <MudText>
-                                Add a parameter first, then select it to edit.
+                                @T("Add a parameter first, then select it to edit.")
                             </MudText>
                         }
                         else
                         {
                             <MudText>
-                                Select a parameter to show and edit it.
+                                @T("Select a parameter to show and edit it.")
                             </MudText>
                         }
                     }
@@ -114,8 +113,8 @@
                         <MudTextField
                             T="string"
                             @bind-Text="@this.selectedParameter.Name"
-                            Label="Parameter Name"
-                            HelperText="The parameter name. It must be unique within the retrieval process."
+                            Label="@T("Parameter Name")"
+                            HelperText="@T("The parameter name. It must be unique within the retrieval process.")"
                             Class="mb-3"
                             Adornment="Adornment.Start"
                             AdornmentIcon="@Icons.Material.Filled.Label"
@@ -130,8 +129,8 @@
                         <MudTextField
                             T="string"
                             @bind-Text="@this.selectedParameter.Description"
-                            Label="Parameter Description"
-                            HelperText="A short description of the parameter. What data type is it? What is it used for? What are the possible values?"
+                            Label="@T("Parameter Description")"
+                            HelperText="@T("A short description of the parameter. What data type is it? What is it used for? What are the possible values?")"
                             Lines="3"
                             AutoGrow="@true"
                             MaxLines="6"
@@ -146,7 +145,7 @@
                         
                         <MudStack Row="@true">
                             <MudButton OnClick="@this.RemoveRetrievalProcessParameter" Variant="Variant.Filled" Color="Color.Secondary">
-                                Delete this parameter
+                                @T("Delete this parameter")
                             </MudButton>
                         </MudStack>
                         
@@ -155,22 +154,19 @@
             </MudStack>
 
             <MudText Typo="Typo.h5" Class="mb-3">
-                Embeddings
+                @T("Embeddings")
             </MudText>
 
             @if(this.AvailableEmbeddings.Count == 0)
             {
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    Currently, you have not defined any embedding methods. If your retrieval process does not require embedding, you can ignore this part.
-                    Otherwise, you can define one or more embedding methods in the previous view to assign them to your retrieval process here.
+                    @T("Currently, you have not defined any embedding methods. If your retrieval process does not require embedding, you can ignore this part. Otherwise, you can define one or more embedding methods in the previous view to assign them to your retrieval process here.")
                 </MudText>
             }
             else
             {
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    Here you can select which embedding methods are used for this retrieval process. Embeddings are optional;
-                    if your retrieval process works without embedding, you can ignore this part. You can only choose the embedding
-                    methods you have previously defined.
+                    @T("Here you can select which embedding methods are used for this retrieval process. Embeddings are optional; if your retrieval process works without embedding, you can ignore this part. You can only choose the embedding methods you have previously defined.")
                 </MudText>
 
                 <MudSelectExtended
@@ -181,11 +177,11 @@
                     SelectedValuesChanged="@this.EmbeddingsChanged"
                     Strict="@true"
                     Margin="Margin.Dense"
-                    Label="Embeddings methods"
+                    Label="@T("Embeddings methods")"
                     ShrinkLabel="@true"
                     Class="mb-3"
                     Variant="Variant.Outlined"
-                    HelperText="Optional. Select the embedding methods that are used for this retrieval process.">
+                    HelperText="@T("Optional. Select the embedding methods that are used for this retrieval process.")">
                     @foreach (var embedding in this.AvailableEmbeddings)
                     {
                         <MudSelectItemExtended Value="@embedding">
@@ -198,15 +194,17 @@
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
         <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
             @if(this.IsEditing)
             {
-                @:Update
+                @T("Update")
             }
             else
             {
-                @:Add
+                @T("Add")
             }
         </MudButton>
     </DialogActions>

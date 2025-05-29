@@ -1,3 +1,5 @@
+@inherits MSGComponentBase
+
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
@@ -5,8 +7,8 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataEmbeddingName"
-                Label="Embedding Name"
-                HelperText="The name of the embedding method."
+                Label="@T("Embedding Name")"
+                HelperText="@T("The name of the embedding method.")"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Label"
@@ -22,8 +24,8 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataEmbeddingType"
-                Label="Embedding Type"
-                HelperText="What kind of embedding is used. For example, Transformer Embedding, Contextual Word Embedding, Graph Embedding, etc."
+                Label="@T("Embedding Type")"
+                HelperText="@T("What kind of embedding is used. For example, Transformer Embedding, Contextual Word Embedding, Graph Embedding, etc.")"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Extension"
                 AdornmentColor="Color.Info"
@@ -35,16 +37,16 @@
             />
 
             <MudList T="@string" Class="mb-3">
-                <MudListItem Icon="@Icons.Material.Filled.Link" Href="https://en.wikipedia.org/wiki/Word_embedding" Target="_blank" Text="See Wikipedia for more information about word embeddings"/>
-                <MudListItem Icon="@Icons.Material.Filled.Link" Href="https://en.wikipedia.org/wiki/Knowledge_graph_embedding" Target="_blank" Text="See Wikipedia for more information about knowledge graph embeddings"/>
+                <MudListItem Icon="@Icons.Material.Filled.Link" Href="https://en.wikipedia.org/wiki/Word_embedding" Target="_blank" Text="@T("See Wikipedia for more information about word embeddings")"/>
+                <MudListItem Icon="@Icons.Material.Filled.Link" Href="https://en.wikipedia.org/wiki/Knowledge_graph_embedding" Target="_blank" Text="@T("See Wikipedia for more information about knowledge graph embeddings")"/>
             </MudList>
 
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataDescription"
-                Label="Embedding Description"
-                HelperText="A short description of the embedding method."
+                Label="@T("Embedding Description")"
+                HelperText="@T("A short description of the embedding method.")"
                 Lines="3"
                 AutoGrow="@true"
                 MaxLines="6"
@@ -62,8 +64,8 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataUsedWhen"
-                Label="Used when"
-                HelperText="When is this embedding used? When you define multiple embeddings, it is helpful to know when to use which one."
+                Label="@T("Used when")"
+                HelperText="@T("When is this embedding used? When you define multiple embeddings, it is helpful to know when to use which one.")"
                 Lines="3"
                 AutoGrow="@true"
                 MaxLines="6"
@@ -81,8 +83,8 @@
             <MudTextField
                 T="string"
                 @bind-Text="@this.DataLink"
-                Label="Embedding Link"
-                HelperText="A link to the embedding, e.g., to the model, the source code, the paper, it's Wikipedia page, etc."
+                Label="@T("Embedding Link")"
+                HelperText="@T("A link to the embedding, e.g., to the model, the source code, the paper, it's Wikipedia page, etc.")"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Link"
@@ -94,15 +96,17 @@
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
         <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
             @if(this.IsEditing)
             {
-                @:Update
+                @T("Update")
             }
             else
             {
-                @:Add
+                @T("Add")
             }
         </MudButton>
     </DialogActions>

@@ -7,13 +7,14 @@ use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
 use tauri::updater::UpdateResponse;
-use tauri::{Manager, Window};
+use tauri::{Manager, PathResolver, Window};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::time;
 use crate::api_token::APIToken;
 use crate::dotnet::stop_dotnet_server;
 use crate::environment::{is_prod, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
+use crate::pdfium::PDFIUM_LIB_PATH;
 
 /// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
@@ -38,7 +39,7 @@ pub fn start_tauri() {
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
-
+            set_pdfium_path(app.path_resolver());
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -266,6 +267,19 @@ pub struct PreviousDirectory {
     path: String,
 }
 
+#[derive(Clone, Deserialize)]
+pub struct FileTypeFilter {
+    filter_name: String,
+    filter_extensions: Vec<String>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct SelectFileOptions {
+    title: String,
+    previous_file: Option<PreviousFile>,
+    filter: Option<FileTypeFilter>,
+}
+
 #[derive(Serialize)]
 pub struct DirectorySelectionResponse {
     user_cancelled: bool,
@@ -273,24 +287,36 @@ pub struct DirectorySelectionResponse {
 }
 
 /// Let the user select a file.
-#[post("/select/file?<title>", data = "<previous_file>")]
-pub fn select_file(_token: APIToken, title: &str, previous_file: Option<Json<PreviousFile>>) -> Json<FileSelectionResponse> {
-    let file_path = match previous_file {
-        Some(previous) => {
-            let previous_path = previous.file_path.as_str();
-            FileDialogBuilder::new()
-                .set_title(title)
-                .set_directory(previous_path)
-                .pick_file()
+#[post("/select/file", data = "<payload>")]
+pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FileSelectionResponse> {
+
+    // Create a new file dialog builder:
+    let file_dialog = FileDialogBuilder::new();
+
+    // Set the title of the file dialog:
+    let file_dialog = file_dialog.set_title(&payload.title);
+
+    // Set the file type filter if provided:
+    let file_dialog = match &payload.filter {
+        Some(filter) => {
+            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
         },
 
-        None => {
-            FileDialogBuilder::new()
-                .set_title(title)
-                .pick_file()
-        },
+        None => file_dialog,
     };
 
+    // Set the previous file path if provided:
+    let file_dialog = match &payload.previous_file {
+        Some(previous) => {
+            let previous_path = previous.file_path.as_str();
+            file_dialog.set_directory(previous_path)
+        },
+
+        None => file_dialog,
+    };
+
+    // Show the file dialog and get the selected file path:
+    let file_path = file_dialog.pick_file();
     match file_path {
         Some(path) => {
             info!("User selected file: {path:?}");
@@ -319,4 +345,17 @@ pub struct PreviousFile {
 pub struct FileSelectionResponse {
     user_cancelled: bool,
     selected_file_path: String,
+}
+
+fn set_pdfium_path(path_resolver: PathResolver) {
+    let pdfium_relative_source_path = String::from("resources/libraries/");
+    let pdfium_source_path = path_resolver.resolve_resource(pdfium_relative_source_path);
+    if pdfium_source_path.is_none() {
+        error!(Source = "Bootloader Tauri"; "Failed to set the PDFium library path.");
+        return;
+    }
+
+    let pdfium_source_path = pdfium_source_path.unwrap();
+    let pdfium_source_path = pdfium_source_path.to_str().unwrap().to_string();
+    *PDFIUM_LIB_PATH.lock().unwrap() = Some(pdfium_source_path.clone());
 }

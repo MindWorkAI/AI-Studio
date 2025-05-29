@@ -1,3 +1,4 @@
+using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Validation;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceLocalDirectoryDialog : ComponentBase
+public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -19,9 +20,6 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
 
     [Parameter]
     public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -42,6 +40,7 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
     private bool dataUserAcknowledgedCloudEmbedding;
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
+    private ushort dataMaxMatches = 10;
     private DataSourceSecurity dataSecurityPolicy;
     
     // We get the form reference from Blazor code to validate it manually:
@@ -77,6 +76,7 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
+            this.dataMaxMatches = this.DataSource.MaxMatches;
         }
         
         await base.OnInitializedAsync();
@@ -105,6 +105,7 @@ public partial class DataSourceLocalDirectoryDialog : ComponentBase
         EmbeddingId = this.dataEmbeddingId,
         Path = this.dataPath,
         SecurityPolicy = this.dataSecurityPolicy,
+        MaxMatches = this.dataMaxMatches,
     };
 
     private async Task Store()

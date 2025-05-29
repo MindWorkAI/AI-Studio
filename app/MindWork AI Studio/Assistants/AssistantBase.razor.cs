@@ -13,11 +13,8 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants;
 
-public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMessageBusReceiver, IDisposable where TSettings : IComponent
+public abstract partial class AssistantBase<TSettings> : AssistantLowerBase where TSettings : IComponent
 {
-    [Inject]
-    protected SettingsManager SettingsManager { get; init; } = null!;
-    
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
@@ -41,9 +38,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
-    
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
     
     protected abstract string Title { get; }
     
@@ -95,12 +89,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
+    protected ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     protected ChatThread? chatThread;
     protected IContent? lastUserPrompt;
+    protected CancellationTokenSource? cancellationTokenSource;
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
-    
-    private CancellationTokenSource? cancellationTokenSource;
+
     private ContentBlock? resultingContentBlock;
     private string[] inputIssues = [];
     private bool isProcessing;
@@ -109,6 +104,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         this.formChangeTimer.AutoReset = false;
         this.formChangeTimer.Elapsed += async (_, _) =>
         {
@@ -119,11 +116,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
         this.MightPreselectValues();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        
-        this.MessageBus.RegisterComponent(this);
-        this.MessageBus.ApplyFilters(this, [], [ Event.COLOR_THEME_CHANGED ]);
-        
-        await base.OnInitializedAsync();
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -145,38 +138,27 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
     }
 
     #endregion
-    
-    #region Implementation of IMessageBusReceiver
 
-    public string ComponentName => nameof(AssistantBase<TSettings>);
-    
-    public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
-    {
-        switch (triggeredEvent)
-        {
-            case Event.COLOR_THEME_CHANGED:
-                this.StateHasChanged();
-                break;
-        }
-        
-        return Task.CompletedTask;
-    }
-
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-    {
-        return Task.FromResult<TResult?>(default);
-    }
-
-    #endregion
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
 
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return "Please select a provider.";
+            return this.TB("Please select a provider.");
         
         return null;
+    }
+
+    private async Task Start()
+    {
+        using (this.cancellationTokenSource = new())
+        {
+            await this.SubmitAction();
+        }
+        
+        this.cancellationTokenSource = null;
     }
 
     private void TriggerFormChange(FormFieldChangedEventArgs _)
@@ -216,7 +198,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
-            Name = $"Assistant - {this.Title}",
+            Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Seed = this.RNG.Next(),
             Blocks = [],
         };
@@ -262,6 +244,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
 
     protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
     {
+        var manageCancellationLocally = this.cancellationTokenSource is null;
+        this.cancellationTokenSource ??= new CancellationTokenSource();
+        
         var aiText = new ContentText
         {
             // We have to wait for the remote
@@ -286,18 +271,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
 
         this.isProcessing = true;
         this.StateHasChanged();
-
-        using (this.cancellationTokenSource = new())
-        {
-            // Use the selected provider to get the AI response.
-            // By awaiting this line, we wait for the entire
-            // content to be streamed.
-            this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource.Token);
-        }
-
-        this.cancellationTokenSource = null;
+        
+        // Use the selected provider to get the AI response.
+        // By awaiting this line, we wait for the entire
+        // content to be streamed.
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
+        
         this.isProcessing = false;
         this.StateHasChanged();
+        
+        if(manageCancellationLocally)
+        {
+            this.cancellationTokenSource.Dispose();
+            this.cancellationTokenSource = null;
+        }
         
         // Return the AI response:
         return aiText.Text;
@@ -393,11 +380,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase, IMe
         false => $"background-color: {this.ColorTheme.GetCurrentPalette(this.SettingsManager).InfoLighten}",
     };
 
-    #region Implementation of IDisposable
+    #region Overrides of MSGComponentBase
 
-    public void Dispose()
+    protected override void DisposeResources()
     {
-        this.MessageBus.Unregister(this);
         this.formChangeTimer.Dispose();
     }
 

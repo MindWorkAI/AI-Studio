@@ -1,20 +1,18 @@
+@inherits MSGComponentBase
 <MudTooltip Placement="Placement.Bottom" Arrow="@true" Class="@this.Classes">
     <ChildContent>
         <MudChip T="string" Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Error" Class="mb-3">
-            Prototype
+            @T("Prototype")
         </MudChip>
     </ChildContent>
     <TooltipContent>
         <div style="max-width: 22em;">
             <MudText Typo="Typo.body2" Class="mb-3">
-                This feature is currently in the prototype phase.
-                Expect bugs, unfinished work, changes in future
-                versions, and more.
+                @T("This feature is currently in the prototype phase. Expect bugs, unfinished work, changes in future versions, and more.")
             </MudText>
 
             <MudText Typo="Typo.body2">
-                Prototype phase means that we have a plan but we
-                are still working on it.
+                @T("Prototype phase means that we have a plan but we are still working on it.")
             </MudText>
         </div>
     </TooltipContent>

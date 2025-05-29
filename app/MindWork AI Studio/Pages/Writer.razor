@@ -3,7 +3,7 @@
 
 <div class="inner-scrolling-context">
     <MudText Typo="Typo.h3" Class="mb-2">
-        Writer
+        @T("Writer")
     </MudText>
     <PreviewExperimental ApplyInnerScrollingFix="true"/>
 
@@ -13,7 +13,7 @@
             <MudTextField
                 @ref="@this.textField"
                 T="string"
-                Label="Write your text"
+                Label="@T("Write your text")"
                 @bind-Text="@this.userInput"
                 Immediate="@true"
                 Lines="16"
@@ -27,7 +27,7 @@
 
             <MudTextField
                 T="string"
-                Label="Your stage directions"
+                Label="@T("Your stage directions")"
                 @bind-Text="@this.userDirection"
                 Immediate="@true"
                 Lines="4"
@@ -45,7 +45,7 @@
             }
             <MudTextField
                 T="string"
-                Label="Suggestion"
+                Label="@T("Suggestion")"
                 @bind-Text="@this.suggestion"
                 ReadOnly="@true"
                 Lines="3"

@@ -1,0 +1,28 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+            @T("Assistant: Localization")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="@T("Preselect localization options?")" LabelOn="@T("Localization options are preselected")" LabelOff="@T("No localization options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.I18N.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect the localization options. This is might be useful when you prefer a specific language or LLM model.")"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which target language should be preselected?")"/>
+            @if (this.SettingsManager.ConfigurationData.I18N.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.I18N.PreselectOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId = selectedValue)" OptionHelp="@T("Select the language plugin used for comparision.")"/>
+            <ConfigurationProviderSelection Component="Components.I18N_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider = selectedValue)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

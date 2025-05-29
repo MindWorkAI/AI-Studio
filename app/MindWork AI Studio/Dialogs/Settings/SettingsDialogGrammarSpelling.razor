@@ -5,22 +5,24 @@
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
             <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
-            Assistant: Grammar & Spelling Checker Options
+            @T("Assistant: Grammar & Spelling Checker Options")
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
-            <ConfigurationOption OptionDescription="Preselect grammar & spell checker options?" LabelOn="Grammar & spell checker options are preselected" LabelOff="No grammar & spell checker options are preselected" State="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions = updatedState)" OptionHelp="When enabled, you can preselect the grammar & spell checker options. This is might be useful when you prefer a specific language or LLM model."/>
-            <ConfigurationSelect OptionDescription="Preselect the target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage = selectedValue)" OptionHelp="Which target language should be preselected?"/>
+            <ConfigurationOption OptionDescription="@T("Preselect grammar & spell checker options?")" LabelOn="@T("Grammar & spell checker options are preselected")" LabelOff="@T("No grammar & spell checker options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect the grammar & spell checker options. This is might be useful when you prefer a specific language or LLM model.")"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which target language should be preselected?")"/>
             @if (this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedTargetLanguage is CommonLanguages.OTHER)
             {
-                <ConfigurationText OptionDescription="Preselect another target language" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage = updatedText)"/>
+                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedOtherLanguage = updatedText)"/>
             }
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.GRAMMAR_SPELLING_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider = selectedValue)"/>
         </MudPaper>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close" Variant="Variant.Filled">Close</MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
     </DialogActions>
 </MudDialog>

@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 // ReSharper disable NotAccessedPositionalProperty.Local
 
@@ -13,18 +13,29 @@ namespace AIStudio.Settings;
 /// <summary>
 /// The settings manager.
 /// </summary>
-public sealed class SettingsManager(ILogger<SettingsManager> logger)
+public sealed class SettingsManager
 {
     private const string SETTINGS_FILENAME = "settings.json";
     
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() },
+        Converters = { new TolerantEnumConverter() },
     };
 
-    private readonly ILogger<SettingsManager> logger = logger;
-    
+    private readonly ILogger<SettingsManager> logger;
+    private readonly RustService rustService;
+
+    /// <summary>
+    /// The settings manager.
+    /// </summary>
+    public SettingsManager(ILogger<SettingsManager> logger, RustService rustService)
+    {
+        this.logger = logger;
+        this.rustService = rustService;
+        this.logger.LogInformation("Settings manager created.");
+    }
+
     /// <summary>
     /// The directory where the configuration files are stored.
     /// </summary>
@@ -143,7 +154,55 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         return minimumLevel;
     }
     
+    /// <summary>
+    /// Checks if the given plugin is enabled.
+    /// </summary>
+    /// <param name="plugin">The plugin to check.</param>
+    /// <returns>True, when the plugin is enabled, false otherwise.</returns>
     public bool IsPluginEnabled(IPluginMetadata plugin) => this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
+    
+    /// <summary>
+    /// Returns the active language plugin.
+    /// </summary>
+    /// <returns>The active language plugin.</returns>
+    public async Task<ILanguagePlugin> GetActiveLanguagePlugin()
+    {
+        switch (this.ConfigurationData.App.LanguageBehavior)
+        {
+            case LangBehavior.AUTO:
+                var languageCode = await this.rustService.ReadUserLanguage();
+                var languagePlugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x is ILanguagePlugin langPlug && langPlug.IETFTag == languageCode);
+                if (languagePlugin is null)
+                {
+                    this.logger.LogWarning($"The language plugin for the language '{languageCode}' is not available.");
+                    return PluginFactory.BaseLanguage;
+                }
+
+                if (languagePlugin is ILanguagePlugin langPlugin)
+                    return langPlugin;
+
+                this.logger.LogError("The language plugin is not a language plugin.");
+                return PluginFactory.BaseLanguage;
+            
+            case LangBehavior.MANUAL:
+                var pluginId = this.ConfigurationData.App.LanguagePluginId;
+                var plugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x.Id == pluginId);
+                if (plugin is null)
+                {
+                    this.logger.LogWarning($"The chosen language plugin (id='{pluginId}') is not available.");
+                    return PluginFactory.BaseLanguage;
+                }
+
+                if (plugin is ILanguagePlugin chosenLangPlugin)
+                    return chosenLangPlugin;
+
+                this.logger.LogError("The chosen language plugin is not a language plugin.");
+                return PluginFactory.BaseLanguage;
+        }
+        
+        this.logger.LogError("The language behavior is unknown.");
+        return PluginFactory.BaseLanguage;
+    }
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)
@@ -205,6 +264,16 @@ public sealed class SettingsManager(ILogger<SettingsManager> logger)
         
         preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProfile);
         return preselection != default ? preselection : Profile.NO_PROFILE;
+    }
+    
+    public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
+    {
+        var preselection = component.PreselectedChatTemplate(this);
+        if (preselection != default)
+            return preselection;
+        
+        preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedChatTemplate);
+        return preselection != default ? preselection : ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)

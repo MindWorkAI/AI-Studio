@@ -1,0 +1,104 @@
+@using AIStudio.Settings.DataModel
+@using AIStudio.Tools.ERIClient.DataModel
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+
+        <MudText Typo="Typo.h5">
+            @T("Common data source information")
+        </MudText>
+        
+        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.NetworkCheck" Label="@T("ERI server hostname")" Value="@this.DataSource.Hostname" ClipboardTooltipSubject="@T("the ERI server hostname")"/>
+        <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("ERI server port")" Value="@this.Port" ClipboardTooltipSubject="@T("the ERI server port")"/>
+
+        @if (!this.IsConnectionEncrypted())
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
+                @T("Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.")
+            </MudJustifiedText>
+        }
+
+        @if (this.DataSource.AuthMethod is AuthMethod.USERNAME_PASSWORD)
+        {
+            <TextInfoLine Icon="@Icons.Material.Filled.Person2" Label="@T("Username")" Value="@this.DataSource.Username" ClipboardTooltipSubject="@T("the username")"/>
+        }
+
+        <TextInfoLines Label="@T("Server description")" MaxLines="14" Value="@this.serverDescription" ClipboardTooltipSubject="@T("the server description")"/>
+        <TextInfoLines Label="@T("Security requirements of the data provider")" MaxLines="3" Value="@this.securityRequirements.Explain()" ClipboardTooltipSubject="@T("the security requirements of the data provider")"/>
+        <TextInfoLines Label="@T("Your security policy")" MaxLines="3" Value="@this.DataSource.SecurityPolicy.ToInfoText()" Color="@this.DataSource.SecurityPolicy.GetColor()" ClipboardTooltipSubject="@T("your security policy")"/>
+        <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
+
+        <MudText Typo="Typo.h5" Class="mt-6">
+            @T("Retrieval information")
+        </MudText>
+        @if (!this.retrievalInfoformation.Any())
+        {
+            <MudJustifiedText Typo="Typo.body1" Color="Color.Info" Class="mb-3">
+                @T("The data source does not provide any retrieval information.")
+            </MudJustifiedText>
+        }
+        else
+        {
+            <MudExpansionPanels Class="mb-3">
+                <ExpansionPanel HeaderText="@this.RetrievalName(this.selectedRetrievalInfo)" HeaderIcon="@Icons.Material.Filled.Info">
+                    <TextInfoLines Label="Description" MaxLines="14" Value="@this.selectedRetrievalInfo.Description" ClipboardTooltipSubject="@T("the retrieval description")"/>
+                    <TextInfoLines Label="Parameters" MaxLines="14" Value="@this.RetrievalParameters(this.selectedRetrievalInfo)" ClipboardTooltipSubject="@T("the retrieval parameters")"/>
+
+                    @if (!string.IsNullOrWhiteSpace(this.selectedRetrievalInfo.Link))
+                    {
+                        <MudButton Href="@this.selectedRetrievalInfo.Link" Target="_blank" Class="mt-3" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew">
+                            @T("Open web link, show more information")
+                        </MudButton>
+                    }
+
+                    <MudText Typo="Typo.h6" Class="mt-3">
+                        @T("Embeddings")
+                    </MudText>
+                    @* ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract *@
+                    @if (this.selectedRetrievalInfo.Embeddings is null || !this.selectedRetrievalInfo.Embeddings.Any())
+                    {
+                        <MudJustifiedText Typo="Typo.body1" Color="Color.Info" Class="mb-3">
+                            @T("The data source does not provide any embedding information.")
+                        </MudJustifiedText>
+                    }
+                    else
+                    {
+                        <MudExpansionPanels>
+                            @for (var embeddingIndex = 0; embeddingIndex < this.selectedRetrievalInfo.Embeddings.Count; embeddingIndex++)
+                            {
+                                var embedding = this.selectedRetrievalInfo.Embeddings[embeddingIndex];
+                                <ExpansionPanel HeaderText="@embedding.EmbeddingName" HeaderIcon="@Icons.Material.Filled.Info" IsExpanded="embeddingIndex == 0">
+                                    <TextInfoLine Icon="@Icons.Material.Filled.FormatShapes" Label="Type" Value="@embedding.EmbeddingType" ClipboardTooltipSubject="@T("the embedding type")"/>
+                                    <TextInfoLines Label="@T("Description")" MaxLines="14" Value="@embedding.Description" ClipboardTooltipSubject="@T("the embedding description")"/>
+                                    <TextInfoLines Label="@T("When to use")" MaxLines="3" Value="@embedding.UsedWhen" ClipboardTooltipSubject="@T("when is the embedding used")"/>
+
+                                    @if (!string.IsNullOrWhiteSpace(embedding.Link))
+                                    {
+                                        <MudButton Href="@embedding.Link" Target="_blank" Class="mt-3" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew">
+                                            @T("Open web link, show more information")
+                                        </MudButton>
+                                    }
+                                </ExpansionPanel>
+                            }
+                        </MudExpansionPanels>
+                    }
+                </ExpansionPanel>
+            </MudExpansionPanels>
+        }
+
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        @if (this.IsOperationInProgress)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="ml-5 mr-5"/>
+        }
+        <MudButton OnClick="@this.GetERIMetadata" Variant="Variant.Filled" Color="Color.Info">
+            @T("Reload")
+        </MudButton>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

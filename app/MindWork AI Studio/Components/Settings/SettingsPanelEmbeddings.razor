@@ -4,24 +4,17 @@
 
 @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
 {
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="Configure Embeddings">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="@T("Configure Embeddings")">
         <PreviewPrototype/>
         <MudText Typo="Typo.h4" Class="mb-3">
-            Configured Embeddings
+            @T("Configured Embeddings")
         </MudText>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital
-            fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns
-            that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning
-            or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and
-            'joyful' would be more alike than those for 'happy' and 'sad'.
+            @T("Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and 'joyful' would be more alike than those for 'happy' and 'sad'.")
         </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on
-            something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints.
-            For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that
-            discuss similar topics or experiences, even if they use different words.
+            @T("This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.")
         </MudJustifiedText>
         <MudTable Items="@this.SettingsManager.ConfigurationData.EmbeddingProviders" Hover="@true" Class="border-dashed border rounded-lg">
             <ColGroup>
@@ -29,32 +22,32 @@
                 <col style="width: 12em;"/>
                 <col style="width: 12em;"/>
                 <col/>
-                <col style="width: 40em;"/>
+                <col style="width: 16em;"/>
             </ColGroup>
             <HeaderContent>
                 <MudTh>#</MudTh>
-                <MudTh>Name</MudTh>
-                <MudTh>Provider</MudTh>
-                <MudTh>Model</MudTh>
-                <MudTh>Actions</MudTh>
+                <MudTh>@T("Name")</MudTh>
+                <MudTh>@T("Provider")</MudTh>
+                <MudTh>@T("Model")</MudTh>
+                <MudTh>@T("Actions")</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Num</MudTd>
                 <MudTd>@context.Name</MudTd>
-                <MudTd>@context.UsedLLMProvider</MudTd>
+                <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
                 <MudTd>@this.GetEmbeddingProviderModelName(context)</MudTd>
                 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())">
-                            Open Dashboard
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditEmbeddingProvider(context)">
-                            Edit
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteEmbeddingProvider(context)">
-                            Delete
-                        </MudButton>
+                        <MudTooltip Text="@T("Open Dashboard")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                        </MudTooltip>
+                        <MudTooltip Text="@T("Edit")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditEmbeddingProvider(context)"/>
+                        </MudTooltip>
+                        <MudTooltip Text="@T("Delete")">
+                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteEmbeddingProvider(context)"/>
+                        </MudTooltip>
                     </MudStack>
                 </MudTd>
             </RowTemplate>
@@ -62,11 +55,13 @@
 
         @if (this.SettingsManager.ConfigurationData.EmbeddingProviders.Count == 0)
         {
-            <MudText Typo="Typo.h6" Class="mt-3">No embeddings configured yet.</MudText>
+            <MudText Typo="Typo.h6" Class="mt-3">
+                @T("No embeddings configured yet.")
+            </MudText>
         }
 
         <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbeddingProvider">
-            Add Embedding
+            @T("Add Embedding")
         </MudButton>
     </ExpansionPanel>
 }

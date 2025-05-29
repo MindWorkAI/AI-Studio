@@ -7,15 +7,9 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 {
     public override Tools.Components Component => Tools.Components.TEXT_SUMMARIZER_ASSISTANT;
     
-    protected override string Title => "Text Summarizer";
+    protected override string Title => T("Text Summarizer");
     
-    protected override string Description =>
-        """
-        Summarize long text into a shorter version while retaining the main points.
-        You might want to change the language of the summary to make it more readable.
-        It is also possible to change the complexity of the summary to make it
-        easy to understand.
-        """;
+    protected override string Description => T("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
     
     protected override string SystemPrompt => 
         """
@@ -30,7 +24,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => "Summarize";
+    protected override string SubmitText => T("Summarize");
 
     protected override Func<Task> SubmitAction => this.SummarizeText;
 
@@ -90,7 +84,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return "Please provide a text as input. You might copy the desired text from a document or a website.";
+            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -98,7 +92,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return "Please provide a custom language.";
+            return T("Please provide a custom language.");
         
         return null;
     }
@@ -106,7 +100,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string? ValidateExpertInField(string field)
     {
         if(this.selectedComplexity == Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS && string.IsNullOrWhiteSpace(field))
-            return "Please provide your field of expertise.";
+            return T("Please provide your field of expertise.");
         
         return null;
     }

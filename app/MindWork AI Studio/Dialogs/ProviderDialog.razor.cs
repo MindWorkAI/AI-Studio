@@ -1,5 +1,6 @@
+using AIStudio.Components;
 using AIStudio.Provider;
-using AIStudio.Settings;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -12,7 +13,7 @@ namespace AIStudio.Dialogs;
 /// <summary>
 /// The provider settings dialog.
 /// </summary>
-public partial class ProviderDialog : ComponentBase, ISecretId
+public partial class ProviderDialog : MSGComponentBase, ISecretId
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -48,6 +49,12 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     public Host DataHost { get; set; } = Host.NONE;
     
     /// <summary>
+    /// The HFInstanceProvider to use, e.g., CEREBRAS.
+    /// </summary>
+    [Parameter]
+    public HFInferenceProvider HFInferenceProviderId { get; set; } = HFInferenceProvider.NONE;
+    
+    /// <summary>
     /// Is this provider self-hosted?
     /// </summary>
     [Parameter]
@@ -70,9 +77,6 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
@@ -122,10 +126,16 @@ public partial class ProviderDialog : ComponentBase, ISecretId
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = this.DataLLMProvider is LLMProviders.FIREWORKS ? new Model(this.dataManuallyModel, null) : this.DataModel,
+            Model = this.DataLLMProvider switch
+            {
+                LLMProviders.FIREWORKS => new Model(this.dataManuallyModel, null),
+                LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
+                _ => this.DataModel
+            },
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
+            HFInferenceProvider = this.HFInferenceProviderId,
         };
     }
 
@@ -146,8 +156,8 @@ public partial class ProviderDialog : ComponentBase, ISecretId
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
-            // When using Fireworks, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.FIREWORKS)
+            // When using Fireworks or Hugging Face, we must copy the model name:
+            if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
                 this.dataManuallyModel = this.DataModel.Id;
             
             //
@@ -169,7 +179,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
                 this.dataAPIKey = string.Empty;
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
                 {
-                    this.dataAPIKeyStorageIssue = $"Failed to load the API key from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the API key again.";
+                    this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
                 }
             }
@@ -219,7 +229,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
             var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey);
             if (!storeResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = $"Failed to store the API key in the operating system. The message was: {storeResponse.Issue}. Please try again.";
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.Validate();
                 return;
             }
@@ -230,8 +240,8 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if (this.DataLLMProvider is LLMProviders.FIREWORKS && string.IsNullOrWhiteSpace(manuallyModel))
-            return "Please enter a model name.";
+        if ((this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE) && string.IsNullOrWhiteSpace(manuallyModel))
+            return T("Please enter a model name.");
         
         return null;
     }
@@ -256,9 +266,7 @@ public partial class ProviderDialog : ComponentBase, ISecretId
     
     private string APIKeyText => this.DataLLMProvider switch
     {
-        LLMProviders.SELF_HOSTED => "(Optional) API Key",
-        _ => "API Key",
+        LLMProviders.SELF_HOSTED => T("(Optional) API Key"),
+        _ => T("API Key"),
     };
-    
-    private bool IsNoneProvider => this.DataLLMProvider is LLMProviders.NONE;
 }

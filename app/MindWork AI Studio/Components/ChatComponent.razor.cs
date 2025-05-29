@@ -46,6 +46,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
+    private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
@@ -59,7 +60,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
-    
+
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
     private MudTextField<string> inputField = null!;
@@ -76,6 +77,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Get the preselected profile:
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+        
+        // Get the preselected chat template:
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -255,13 +259,22 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private bool IsProviderSelected => this.Provider.UsedLLMProvider != LLMProviders.NONE;
     
-    private string ProviderPlaceholder => this.IsProviderSelected ? "Type your input here..." : "Select a provider first";
+    private string ProviderPlaceholder => this.IsProviderSelected ? T("Type your input here...") : T("Select a provider first");
 
-    private string InputLabel => this.IsProviderSelected ? $"Your Prompt (use selected instance '{this.Provider.InstanceName}', provider '{this.Provider.UsedLLMProvider.ToName()}')" : "Select a provider first";
-    
+    private string InputLabel
+    {
+        get
+        {
+            if (this.IsProviderSelected)
+                return string.Format(T("Your Prompt (use selected instance '{0}', provider '{1}')"), this.Provider.InstanceName, this.Provider.UsedLLMProvider.ToName());
+            
+            return this.T("Select a provider first");
+        }
+    }
+
     private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Count > 0;
     
-    private string TooltipAddChatToWorkspace => $"Start new chat in workspace \"{this.currentWorkspaceName}\"";
+    private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
     
@@ -282,6 +295,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // We select the first 10 words of the user input:
         var words = firstUserInput.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var threadName = string.Join(' ', words.Take(10));
+        threadName = threadName.Trim();
+        
+        // Remove all line breaks:
+        threadName = threadName.Replace("\r", string.Empty);
+        threadName = threadName.Replace("\n", " ");
+        threadName = threadName.Replace("\t", " ");
         
         // If the thread name is empty, we use a default name:
         if (string.IsNullOrWhiteSpace(threadName))
@@ -302,6 +321,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         };
         
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+    
+    private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
+    {
+        this.currentChatTemplate = chatTemplate;
+        if(this.ChatThread is null)
+            return;
+
+        await this.StartNewChat(true);
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
@@ -398,13 +426,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             {
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
+                SelectedChatTemplate = this.currentChatTemplate.Id,
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
                 Seed = this.RNG.Next(),
-                Blocks = [],
+                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -415,9 +444,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
                 this.ChatThread.Name = this.ExtractThreadName(this.userInput);
             
-            // Update provider and profile:
+            // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
             this.ChatThread.SelectedProfile = this.currentProfile.Id;
+            
+            //
+            // Remark: We do not update the chat template here
+            // because the chat template is only used when starting a new chat.
+            // Updating the chat template afterward is not supported.
+            //
         }
 
         var time = DateTimeOffset.Now;
@@ -628,12 +663,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             {
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
+                SelectedChatTemplate = this.currentChatTemplate.Id,
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
                 Seed = this.RNG.Next(),
-                Blocks = [],
+                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
         
@@ -653,7 +689,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             var confirmationDialogParameters = new DialogParameters
             {
-                { "Message", "Are you sure you want to move this chat? All unsaved changes will be lost." },
+                { "Message", T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
             };
         
             var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
@@ -664,12 +700,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         var dialogParameters = new DialogParameters
         {
-            { "Message", "Please select the workspace where you want to move the chat to." },
+            { "Message", T("Please select the workspace where you want to move the chat to.") },
             { "SelectedWorkspace", this.ChatThread?.WorkspaceId },
-            { "ConfirmText", "Move chat" },
+            { "ConfirmText", T("Move chat") },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>("Move Chat to Workspace", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -739,6 +775,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
         var chatProfile = this.ChatThread?.SelectedProfile;
+        var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
         switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
         {
@@ -765,6 +802,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile);
             if(this.currentProfile == default)
                 this.currentProfile = Profile.NO_PROFILE;
+        }
+        
+        // Try to select the chat template:
+        if (!string.IsNullOrWhiteSpace(chatChatTemplate))
+        {
+            this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
+            if(this.currentChatTemplate == default)
+                this.currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
         }
     }
 
@@ -838,10 +883,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     }
     
     #region Overrides of MSGComponentBase
-
-    public override string ComponentName => nameof(ChatComponent);
     
-    public override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
         {
@@ -860,7 +903,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
     }
 
-    public override Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
+    protected override Task<TResult?> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
     {
         switch (triggeredEvent)
         {
@@ -880,7 +923,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        this.MessageBus.Unregister(this);
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

@@ -3,13 +3,12 @@
 @using AIStudio.Provider.SelfHosted
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="Configure Providers">
-    <MudText Typo="Typo.h4" Class="mb-3">Configured Providers</MudText>
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="@T("Configure Providers")">
+    <MudText Typo="Typo.h4" Class="mb-3">
+        @T("Configured Providers")
+    </MudText>
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-4o.
-        You can configure as many providers as you want. This way, you can use the appropriate model for each
-        task. As an LLM provider, you can also choose local providers. However, to use this app, you must
-        configure at least one provider.
+        @T("What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-4o. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.")
     </MudJustifiedText>
     <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Hover="@true" Class="border-dashed border rounded-lg">
         <ColGroup>
@@ -17,19 +16,19 @@
             <col style="width: 12em;"/>
             <col style="width: 12em;"/>
             <col/>
-            <col style="width: 34em;"/>
+            <col style="width: 16em;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>#</MudTh>
-            <MudTh>Instance Name</MudTh>
-            <MudTh>Provider</MudTh>
-            <MudTh>Model</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@T("Instance Name")</MudTh>
+            <MudTh>@T("Provider")</MudTh>
+            <MudTh>@T("Model")</MudTh>
+            <MudTh>@T("Actions")</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Num</MudTd>
             <MudTd>@context.InstanceName</MudTd>
-            <MudTd>@context.UsedLLMProvider</MudTd>
+            <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
             <MudTd>
                 @if (context.UsedLLMProvider is not LLMProviders.SELF_HOSTED)
                 {
@@ -41,20 +40,20 @@
                 }
                 else
                 {
-                    @("as selected by provider")
+                    @T("as selected by provider")
                 }
             </MudTd>
             <MudTd>
-                <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())">
-                        Open Dashboard
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditLLMProvider(context)">
-                        Edit
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteLLMProvider(context)">
-                        Delete
-                    </MudButton>
+                <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                    <MudTooltip Text="@T("Open Dashboard")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Edit")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditLLMProvider(context)"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Delete")">
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteLLMProvider(context)"/>
+                    </MudTooltip>
                 </MudStack>
             </MudTd>
         </RowTemplate>
@@ -62,30 +61,32 @@
 
     @if(this.SettingsManager.ConfigurationData.Providers.Count == 0)
     {
-        <MudText Typo="Typo.h6" Class="mt-3">No providers configured yet.</MudText>
+        <MudText Typo="Typo.h6" Class="mt-3">
+            @T("No providers configured yet.")
+        </MudText>
     }
 
     <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddLLMProvider">
-        Add Provider
+        @T("Add Provider")
     </MudButton>
     
-    <MudText Typo="Typo.h4" Class="mb-3">LLM Provider Confidence</MudText>
+    <MudText Typo="Typo.h4" Class="mb-3">
+        @T("LLM Provider Confidence")
+    </MudText>
     <MudJustifiedText Class="mb-3">
-        Do you want to always be able to recognize how trustworthy your LLM providers are? This way,
-        you keep control over which provider you send your data to. You have two options for this:
-        Either you choose a common schema, or you configure the trust levels for each LLM provider yourself.
+        @T("Do you want to always be able to recognize how trustworthy your LLM providers are? This way, you keep control over which provider you send your data to. You have two options for this: Either you choose a common schema, or you configure the trust levels for each LLM provider yourself.")
     </MudJustifiedText>
     
-    <ConfigurationOption OptionDescription="Do you want to enforce an app-wide minimum confidence level?" LabelOn="Yes, enforce a minimum confidence level" LabelOff="No, do not enforce a minimum confidence level" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence = updatedState)" OptionHelp="When enabled, you can enforce a minimum confidence level for all LLM providers. This way, you can ensure that only trustworthy providers are used."/>
+    <ConfigurationOption OptionDescription="@T("Do you want to enforce an app-wide minimum confidence level?")" LabelOn="@T("Yes, enforce a minimum confidence level")" LabelOff="@T("No, do not enforce a minimum confidence level")" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence = updatedState)" OptionHelp="@T("When enabled, you can enforce a minimum confidence level for all LLM providers. This way, you can ensure that only trustworthy providers are used.")"/>
     @if(this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence)
     {
         <ConfigurationMinConfidenceSelection RestrictToGlobalMinimumConfidence="@false" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence = selectedValue)"/>
     }
     
-    <ConfigurationOption OptionDescription="Show provider's confidence level?" LabelOn="Yes, show me the confidence level" LabelOff="No, please hide the confidence level" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence = updatedState)" OptionHelp="When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc."/>
+    <ConfigurationOption OptionDescription="@T("Show provider's confidence level?")" LabelOn="@T("Yes, show me the confidence level")" LabelOff="@T("No, please hide the confidence level")" State="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence = updatedState)" OptionHelp="@T("When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc.")"/>
     @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
     {
-        <ConfigurationSelect OptionDescription="Select a confidence scheme" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme)" Data="@ConfigurationSelectDataFactory.GetConfidenceSchemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme = selectedValue)" OptionHelp="Choose the scheme that best suits you and your life. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider yourself."/>
+        <ConfigurationSelect OptionDescription="@T("Select a confidence scheme")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme)" Data="@ConfigurationSelectDataFactory.GetConfidenceSchemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme = selectedValue)" OptionHelp="@T("Choose the scheme that best suits you and your life. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider yourself.")"/>
         @if (this.SettingsManager.ConfigurationData.LLMProviders.ConfidenceScheme is ConfidenceSchemes.CUSTOM)
         {
             <MudTable Items="@(Enum.GetValues<LLMProviders>().Where(x => x is not LLMProviders.NONE))" Hover="@true" Class="border-dashed border rounded-lg">
@@ -95,9 +96,9 @@
                     <col style="width: 22em;"/>
                 </ColGroup>
                 <HeaderContent>
-                    <MudTh>LLM Provider</MudTh>
-                    <MudTh>Description</MudTh>
-                    <MudTh>Confidence Level</MudTh>
+                    <MudTh>@T("LLM Provider")</MudTh>
+                    <MudTh>@T("Description")</MudTh>
+                    <MudTh>@T("Confidence Level")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="vertical-align: top;">

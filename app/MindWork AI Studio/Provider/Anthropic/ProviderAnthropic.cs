@@ -89,6 +89,8 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     {
         var additionalModels = new[]
         {
+            new Model("claude-opus-4-0", "Claude Opus 4.0 (Latest)"),
+            new Model("claude-sonnet-4-0", "Claude Sonnet 4.0 (Latest)"),
             new Model("claude-3-7-sonnet-latest", "Claude 3.7 Sonnet (Latest)"),
             new Model("claude-3-5-sonnet-latest", "Claude 3.5 Sonnet (Latest)"),
             new Model("claude-3-5-haiku-latest", "Claude 3.5 Haiku (Latest)"),
@@ -110,6 +112,41 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
         return Task.FromResult(Enumerable.Empty<Model>());
     }
 
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        // Claude 4.x models:
+        if(modelName.StartsWith("claude-opus-4") || modelName.StartsWith("claude-sonnet-4"))
+            return [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING];
+        
+        // Claude 3.7 is able to do reasoning:
+        if(modelName.StartsWith("claude-3-7"))
+            return [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING];
+        
+        // All other 3.x models are able to process text and images as input:
+        if(modelName.StartsWith("claude-3-"))
+            return [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING];
+        
+        // Any other model is able to process text only:
+        return [
+            Capability.TEXT_INPUT,
+            Capability.TEXT_OUTPUT,
+            Capability.FUNCTION_CALLING];
+    }
+    
     #endregion
     
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

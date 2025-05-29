@@ -6,42 +6,63 @@ using Changelog = AIStudio.Components.Changelog;
 
 namespace AIStudio.Pages;
 
-public partial class Home : ComponentBase
+public partial class Home : MSGComponentBase
 {
     [Inject]
-    private HttpClient HttpClient { get; set; } = null!;
+    private HttpClient HttpClient { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
-
+    
+    private TextItem[] itemsAdvantages = [];
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         await this.ReadLastChangeAsync();
         await base.OnInitializedAsync();
+        
+        this.InitializeAdvantagesItems();
+    }
+
+    private void InitializeAdvantagesItems()
+    {
+        this.itemsAdvantages = [
+            new(this.T("Free of charge"), this.T("The app is free to use, both for personal and commercial purposes.")),
+            new(this.T("Independence"), this.T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), Hugging Face, and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")), 
+            new(this.T("Assistants"), this.T("You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.")),
+            new(this.T("Unrestricted usage"), this.T("Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.")),
+            new(this.T("Cost-effective"), this.T("You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.")),
+            new(this.T("Privacy"), this.T("You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.")),
+            new(this.T("Flexibility"), this.T("Choose the provider and model best suited for your current task.")),
+            new(this.T("No bloatware"), this.T("The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.")),
+        ];
     }
 
     #endregion
-    
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                this.InitializeAdvantagesItems();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+    }
+
+    #endregion
+
     private async Task ReadLastChangeAsync()
     {
         var latest = Changelog.LOGS.MaxBy(n => n.Build);
         using var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
         this.LastChangeContent = await response.Content.ReadAsStringAsync();
     }
-
-    private static readonly TextItem[] ITEMS_ADVANTAGES =
-    [
-        new("Free of charge", "The app is free to use, both for personal and commercial purposes."),
-        new("Independence", "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT4o, o1, etc.), Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, and self-hosted models using llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities."), 
-        new("Assistants", "You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants."),
-        new("Unrestricted usage", "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."),
-        new("Cost-effective", "You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit."),
-        new("Privacy", "You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems."),
-        new("Flexibility", "Choose the provider and model best suited for your current task."),
-        new("No bloatware", "The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life."),
-    ];
-
+    
     private const string QUICK_START_GUIDE =
         """
         Ready to dive in and get started with MindWork AI Studio? This quick start guide will help you set up everything you need to start using the app.

@@ -1,23 +1,25 @@
 @attribute [Route(Routes.ASSISTANT_EMAIL)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogWritingEMails>
 
-<MudTextSwitch Label="Is there a history, a previous conversation?" @bind-Value="@this.provideHistory" LabelOn="Yes, I provide the previous conversation" LabelOff="No, I don't provide a previous conversation" />
+<MudTextSwitch Label="@T("Is there a history, a previous conversation?")" @bind-Value="@this.provideHistory" LabelOn="@T("Yes, I provide the previous conversation")" LabelOff="@T("No, I don't provide a previous conversation")" />
 @if (this.provideHistory)
 {
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
-        <MudTextField T="string" @bind-Text="@this.inputHistory" Validation="@this.ValidateHistory" Label="Previous conversation" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Provide the previous conversation, e.g., the last e-mail, the last chat, etc." Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DocumentScanner"/>
+        <MudTextField T="string" @bind-Text="@this.inputHistory" Validation="@this.ValidateHistory" Label="@T("Previous conversation")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Provide the previous conversation, e.g., the last e-mail, the last chat, etc.")" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DocumentScanner"/>
     </MudPaper>
 }
 
-<MudTextField T="string" @bind-Text="@this.inputGreeting" Label="(Optional) The greeting phrase to use" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Placeholder="Dear Colleagues" Class="mb-3"/>
-<MudTextField T="string" @bind-Text="@this.inputBulletPoints" Validation="@this.ValidateBulletPoints" AdornmentIcon="@Icons.Material.Filled.ListAlt" Adornment="Adornment.Start" Label="Your bullet points" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Bullet list the content of the e-mail roughly. Use dashes (-) to separate the items." Immediate="@false" DebounceInterval="1_000" OnDebounceIntervalElapsed="@this.OnContentChanged" Placeholder="@PLACEHOLDER_BULLET_POINTS"/>
-<MudSelect T="string" Label="(Optional) Are any of your points particularly important?" MultiSelection="@true" @bind-SelectedValues="@this.selectedFoci" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt">
+<MudTextField T="string" @bind-Text="@this.inputGreeting" Label="@T("(Optional) The greeting phrase to use")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Placeholder="@T("Dear Colleagues")" Class="mb-3"/>
+<DebouncedTextField @bind-Text="@this.inputBulletPoints" ValidationFunc="@this.ValidateBulletPoints" Icon="@Icons.Material.Filled.ListAlt" Label="@T("Your bullet points")" Lines="6" MaxLines="12" Attributes="@USER_INPUT_ATTRIBUTES" HelpText="@T("Bullet list the content of the e-mail roughly. Use dashes (-) to separate the items.")" DebounceTime="TimeSpan.FromSeconds(1)" WhenTextCanged="@this.OnContentChanged" Placeholder="@PLACEHOLDER_BULLET_POINTS"/>
+<MudSelect T="string" Label="@T("(Optional) Are any of your points particularly important?")" MultiSelection="@true" @bind-SelectedValues="@this.selectedFoci" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ListAlt">
     @foreach (var contentLine in this.bulletPointsLines)
     {
-        <MudSelectItem T="string" Value="@contentLine">@contentLine</MudSelectItem>
+        <MudSelectItem T="string" Value="@contentLine">
+            @contentLine
+        </MudSelectItem>
     }
 </MudSelect>
-<MudTextField T="string" @bind-Text="@this.inputName" Label="(Optional) Your name for the closing salutation" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="Your name for the closing salutation of your e-mail." Class="mb-3"/>
-<EnumSelection T="WritingStyles" NameFunc="@(style => style.Name())" @bind-Value="@this.selectedWritingStyle" Icon="@Icons.Material.Filled.Edit" Label="Select the writing style" ValidateSelection="@this.ValidateWritingStyle"/>
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="Target language" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="Custom target language" />
+<MudTextField T="string" @bind-Text="@this.inputName" Label="@T("(Optional) Your name for the closing salutation")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" HelperText="@T("Your name for the closing salutation of your e-mail.")" Class="mb-3"/>
+<EnumSelection T="WritingStyles" NameFunc="@(style => style.Name())" @bind-Value="@this.selectedWritingStyle" Icon="@Icons.Material.Filled.Edit" Label="@T("Select the writing style")" ValidateSelection="@this.ValidateWritingStyle"/>
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidateTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

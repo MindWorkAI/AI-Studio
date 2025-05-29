@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Components;
+using AIStudio.Components;
 
 namespace AIStudio.Assistants;
 
-public abstract class AssistantLowerBase : ComponentBase
+public abstract class AssistantLowerBase : MSGComponentBase
 {
     protected static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     

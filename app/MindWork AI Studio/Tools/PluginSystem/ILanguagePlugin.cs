@@ -16,6 +16,22 @@ public interface ILanguagePlugin
     /// </remarks>
     /// <param name="key">The key to use to get the text.</param>
     /// <param name="value">The desired text.</param>
+    /// <param name="logWarning">When true, a warning will be logged if the key does not exist.</param>
     /// <returns>True if the key exists, false otherwise.</returns>
-    public bool TryGetText(string key, out string value);
+    public bool TryGetText(string key, out string value, bool logWarning = false);
+    
+    /// <summary>
+    /// Gets the IETF tag of the language plugin.
+    /// </summary>
+    public string IETFTag { get; }
+    
+    /// <summary>
+    /// Gets the name of the language.
+    /// </summary>
+    public string LangName { get; }
+
+    /// <summary>
+    /// Get all keys and texts from the language plugin.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Content { get; }
 }

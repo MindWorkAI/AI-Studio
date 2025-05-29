@@ -1,17 +1,18 @@
 using System.Reflection;
 
+using AIStudio.Components;
+using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
+using SharedTools;
+
 namespace AIStudio.Pages;
 
-public partial class About : ComponentBase
+public partial class About : MSGComponentBase
 {
-    [Inject]
-    private MessageBus MessageBus { get; init; } = null!;
-    
     [Inject]
     private RustService RustService { get; init; } = null!;
     
@@ -20,24 +21,41 @@ public partial class About : ComponentBase
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
-    
-    private static string VersionDotnetRuntime => $"Used .NET runtime: v{META_DATA.DotnetVersion}";
-    
-    private static string VersionDotnetSdk => $"Used .NET SDK: v{META_DATA.DotnetSdkVersion}";
-    
-    private static string VersionRust => $"Used Rust compiler: v{META_DATA.RustVersion}";
+    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
+    private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
 
-    private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum})";
+    private string osLanguage = string.Empty;
     
-    private static string BuildTime => $"Build time: {META_DATA.BuildTime}";
+    private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
     private static string MudBlazorVersion => $"MudBlazor: v{META_DATA.MudBlazorVersion}";
     
     private static string TauriVersion => $"Tauri: v{META_DATA.TauriVersion}";
+    
+    private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
+    
+    private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
+    
+    private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
+    
+    private string VersionDotnetSdk => $"{T("Used .NET SDK")}: v{META_DATA.DotnetSdkVersion}";
+    
+    private string BuildTime => $"{T("Build time")}: {META_DATA.BuildTime}";
+    
+    private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
 
     private GetLogPathsResponse logPaths;
-
+    
     #region Overrides of ComponentBase
+    
+    protected override async Task OnInitializedAsync()
+    {
+        this.osLanguage = await this.RustService.ReadUserLanguage();
+        this.logPaths = await this.RustService.GetLogPaths();
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
 
     private async Task CopyStartupLogPath()
     {
@@ -48,14 +66,6 @@ public partial class About : ComponentBase
     {
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
     }
-    
-    protected override async Task OnInitializedAsync()
-    {
-        this.logPaths = await this.RustService.GetLogPaths();
-        await base.OnInitializedAsync();
-    }
-
-    #endregion
     
     private const string LICENSE = """
         # Functional Source License, Version 1.1, MIT Future License

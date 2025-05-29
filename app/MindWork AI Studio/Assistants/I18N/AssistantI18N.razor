@@ -1,0 +1,124 @@
+@attribute [Route(Routes.ASSISTANT_AI_STUDIO_I18N)]
+@using AIStudio.Settings
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogI18N>
+
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" SelectionUpdated="_ => this.OnChangedLanguage()" />
+<ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="@T("Select the language plugin used for comparision.")"/>
+@if (this.isLoading)
+{
+    <MudText Typo="Typo.body1" Class="mb-6">
+        @T("The data is being loaded, please wait...")
+    </MudText>
+} else if (!this.isLoading && !string.IsNullOrWhiteSpace(this.loadingIssue))
+{
+    <MudText Typo="Typo.body1" Class="mb-6">
+        @T("While loading the I18N data, an issue occurred:") @this.loadingIssue
+    </MudText>
+}
+else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
+{
+    <MudText Typo="Typo.h6">
+        @this.AddedContentText
+    </MudText>
+    <MudTable Items="@this.addedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+        <ToolBarContent>
+            <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="@T("Search")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>@T("Key")</MudTh>
+            <MudTh>@T("Text")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <pre style="font-size: 0.8em;">
+                    @context.Key
+                </pre>
+            </MudTd>
+            <MudTd>
+                @context.Value
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    
+    <MudText Typo="Typo.h6">
+        @this.RemovedContentText
+    </MudText>
+    <MudTable Items="@this.removedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+        <ToolBarContent>
+            <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="@T("Search")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>@T("Key")</MudTh>
+            <MudTh>@T("Text")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <pre style="font-size: 0.8em;">
+                    @context.Key
+                </pre>
+            </MudTd>
+            <MudTd>
+                @context.Value
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    
+    @if (this.selectedTargetLanguage is CommonLanguages.EN_US)
+    {
+        <MudJustifiedText Typo="Typo.body1" Class="mb-6">
+            @T("Please note: neither is a translation needed nor performed for English (USA). Anyway, you might want to generate the related Lua code.")
+        </MudJustifiedText>
+    }
+    else
+    {
+        <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+    }
+    
+    @if (this.localizedContent.Count > 0)
+    {
+        <hr style="width: 100%; border-width: 0.25ch;" class="mt-6 mb-6"/>
+        <MudText Typo="Typo.h6">
+            @this.LocalizedContentText
+        </MudText>
+        <MudTable Items="@this.localizedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+            <ToolBarContent>
+                <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="@T("Search")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </ToolBarContent>
+            <ColGroup>
+                <col/>
+                <col/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>@T("Key")</MudTh>
+                <MudTh>@T("Text")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <pre style="font-size: 0.8em;">
+                    @context.Key
+                </pre>
+                </MudTd>
+                <MudTd>
+                    @context.Value
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    }
+}
