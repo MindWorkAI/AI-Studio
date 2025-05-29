@@ -153,8 +153,8 @@ public static partial class Pandoc
             var response = await client.GetAsync(uri);
             if (!response.IsSuccessStatusCode)
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the download archive was not found."));
-                LOG.LogError("Pandoc was not installed, the release archive was not found (Status Code {StatusCode}):\n{Uri}\n{Message}", response.StatusCode, uri, response.RequestMessage);
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the archive was not found."));
+                LOG.LogError("Pandoc was not installed, the release archive was not found (status code {StatusCode}): url='{Uri}', message='{Message}'", response.StatusCode, uri, response.RequestMessage);
                 return;
             }
             
@@ -176,8 +176,8 @@ public static partial class Pandoc
             }
             else
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, $"Pandoc was not installed successfully, because the download archive type is unknown."));
-                LOG.LogError("Pandoc was not installed, the download archive is unknown:\n {Uri}", uri);
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the archive type is unknown."));
+                LOG.LogError("Pandoc was not installed, the archive is unknown: url='{Uri}'", uri);
                 return;
             }
 
