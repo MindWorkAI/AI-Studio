@@ -181,8 +181,7 @@ public static partial class Pandoc
                 return;
             }
 
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle,
-                $"Pandoc {await FetchLatestVersionAsync()} was installed successfully."));
+            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {await FetchLatestVersionAsync()} was installed successfully."));
         }
         catch (Exception ex)
         {
