@@ -1,5 +1,5 @@
-﻿<MudTabs @bind-ActivePanelIndex="selectedIndex" PanelClass="code-block" MinimumTabWidth="30px" Class="mt-2">
-    @foreach (var block in blocks)
+﻿<MudTabs @bind-ActivePanelIndex="this.SelectedIndex" PanelClass="code-block" MinimumTabWidth="30px" Class="mt-2">
+    @foreach (var block in this.blocks)
     {
         <MudTabPanel Text="@block.Title">
             @block.Fragment
