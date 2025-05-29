@@ -138,7 +138,7 @@ public static partial class Pandoc
                 Directory.CreateDirectory(installDir);
 
             using var client = new HttpClient();
-            var uri = await GenerateUriAsync();
+            var uri = await GenerateArchiveUriAsync();
             
             var response = await client.GetAsync(uri);
             if (!response.IsSuccessStatusCode)
@@ -229,8 +229,8 @@ public static partial class Pandoc
     /// <summary>
     /// Reads the systems architecture to find the correct archive
     /// </summary>
-    /// <returns>Full URI to the right archive in Pandoc's repo</returns>
-    public static async Task<string> GenerateUriAsync()
+    /// <returns>Full URI to the right archive in Pandoc's repository.</returns>
+    public static async Task<string> GenerateArchiveUriAsync()
     {
         var version = await FetchLatestVersionAsync();
         var baseUri = $"{DOWNLOAD_URL}/{version}/pandoc-{version}-";

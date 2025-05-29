@@ -69,7 +69,7 @@ public partial class PandocDialog : ComponentBase
 
     private async Task GetArchive()
     {
-        var uri = await Pandoc.GenerateUriAsync();
+        var uri = await Pandoc.GenerateArchiveUriAsync();
         var filename = this.FilenameFromUri(uri);
         await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
     }
