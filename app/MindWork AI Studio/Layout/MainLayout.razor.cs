@@ -175,19 +175,19 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, IDis
                 break;
             
             case Event.SHOW_SUCCESS:
-                if (data is Success success)
+                if (data is DataSuccessMessage success)
                     success.Show(this.Snackbar);
                 
                 break;
             
             case Event.SHOW_ERROR:
-                if (data is Error error)
+                if (data is DataErrorMessage error)
                     error.Show(this.Snackbar);
                 
                 break;
             
             case Event.SHOW_WARNING:
-                if (data is Warning warning)
+                if (data is DataWarningMessage warning)
                     warning.Show(this.Snackbar);
                 
                 break;
