@@ -112,9 +112,6 @@
                     </MudExpansionPanels>
                 </ExpansionPanel>
             </MudExpansionPanels>
-            <div class="mt-2">
-                <MudButton OnClick="@this.RejectLicense" Variant="Variant.Text" Color="Color.Default">Reject GPL licence</MudButton>
-            </div>
         }
         else
         {
@@ -140,11 +137,22 @@
                     <MudText Class="mb-6" Typo="Typo.subtitle1" Align="Align.Center">
                         Pandoc ist auf Ihrem System nicht verfügbar
                     </MudText>
-                    <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled">
-                        Proceed to installation
-                    </MudButton>
                 }
             </MudItem>
         }
     </DialogContent>
+    <DialogActions>
+        @if (this.showInstallPage)
+        {
+            <MudButton Color="Color.Warning" OnClick="@this.RejectLicense" Variant="Variant.Filled">
+                Reject GPL licence
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled">
+                Proceed to installation
+            </MudButton>
+        }
+    </DialogActions>
 </MudDialog>
