@@ -21,8 +21,8 @@ public partial class PandocDialog : ComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocDialog");
-    private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/master/COPYRIGHT";
-    private static string PANDOC_VERSION = "1.0.0";
+    private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/COPYING.md";
+    private static string PANDOC_VERSION = string.Empty;
 
     private bool isPandocAvailable;
     private bool showSkeleton;
@@ -106,8 +106,6 @@ public partial class PandocDialog : ComponentBase
             this.isLoading = true;
             try
             {
-                await Task.Delay(600);
-
                 this.licenseText = await this.LoadLicenseTextAsync();
             }
             catch (Exception ex)
@@ -122,7 +120,6 @@ public partial class PandocDialog : ComponentBase
         }
         else
         {
-            await Task.Delay(350);
             this.licenseText = string.Empty;
         }
     }
@@ -131,7 +128,7 @@ public partial class PandocDialog : ComponentBase
     {
         var response = await this.HttpClient.GetAsync(LICENCE_URI);
         response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadAsStringAsync();
-        return content;
+        
+        return await response.Content.ReadAsStringAsync();
     }
 }
