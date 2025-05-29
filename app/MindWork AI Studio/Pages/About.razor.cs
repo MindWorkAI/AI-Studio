@@ -1,6 +1,7 @@
 using System.Reflection;
 
 using AIStudio.Components;
+using AIStudio.Dialogs;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -8,6 +9,8 @@ using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 using SharedTools;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Pages;
 
@@ -17,12 +20,17 @@ public partial class About : MSGComponentBase
     private RustService RustService { get; init; } = null!;
     
     [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+    
+    [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
+    
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
 
     private string osLanguage = string.Empty;
     
@@ -43,6 +51,9 @@ public partial class About : MSGComponentBase
     private string BuildTime => $"{T("Build time")}: {META_DATA.BuildTime}";
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
+    
+    private string versionPandoc = TB("Determine Pandoc version, please wait...");
+    private PandocInstallation pandocInstallation;
 
     private GetLogPathsResponse logPaths;
     
@@ -52,11 +63,40 @@ public partial class About : MSGComponentBase
     {
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
+        
         await base.OnInitializedAsync();
+        await this.DeterminePandocVersion();
     }
 
     #endregion
 
+    private async Task DeterminePandocVersion()
+    {
+        this.pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService, false);
+        var pandocInstallationType = this.pandocInstallation.IsLocalInstallation 
+            ? T("installed by AI Studio")
+            : T("installation provided by the system");
+        
+        switch (this.pandocInstallation)
+        {
+            case { CheckWasSuccessful: true, IsAvailable: true }:
+                this.versionPandoc = $"{this.T("Installed Pandoc version")}: v{this.pandocInstallation.Version} ({pandocInstallationType}) - OK";
+                break;
+            
+            case { CheckWasSuccessful: true, IsAvailable: false }:
+                this.versionPandoc = $"{this.T("Installed Pandoc version")}: v{this.pandocInstallation.Version} ({pandocInstallationType}) - {T("this version does not met the requirements")}";
+                break;
+            
+            default:
+                this.versionPandoc = TB("Installed Pandoc version: Pandoc is not installed or not available.");
+                break;
+        }
+        
+        this.StateHasChanged();
+    }
+    
+    private async Task ShowPandocDialog() => await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
+    
     private async Task CopyStartupLogPath()
     {
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogStartupPath);
