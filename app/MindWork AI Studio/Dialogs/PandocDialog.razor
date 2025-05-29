@@ -18,7 +18,7 @@
             </div>
             
             <MudExpansionPanels Class="mb-3" MultiExpansion="@false" Outlined="false" Elevation="0">
-                <ExpansionPanel HeaderText="View GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="this.OnExpandedChanged">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="View GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="this.OnExpandedChanged">
                     @if (this.isLoading)
                     {
                         <MudSkeleton />
