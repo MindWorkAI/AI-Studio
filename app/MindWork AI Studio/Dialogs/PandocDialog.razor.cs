@@ -35,6 +35,7 @@ public partial class PandocDialog : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        
         this.showSkeleton = true;
         await this.CheckPandocAvailabilityAsync();
         PANDOC_VERSION = await Pandoc.FetchLatestVersionAsync();
@@ -49,6 +50,7 @@ public partial class PandocDialog : ComponentBase
         var pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService);
         this.isPandocAvailable = pandocInstallation.IsAvailable;
         this.showSkeleton = false;
+        
         await this.InvokeAsync(this.StateHasChanged);
     }
 
@@ -56,6 +58,7 @@ public partial class PandocDialog : ComponentBase
     {
         await Pandoc.InstallAsync(this.RustService);
         this.MudDialog.Close(DialogResult.Ok(true));
+        
         await this.DialogService.ShowAsync<PandocDialog>("pandoc dialog");
     }
 
@@ -65,6 +68,7 @@ public partial class PandocDialog : ComponentBase
     {
         var uri = await Pandoc.GenerateInstallerUriAsync();
         var filename = this.FilenameFromUri(uri);
+        
         await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
     }
 
@@ -72,6 +76,7 @@ public partial class PandocDialog : ComponentBase
     {
         var uri = await Pandoc.GenerateArchiveUriAsync();
         var filename = this.FilenameFromUri(uri);
+        
         await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
     }
 
