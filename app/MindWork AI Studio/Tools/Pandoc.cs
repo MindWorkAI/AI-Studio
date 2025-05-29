@@ -14,8 +14,8 @@ public static partial class Pandoc
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
     
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocService");
-    private static readonly Version MINIMUM_REQUIRED_VERSION = new (3, 6);
-    private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 1);
+    private static readonly Version MINIMUM_REQUIRED_VERSION = new (3, 7);
+    private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 2);
 
     /// <summary>
     /// Checks if pandoc is available on the system and can be started as a process or present in AiStudio's data dir
