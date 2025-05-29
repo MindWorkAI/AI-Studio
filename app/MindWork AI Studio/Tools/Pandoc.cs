@@ -190,10 +190,7 @@ public static partial class Pandoc
         
         try
         {
-            foreach (var dir in Directory.GetDirectories(path))
-            {
-                Directory.Delete(dir, true);
-            }
+            Directory.Delete(path, true);
         }
         catch (Exception ex)
         {
