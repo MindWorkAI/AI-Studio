@@ -24,31 +24,10 @@ public static partial class Pandoc
     private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 2);
 
     /// <summary>
-    /// Prepares a ProcessStartInfo for running pandoc with the given parameters.
+    /// Prepares a Pandoc process by using the Pandoc process builder.
     /// </summary>
-    /// <remarks>
-    /// Any local installation of pandoc will be preferred over the system-wide installation.
-    /// </remarks>
-    /// <param name="rustService">The global rust service to access file system and data dir.</param>
-    /// <param name="inputFile">The input file to convert.</param>
-    /// <param name="outputFile">The output file to write the converted content to.</param>
-    /// <param name="inputFormat">The format of the input file (e.g., markdown, html, etc.).</param>
-    /// <param name="outputFormat">The format of the output file (e.g., pdf, docx, etc.).</param>
-    /// <param name="additionalArgs">Additional arguments to pass to the pandoc command (optional).</param>
-    /// <returns>The ProcessStartInfo object configured to run pandoc with the specified parameters.</returns>
-    public static async Task<PandocPreparedProcess> PreparePandocProcess(RustService rustService, string inputFile, string outputFile, string inputFormat, string outputFormat, string? additionalArgs = null)
-    {
-        var pandocExecutable = await PandocExecutablePath(rustService);
-        return new (new ProcessStartInfo
-        {
-            FileName = pandocExecutable.Executable,
-            Arguments = $"{inputFile} -f {inputFormat} -t {outputFormat} {additionalArgs ?? string.Empty} -o {outputFile}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        }, pandocExecutable.IsLocalInstallation);
-    }
+    /// <returns>The Pandoc process builder with default settings.</returns>
+    public static PandocProcessBuilder PreparePandocProcess() => PandocProcessBuilder.Create();
 
     /// <summary>
     /// Checks if pandoc is available on the system and can be started as a process or is present in AI Studio's data dir.
@@ -60,11 +39,8 @@ public static partial class Pandoc
     {
         try
         {
-            var preparedProcess = await PreparePandocProcess(rustService, string.Empty, string.Empty, string.Empty, string.Empty);
-            var startInfo = preparedProcess.StartInfo;
-            startInfo.Arguments = "--version";
-            
-            using var process = Process.Start(startInfo);
+            var preparedProcess = await PreparePandocProcess().AddArgument("--version").BuildAsync(rustService);
+            using var process = Process.Start(preparedProcess.StartInfo);
             if (process == null)
             {
                 if (showMessages)
@@ -295,51 +271,7 @@ public static partial class Pandoc
         }
     }
 
-    /// <summary>
-    /// Reads the os platform to determine the used executable name.
-    /// </summary>
-    private static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
-    
-    /// <summary>
-    /// Returns the path to the pandoc executable.
-    /// </summary>
-    /// <remarks>
-    /// Any local installation of pandoc will be preferred over the system-wide installation.
-    /// When a local installation is found, its absolute path will be returned. In case no local
-    /// installation is found, the name of the pandoc executable will be returned.
-    /// </remarks>
-    /// <param name="rustService">Global rust service to access file system and data dir.</param>
-    /// <returns>Path to the pandoc executable.</returns>
-    private static async Task<PandocExecutable> PandocExecutablePath(RustService rustService)
-    {
-        //
-        // First, we try to find the pandoc executable in the data directory.
-        // Any local installation should be preferred over the system-wide installation.
-        //
-        var localInstallationRootDirectory = await GetPandocDataFolder(rustService);
-        try
-        {
-            var executableName = PandocExecutableName;
-            var subdirectories = Directory.GetDirectories(localInstallationRootDirectory);
-            foreach (var subdirectory in subdirectories)
-            {
-                var pandocPath = Path.Combine(subdirectory, executableName);
-                if (File.Exists(pandocPath))
-                    return new(pandocPath, true);
-            }
-        }
-        catch
-        {
-            // ignored
-        }
-        
-        //
-        // When no local installation was found, we assume that the pandoc executable is in the system PATH.
-        //
-        return new(PandocExecutableName, false);
-    }
-
-    private static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");
+    public static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");
     
     [GeneratedRegex(@"pandoc(?:\.exe)?\s*([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+)?)")]
     private static partial Regex PandocCmdRegex();
