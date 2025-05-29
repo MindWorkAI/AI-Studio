@@ -18,11 +18,11 @@ public static partial class Pandoc
     private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 2);
 
     /// <summary>
-    /// Checks if pandoc is available on the system and can be started as a process or present in AiStudio's data dir
+    /// Checks if pandoc is available on the system and can be started as a process or is present in AI Studio's data dir.
     /// </summary>
-    /// <param name="rustService">Global rust service to access file system and data dir</param>
-    /// <param name="showMessages">Controls if snackbars are shown to the user</param>
-    /// <returns>True, if pandoc is available and the minimum required version is met, else False.</returns>
+    /// <param name="rustService">Global rust service to access file system and data dir.</param>
+    /// <param name="showMessages">Controls if snackbars are shown to the user.</param>
+    /// <returns>True, if pandoc is available and the minimum required version is met, else false.</returns>
     public static async Task<bool> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
     {
         var installDir = await GetPandocDataFolder(rustService);
@@ -227,7 +227,7 @@ public static partial class Pandoc
     }
 
     /// <summary>
-    /// Reads the systems architecture to find the correct archive
+    /// Reads the systems architecture to find the correct archive.
     /// </summary>
     /// <returns>Full URI to the right archive in Pandoc's repository.</returns>
     public static async Task<string> GenerateArchiveUriAsync()
