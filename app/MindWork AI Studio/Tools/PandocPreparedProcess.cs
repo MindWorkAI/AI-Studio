@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace AIStudio.Tools;
 
-public class PandocPreparedProcess(ProcessStartInfo startInfo, bool isLocal)
+public sealed class PandocPreparedProcess(ProcessStartInfo startInfo, bool isLocal)
 {
     public ProcessStartInfo StartInfo => startInfo;
 
