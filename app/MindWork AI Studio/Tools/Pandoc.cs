@@ -47,7 +47,7 @@ public static partial class Pandoc
         {
             var startInfo = new ProcessStartInfo
             {
-                FileName = GetPandocExecutableName(),
+                FileName = PandocExecutableName,
                 Arguments = "--version",
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
@@ -300,10 +300,9 @@ public static partial class Pandoc
     }
 
     /// <summary>
-    /// Reads the os platform to determine the used executable name
+    /// Reads the os platform to determine the used executable name.
     /// </summary>
-    /// <returns>Name of the pandoc executable</returns>
-    private static string GetPandocExecutableName() => CPU_ARCHITECTURE is RID.WIN_ARM64 ? "pandoc.exe" : "pandoc";
+    private static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
 
     private static async Task<string> GetPandocDataFolder(RustService rustService) => Path.Join(await rustService.GetDataDirectory(), "pandoc");
     
