@@ -197,7 +197,7 @@ public static partial class Pandoc
         }
         catch (Exception ex)
         {
-            LOG.LogError(ex, "Error clearing pandoc folder.");
+            LOG.LogError(ex, "Error clearing pandoc installation directory.");
         }
     }
     
