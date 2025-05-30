@@ -127,18 +127,18 @@
         }
         else
         {
-            <MudItem Class="px-8 py-2" Style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <MudItem Class="px-8 py-2">
                 @if (this.pandocInstallation == default)
                 {
-                    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Class="mb-4" Style="width: 4em; height: 4em;"/>
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Pulse" Width="230px" Height="35px"/>
-                }
-                else if (this.isPandocAvailable)
-                {
-                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
-                    <MudJustifiedText Typo="Typo.body1" Align="Align.Center">
-                        Pandoc ist auf Ihrem System verfügbar
-                    </MudJustifiedText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="4em" Height="4em" Animation="Animation.Pulse" />
+                        <MudStack Row="false" Class="d-flex flex-column flex-grow-1">
+                            <MudSkeleton Width="90%" Animation="Animation.Wave"/>
+                            <MudSkeleton Width="75%" Animation="Animation.Wave"/>
+                            <MudSkeleton Width="55%" />
+                            <MudSkeleton Width="12%" />
+                        </MudStack>
+                    </MudStack>
                 }
                 else
                 {
