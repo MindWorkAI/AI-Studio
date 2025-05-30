@@ -39,6 +39,7 @@ public partial class PandocDialog : ComponentBase
     private PandocInstallation pandocInstallation;
     private string? licenseText;
     private bool isLoadingLicence;
+    private bool isInstallationInProgress;
     private int selectedInstallerIndex = SelectInstallerIndex();
     private int selectedArchiveIndex = SelectArchiveIndex();
     private string downloadUrlArchive = string.Empty;
@@ -66,8 +67,12 @@ public partial class PandocDialog : ComponentBase
 
     private async Task InstallPandocAsync()
     {
+        this.isInstallationInProgress = true;
+        this.StateHasChanged();
+        
         await Pandoc.InstallAsync(this.RustService);
         
+        this.isInstallationInProgress = false;
         this.MudDialog.Close(DialogResult.Ok(true));
         await this.DialogService.ShowAsync<PandocDialog>("Pandoc Installation", DialogOptions.FULLSCREEN);
     }
