@@ -484,6 +484,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T4096
 -- Please describe at least one retrieval process.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1035068989"] = "Please describe at least one retrieval process."
 
+-- Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1047217452"] = "Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing."
+
 -- Please select which types of LLMs users are allowed to use with the data from this ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1047631678"] = "Please select which types of LLMs users are allowed to use with the data from this ERI server."
 
@@ -511,9 +514,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1261836894"] = "Pleas
 -- You have not yet added any ERI server presets.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1267931972"] = "You have not yet added any ERI server presets."
 
--- <b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1287629674"] = "<b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."
-
 -- The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1302705248"] = "The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model."
 
@@ -535,11 +535,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1456749976"] = "Pleas
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1469573738"] = "Delete"
 
+-- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1531680404"] = "When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files."
+
 -- Related links:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Related links:"
 
 -- Please select an ERI specification version for the ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Please select an ERI specification version for the ERI server."
+
+-- Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T168780641"] = "Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."
 
 -- Write code to file system
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1717303021"] = "Write code to file system"
@@ -562,6 +568,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T180938091"] = "Delete
 -- Provider selection for generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1840198821"] = "Provider selection for generation"
 
+-- However, generating all the files takes a certain amount of time.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1862007299"] = "However, generating all the files takes a certain amount of time."
+
 -- Should we automatically save any input made?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1980659256"] = "Should we automatically save any input made?"
 
@@ -577,8 +586,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2034620186"] = "Data 
 -- Interactive documentation aka Swagger UI
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2064957876"] = "Interactive documentation aka Swagger UI"
 
--- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2155983785"] = "When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose."
+-- Warning:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2149175535"] = "Warning:"
 
 -- Add Embedding Method
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2176833082"] = "Add Embedding Method"
@@ -606,6 +615,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396"] = "Are y
 
 -- Data source settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2440619931"] = "Data source settings"
+
+-- The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T248288139"] = "The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this."
 
 -- Yes, please write or update all generated code to the file system
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T252707279"] = "Yes, please write or update all generated code to the file system"
@@ -682,17 +694,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "No, j
 -- Other language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3374524465"] = "Other language"
 
+-- Important:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3379345517"] = "Important:"
+
 -- ERI Server {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3443687246"] = "ERI Server {0}"
 
 -- You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3446047228"] = "You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings."
 
--- <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3485079498"] = "<b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing."
-
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3512062061"] = "Type"
+
+-- It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3541842180"] = "It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose."
 
 -- Please describe how the selected authentication methods should be used.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T356079033"] = "Please describe how the selected authentication methods should be used."
@@ -732,6 +747,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3865031940"] = "Actio
 
 -- ERI specification version
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3897494556"] = "ERI specification version"
+
+-- But beware:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3956615326"] = "But beware:"
 
 -- Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3973182416"] = "Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server."
@@ -2779,6 +2797,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Can
 -- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system."
 
+-- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and Install," you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1357200670"] = "Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking \"Accept GPL and Install,\" you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use."
+
 -- View the GNU General Public License v2 (GPL)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1587398673"] = "View the GNU General Public License v2 (GPL)"
 
@@ -2791,26 +2812,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1780479836"] = "Automatic ins
 -- Manual installation
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1814127049"] = "Manual installation"
 
--- Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and download installer,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1962103492"] = "Pandoc is distributed under the <MudLink Href=\\\"https://github.com/jgm/pandoc/blob/main/COPYING.md\\\" Target=\\\"_blank\\\">GNU General Public License v2 (GPL)</MudLink>. By clicking \\\"Accept GPL and download installer,\\\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
-
 -- AI Studio uses the free and open-source third-party app Pandoc to process and retrieve data from local Office files (such as Word files) or to generate Office documents.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T205422394"] = "AI Studio uses the free and open-source third-party app Pandoc to process and retrieve data from local Office files (such as Word files) or to generate Office documents."
 
+-- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and download installer," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2084501359"] = "Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking \"Accept GPL and download installer,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
+
 -- Extract the archive to a folder of your choice, e.g.:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2094245964"] = "Extract the archive to a folder of your choice, e.g.:"
-
--- Open the folder and copy the full path to the <CodeBlock IsInline=\"true\">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your clipboard:
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T243353768"] = "Open the folder and copy the full path to the <CodeBlock IsInline=\\\"true\\\">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your clipboard:"
-
--- Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2531990034"] = "Pandoc is distributed under the <MudLink Href=\\\"https://github.com/jgm/pandoc/blob/main/COPYING.md\\\" Target=\\\"_blank\\\">GNU General Public License v2 (GPL)</MudLink>. By clicking \\\"Accept GPL and archive,\\\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
 
 -- Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2559178004"] = "Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?"
 
 -- Please wait for the installation to complete...
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2606205182"] = "Please wait for the installation to complete..."
+
+-- Open the folder and copy the full path to the folder where your Pandoc executable file is into your clipboard:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2946844485"] = "Open the folder and copy the full path to the folder where your Pandoc executable file is into your clipboard:"
 
 -- Accept the GPL and start the installation
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2966192331"] = "Accept the GPL and start the installation"
@@ -2820,6 +2838,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3054618024"] = "Error loading
 
 -- Accept the GPL and download the installer
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3104260405"] = "Accept the GPL and download the installer"
+
+-- Add the copied path to your system's or user's PATH environment variable, restart your terminal, and check the installation:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T313476957"] = "Add the copied path to your system's or user's PATH environment variable, restart your terminal, and check the installation:"
 
 -- Accept the terms of the GPL license and download the latest archive with the download button below.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3263447722"] = "Accept the terms of the GPL license and download the latest archive with the download button below."
@@ -2845,9 +2866,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3780227601"] = "If you want t
 -- Download installer
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3791603277"] = "Download installer"
 
--- Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and Install,\" you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3956237733"] = "Pandoc is distributed under the <MudLink Href=\\\"https://github.com/jgm/pandoc/blob/main/COPYING.md\\\" Target=\\\"_blank\\\">GNU General Public License v2 (GPL)</MudLink>. By clicking \\\"Accept GPL and Install,\\\" you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use."
-
 -- Accept the GPL and download the archive
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3987456907"] = "Accept the GPL and download the archive"
 
@@ -2863,8 +2881,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4152693089"] = "Re-install Pa
 -- Accept the terms of the GPL license and download the latest installer with the download button below. Eventually, you need to allow the download of the installer in the download window.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Accept the terms of the GPL license and download the latest installer with the download button below. Eventually, you need to allow the download of the installer in the download window."
 
--- Add the copied path to your system's or user's <CodeBlock IsInline=\"true\">PATH</CodeBlock> environment variable, restart your terminal, and check the installation by typing <CodeBlock IsInline=\"true\">pandoc --version</CodeBlock> into your terminal:
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T590618273"] = "Add the copied path to your system's or user's <CodeBlock IsInline=\\\"true\\\">PATH</CodeBlock> environment variable, restart your terminal, and check the installation by typing <CodeBlock IsInline=\\\"true\\\">pandoc --version</CodeBlock> into your terminal:"
+-- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
