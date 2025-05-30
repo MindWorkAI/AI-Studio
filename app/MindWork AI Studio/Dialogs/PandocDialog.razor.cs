@@ -81,7 +81,7 @@ public partial class PandocDialog : ComponentBase
 
     private async Task RejectLicense()
     {
-        var message = "Pandoc is open-source and free of charge, but if you reject Pandoc's license, it can not be installed and some of AIStudios data retrieval features will be disabled (e.g. using Office files like Word). This decision can be revoked at any time. Are you sure you want to reject the license?";
+        var message = "Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?";
         var dialogParameters = new DialogParameters
         {
             { "Message", message },
@@ -116,7 +116,7 @@ public partial class PandocDialog : ComponentBase
             catch (Exception ex)
             {
                 this.licenseText = "Error loading license text, please consider following the links to read the GPL.";
-                LOG.LogError("Error loading GPL license text:\n{ErrorMessage}", ex.Message);
+                LOG.LogError("Error loading GPL license text: {ErrorMessage}", ex.Message);
             }
             finally
             {
