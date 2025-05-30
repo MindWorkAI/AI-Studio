@@ -60,6 +60,8 @@
                     </MudJustifiedText>
                 }
             }
+            
+            <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
 
             <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
