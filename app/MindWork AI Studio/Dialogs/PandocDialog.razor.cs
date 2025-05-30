@@ -66,7 +66,7 @@ public partial class PandocDialog : ComponentBase
         await Pandoc.InstallAsync(this.RustService);
         
         this.MudDialog.Close(DialogResult.Ok(true));
-        await this.DialogService.ShowAsync<PandocDialog>("pandoc dialog");
+        await this.DialogService.ShowAsync<PandocDialog>("Pandoc Installation", DialogOptions.FULLSCREEN);
     }
 
     private void ProceedToInstallation() => this.ShowInstallationPage = true;
