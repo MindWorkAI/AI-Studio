@@ -30,6 +30,24 @@ public partial class ManagePandocDependency : MSGComponentBase
 
     #endregion
 
+    private Color DetermineButtonColor()
+    {
+        if (this.pandocInstallation == default)
+            return Color.Default;
+        
+        switch (this.pandocInstallation)
+        {
+            case { CheckWasSuccessful: true, IsAvailable: true }:
+                return Color.Default;
+            
+            case { CheckWasSuccessful: true, IsAvailable: false }:
+                return Color.Warning;
+            
+            case { CheckWasSuccessful: false }:
+                return Color.Error;
+        }
+    }
+    
     private string DetermineButtonText()
     {
         if(this.pandocInstallation == default)
