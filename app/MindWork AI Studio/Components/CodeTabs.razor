@@ -1,4 +1,4 @@
-﻿<MudTabs ActivePanelIndex="this.SelectedIndex" ActivePanelIndexChanged="async idx => await this.TabChanged(idx)" PanelClass="code-block" MinimumTabWidth="30px" Class="mt-2">
+﻿<MudTabs ActivePanelIndex="this.SelectedIndex" ActivePanelIndexChanged="async idx => await this.TabChanged(idx)" PanelClass="code-block mt-1" MinimumTabWidth="30px" Class="mt-2">
     @foreach (var block in this.blocks)
     {
         <MudTabPanel Text="@block.Title">
