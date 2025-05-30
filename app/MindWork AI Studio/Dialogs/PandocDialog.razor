@@ -32,7 +32,7 @@
                     <MudJustifiedText Typo="Typo.body1">
                         Pandoc is distributed under the <MudLink Typo="Typo.caption" Href="https://github.com/jgm/pandoc/blob/main/COPYING.md" Target="_blank">GNU General Public License v2 (GPL)</MudLink>. By clicking "Accept GPL and Install", you agree to the terms of the GPL license and Pandoc will be installed automatically for you. Software under GPL is <strong>free of charge</strong> and free to use.
                     </MudJustifiedText>
-                    <MudButton OnClick="InstallPandocAsync" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.InstallDesktop">
+                    <MudButton OnClick="InstallPandocAsync" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.InstallDesktop">
                         Accept GPL and install for free
                     </MudButton>
                 </ExpansionPanel>
@@ -67,7 +67,7 @@
                                 Pandoc is distributed under the <MudLink Typo="Typo.caption" Href="https://github.com/jgm/pandoc/blob/main/COPYING.md" Target="_blank">GNU General Public License v2 (GPL)</MudLink>. By clicking "Accept GPL and download installer", you agree to the terms of the GPL license. Software under GPL is <strong>free of charge</strong> and free to use.
                             </MudJustifiedText>
                             
-                            <MudButton Href="@this.downloadUrlInstaller" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
+                            <MudButton Href="@this.downloadUrlInstaller" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Downloading">
                                 Accept GPL and download installer
                             </MudButton>
                         </ExpansionPanel>
@@ -120,7 +120,7 @@
                                 </MudJustifiedText>
                             </MudText>
                             
-                            <MudButton Href="@this.downloadUrlArchive" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
+                            <MudButton Href="@this.downloadUrlArchive" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Downloading">
                                 Accept GPL and download archive
                             </MudButton>
                         </ExpansionPanel>
@@ -140,8 +140,7 @@
                 }
                 else if (this.isPandocAvailable)
                 {
-                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check"
-                             Color="Color.Success"/>
+                    <MudIcon Class="mb-2" Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
                     <MudJustifiedText Typo="Typo.body1" Align="Align.Center">
                         Pandoc ist auf Ihrem System verfügbar
                     </MudJustifiedText>
@@ -159,13 +158,13 @@
     <DialogActions>
         @if (this.showInstallPage)
         {
-            <MudButton Color="Color.Warning" OnClick="@this.RejectLicense" Variant="Variant.Filled">
+            <MudButton Color="Color.Warning" OnClick="@this.RejectLicense" Variant="Variant.Filled" Size="Size.Medium">
                 Reject GPL licence
             </MudButton>
         }
         else
         {
-            <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled">
+            <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled" Size="Size.Medium">
                 Proceed to installation
             </MudButton>
         }
