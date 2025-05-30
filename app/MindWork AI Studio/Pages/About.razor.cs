@@ -80,7 +80,7 @@ public partial class About : MSGComponentBase
         switch (this.pandocInstallation)
         {
             case { CheckWasSuccessful: true, IsAvailable: true }:
-                this.versionPandoc = $"{this.T("Installed Pandoc version")}: v{this.pandocInstallation.Version} ({pandocInstallationType}) - OK";
+                this.versionPandoc = $"{this.T("Installed Pandoc version")}: v{this.pandocInstallation.Version} ({pandocInstallationType}) - {T("OK")}";
                 break;
             
             case { CheckWasSuccessful: true, IsAvailable: false }:
