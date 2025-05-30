@@ -100,6 +100,7 @@ public partial class About : MSGComponentBase
         var dialogParameters = new DialogParameters<PandocDialog>
         {
             { x => x.ShowInstallationPage, true },
+            { x => x.ShowInitialResultInSnackbar, false },
         };
         
         await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), dialogParameters, DialogOptions.FULLSCREEN);

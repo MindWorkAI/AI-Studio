@@ -16,6 +16,9 @@ public partial class PandocDialog : ComponentBase
     
     [Parameter]
     public bool ShowInstallationPage { get; set; }
+
+    [Parameter]
+    public bool ShowInitialResultInSnackbar { get; set; } = true;
     
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
@@ -48,16 +51,16 @@ public partial class PandocDialog : ComponentBase
         await base.OnInitializedAsync();
         
         LATEST_PANDOC_VERSION = await Pandoc.FetchLatestVersionAsync();
-        await this.CheckPandocAvailabilityAsync();
+        await this.CheckPandocAvailabilityAsync(this.ShowInitialResultInSnackbar);
     }
 
     #endregion
     
     private void Cancel() => this.MudDialog.Cancel();
 
-    private async Task CheckPandocAvailabilityAsync()
+    private async Task CheckPandocAvailabilityAsync(bool useSnackbar)
     {
-        this.pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService);
+        this.pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService, useSnackbar);
         await this.InvokeAsync(this.StateHasChanged);
     }
 
