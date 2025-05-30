@@ -92,7 +92,7 @@ public partial class About : MSGComponentBase
                 break;
         }
         
-        this.StateHasChanged();
+        await this.InvokeAsync(this.StateHasChanged);
     }
     
     private string PandocButtonText
@@ -111,7 +111,9 @@ public partial class About : MSGComponentBase
 
     private async Task ShowPandocDialog()
     {
-        await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+        await this.DeterminePandocVersion();
     }
 
     private async Task CopyStartupLogPath()
