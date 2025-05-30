@@ -1,10 +1,19 @@
-﻿using AIStudio.Tools.Services;
+﻿using System.Reflection;
+
+using AIStudio.Tools.Metadata;
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
+
+using SharedTools;
 
 namespace AIStudio.Dialogs;
 
 public partial class PandocDialog : ComponentBase
 {
+    private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
+    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
+    private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
+    
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
     
@@ -136,4 +145,31 @@ public partial class PandocDialog : ComponentBase
         
         return await response.Content.ReadAsStringAsync();
     }
+
+    // ReSharper disable RedundantSwitchExpressionArms
+    private int SelectInstallerIndex() => CPU_ARCHITECTURE switch
+    {
+        RID.OSX_ARM64 => 1,
+        RID.OSX_X64 => 2,
+        
+        RID.WIN_ARM64 => 0,
+        RID.WIN_X64 => 0,
+        
+        _ => 0,
+    };
+    
+    private int SelectArchiveIndex() => CPU_ARCHITECTURE switch
+    {
+        RID.OSX_ARM64 => 1,
+        RID.OSX_X64 => 1,
+        
+        RID.WIN_ARM64 => 0,
+        RID.WIN_X64 => 0,
+        
+        RID.LINUX_ARM64 => 2,
+        RID.LINUX_X64 => 2,
+        
+        _ => 0,
+    };
+    // ReSharper restore RedundantSwitchExpressionArms
 }
