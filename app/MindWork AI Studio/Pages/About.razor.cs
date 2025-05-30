@@ -95,8 +95,16 @@ public partial class About : MSGComponentBase
         this.StateHasChanged();
     }
     
-    private async Task ShowPandocDialog() => await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
-    
+    private async Task ShowPandocDialog()
+    {
+        var dialogParameters = new DialogParameters<PandocDialog>
+        {
+            { x => x.ShowInstallationPage, true },
+        };
+        
+        await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+
     private async Task CopyStartupLogPath()
     {
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogStartupPath);
