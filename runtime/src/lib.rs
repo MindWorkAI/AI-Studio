@@ -12,3 +12,4 @@ pub mod certificate;
 pub mod file_data;
 pub mod metadata;
 pub mod pdfium;
+pub mod pandoc;
