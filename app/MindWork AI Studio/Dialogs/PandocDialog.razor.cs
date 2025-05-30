@@ -31,7 +31,7 @@ public partial class PandocDialog : ComponentBase
     
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocDialog");
     private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/COPYING.md";
-    private static string PANDOC_VERSION = string.Empty;
+    private static string LATEST_PANDOC_VERSION = string.Empty;
 
     private bool isPandocAvailable;
     private bool showSkeleton;
@@ -50,8 +50,8 @@ public partial class PandocDialog : ComponentBase
         await base.OnInitializedAsync();
         
         this.showSkeleton = true;
+        LATEST_PANDOC_VERSION = await Pandoc.FetchLatestVersionAsync();
         await this.CheckPandocAvailabilityAsync();
-        PANDOC_VERSION = await Pandoc.FetchLatestVersionAsync();
     }
 
     #endregion
