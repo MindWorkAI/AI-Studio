@@ -192,12 +192,24 @@
             <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
                 Cancel
             </MudButton>
-            
+
             @if (this.pandocInstallation != default)
             {
-                <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled" Size="Size.Medium">
-                    Proceed to installation
-                </MudButton>
+                switch (this.pandocInstallation)
+                {
+                    case { CheckWasSuccessful: true, IsAvailable: false }:
+                    case { CheckWasSuccessful: false, IsAvailable: false }:
+                        <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled" Size="Size.Medium">
+                            Proceed to installation
+                        </MudButton>
+                        break;
+
+                    case { CheckWasSuccessful: true, IsAvailable: true }:
+                        <MudButton Color="Color.Default" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled" Size="Size.Medium">
+                            Re-install Pandoc
+                        </MudButton>
+                        break;
+                }
             }
         }
     </DialogActions>
