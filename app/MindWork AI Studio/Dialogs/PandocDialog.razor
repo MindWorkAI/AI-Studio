@@ -142,10 +142,36 @@
                 }
                 else
                 {
-                    <MudIcon Class="mb-2" Style="width: 3.5em; height: 3.5em;" Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
-                    <MudJustifiedText Class="mb-6" Typo="Typo.body1" Align="Align.Center">
-                        Pandoc ist auf Ihrem System nicht verfügbar
-                    </MudJustifiedText>
+                    switch (this.pandocInstallation)
+                    {
+                        case { CheckWasSuccessful: true, IsAvailable: true }:
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudIcon Style="width: 2.5em; height: 2.5em;" Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                                <MudJustifiedText Typo="Typo.body1">
+                                    Pandoc is installed and the version meets the requirements of MindWork AI Studio.
+                                </MudJustifiedText>
+                            </MudStack>
+                            break;
+
+                        case { CheckWasSuccessful: true, IsAvailable: false }:
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudIcon Style="width: 3.5em; height: 3.5em;" Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                                <MudJustifiedText Typo="Typo.body1">
+                                    Pandoc is installed, but the version is too old and does not meet the requirements of
+                                    MindWork AI Studio. AI Studio can help you install a newer version.
+                                </MudJustifiedText>
+                            </MudStack>
+                            break;
+
+                        case { CheckWasSuccessful: false }:
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudIcon Style="width: 3.5em; height: 3.5em;" Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                                <MudJustifiedText Typo="Typo.body1">
+                                    Pandoc doesn't seem to be installed on this system. AI Studio can help you install the correct version.
+                                </MudJustifiedText>
+                            </MudStack>
+                            break;
+                    }
                 }
             </MudItem>
         }
@@ -159,9 +185,16 @@
         }
         else
         {
-            <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled" Size="Size.Medium">
-                Proceed to installation
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                Cancel
             </MudButton>
+            
+            @if (this.pandocInstallation != default)
+            {
+                <MudButton Color="Color.Primary" OnClick="@this.ProceedToInstallation" Variant="Variant.Filled" Size="Size.Medium">
+                    Proceed to installation
+                </MudButton>
+            }
         }
     </DialogActions>
 </MudDialog>
