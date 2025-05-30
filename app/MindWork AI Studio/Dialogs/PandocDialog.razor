@@ -82,28 +82,27 @@
                                 </MudListItem>
                                 
                                 <MudListItem T="string" Class="mb-2">
-                                    Extract the archive to a folder of your choice.
+                                    Extract the archive to a folder of your choice, e.g.:
                                     <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc</CodeBlock>
-                                        <CodeBlock Title="macOS">/usr/local/bin/pandoc</CodeBlock>
+                                        <CodeBlock Title="macOS">~/pandoc</CodeBlock>
                                         <CodeBlock Title="Linux">/usr/local/bin/pandoc</CodeBlock>
                                     </CodeTabs>
                                 </MudListItem>
                                 
                                 <MudListItem T="string" Class="mb-2">
                                     Open the folder and copy the full path to the <CodeBlock IsInline="true">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your
-                                    clipboard.
+                                    clipboard:
                                     <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-@(PANDOC_VERSION)</CodeBlock>
-                                        <CodeBlock Title="macOS">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
+                                        <CodeBlock Title="macOS">~/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="Linux">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
                                     </CodeTabs>
                                 </MudListItem>
                                 
                                 <MudListItem T="string">
-                                    Add the copied path to your systems environment variables and check the installation
-                                    by typing <br/><CodeBlock IsInline="@true">pandoc --version</CodeBlock>
-                                    into your command line interface.
+                                    Add the copied path to your system's or user's <CodeBlock IsInline="true">PATH</CodeBlock> environment variable, restart your terminal, and check the installation
+                                    by typing <CodeBlock IsInline="@true">pandoc --version</CodeBlock> into your terminal:
                                     <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">> pandoc.exe --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="macOS">> pandoc --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
