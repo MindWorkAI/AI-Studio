@@ -37,7 +37,7 @@ public partial class PandocDialog : ComponentBase
     private bool showSkeleton;
     private bool showInstallPage;
     private string? licenseText;
-    private bool isLoading;
+    private bool isLoadingLicence;
     private int selectedInstallerIndex = SelectInstallerIndex();
     private int selectedArchiveIndex = SelectArchiveIndex();
     private string downloadUrlArchive = string.Empty;
@@ -108,7 +108,7 @@ public partial class PandocDialog : ComponentBase
     {
         if (isExpanded)
         {
-            this.isLoading = true;
+            this.isLoadingLicence = true;
             try
             {
                 this.licenseText = await this.LoadLicenseTextAsync();
@@ -120,7 +120,7 @@ public partial class PandocDialog : ComponentBase
             }
             finally
             {
-                this.isLoading = false;
+                this.isLoadingLicence = false;
             }
         }
         else

@@ -13,7 +13,7 @@
             
             <MudExpansionPanels Class="mb-3" MultiExpansion="@false" Outlined="false" Elevation="0">
                 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="View GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="this.WhenExpandingLicence">
-                    @if (this.isLoading)
+                    @if (this.isLoadingLicence)
                     {
                         <MudSkeleton />
                         <MudSkeleton Animation="Animation.Wave" />
