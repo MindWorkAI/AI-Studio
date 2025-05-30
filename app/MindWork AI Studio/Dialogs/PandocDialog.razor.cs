@@ -80,7 +80,7 @@ public partial class PandocDialog : ComponentBase
             { "Message", message },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Reject Pandoc's licence", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Reject Pandoc's Licence", dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             dialogReference.Close();
