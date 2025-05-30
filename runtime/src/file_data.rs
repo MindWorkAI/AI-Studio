@@ -7,7 +7,6 @@ use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
 use tokio::io::AsyncBufReadExt;
-use tokio::process::Command;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use rocket::Shutdown;
@@ -16,6 +15,7 @@ use rocket::tokio::select;
 use rocket::serde::Serialize;
 use rocket::get;
 use crate::api_token::APIToken;
+use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::PdfiumInit;
 
 #[derive(Debug, Serialize)]
@@ -255,12 +255,13 @@ async fn convert_with_pandoc(
     from: &str,
     to: &str,
 ) -> Result<ChunkStream> {
-    let output = Command::new("pandoc")
-        .arg(file_path)
-        .args(["-f", from, "-t", to])
-        .output()
-        .await?;
-
+    let output = PandocProcessBuilder::new()
+        .with_input_file(file_path)
+        .with_input_format(from)
+        .with_output_format(to)
+        .build()
+        .command.output().await?;
+    
     let stream = stream! {
         if output.status.success() {
             match String::from_utf8(output.stdout.clone()) {
