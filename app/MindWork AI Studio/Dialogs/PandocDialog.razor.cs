@@ -74,9 +74,7 @@ public partial class PandocDialog : ComponentBase
 
     private async Task RejectLicense()
     {
-        var message = "Pandoc is open-source and free of charge, but if you reject Pandoc's license, it can not be installed and some of AIStudios data retrieval features will be disabled (e.g. using Office files like Word)." +
-                      "This decision can be revoked at any time. Are you sure you want to reject the license?";
-        
+        var message = "Pandoc is open-source and free of charge, but if you reject Pandoc's license, it can not be installed and some of AIStudios data retrieval features will be disabled (e.g. using Office files like Word). This decision can be revoked at any time. Are you sure you want to reject the license?";
         var dialogParameters = new DialogParameters
         {
             { "Message", message },
