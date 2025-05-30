@@ -36,7 +36,7 @@
 
                 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.AutoFixHigh" HeaderText="@T("Automatic installation")" IsExpanded="true">
                     <MudJustifiedText Typo="Typo.body1">
-                        @((MarkupString)T("Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and Install,\" you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use."))
+                        @T("""Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and Install," you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use.""")
                     </MudJustifiedText>
                     <MudButton OnClick="this.InstallPandocAsync" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.InstallDesktop">
                         @T("Accept the GPL and start the installation")
@@ -69,7 +69,7 @@
                             </MudList>
 
                             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
-                                @((MarkupString)T("Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and download installer,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."))
+                                @T("""Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and download installer," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.""")
                             </MudJustifiedText>
 
                             <MudButton Href="@this.downloadUrlInstaller" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Downloading">
@@ -98,7 +98,7 @@
 
                                 <MudListItem T="string" Class="mb-2">
                                     <MudJustifiedText Typo="Typo.body1">
-                                        @((MarkupString)T("Open the folder and copy the full path to the <CodeBlock IsInline=\"true\">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your clipboard:"))
+                                        @T("Open the folder and copy the full path to the folder where your Pandoc executable file is into your clipboard:")
                                     </MudJustifiedText>
                                     <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-@(LATEST_PANDOC_VERSION)</CodeBlock>
@@ -109,7 +109,7 @@
 
                                 <MudListItem T="string">
                                     <MudJustifiedText Typo="Typo.body1">
-                                        @((MarkupString)T("Add the copied path to your system's or user's <CodeBlock IsInline=\"true\">PATH</CodeBlock> environment variable, restart your terminal, and check the installation by typing <CodeBlock IsInline=\"true\">pandoc --version</CodeBlock> into your terminal:"))
+                                        @T("Add the copied path to your system's or user's PATH environment variable, restart your terminal, and check the installation:")
                                     </MudJustifiedText>
                                     <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">> pandoc.exe --version<br/>> pandoc @(LATEST_PANDOC_VERSION)</CodeBlock>
@@ -121,7 +121,7 @@
 
                             <MudText Class="mb-3" Typo="Typo.caption">
                                 <MudJustifiedText Typo="Typo.body1">
-                                    @((MarkupString)T("Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."))
+                                    @T("""Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.""")
                                 </MudJustifiedText>
                             </MudText>
 

@@ -1519,6 +1519,30 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Avail
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Issues"
 
+-- Your Pandoc installation meets the requirements.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Your Pandoc installation meets the requirements."
+
+-- Please wait while we check the availability of Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1336364299"] = "Please wait while we check the availability of Pandoc."
+
+-- Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T185447014"] = "Pandoc Installation"
+
+-- Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T251757907"] = "Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features."
+
+-- Pandoc is not installed or not available. Please install it to use the features that require Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T3147551473"] = "Pandoc is not installed or not available. Please install it to use the features that require Pandoc."
+
+-- Update Pandoc
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T3249965383"] = "Update Pandoc"
+
+-- Check your Pandoc installation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "Check your Pandoc installation"
+
+-- Install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Install Pandoc"
+
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications."
 
@@ -2437,6 +2461,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"] = "Embedding"
 
+-- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"] = "For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc."
+
 -- Yes, please send my data to the cloud
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3572613009"] = "Yes, please send my data to the cloud"
 
@@ -2550,6 +2577,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2814869210"] = "
 
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "Embedding"
+
+-- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc."
 
 -- Yes, please send my data to the cloud
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3572613009"] = "Yes, please send my data to the cloud"
@@ -2745,6 +2775,96 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Pro
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Cancel"
+
+-- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system."
+
+-- View the GNU General Public License v2 (GPL)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1587398673"] = "View the GNU General Public License v2 (GPL)"
+
+-- Reject the GPL licence
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1655899051"] = "Reject the GPL licence"
+
+-- Automatic installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1780479836"] = "Automatic installation"
+
+-- Manual installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1814127049"] = "Manual installation"
+
+-- Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and download installer,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1962103492"] = "Pandoc is distributed under the <MudLink Href=\\\"https://github.com/jgm/pandoc/blob/main/COPYING.md\\\" Target=\\\"_blank\\\">GNU General Public License v2 (GPL)</MudLink>. By clicking \\\"Accept GPL and download installer,\\\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
+
+-- AI Studio uses the free and open-source third-party app Pandoc to process and retrieve data from local Office files (such as Word files) or to generate Office documents.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T205422394"] = "AI Studio uses the free and open-source third-party app Pandoc to process and retrieve data from local Office files (such as Word files) or to generate Office documents."
+
+-- Extract the archive to a folder of your choice, e.g.:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2094245964"] = "Extract the archive to a folder of your choice, e.g.:"
+
+-- Open the folder and copy the full path to the <CodeBlock IsInline=\"true\">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your clipboard:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T243353768"] = "Open the folder and copy the full path to the <CodeBlock IsInline=\\\"true\\\">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your clipboard:"
+
+-- Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2531990034"] = "Pandoc is distributed under the <MudLink Href=\\\"https://github.com/jgm/pandoc/blob/main/COPYING.md\\\" Target=\\\"_blank\\\">GNU General Public License v2 (GPL)</MudLink>. By clicking \\\"Accept GPL and archive,\\\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
+
+-- Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2559178004"] = "Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?"
+
+-- Please wait for the installation to complete...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2606205182"] = "Please wait for the installation to complete..."
+
+-- Accept the GPL and start the installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2966192331"] = "Accept the GPL and start the installation"
+
+-- Error loading license text, please consider following the links to read the GPL.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3054618024"] = "Error loading license text, please consider following the links to read the GPL."
+
+-- Accept the GPL and download the installer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3104260405"] = "Accept the GPL and download the installer"
+
+-- Accept the terms of the GPL license and download the latest archive with the download button below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3263447722"] = "Accept the terms of the GPL license and download the latest archive with the download button below."
+
+-- Pandoc doesn't seem to be installed on this system. AI Studio can help you install the correct version.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3355132094"] = "Pandoc doesn't seem to be installed on this system. AI Studio can help you install the correct version."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3448155331"] = "Close"
+
+-- Pandoc is installed and the version meets the requirements of MindWork AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3653795841"] = "Pandoc is installed and the version meets the requirements of MindWork AI Studio."
+
+-- Pandoc is installed, but the version is too old and does not meet the requirements of MindWork AI Studio. AI Studio can help you install a newer version.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3692691761"] = "Pandoc is installed, but the version is too old and does not meet the requirements of MindWork AI Studio. AI Studio can help you install a newer version."
+
+-- Execute the installer and follow the instructions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3730261061"] = "Execute the installer and follow the instructions."
+
+-- If you want to install Pandoc yourself, follow one of these two guides. The first guide uses an installer and is available for Windows and macOS.  Alternatively, you might use a package manager of your operating system to install Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3780227601"] = "If you want to install Pandoc yourself, follow one of these two guides. The first guide uses an installer and is available for Windows and macOS.  Alternatively, you might use a package manager of your operating system to install Pandoc."
+
+-- Download installer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3791603277"] = "Download installer"
+
+-- Pandoc is distributed under the <MudLink Href=\"https://github.com/jgm/pandoc/blob/main/COPYING.md\" Target=\"_blank\">GNU General Public License v2 (GPL)</MudLink>. By clicking \"Accept GPL and Install,\" you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3956237733"] = "Pandoc is distributed under the <MudLink Href=\\\"https://github.com/jgm/pandoc/blob/main/COPYING.md\\\" Target=\\\"_blank\\\">GNU General Public License v2 (GPL)</MudLink>. By clicking \\\"Accept GPL and Install,\\\" you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use."
+
+-- Accept the GPL and download the archive
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3987456907"] = "Accept the GPL and download the archive"
+
+-- Reject Pandoc's Licence
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4092049320"] = "Reject Pandoc's Licence"
+
+-- Proceed to the installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4134878031"] = "Proceed to the installation"
+
+-- Re-install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4152693089"] = "Re-install Pandoc"
+
+-- Accept the terms of the GPL license and download the latest installer with the download button below. Eventually, you need to allow the download of the installer in the download window.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Accept the terms of the GPL license and download the latest installer with the download button below. Eventually, you need to allow the download of the installer in the download window."
+
+-- Add the copied path to your system's or user's <CodeBlock IsInline=\"true\">PATH</CodeBlock> environment variable, restart your terminal, and check the installation by typing <CodeBlock IsInline=\"true\">pandoc --version</CodeBlock> into your terminal:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T590618273"] = "Add the copied path to your system's or user's <CodeBlock IsInline=\\\"true\\\">PATH</CodeBlock> environment variable, restart your terminal, and check the installation by typing <CodeBlock IsInline=\\\"true\\\">pandoc --version</CodeBlock> into your terminal:"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
@@ -4033,6 +4153,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1772678682"] = "This library is used t
 -- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1806897624"] = "By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents."
 
+-- Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T185447014"] = "Pandoc Installation"
+
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1890416390"] = "Check for updates"
 
@@ -4063,6 +4186,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2329884315"] = "The C# language is use
 -- Used PDFium version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2368247719"] = "Used PDFium version"
 
+-- installation provided by the system
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2371107659"] = "installation provided by the system"
+
+-- Installed Pandoc version: Pandoc is not installed or not available.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2374031539"] = "Installed Pandoc version: Pandoc is not installed or not available."
+
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
 
@@ -4083,6 +4212,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2706940196"] = "Logbook"
 
 -- This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2726131107"] = "This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read."
+
+-- Determine Pandoc version, please wait...
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2765814390"] = "Determine Pandoc version, please wait..."
 
 -- Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2777988282"] = "Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor."
@@ -4108,6 +4240,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T313276297"] = "Connect AI Studio to yo
 -- Have feature ideas? Submit suggestions for future AI Studio enhancements.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3178730036"] = "Have feature ideas? Submit suggestions for future AI Studio enhancements."
 
+-- Update Pandoc
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3249965383"] = "Update Pandoc"
+
 -- Discover MindWork AI's mission and vision on our official homepage.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3294830584"] = "Discover MindWork AI's mission and vision on our official homepage."
 
@@ -4129,8 +4264,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3563271893"] = "Motivation"
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3722989559"] = "This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat."
 
+-- this version does not met the requirements
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3813932670"] = "this version does not met the requirements"
+
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3908558992"] = "Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."
+
+-- Installed Pandoc version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3983971016"] = "Installed Pandoc version"
+
+-- Check Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3986423270"] = "Check Pandoc Installation"
 
 -- Versions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4010195468"] = "Versions"
@@ -4159,8 +4303,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T639371534"] = "Did you find a bug or a
 -- This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T64689067"] = "This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible."
 
+-- installed by AI Studio
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T833849470"] = "installed by AI Studio"
+
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."
+
+-- Install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T986578435"] = "Install Pandoc"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
@@ -4995,6 +5145,42 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T816853779"] = "Failed
 
 -- Failed to retrieve the authentication methods: the ERI server did not return a valid response.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T984407320"] = "Failed to retrieve the authentication methods: the ERI server did not return a valid response."
+
+-- Was not able to validate the Pandoc installation.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1364844008"] = "Was not able to validate the Pandoc installation."
+
+-- Installers are not available on {0} systems.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1640771881"] = "Installers are not available on {0} systems."
+
+-- Pandoc v{0} was installed successfully.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1885555132"] = "Pandoc v{0} was installed successfully."
+
+-- Was not able to check the Pandoc installation.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2171727146"] = "Was not able to check the Pandoc installation."
+
+-- Pandoc v{0} is installed, but it doesn't match the required version (v{1}).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2299898115"] = "Pandoc v{0} is installed, but it doesn't match the required version (v{1})."
+
+-- Pandoc v{0} is installed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2550598062"] = "Pandoc v{0} is installed."
+
+-- Pandoc v{0} is installed, but it does not match the required version (v{1}).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2555465873"] = "Pandoc v{0} is installed, but it does not match the required version (v{1})."
+
+-- Pandoc was not installed successfully, because the archive was not found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T34210248"] = "Pandoc was not installed successfully, because the archive was not found."
+
+-- Pandoc is not available on the system or the process had issues.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3746116957"] = "Pandoc is not available on the system or the process had issues."
+
+-- Pandoc was not installed successfully, because the archive type is unknown.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3962211670"] = "Pandoc was not installed successfully, because the archive type is unknown."
+
+-- It seems that Pandoc is not installed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "It seems that Pandoc is not installed."
+
+-- The latest Pandoc version was not found, installing version {0} instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "The latest Pandoc version was not found, installing version {0} instead."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "The table AUTHORS does not exist or is using an invalid syntax."
