@@ -14,6 +14,9 @@ public partial class PandocDialog : ComponentBase
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
     
+    [Parameter]
+    public bool ShowInstallationPage { get; set; }
+    
     [Inject]
     private HttpClient HttpClient { get; set; } = null!;
     
@@ -31,7 +34,6 @@ public partial class PandocDialog : ComponentBase
     private static string LATEST_PANDOC_VERSION = string.Empty;
 
     private PandocInstallation pandocInstallation;
-    private bool showInstallationPage;
     private string? licenseText;
     private bool isLoadingLicence;
     private int selectedInstallerIndex = SelectInstallerIndex();
@@ -62,12 +64,12 @@ public partial class PandocDialog : ComponentBase
     private async Task InstallPandocAsync()
     {
         await Pandoc.InstallAsync(this.RustService);
-        this.MudDialog.Close(DialogResult.Ok(true));
         
+        this.MudDialog.Close(DialogResult.Ok(true));
         await this.DialogService.ShowAsync<PandocDialog>("pandoc dialog");
     }
 
-    private void ProceedToInstallation() => this.showInstallationPage = true;
+    private void ProceedToInstallation() => this.ShowInstallationPage = true;
 
     private async Task RejectLicense()
     {

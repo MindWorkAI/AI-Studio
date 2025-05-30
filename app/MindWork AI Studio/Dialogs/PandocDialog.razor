@@ -1,6 +1,6 @@
 ﻿<MudDialog>
     <DialogContent>
-        @if (this.showInstallationPage)
+        @if (this.ShowInstallationPage)
         {
             <div class="mb-4">
                 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
@@ -177,7 +177,7 @@
         }
     </DialogContent>
     <DialogActions>
-        @if (this.showInstallationPage)
+        @if (this.ShowInstallationPage)
         {
             <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
                 Cancel
