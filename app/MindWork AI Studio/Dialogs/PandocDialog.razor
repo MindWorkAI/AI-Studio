@@ -54,7 +54,7 @@
                                 <MudListItem T="string" Class="mb-2">
                                     Accept the terms of the GPL license and download the latest installer with the download button below.
                                     Eventually you need to allow the download of the installer in the download window.
-                                    <CodeTabs SelectedIndex="this.SelectInstallerIndex()">
+                                    <CodeTabs SelectedIndex="SelectInstallerIndex()">
                                         <CodeBlock Title="Windows">pandoc-@(PANDOC_VERSION)-windows-x86_64.msi</CodeBlock>
                                         <CodeBlock Title="macOS ARM">pandoc-@(PANDOC_VERSION)-arm64-macOS.pkg</CodeBlock>
                                         <CodeBlock Title="macOS x86">pandoc-@(PANDOC_VERSION)-x86_64-macOS.pkg</CodeBlock>
@@ -83,7 +83,7 @@
                                 
                                 <MudListItem T="string" Class="mb-2">
                                     Extract the archive to a folder of your choice.
-                                    <CodeTabs SelectedIndex="this.SelectArchiveIndex()">
+                                    <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc</CodeBlock>
                                         <CodeBlock Title="macOS">/usr/local/bin/pandoc</CodeBlock>
                                         <CodeBlock Title="Linux">/usr/local/bin/pandoc</CodeBlock>
@@ -93,7 +93,7 @@
                                 <MudListItem T="string" Class="mb-2">
                                     Open the folder and copy the full path to the <CodeBlock IsInline="true">@PandocProcessBuilder.PandocExecutableName</CodeBlock> file into your
                                     clipboard.
-                                    <CodeTabs SelectedIndex="this.SelectArchiveIndex()">
+                                    <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">C:\Users\%USERNAME%\pandoc\pandoc-@(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="macOS">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="Linux">/usr/local/bin/pandoc/pandoc-@(PANDOC_VERSION)</CodeBlock>
@@ -104,7 +104,7 @@
                                     Add the copied path to your systems environment variables and check the installation
                                     by typing <br/><CodeBlock IsInline="@true">pandoc --version</CodeBlock>
                                     into your command line interface.
-                                    <CodeTabs SelectedIndex="this.SelectArchiveIndex()">
+                                    <CodeTabs @bind-SelectedIndex="this.selectedArchiveIndex">
                                         <CodeBlock Title="Windows">> pandoc.exe --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="macOS">> pandoc --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>
                                         <CodeBlock Title="Linux">> pandoc --version<br/>> pandoc @(PANDOC_VERSION)</CodeBlock>

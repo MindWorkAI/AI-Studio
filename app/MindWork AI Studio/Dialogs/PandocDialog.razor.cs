@@ -38,6 +38,7 @@ public partial class PandocDialog : ComponentBase
     private bool showInstallPage;
     private string? licenseText;
     private bool isLoading;
+    private int selectedArchiveIndex = SelectArchiveIndex();
     
     #region Overrides of ComponentBase
     
@@ -147,7 +148,7 @@ public partial class PandocDialog : ComponentBase
     }
 
     // ReSharper disable RedundantSwitchExpressionArms
-    private int SelectInstallerIndex() => CPU_ARCHITECTURE switch
+    private static int SelectInstallerIndex() => CPU_ARCHITECTURE switch
     {
         RID.OSX_ARM64 => 1,
         RID.OSX_X64 => 2,
@@ -158,7 +159,7 @@ public partial class PandocDialog : ComponentBase
         _ => 0,
     };
     
-    private int SelectArchiveIndex() => CPU_ARCHITECTURE switch
+    private static int SelectArchiveIndex() => CPU_ARCHITECTURE switch
     {
         RID.OSX_ARM64 => 1,
         RID.OSX_X64 => 1,
