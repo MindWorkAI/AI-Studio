@@ -13,6 +13,8 @@ namespace AIStudio.Tools;
 
 public static partial class Pandoc
 {
+    private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(Pandoc).Namespace, nameof(Pandoc));
+    
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
@@ -45,10 +47,10 @@ public static partial class Pandoc
             if (process == null)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, "Was not able to check the Pandoc installation."));
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, TB("Was not able to check the Pandoc installation.")));
                 
                 LOG.LogInformation("The Pandoc process was not started, it was null");
-                return new(false, "Was not able to check the Pandoc installation.", false, string.Empty, preparedProcess.IsLocal);
+                return new(false, TB("Was not able to check the Pandoc installation."), false, string.Empty, preparedProcess.IsLocal);
             }
                 
             var output = await process.StandardOutput.ReadToEndAsync();
@@ -56,20 +58,20 @@ public static partial class Pandoc
             if (process.ExitCode != 0)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "Pandoc is not available on the system or the process had issues."));
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc is not available on the system or the process had issues.")));
                 
                 LOG.LogError("The Pandoc process was exited with code {ProcessExitCode}", process.ExitCode);
-                return new(false, "Pandoc is not available on the system or the process had issues.", false, string.Empty, preparedProcess.IsLocal);
+                return new(false, TB("Pandoc is not available on the system or the process had issues."), false, string.Empty, preparedProcess.IsLocal);
             }
 
             var versionMatch = PandocCmdRegex().Match(output);
             if (!versionMatch.Success)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, "Was not able to validate the Pandoc installation."));
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, TB("Was not able to validate the Pandoc installation.")));
                 
                 LOG.LogError("Pandoc --version returned an invalid format: {Output}", output);
-                return new(false, "Was not able to validate the Pandoc installation.", false, string.Empty, preparedProcess.IsLocal);
+                return new(false, TB("Was not able to validate the Pandoc installation."), false, string.Empty, preparedProcess.IsLocal);
             }
             
             var versions = versionMatch.Groups[1].Value;
@@ -79,25 +81,25 @@ public static partial class Pandoc
             if (installedVersion >= MINIMUM_REQUIRED_VERSION)
             {
                 if (showMessages)
-                    await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc v{installedVersionString} is installed."));
+                    await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} is installed."), installedVersionString)));
                 
                 LOG.LogInformation("Pandoc v{0} is installed and matches the required version (v{1})", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
                 return new(true, string.Empty, true, installedVersionString, preparedProcess.IsLocal);
             }
             
             if (showMessages)
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Build, $"Pandoc v{installedVersionString} is installed, but it doesn't match the required version (v{MINIMUM_REQUIRED_VERSION.ToString()})."));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Build, string.Format(TB("Pandoc v{0} is installed, but it doesn't match the required version (v{1})."), installedVersionString, MINIMUM_REQUIRED_VERSION.ToString())));
             
             LOG.LogWarning("Pandoc v{0} is installed, but it does not match the required version (v{1})", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
-            return new(true, $"Pandoc v{installedVersionString} is installed, but it does not match the required version (v{MINIMUM_REQUIRED_VERSION.ToString()}).", false, installedVersionString, preparedProcess.IsLocal);
+            return new(true, string.Format(TB("Pandoc v{0} is installed, but it does not match the required version (v{1})."), installedVersionString, MINIMUM_REQUIRED_VERSION.ToString()), false, installedVersionString, preparedProcess.IsLocal);
         }
         catch (Exception e)
         {
             if (showMessages)
-                await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, "It seems that Pandoc is not installed."));
+                await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, TB("It seems that Pandoc is not installed.")));
             
             LOG.LogError("Pandoc is not installed and threw an exception: {0}", e.Message);
-            return new(false, "It seems that Pandoc is not installed.", false, string.Empty, false);
+            return new(false, TB("It seems that Pandoc is not installed."), false, string.Empty, false);
         }
     }
 
@@ -131,7 +133,7 @@ public static partial class Pandoc
                 var response = await client.GetAsync(uri);
                 if (!response.IsSuccessStatusCode)
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the archive was not found."));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the archive was not found.")));
                     LOG.LogError("Pandoc was not installed successfully, because the archive was not found (status code {0}): url='{1}', message='{2}'", response.StatusCode, uri, response.RequestMessage);
                     return;
                 }
@@ -153,14 +155,14 @@ public static partial class Pandoc
             }
             else
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the archive type is unknown."));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the archive type is unknown.")));
                 LOG.LogError("Pandoc was not installed, the archive is unknown: url='{0}'", uri);
                 return;
             }
 
             File.Delete(pandocTempDownloadFile);
             
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc v{latestVersion} was installed successfully."));
+            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} was installed successfully."), latestVersion)));
             LOG.LogInformation("Pandoc v{0} was installed successfully.", latestVersion);
         }
         catch (Exception ex)
@@ -196,7 +198,7 @@ public static partial class Pandoc
         if (!response.IsSuccessStatusCode)
         {
             LOG.LogError("Code {StatusCode}: Could not fetch Pandoc's latest page: {Response}", response.StatusCode, response.RequestMessage);
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
+            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, string.Format(TB("The latest Pandoc version was not found, installing version {0} instead."), FALLBACK_VERSION.ToString())));
             return FALLBACK_VERSION.ToString();
         }
 
@@ -205,7 +207,7 @@ public static partial class Pandoc
         if (!versionMatch.Success)
         {
             LOG.LogError("The latest version regex returned nothing: {0}", versionMatch.Groups.ToString());
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, $"The latest pandoc version was not found, installing version {FALLBACK_VERSION.ToString()} instead."));
+            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.Warning, string.Format(TB("The latest Pandoc version was not found, installing version {0} instead."), FALLBACK_VERSION.ToString())));
             return FALLBACK_VERSION.ToString();
         }
         
@@ -280,7 +282,7 @@ public static partial class Pandoc
                 return $"{baseUri}arm64-macOS.pkg";
             
             default:
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"Installers are not available on {CPU_ARCHITECTURE.ToUserFriendlyName()} systems."));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, string.Format(TB("Installers are not available on {0} systems."), CPU_ARCHITECTURE.ToUserFriendlyName())));
                 return string.Empty;
         }
     }

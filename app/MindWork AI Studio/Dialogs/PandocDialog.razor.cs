@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 
+using AIStudio.Components;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
@@ -8,7 +9,7 @@ using SharedTools;
 
 namespace AIStudio.Dialogs;
 
-public partial class PandocDialog : ComponentBase
+public partial class PandocDialog : MSGComponentBase
 {
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
@@ -81,13 +82,13 @@ public partial class PandocDialog : ComponentBase
 
     private async Task RejectLicense()
     {
-        var message = "Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?";
+        var message = T("Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?");
         var dialogParameters = new DialogParameters
         {
             { "Message", message },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Reject Pandoc's Licence", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Reject Pandoc's Licence"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             dialogReference.Close();
@@ -115,7 +116,7 @@ public partial class PandocDialog : ComponentBase
             }
             catch (Exception ex)
             {
-                this.licenseText = "Error loading license text, please consider following the links to read the GPL.";
+                this.licenseText = T("Error loading license text, please consider following the links to read the GPL.");
                 LOG.LogError("Error loading GPL license text: {ErrorMessage}", ex.Message);
             }
             finally
