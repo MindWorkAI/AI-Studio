@@ -273,7 +273,7 @@ public static partial class Pandoc
                 return $"{baseUri}arm64-macOS.pkg";
             
             default:
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"Installers are not available on {CPU_ARCHITECTURE} systems."));
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Terminal, $"Installers are not available on {CPU_ARCHITECTURE.ToUserFriendlyName()} systems."));
                 return string.Empty;
         }
     }
