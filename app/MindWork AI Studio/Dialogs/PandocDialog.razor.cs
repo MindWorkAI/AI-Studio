@@ -34,7 +34,7 @@ public partial class PandocDialog : ComponentBase
     private static string LATEST_PANDOC_VERSION = string.Empty;
 
     private PandocInstallation pandocInstallation;
-    private bool showInstallPage;
+    private bool showInstallationPage;
     private string? licenseText;
     private bool isLoadingLicence;
     private int selectedInstallerIndex = SelectInstallerIndex();
@@ -70,7 +70,7 @@ public partial class PandocDialog : ComponentBase
         await this.DialogService.ShowAsync<PandocDialog>("pandoc dialog");
     }
 
-    private void ProceedToInstallation() => this.showInstallPage = true;
+    private void ProceedToInstallation() => this.showInstallationPage = true;
 
     private async Task RejectLicense()
     {
