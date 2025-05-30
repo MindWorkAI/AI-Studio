@@ -128,7 +128,7 @@
         else
         {
             <MudItem Class="px-8 py-2" Style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                @if (this.showSkeleton)
+                @if (this.pandocInstallation == default)
                 {
                     <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Class="mb-4" Style="width: 4em; height: 4em;"/>
                     <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Pulse" Width="230px" Height="35px"/>

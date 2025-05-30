@@ -33,8 +33,7 @@ public partial class PandocDialog : ComponentBase
     private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/COPYING.md";
     private static string LATEST_PANDOC_VERSION = string.Empty;
 
-    private bool isPandocAvailable;
-    private bool showSkeleton;
+    private PandocInstallation pandocInstallation;
     private bool showInstallPage;
     private string? licenseText;
     private bool isLoadingLicence;
@@ -49,7 +48,6 @@ public partial class PandocDialog : ComponentBase
     {
         await base.OnInitializedAsync();
         
-        this.showSkeleton = true;
         LATEST_PANDOC_VERSION = await Pandoc.FetchLatestVersionAsync();
         await this.CheckPandocAvailabilityAsync();
     }
@@ -60,10 +58,7 @@ public partial class PandocDialog : ComponentBase
 
     private async Task CheckPandocAvailabilityAsync()
     {
-        var pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService);
-        this.isPandocAvailable = pandocInstallation.IsAvailable;
-        this.showSkeleton = false;
-        
+        this.pandocInstallation = await Pandoc.CheckAvailabilityAsync(this.RustService);
         await this.InvokeAsync(this.StateHasChanged);
     }
 
