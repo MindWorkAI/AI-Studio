@@ -109,7 +109,7 @@ public sealed class PandocProcessBuilder
         try
         {
             var executableName = PandocExecutableName;
-            var subdirectories = Directory.GetDirectories(localInstallationRootDirectory);
+            var subdirectories = Directory.GetDirectories(localInstallationRootDirectory, "*", SearchOption.AllDirectories);
             foreach (var subdirectory in subdirectories)
             {
                 var pandocPath = Path.Combine(subdirectory, executableName);
