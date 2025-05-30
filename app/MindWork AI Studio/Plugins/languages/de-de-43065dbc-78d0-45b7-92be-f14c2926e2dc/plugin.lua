@@ -486,6 +486,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T4096
 -- Please describe at least one retrieval process.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1035068989"] = "Bitte beschreiben Sie mindestens einen Abrufprozess."
 
+-- Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1047217452"] = "Lokale oder selbst gehostete Modelle funktionieren möglicherweise ohne diese Einschränkungen und können schneller Antworten generieren. AI Studio passt sein Verhalten dynamisch an und versucht stets, die schnellstmögliche Datenverarbeitung zu erreichen."
+
 -- Please select which types of LLMs users are allowed to use with the data from this ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1047631678"] = "Bitte wählen Sie aus, welche Typen von LLMs mit den Daten dieses ERI-Servers verwendet werden dürfen."
 
@@ -513,9 +516,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1261836894"] = "Bitte
 -- You have not yet added any ERI server presets.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1267931972"] = "Sie haben bislang keine ERI-Server-Voreinstellung hinzugefügt."
 
--- <b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1287629674"] = "<b>Warnung:</b> Ports unter 1024 sind für Systemdienste reserviert. Ihr ERI-Server muss mit erhöhten Rechten (als Root-Benutzer) ausgeführt werden."
-
 -- The task of writing the ERI server for you is very complex. Therefore, a very powerful LLM is needed to successfully accomplish this task. Small local models will probably not be sufficient. Instead, try using a large cloud-based or a large self-hosted model.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1302705248"] = "Die Aufgabe, den ERI-Server für Sie zu schreiben, ist sehr komplex. Daher wird ein sehr leistungsfähiges LLM benötigt, um diese Aufgabe erfolgreich zu bewältigen. Kleine lokale Modelle werden dafür wahrscheinlich nicht ausreichen. Versuchen Sie stattdessen, ein großes Cloud-basiertes oder ein großes selbst gehostetes Modell zu verwenden."
 
@@ -537,11 +537,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1456749976"] = "Bitte
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1469573738"] = "Löschen"
 
+-- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1531680404"] = "Wenn Sie den ERI-Server-Code neu erstellen oder generieren, geht AI Studio wie folgt vor: Alle beim letzten Mal generierten Dateien werden gelöscht. Alle anderen von ihnen erstellten Dateien bleiben erhalten. Anschließend generiert die KI die neuen Dateien."
+
 -- Related links:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Relevante Links:"
 
 -- Please select an ERI specification version for the ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Bitte wählen Sie eine Version der ERI-Spezifikation für den ERI-Server aus."
+
+-- Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T168780641"] = "Ports unterhalb von 1024 sind für Systemdienste reserviert. Ihr ERI-Server muss mit erhöhten Rechten (als Root-Benutzer) ausgeführt werden."
 
 -- Write code to file system
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1717303021"] = "Code in das Dateisystem schreiben"
@@ -564,6 +570,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T180938091"] = "Abrufp
 -- Provider selection for generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1840198821"] = "Anbieterauswahl für die Generierung"
 
+-- However, generating all the files takes a certain amount of time.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1862007299"] = "Das Erzeugen aller Dateien benötigt jedoch eine gewisse Zeit."
+
 -- Should we automatically save any input made?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1980659256"] = "Sollen wir sämtliche Eingaben automatisch speichern?"
 
@@ -579,8 +588,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2034620186"] = "Daten
 -- Interactive documentation aka Swagger UI
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2064957876"] = "Interaktive Dokumentation (auch bekannt als Swagger UI)"
 
--- When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2155983785"] = "Wenn Sie den ERI-Server-Code neu erstellen oder generieren, geht AI Studio wie folgt vor: Alle beim letzten Mal generierten Dateien werden gelöscht. Alle anderen von ihnen erstellten Dateien bleiben erhalten. Anschließend generiert die KI die neuen Dateien. <b>Aber Vorsicht:</b> Es kann passieren, dass die KI diesmal eine Datei generiert, die Sie beim letzten Mal manuell erstellt haben. In diesem Fall wird ihre manuell erstellte Datei überschrieben. Sie sollten daher immer ein Git-Repository anlegen und alle Änderungen vor der Nutzung dieses Assistenten committen oder gegebenenfalls zurücksetzen. Mit einer Diff-Ansicht können Sie sofort erkennen, wo die KI Änderungen vorgenommen hat. Am besten nutzen Sie dafür eine IDE, die für die von ihnen gewählte Programmiersprache geeignet ist."
+-- Warning:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2149175535"] = "Warnung:"
 
 -- Add Embedding Method
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2176833082"] = "Einbettungsmethode hinzufügen"
@@ -608,6 +617,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396"] = "Sind 
 
 -- Data source settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2440619931"] = "Datenquellen-Einstellungen"
+
+-- The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T248288139"] = "Das LLM muss möglicherweise viele Dateien generieren. Dadurch wird das Anfrage-Limit der meisten LLM-Anbieter erreicht. In der Regel kann nur eine bestimmte Anzahl von Anfragen pro Minute gestellt werden, und es dürfen nur eine maximale Anzahl von Tokens pro Minute erzeugt werden. AI Studio berücksichtigt dies automatisch."
 
 -- Yes, please write or update all generated code to the file system
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T252707279"] = "Ja, bitte schreibe oder aktualisiere allen erzeugten Code im Dateisystem."
@@ -684,17 +696,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3316699247"] = "Nein,
 -- Other language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3374524465"] = "Andere Sprache"
 
+-- Important:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3379345517"] = "Wichtig:"
+
 -- ERI Server {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3443687246"] = "ERI-Server {0}"
 
 -- You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3446047228"] = "Sie werden wahrscheinlich eine oder mehrere Einbettungs-Methoden verwenden, um die Bedeutung Ihrer Daten in einen typischerweise hochdimensionalen Vektorraum zu kodieren. In diesem Fall nutzen Sie eine Vektordatenbank, um diese Vektoren (sogenannte Einbettungen) zu speichern und zu durchsuchen. Es ist jedoch nicht zwingend erforderlich, Einbettungs-Methoden zu verwenden. Wenn ihre Suchmethode ohne Einbettungen funktioniert, können Sie diesen Abschnitt ignorieren. Ein Beispiel: Sie speichern Dateien auf einem Dateiserver, und ihre Suchmethode arbeitet ausschließlich mit Dateinamen im Dateisystem – dann benötigen Sie keine Einbettungen."
 
--- <b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3485079498"] = "<b>Wichtig:</b> Das LLM muss möglicherweise viele Dateien generieren. Dadurch wird das Anfrage-Limit der meisten LLM-Anbieter erreicht. In der Regel kann nur eine bestimmte Anzahl von Anfragen pro Minute gestellt werden, und es dürfen nur eine maximale Anzahl von Tokens pro Minute erzeugt werden. AI Studio berücksichtigt dies automatisch. <b>Das Erzeugen aller Dateien benötigt jedoch eine gewisse Zeit.</b> Lokale oder selbst gehostete Modelle funktionieren möglicherweise ohne diese Einschränkungen und können schneller antworten. AI Studio passt sein Verhalten dynamisch an und versucht immer, die Daten so schnell wie möglich zu verarbeiten."
-
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3512062061"] = "Typ"
+
+-- It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3541842180"] = "Es kann passieren, dass die KI diesmal eine Datei generiert, die Sie beim letzten Mal manuell erstellt haben. In diesem Fall wird ihre manuell erstellte Datei überschrieben. Sie sollten daher immer ein Git-Repository anlegen und alle Änderungen vor der Nutzung dieses Assistenten committen oder gegebenenfalls zurücksetzen. Mit einer Diff-Ansicht können Sie sofort erkennen, wo die KI Änderungen vorgenommen hat. Am besten nutzen Sie dafür eine IDE, die für die von ihnen gewählte Programmiersprache geeignet ist."
 
 -- Please describe how the selected authentication methods should be used.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T356079033"] = "Bitte beschreiben Sie, wie die ausgewählten Authentifizierungsmethoden verwendet werden sollen."
@@ -734,6 +749,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3865031940"] = "Aktio
 
 -- ERI specification version
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3897494556"] = "ERI-Spezifikations-Version"
+
+-- But beware:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3956615326"] = "Aber Vorsicht:"
 
 -- Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3973182416"] = "Bitte geben Sie eine Beschreibung für Ihren ERI-Server an. Welche Daten wird der Server abrufen? Diese Beschreibung wird dazu verwendet, die Nutzer über den Zweck ihres ERI-Servers zu informieren."
@@ -1520,6 +1538,30 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Verf�
 
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Probleme"
+
+-- Your Pandoc installation meets the requirements.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Ihre Pandoc-Installation erfüllt die Anforderungen."
+
+-- Please wait while we check the availability of Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1336364299"] = "Bitte warten Sie, während wir die Verfügbarkeit von Pandoc überprüfen."
+
+-- Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T185447014"] = "Pandoc-Installation"
+
+-- Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T251757907"] = "Ihre Pandoc-Installation ist veraltet. Bitte aktualisieren Sie Pandoc auf die neueste Version, um die volle Kompatibilität mit allen Funktionen sicherzustellen."
+
+-- Pandoc is not installed or not available. Please install it to use the features that require Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T3147551473"] = "Pandoc ist nicht installiert oder nicht verfügbar. Bitte installieren Sie Pandoc, um die Funktionen zu nutzen, die Pandoc erfordern."
+
+-- Update Pandoc
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T3249965383"] = "Pandoc aktualisieren"
+
+-- Check your Pandoc installation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "Überprüfen Sie Ihre Pandoc-Installation"
+
+-- Install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Pandoc installieren"
 
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Da mein Arbeitgeber sowohl Windows als auch Linux am Arbeitsplatz nutzt, wollte ich eine plattformübergreifende Lösung, die nahtlos auf allen wichtigen Betriebssystemen, einschließlich macOS, funktioniert. Außerdem wollte ich zeigen, dass es möglich ist, moderne, effiziente und plattformübergreifende Anwendungen zu erstellen, ohne auf Software-Balast, wie z.B. das Electron-Framework, zurückzugreifen. Die Kombination aus .NET und Rust mit Tauri hat sich dabei als hervorragender Technologiestapel für den Bau solch robuster Anwendungen erwiesen."
@@ -2439,6 +2481,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"] = "Einbettung"
 
+-- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"] = "Für einige Dateitypen, wie zum Beispiel Office-Dateien, benötigt MindWork AI Studio die Open-Source-Anwendung Pandoc."
+
 -- Yes, please send my data to the cloud
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3572613009"] = "Ja, bitte senden Sie meine Daten in die Cloud"
 
@@ -2552,6 +2597,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2814869210"] = "
 
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "Einbettung"
+
+-- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "Für einige Dateitypen, wie zum Beispiel Office-Dateien, benötigt MindWork AI Studio die Open-Source-Anwendung Pandoc."
 
 -- Yes, please send my data to the cloud
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3572613009"] = "Ja, bitte senden Sie meine Daten in die Cloud."
@@ -2747,6 +2795,96 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Anb
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Abbrechen"
+
+-- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Leider ist die GPL-Lizenz von Pandoc nicht mit der Lizenz von AI Studio kompatibel. Software unter der GPL-Lizenz ist jedoch kostenlos und frei nutzbar. Sie müssen die GPL-Lizenz akzeptieren, bevor wir Pandoc automatisch für Sie herunterladen und installieren können (empfohlen). Alternativ können Sie Pandoc auch selbst herunterladen – entweder mit den untenstehenden Anweisungen oder auf anderem Weg, zum Beispiel über den Paketmanager Ihres Betriebssystems."
+
+-- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and Install," you agree to the terms of the GPL license, and Pandoc will be installed automatically for you. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1357200670"] = "Pandoc wird unter der GNU General Public License v2 (GPL) vertrieben. Wenn Sie auf „GPL akzeptieren und installieren“ klicken, stimmen Sie den Bedingungen der GPL-Lizenz zu und Pandoc wird automatisch für Sie installiert. Software unter der GPL ist kostenlos und frei nutzbar."
+
+-- View the GNU General Public License v2 (GPL)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1587398673"] = "GNU General Public License v2 (GPL) anzeigen"
+
+-- Reject the GPL licence
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1655899051"] = "GPL-Lizenz ablehnen"
+
+-- Automatic installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1780479836"] = "Automatische Installation"
+
+-- Manual installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1814127049"] = "Manuelle Installation"
+
+-- AI Studio uses the free and open-source third-party app Pandoc to process and retrieve data from local Office files (such as Word files) or to generate Office documents.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T205422394"] = "AI Studio verwendet die kostenlose und quelloffene Drittanbieter-Software Pandoc, um Daten aus lokalen Office-Dateien (wie Word-Dateien) zu verarbeiten und abzurufen oder um Office-Dokumente zu erstellen."
+
+-- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and download installer," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2084501359"] = "Pandoc wird unter der GNU General Public License v2 (GPL) verbreitet. Wenn Sie auf „GPL akzeptieren und Installer herunterladen“ klicken, stimmen Sie den Bedingungen der GPL-Lizenz zu. Software unter der GPL ist kostenlos und frei nutzbar."
+
+-- Extract the archive to a folder of your choice, e.g.:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2094245964"] = "Entpacken Sie das Archiv in einen Ordner Ihrer Wahl, z. B.:"
+
+-- Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2559178004"] = "Pandoc ist Open Source und kostenlos. Wenn Sie die Lizenz jedoch ablehnen, können Sie Pandoc nicht installieren. Dadurch werden einige Funktionen von MindWork AI Studio eingeschränkt (wie die Integration von Office-Dateien) oder stehen nicht zur Verfügung (wie das Erstellen von Office-Dateien). Sie können Ihre Entscheidung jederzeit ändern. Möchten Sie die Lizenz wirklich ablehnen?"
+
+-- Please wait for the installation to complete...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2606205182"] = "Bitte warten Sie, bis die Installation abgeschlossen ist..."
+
+-- Open the folder and copy the full path to the folder where your Pandoc executable file is into your clipboard:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2946844485"] = "Öffnen Sie den Ordner und kopieren Sie den vollständigen Pfad zu dem Ordner, in dem sich die Pandoc-Programmdatei befindet, in die Zwischenablage:"
+
+-- Accept the GPL and start the installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T2966192331"] = "Akzeptieren Sie die GPL und starten Sie die Installation"
+
+-- Error loading license text, please consider following the links to read the GPL.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3054618024"] = "Fehler beim Laden des Lizenztexts. Bitte nutzen Sie die Links, um die GPL zu lesen."
+
+-- Accept the GPL and download the installer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3104260405"] = "Akzeptieren Sie die GPL und laden Sie das Installationsprogramm herunter"
+
+-- Add the copied path to your system's or user's PATH environment variable, restart your terminal, and check the installation:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T313476957"] = "Fügen Sie den kopierten Pfad zur PATH-Umgebungsvariable Ihres Systems oder Benutzers hinzu, starten Sie Ihr Terminal neu und überprüfen Sie die Installation:"
+
+-- Accept the terms of the GPL license and download the latest archive with the download button below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3263447722"] = "Akzeptieren Sie die Bedingungen der GPL-Lizenz und laden Sie das neueste Archiv mit dem untenstehenden Download-Button herunter."
+
+-- Pandoc doesn't seem to be installed on this system. AI Studio can help you install the correct version.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3355132094"] = "Pandoc scheint auf diesem System nicht installiert zu sein. AI Studio kann ihnen helfen, die richtige Version zu installieren."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3448155331"] = "Schließen"
+
+-- Pandoc is installed and the version meets the requirements of MindWork AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3653795841"] = "Pandoc ist installiert und die Version entspricht den Anforderungen von MindWork AI Studio."
+
+-- Pandoc is installed, but the version is too old and does not meet the requirements of MindWork AI Studio. AI Studio can help you install a newer version.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3692691761"] = "Pandoc ist installiert, aber die Version ist zu alt und erfüllt nicht die Anforderungen von MindWork AI Studio. AI Studio kann ihnen helfen, eine neuere Version zu installieren."
+
+-- Execute the installer and follow the instructions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3730261061"] = "Führen Sie das Installationsprogramm aus und folgen Sie den Anweisungen."
+
+-- If you want to install Pandoc yourself, follow one of these two guides. The first guide uses an installer and is available for Windows and macOS.  Alternatively, you might use a package manager of your operating system to install Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3780227601"] = "Wenn Sie Pandoc selbst installieren möchten, folgen Sie einer der beiden Anleitungen. Die erste Anleitung verwendet ein Installationsprogramm und ist für Windows und macOS verfügbar. Alternativ können Sie auch den Paketmanager Ihres Betriebssystems verwenden, um Pandoc zu installieren."
+
+-- Download installer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3791603277"] = "Installer herunterladen"
+
+-- Accept the GPL and download the archive
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T3987456907"] = "Akzeptieren Sie die GPL und laden Sie das Archiv herunter"
+
+-- Reject Pandoc's Licence
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4092049320"] = "Pandoc-Lizenz ablehnen"
+
+-- Proceed to the installation
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4134878031"] = "Mit der Installation fortfahren"
+
+-- Re-install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T4152693089"] = "Pandoc neu installieren"
+
+-- Accept the terms of the GPL license and download the latest installer with the download button below. Eventually, you need to allow the download of the installer in the download window.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Akzeptieren Sie die Bedingungen der GPL-Lizenz und laden Sie mit dem untenstehenden Download-Button das neueste Installationsprogramm herunter. Gegebenenfalls müssen Sie den Download des Installationsprogramms im Downloadfenster erlauben."
+
+-- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept the GPL and download the archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc wird unter der GNU General Public License v2 (GPL) vertrieben. Wenn Sie auf „GPL akzeptieren und Archiv herunterladen“ klicken, stimmen Sie den Bedingungen der GPL-Lizenz zu. Software unter der GPL ist kostenlos und frei nutzbar."
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."
@@ -3301,7 +3439,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T108494
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1096979935"] = "Möchten Sie die Datenquelle „{0}“ vom Typ {1} wirklich löschen?"
 
 -- Edit Local Directory Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1215599168"] = "Lokale Ordner-Datenquelle bearbeiten"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1215599168"] = "Datenquelle bearbeiten: Lokaler Ordner"
 
 -- Add Local Directory as Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1454193397"] = "Lokalen Ordner als Datenquelle hinzufügen"
@@ -3325,7 +3463,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T214675
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T221059217"] = "ERI v1 Datenquelle bearbeiten"
 
 -- Edit Local File Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2453292893"] = "Lokale Datei-Datenquelle bearbeiten"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2453292893"] = "Datenquelle bearbeiten: Lokale Datei"
 
 -- ERI v1 Data Source Information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T26243729"] = "ERI v1 Datenquellen-Informationen"
@@ -4035,6 +4173,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1772678682"] = "Diese Bibliothek wird 
 -- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1806897624"] = "Wenn Sie auf den jeweiligen Pfad klicken, wird dieser in die Zwischenablage kopiert. Sie können diese Dateien mit einem Texteditor öffnen, um ihren Inhalt anzusehen."
 
+-- Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T185447014"] = "Pandoc-Installation"
+
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1890416390"] = "Nach Updates suchen"
 
@@ -4053,6 +4194,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "Diese Bibliothek wird 
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "Für die sichere Kommunikation zwischen der Benutzeroberfläche und der Laufzeit müssen wir Zertifikate erstellen. Diese Rust-Bibliothek eignet sich hervorragend dafür."
 
+-- OK
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2246359087"] = "OK"
+
 -- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2273492381"] = "Wir müssen Zufallszahlen erzeugen, z. B. um die Kommunikation zwischen der Benutzeroberfläche und der Laufzeitumgebung abzusichern. Die rand-Bibliothek eignet sich dafür hervorragend."
 
@@ -4064,6 +4208,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2329884315"] = "Die Programmiersprache
 
 -- Used PDFium version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2368247719"] = "Verwendete PDFium-Version"
+
+-- installation provided by the system
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2371107659"] = "Installation vom System bereitgestellt"
+
+-- Installed Pandoc version: Pandoc is not installed or not available.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2374031539"] = "Installierte Pandoc-Version: Pandoc ist nicht installiert oder nicht verfügbar."
 
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2557014401"] = "Diese Bibliothek wird verwendet, um die Sprache des Betriebssystems zu erkennen. Dies ist notwendig, um die Sprache der Benutzeroberfläche einzustellen."
@@ -4085,6 +4235,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2706940196"] = "Protokolldateien"
 
 -- This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2726131107"] = "Diese Komponente wird verwendet, um Markdown-Text darzustellen. Das ist wichtig, weil das LLM häufig mit im Markdown-Format formatiertem Text antwortet. Dadurch können wir die Antworten besser lesbar anzeigen."
+
+-- Determine Pandoc version, please wait...
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2765814390"] = "Pandoc-Version wird ermittelt, bitte warten …"
 
 -- Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2777988282"] = "Code in der Programmiersprache Rust kann als synchron oder asynchron spezifiziert werden. Im Gegensatz zu .NET und der Sprache C# kann Rust asynchronen Code jedoch nicht von selbst ausführen. Dafür benötigt Rust Unterstützung in Form eines Executors. Tokio ist ein solcher Executor."
@@ -4110,6 +4263,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T313276297"] = "Verbinden Sie AI Studio
 -- Have feature ideas? Submit suggestions for future AI Studio enhancements.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3178730036"] = "Haben Sie Ideen für neue Funktionen? Senden Sie uns Vorschläge für zukünftige Verbesserungen von AI Studio."
 
+-- Update Pandoc
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3249965383"] = "Pandoc aktualisieren"
+
 -- Discover MindWork AI's mission and vision on our official homepage.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3294830584"] = "Entdecken Sie die Mission und Vision von MindWork AI auf unserer offiziellen Homepage."
 
@@ -4131,8 +4287,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3563271893"] = "Motivation"
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."
 
+-- this version does not met the requirements
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
+
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3908558992"] = "Jetzt haben wir mehrere Systeme, einige entwickelt in .NET und andere in Rust. Das Datenformat JSON ist dafür zuständig, Daten zwischen beiden Welten zu übersetzen (dies nennt man Serialisierung und Deserialisierung von Daten). In der Rust-Welt übernimmt Serde diese Aufgabe. Das Pendant in der .NET-Welt ist ein fester Bestandteil von .NET und findet sich in System.Text.Json."
+
+-- Installed Pandoc version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3983971016"] = "Installierte Pandoc-Version"
+
+-- Check Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3986423270"] = "Pandoc-Installation prüfen"
 
 -- Versions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4010195468"] = "Versionen"
@@ -4161,8 +4326,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T639371534"] = "Haben Sie einen Fehler 
 -- This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T64689067"] = "Diese Rust-Bibliothek wird verwendet, um die Nachrichten der App im Terminal auszugeben. Das ist während der Entwicklung und Fehlersuche hilfreich. Diese Funktion ist zunächst unsichtbar; werden App über das Terminal gestartet, werden die Nachrichten sichtbar."
 
+-- installed by AI Studio
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T833849470"] = "installiert von AI Studio"
+
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "Für einige Datenübertragungen müssen wir die Daten in Base64 kodieren. Diese Rust-Bibliothek eignet sich dafür hervorragend."
+
+-- Install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T986578435"] = "Pandoc installieren"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Erhalten Sie Unterstützung beim Programmieren und Debuggen durch ein KI-Modell."
@@ -4997,6 +5168,42 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T816853779"] = "Fehler
 
 -- Failed to retrieve the authentication methods: the ERI server did not return a valid response.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T984407320"] = "Fehler beim Abrufen der Authentifizierungsmethoden: Der ERI-Server hat keine gültige Antwort zurückgegeben."
+
+-- Was not able to validate the Pandoc installation.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1364844008"] = "Die Pandoc-Installation konnte nicht überprüft werden."
+
+-- Installers are not available on {0} systems.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1640771881"] = "Installationsprogramme sind für {0}-Systemen nicht verfügbar."
+
+-- Pandoc v{0} was installed successfully.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1885555132"] = "Pandoc v{0} wurde erfolgreich installiert."
+
+-- Was not able to check the Pandoc installation.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2171727146"] = "Die Pandoc-Installation konnte nicht überprüft werden."
+
+-- Pandoc v{0} is installed, but it doesn't match the required version (v{1}).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2299898115"] = "Pandoc v{0} ist installiert, entspricht jedoch nicht der erforderlichen Version (v{1})."
+
+-- Pandoc v{0} is installed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2550598062"] = "Pandoc v{0} ist installiert."
+
+-- Pandoc v{0} is installed, but it does not match the required version (v{1}).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2555465873"] = "Pandoc v{0} ist installiert, entspricht aber nicht der benötigten Version (v{1})."
+
+-- Pandoc was not installed successfully, because the archive was not found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T34210248"] = "Pandoc wurde nicht erfolgreich installiert, da das Archiv nicht gefunden wurde."
+
+-- Pandoc is not available on the system or the process had issues.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3746116957"] = "Pandoc ist auf dem System nicht verfügbar oder der Vorgang ist auf Probleme gestoßen."
+
+-- Pandoc was not installed successfully, because the archive type is unknown.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3962211670"] = "Pandoc wurde nicht erfolgreich installiert, da der Archivtyp unbekannt ist."
+
+-- It seems that Pandoc is not installed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "Es scheint, dass Pandoc nicht installiert ist."
+
+-- The latest Pandoc version was not found, installing version {0} instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "Die neueste Pandoc-Version wurde nicht gefunden, stattdessen wird Version {0} installiert."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."

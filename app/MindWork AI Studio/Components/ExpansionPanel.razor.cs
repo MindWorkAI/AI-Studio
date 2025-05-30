@@ -17,6 +17,12 @@ public partial class ExpansionPanel : ComponentBase
     public string HeaderText { get; set; } = "n/a";
     
     [Parameter]
+    public int? MaxHeight { get; set; }
+    
+    [Parameter]
+    public Func<bool, Task> ExpandedChanged { get; set; } = _ => Task.CompletedTask;
+    
+    [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
     [Parameter]

@@ -19,13 +19,19 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnetRuntime"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@VersionPdfium"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Article" Text="@this.versionPandoc"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                 </MudList>
-                <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
-                    @T("Check for updates")
-                </MudButton>
+                <MudStack Row="true">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
+                        @T("Check for updates")
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="async () => await this.ShowPandocDialog()">
+                        @this.PandocButtonText
+                    </MudButton>
+                </MudStack>
             </ExpansionPanel>
 
             <ExpansionPanel HeaderIcon="@Icons.Custom.Brands.GitHub" HeaderText="@T("Community & Code")">

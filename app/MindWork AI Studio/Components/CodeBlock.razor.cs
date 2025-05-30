@@ -33,8 +33,5 @@ public partial class CodeBlock : ComponentBase
         }
     }
 
-    private string BlockPadding()
-    {
-        return this.ParentTabs is null ? "padding: 16px !important;" : "padding: 8px !important";
-    }
+    private string BlockPadding => this.ParentTabs is null ? "padding: 16px !important;" : "padding: 8px !important";
 }

@@ -154,7 +154,7 @@ else
         @if (this.dataSourcePort < 1024)
         {
             <MudText Typo="Typo.body2">
-                @((MarkupString)T("<b>Warning:</b> Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."))
+                <b>@T("Warning:")</b> @T("Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).")
             </MudText>
         }
     </div>
@@ -326,7 +326,7 @@ else
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @((MarkupString)T("<b>Important:</b> The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this. <b>However, generating all the files takes a certain amount of time.</b> Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing."))
+    <b>@T("Important:")</b> @T("The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.") <b>@T("However, generating all the files takes a certain amount of time.")</b> @T("Local or self-hosted models may work without these limitations and can generate responses faster. AI Studio dynamically adapts its behavior and always tries to achieve the fastest possible data processing.")
 </MudJustifiedText>
 
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
@@ -340,7 +340,7 @@ else
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @((MarkupString)T("When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files. <b>But beware:</b> It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose."))
+    @T("When you rebuild / re-generate the ERI server code, AI Studio proceeds as follows: All files generated last time will be deleted. All other files you have created remain. Then, the AI generates the new files.") <b>@T("But beware:")</b> @T("It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.")
 </MudJustifiedText>
 
 <MudTextSwitch Label="@T("Should we write the generated code to the file system?")" Disabled="@this.IsNoneERIServerSelected" @bind-Value="@this.writeToFilesystem" LabelOn="@T("Yes, please write or update all generated code to the file system")" LabelOff="@T("No, just show me the code")" />

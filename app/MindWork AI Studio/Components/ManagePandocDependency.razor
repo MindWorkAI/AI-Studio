@@ -1,0 +1,10 @@
+@inherits MSGComponentBase
+
+<MudStack Row="false" Class="mb-3 pa-3 border-dashed border rounded-lg">
+    <MudJustifiedText Typo="Typo.body1">
+        @this.DetermineIntroText()
+    </MudJustifiedText>
+    <MudButton Color="@this.DetermineButtonColor()" Variant="Variant.Filled" OnClick="() => this.ShowPandocDialogAsync()">
+        @this.DetermineButtonText()
+    </MudButton>
+</MudStack>

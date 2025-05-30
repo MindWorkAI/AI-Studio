@@ -1,4 +1,4 @@
-<MudExpansionPanel Class="border-solid border rounded-lg" Expanded="@this.IsExpanded">
+<MudExpansionPanel Class="border-solid border rounded-lg" Expanded="@this.IsExpanded" MaxHeight="@this.MaxHeight" ExpandedChanged="async s => await this.ExpandedChanged(s)">
     <TitleContent>
         <div class="d-flex align-center">
             <MudIcon Icon="@this.HeaderIcon" Size="@this.IconSize" Color="@this.IconColor" class="mr-3"/>
