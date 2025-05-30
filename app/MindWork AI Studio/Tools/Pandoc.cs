@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -112,33 +113,38 @@ public static partial class Pandoc
         {
             if (!Directory.Exists(installDir))
                 Directory.CreateDirectory(installDir);
-
-            using var client = new HttpClient();
+            
+            // Create a temporary file to download the archive to:
+            var pandocTempDownloadFile = Path.GetTempFileName();
+            
+            //
+            // Download the latest Pandoc archive from GitHub:
+            //
             var uri = await GenerateArchiveUriAsync();
-            
-            var response = await client.GetAsync(uri);
-            if (!response.IsSuccessStatusCode)
+            using (var client = new HttpClient())
             {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the archive was not found."));
-                LOG.LogError("Pandoc was not installed, the release archive was not found (status code {StatusCode}): url='{Uri}', message='{Message}'", response.StatusCode, uri, response.RequestMessage);
-                return;
-            }
-            
-            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                var response = await client.GetAsync(uri);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, "Pandoc was not installed successfully, because the archive was not found."));
+                    LOG.LogError("Pandoc was not installed, the release archive was not found (status code {StatusCode}): url='{Uri}', message='{Message}'", response.StatusCode, uri, response.RequestMessage);
+                    return;
+                }
 
-            if (uri.Contains(".zip"))
-            {
-                var tempZipPath = Path.Join(Path.GetTempPath(), "pandoc.zip");
-                await File.WriteAllBytesAsync(tempZipPath, fileBytes);
-                ZipFile.ExtractToDirectory(tempZipPath, installDir);
-                File.Delete(tempZipPath);
+                // Download the archive to the temporary file:
+                await using var tempFileStream = File.Create(pandocTempDownloadFile);
+                await response.Content.CopyToAsync(tempFileStream);
             }
-            else if (uri.Contains(".tar.gz"))
+
+            if (uri.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
-                var tempTarPath = Path.Join(Path.GetTempPath(), "pandoc.tar.gz");
-                await File.WriteAllBytesAsync(tempTarPath, fileBytes);
-                ZipFile.ExtractToDirectory(tempTarPath, installDir);
-                File.Delete(tempTarPath);
+                ZipFile.ExtractToDirectory(pandocTempDownloadFile, installDir);
+            }
+            else if (uri.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+            {
+                await using var tgzStream = File.Open(pandocTempDownloadFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                await using var uncompressedStream = new GZipStream(tgzStream, CompressionMode.Decompress);
+                await TarFile.ExtractToDirectoryAsync(uncompressedStream, installDir, true);
             }
             else
             {
@@ -147,6 +153,7 @@ public static partial class Pandoc
                 return;
             }
 
+            File.Delete(pandocTempDownloadFile);
             await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, $"Pandoc {await FetchLatestVersionAsync()} was installed successfully."));
         }
         catch (Exception ex)
