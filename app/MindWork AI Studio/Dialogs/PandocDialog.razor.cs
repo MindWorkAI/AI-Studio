@@ -21,9 +21,6 @@ public partial class PandocDialog : ComponentBase
     private RustService RustService { get; init; } = null!;
     
     [Inject]
-    protected IJSRuntime JsRuntime { get; init; } = null!;
-    
-    [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
     [CascadingParameter]
