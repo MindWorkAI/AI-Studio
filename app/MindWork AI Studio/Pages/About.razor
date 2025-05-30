@@ -28,19 +28,9 @@
                     <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
                         @T("Check for updates")
                     </MudButton>
-                    @if (this.pandocInstallation != default && !this.pandocInstallation.IsAvailable)
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="async () => await this.ShowPandocDialog()">
-                            @if (string.IsNullOrWhiteSpace(this.pandocInstallation.Version))
-                            {
-                                @T("Install Pandoc")
-                            }
-                            else
-                            {
-                                @T("Update Pandoc")
-                            }
-                        </MudButton>
-                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="async () => await this.ShowPandocDialog()">
+                        @this.PandocButtonText
+                    </MudButton>
                 </MudStack>
             </ExpansionPanel>
 

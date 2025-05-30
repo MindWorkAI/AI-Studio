@@ -95,15 +95,23 @@ public partial class About : MSGComponentBase
         this.StateHasChanged();
     }
     
+    private string PandocButtonText
+    {
+        get
+        {
+            return this.pandocInstallation switch
+            {
+                { IsAvailable: true, CheckWasSuccessful: true } => this.T("Check Pandoc Installation"),
+                { IsAvailable: false, CheckWasSuccessful: true } => this.T("Update Pandoc"),
+                
+                _ => this.T("Install Pandoc")
+            };
+        }
+    }
+
     private async Task ShowPandocDialog()
     {
-        var dialogParameters = new DialogParameters<PandocDialog>
-        {
-            { x => x.ShowInstallationPage, true },
-            { x => x.ShowInitialResultInSnackbar, false },
-        };
-        
-        await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), dialogParameters, DialogOptions.FULLSCREEN);
+        await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
     }
 
     private async Task CopyStartupLogPath()
