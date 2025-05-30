@@ -179,6 +179,10 @@
     <DialogActions>
         @if (this.showInstallPage)
         {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                Cancel
+            </MudButton>
+            
             <MudButton Color="Color.Warning" OnClick="@this.RejectLicense" Variant="Variant.Filled" Size="Size.Medium">
                 Reject GPL licence
             </MudButton>
