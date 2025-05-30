@@ -39,6 +39,8 @@ public partial class PandocDialog : ComponentBase
     private string? licenseText;
     private bool isLoading;
     private int selectedArchiveIndex = SelectArchiveIndex();
+    private string downloadUrlArchive = string.Empty;
+    private string downloadUrlInstaller = string.Empty;
     
     #region Overrides of ComponentBase
     
@@ -74,22 +76,6 @@ public partial class PandocDialog : ComponentBase
 
     private void ProceedToInstallation() => this.showInstallPage = true;
 
-    private async Task GetInstaller()
-    {
-        var uri = await Pandoc.GenerateInstallerUriAsync();
-        var filename = this.FilenameFromUri(uri);
-        
-        await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
-    }
-
-    private async Task GetArchive()
-    {
-        var uri = await Pandoc.GenerateArchiveUriAsync();
-        var filename = this.FilenameFromUri(uri);
-        
-        await this.JsRuntime.InvokeVoidAsync("triggerDownload", uri, filename);
-    }
-
     private async Task RejectLicense()
     {
         var message = "Pandoc is open-source and free of charge, but if you reject Pandoc's license, it can not be installed and some of AIStudios data retrieval features will be disabled (e.g. using Office files like Word)." +
@@ -107,14 +93,17 @@ public partial class PandocDialog : ComponentBase
         else
             this.Cancel();
     }
-
-    private string FilenameFromUri(string uri)
+    
+    private async Task WhenExpandingManualInstallation(bool isExpanded)
     {
-        var index = uri.LastIndexOf('/');
-        return uri[(index + 1)..];
+        if(string.IsNullOrWhiteSpace(this.downloadUrlArchive))
+            this.downloadUrlArchive = await Pandoc.GenerateArchiveUriAsync();
+        
+        if(string.IsNullOrWhiteSpace(this.downloadUrlInstaller))
+            this.downloadUrlInstaller = await Pandoc.GenerateInstallerUriAsync();
     }
 
-    private async Task OnExpandedChanged(bool isExpanded)
+    private async Task WhenExpandingLicence(bool isExpanded)
     {
         if (isExpanded)
         {

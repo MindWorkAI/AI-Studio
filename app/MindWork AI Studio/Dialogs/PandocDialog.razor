@@ -18,7 +18,7 @@
             </div>
             
             <MudExpansionPanels Class="mb-3" MultiExpansion="@false" Outlined="false" Elevation="0">
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="View GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="this.OnExpandedChanged">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="View GNU General Public License v2 (GPL)" MaxHeight="300" ExpandedChanged="this.WhenExpandingLicence">
                     @if (this.isLoading)
                     {
                         <MudSkeleton />
@@ -43,7 +43,7 @@
                     </MudButton>
                 </ExpansionPanel>
                 
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="Manual installation">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="Manual installation" ExpandedChanged="this.WhenExpandingManualInstallation">
                     <MudText Class="mb-2">
                         If you prefer to install Pandoc yourself, please follow one of these two guides. Installers are only available for Windows and macOS.
                     </MudText>
@@ -70,7 +70,7 @@
                                 By clicking "Accept GPL and download installer", you agree to the terms of the GPL license. Software under GPL is <strong>free of charge</strong> and free to use.<br/>
                             </MudText>
                             
-                            <MudButton OnClick="@this.GetInstaller" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
+                            <MudButton Href="@this.downloadUrlInstaller" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
                                 Accept GPL and download installer
                             </MudButton>
                         </ExpansionPanel>
@@ -116,7 +116,7 @@
                                 By clicking "Accept GPL and archive", you agree to the terms of the GPL license. Software under GPL is <strong>free of charge</strong> and free to use.<br/>
                             </MudText>
                             
-                            <MudButton OnClick="@this.GetArchive" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
+                            <MudButton Href="@this.downloadUrlArchive" Target="_blank" Color="Color.Primary" Class="mt-4" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Downloading">
                                 Accept GPL and download archive
                             </MudButton>
                         </ExpansionPanel>
