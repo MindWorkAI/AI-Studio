@@ -38,6 +38,7 @@ public partial class PandocDialog : ComponentBase
     private bool showInstallPage;
     private string? licenseText;
     private bool isLoading;
+    private int selectedInstallerIndex = SelectInstallerIndex();
     private int selectedArchiveIndex = SelectArchiveIndex();
     private string downloadUrlArchive = string.Empty;
     private string downloadUrlInstaller = string.Empty;
