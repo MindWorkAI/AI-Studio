@@ -208,6 +208,30 @@ internal sealed class Program
         await rust.AppIsReady();
         programLogger.LogInformation("The AI Studio server is ready.");
         
+        //
+        // Read the enterprise environment for the current user's configuration:
+        //
+        var enterpriseConfigServerUrl = await RUST_SERVICE.EnterpriseEnvConfigServerUrl();
+        var enterpriseConfigId = await RUST_SERVICE.EnterpriseEnvConfigId();
+        switch (enterpriseConfigServerUrl)
+        {
+            case null when enterpriseConfigId == Guid.Empty:
+                programLogger.LogInformation("AI Studio runs without an enterprise configuration.");
+                break;
+            
+            case null:
+                programLogger.LogWarning($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}'), but the configuration server URL is not set.");
+                break;
+            
+            case not null when enterpriseConfigId == Guid.Empty:
+                programLogger.LogWarning($"AI Studio runs with an enterprise configuration server URL ('{enterpriseConfigServerUrl}'), but the configuration ID is not set.");
+                break;
+            
+            default:
+                programLogger.LogInformation($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}') and configuration server URL ('{enterpriseConfigServerUrl}').");
+                break;
+        }
+        
         TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
         {
             programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
