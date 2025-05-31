@@ -48,7 +48,7 @@ pub fn read_user_language(_token: APIToken) -> String {
 }
 
 #[get("/system/enterprise/config/id")]
-pub fn read_enterprise_env_config_id(_token: APIToken) -> Option<String> {
+pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
     //
     // When we are on a Windows machine, we try to read the enterprise config from
     // the Windows registry. In case we can't find the registry key, or we are on a
@@ -71,7 +71,7 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> Option<String> {
 }
 
 #[get("/system/enterprise/config/server")]
-pub fn read_enterprise_env_config_server_url(_token: APIToken) -> Option<String> {
+pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     //
     // When we are on a Windows machine, we try to read the enterprise config from
     // the Windows registry. In case we can't find the registry key, or we are on a
@@ -93,11 +93,11 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> Option<String>
     )
 }
 
-fn get_enterprise_configuration(reg_value: &str, env_name: &str) -> Option<String> {
+fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
     info!("Trying to read the enterprise environment for some predefined configuration.");
     cfg_if::cfg_if! {
         if #[cfg(target_os = "windows")] {
-            info!(r"Detected a Windows machine, trying to read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT' or the environment variables");
+            info!(r"Detected a Windows machine, trying to read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT' or environment variables.");
             use windows_registry::*;
             let key_path = r"Software\github\MindWork AI Studio\Enterprise IT";
             let key = match CURRENT_USER.open(key_path) {
@@ -107,28 +107,28 @@ fn get_enterprise_configuration(reg_value: &str, env_name: &str) -> Option<Strin
                     return match env::var(env_name) {
                         Ok(val) => {
                             info!("Falling back to the environment variable '{}' was successful.", env_name);
-                            Some(val)
+                            val
                         },
                         Err(_) => {
                             info!("Falling back to the environment variable '{}' was not successful. It appears that this is not an enterprise environment.", env_name);
-                            None
+                            "".to_string()
                         },
                     }
                 },
             };
 
-            match key.get_string(reg_value) {
-                Ok(val) => Some(val),
+            match key.get_string(_reg_value) {
+                Ok(val) => val,
                 Err(_) => {
-                    info!(r"We could read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT', but the value '{}' could not be read. Falling back to environment variables.", reg_value);
+                    info!(r"We could read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT', but the value '{}' could not be read. Falling back to environment variables.", _reg_value);
                     match env::var(env_name) {
                         Ok(val) => {
                             info!("Falling back to the environment variable '{}' was successful.", env_name);
-                            Some(val)
+                            val
                         },
                         Err(_) => {
                             info!("Falling back to the environment variable '{}' was not successful. It appears that this is not an enterprise environment.", env_name);
-                            None
+                            "".to_string()
                         }
                     }
                 },
@@ -136,7 +136,13 @@ fn get_enterprise_configuration(reg_value: &str, env_name: &str) -> Option<Strin
         } else {
             // In the case of macOS or Linux, we just read the environment variable:
             info!(r"Detected a Unix machine, trying to read the environment variable '{}'.", env_name);
-            env::var(env_name).ok()
+            match env::var(env_name) {
+                Ok(val) => val,
+                Err(_) => {
+                    info!("The environment variable '{}' was not found. It appears that this is not an enterprise environment.", env_name);
+                    "".to_string()
+                }
+            }
         }
     }
 }
