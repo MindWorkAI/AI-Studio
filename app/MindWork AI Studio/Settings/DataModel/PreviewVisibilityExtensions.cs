@@ -19,14 +19,12 @@ public static class PreviewVisibilityExtensions
         
         if (visibility >= PreviewVisibility.PROTOTYPE)
         {
-            features.Add(PreviewFeatures.PRE_READ_PDF_2025);
             features.Add(PreviewFeatures.PRE_RAG_2024);
         }
         
         if (visibility >= PreviewVisibility.EXPERIMENTAL)
         {
             features.Add(PreviewFeatures.PRE_WRITER_MODE_2024);
-            features.Add(PreviewFeatures.PRE_PLUGINS_2025);
         }
         
         return features;

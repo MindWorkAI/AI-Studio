@@ -196,26 +196,22 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 break;
 
             case Event.STARTUP_PLUGIN_SYSTEM:
-                if(PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
+                _ = Task.Run(async () =>
                 {
-                    _ = Task.Run(async () =>
+                    // Set up the plugin system:
+                    if (PluginFactory.Setup())
                     {
-                        // Set up the plugin system:
-                        if (PluginFactory.Setup())
-                        {
-                            // Ensure that all internal plugins are present:
-                            await PluginFactory.EnsureInternalPlugins();
+                        // Ensure that all internal plugins are present:
+                        await PluginFactory.EnsureInternalPlugins();
 
-                            // Load (but not start) all plugins, without waiting for them:
-                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+                        // Load (but not start) all plugins, without waiting for them:
+                        var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
 
-                            // Set up hot reloading for plugins:
-                            PluginFactory.SetUpHotReloading();
-                        }
-                    });
-                }
-                
+                        // Set up hot reloading for plugins:
+                        PluginFactory.SetUpHotReloading();
+                    }
+                });
                 break;
             
             case Event.PLUGINS_RELOADED:
@@ -246,9 +242,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
             yield return new(T("Writer"), Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
 
-        if (PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
-            yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
-        
+        yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
         yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
         yield return new(T("About"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
         yield return new(T("Settings"), Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
