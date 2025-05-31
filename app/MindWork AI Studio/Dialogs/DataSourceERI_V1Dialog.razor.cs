@@ -116,7 +116,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                 else
                 {
                     this.dataSecret = string.Empty;
-                    this.dataSecretStorageIssue = $"Failed to load the auth. secret from the operating system. The message was: {requestedSecret.Issue}. You might ignore this message and provide the secret again.";
+                    this.dataSecretStorageIssue = string.Format(T("Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."), requestedSecret.Issue);
                     await this.form.Validate();
                 }
             }

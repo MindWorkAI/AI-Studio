@@ -51,15 +51,12 @@
             }
         </MudStack>
         
-        @if (PreviewFeatures.PRE_PLUGINS_2025.IsEnabled(this.SettingsManager))
-        {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-                @T("AI Studio Development")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-                <AssistantBlock TSettings="SettingsDialogI18N" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
-            </MudStack>
-        }
+        <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
+            @T("AI Studio Development")
+        </MudText>
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantBlock TSettings="SettingsDialogI18N" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
+        </MudStack>
 
     </InnerScrolling>
 </div>

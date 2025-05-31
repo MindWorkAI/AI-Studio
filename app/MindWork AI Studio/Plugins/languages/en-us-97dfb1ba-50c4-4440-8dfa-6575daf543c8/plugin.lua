@@ -2283,6 +2283,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1847791252"] = "Upd
 -- Failed to connect to the ERI v1 server. The message was: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2150703468"] = "Failed to connect to the ERI v1 server. The message was: {0}"
 
+-- Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2209069174"] = "Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T2646845972"] = "Add"
 

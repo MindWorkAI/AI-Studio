@@ -29,6 +29,8 @@ public static class PreviewFeaturesExtensions
     public static bool IsReleased(this PreviewFeatures feature) => feature switch
     {
         PreviewFeatures.PRE_READ_PDF_2025 => true,
+        PreviewFeatures.PRE_PLUGINS_2025 => true,
+        
         _ => false
     };
     
