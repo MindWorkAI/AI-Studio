@@ -135,7 +135,7 @@ fn get_enterprise_configuration(reg_value: &str, env_name: &str) -> Option<Strin
             }
         } else {
             // In the case of macOS or Linux, we just read the environment variable:
-            info!(r"Detected a Unix machine, trying to read the environment variable '{}'.", env_name)
+            info!(r"Detected a Unix machine, trying to read the environment variable '{}'.", env_name);
             env::var(env_name).ok()
         }
     }
