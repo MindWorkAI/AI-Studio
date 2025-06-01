@@ -23,6 +23,8 @@ public readonly record struct Provider(
     LLMProviders UsedLLMProvider,
     Model Model,
     bool IsSelfHosted = false,
+    bool IsEnterpriseConfiguration = false,
+    Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ISecretId
