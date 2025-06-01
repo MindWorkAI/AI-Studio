@@ -1,7 +1,7 @@
 use std::env;
 use std::sync::OnceLock;
 use log::info;
-use rocket::get;
+use rocket::{delete, get};
 use sys_locale::get_locale;
 use crate::api_token::APIToken;
 
@@ -67,6 +67,29 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
     get_enterprise_configuration(
         "config_id",
         "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID",
+    )
+}
+
+#[delete("/system/enterprise/config/id")]
+pub fn delete_enterprise_env_config_id(_token: APIToken) -> String {
+    //
+    // When we are on a Windows machine, we try to read the enterprise config from
+    // the Windows registry. In case we can't find the registry key, or we are on a
+    // macOS or Linux machine, we try to read the enterprise config from the
+    // environment variables.
+    //
+    // The registry key is:
+    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
+    //
+    // In this registry key, we expect the following values:
+    // - delete_config_id
+    //
+    // The environment variable is:
+    // MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID
+    //
+    get_enterprise_configuration(
+        "delete_config_id",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
     )
 }
 
