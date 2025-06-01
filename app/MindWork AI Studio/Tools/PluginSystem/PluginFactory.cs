@@ -12,6 +12,7 @@ public static partial class PluginFactory
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
     private static string INTERNAL_PLUGINS_ROOT = string.Empty;
+    private static string CONFIGURATION_PLUGINS_ROOT = string.Empty;
     private static FileSystemWatcher HOT_RELOAD_WATCHER = null!;
     private static ILanguagePlugin BASE_LANGUAGE_PLUGIN = NoPluginLanguage.INSTANCE;
 
@@ -29,6 +30,7 @@ public static partial class PluginFactory
         DATA_DIR = SettingsManager.DataDirectory!;
         PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
         INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
+        CONFIGURATION_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".config");
         
         if (!Directory.Exists(PLUGINS_ROOT))
             Directory.CreateDirectory(PLUGINS_ROOT);

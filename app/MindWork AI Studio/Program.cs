@@ -133,6 +133,7 @@ internal sealed class Program
         builder.Services.AddTransient<AgentTextContentCleaner>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
+        builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddHubOptions(options =>
