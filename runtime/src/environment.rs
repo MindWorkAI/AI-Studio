@@ -1,5 +1,7 @@
+use std::env;
 use std::sync::OnceLock;
-use rocket::get;
+use log::info;
+use rocket::{delete, get};
 use sys_locale::get_locale;
 use crate::api_token::APIToken;
 
@@ -43,4 +45,127 @@ pub fn read_user_language(_token: APIToken) -> String {
         log::warn!("Could not determine the system language. Use default 'en-US'.");
         String::from("en-US")
     })
+}
+
+#[get("/system/enterprise/config/id")]
+pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
+    //
+    // When we are on a Windows machine, we try to read the enterprise config from
+    // the Windows registry. In case we can't find the registry key, or we are on a
+    // macOS or Linux machine, we try to read the enterprise config from the
+    // environment variables.
+    //
+    // The registry key is:
+    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
+    //
+    // In this registry key, we expect the following values:
+    // - config_id
+    //
+    // The environment variable is:
+    // MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID
+    //
+    get_enterprise_configuration(
+        "config_id",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID",
+    )
+}
+
+#[delete("/system/enterprise/config/id")]
+pub fn delete_enterprise_env_config_id(_token: APIToken) -> String {
+    //
+    // When we are on a Windows machine, we try to read the enterprise config from
+    // the Windows registry. In case we can't find the registry key, or we are on a
+    // macOS or Linux machine, we try to read the enterprise config from the
+    // environment variables.
+    //
+    // The registry key is:
+    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
+    //
+    // In this registry key, we expect the following values:
+    // - delete_config_id
+    //
+    // The environment variable is:
+    // MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID
+    //
+    get_enterprise_configuration(
+        "delete_config_id",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
+    )
+}
+
+#[get("/system/enterprise/config/server")]
+pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
+    //
+    // When we are on a Windows machine, we try to read the enterprise config from
+    // the Windows registry. In case we can't find the registry key, or we are on a
+    // macOS or Linux machine, we try to read the enterprise config from the
+    // environment variables.
+    //
+    // The registry key is:
+    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
+    //
+    // In this registry key, we expect the following values:
+    // - config_server_url
+    //
+    // The environment variable is:
+    // MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL
+    //
+    get_enterprise_configuration(
+        "config_server_url",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL",
+    )
+}
+
+fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
+    info!("Trying to read the enterprise environment for some predefined configuration.");
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "windows")] {
+            info!(r"Detected a Windows machine, trying to read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT' or environment variables.");
+            use windows_registry::*;
+            let key_path = r"Software\github\MindWork AI Studio\Enterprise IT";
+            let key = match CURRENT_USER.open(key_path) {
+                Ok(key) => key,
+                Err(_) => {
+                    info!(r"Could not read the registry key HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT. Falling back to environment variables.");
+                    return match env::var(env_name) {
+                        Ok(val) => {
+                            info!("Falling back to the environment variable '{}' was successful.", env_name);
+                            val
+                        },
+                        Err(_) => {
+                            info!("Falling back to the environment variable '{}' was not successful. It appears that this is not an enterprise environment.", env_name);
+                            "".to_string()
+                        },
+                    }
+                },
+            };
+
+            match key.get_string(_reg_value) {
+                Ok(val) => val,
+                Err(_) => {
+                    info!(r"We could read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT', but the value '{}' could not be read. Falling back to environment variables.", _reg_value);
+                    match env::var(env_name) {
+                        Ok(val) => {
+                            info!("Falling back to the environment variable '{}' was successful.", env_name);
+                            val
+                        },
+                        Err(_) => {
+                            info!("Falling back to the environment variable '{}' was not successful. It appears that this is not an enterprise environment.", env_name);
+                            "".to_string()
+                        }
+                    }
+                },
+            }
+        } else {
+            // In the case of macOS or Linux, we just read the environment variable:
+            info!(r"Detected a Unix machine, trying to read the environment variable '{}'.", env_name);
+            match env::var(env_name) {
+                Ok(val) => val,
+                Err(_) => {
+                    info!("The environment variable '{}' was not found. It appears that this is not an enterprise environment.", env_name);
+                    "".to_string()
+                }
+            }
+        }
+    }
 }

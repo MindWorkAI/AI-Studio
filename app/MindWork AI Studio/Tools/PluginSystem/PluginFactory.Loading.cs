@@ -1,5 +1,7 @@
 using System.Text;
 
+using AIStudio.Settings.DataModel;
+
 using Lua;
 using Lua.Standard;
 
@@ -58,8 +60,11 @@ public static partial class PluginFactory
                 try
                 {
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        LOG.LogWarning("Was not able to load all plugins, because the operation was cancelled. It seems to be a timeout.");
                         break;
-            
+                    }
+
                     LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
                     var fileInfo = new FileInfo(pluginMainFile);
                     string code;
@@ -113,6 +118,61 @@ public static partial class PluginFactory
             PLUGIN_LOAD_SEMAPHORE.Release();
             LOG.LogInformation("Finished loading plugins.");
         }
+        
+        //
+        // Next, we have to clean up our settings. It is possible that a configuration plugin was removed.
+        // We have to remove the related settings as well:
+        //
+        var wasConfigurationChanged = false;
+        
+        //
+        // Check LLM providers:
+        //
+        #pragma warning disable MWAIS0001
+        var configuredProviders = SETTINGS_MANAGER.ConfigurationData.Providers.ToList();
+        foreach (var configuredProvider in configuredProviders)
+        {
+            if(!configuredProvider.IsEnterpriseConfiguration)
+                continue;
+
+            var providerSourcePluginId = configuredProvider.EnterpriseConfigurationPluginId;
+            if(providerSourcePluginId == Guid.Empty)
+                continue;
+            
+            var providerSourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == providerSourcePluginId);
+            if(providerSourcePlugin is null)
+            {
+                LOG.LogWarning($"The configured LLM provider '{configuredProvider.InstanceName}' (id={configuredProvider.Id}) is based on a plugin that is not available anymore. Removing the provider from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
+                wasConfigurationChanged = true;
+            }
+        }
+        #pragma warning restore MWAIS0001
+
+        //
+        // Check all possible settings:
+        //
+        if (SETTINGS_LOCKER.GetConfigurationPluginId<DataApp>(x => x.UpdateBehavior) is var updateBehaviorPluginId && updateBehaviorPluginId != Guid.Empty)
+        {
+            var sourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == updateBehaviorPluginId);
+            if (sourcePlugin is null)
+            {
+                // Remove the locked state:
+                SETTINGS_LOCKER.Remove<DataApp>(x => x.UpdateBehavior);
+                
+                // Reset the setting to the default value:
+                SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = UpdateBehavior.HOURLY;
+                
+                LOG.LogWarning($"The configured update behavior is based on a plugin that is not available anymore. Resetting the setting to the default value: {SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior}.");
+                wasConfigurationChanged = true;
+            }
+        }
+        
+        if (wasConfigurationChanged)
+        {
+            await SETTINGS_MANAGER.StoreSettings();
+            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        }
     }
 
     public static async Task<PluginBase> Load(string? pluginPath, string code, CancellationToken cancellationToken = default)
@@ -158,11 +218,18 @@ public static partial class PluginFactory
             return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
         var isInternal = !string.IsNullOrWhiteSpace(pluginPath) && pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
-        return type switch
+        switch (type)
         {
-            PluginType.LANGUAGE => new PluginLanguage(isInternal, state, type),
+            case PluginType.LANGUAGE:
+                return new PluginLanguage(isInternal, state, type);
             
-            _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
-        };
+            case PluginType.CONFIGURATION:
+                var configPlug = new PluginConfiguration(isInternal, state, type);
+                await configPlug.InitializeAsync();
+                return configPlug;
+            
+            default:
+                return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");
+        }
     }
 }

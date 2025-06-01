@@ -159,7 +159,7 @@ public sealed class SettingsManager
     /// </summary>
     /// <param name="plugin">The plugin to check.</param>
     /// <returns>True, when the plugin is enabled, false otherwise.</returns>
-    public bool IsPluginEnabled(IPluginMetadata plugin) => this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
+    public bool IsPluginEnabled(IPluginMetadata plugin) => plugin.Type is PluginType.CONFIGURATION || this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
     
     /// <summary>
     /// Returns the active language plugin.

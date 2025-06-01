@@ -1974,6 +1974,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T331371
 -- Add LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3346433704"] = "LLM-Anbieter hinzufügen"
 
+-- This provider is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3415927576"] = "Dieser Anbieter wird von ihrer Organisation verwaltet."
+
 -- LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3612415205"] = "LLM-Anbieter"
 
@@ -4155,11 +4158,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1020427799"] = "Über MindWork AI Stud
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über ihre Beiträge."
 
+-- AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is not yet available.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1297057566"] = "AI Studio läuft mit der Konfigurations-ID '{0}' ihrer Organisation und dem Konfigurationsserver '{1}'. Das Konfigurations-Plugin ist noch nicht verfügbar."
+
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
+
+-- AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1454889560"] = "AI Studio läuft mit der Konfigurations-ID '{0}' ihrer Organisation und dem Konfigurationsserver '{1}'. Das Konfigurations-Plugin ist aktiv."
+
+-- AI Studio runs with an enterprise configuration using the configuration plugin '{0}', without central configuration management.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1530477579"] = "AI Studio läuft mit einer Unternehmenseinstellung und verwendet das Konfigurations-Plugin '{0}', jedoch ohne zentrale Konfigurationsverwaltung."
 
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T162898512"] = "Wir verwenden Lua als Sprache für Plugins. Lua-CSharp ermöglicht die Kommunikation zwischen Lua-Skripten und AI Studio in beide Richtungen. Vielen Dank an Yusuke Nakada für diese großartige Bibliothek."
@@ -4185,6 +4197,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1890416390"] = "Nach Updates suchen"
 -- Vision
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1892426825"] = "Vision"
 
+-- In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1915240766"] = "Um ein beliebiges LLM nutzen zu können, muss jeder User seinen sogenannten API-Schlüssel für jeden LLM-Anbieter speichern. Dieser Schlüssel muss sicher aufbewahrt werden – ähnlich wie ein Passwort. Die sicherste Methode hierfür bieten Betriebssysteme wie macOS, Windows und Linux: Sie verfügen über Mechanismen, solche Daten – sofern vorhanden – auf spezieller Sicherheits-Hardware zu speichern. Da dies derzeit in .NET nicht möglich ist, verwenden wir diese Rust-Bibliothek."
+
 -- This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1924365263"] = "Diese Bibliothek wird verwendet, um HTML in Markdown umzuwandeln. Das ist zum Beispiel notwendig, wenn Sie eine URL als Eingabe für einen Assistenten angeben."
 
@@ -4197,14 +4212,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "Diese Bibliothek wird 
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "Für die sichere Kommunikation zwischen der Benutzeroberfläche und der Laufzeit müssen wir Zertifikate erstellen. Diese Rust-Bibliothek eignet sich hervorragend dafür."
 
+-- AI Studio runs without an enterprise configuration.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2244723851"] = "AI Studio läuft ohne eine Konfiguration ihrer Organisation."
+
 -- OK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2246359087"] = "OK"
 
 -- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2273492381"] = "Wir müssen Zufallszahlen erzeugen, z. B. um die Kommunikation zwischen der Benutzeroberfläche und der Laufzeitumgebung abzusichern. Die rand-Bibliothek eignet sich dafür hervorragend."
-
--- In order to use any LLM, each user must store their so-called token for each LLM provider. This token must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T228561878"] = "Um ein beliebiges LLM nutzen zu können, muss jeder Benutzer seinen sogenannten Token für jeden LLM-Anbieter speichern. Dieser Token muss sicher aufbewahrt werden, ähnlich wie ein Passwort. Am sichersten gelingt dies mit den Betriebssystemen wie macOS, Windows und Linux: Sie verfügen über Mechanismen, solche Daten – sofern vorhanden – auf spezieller Sicherheits-Hardware zu speichern. Da dies in .NET derzeit nicht möglich ist, verwenden wir diese Rust-Bibliothek."
 
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2329884315"] = "Die Programmiersprache C# wird für die Umsetzung der Benutzeroberfläche und des Backends verwendet. Für die Entwicklung der Benutzeroberfläche mit C# kommt die Blazor-Technologie aus ASP.NET Core zum Einsatz. Alle diese Technologien sind im .NET SDK integriert."
@@ -4292,6 +4307,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3722989559"] = "Diese Bibliothek wird 
 
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
+
+-- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3874337003"] = "Diese Bibliothek wird verwendet, um auf die Windows-Registry zuzugreifen. Wir nutzen sie in Windows-Unternehmensumgebungen, um die gewünschte Konfiguration auszulesen."
 
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3908558992"] = "Jetzt haben wir mehrere Systeme, einige entwickelt in .NET und andere in Rust. Das Datenformat JSON ist dafür zuständig, Daten zwischen beiden Welten zu übersetzen (dies nennt man Serialisierung und Deserialisierung von Daten). In der Rust-Welt übernimmt Serde diese Aufgabe. Das Pendant in der .NET-Welt ist ein fester Bestandteil von .NET und findet sich in System.Text.Json."
@@ -5360,6 +5378,15 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T90450
 
 -- Content Creation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T914642375"] = "Inhalte erstellen"
+
+-- The SETTINGS table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011"] = "Die Tabelle SETTINGS existiert nicht oder ist keine gültige Tabelle."
+
+-- The CONFIG table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "Die Tabelle CONFIG existiert nicht oder ist keine gültige Tabelle."
+
+-- The LLM_PROVIDERS table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T806592324"] = "Die Tabelle LLM_PROVIDERS existiert nicht oder ist keine gültige Tabelle."
 
 -- The field IETF_TAG does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T1796010240"] = "Das Feld IETF_TAG existiert nicht oder ist keine gültige Zeichenkette."

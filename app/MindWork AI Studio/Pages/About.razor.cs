@@ -3,6 +3,7 @@ using System.Reflection;
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Tools.Metadata;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -30,7 +31,7 @@ public partial class About : MSGComponentBase
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
     
-    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
 
     private string osLanguage = string.Empty;
     
@@ -114,6 +115,27 @@ public partial class About : MSGComponentBase
         var dialogReference = await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), DialogOptions.FULLSCREEN);
         await dialogReference.Result;
         await this.DeterminePandocVersion();
+    }
+
+    private string GetEnterpriseEnvironment()
+    {
+        var configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+        var currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
+
+        switch (currentEnvironment)
+        {
+            case { IsActive: false } when configPlug is null:
+                return T("AI Studio runs without an enterprise configuration.");
+            
+            case { IsActive: false }:
+                return string.Format(T("AI Studio runs with an enterprise configuration using the configuration plugin '{0}', without central configuration management."), configPlug.Id);
+            
+            case { IsActive: true } when configPlug is null:
+                return string.Format(T("AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is not yet available."), currentEnvironment.ConfigurationId, currentEnvironment.ConfigurationServerUrl);
+            
+            case { IsActive: true }:
+                return string.Format(T("AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is active."), currentEnvironment.ConfigurationId, currentEnvironment.ConfigurationServerUrl);
+        }
     }
 
     private async Task CopyStartupLogPath()

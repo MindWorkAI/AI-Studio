@@ -63,7 +63,7 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    @if (!context.IsInternal)
+                    @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
                     {
                         var isEnabled = this.SettingsManager.IsPluginEnabled(context);
                         <MudTooltip Text="@(isEnabled ? T("Disable plugin") : T("Enable plugin"))">
