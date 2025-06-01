@@ -58,8 +58,11 @@ public static partial class PluginFactory
                 try
                 {
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        LOG.LogWarning("Was not able to load all plugins, because the operation was cancelled. It seems to be a timeout.");
                         break;
-            
+                    }
+
                     LOG.LogInformation($"Try to load plugin: {pluginMainFile}");
                     var fileInfo = new FileInfo(pluginMainFile);
                     string code;
