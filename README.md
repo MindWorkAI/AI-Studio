@@ -47,6 +47,8 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
+- v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
 - v0.9.44: Added PDF import to the text summarizer, translation, and legal check assistants, allowing you to import PDF files and use them as input for the assistants.
 - v0.9.40: Added support for the `o4` models from OpenAI. Also, we added Alibaba Cloud & Hugging Face as LLM providers.
 - v0.9.39: Added the plugin system as a preview feature.
