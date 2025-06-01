@@ -116,6 +116,61 @@ public static partial class PluginFactory
             PLUGIN_LOAD_SEMAPHORE.Release();
             LOG.LogInformation("Finished loading plugins.");
         }
+        
+        //
+        // Next, we have to clean up our settings. It is possible that a configuration plugin was removed.
+        // We have to remove the related settings as well:
+        //
+        var wasConfigurationChanged = false;
+        
+        //
+        // Check LLM providers:
+        //
+        #pragma warning disable MWAIS0001
+        var configuredProviders = SETTINGS_MANAGER.ConfigurationData.Providers.ToList();
+        foreach (var configuredProvider in configuredProviders)
+        {
+            if(!configuredProvider.IsEnterpriseConfiguration)
+                continue;
+
+            var providerSourcePluginId = configuredProvider.EnterpriseConfigurationPluginId;
+            if(providerSourcePluginId == Guid.Empty)
+                continue;
+            
+            var providerSourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == providerSourcePluginId);
+            if(providerSourcePlugin is null)
+            {
+                LOG.LogWarning($"The configured LLM provider '{configuredProvider.InstanceName}' (id={configuredProvider.Id}) is based on a plugin that is not available anymore. Removing the provider from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
+                wasConfigurationChanged = true;
+            }
+        }
+        #pragma warning restore MWAIS0001
+
+        //
+        // Check all possible settings:
+        //
+        if (SETTINGS_LOCKER.GetConfigurationPluginId<DataApp>(x => x.UpdateBehavior) is var updateBehaviorPluginId && updateBehaviorPluginId != Guid.Empty)
+        {
+            var sourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == updateBehaviorPluginId);
+            if (sourcePlugin is null)
+            {
+                // Remove the locked state:
+                SETTINGS_LOCKER.Remove<DataApp>(x => x.UpdateBehavior);
+                
+                // Reset the setting to the default value:
+                SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = UpdateBehavior.HOURLY;
+                
+                LOG.LogWarning($"The configured update behavior is based on a plugin that is not available anymore. Resetting the setting to the default value: {SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior}.");
+                wasConfigurationChanged = true;
+            }
+        }
+        
+        if (wasConfigurationChanged)
+        {
+            await SETTINGS_MANAGER.StoreSettings();
+            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        }
     }
 
     public static async Task<PluginBase> Load(string? pluginPath, string code, CancellationToken cancellationToken = default)
