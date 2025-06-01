@@ -133,6 +133,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 _ => this.DataModel
             },
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
+            IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
