@@ -1,5 +1,7 @@
 using System.Text;
 
+using AIStudio.Settings.DataModel;
+
 using Lua;
 using Lua.Standard;
 
@@ -216,11 +218,18 @@ public static partial class PluginFactory
             return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
         var isInternal = !string.IsNullOrWhiteSpace(pluginPath) && pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
-        return type switch
+        switch (type)
         {
-            PluginType.LANGUAGE => new PluginLanguage(isInternal, state, type),
+            case PluginType.LANGUAGE:
+                return new PluginLanguage(isInternal, state, type);
             
-            _ => new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.")
-        };
+            case PluginType.CONFIGURATION:
+                var configPlug = new PluginConfiguration(isInternal, state, type);
+                await configPlug.InitializeAsync();
+                return configPlug;
+            
+            default:
+                return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");
+        }
     }
 }
