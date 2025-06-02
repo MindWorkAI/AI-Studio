@@ -43,8 +43,10 @@ public static partial class PluginFactory
             var response = await httpClient.GetAsync(downloadUrl, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                await using var tempFileStream = File.Create(tempDownloadFile);
-                await response.Content.CopyToAsync(tempFileStream, cancellationToken);
+                await using(var tempFileStream = File.Create(tempDownloadFile))
+                {
+                    await response.Content.CopyToAsync(tempFileStream, cancellationToken);
+                }
                 
                 var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
                 if(Directory.Exists(configDirectory))
