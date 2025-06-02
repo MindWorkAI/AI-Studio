@@ -2,11 +2,15 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class EnterpriseEnvironmentService(ILogger<TemporaryChatService> logger, RustService rustService) : BackgroundService
+public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentService> logger, RustService rustService) : BackgroundService
 {
     public static EnterpriseEnvironment CURRENT_ENVIRONMENT;
-    
+
+#if DEBUG
+    private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(6);
+#else
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(16);
+#endif
     
     #region Overrides of BackgroundService
 
@@ -14,7 +18,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<TemporaryChatService> l
     {
         logger.LogInformation("The enterprise environment service was initialized.");
         
-        await this.StartUpdating();
+        await this.StartUpdating(isFirstRun: true);
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(CHECK_INTERVAL, stoppingToken);
@@ -24,7 +28,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<TemporaryChatService> l
 
     #endregion
 
-    private async Task StartUpdating()
+    private async Task StartUpdating(bool isFirstRun = false)
     {
         try
         {
@@ -40,7 +44,8 @@ public sealed class EnterpriseEnvironmentService(ILogger<TemporaryChatService> l
         
             var enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
             var enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
-            var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId);
+            var etag = await PluginFactory.DetermineConfigPluginETagAsync(enterpriseConfigId, enterpriseConfigServerUrl);
+            var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag);
             if (CURRENT_ENVIRONMENT != nextEnterpriseEnvironment)
             {
                 logger.LogInformation("The enterprise environment has changed. Updating the current environment.");
@@ -62,10 +67,16 @@ public sealed class EnterpriseEnvironmentService(ILogger<TemporaryChatService> l
 
                     default:
                         logger.LogInformation($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}') and configuration server URL ('{enterpriseConfigServerUrl}').");
-                        await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseConfigId, enterpriseConfigServerUrl);
+                        
+                        if(isFirstRun)
+                            MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag));
+                        else
+                            await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseConfigId, enterpriseConfigServerUrl);
                         break;
                 }
             }
+            else
+                logger.LogInformation("The enterprise environment has not changed. No update required.");
         }
         catch (Exception e)
         {

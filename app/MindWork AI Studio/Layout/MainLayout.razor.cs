@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using EnterpriseEnvironment = AIStudio.Tools.EnterpriseEnvironment;
 
 namespace AIStudio.Layout;
 
@@ -138,90 +139,100 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     public async Task ProcessMessage<TMessage>(ComponentBase? sendingComponent, Event triggeredEvent, TMessage? data)
     {
-        switch (triggeredEvent)
+        await this.InvokeAsync(async () =>
         {
-            case Event.UPDATE_AVAILABLE:
-                if (data is UpdateResponse updateResponse)
-                {
-                    this.currentUpdateResponse = updateResponse;
-                    var message = string.Format(T("An update to version {0} is available."), updateResponse.NewVersion);
-                    this.Snackbar.Add(message, Severity.Info, config =>
+            switch (triggeredEvent)
+            {
+                case Event.UPDATE_AVAILABLE:
+                    if (data is UpdateResponse updateResponse)
                     {
-                        config.Icon = Icons.Material.Filled.Update;
-                        config.IconSize = Size.Large;
-                        config.HideTransitionDuration = 600;
-                        config.VisibleStateDuration = 32_000;
-                        config.OnClick = async _ =>
+                        this.currentUpdateResponse = updateResponse;
+                        var message = string.Format(T("An update to version {0} is available."), updateResponse.NewVersion);
+                        this.Snackbar.Add(message, Severity.Info, config =>
                         {
-                            await this.ShowUpdateDialog();
-                        };
-                        config.Action = T("Show details");
-                        config.ActionVariant = Variant.Filled;
-                    });
-                }
-                
-                break;
-            
-            case Event.CONFIGURATION_CHANGED:
-                if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
-                    this.navBarOpen = true;
-                else
-                    this.navBarOpen = false;
-                
-                await this.UpdateThemeConfiguration();
-                this.LoadNavItems();
-                this.StateHasChanged();
-                break;
-            
-            case Event.COLOR_THEME_CHANGED:
-                this.StateHasChanged();
-                break;
-            
-            case Event.SHOW_SUCCESS:
-                if (data is DataSuccessMessage success)
-                    success.Show(this.Snackbar);
-                
-                break;
-            
-            case Event.SHOW_ERROR:
-                if (data is DataErrorMessage error)
-                    error.Show(this.Snackbar);
-                
-                break;
-            
-            case Event.SHOW_WARNING:
-                if (data is DataWarningMessage warning)
-                    warning.Show(this.Snackbar);
-                
-                break;
-
-            case Event.STARTUP_PLUGIN_SYSTEM:
-                _ = Task.Run(async () =>
-                {
-                    // Set up the plugin system:
-                    if (PluginFactory.Setup())
-                    {
-                        // Ensure that all internal plugins are present:
-                        await PluginFactory.EnsureInternalPlugins();
-
-                        // Load (but not start) all plugins, without waiting for them:
-                        var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                        await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
-
-                        // Set up hot reloading for plugins:
-                        PluginFactory.SetUpHotReloading();
+                            config.Icon = Icons.Material.Filled.Update;
+                            config.IconSize = Size.Large;
+                            config.HideTransitionDuration = 600;
+                            config.VisibleStateDuration = 32_000;
+                            config.OnClick = async _ =>
+                            {
+                                await this.ShowUpdateDialog();
+                            };
+                            config.Action = T("Show details");
+                            config.ActionVariant = Variant.Filled;
+                        });
                     }
-                });
-                break;
-            
-            case Event.PLUGINS_RELOADED:
-                this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
-                I18N.Init(this.Lang);
-                this.LoadNavItems();
-                
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-        }
+
+                    break;
+
+                case Event.CONFIGURATION_CHANGED:
+                    if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
+                        this.navBarOpen = true;
+                    else
+                        this.navBarOpen = false;
+
+                    await this.UpdateThemeConfiguration();
+                    this.LoadNavItems();
+                    this.StateHasChanged();
+                    break;
+
+                case Event.COLOR_THEME_CHANGED:
+                    this.StateHasChanged();
+                    break;
+
+                case Event.SHOW_SUCCESS:
+                    if (data is DataSuccessMessage success)
+                        success.Show(this.Snackbar);
+
+                    break;
+
+                case Event.SHOW_ERROR:
+                    if (data is DataErrorMessage error)
+                        error.Show(this.Snackbar);
+
+                    break;
+
+                case Event.SHOW_WARNING:
+                    if (data is DataWarningMessage warning)
+                        warning.Show(this.Snackbar);
+
+                    break;
+
+                case Event.STARTUP_PLUGIN_SYSTEM:
+                    _ = Task.Run(async () =>
+                    {
+                        // Set up the plugin system:
+                        if (PluginFactory.Setup())
+                        {
+                            // Ensure that all internal plugins are present:
+                            await PluginFactory.EnsureInternalPlugins();
+
+                            //
+                            // Check if there is an enterprise configuration plugin to download:
+                            //
+                            var enterpriseEnvironment = this.MessageBus.CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT).FirstOrDefault();
+                            if (enterpriseEnvironment != default)
+                                await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseEnvironment.ConfigurationId, enterpriseEnvironment.ConfigurationServerUrl);
+
+                            // Load (but not start) all plugins without waiting for them:
+                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+
+                            // Set up hot reloading for plugins:
+                            PluginFactory.SetUpHotReloading();
+                        }
+                    });
+                    break;
+
+                case Event.PLUGINS_RELOADED:
+                    this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
+                    I18N.Init(this.Lang);
+                    this.LoadNavItems();
+
+                    await this.InvokeAsync(this.StateHasChanged);
+                    break;
+            }
+        });
     }
 
     public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)

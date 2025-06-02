@@ -64,6 +64,7 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
     // The environment variable is:
     // MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID
     //
+    info!("Trying to read the enterprise environment for some config ID.");
     get_enterprise_configuration(
         "config_id",
         "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID",
@@ -87,6 +88,7 @@ pub fn delete_enterprise_env_config_id(_token: APIToken) -> String {
     // The environment variable is:
     // MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID
     //
+    info!("Trying to read the enterprise environment for some config ID, which should be deleted.");
     get_enterprise_configuration(
         "delete_config_id",
         "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
@@ -110,6 +112,7 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     // The environment variable is:
     // MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL
     //
+    info!("Trying to read the enterprise environment for the config server URL.");
     get_enterprise_configuration(
         "config_server_url",
         "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL",
@@ -117,7 +120,6 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
 }
 
 fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
-    info!("Trying to read the enterprise environment for some predefined configuration.");
     cfg_if::cfg_if! {
         if #[cfg(target_os = "windows")] {
             info!(r"Detected a Windows machine, trying to read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT' or environment variables.");
@@ -133,7 +135,7 @@ fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
                             val
                         },
                         Err(_) => {
-                            info!("Falling back to the environment variable '{}' was not successful. It appears that this is not an enterprise environment.", env_name);
+                            info!("Falling back to the environment variable '{}' was not successful.", env_name);
                             "".to_string()
                         },
                     }
@@ -150,7 +152,7 @@ fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
                             val
                         },
                         Err(_) => {
-                            info!("Falling back to the environment variable '{}' was not successful. It appears that this is not an enterprise environment.", env_name);
+                            info!("Falling back to the environment variable '{}' was not successful.", env_name);
                             "".to_string()
                         }
                     }
@@ -162,7 +164,7 @@ fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
             match env::var(env_name) {
                 Ok(val) => val,
                 Err(_) => {
-                    info!("The environment variable '{}' was not found. It appears that this is not an enterprise environment.", env_name);
+                    info!("The environment variable '{}' was not found.", env_name);
                     "".to_string()
                 }
             }

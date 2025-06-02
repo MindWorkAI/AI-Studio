@@ -1,33 +1,61 @@
 using System.IO.Compression;
+using System.Net.Http.Headers;
 
 namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
+    public static async Task<EntityTagHeaderValue?> DetermineConfigPluginETagAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
+            var downloadUrl = $"{serverUrl}/{configPlugId}.zip";
+            
+            using var http = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Get, downloadUrl);
+            var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            return response.Headers.ETag;
+        }
+        catch (Exception e)
+        {
+            LOG.LogError(e, "An error occurred while determining the ETag for the configuration plugin.");
+            return null;
+        }
+    }
+    
     public static async Task<bool> TryDownloadingConfigPluginAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
     {
-        if (!IS_INITIALIZED)
+        if(!IS_INITIALIZED)
+        {
+            LOG.LogWarning("Plugin factory is not yet initialized. Cannot download configuration plugin.");
             return false;
+        }
 
-        LOG.LogInformation($"Downloading configuration plugin with ID: {configPlugId} from server: {configServerUrl}");
+        var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
+        var downloadUrl = $"{serverUrl}/{configPlugId}.zip";
+        
+        LOG.LogInformation($"Try to download configuration plugin with ID='{configPlugId}' from server='{configServerUrl}' (GET {downloadUrl})");
         var tempDownloadFile = Path.GetTempFileName();
         try
         {
             using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync($"{configServerUrl}/{configPlugId}.zip", cancellationToken);
+            var response = await httpClient.GetAsync(downloadUrl, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                await using var tempFileStream = File.Create(tempDownloadFile);
-                await response.Content.CopyToAsync(tempFileStream, cancellationToken);
+                await using(var tempFileStream = File.Create(tempDownloadFile))
+                {
+                    await response.Content.CopyToAsync(tempFileStream, cancellationToken);
+                }
                 
-                var pluginDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
-                if(Directory.Exists(pluginDirectory))
-                    Directory.Delete(pluginDirectory, true);
+                var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
+                if(Directory.Exists(configDirectory))
+                    Directory.Delete(configDirectory, true);
                 
-                Directory.CreateDirectory(pluginDirectory);
-                ZipFile.ExtractToDirectory(tempDownloadFile, pluginDirectory);
+                Directory.CreateDirectory(configDirectory);
+                ZipFile.ExtractToDirectory(tempDownloadFile, configDirectory);
                 
-                LOG.LogInformation($"Configuration plugin with ID='{configPlugId}' downloaded and extracted successfully to '{pluginDirectory}'.");
+                LOG.LogInformation($"Configuration plugin with ID='{configPlugId}' downloaded and extracted successfully to '{configDirectory}'.");
             }
             else
                 LOG.LogError($"Failed to download the enterprise configuration plugin. HTTP Status: {response.StatusCode}");

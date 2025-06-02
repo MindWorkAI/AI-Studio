@@ -15,8 +15,16 @@ public sealed class MessageBus
     private readonly ConcurrentQueue<Message> messageQueue = new();
     private readonly SemaphoreSlim sendingSemaphore = new(1, 1);
 
+    private static ILogger<MessageBus>? LOG; 
+
     private MessageBus()
     {
+    }
+    
+    public void Initialize(ILogger<MessageBus> logger)
+    {
+        LOG = logger;
+        LOG.LogInformation("Message bus initialized.");
     }
 
     /// <summary>
@@ -48,7 +56,7 @@ public sealed class MessageBus
     public async Task SendMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data = default)
     {
         this.messageQueue.Enqueue(new Message(sendingComponent, triggeredEvent, data));
-        
+
         try
         {
             await this.sendingSemaphore.WaitAsync();
@@ -61,10 +69,15 @@ public sealed class MessageBus
 
                     var eventFilter = this.componentEvents[receiver];
                     if (eventFilter.Length == 0 || eventFilter.Contains(triggeredEvent))
+
                         // We don't await the task here because we don't want to block the message bus:
                         _ = receiver.ProcessMessage(message.SendingComponent, message.TriggeredEvent, message.Data);
                 }
             }
+        }
+        catch (Exception e)
+        {
+            LOG?.LogError(e, "Error while sending message.");
         }
         finally
         {
