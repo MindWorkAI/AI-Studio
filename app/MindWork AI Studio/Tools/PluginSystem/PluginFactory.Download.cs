@@ -6,13 +6,21 @@ public static partial class PluginFactory
 {
     public static async Task<bool> TryDownloadingConfigPluginAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
     {
-        LOG.LogInformation($"Downloading configuration plugin with ID: {configPlugId} from server: {configServerUrl}");
+        if(!IS_INITIALIZED)
+        {
+            LOG.LogWarning("Plugin factory is not yet initialized. Cannot download configuration plugin.");
+            return false;
+        }
+
+        var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
+        var downloadUrl = $"{serverUrl}/{configPlugId}.zip";
+        
+        LOG.LogInformation($"Try to download configuration plugin with ID='{configPlugId}' from server='{configServerUrl}' (GET {downloadUrl})");
         var tempDownloadFile = Path.GetTempFileName();
         try
         {
             using var httpClient = new HttpClient();
-            var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
-            var response = await httpClient.GetAsync($"{serverUrl}/{configPlugId}.zip", cancellationToken);
+            var response = await httpClient.GetAsync(downloadUrl, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 await using var tempFileStream = File.Create(tempDownloadFile);
