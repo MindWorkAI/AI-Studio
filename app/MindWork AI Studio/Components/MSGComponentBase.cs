@@ -49,11 +49,11 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
                     this.StateHasChanged();
                     break;
             
-            case Event.PLUGINS_RELOADED:
-                this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-        }
+                case Event.PLUGINS_RELOADED:
+                    this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
+                    await this.InvokeAsync(this.StateHasChanged);
+                    break;
+            }
         
             await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
         });
