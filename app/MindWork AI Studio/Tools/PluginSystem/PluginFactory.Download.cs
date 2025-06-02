@@ -11,7 +11,8 @@ public static partial class PluginFactory
         try
         {
             using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync($"{configServerUrl}/{configPlugId}.zip", cancellationToken);
+            var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
+            var response = await httpClient.GetAsync($"{serverUrl}/{configPlugId}.zip", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 await using var tempFileStream = File.Create(tempDownloadFile);
