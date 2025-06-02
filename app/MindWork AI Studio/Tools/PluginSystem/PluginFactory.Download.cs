@@ -1,9 +1,29 @@
 using System.IO.Compression;
+using System.Net.Http.Headers;
 
 namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
+    public static async Task<EntityTagHeaderValue?> DetermineConfigPluginETagAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
+            var downloadUrl = $"{serverUrl}/{configPlugId}.zip";
+            
+            using var http = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Get, downloadUrl);
+            var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            return response.Headers.ETag;
+        }
+        catch (Exception e)
+        {
+            LOG.LogError(e, "An error occurred while determining the ETag for the configuration plugin.");
+            return null;
+        }
+    }
+    
     public static async Task<bool> TryDownloadingConfigPluginAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
     {
         if(!IS_INITIALIZED)

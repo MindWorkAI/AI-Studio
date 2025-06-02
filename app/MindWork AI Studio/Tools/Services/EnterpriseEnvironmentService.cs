@@ -40,7 +40,8 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         
             var enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
             var enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
-            var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId);
+            var etag = await PluginFactory.DetermineConfigPluginETagAsync(enterpriseConfigId, enterpriseConfigServerUrl);
+            var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag);
             if (CURRENT_ENVIRONMENT != nextEnterpriseEnvironment)
             {
                 logger.LogInformation("The enterprise environment has changed. Updating the current environment.");
