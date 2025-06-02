@@ -13,10 +13,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
 
-    [Inject]
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
-    private ILogger<MSGComponentBase> Logger { get; init; } = null!;
-
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
     #region Overrides of ComponentBase
