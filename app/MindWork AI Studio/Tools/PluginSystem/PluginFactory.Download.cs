@@ -7,6 +7,9 @@ public static partial class PluginFactory
 {
     public static async Task<EntityTagHeaderValue?> DetermineConfigPluginETagAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
     {
+        if(configPlugId == Guid.Empty || string.IsNullOrWhiteSpace(configServerUrl))
+            return null;
+        
         try
         {
             var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
