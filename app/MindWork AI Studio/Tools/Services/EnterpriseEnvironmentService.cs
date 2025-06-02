@@ -5,8 +5,12 @@ namespace AIStudio.Tools.Services;
 public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentService> logger, RustService rustService) : BackgroundService
 {
     public static EnterpriseEnvironment CURRENT_ENVIRONMENT;
-    
+
+#if DEBUG
+    private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(6);
+#else
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(16);
+#endif
     
     #region Overrides of BackgroundService
 
