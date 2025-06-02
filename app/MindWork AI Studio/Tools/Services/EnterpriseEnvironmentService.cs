@@ -54,6 +54,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                 switch (enterpriseConfigServerUrl)
                 {
                     case null when enterpriseConfigId == Guid.Empty:
+                    case not null when string.IsNullOrWhiteSpace(enterpriseConfigServerUrl) && enterpriseConfigId == Guid.Empty:
                         logger.LogInformation("AI Studio runs without an enterprise configuration.");
                         break;
 
@@ -61,7 +62,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                         logger.LogWarning($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}'), but the configuration server URL is not set.");
                         break;
 
-                    case not null when enterpriseConfigId == Guid.Empty:
+                    case not null when !string.IsNullOrWhiteSpace(enterpriseConfigServerUrl) && enterpriseConfigId == Guid.Empty:
                         logger.LogWarning($"AI Studio runs with an enterprise configuration server URL ('{enterpriseConfigServerUrl}'), but the configuration ID is not set.");
                         break;
 
