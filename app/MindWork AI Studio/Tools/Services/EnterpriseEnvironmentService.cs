@@ -71,6 +71,8 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                         break;
                 }
             }
+            else
+                logger.LogInformation("The enterprise environment has not changed. No update required.");
         }
         catch (Exception e)
         {
