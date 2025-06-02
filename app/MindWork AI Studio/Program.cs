@@ -160,6 +160,7 @@ internal sealed class Program
 
         // Get the logging factory for e.g., static classes:
         LOGGER_FACTORY = app.Services.GetRequiredService<ILoggerFactory>();
+        MessageBus.INSTANCE.Initialize(LOGGER_FACTORY.CreateLogger<MessageBus>());
         
         // Get a program logger:
         var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
