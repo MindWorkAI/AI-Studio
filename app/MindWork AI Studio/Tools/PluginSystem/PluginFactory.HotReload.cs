@@ -46,6 +46,9 @@ public static partial class PluginFactory
             try
             {
                 LOG.LogInformation($"File changed ({changeType}): {args.FullPath}. Reloading plugins...");
+                
+                // Wait for parallel writes to finish:
+                await Task.Delay(TimeSpan.FromSeconds(3));
                 await LoadAll();
                 await MessageBus.INSTANCE.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
             }
