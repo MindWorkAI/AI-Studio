@@ -45,11 +45,13 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
 
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
     {
-        switch (triggeredEvent)
+        await this.InvokeAsync(async () =>
         {
-            case Event.COLOR_THEME_CHANGED:
-                this.StateHasChanged();
-                break;
+            switch (triggeredEvent)
+            {
+                case Event.COLOR_THEME_CHANGED:
+                    this.StateHasChanged();
+                    break;
             
             case Event.PLUGINS_RELOADED:
                 this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
@@ -57,7 +59,8 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
                 break;
         }
         
-        await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+            await this.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+        });
     }
 
     public async Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
