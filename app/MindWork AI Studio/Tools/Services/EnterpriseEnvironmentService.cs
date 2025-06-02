@@ -2,7 +2,7 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class EnterpriseEnvironmentService(ILogger<TemporaryChatService> logger, RustService rustService) : BackgroundService
+public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentService> logger, RustService rustService) : BackgroundService
 {
     public static EnterpriseEnvironment CURRENT_ENVIRONMENT;
     
