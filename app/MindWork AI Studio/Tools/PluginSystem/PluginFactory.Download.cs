@@ -6,9 +6,6 @@ public static partial class PluginFactory
 {
     public static async Task<bool> TryDownloadingConfigPluginAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
     {
-        if (!IS_INITIALIZED)
-            return false;
-
         LOG.LogInformation($"Downloading configuration plugin with ID: {configPlugId} from server: {configServerUrl}");
         var tempDownloadFile = Path.GetTempFileName();
         try
