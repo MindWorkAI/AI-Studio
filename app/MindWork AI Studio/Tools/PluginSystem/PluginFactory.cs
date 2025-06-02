@@ -27,6 +27,7 @@ public static partial class PluginFactory
         if(IS_INITIALIZED)
             return false;
         
+        LOG.LogInformation("Initializing plugin factory...");
         DATA_DIR = SettingsManager.DataDirectory!;
         PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
         INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
@@ -37,7 +38,7 @@ public static partial class PluginFactory
         
         HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
         IS_INITIALIZED = true;
-        
+        LOG.LogInformation("Plugin factory initialized successfully.");
         return true;
     }
     
