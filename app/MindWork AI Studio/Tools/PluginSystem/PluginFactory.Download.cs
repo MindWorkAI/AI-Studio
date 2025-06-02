@@ -18,14 +18,14 @@ public static partial class PluginFactory
                 await using var tempFileStream = File.Create(tempDownloadFile);
                 await response.Content.CopyToAsync(tempFileStream, cancellationToken);
                 
-                var pluginDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
-                if(Directory.Exists(pluginDirectory))
-                    Directory.Delete(pluginDirectory, true);
+                var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
+                if(Directory.Exists(configDirectory))
+                    Directory.Delete(configDirectory, true);
                 
-                Directory.CreateDirectory(pluginDirectory);
-                ZipFile.ExtractToDirectory(tempDownloadFile, pluginDirectory);
+                Directory.CreateDirectory(configDirectory);
+                ZipFile.ExtractToDirectory(tempDownloadFile, configDirectory);
                 
-                LOG.LogInformation($"Configuration plugin with ID='{configPlugId}' downloaded and extracted successfully to '{pluginDirectory}'.");
+                LOG.LogInformation($"Configuration plugin with ID='{configPlugId}' downloaded and extracted successfully to '{configDirectory}'.");
             }
             else
                 LOG.LogError($"Failed to download the enterprise configuration plugin. HTTP Status: {response.StatusCode}");
