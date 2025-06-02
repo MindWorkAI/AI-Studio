@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using EnterpriseEnvironment = AIStudio.Tools.EnterpriseEnvironment;
 
 namespace AIStudio.Layout;
 
@@ -204,7 +205,14 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                         // Ensure that all internal plugins are present:
                         await PluginFactory.EnsureInternalPlugins();
 
-                        // Load (but not start) all plugins, without waiting for them:
+                        //
+                        // Check if there is an enterprise configuration plugin to download:
+                        //
+                        var enterpriseEnvironment = this.MessageBus.CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT).FirstOrDefault();
+                        if(enterpriseEnvironment != default)
+                            await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseEnvironment.ConfigurationId, enterpriseEnvironment.ConfigurationServerUrl);
+                        
+                        // Load (but not start) all plugins without waiting for them:
                         var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                         await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
 

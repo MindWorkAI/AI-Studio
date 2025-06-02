@@ -14,7 +14,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
     {
         logger.LogInformation("The enterprise environment service was initialized.");
         
-        await this.StartUpdating();
+        await this.StartUpdating(isFirstRun: true);
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(CHECK_INTERVAL, stoppingToken);
@@ -24,7 +24,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
 
     #endregion
 
-    private async Task StartUpdating()
+    private async Task StartUpdating(bool isFirstRun = false)
     {
         try
         {
@@ -63,7 +63,11 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
 
                     default:
                         logger.LogInformation($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}') and configuration server URL ('{enterpriseConfigServerUrl}').");
-                        await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseConfigId, enterpriseConfigServerUrl);
+                        
+                        if(isFirstRun)
+                            MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag));
+                        else
+                            await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseConfigId, enterpriseConfigServerUrl);
                         break;
                 }
             }
