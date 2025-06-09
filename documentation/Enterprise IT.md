@@ -79,6 +79,8 @@ The latest example of an AI Studio configuration via configuration plugin can al
 - [The icon](../app/MindWork%20AI%20Studio/Plugins/configuration/icon.lua)
 - [The configuration with explanations](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua)
 
+Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear.
+
 Currently, you can configure the following things:
 - Any number of self-hosted LLM providers (a combination of server and model), but currently only without API keys
 - The update behavior of AI Studio
