@@ -4213,7 +4213,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "This library is used t
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
 
 -- AI Studio runs without an enterprise configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2244723851"] = "AI Studio runs without an enterprise configuration."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2244723851"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
 
 -- OK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2246359087"] = "OK"
