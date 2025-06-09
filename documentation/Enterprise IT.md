@@ -76,8 +76,8 @@ intranet.my-company.com:30100 {
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:
 
-- [The icon](app/MindWork AI Studio/Plugins/configuration/icon.lua)
-- [The configuration with explanations](app/MindWork AI Studio/Plugins/configuration/plugin.lua)
+- [The icon](app/MindWork%20AI%20Studio/Plugins/configuration/icon.lua)
+- [The configuration with explanations](app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua)
 
 Currently, you can configure the following things:
 - Any number of self-hosted LLM providers (a combination of server and model), but currently only without API keys

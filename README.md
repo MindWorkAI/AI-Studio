@@ -124,7 +124,7 @@ Stay tuned for more updates and enhancements to make MindWork AI Studio even mor
 You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
 
 ## Enterprise IT
-Do you want to manage AI Studio centrally from your IT department? Yes, that’s possible. [Here’s how it works.](documentation/Enterprise IT.md)
+Do you want to manage AI Studio centrally from your IT department? Yes, that’s possible. [Here’s how it works.](documentation/Enterprise%20IT.md)
 
 ## License
 MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional source license). Here’s a simple rundown of what that means for you:
