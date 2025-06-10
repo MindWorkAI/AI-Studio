@@ -119,6 +119,8 @@ public sealed class ContentText : IContent
             this.InitialRemoteWait = false;
             this.IsStreaming = false;
         }, token);
+
+        this.Text = this.Text.RemoveThinkTags().Trim();
         
         // Inform the UI that the streaming is done:
         await this.StreamingDone();
