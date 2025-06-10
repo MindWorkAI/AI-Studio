@@ -4,13 +4,15 @@ public static class StringExtensions
 {
     public static string RemoveThinkTags(this string input)
     {
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("<think>"))
+        const string OPEN_TAG = "<think>";
+        const string CLOSE_TAG = "</think>";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(OPEN_TAG))
             return input;
         
-        int endIndex = input.IndexOf("</think>");
+        var endIndex = input.IndexOf(CLOSE_TAG, StringComparison.Ordinal);
         if (endIndex == -1)
-            return input;
+            return string.Empty;
         
-        return input.Substring(endIndex + "</think>".Length);
+        return input[(endIndex + CLOSE_TAG.Length)..];
     }
 }

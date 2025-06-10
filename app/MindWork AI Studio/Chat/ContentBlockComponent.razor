@@ -67,12 +67,12 @@
                             @if (this.Content.IsStreaming)
                             {
                                 <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
-                                    @textContent.Text
+                                    @textContent.Text.RemoveThinkTags()
                                 </MudText>
                             }
                             else
                             {
-                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags()" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" CodeBlockTheme="@this.CodeColorPalette"/>
+                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" CodeBlockTheme="@this.CodeColorPalette"/>
                             }
                         }
                     }
