@@ -34,7 +34,7 @@ Things we are currently working on:
   - [x] ~~Add support for other languages (I18N) to AI Studio ([PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404), [PR #429](https://github.com/MindWorkAI/AI-Studio/pull/429), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
   - [x] ~~Add an I18N assistant to translate all AI Studio texts to a certain language & culture ([PR #422](https://github.com/MindWorkAI/AI-Studio/pull/422))~~
   - [x] ~~Provide MindWork AI Studio in German ([PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
-  - [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494))~~
+  - [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494), [PR #497](https://github.com/MindWorkAI/AI-Studio/pull/497))~~
   - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
   - [ ] Add assistant plugins
 
@@ -122,6 +122,9 @@ Stay tuned for more updates and enhancements to make MindWork AI Studio even mor
 
 ## Building
 You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
+
+## Enterprise IT
+Do you want to manage AI Studio centrally from your IT department? Yes, that’s possible. [Here’s how it works.](documentation/Enterprise%20IT.md)
 
 ## License
 MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional source license). Here’s a simple rundown of what that means for you:

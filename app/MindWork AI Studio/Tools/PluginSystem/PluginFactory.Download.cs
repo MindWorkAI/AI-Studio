@@ -42,6 +42,7 @@ public static partial class PluginFactory
         var tempDownloadFile = Path.GetTempFileName();
         try
         {
+            await LockHotReloadAsync();
             using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(downloadUrl, cancellationToken);
             if (response.IsSuccessStatusCode)
@@ -80,6 +81,8 @@ public static partial class PluginFactory
                     LOG.LogError(e, "Failed to delete the temporary download file.");
                 }
             }
+            
+            UnlockHotReload();
         }
         
         return true;
