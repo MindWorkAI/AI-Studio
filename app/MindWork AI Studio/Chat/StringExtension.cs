@@ -6,7 +6,7 @@ public static class StringExtensions
     {
         const string OPEN_TAG = "<think>";
         const string CLOSE_TAG = "</think>";
-        if (string.IsNullOrEmpty(input) || !input.StartsWith(OPEN_TAG))
+        if (string.IsNullOrWhiteSpace(input) || !input.StartsWith(OPEN_TAG, StringComparison.Ordinal))
             return input;
         
         var endIndex = input.IndexOf(CLOSE_TAG, StringComparison.Ordinal);
