@@ -38,6 +38,7 @@ calamine = "0.27.0"
 pdfium-render = "0.8.31"
 sys-locale = "0.3.2"
 cfg-if = "1.0.0"
+pptx-to-md = "0.3.0"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 url = "2.5"
