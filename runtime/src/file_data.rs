@@ -62,7 +62,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
 #[get("/retrieval/fs/extract?<path>")]
-pub async fn extract_data(path: String, mut end: Shutdown) -> EventStream![] {
+pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> EventStream![] {
     EventStream! {
         let stream_result = stream_data(&path).await;
         match stream_result {
