@@ -4212,7 +4212,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "Diese Bibliothek wird 
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "Für die sichere Kommunikation zwischen der Benutzeroberfläche und der Laufzeit müssen wir Zertifikate erstellen. Diese Rust-Bibliothek eignet sich hervorragend dafür."
 
--- AI Studio runs without an enterprise configuration.
+-- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2244723851"] = "Dies ist eine private AI Studio-Installation. Es wird keine Konfiguration einer Organisation verwendet."
 
 -- OK
@@ -4349,6 +4349,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T64689067"] = "Diese Rust-Bibliothek wi
 
 -- installed by AI Studio
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T833849470"] = "installiert von AI Studio"
+
+-- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T855925638"] = "Wir verwenden diese Bibliothek, um PowerPoint-Dateien lesen zu können. So ist es möglich, Inhalte aus Folien in Prompts einzufügen und PowerPoint-Dateien in RAG-Prozessen zu berücksichtigen. Wir danken Nils Kruthoff für seine Arbeit an diesem Rust-Crate."
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "Für einige Datenübertragungen müssen wir die Daten in Base64 kodieren. Diese Rust-Bibliothek eignet sich dafür hervorragend."
