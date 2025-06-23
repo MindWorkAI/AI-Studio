@@ -7,6 +7,9 @@
 }
 
 <ReadPDFContent @bind-PDFContent="@this.inputText"/>
+
+<ReadFileContent @bind-FileContent="@this.inputText"/>
+
 <MudTextSwitch Label="@T("Live translation")" @bind-Value="@this.liveTranslation" LabelOn="@T("Live translation")" LabelOff="@T("No live translation")"/>
 @if (this.liveTranslation)
 {

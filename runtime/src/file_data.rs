@@ -29,7 +29,7 @@ pub enum Metadata {
     Text { line_number: usize },
     Pdf { page_number: usize },
     Spreadsheet { sheet_name: String, row_number: usize },
-    Document,
+    Document {},
     Image,
 }
 
@@ -267,7 +267,7 @@ async fn convert_with_pandoc(
             match String::from_utf8(output.stdout.clone()) {
                 Ok(content) => yield Ok(Chunk {
                     content,
-                    metadata: Metadata::Document,
+                    metadata: Metadata::Document {},
                 }),
                 Err(e) => yield Err(e.into()),
             }
