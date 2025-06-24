@@ -6,8 +6,6 @@
     <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent)"/>
 }
 
-<ReadPDFContent @bind-PDFContent="@this.inputText"/>
-
 <ReadFileContent @bind-FileContent="@this.inputText"/>
 
 <MudTextSwitch Label="@T("Live translation")" @bind-Value="@this.liveTranslation" LabelOn="@T("Live translation")" LabelOff="@T("No live translation")"/>
