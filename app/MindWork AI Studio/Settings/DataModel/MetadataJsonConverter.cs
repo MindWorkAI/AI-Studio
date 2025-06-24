@@ -5,47 +5,33 @@ namespace AIStudio.Settings.DataModel;
 
 public class MetadataJsonConverter : JsonConverter<Metadata>
 {
+    private static readonly Dictionary<string, Type> TYPE_MAP = new()
+    {
+        { "Text", typeof(TextMetadata) },
+        { "Pdf", typeof(PdfMetadata) },
+        { "Spreadsheet", typeof(SpreadsheetMetadata) },
+        { "Presentation", typeof(PresentationMetadata) },
+        { "Image", typeof(ImageMetadata) },
+        { "Document", typeof(DocumentMetadata) }
+    };
+
     public override Metadata? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        using var jsonDoc = JsonDocument.ParseValue(ref reader);
+        var root = jsonDoc.RootElement;
+        var rawText = root.GetRawText();
         
-        using (var jsonDoc = JsonDocument.ParseValue(ref reader))
+        var propertyName = root.EnumerateObject()
+            .Select(p => p.Name)
+            .FirstOrDefault(name => TYPE_MAP.ContainsKey(name));
+            
+        if (propertyName != null && TYPE_MAP.TryGetValue(propertyName, out var metadataType))
         {
-            var root = jsonDoc.RootElement;
-
-            if (root.TryGetProperty("Text", out _))
-            {
-                return JsonSerializer.Deserialize<TextMetadata>(root.GetRawText(), options);
-            }
-            else if (root.TryGetProperty("Pdf", out _))
-            {
-                return JsonSerializer.Deserialize<PdfMetadata>(root.GetRawText(), options);
-            }
-            else if (root.TryGetProperty("Spreadsheet", out _))
-            {
-                return JsonSerializer.Deserialize<SpreadsheetMetadata>(root.GetRawText(), options);
-            }
-            else if (root.TryGetProperty("Presentation", out _))
-            {
-                return JsonSerializer.Deserialize<PresentationMetadata>(root.GetRawText(), options);
-            }
-            else if (root.TryGetProperty("Image", out _))
-            {
-                return JsonSerializer.Deserialize<ImageMetadata>(root.GetRawText(), options);
-            }
-            else if (root.TryGetProperty("Document", out _))
-            {
-                return JsonSerializer.Deserialize<DocumentMetadata>(root.GetRawText(), options);
-            }
-            else
-            {
-                // Unbekannter Typ
-                return null;
-            }
+            return (Metadata?)JsonSerializer.Deserialize(rawText, metadataType, options);
         }
+        
+        return null;
     }
 
-    public override void Write(Utf8JsonWriter writer, Metadata value, JsonSerializerOptions options)
-    {
-        throw new NotImplementedException();
-    }
+    public override void Write(Utf8JsonWriter writer, Metadata value, JsonSerializerOptions options) => JsonSerializer.Serialize(writer, value, value.GetType(), options);
 }
