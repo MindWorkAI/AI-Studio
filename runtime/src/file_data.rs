@@ -31,8 +31,8 @@ pub enum Metadata {
     Text { line_number: usize },
     Pdf { page_number: usize },
     Spreadsheet { sheet_name: String, row_number: usize },
-    Document,
-    Image,
+    Document {},
+    Image {},
     Presentation {
         slide_number: u32,
         image: Option<Base64Image>,
@@ -51,8 +51,6 @@ impl Base64Image {
     fn new(id: String, content: String, segment: usize, is_end: bool) -> Self {
         Self { id, content, segment, is_end }
     }
-    Document {},
-    Image {},
 }
 
 const TO_MARKDOWN: &str = "markdown";
