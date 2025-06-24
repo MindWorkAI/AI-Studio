@@ -53,7 +53,7 @@ public sealed partial class RustService
                     eventCount++;
                 }
             }
-            catch (JsonException) { resultBuilder.AppendLine(); }
+            catch (JsonException) { resultBuilder.Append(string.Empty); }
             
         }
         var result = resultBuilder.ToString();

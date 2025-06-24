@@ -7,6 +7,7 @@ namespace AIStudio.Tools;
 public static class SseHandler
 {
     private static readonly ConcurrentDictionary<string, List<PptxImageData>> PPTX_IMAGES = new();
+    private static int CURRENT_SLIDE_NUMBER;
 
     public static async Task<string> ProcessEventAsync(SseEvent? sseEvent, bool extractImages = true)
     {
@@ -25,14 +26,14 @@ public static class SseHandler
                 
                 case PdfMetadata pdfMetadata:
                     var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
-                    result.AppendLine($"[Page {pageNumber}]:\n{sseEvent.Content}");
+                    result.AppendLine($"# Page {pageNumber}\n{sseEvent.Content}");
                     break;
                     
                 case SpreadsheetMetadata spreadsheetMetadata:
                     var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                     var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
                     
-                    if (rowNumber == 1) { result.AppendLine($"\n{sheetName}:"); }
+                    if (rowNumber == 1) { result.AppendLine($"\n# {sheetName}"); }
                 
                     result.AppendLine($"{sseEvent.Content}");
                     break;
@@ -48,13 +49,17 @@ public static class SseHandler
                 case PresentationMetadata presentationMetadata:
                     var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
                     var image = presentationMetadata.Presentation?.Image ?? null;
-                    result.AppendLine($"{sseEvent.Content}");
+
+                    if (slideNumber != CURRENT_SLIDE_NUMBER) { result.AppendLine($"# Slide {slideNumber}"); }
+                    result.Append($"{sseEvent.Content}");
 
                     if (image != null)
                     {
                         var isEnd = ProcessImageSegment(image);
                         if (isEnd && extractImages) { result.AppendLine(BuildImage(image.Id!)); }
                     }
+                    
+                    CURRENT_SLIDE_NUMBER = slideNumber;
                     break;
 
                 default:
@@ -64,11 +69,11 @@ public static class SseHandler
         }
         else if (!string.IsNullOrEmpty(sseEvent.Content))
         {
-            result.AppendLine(sseEvent.Content);
+            result.Append(sseEvent.Content);
         }
         else if (string.IsNullOrEmpty(sseEvent.Content))
         {
-            result.AppendLine();
+            result.Append(string.Empty);
         }
 
         await Task.CompletedTask;

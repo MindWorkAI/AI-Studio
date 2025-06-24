@@ -18,7 +18,7 @@ public partial class ReadFileContent : MSGComponentBase
     
     private async Task SelectFile()
     {
-        var selectedFile = await this.RustService.SelectFile("Select Text file");
+        var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
         if (selectedFile.UserCancelled)
             return;
         
@@ -29,13 +29,13 @@ public partial class ReadFileContent : MSGComponentBase
         
         if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
         {
-            await MessageBus.INSTANCE.SendError(new(@Icons.Material.Filled.AppBlocking, "Executables are not allowed"));
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, T("Executables are not allowed")));
             return;
         }
         
         if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
         {
-            await MessageBus.INSTANCE.SendWarning(new(@Icons.Material.Filled.ImageNotSupported, "Images are not supported yet"));
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, T("Images are not supported yet")));
             return;
         }
         
