@@ -1,11 +1,14 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools;
 
 public static class SseHandler
 {
-    public static async Task<string> ProcessEventAsync(SseEvent? sseEvent)
+    private static readonly ConcurrentDictionary<string, List<PptxImageData>> PPTX_IMAGES = new();
+
+    public static async Task<string> ProcessEventAsync(SseEvent? sseEvent, bool extractImages = true)
     {
         var result = new StringBuilder();
 
@@ -41,6 +44,18 @@ public static class SseHandler
                 case ImageMetadata imageMetadata:
                     result.AppendLine($"{sseEvent.Content}");
                     break;
+                
+                case PresentationMetadata presentationMetadata:
+                    var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
+                    var image = presentationMetadata.Presentation?.Image ?? null;
+                    result.AppendLine($"{sseEvent.Content}");
+
+                    if (image != null)
+                    {
+                        var isEnd = ProcessImageSegment(image);
+                        if (isEnd && extractImages) { result.AppendLine(BuildImage(image.Id!)); }
+                    }
+                    break;
 
                 default:
                     result.AppendLine(sseEvent.Content);
@@ -60,24 +75,49 @@ public static class SseHandler
         return result.ToString();
     }
     
-    private static void ProcessImageSegment(PptxImageData pptxImageData, Dictionary<string, List<string>> images, StringBuilder resultBuilder, ILogger logger)
+    private static bool ProcessImageSegment(PptxImageData pptxImageData)
     {
-        if (string.IsNullOrEmpty(pptxImageData.Id) || string.IsNullOrEmpty(pptxImageData.Content))
-        {
-            return;
-        }
+        if (string.IsNullOrEmpty(pptxImageData.Id)) { return false; }
 
-        if (!images.ContainsKey(pptxImageData.Id))
-        {
-            images[pptxImageData.Id] = new List<string>();
-        }
+        var id =  pptxImageData.Id;
+        var segment = pptxImageData.Segment ?? 0;
+        var content = pptxImageData.Content ?? string.Empty;
+        var isEnd = pptxImageData.IsEnd;
 
-        images[pptxImageData.Id].Add(pptxImageData.Content);
-
-        if (pptxImageData.IsEnd)
+        var imageSegment = new PptxImageData()
         {
-            resultBuilder.AppendLine("[Präsentationsbild eingebettet]");
-            // TODO
-        }
+            Id = id,
+            Content = content,
+            Segment = segment,
+            IsEnd = isEnd,
+        };
+        
+        PPTX_IMAGES.AddOrUpdate(
+            id,
+            _ => [imageSegment],
+            (_, existingList) =>
+            {
+                existingList.Add(imageSegment);
+                return existingList;
+            }
+        );
+
+        return isEnd;
+    }
+
+    private static string BuildImage(string id)
+    {
+        if (!PPTX_IMAGES.TryGetValue(id, out var imageSegments)) return string.Empty;
+        
+        var sortedSegments = imageSegments
+            .OrderBy(item => item.Segment)
+            .ToList();
+            
+        var base64Image = string.Join(string.Empty, sortedSegments
+            .Where(item => item.Content != null)
+            .Select(item => item.Content));
+        
+        PPTX_IMAGES.Remove(id, out _);
+        return base64Image;
     }
 }
