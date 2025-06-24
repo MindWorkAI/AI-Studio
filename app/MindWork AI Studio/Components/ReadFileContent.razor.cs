@@ -18,15 +18,28 @@ public partial class ReadFileContent : MSGComponentBase
     
     private async Task SelectFile()
     {
-        var txtFile = await this.RustService.SelectFile("Select Text file");
-        if (txtFile.UserCancelled)
+        var selectedFile = await this.RustService.SelectFile("Select Text file");
+        if (selectedFile.UserCancelled)
             return;
         
-        if(!File.Exists(txtFile.SelectedFilePath))
+        if(!File.Exists(selectedFile.SelectedFilePath))
             return;
         
-        var txtContent = await this.RustService.ReadArbitraryFileData(txtFile.SelectedFilePath, int.MaxValue);
+        var ext = Path.GetExtension(selectedFile.SelectedFilePath).TrimStart('.');
         
-        await this.FileContentChanged.InvokeAsync(txtContent);
+        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendError(new(@Icons.Material.Filled.AppBlocking, "Executables are not allowed"));
+            return;
+        }
+        
+        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendWarning(new(@Icons.Material.Filled.ImageNotSupported, "Images are not supported yet"));
+            return;
+        }
+        
+        var fileContent = await this.RustService.ReadArbitraryFileData(selectedFile.SelectedFilePath, int.MaxValue);
+        await this.FileContentChanged.InvokeAsync(fileContent);
     }
 }
