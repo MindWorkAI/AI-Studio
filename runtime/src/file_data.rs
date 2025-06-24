@@ -30,7 +30,7 @@ pub enum Metadata {
     Pdf { page_number: usize },
     Spreadsheet { sheet_name: String, row_number: usize },
     Document {},
-    Image,
+    Image {},
 }
 
 const TO_MARKDOWN: &str = "markdown";
@@ -289,7 +289,7 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     let stream = stream! {
         yield Ok(Chunk {
             content: base64,
-            metadata: Metadata::Image,
+            metadata: Metadata::Image {},
         });
     };
 
