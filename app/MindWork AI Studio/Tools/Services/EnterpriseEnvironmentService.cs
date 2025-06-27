@@ -32,7 +32,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
     {
         try
         {
-            logger.LogInformation("Starting update of the enterprise environment.");
+            logger.LogInformation("Start updating of the enterprise environment.");
         
             var enterpriseRemoveConfigId = await rustService.EnterpriseEnvRemoveConfigId();
             var isPlugin2RemoveInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == enterpriseRemoveConfigId);
