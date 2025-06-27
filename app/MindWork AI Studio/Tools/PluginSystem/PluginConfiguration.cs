@@ -48,7 +48,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return false;
         }
 
-        if (settingsTable.TryGetValue("DataApp.UpdateBehavior", out var updateBehaviorValue) && updateBehaviorValue.TryRead<string>(out var updateBehaviorText) && Enum.TryParse<UpdateBehavior>(updateBehaviorText, true, out var updateBehavior))
+        if (settingsTable.TryGetValue(SettingsManager.ToSettingName<DataApp>(x => x.UpdateBehavior), out var updateBehaviorValue) && updateBehaviorValue.TryRead<string>(out var updateBehaviorText) && Enum.TryParse<UpdateBehavior>(updateBehaviorText, true, out var updateBehavior))
         {
             SETTINGS_LOCKER.Register<DataApp>(x => x.UpdateBehavior, this.Id);
             SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = updateBehavior;
