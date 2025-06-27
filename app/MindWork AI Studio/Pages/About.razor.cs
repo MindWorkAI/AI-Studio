@@ -66,7 +66,10 @@ public partial class About : MSGComponentBase
         this.logPaths = await this.RustService.GetLogPaths();
         
         await base.OnInitializedAsync();
-        await this.DeterminePandocVersion();
+        
+        // Determine the Pandoc version may take some time, so we start it here
+        // without waiting for the result:
+        _ = this.DeterminePandocVersion();
     }
 
     #endregion
