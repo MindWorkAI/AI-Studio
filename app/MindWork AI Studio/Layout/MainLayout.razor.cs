@@ -109,7 +109,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Send a message to start the plugin system:
         await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
-        await this.themeProvider.WatchSystemPreference(this.SystemeThemeChanged);
+        await this.themeProvider.WatchSystemDarkModeAsync(this.SystemeThemeChanged);
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
 
@@ -324,7 +324,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private async Task UpdateThemeConfiguration()
     {
         if (this.SettingsManager.ConfigurationData.App.PreferredTheme is Themes.SYSTEM)
-            this.useDarkMode = await this.themeProvider.GetSystemPreference();
+            this.useDarkMode = await this.themeProvider.GetSystemDarkModeAsync();
         else
             this.useDarkMode = this.SettingsManager.ConfigurationData.App.PreferredTheme == Themes.DARK;
 
