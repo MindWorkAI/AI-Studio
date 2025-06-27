@@ -47,14 +47,17 @@ public partial class Workspaces : MSGComponentBase
         // - Those initial tree items cannot have children
         // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
         //
-        await this.LoadTreeItems();
+        // We won't await the loading of the tree items here,
+        // to avoid blocking the UI thread:
+        _ = this.LoadTreeItems();
     }
 
     #endregion
 
     private async Task LoadTreeItems()
     {
-        var workspacesNode = new TreeItemData<ITreeItem>
+        this.treeItems.Clear();
+        this.treeItems.Add(new TreeItemData<ITreeItem>
         {
             Expanded = this.ExpandRootNodes,
             Expandable = true,
@@ -68,9 +71,16 @@ public partial class Workspaces : MSGComponentBase
                 Path = "root",
                 Children = await this.LoadWorkspaces(),
             },
-        };
-
-        var tempChatNode = new TreeItemData<ITreeItem>
+        });
+        
+        this.treeItems.Add(new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeDivider(),
+        });
+        
+        await this.InvokeAsync(this.StateHasChanged);
+        this.treeItems.Add(new TreeItemData<ITreeItem>
         {
             Expanded = this.ExpandRootNodes,
             Expandable = true,
@@ -84,16 +94,9 @@ public partial class Workspaces : MSGComponentBase
                 Path = "temp",
                 Children = await this.LoadTemporaryChats(),
             },
-        };
-        
-        this.treeItems.Clear();
-        this.treeItems.Add(workspacesNode);
-        this.treeItems.Add(new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeDivider(),
         });
-        this.treeItems.Add(tempChatNode);
+        
+        await this.InvokeAsync(this.StateHasChanged);
     }
 
     private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadTemporaryChats()

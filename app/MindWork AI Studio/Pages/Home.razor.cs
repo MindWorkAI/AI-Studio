@@ -19,10 +19,12 @@ public partial class Home : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await this.ReadLastChangeAsync();
         await base.OnInitializedAsync();
-        
         this.InitializeAdvantagesItems();
+        
+        // Read the last change content asynchronously
+        // without blocking the UI thread:
+        _ = this.ReadLastChangeAsync();
     }
 
     private void InitializeAdvantagesItems()
@@ -61,6 +63,8 @@ public partial class Home : MSGComponentBase
         var latest = Changelog.LOGS.MaxBy(n => n.Build);
         using var response = await this.HttpClient.GetAsync($"changelog/{latest.Filename}");
         this.LastChangeContent = await response.Content.ReadAsStringAsync();
+        
+        await this.InvokeAsync(this.StateHasChanged);
     }
     
     private const string QUICK_START_GUIDE =
