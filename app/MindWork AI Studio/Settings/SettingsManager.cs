@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Text.Json;
 
 using AIStudio.Provider;
@@ -346,5 +347,22 @@ public sealed class SettingsManager
             default:
                 return ConfidenceLevel.UNKNOWN;
         }
+    }
+
+    public static string ToSettingName<T>(Expression<Func<T, object>> propertyExpression)
+    {
+        MemberExpression? memberExpr;
+
+        // Handle the case where the expression is a unary expression (e.g., when using Convert):
+        if (propertyExpression.Body is UnaryExpression { NodeType: ExpressionType.Convert } unaryExpr)
+            memberExpr = unaryExpr.Operand as MemberExpression;
+        else
+            memberExpr = propertyExpression.Body as MemberExpression;
+
+        if (memberExpr is null)
+            throw new ArgumentException("Expression must be a property access", nameof(propertyExpression));
+
+        // Return the full name of the property, including the class name:
+        return $"{typeof(T).Name}.{memberExpr.Member.Name}";
     }
 }
