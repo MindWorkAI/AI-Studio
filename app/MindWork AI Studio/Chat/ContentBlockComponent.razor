@@ -72,7 +72,7 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" CodeBlockTheme="@this.CodeColorPalette"/>
+                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Styling="@this.MarkdownStyling" />
                             }
                         }
                     }

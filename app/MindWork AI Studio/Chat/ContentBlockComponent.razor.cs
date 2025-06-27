@@ -142,6 +142,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
+
+    private MudMarkdownStyling MarkdownStyling => new()
+    {
+        CodeBlock = { Theme = this.CodeColorPalette },
+    };
     
     private async Task RemoveBlock()
     {
