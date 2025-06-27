@@ -106,6 +106,12 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             this.dataUsername = this.DataSource.Username;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
             this.dataMaxMatches = this.DataSource.MaxMatches;
+            
+            // We cannot load the retrieval processes now, since we have
+            // to load the data first. But while doing so, we can need to
+            // restore the selected retrieval process id. That's why we
+            // assign the selected retrieval id to the default retrieval process:
+            this.dataSelectedRetrievalProcess = this.dataSelectedRetrievalProcess with { Id = this.DataSource.SelectedRetrievalId };
 
             if (this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD)
             {
