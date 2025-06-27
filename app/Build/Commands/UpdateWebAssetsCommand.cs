@@ -20,6 +20,7 @@ public sealed class UpdateWebAssetsCommand
         var rid = Environment.GetCurrentRid();
         var cwd = Environment.GetAIStudioDirectory();
         var contentPath = Path.Join(cwd, "bin", "release", Environment.DOTNET_VERSION, rid.AsMicrosoftRid(), "publish", "wwwroot", "_content");
+        
         var isMudBlazorDirectoryPresent = Directory.Exists(Path.Join(contentPath, "MudBlazor"));
         if (!isMudBlazorDirectoryPresent)
         {
@@ -28,14 +29,21 @@ public sealed class UpdateWebAssetsCommand
             return;
         }
         
-        Directory.CreateDirectory(Path.Join(cwd, "wwwroot", "system"));
+        var destinationPath = Path.Join(cwd, "wwwroot", "system");
+        if(Directory.Exists(destinationPath))
+            Directory.Delete(destinationPath, true);
+        
+        Directory.CreateDirectory(destinationPath);
+        
         var sourcePaths = Directory.EnumerateFiles(contentPath, "*", SearchOption.AllDirectories);
         var counter = 0;
         foreach(var sourcePath in sourcePaths)
         {
             counter++;
-            var relativePath = Path.GetRelativePath(cwd, sourcePath);
-            var targetPath = Path.Join(cwd, "wwwroot", relativePath);
+            var relativePath = sourcePath
+                .Replace(contentPath, "")
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var targetPath = Path.Join(cwd, "wwwroot", "system", relativePath);
             var targetDirectory = Path.GetDirectoryName(targetPath);
             if (targetDirectory != null)
                 Directory.CreateDirectory(targetDirectory);
