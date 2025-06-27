@@ -1474,7 +1474,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T20906218
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T3672477670"] = "App-Standard verwenden"
 
 -- Yes, let the AI decide which data sources are needed.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Ja, lassen Sie die KI entscheiden, welche Datenquellen benötigt werden."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Ja, die KI soll entscheiden, welche Datenquellen benötigt werden."
 
 -- Yes, let the AI validate & filter the retrieved data.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Ja, die KI soll die abgerufenen Daten überprüfen und filtern."
@@ -1713,6 +1713,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANE
 -- Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1299550589"] = "Anwendungsfall: Dieser Agent wird verwendet, um Textinhalte zu bereinigen. Er extrahiert den Hauptinhalt, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit diese verwendet werden können."
 
+-- Agent: Text Content Cleaner Options
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3517268866"] = "Agent: Inhaltsbereinigung"
+
 -- No options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T354528094"] = "Keine Optionen sind vorausgewählt"
 
@@ -1728,8 +1731,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESEL
 -- Use Case: this agent is used to select the appropriate data sources for the current prompt.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Anwendungsfall: Dieser Assistent wird verwendet, um die passenden Datenquellen für die aktuelle Eingabe auszuwählen."
 
--- Agent: Data Source Selection Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Auswahlmöglichkeiten für Datenquellen"
+-- Agent: Data Source Selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Wahl der Datenquellen"
 
 -- No options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T354528094"] = "Keine Optionen sind vorausgewählt"
@@ -1773,11 +1776,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONT
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Optionen sind vorausgewählt"
 
--- Agent: Retrieval Context Validation Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T928989804"] = "Agent: Optionen zur Überprüfung des Abruf-Kontexts"
+-- Agent: Retrieval Context Validation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T928989804"] = "Agent: Validierung der Abruf-Kontexte"
 
 -- No validation is performed
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Überprüfung statt"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Validierung statt"
 
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
