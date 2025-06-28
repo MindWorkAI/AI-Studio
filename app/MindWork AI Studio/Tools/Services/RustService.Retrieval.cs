@@ -44,7 +44,7 @@ public sealed partial class RustService
             }
             catch (JsonException)
             {
-                resultBuilder.Append(string.Empty);
+                this.logger?.LogError("Failed to deserialize SSE event: {JsonContent}", jsonContent); 
             }
             
         }
