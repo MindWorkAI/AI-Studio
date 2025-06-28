@@ -28,11 +28,22 @@ pub struct Chunk {
 
 #[derive(Debug, Serialize)]
 pub enum Metadata {
-    Text { line_number: usize },
-    Pdf { page_number: usize },
-    Spreadsheet { sheet_name: String, row_number: usize },
+    Text {
+        line_number: usize
+    },
+    
+    Pdf {
+        page_number: usize
+    },
+    
+    Spreadsheet {
+        sheet_name: String,
+        row_number: usize,
+    },
+    
     Document {},
     Image {},
+    
     Presentation {
         slide_number: u32,
         image: Option<Base64Image>,
@@ -72,7 +83,7 @@ pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> 
                         chunk = stream.next() => match chunk {
                             Some(Ok(chunk)) => chunk,
                             Some(Err(e)) => {
-                                yield Event::json(&format!("Error: {}", e));
+                                yield Event::json(&format!("Error: {e}"));
                                 break;
                             },
                             None => break,
@@ -85,7 +96,7 @@ pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> 
             },
 
             Err(e) => {
-                yield Event::json(&format!("Error starting stream: {}", e));
+                yield Event::json(&format!("Error starting stream: {e}"));
             }
         }
     }

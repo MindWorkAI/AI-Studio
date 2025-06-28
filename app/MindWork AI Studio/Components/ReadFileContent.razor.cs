@@ -26,7 +26,6 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         
         var ext = Path.GetExtension(selectedFile.SelectedFilePath).TrimStart('.');
-        
         if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
         {
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, T("Executables are not allowed")));
