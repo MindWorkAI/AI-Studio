@@ -28,11 +28,22 @@ pub struct Chunk {
 
 #[derive(Debug, Serialize)]
 pub enum Metadata {
-    Text { line_number: usize },
-    Pdf { page_number: usize },
-    Spreadsheet { sheet_name: String, row_number: usize },
-    Document,
-    Image,
+    Text {
+        line_number: usize
+    },
+    
+    Pdf {
+        page_number: usize
+    },
+    
+    Spreadsheet {
+        sheet_name: String,
+        row_number: usize,
+    },
+    
+    Document {},
+    Image {},
+    
     Presentation {
         slide_number: u32,
         image: Option<Base64Image>,
@@ -72,7 +83,7 @@ pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> 
                         chunk = stream.next() => match chunk {
                             Some(Ok(chunk)) => chunk,
                             Some(Err(e)) => {
-                                yield Event::json(&format!("Error: {}", e));
+                                yield Event::json(&format!("Error: {e}"));
                                 break;
                             },
                             None => break,
@@ -85,7 +96,7 @@ pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> 
             },
 
             Err(e) => {
-                yield Event::json(&format!("Error starting stream: {}", e));
+                yield Event::json(&format!("Error starting stream: {e}"));
             }
         }
     }
@@ -168,30 +179,6 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     };
 
     Ok(Box::pin(stream))
-}
-
-#[get("/retrieval/fs/read/pdf?<file_path>")]
-pub fn read_pdf(_token: APIToken, file_path: String) -> String {
-    let pdfium = Pdfium::ai_studio_init();
-    let doc = match pdfium.load_pdf_from_file(&file_path, None) {
-        Ok(document) => document,
-        Err(e) => return e.to_string(),
-    };
-
-    let mut pdf_content = String::new();
-    for page in doc.pages().iter() {
-        let content = match page.text().map(|text_content| text_content.all()) {
-            Ok(content) => content,
-            Err(_) => {
-                continue
-            }
-        };
-
-        pdf_content.push_str(&content);
-        pdf_content.push_str("\n\n");
-    }
-
-    pdf_content
 }
 
 async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
@@ -290,7 +277,7 @@ async fn convert_with_pandoc(
             match String::from_utf8(output.stdout.clone()) {
                 Ok(content) => yield Ok(Chunk {
                     content,
-                    metadata: Metadata::Document,
+                    metadata: Metadata::Document {},
                 }),
                 Err(e) => yield Err(e.into()),
             }
@@ -312,7 +299,7 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     let stream = stream! {
         yield Ok(Chunk {
             content: base64,
-            metadata: Metadata::Image,
+            metadata: Metadata::Image {},
         });
     };
 
