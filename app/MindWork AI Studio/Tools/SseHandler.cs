@@ -19,8 +19,7 @@ public static class SseHandler
         {
             switch (sseEvent.Metadata)
             {
-                case TextMetadata textMetadata:
-                    var lineNumber = textMetadata.Text?.LineNumber ?? 0;
+                case TextMetadata:
                     result.AppendLine($"{sseEvent.Content}");
                     break;
                 
@@ -38,14 +37,11 @@ public static class SseHandler
                     result.AppendLine($"{sseEvent.Content}");
                     break;
                 
-                case DocumentMetadata documentMetadata:
+                case DocumentMetadata:
+                case ImageMetadata:
                     result.AppendLine($"{sseEvent.Content}");
                     break;
-                
-                case ImageMetadata imageMetadata:
-                    result.AppendLine($"{sseEvent.Content}");
-                    break;
-                
+
                 case PresentationMetadata presentationMetadata:
                     var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
                     var image = presentationMetadata.Presentation?.Image ?? null;
