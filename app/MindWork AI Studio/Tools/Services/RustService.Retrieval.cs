@@ -9,12 +9,11 @@ public sealed partial class RustService
     public async Task<string> ReadArbitraryFileData(string path, int maxChunks)
     {
         var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}";
-
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-
-        if (!response.IsSuccessStatusCode) { return string.Empty; }
+        if (!response.IsSuccessStatusCode)
+            return string.Empty;
 
         await using var stream = await response.Content.ReadAsStreamAsync();
         using var reader = new StreamReader(stream);
@@ -37,14 +36,17 @@ public sealed partial class RustService
             try
             {
                 var sseEvent = JsonSerializer.Deserialize<SseEvent>(jsonContent);
-                if (sseEvent != null)
+                if (sseEvent is not null)
                 {
                     var content = await SseHandler.ProcessEventAsync(sseEvent, false);
                     resultBuilder.Append(content);
                     chunkCount++;
                 }
             }
-            catch (JsonException) { resultBuilder.Append(string.Empty); }
+            catch (JsonException)
+            {
+                resultBuilder.Append(string.Empty);
+            }
             
         }
         
