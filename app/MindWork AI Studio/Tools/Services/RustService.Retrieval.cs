@@ -6,7 +6,7 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    public async Task<string> ReadArbitraryFileData(string path, int maxEvents)
+    public async Task<string> ReadArbitraryFileData(string path, int maxChunks)
     {
         var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}";
 
@@ -20,9 +20,9 @@ public sealed partial class RustService
         using var reader = new StreamReader(stream);
 
         var resultBuilder = new StringBuilder();
-        var eventCount = 0;
+        var chunkCount = 0;
 
-        while (!reader.EndOfStream && eventCount < maxEvents)
+        while (!reader.EndOfStream && chunkCount < maxChunks)
         {
             var line = await reader.ReadLineAsync();
             
@@ -38,7 +38,7 @@ public sealed partial class RustService
                 {
                     var content = await SseHandler.ProcessEventAsync(sseEvent, false);
                     resultBuilder.Append(content);
-                    eventCount++;
+                    chunkCount++;
                 }
             }
             catch (JsonException) { resultBuilder.Append(string.Empty); }
