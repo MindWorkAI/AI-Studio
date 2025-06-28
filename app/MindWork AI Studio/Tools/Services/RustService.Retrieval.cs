@@ -26,7 +26,9 @@ public sealed partial class RustService
         {
             var line = await reader.ReadLineAsync();
             
-            if (string.IsNullOrEmpty(line)) continue;
+            if (string.IsNullOrEmpty(line))
+                continue;
+            
             if (!line.StartsWith("data:", StringComparison.InvariantCulture))
                 continue;
             
@@ -45,8 +47,7 @@ public sealed partial class RustService
             catch (JsonException) { resultBuilder.Append(string.Empty); }
             
         }
-        var result = resultBuilder.ToString();
-
-        return result;
+        
+        return resultBuilder.ToString();
     }
 }
