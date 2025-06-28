@@ -21,5 +21,5 @@ public readonly record struct FileTypeFilter(string FilterName, string[] FilterE
     
     public static FileTypeFilter AllImages => new(TB("All Image Files"), ["jpg", "jpeg", "png", "gif", "bmp", "tiff"]);
     
-    public static FileTypeFilter Executables => new(TB("Executable Files"), ["exe", "app", "bin"]);
+    public static FileTypeFilter Executables => new(TB("Executable Files"), ["exe", "app", "bin", "appimage"]);
 }
