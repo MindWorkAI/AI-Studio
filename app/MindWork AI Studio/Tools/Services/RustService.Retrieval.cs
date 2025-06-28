@@ -27,7 +27,8 @@ public sealed partial class RustService
             var line = await reader.ReadLineAsync();
             
             if (string.IsNullOrEmpty(line)) continue;
-            if (!line.StartsWith("data:")) continue;
+            if (!line.StartsWith("data:", StringComparison.InvariantCulture))
+                continue;
             
             var jsonContent = line[5..];
 
