@@ -100,7 +100,8 @@ public static class SseHandler
 
     private static string BuildImage(string id)
     {
-        if (!PPTX_IMAGES.TryGetValue(id, out var imageSegments)) return string.Empty;
+        if (!PPTX_IMAGES.TryGetValue(id, out var imageSegments))
+            return string.Empty;
         
         var sortedSegments = imageSegments
             .OrderBy(item => item.Segment)
