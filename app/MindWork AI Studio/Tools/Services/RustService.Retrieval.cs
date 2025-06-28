@@ -23,8 +23,7 @@ public sealed partial class RustService
         while (!reader.EndOfStream && chunkCount < maxChunks)
         {
             var line = await reader.ReadLineAsync();
-            
-            if (string.IsNullOrEmpty(line))
+            if (string.IsNullOrWhiteSpace(line))
                 continue;
             
             if (!line.StartsWith("data:", StringComparison.InvariantCulture))

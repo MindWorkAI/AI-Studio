@@ -77,7 +77,8 @@ public static class SseHandler
     
     private static bool ProcessImageSegment(PptxImageData pptxImageData)
     {
-        if (string.IsNullOrEmpty(pptxImageData.Id)) { return false; }
+        if (string.IsNullOrWhiteSpace(pptxImageData.Id))
+            return false;
 
         var id =  pptxImageData.Id;
         var segment = pptxImageData.Segment ?? 0;
