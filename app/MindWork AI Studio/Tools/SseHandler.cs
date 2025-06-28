@@ -8,71 +8,63 @@ public static class SseHandler
     private static readonly ConcurrentDictionary<string, List<PptxImageData>> PPTX_IMAGES = new();
     private static int CURRENT_SLIDE_NUMBER;
 
-    public static async Task<string> ProcessEventAsync(SseEvent? sseEvent, bool extractImages = true)
+    public static string ProcessEvent(SseEvent? sseEvent, bool extractImages = true)
     {
-        var result = new StringBuilder();
-
-        if (sseEvent == null) { return result.ToString(); }
-
-        if (sseEvent is { Content: not null, Metadata: not null })
+        switch (sseEvent)
         {
-            switch (sseEvent.Metadata)
-            {
-                case TextMetadata:
-                    result.AppendLine($"{sseEvent.Content}");
-                    break;
+            case { Content: not null, Metadata: not null }:
+                switch (sseEvent.Metadata)
+                {
+                    case TextMetadata:
+                        return $"{sseEvent.Content}";
                 
-                case PdfMetadata pdfMetadata:
-                    var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
-                    result.AppendLine($"# Page {pageNumber}\n{sseEvent.Content}");
-                    break;
+                    case PdfMetadata pdfMetadata:
+                        var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
+                        return $"# Page {pageNumber}\n{sseEvent.Content}";
                     
-                case SpreadsheetMetadata spreadsheetMetadata:
-                    var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
-                    var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
-                    
-                    if (rowNumber == 1) { result.AppendLine($"\n# {sheetName}"); }
+                    case SpreadsheetMetadata spreadsheetMetadata:
+                        var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
+                        var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
+                        var spreadSheetResult = new StringBuilder();
+                        if (rowNumber == 1)
+                            spreadSheetResult.AppendLine($"\n# {sheetName}");
                 
-                    result.AppendLine($"{sseEvent.Content}");
-                    break;
+                        spreadSheetResult.AppendLine($"{sseEvent.Content}");
+                        return spreadSheetResult.ToString();
                 
-                case DocumentMetadata:
-                case ImageMetadata:
-                    result.AppendLine($"{sseEvent.Content}");
-                    break;
+                    case DocumentMetadata:
+                    case ImageMetadata:
+                        return $"{sseEvent.Content}";
 
-                case PresentationMetadata presentationMetadata:
-                    var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
-                    var image = presentationMetadata.Presentation?.Image ?? null;
-
-                    if (slideNumber != CURRENT_SLIDE_NUMBER) { result.AppendLine($"# Slide {slideNumber}"); }
-                    result.Append($"{sseEvent.Content}");
-
-                    if (image != null)
-                    {
-                        var isEnd = ProcessImageSegment(image);
-                        if (isEnd && extractImages) { result.AppendLine(BuildImage(image.Id!)); }
-                    }
+                    case PresentationMetadata presentationMetadata:
+                        var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
+                        var image = presentationMetadata.Presentation?.Image ?? null;
+                        var presentationResult = new StringBuilder();
+                        if (slideNumber != CURRENT_SLIDE_NUMBER)
+                            presentationResult.AppendLine($"# Slide {slideNumber}");
                     
-                    CURRENT_SLIDE_NUMBER = slideNumber;
-                    break;
+                        presentationResult.Append($"{sseEvent.Content}");
 
-                default:
-                    result.AppendLine(sseEvent.Content);
-                    break;
-            }
-        }
-        else if (!string.IsNullOrEmpty(sseEvent.Content))
-        {
-            result.Append(sseEvent.Content);
-        }
-        else if (string.IsNullOrEmpty(sseEvent.Content))
-        {
-            result.Append(string.Empty);
-        }
+                        if (image is not null)
+                        {
+                            var isEnd = ProcessImageSegment(image);
+                            if (isEnd && extractImages)
+                                presentationResult.AppendLine(BuildImage(image.Id!));
+                        }
+                    
+                        CURRENT_SLIDE_NUMBER = slideNumber;
+                        return presentationResult.ToString();
 
-        await Task.CompletedTask;
-        return result.ToString();
+                    default:
+                        return sseEvent.Content;
+                }
+                
+            case { Content: not null, Metadata: null }:
+                return sseEvent.Content;
+            
+            default:
+                return string.Empty;
+        }
     }
     
     private static bool ProcessImageSegment(PptxImageData pptxImageData)
@@ -85,7 +77,7 @@ public static class SseHandler
         var content = pptxImageData.Content ?? string.Empty;
         var isEnd = pptxImageData.IsEnd;
 
-        var imageSegment = new PptxImageData()
+        var imageSegment = new PptxImageData
         {
             Id = id,
             Content = content,
