@@ -16,25 +16,32 @@ public static class ContentStreamSseHandler
                 switch (sseEvent.Metadata)
                 {
                     case ContentStreamTextMetadata:
-                        return $"{sseEvent.Content}\n";
+                        return sseEvent.Content;
                 
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
-                        return $"# Page {pageNumber}\n{sseEvent.Content}";
+                        return $"""
+                                # Page {pageNumber}
+                                {sseEvent.Content}
+                                
+                                """;
                     
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
                         var spreadSheetResult = new StringBuilder();
                         if (rowNumber == 1)
-                            spreadSheetResult.AppendLine($"\n# {sheetName}");
-                
-                        spreadSheetResult.AppendLine($"{sseEvent.Content}");
+                        {
+                            spreadSheetResult.AppendLine();
+                            spreadSheetResult.AppendLine($"# {sheetName}");
+                        }
+
+                        spreadSheetResult.Append(sseEvent.Content);
                         return spreadSheetResult.ToString();
                 
                     case ContentStreamDocumentMetadata:
                     case ContentStreamImageMetadata:
-                        return $"{sseEvent.Content}";
+                        return sseEvent.Content;
 
                     case ContentStreamPresentationMetadata presentationMetadata:
                         var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
@@ -71,7 +78,7 @@ public static class ContentStreamSseHandler
                 return sseEvent.Content;
             
             default:
-                return string.Empty;
+                return null;
         }
     }
     
