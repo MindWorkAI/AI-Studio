@@ -140,6 +140,10 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
         }
 
+        "csv" | "tsv" => {
+            stream_text_file(file_path, true, Some("csv".to_string())).await?
+        },
+
         "pptx" => stream_pptx(file_path, extract_images).await?,
         
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
@@ -158,7 +162,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
                 },
 
-                _ => stream_text_file(file_path).await?,
+                _ => stream_text_file(file_path, false, None).await?,
             },
             
             Kind::Ebook => return Err("Ebooks not yet supported".into()),
@@ -167,7 +171,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
                 if !extract_images {
                     return Err("Image extraction is disabled.".into());
                 }
-                
+
                 chunk_image(file_path).await?
             },
             
@@ -176,7 +180,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
                 },
 
-                _ => stream_text_file(file_path).await?,
+                _ => stream_text_file(file_path, false, None).await?,
             },
             
             Kind::Presentation => match fmt {
@@ -184,31 +188,52 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
                     stream_pptx(file_path, extract_images).await?
                 },
 
-                _ => stream_text_file(file_path).await?,
+                _ => stream_text_file(file_path, false, None).await?,
             },
             
             Kind::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
 
-            _ => stream_text_file(file_path).await?,
+            _ => stream_text_file(file_path, false, None).await?,
         },
     };
 
     Ok(Box::pin(stream))
 }
 
-async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
+async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: Option<String>) -> Result<ChunkStream> {
     let file = tokio::fs::File::open(file_path).await?;
     let reader = tokio::io::BufReader::new(file);
     let mut lines = reader.lines();
     let mut line_number = 0;
 
     let stream = stream! {
+
+        if use_md_fences {
+            match fence_language {
+                Some(lang) if lang.trim().is_empty() => {
+                    yield Ok(Chunk::new("```".to_string(), Metadata::Text { line_number }));
+                },
+
+                Some(lang) => {
+                    yield Ok(Chunk::new(format!("```{}", lang.trim()), Metadata::Text { line_number }));
+                },
+
+                None => {
+                    yield Ok(Chunk::new("```".to_string(), Metadata::Text { line_number }));
+                }
+            };
+        }
+
         while let Ok(Some(line)) = lines.next_line().await {
             line_number += 1;
             yield Ok(Chunk::new(
                 line,
                 Metadata::Text { line_number }
             ));
+        }
+
+        if use_md_fences {
+            yield Ok(Chunk::new("```\n".to_string(), Metadata::Text { line_number }));
         }
     };
 
@@ -272,7 +297,17 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
-            for (row_idx, row) in range.rows().enumerate() {
+            let mut row_idx = 0;
+            tx.blocking_send(Ok(Chunk::new(
+                "```csv".to_string(),
+                Metadata::Spreadsheet {
+                    sheet_name: sheet_name.clone(),
+                    row_number: row_idx,
+                }
+            ))).ok();
+            
+            for row in range.rows() {
+                row_idx += 1;
                 let content = row.iter()
                     .map(|cell| cell.to_string())
                     .collect::<Vec<_>>()
@@ -282,12 +317,20 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     content,
                     Metadata::Spreadsheet {
                         sheet_name: sheet_name.clone(),
-                        row_number: row_idx + 1,
+                        row_number: row_idx,
                     }
                 ))).is_err() {
                     return;
                 }
             }
+
+            tx.blocking_send(Ok(Chunk::new(
+                "```".to_string(),
+                Metadata::Spreadsheet {
+                    sheet_name: sheet_name.clone(),
+                    row_number: row_idx,
+                }
+            ))).ok();
         }
     });
 

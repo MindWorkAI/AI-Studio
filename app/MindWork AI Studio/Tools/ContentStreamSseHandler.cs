@@ -30,7 +30,7 @@ public static class ContentStreamSseHandler
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
                         var spreadSheetResult = new StringBuilder();
-                        if (rowNumber == 1)
+                        if (rowNumber == 0)
                         {
                             spreadSheetResult.AppendLine();
                             spreadSheetResult.AppendLine($"# {sheetName}");
