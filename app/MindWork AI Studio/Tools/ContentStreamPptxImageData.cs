@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace AIStudio.Tools;
 
-public class ContentStreamPptxImageData
+public sealed class ContentStreamPptxImageData
 {
     [JsonPropertyName("id")] 
     public string? Id { get; init; }

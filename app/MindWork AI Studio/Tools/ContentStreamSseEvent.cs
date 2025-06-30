@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace AIStudio.Tools;
 
-public class ContentStreamSseEvent
+public sealed class ContentStreamSseEvent
 {
     [JsonPropertyName("content")] 
     public string? Content { get; init; }

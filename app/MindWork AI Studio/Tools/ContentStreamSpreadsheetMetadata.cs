@@ -4,7 +4,7 @@ namespace AIStudio.Tools;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable ClassNeverInstantiated.Global
-public class ContentStreamSpreadsheetMetadata : ContentStreamSseMetadata
+public sealed class ContentStreamSpreadsheetMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("Spreadsheet")] 
     public ContentStreamSpreadsheetDetails? Spreadsheet { get; init; }

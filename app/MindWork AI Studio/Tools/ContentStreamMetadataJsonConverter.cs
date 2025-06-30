@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace AIStudio.Tools;
 
-public class ContentStreamMetadataJsonConverter : JsonConverter<ContentStreamSseMetadata>
+public sealed class ContentStreamMetadataJsonConverter : JsonConverter<ContentStreamSseMetadata>
 {
     public override ContentStreamSseMetadata? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
