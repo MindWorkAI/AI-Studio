@@ -16,7 +16,7 @@ public static class ContentStreamSseHandler
                 switch (sseEvent.Metadata)
                 {
                     case ContentStreamTextMetadata:
-                        return $"{sseEvent.Content}";
+                        return $"{sseEvent.Content}\n";
                 
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
