@@ -6,7 +6,7 @@ namespace AIStudio.Tools;
 public static class ContentStreamSseHandler
 {
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> PPTX_IMAGES = new();
-    private static int CURRENT_SLIDE_NUMBER;
+    private static readonly ConcurrentDictionary<string, int> CURRENT_SLIDE_NUMBERS = new();
 
     public static string ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
@@ -40,21 +40,26 @@ public static class ContentStreamSseHandler
                         var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
                         var image = presentationMetadata.Presentation?.Image ?? null;
                         var presentationResult = new StringBuilder();
-                        if (slideNumber != CURRENT_SLIDE_NUMBER)
+                        var streamId = sseEvent.StreamId;
+
+                        CURRENT_SLIDE_NUMBERS.TryGetValue(streamId!, out var currentSlideNumber);
+
+                        if (slideNumber != currentSlideNumber)
                             presentationResult.AppendLine($"# Slide {slideNumber}");
-                    
+
                         presentationResult.Append($"{sseEvent.Content}");
 
                         if (image is not null)
                         {
-                            var isEnd = ProcessImageSegment(image);
+                            var imageId = $"{streamId}-{image.Id!}";
+                            var isEnd = ProcessImageSegment(imageId, image);
                             if (isEnd && extractImages)
-                                presentationResult.AppendLine(BuildImage(image.Id!));
+                                presentationResult.AppendLine(BuildImage(imageId));
                         }
-                    
-                        CURRENT_SLIDE_NUMBER = slideNumber;
-                        return presentationResult.ToString();
 
+                        CURRENT_SLIDE_NUMBERS[streamId!] = slideNumber;
+
+                        return presentationResult.ToString();
                     default:
                         return sseEvent.Content;
                 }
@@ -67,26 +72,25 @@ public static class ContentStreamSseHandler
         }
     }
     
-    private static bool ProcessImageSegment(ContentStreamPptxImageData contentStreamPptxImageData)
+    private static bool ProcessImageSegment(string imageId, ContentStreamPptxImageData contentStreamPptxImageData)
     {
-        if (string.IsNullOrWhiteSpace(contentStreamPptxImageData.Id))
+        if (string.IsNullOrWhiteSpace(contentStreamPptxImageData.Id) || string.IsNullOrWhiteSpace(imageId))
             return false;
 
-        var id =  contentStreamPptxImageData.Id;
         var segment = contentStreamPptxImageData.Segment ?? 0;
         var content = contentStreamPptxImageData.Content ?? string.Empty;
         var isEnd = contentStreamPptxImageData.IsEnd;
 
         var imageSegment = new ContentStreamPptxImageData
         {
-            Id = id,
+            Id = imageId,
             Content = content,
             Segment = segment,
             IsEnd = isEnd,
         };
         
         PPTX_IMAGES.AddOrUpdate(
-            id,
+            imageId,
             _ => [imageSegment],
             (_, existingList) =>
             {
