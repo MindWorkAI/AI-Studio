@@ -5,7 +5,7 @@ namespace AIStudio.Tools;
 
 public static class ContentStreamSseHandler
 {
-    private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> PPTX_IMAGES = new();
+    private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
     private static readonly ConcurrentDictionary<string, int> CURRENT_SLIDE_NUMBERS = new();
 
     public static string ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
@@ -89,7 +89,7 @@ public static class ContentStreamSseHandler
             IsEnd = isEnd,
         };
         
-        PPTX_IMAGES.AddOrUpdate(
+        CHUNKED_IMAGES.AddOrUpdate(
             imageId,
             _ => [imageSegment],
             (_, existingList) =>
@@ -104,7 +104,7 @@ public static class ContentStreamSseHandler
 
     private static string BuildImage(string id)
     {
-        if (!PPTX_IMAGES.TryGetValue(id, out var imageSegments))
+        if (!CHUNKED_IMAGES.TryGetValue(id, out var imageSegments))
             return string.Empty;
         
         var sortedSegments = imageSegments
@@ -115,7 +115,7 @@ public static class ContentStreamSseHandler
             .Where(item => item.Content != null)
             .Select(item => item.Content));
         
-        PPTX_IMAGES.Remove(id, out _);
+        CHUNKED_IMAGES.Remove(id, out _);
         return base64Image;
     }
 }
