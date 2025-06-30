@@ -23,16 +23,35 @@ use tokio_stream::wrappers::ReceiverStream;
 #[derive(Debug, Serialize)]
 pub struct Chunk {
     pub content: String,
+    pub stream_id: String,
     pub metadata: Metadata,
+}
+impl Chunk {
+    pub fn new(content: String, metadata: Metadata) -> Self {
+        Chunk { content, stream_id: String::new(), metadata }
+    }
+    
+    pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
 }
 
 #[derive(Debug, Serialize)]
 pub enum Metadata {
-    Text { line_number: usize },
-    Pdf { page_number: usize },
-    Spreadsheet { sheet_name: String, row_number: usize },
-    Document,
-    Image,
+    Text {
+        line_number: usize
+    },
+    
+    Pdf {
+        page_number: usize
+    },
+    
+    Spreadsheet {
+        sheet_name: String,
+        row_number: usize,
+    },
+    
+    Document {},
+    Image {},
+    
     Presentation {
         slide_number: u32,
         image: Option<Base64Image>,
@@ -61,18 +80,23 @@ const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/retrieval/fs/extract?<path>")]
-pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> EventStream![] {
+#[get("/retrieval/fs/extract?<path>&<stream_id>")]
+pub async fn extract_data(_token: APIToken, path: String, stream_id: String, mut end: Shutdown) -> EventStream![] {
     EventStream! {
         let stream_result = stream_data(&path).await;
+        let id_ref = &stream_id;
+        
         match stream_result {
             Ok(mut stream) => {
                 loop {
                     let chunk = select! {
                         chunk = stream.next() => match chunk {
-                            Some(Ok(chunk)) => chunk,
+                            Some(Ok(mut chunk)) => {
+                                chunk.set_stream_id(id_ref);
+                                chunk
+                            },
                             Some(Err(e)) => {
-                                yield Event::json(&format!("Error: {}", e));
+                                yield Event::json(&format!("Error: {e}"));
                                 break;
                             },
                             None => break,
@@ -85,7 +109,7 @@ pub async fn extract_data(_token: APIToken, path: String, mut end: Shutdown) -> 
             },
 
             Err(e) => {
-                yield Event::json(&format!("Error starting stream: {}", e));
+                yield Event::json(&format!("Error starting stream: {e}"));
             }
         }
     }
@@ -160,38 +184,14 @@ async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
     let stream = stream! {
         while let Ok(Some(line)) = lines.next_line().await {
             line_number += 1;
-            yield Ok(Chunk {
-                content: line,
-                metadata: Metadata::Text { line_number },
-            });
+            yield Ok(Chunk::new(
+                line,
+                Metadata::Text { line_number }
+            ));
         }
     };
 
     Ok(Box::pin(stream))
-}
-
-#[get("/retrieval/fs/read/pdf?<file_path>")]
-pub fn read_pdf(_token: APIToken, file_path: String) -> String {
-    let pdfium = Pdfium::ai_studio_init();
-    let doc = match pdfium.load_pdf_from_file(&file_path, None) {
-        Ok(document) => document,
-        Err(e) => return e.to_string(),
-    };
-
-    let mut pdf_content = String::new();
-    for page in doc.pages().iter() {
-        let content = match page.text().map(|text_content| text_content.all()) {
-            Ok(content) => content,
-            Err(_) => {
-                continue
-            }
-        };
-
-        pdf_content.push_str(&content);
-        pdf_content.push_str("\n\n");
-    }
-
-    pdf_content
 }
 
 async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
@@ -217,10 +217,10 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
-            if tx.blocking_send(Ok(Chunk {
-                content,
-                metadata: Metadata::Pdf { page_number: num_page + 1 },
-            })).is_err() {
+            if tx.blocking_send(Ok(Chunk::new(
+                content, 
+                Metadata::Pdf { page_number: num_page + 1 }
+            ))).is_err() {
                 break;
             }
         }
@@ -257,13 +257,13 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     .collect::<Vec<_>>()
                     .join(",");
 
-                if tx.blocking_send(Ok(Chunk {
+                if tx.blocking_send(Ok(Chunk::new(
                     content,
-                    metadata: Metadata::Spreadsheet {
+                    Metadata::Spreadsheet {
                         sheet_name: sheet_name.clone(),
                         row_number: row_idx + 1,
-                    },
-                })).is_err() {
+                    }
+                ))).is_err() {
                     return;
                 }
             }
@@ -288,10 +288,10 @@ async fn convert_with_pandoc(
     let stream = stream! {
         if output.status.success() {
             match String::from_utf8(output.stdout.clone()) {
-                Ok(content) => yield Ok(Chunk {
+                Ok(content) => yield Ok(Chunk::new(
                     content,
-                    metadata: Metadata::Document,
-                }),
+                    Metadata::Document {}
+                )),
                 Err(e) => yield Err(e.into()),
             }
         } else {
@@ -310,10 +310,10 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     let base64 = general_purpose::STANDARD.encode(&data);
 
     let stream = stream! {
-        yield Ok(Chunk {
-            content: base64,
-            metadata: Metadata::Image,
-        });
+        yield Ok(Chunk::new(
+            base64,
+            Metadata::Image {},
+        ));
     };
 
     Ok(Box::pin(stream))
@@ -340,13 +340,13 @@ async fn stream_pptx(file_path: &str) -> Result<ChunkStream> {
             match slide_result {
                 Ok(slide) => {
                     if let Some(md_content) = slide.convert_to_md() {
-                        let chunk = Chunk {
-                            content: md_content,
-                            metadata: Metadata::Presentation {
+                        let chunk = Chunk::new(
+                            md_content,
+                            Metadata::Presentation {
                                 slide_number: slide.slide_number,
                                 image: None,
-                            },
-                        };
+                            }
+                        );
 
                         if tx.send(Ok(chunk)).await.is_err() {
                             break;
@@ -373,13 +373,13 @@ async fn stream_pptx(file_path: &str) -> Result<ChunkStream> {
                                     is_end
                                 );
 
-                                let chunk = Chunk {
-                                    content: String::new(),
-                                    metadata: Metadata::Presentation {
+                                let chunk = Chunk::new(
+                                    String::new(),
+                                    Metadata::Presentation {
                                         slide_number: slide.slide_number,
                                         image: Some(base64_image),
-                                    },
-                                };
+                                    }
+                                );
 
                                 if tx.send(Ok(chunk)).await.is_err() {
                                     break;
