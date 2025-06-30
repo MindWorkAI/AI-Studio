@@ -5,10 +5,10 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    public async Task<string> ReadArbitraryFileData(string path, int maxChunks)
+    public async Task<string> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false)
     {
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
@@ -37,7 +37,7 @@ public sealed partial class RustService
                 var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
                 if (sseEvent is not null)
                 {
-                    var content = ContentStreamSseHandler.ProcessEvent(sseEvent, false);
+                    var content = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
                     if(content is not null)
                         resultBuilder.AppendLine(content);
                     

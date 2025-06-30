@@ -81,10 +81,10 @@ const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/retrieval/fs/extract?<path>&<stream_id>")]
-pub async fn extract_data(_token: APIToken, path: String, stream_id: String, mut end: Shutdown) -> EventStream![] {
+#[get("/retrieval/fs/extract?<path>&<stream_id>&<extract_images>")]
+pub async fn extract_data(_token: APIToken, path: String, stream_id: String, extract_images: bool, mut end: Shutdown) -> EventStream![] {
     EventStream! {
-        let stream_result = stream_data(&path).await;
+        let stream_result = stream_data(&path, extract_images).await;
         let id_ref = &stream_id;
         
         match stream_result {
@@ -116,7 +116,7 @@ pub async fn extract_data(_token: APIToken, path: String, stream_id: String, mut
     }
 }
 
-async fn stream_data(file_path: &str) -> Result<ChunkStream> {
+async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");
         return Err("File does not exist.".into());
@@ -133,14 +133,14 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
 
     let ext = file_path.split('.').next_back().unwrap_or("");
     debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
-    
+
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
         }
 
-        "pptx" => stream_pptx(file_path).await?,
+        "pptx" => stream_pptx(file_path, extract_images).await?,
         
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
             stream_spreadsheet_as_csv(file_path).await?
@@ -163,7 +163,13 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
             
             Kind::Ebook => return Err("Ebooks not yet supported".into()),
 
-            Kind::Image => chunk_image(file_path).await?,
+            Kind::Image => {
+                if !extract_images {
+                    return Err("Image extraction is disabled.".into());
+                }
+                
+                chunk_image(file_path).await?
+            },
             
             Kind::Other => match fmt {
                 FileFormat::HypertextMarkupLanguage => {
@@ -175,7 +181,7 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
             
             Kind::Presentation => match fmt {
                 FileFormat::OfficeOpenXmlPresentation => {
-                    stream_pptx(file_path).await?
+                    stream_pptx(file_path, extract_images).await?
                 },
 
                 _ => stream_text_file(file_path).await?,
@@ -334,11 +340,11 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(stream))
 }
 
-async fn stream_pptx(file_path: &str) -> Result<ChunkStream> {
+async fn stream_pptx(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
     let path = Path::new(file_path).to_owned();
 
     let parser_config = ParserConfig::builder()
-        .extract_images(true)
+        .extract_images(extract_images)
         .compress_images(true)
         .quality(75)
         .image_handling_mode(ImageHandlingMode::Manually)
