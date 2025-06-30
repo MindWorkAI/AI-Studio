@@ -16,6 +16,7 @@ use rocket::tokio::select;
 use rocket::Shutdown;
 use std::path::Path;
 use std::pin::Pin;
+use log::{debug, error};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -117,6 +118,7 @@ pub async fn extract_data(_token: APIToken, path: String, stream_id: String, mut
 
 async fn stream_data(file_path: &str) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
+        error!("File does not exist: '{file_path}'");
         return Err("File does not exist.".into());
     }
 
@@ -126,6 +128,8 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
     }).await??;
 
     let ext = file_path.split('.').next_back().unwrap_or("");
+    debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
+    
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
