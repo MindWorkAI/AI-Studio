@@ -8,7 +8,7 @@ public static class ContentStreamSseHandler
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
     private static readonly ConcurrentDictionary<string, int> CURRENT_SLIDE_NUMBERS = new();
 
-    public static string ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
+    public static string? ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
         switch (sseEvent)
         {
@@ -16,40 +16,50 @@ public static class ContentStreamSseHandler
                 switch (sseEvent.Metadata)
                 {
                     case ContentStreamTextMetadata:
-                        return $"{sseEvent.Content}\n";
+                        return sseEvent.Content;
                 
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
-                        return $"# Page {pageNumber}\n{sseEvent.Content}";
+                        return $"""
+                                # Page {pageNumber}
+                                {sseEvent.Content}
+                                
+                                """;
                     
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
                         var spreadSheetResult = new StringBuilder();
-                        if (rowNumber == 1)
-                            spreadSheetResult.AppendLine($"\n# {sheetName}");
-                
-                        spreadSheetResult.AppendLine($"{sseEvent.Content}");
+                        if (rowNumber == 0)
+                        {
+                            spreadSheetResult.AppendLine();
+                            spreadSheetResult.AppendLine($"# {sheetName}");
+                        }
+
+                        spreadSheetResult.Append(sseEvent.Content);
                         return spreadSheetResult.ToString();
                 
                     case ContentStreamDocumentMetadata:
                     case ContentStreamImageMetadata:
-                        return $"{sseEvent.Content}";
+                        return sseEvent.Content;
 
                     case ContentStreamPresentationMetadata presentationMetadata:
                         var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
                         var image = presentationMetadata.Presentation?.Image ?? null;
                         var presentationResult = new StringBuilder();
                         var streamId = sseEvent.StreamId;
-
+                        
                         CURRENT_SLIDE_NUMBERS.TryGetValue(streamId!, out var currentSlideNumber);
-
                         if (slideNumber != currentSlideNumber)
+                        {
+                            presentationResult.AppendLine();
                             presentationResult.AppendLine($"# Slide {slideNumber}");
+                        }
 
-                        presentationResult.Append($"{sseEvent.Content}");
-
-                        if (image is not null)
+                        if(!string.IsNullOrWhiteSpace(sseEvent.Content))
+                            presentationResult.AppendLine(sseEvent.Content);
+                        
+                        if (extractImages && image is not null)
                         {
                             var imageId = $"{streamId}-{image.Id!}";
                             var isEnd = ProcessImageSegment(imageId, image);
@@ -58,8 +68,8 @@ public static class ContentStreamSseHandler
                         }
 
                         CURRENT_SLIDE_NUMBERS[streamId!] = slideNumber;
-
-                        return presentationResult.ToString();
+                        return presentationResult.Length is 0 ? null : presentationResult.ToString();
+                    
                     default:
                         return sseEvent.Content;
                 }
@@ -68,7 +78,7 @@ public static class ContentStreamSseHandler
                 return sseEvent.Content;
             
             default:
-                return string.Empty;
+                return null;
         }
     }
     

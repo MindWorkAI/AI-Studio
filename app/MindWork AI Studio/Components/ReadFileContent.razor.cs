@@ -38,8 +38,7 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
         
-        var streamId = Guid.NewGuid().ToString();
-        var fileContent = await this.RustService.ReadArbitraryFileData(selectedFile.SelectedFilePath, streamId, int.MaxValue);
+        var fileContent = await this.RustService.ReadArbitraryFileData(selectedFile.SelectedFilePath, int.MaxValue);
         await this.FileContentChanged.InvokeAsync(fileContent);
     }
 }

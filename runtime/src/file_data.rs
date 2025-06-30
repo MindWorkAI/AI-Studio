@@ -16,6 +16,7 @@ use rocket::tokio::select;
 use rocket::Shutdown;
 use std::path::Path;
 use std::pin::Pin;
+use log::{debug, error};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -80,10 +81,10 @@ const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/retrieval/fs/extract?<path>&<stream_id>")]
-pub async fn extract_data(_token: APIToken, path: String, stream_id: String, mut end: Shutdown) -> EventStream![] {
+#[get("/retrieval/fs/extract?<path>&<stream_id>&<extract_images>")]
+pub async fn extract_data(_token: APIToken, path: String, stream_id: String, extract_images: bool, mut end: Shutdown) -> EventStream![] {
     EventStream! {
-        let stream_result = stream_data(&path).await;
+        let stream_result = stream_data(&path, extract_images).await;
         let id_ref = &stream_id;
         
         match stream_result {
@@ -115,24 +116,35 @@ pub async fn extract_data(_token: APIToken, path: String, stream_id: String, mut
     }
 }
 
-async fn stream_data(file_path: &str) -> Result<ChunkStream> {
+async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
+        error!("File does not exist: '{file_path}'");
         return Err("File does not exist.".into());
     }
 
     let file_path_clone = file_path.to_owned();
-    let fmt = tokio::task::spawn_blocking(move || {
-        FileFormat::from_file(&file_path_clone)
-    }).await??;
+    let fmt = match FileFormat::from_file(&file_path_clone) {
+        Ok(format) => format,
+        Err(error) => {
+            error!("Failed to determine file format for '{file_path}': {error}");
+            return Err(format!("Failed to determine file format for '{file_path}': {error}").into());
+        },
+    };
 
     let ext = file_path.split('.').next_back().unwrap_or("");
+    debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
+
     let stream = match ext {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
         }
 
-        "pptx" => stream_pptx(file_path).await?,
+        "csv" | "tsv" => {
+            stream_text_file(file_path, true, Some("csv".to_string())).await?
+        },
+
+        "pptx" => stream_pptx(file_path, extract_images).await?,
         
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
             stream_spreadsheet_as_csv(file_path).await?
@@ -141,53 +153,87 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
         _ => match fmt.kind() {
             Kind::Document => match fmt {
                 FileFormat::PortableDocumentFormat => stream_pdf(file_path).await?,
+
                 FileFormat::MicrosoftWordDocument => {
                     convert_with_pandoc(file_path, "docx", TO_MARKDOWN).await?
-                }
+                },
+
                 FileFormat::OfficeOpenXmlDocument => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
-                }
-                _ => stream_text_file(file_path).await?,
+                },
+
+                _ => stream_text_file(file_path, false, None).await?,
             },
             
             Kind::Ebook => return Err("Ebooks not yet supported".into()),
-            Kind::Image => chunk_image(file_path).await?,
+
+            Kind::Image => {
+                if !extract_images {
+                    return Err("Image extraction is disabled.".into());
+                }
+
+                chunk_image(file_path).await?
+            },
             
             Kind::Other => match fmt {
                 FileFormat::HypertextMarkupLanguage => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
-                }
-                _ => stream_text_file(file_path).await?,
+                },
+
+                _ => stream_text_file(file_path, false, None).await?,
             },
             
             Kind::Presentation => match fmt {
                 FileFormat::OfficeOpenXmlPresentation => {
-                    stream_pptx(file_path).await?
-                }
-                _ => stream_text_file(file_path).await?,
+                    stream_pptx(file_path, extract_images).await?
+                },
+
+                _ => stream_text_file(file_path, false, None).await?,
             },
             
             Kind::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
-            _ => stream_text_file(file_path).await?,
+
+            _ => stream_text_file(file_path, false, None).await?,
         },
     };
 
     Ok(Box::pin(stream))
 }
 
-async fn stream_text_file(file_path: &str) -> Result<ChunkStream> {
+async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: Option<String>) -> Result<ChunkStream> {
     let file = tokio::fs::File::open(file_path).await?;
     let reader = tokio::io::BufReader::new(file);
     let mut lines = reader.lines();
     let mut line_number = 0;
 
     let stream = stream! {
+
+        if use_md_fences {
+            match fence_language {
+                Some(lang) if lang.trim().is_empty() => {
+                    yield Ok(Chunk::new("```".to_string(), Metadata::Text { line_number }));
+                },
+
+                Some(lang) => {
+                    yield Ok(Chunk::new(format!("```{}", lang.trim()), Metadata::Text { line_number }));
+                },
+
+                None => {
+                    yield Ok(Chunk::new("```".to_string(), Metadata::Text { line_number }));
+                }
+            };
+        }
+
         while let Ok(Some(line)) = lines.next_line().await {
             line_number += 1;
             yield Ok(Chunk::new(
                 line,
                 Metadata::Text { line_number }
             ));
+        }
+
+        if use_md_fences {
+            yield Ok(Chunk::new("```\n".to_string(), Metadata::Text { line_number }));
         }
     };
 
@@ -251,7 +297,17 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
-            for (row_idx, row) in range.rows().enumerate() {
+            let mut row_idx = 0;
+            tx.blocking_send(Ok(Chunk::new(
+                "```csv".to_string(),
+                Metadata::Spreadsheet {
+                    sheet_name: sheet_name.clone(),
+                    row_number: row_idx,
+                }
+            ))).ok();
+            
+            for row in range.rows() {
+                row_idx += 1;
                 let content = row.iter()
                     .map(|cell| cell.to_string())
                     .collect::<Vec<_>>()
@@ -261,12 +317,20 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     content,
                     Metadata::Spreadsheet {
                         sheet_name: sheet_name.clone(),
-                        row_number: row_idx + 1,
+                        row_number: row_idx,
                     }
                 ))).is_err() {
                     return;
                 }
             }
+
+            tx.blocking_send(Ok(Chunk::new(
+                "```".to_string(),
+                Metadata::Spreadsheet {
+                    sheet_name: sheet_name.clone(),
+                    row_number: row_idx,
+                }
+            ))).ok();
         }
     });
 
@@ -319,11 +383,11 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(stream))
 }
 
-async fn stream_pptx(file_path: &str) -> Result<ChunkStream> {
+async fn stream_pptx(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
     let path = Path::new(file_path).to_owned();
 
     let parser_config = ParserConfig::builder()
-        .extract_images(true)
+        .extract_images(extract_images)
         .compress_images(true)
         .quality(75)
         .image_handling_mode(ImageHandlingMode::Manually)
@@ -356,7 +420,6 @@ async fn stream_pptx(file_path: &str) -> Result<ChunkStream> {
                     if let Some(images) = slide.load_images_manually() {
                         for image in images.iter() {
                             let base64_data = &image.base64_content;
-
                             let total_length = base64_data.len();
                             let mut offset = 0;
                             let mut segment_index = 0;
