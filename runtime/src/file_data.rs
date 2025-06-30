@@ -149,33 +149,40 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
         _ => match fmt.kind() {
             Kind::Document => match fmt {
                 FileFormat::PortableDocumentFormat => stream_pdf(file_path).await?,
+
                 FileFormat::MicrosoftWordDocument => {
                     convert_with_pandoc(file_path, "docx", TO_MARKDOWN).await?
-                }
+                },
+
                 FileFormat::OfficeOpenXmlDocument => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
-                }
+                },
+
                 _ => stream_text_file(file_path).await?,
             },
             
             Kind::Ebook => return Err("Ebooks not yet supported".into()),
+
             Kind::Image => chunk_image(file_path).await?,
             
             Kind::Other => match fmt {
                 FileFormat::HypertextMarkupLanguage => {
                     convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
-                }
+                },
+
                 _ => stream_text_file(file_path).await?,
             },
             
             Kind::Presentation => match fmt {
                 FileFormat::OfficeOpenXmlPresentation => {
                     stream_pptx(file_path).await?
-                }
+                },
+
                 _ => stream_text_file(file_path).await?,
             },
             
             Kind::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
+
             _ => stream_text_file(file_path).await?,
         },
     };
@@ -364,7 +371,6 @@ async fn stream_pptx(file_path: &str) -> Result<ChunkStream> {
                     if let Some(images) = slide.load_images_manually() {
                         for image in images.iter() {
                             let base64_data = &image.base64_content;
-
                             let total_length = base64_data.len();
                             let mut offset = 0;
                             let mut segment_index = 0;
