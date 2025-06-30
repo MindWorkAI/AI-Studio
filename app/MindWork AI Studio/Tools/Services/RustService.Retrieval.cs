@@ -5,8 +5,9 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    public async Task<string> ReadArbitraryFileData(string path, string streamId, int maxChunks)
+    public async Task<string> ReadArbitraryFileData(string path, int maxChunks)
     {
+        var streamId = Guid.NewGuid().ToString();
         var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}";
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
