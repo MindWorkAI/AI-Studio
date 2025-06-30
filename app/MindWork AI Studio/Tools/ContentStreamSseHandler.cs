@@ -6,8 +6,6 @@ namespace AIStudio.Tools;
 public static class ContentStreamSseHandler
 {
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> PPTX_IMAGES = new();
-    
-    #warning We must used a ConcurrentDictionary as well for multiple parallel embeddings
     private static int CURRENT_SLIDE_NUMBER;
 
     public static string ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
@@ -74,7 +72,6 @@ public static class ContentStreamSseHandler
         if (string.IsNullOrWhiteSpace(contentStreamPptxImageData.Id))
             return false;
 
-        #warning Image IDs must be unique across all parallel embeddings. Use a GUID or similar as prefix.
         var id =  contentStreamPptxImageData.Id;
         var segment = contentStreamPptxImageData.Segment ?? 0;
         var content = contentStreamPptxImageData.Content ?? string.Empty;
