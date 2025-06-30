@@ -33,10 +33,10 @@ public sealed partial class RustService
 
             try
             {
-                var sseEvent = JsonSerializer.Deserialize<SseEvent>(jsonContent);
+                var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
                 if (sseEvent is not null)
                 {
-                    var content = SseHandler.ProcessEvent(sseEvent, false);
+                    var content = ContentStreamSseHandler.ProcessEvent(sseEvent, false);
                     resultBuilder.Append(content);
                     chunkCount++;
                 }

@@ -3,26 +3,28 @@ using System.Text;
 
 namespace AIStudio.Tools;
 
-public static class SseHandler
+public static class ContentStreamSseHandler
 {
-    private static readonly ConcurrentDictionary<string, List<PptxImageData>> PPTX_IMAGES = new();
+    private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> PPTX_IMAGES = new();
+    
+    #warning We must used a ConcurrentDictionary as well for multiple parallel embeddings
     private static int CURRENT_SLIDE_NUMBER;
 
-    public static string ProcessEvent(SseEvent? sseEvent, bool extractImages = true)
+    public static string ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
         switch (sseEvent)
         {
             case { Content: not null, Metadata: not null }:
                 switch (sseEvent.Metadata)
                 {
-                    case TextMetadata:
+                    case ContentStreamTextMetadata:
                         return $"{sseEvent.Content}";
                 
-                    case PdfMetadata pdfMetadata:
+                    case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
                         return $"# Page {pageNumber}\n{sseEvent.Content}";
                     
-                    case SpreadsheetMetadata spreadsheetMetadata:
+                    case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
                         var spreadSheetResult = new StringBuilder();
@@ -32,11 +34,11 @@ public static class SseHandler
                         spreadSheetResult.AppendLine($"{sseEvent.Content}");
                         return spreadSheetResult.ToString();
                 
-                    case DocumentMetadata:
-                    case ImageMetadata:
+                    case ContentStreamDocumentMetadata:
+                    case ContentStreamImageMetadata:
                         return $"{sseEvent.Content}";
 
-                    case PresentationMetadata presentationMetadata:
+                    case ContentStreamPresentationMetadata presentationMetadata:
                         var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
                         var image = presentationMetadata.Presentation?.Image ?? null;
                         var presentationResult = new StringBuilder();
@@ -67,17 +69,18 @@ public static class SseHandler
         }
     }
     
-    private static bool ProcessImageSegment(PptxImageData pptxImageData)
+    private static bool ProcessImageSegment(ContentStreamPptxImageData contentStreamPptxImageData)
     {
-        if (string.IsNullOrWhiteSpace(pptxImageData.Id))
+        if (string.IsNullOrWhiteSpace(contentStreamPptxImageData.Id))
             return false;
 
-        var id =  pptxImageData.Id;
-        var segment = pptxImageData.Segment ?? 0;
-        var content = pptxImageData.Content ?? string.Empty;
-        var isEnd = pptxImageData.IsEnd;
+        #warning Image IDs must be unique across all parallel embeddings. Use a GUID or similar as prefix.
+        var id =  contentStreamPptxImageData.Id;
+        var segment = contentStreamPptxImageData.Segment ?? 0;
+        var content = contentStreamPptxImageData.Content ?? string.Empty;
+        var isEnd = contentStreamPptxImageData.IsEnd;
 
-        var imageSegment = new PptxImageData
+        var imageSegment = new ContentStreamPptxImageData
         {
             Id = id,
             Content = content,
