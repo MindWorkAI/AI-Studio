@@ -37,7 +37,9 @@ public sealed partial class RustService
                 if (sseEvent is not null)
                 {
                     var content = ContentStreamSseHandler.ProcessEvent(sseEvent, false);
-                    resultBuilder.Append(content);
+                    if(content is not null)
+                        resultBuilder.AppendLine(content);
+                    
                     chunkCount++;
                 }
             }

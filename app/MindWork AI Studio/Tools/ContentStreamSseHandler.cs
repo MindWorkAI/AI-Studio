@@ -8,7 +8,7 @@ public static class ContentStreamSseHandler
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
     private static readonly ConcurrentDictionary<string, int> CURRENT_SLIDE_NUMBERS = new();
 
-    public static string ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
+    public static string? ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
         switch (sseEvent)
         {
@@ -41,15 +41,18 @@ public static class ContentStreamSseHandler
                         var image = presentationMetadata.Presentation?.Image ?? null;
                         var presentationResult = new StringBuilder();
                         var streamId = sseEvent.StreamId;
-
+                        
                         CURRENT_SLIDE_NUMBERS.TryGetValue(streamId!, out var currentSlideNumber);
-
                         if (slideNumber != currentSlideNumber)
+                        {
+                            presentationResult.AppendLine();
                             presentationResult.AppendLine($"# Slide {slideNumber}");
+                        }
 
-                        presentationResult.Append($"{sseEvent.Content}");
-
-                        if (image is not null)
+                        if(!string.IsNullOrWhiteSpace(sseEvent.Content))
+                            presentationResult.AppendLine(sseEvent.Content);
+                        
+                        if (extractImages && image is not null)
                         {
                             var imageId = $"{streamId}-{image.Id!}";
                             var isEnd = ProcessImageSegment(imageId, image);
@@ -58,8 +61,8 @@ public static class ContentStreamSseHandler
                         }
 
                         CURRENT_SLIDE_NUMBERS[streamId!] = slideNumber;
-
-                        return presentationResult.ToString();
+                        return presentationResult.Length is 0 ? null : presentationResult.ToString();
+                    
                     default:
                         return sseEvent.Content;
                 }
