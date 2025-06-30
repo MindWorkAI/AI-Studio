@@ -123,9 +123,13 @@ async fn stream_data(file_path: &str) -> Result<ChunkStream> {
     }
 
     let file_path_clone = file_path.to_owned();
-    let fmt = tokio::task::spawn_blocking(move || {
-        FileFormat::from_file(&file_path_clone)
-    }).await??;
+    let fmt = match FileFormat::from_file(&file_path_clone) {
+        Ok(format) => format,
+        Err(error) => {
+            error!("Failed to determine file format for '{file_path}': {error}");
+            return Err(format!("Failed to determine file format for '{file_path}': {error}").into());
+        },
+    };
 
     let ext = file_path.split('.').next_back().unwrap_or("");
     debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
