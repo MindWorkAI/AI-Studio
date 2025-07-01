@@ -3408,9 +3408,9 @@ checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
 
 [[package]]
 name = "pptx-to-md"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e26f6df203425a22367de642b415c18f1456de2bc870fbd7d2be83d5f57ae058"
+checksum = "25f7bef20173da9d560ffb6b67cba2d2b834375d0d262e5aeb86f44e069ae446"
 dependencies = [
  "base64 0.22.1",
  "image 0.24.9",
