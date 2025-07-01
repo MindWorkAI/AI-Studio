@@ -15,39 +15,52 @@ public sealed partial class RustService
         if (!response.IsSuccessStatusCode)
             return string.Empty;
 
-        await using var stream = await response.Content.ReadAsStreamAsync();
-        using var reader = new StreamReader(stream);
-
         var resultBuilder = new StringBuilder();
-        var chunkCount = 0;
 
-        while (!reader.EndOfStream && chunkCount < maxChunks)
+        try
         {
-            var line = await reader.ReadLineAsync();
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            if (!line.StartsWith("data:", StringComparison.InvariantCulture))
-                continue;
-            
-            var jsonContent = line[5..];
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(stream);
+            var chunkCount = 0;
 
-            try
+            while (!reader.EndOfStream && chunkCount < maxChunks)
             {
-                var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
-                if (sseEvent is not null)
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                if (!line.StartsWith("data:", StringComparison.InvariantCulture))
+                    continue;
+
+                var jsonContent = line[5..];
+
+                try
                 {
-                    var content = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
-                    if(content is not null)
-                        resultBuilder.AppendLine(content);
-                    
-                    chunkCount++;
+                    var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
+                    if (sseEvent is not null)
+                    {
+                        var content = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
+                        if (content is not null)
+                            resultBuilder.AppendLine(content);
+
+                        chunkCount++;
+                    }
+                }
+                catch (JsonException)
+                {
+                    this.logger?.LogError("Failed to deserialize SSE event: {JsonContent}", jsonContent);
                 }
             }
-            catch (JsonException)
-            {
-                this.logger?.LogError("Failed to deserialize SSE event: {JsonContent}", jsonContent); 
-            }
+        }
+        catch(Exception e)
+        {
+            this.logger?.LogError(e, "Error reading file data from stream: {Path}", path);
+        }
+        finally
+        {
+            var finalContentChunk = ContentStreamSseHandler.Clear(streamId);
+            if (!string.IsNullOrWhiteSpace(finalContentChunk))
+                resultBuilder.AppendLine(finalContentChunk);
         }
         
         return resultBuilder.ToString();

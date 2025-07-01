@@ -6,7 +6,7 @@ namespace AIStudio.Tools;
 public static class ContentStreamSseHandler
 {
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
-    private static readonly ConcurrentDictionary<string, int> CURRENT_SLIDE_NUMBERS = new();
+    private static readonly ConcurrentDictionary<string, SlideManager> SLIDE_MANAGERS = new();
 
     public static string? ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
@@ -44,31 +44,13 @@ public static class ContentStreamSseHandler
                         return sseEvent.Content;
 
                     case ContentStreamPresentationMetadata presentationMetadata:
-                        var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
-                        var image = presentationMetadata.Presentation?.Image ?? null;
-                        var presentationResult = new StringBuilder();
-                        var streamId = sseEvent.StreamId;
+                        var slideManager = SLIDE_MANAGERS.GetOrAdd(
+                            sseEvent.StreamId!,
+                            _ => new()
+                        );
                         
-                        CURRENT_SLIDE_NUMBERS.TryGetValue(streamId!, out var currentSlideNumber);
-                        if (slideNumber != currentSlideNumber)
-                        {
-                            presentationResult.AppendLine();
-                            presentationResult.AppendLine($"# Slide {slideNumber}");
-                        }
-
-                        if(!string.IsNullOrWhiteSpace(sseEvent.Content))
-                            presentationResult.AppendLine(sseEvent.Content);
-                        
-                        if (extractImages && image is not null)
-                        {
-                            var imageId = $"{streamId}-{image.Id!}";
-                            var isEnd = ProcessImageSegment(imageId, image);
-                            if (isEnd && extractImages)
-                                presentationResult.AppendLine(BuildImage(imageId));
-                        }
-
-                        CURRENT_SLIDE_NUMBERS[streamId!] = slideNumber;
-                        return presentationResult.Length is 0 ? null : presentationResult.ToString();
+                        slideManager.AddSlide(presentationMetadata, sseEvent.Content, extractImages);
+                        return null;
                     
                     default:
                         return sseEvent.Content;
@@ -81,8 +63,8 @@ public static class ContentStreamSseHandler
                 return null;
         }
     }
-    
-    private static bool ProcessImageSegment(string imageId, ContentStreamPptxImageData contentStreamPptxImageData)
+
+    public static bool ProcessImageSegment(string imageId, ContentStreamPptxImageData contentStreamPptxImageData)
     {
         if (string.IsNullOrWhiteSpace(contentStreamPptxImageData.Id) || string.IsNullOrWhiteSpace(imageId))
             return false;
@@ -112,7 +94,7 @@ public static class ContentStreamSseHandler
         return isEnd;
     }
 
-    private static string BuildImage(string id)
+    public static string BuildImage(string id)
     {
         if (!CHUNKED_IMAGES.TryGetValue(id, out var imageSegments))
             return string.Empty;
@@ -127,5 +109,26 @@ public static class ContentStreamSseHandler
         
         CHUNKED_IMAGES.Remove(id, out _);
         return base64Image;
+    }
+    
+    public static string? Clear(string streamId)
+    {
+        if (string.IsNullOrWhiteSpace(streamId))
+            return null;
+ 
+        var finalContentChunk = new StringBuilder();
+        if(SLIDE_MANAGERS.TryGetValue(streamId, out var slideManager))
+        {
+            var result = slideManager.GetAllSlidesInOrder();
+            if (!string.IsNullOrWhiteSpace(result))
+                finalContentChunk.Append(result);
+        }
+        
+        SLIDE_MANAGERS.TryRemove(streamId, out _);
+        var imageIdPrefix = $"{streamId}-";
+        foreach (var key in CHUNKED_IMAGES.Keys.Where(k => k.StartsWith(imageIdPrefix, StringComparison.InvariantCultureIgnoreCase)))
+            CHUNKED_IMAGES.TryRemove(key, out _);
+        
+        return finalContentChunk.Length > 0 ? finalContentChunk.ToString() : null;
     }
 }
