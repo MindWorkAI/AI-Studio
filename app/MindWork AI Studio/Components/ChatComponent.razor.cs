@@ -505,7 +505,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         });
         
         // Clear the input field:
+        await this.inputField.FocusAsync();
         this.userInput = string.Empty;
+        await this.inputField.BlurAsync();
         
         // Enable the stream state for the chat component:
         this.isStreaming = true;
