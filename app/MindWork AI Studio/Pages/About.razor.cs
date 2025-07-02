@@ -62,10 +62,10 @@ public partial class About : MSGComponentBase
     
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
-        
-        await base.OnInitializedAsync();
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
