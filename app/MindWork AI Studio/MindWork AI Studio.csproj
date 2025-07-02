@@ -50,7 +50,7 @@
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.2.3" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
       <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.6" />
-      <PackageReference Include="MudBlazor" Version="8.8.0" />
+      <PackageReference Include="MudBlazor" Version="8.9.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.7.0" />
       <PackageReference Include="ReverseMarkdown" Version="4.7.0" />
       <PackageReference Include="LuaCSharp" Version="0.4.2" />
