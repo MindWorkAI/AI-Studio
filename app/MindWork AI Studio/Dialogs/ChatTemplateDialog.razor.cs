@@ -53,6 +53,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter] 
     public bool AllowProfileUsage { get; set; } = true;
     
+    [Parameter] 
+    public bool CreateFromExistingChatThread { get; set; }
+    
+    [Parameter] 
+    public ChatThread? ExistingChatThread { get; set; }
+    
     [Inject]
     private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
     
@@ -89,6 +95,20 @@ public partial class ChatTemplateDialog : MSGComponentBase
         {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
             this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
+        }
+
+        if (this.CreateFromExistingChatThread)
+        {
+            this.DataSystemPrompt = this.ExistingChatThread!.SystemPrompt;
+            this.dataExampleConversation = this.ExistingChatThread!.Blocks.Select(n => n.DeepClone()).ToList();
+            this.DataName = this.ExistingChatThread!.Name;
+            
+            // the contentblocks that we copy are visible to the user, and we don't want to show them while using the template
+            foreach (var item in this.dataExampleConversation)
+            {
+                item.HideFromUser = true;
+            }
+                
         }
         
         await base.OnInitializedAsync();
