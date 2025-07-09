@@ -56,6 +56,34 @@
                 @T("Use the default system prompt")
             </MudButton>
             
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("Predefined User Input")
+            </MudText>
+            
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.")
+            </MudJustifiedText>
+            
+            <MudTextField
+                T="string"
+                @bind-Text="@this.PredefinedUserPrompt"
+                AdornmentIcon="@Icons.Material.Filled.ListAlt"
+                Adornment="Adornment.Start"
+                Immediate="@true"
+                Label="@T("What predefined user input do you want to use?")"
+                Variant="Variant.Outlined"
+                Lines="4"
+                MaxLines="12"
+                AutoGrow="@true"
+                Class="mb-3"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                HelperText="@T("Tell the AI your predefined user input.")"
+            />
+            
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("Profile Usage")
+            </MudText>
+            
             <MudJustifiedText Class="mt-6" Typo="Typo.body1">
                 @T("Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.")
             </MudJustifiedText>
@@ -68,6 +96,7 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.")
             </MudJustifiedText>
+            
             
             <MudTable Items="@this.dataExampleConversation" FixedHeader="true" Hover="true" Class="mt-3 mb-3" CanCancelEdit="true" CancelEditTooltip="@T("Cancel")" CommitEditTooltip="@T("Commit Changes")" Outlined="true" RowEditCancel="@this.ResetItem" RowEditPreview="@this.BackupItem" EditTrigger="TableEditTrigger.RowClick" IsEditRowSwitchingBlocked="false" RowEditCommit="@this.CommitInlineEdit">
                 <ColGroup>

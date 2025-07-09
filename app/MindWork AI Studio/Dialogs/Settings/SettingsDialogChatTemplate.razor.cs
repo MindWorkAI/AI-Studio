@@ -33,6 +33,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.DataId, chatTemplate.Id },
             { x => x.DataName, chatTemplate.Name },
             { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
+            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
             { x => x.IsEditing, true },
             { x => x.ExampleConversation, chatTemplate.ExampleConversation },
             { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },

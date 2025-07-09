@@ -673,6 +673,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Seed = this.RNG.Next(),
                 Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
+
+            this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
         }
         
         // Now, we have to reset the data source options as well:

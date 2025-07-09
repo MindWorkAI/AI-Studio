@@ -36,6 +36,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public string DataSystemPrompt { get; set; } = string.Empty;
     
     /// <summary>
+    /// What is the predefined user prompt?
+    /// </summary>
+    [Parameter]
+    public string PredefinedUserPrompt { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]
@@ -107,6 +113,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
+        PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
         AllowProfileUsage = this.AllowProfileUsage,
     };
