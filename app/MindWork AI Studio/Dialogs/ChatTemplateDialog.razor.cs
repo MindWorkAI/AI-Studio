@@ -97,17 +97,11 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
         }
 
-        if (this.CreateFromExistingChatThread)
+        if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
         {
-            this.DataSystemPrompt = this.ExistingChatThread!.SystemPrompt;
-            this.dataExampleConversation = this.ExistingChatThread!.Blocks.Select(n => n.DeepClone()).ToList();
-            this.DataName = this.ExistingChatThread!.Name;
-            
-            // the contentblocks that we copy are visible to the user, and we don't want to show them while using the template
-            foreach (var item in this.dataExampleConversation)
-            {
-                item.HideFromUser = true;
-            }
+            this.DataSystemPrompt = this.ExistingChatThread.SystemPrompt;
+            this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.DeepClone(true)).ToList();
+            this.DataName = this.ExistingChatThread.Name;
         }
         
         await base.OnInitializedAsync();
