@@ -68,7 +68,7 @@ public sealed record ChatThread
     /// <summary>
     /// The current system prompt for the chat thread.
     /// </summary>
-    public string SystemPrompt { get; set; } = string.Empty;
+    public string SystemPrompt { get; init; } = string.Empty;
 
     /// <summary>
     /// The content blocks of the chat thread.
@@ -121,9 +121,10 @@ public sealed record ChatThread
             }
         }
         
-        // We need a way to save the changed system prompt in our chatThread.
-        // Otherwise, the chatThread will always tell us that it is using the default system prompt.
-        chatThread.SystemPrompt = systemPromptTextWithChatTemplate;
+        // We need a way to save the changed system prompt in our chat thread.
+        // Otherwise, the chat thread will always tell us that it is using the
+        // default system prompt:
+        chatThread = chatThread with { SystemPrompt = systemPromptTextWithChatTemplate };
         
         logger.LogInformation(logMessage);
         
