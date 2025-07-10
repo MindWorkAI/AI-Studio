@@ -108,7 +108,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
             {
                 item.HideFromUser = true;
             }
-                
         }
         
         await base.OnInitializedAsync();

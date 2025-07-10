@@ -6,7 +6,6 @@ namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogChatTemplate : SettingsDialogBase
 {
-
     [Parameter] 
     public bool CreateTemplateFromExistingChatThread { get; set; }
     
