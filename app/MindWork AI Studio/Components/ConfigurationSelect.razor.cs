@@ -7,28 +7,28 @@ namespace AIStudio.Components;
 /// <summary>
 /// Configuration component for selecting a value from a list.
 /// </summary>
-/// <typeparam name="T">The type of the value to select.</typeparam>
-public partial class ConfigurationSelect<T> : ConfigurationBase
+/// <typeparam name="TConfig">The type of the value to select.</typeparam>
+public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
 {
     /// <summary>
     /// The data to select from.
     /// </summary>
     [Parameter]
-    public IEnumerable<ConfigurationSelectData<T>> Data { get; set; } = [];
+    public IEnumerable<ConfigurationSelectData<TConfig>> Data { get; set; } = [];
     
     /// <summary>
     /// The selected value.
     /// </summary>
     [Parameter]
-    public Func<T> SelectedValue { get; set; } = () => default!;
+    public Func<TConfig> SelectedValue { get; set; } = () => default!;
     
     /// <summary>
     /// An action that is called when the selection changes.
     /// </summary>
     [Parameter]
-    public Action<T> SelectionUpdate { get; set; } = _ => { };
+    public Action<TConfig> SelectionUpdate { get; set; } = _ => { };
     
-    private async Task OptionChanged(T updatedValue)
+    private async Task OptionChanged(TConfig updatedValue)
     {
         this.SelectionUpdate(updatedValue);
         await this.SettingsManager.StoreSettings();

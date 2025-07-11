@@ -1,3 +1,3 @@
 @using AIStudio.Settings
-@inherits MSGComponentBase
-<ConfigurationSelect Disabled="@this.Disabled" OptionDescription="@T("Select a minimum confidence level")" SelectedValue="@this.FilteredSelectedValue" Data="@ConfigurationSelectDataFactory.GetConfidenceLevelsData(this.SettingsManager, this.RestrictToGlobalMinimumConfidence)" SelectionUpdate="@this.SelectionUpdate" OptionHelp="@T("Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.")"/>
+@inherits ConfigurationBaseCore
+<ConfigurationSelect Disabled="@(() => this.IsDisabled)" OptionDescription="@T("Select a minimum confidence level")" SelectedValue="@this.FilteredSelectedValue" Data="@ConfigurationSelectDataFactory.GetConfidenceLevelsData(this.SettingsManager, this.RestrictToGlobalMinimumConfidence)" SelectionUpdate="@this.SelectionUpdate" OptionHelp="@T("Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.")"/>

@@ -5,7 +5,7 @@ namespace AIStudio.Components;
 /// <summary>
 /// Configuration component for any boolean option.
 /// </summary>
-public partial class ConfigurationOption : ConfigurationBase
+public partial class ConfigurationOption : ConfigurationBaseCore
 {
     /// <summary>
     /// Text to display when the option is true.

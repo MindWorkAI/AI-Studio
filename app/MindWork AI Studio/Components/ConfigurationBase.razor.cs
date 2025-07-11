@@ -27,10 +27,14 @@ public partial class ConfigurationBase : MSGComponentBase
     public Func<bool> Disabled { get; set; } = () => false;
     
     /// <summary>
-    /// Is the option disabled by a plugin?
+    /// Is the option locked by a configuration plugin?
     /// </summary>
     [Parameter]
-    public Func<bool> LockedByPlugin { get; set; } = () => false;
+    public Func<bool> IsLocked { get; set; } = () => false;
+
+    protected bool IsDisabled => this.Disabled() || this.IsLocked();
+    
+    private protected virtual RenderFragment? Body => null;
     
     protected const string MARGIN_CLASS = "mb-6";
     protected static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
@@ -45,7 +49,9 @@ public partial class ConfigurationBase : MSGComponentBase
     }
 
     #endregion
-
+    
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(ConfigurationBase).Namespace, nameof(ConfigurationBase));
+    
     protected async Task InformAboutChange() => await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 
     #region Overrides of MSGComponentBase

@@ -1,4 +1,4 @@
-@inherits ConfigurationBase
+@inherits ConfigurationBaseCore
 @typeparam TData
 
 <MudSelectExtended
@@ -7,7 +7,7 @@
     MultiSelectionTextFunc="@this.GetMultiSelectionText"
     SelectedValues="@this.SelectedValues()"
     Strict="@true"
-    Disabled="@this.Disabled()"
+    Disabled="@this.IsDisabled"
     Margin="Margin.Dense"
     Label="@this.OptionDescription"
     Class="@GetClass"

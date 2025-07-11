@@ -8,7 +8,7 @@ namespace AIStudio.Components;
 /// Configuration component for selecting many values from a list.
 /// </summary>
 /// <typeparam name="TData">The type of the value to select.</typeparam>
-public partial class ConfigurationMultiSelect<TData> : ConfigurationBase
+public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
 {
     /// <summary>
     /// The data to select from.

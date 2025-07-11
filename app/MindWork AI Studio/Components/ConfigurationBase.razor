@@ -1,1 +1,15 @@
 @inherits MSGComponentBase
+
+@if (this.Body is not null)
+{
+    @if (!this.Disabled() && this.IsLocked())
+    {
+        <MudTooltip Text="@TB("This feature is managed by your organization and has therefore been disabled.")" Arrow="true" Placement="Placement.Top">
+            @this.Body
+        </MudTooltip>
+    }
+    else
+    {
+        @this.Body
+    }
+}

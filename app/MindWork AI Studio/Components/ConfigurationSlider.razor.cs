@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct, INumber<T>
+public partial class ConfigurationSlider<T> : ConfigurationBaseCore where T : struct, INumber<T>
 {
     /// <summary>
     /// The minimum value for the slider.

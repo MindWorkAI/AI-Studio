@@ -1,11 +1,11 @@
-@inherits ConfigurationBase
+@inherits ConfigurationBaseCore
 
 <MudTextField
     T="string"
     Text="@this.Text()"
     TextChanged="@this.InternalUpdate"
     Label="@this.OptionDescription"
-    Disabled="@this.Disabled()"
+    Disabled="@this.IsDisabled"
     Class="@MARGIN_CLASS"
     Adornment="Adornment.Start"
     AdornmentIcon="@this.Icon"

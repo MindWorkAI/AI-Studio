@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationMinConfidenceSelection : MSGComponentBase
+public partial class ConfigurationMinConfidenceSelection : ConfigurationBaseCore
 {
     /// <summary>
     /// The selected value.
@@ -17,12 +17,6 @@ public partial class ConfigurationMinConfidenceSelection : MSGComponentBase
     /// </summary>
     [Parameter]
     public Action<ConfidenceLevel> SelectionUpdate { get; set; } = _ => { };
-
-    /// <summary>
-    /// Is the selection component disabled?
-    /// </summary>
-    [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
 
     /// <summary>
     /// Boolean value indicating whether the selection is restricted to a global minimum confidence level.

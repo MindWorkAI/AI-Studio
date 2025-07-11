@@ -4,7 +4,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationText : ConfigurationBase
+public partial class ConfigurationText : ConfigurationBaseCore
 {
     /// <summary>
     /// The text used for the textfield.
