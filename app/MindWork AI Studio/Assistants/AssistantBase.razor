@@ -9,7 +9,7 @@
             @this.Title
         </MudText>
         
-        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
+        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettingsDialog())"/>
     </MudStack>
 
     <InnerScrolling>
@@ -26,13 +26,13 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="async () => await this.Start()" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.isProcessing && this.cancellationTokenSource is not null)
                         {
                             <MudTooltip Text="@TB("Stop generation")">
-                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="() => this.CancelStreaming()"/>
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>
                             </MudTooltip>
                         }
                     </MudStack>
@@ -80,7 +80,7 @@
                         <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                             @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                             {
-                                <MudMenuItem OnClick="() => this.SendToAssistant(assistant, new())">
+                                <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
                                     @assistant.Name()
                                 </MudMenuItem>
                             }
@@ -94,14 +94,14 @@
                     {
                         case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
                             <MudTooltip Text="@buttonData.Tooltip">
-                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="@(async () => await buttonData.AsyncAction())">
                                     @buttonData.Text
                                 </MudButton>
                             </MudTooltip>
                             break;
 
                         case ButtonData buttonData:
-                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="async () => await buttonData.AsyncAction()">
+                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="@(async () => await buttonData.AsyncAction())">
                                 @buttonData.Text
                             </MudButton>
                             break;
@@ -110,7 +110,7 @@
                             <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
                                 @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
                                 {
-                                    <MudMenuItem OnClick="() => this.SendToAssistant(assistant, sendToButton)">
+                                    <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
                                         @assistant.Name()
                                     </MudMenuItem>
                                 }
@@ -121,14 +121,14 @@
                 
                 @if (this.ShowCopyResult)
                 {
-                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="() => this.CopyToClipboard()">
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="@(async () => await this.CopyToClipboard())">
                         @TB("Copy result")
                     </MudButton>
                 }
 
                 @if (this.ShowReset)
                 {
-                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="() => this.InnerResetForm()">
+                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await this.InnerResetForm())">
                         @TB("Reset")
                     </MudButton>
                 }
