@@ -1,16 +1,42 @@
+using AIStudio.Chat;
 using AIStudio.Settings;
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogChatTemplate : SettingsDialogBase
 {
+    [Parameter] 
+    public bool CreateTemplateFromExistingChatThread { get; set; }
+    
+    [Parameter]
+    public ChatThread? ExistingChatThread { get; set; }
+    
+    #region Overrides of ComponentBase
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (this.CreateTemplateFromExistingChatThread) 
+            await this.AddChatTemplate();
+    }
+
+    #endregion
+    
     private async Task AddChatTemplate()
     {
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.IsEditing, false },
         };
-        
+
+        if (this.CreateTemplateFromExistingChatThread)
+        {
+            dialogParameters.Add(x => x.CreateFromExistingChatThread, this.CreateTemplateFromExistingChatThread);
+            dialogParameters.Add(x => x.ExistingChatThread, this.ExistingChatThread);
+        }
+
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Add Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
@@ -33,6 +59,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.DataId, chatTemplate.Id },
             { x => x.DataName, chatTemplate.Name },
             { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
+            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
             { x => x.IsEditing, true },
             { x => x.ExampleConversation, chatTemplate.ExampleConversation },
             { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },

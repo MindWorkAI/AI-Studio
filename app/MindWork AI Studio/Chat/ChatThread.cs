@@ -100,11 +100,11 @@ public sealed record ChatThread
             systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
         else
         {
-            if(!Guid.TryParse(chatThread.SelectedChatTemplate, out var chatTeamplateId))
+            if(!Guid.TryParse(chatThread.SelectedChatTemplate, out var chatTemplateId))
                 systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
             else
             {
-                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTeamplateId == Guid.Empty)
+                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
                     systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
                 else
                 {
@@ -120,6 +120,11 @@ public sealed record ChatThread
                 }
             }
         }
+        
+        // We need a way to save the changed system prompt in our chat thread.
+        // Otherwise, the chat thread will always tell us that it is using the
+        // default system prompt:
+        chatThread = chatThread with { SystemPrompt = systemPromptTextWithChatTemplate };
         
         logger.LogInformation(logMessage);
         

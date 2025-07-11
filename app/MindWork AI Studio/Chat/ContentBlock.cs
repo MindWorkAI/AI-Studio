@@ -30,12 +30,12 @@ public class ContentBlock
     /// </summary>
     public bool HideFromUser { get; init; }
 
-    public ContentBlock DeepClone() => new()
+    public ContentBlock DeepClone(bool changeHideState = false, bool hideFromUser = true) => new()
     {
         Time = this.Time,
         ContentType = this.ContentType,
         Content = this.Content?.DeepClone(),
         Role = this.Role,
-        HideFromUser = this.HideFromUser,
+        HideFromUser = changeHideState ? hideFromUser : this.HideFromUser,
     };
 }

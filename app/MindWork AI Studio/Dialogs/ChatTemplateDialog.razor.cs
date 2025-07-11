@@ -36,6 +36,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
     public string DataSystemPrompt { get; set; } = string.Empty;
     
     /// <summary>
+    /// What is the predefined user prompt?
+    /// </summary>
+    [Parameter]
+    public string PredefinedUserPrompt { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]
@@ -46,6 +52,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     [Parameter] 
     public bool AllowProfileUsage { get; set; } = true;
+    
+    [Parameter] 
+    public bool CreateFromExistingChatThread { get; set; }
+    
+    [Parameter] 
+    public ChatThread? ExistingChatThread { get; set; }
     
     [Inject]
     private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
@@ -84,6 +96,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
             this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
         }
+
+        if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
+        {
+            this.DataSystemPrompt = this.ExistingChatThread.SystemPrompt;
+            this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.DeepClone(true)).ToList();
+            this.DataName = this.ExistingChatThread.Name;
+        }
         
         await base.OnInitializedAsync();
     }
@@ -107,6 +126,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
+        PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
         AllowProfileUsage = this.AllowProfileUsage,
     };

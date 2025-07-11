@@ -80,6 +80,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
+        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
         
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -272,7 +273,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
     }
 
-    private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Count > 0;
+    private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Any(b => !b.HideFromUser);
     
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
@@ -326,6 +327,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
         this.currentChatTemplate = chatTemplate;
+        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
         if(this.ChatThread is null)
             return;
 
@@ -674,6 +676,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
+        
+        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
         
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();
