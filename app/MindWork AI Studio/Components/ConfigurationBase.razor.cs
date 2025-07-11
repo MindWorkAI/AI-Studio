@@ -26,6 +26,12 @@ public partial class ConfigurationBase : MSGComponentBase
     [Parameter]
     public Func<bool> Disabled { get; set; } = () => false;
     
+    /// <summary>
+    /// Is the option disabled by a plugin?
+    /// </summary>
+    [Parameter]
+    public Func<bool> LockedByPlugin { get; set; } = () => false;
+    
     protected const string MARGIN_CLASS = "mb-6";
     protected static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     

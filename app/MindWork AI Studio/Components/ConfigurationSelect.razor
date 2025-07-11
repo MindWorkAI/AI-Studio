@@ -1,11 +1,13 @@
 @inherits ConfigurationBase
 @typeparam T
 
-<MudSelect T="T" Value="@this.SelectedValue()" Strict="@true" ShrinkLabel="@true" Disabled="@this.Disabled()" Margin="Margin.Dense" Label="@this.OptionDescription" Class="@GetClass" Variant="Variant.Outlined" HelperText="@this.OptionHelp" ValueChanged="@this.OptionChanged">
-    @foreach (var data in this.Data)
-    {
-        <MudSelectItem Value="@data.Value">
-            @data.Name
-        </MudSelectItem>
-    }
-</MudSelect>
+<MudTooltip Text="Disabled by a plugin" Disabled="@(!this.LockedByPlugin())" Arrow="true" Placement="Placement.Top">
+    <MudSelect T="T" Value="@this.SelectedValue()" Strict="@true" ShrinkLabel="@true" Disabled="@(this.Disabled() || this.LockedByPlugin())" Margin="Margin.Dense" Label="@this.OptionDescription" Class="@GetClass" Variant="Variant.Outlined" HelperText="@this.OptionHelp" ValueChanged="@this.OptionChanged">
+        @foreach (var data in this.Data)
+        {
+            <MudSelectItem Value="@data.Value">
+                @data.Name
+            </MudSelectItem>
+        }
+    </MudSelect>
+</MudTooltip>
