@@ -43,7 +43,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public int MaxLines { get; set; } = 12;
     
     private string internalText = string.Empty;
-    private Timer timer = new(TimeSpan.FromMilliseconds(500))
+    private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
     {
         AutoReset = false
     };
@@ -56,15 +56,11 @@ public partial class ConfigurationText : ConfigurationBaseCore
         await base.OnInitializedAsync();
     }
 
-    #region Overrides of ComponentBase
-
     protected override async Task OnParametersSetAsync()
     {
         this.internalText = this.Text();
         await base.OnParametersSetAsync();
     }
-
-    #endregion
 
     #endregion
 

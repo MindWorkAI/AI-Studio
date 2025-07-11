@@ -6,7 +6,7 @@
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
         <MudText Typo="Typo.h3">
-            @(this.Title)
+            @this.Title
         </MudText>
         
         <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
