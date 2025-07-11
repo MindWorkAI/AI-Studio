@@ -75,7 +75,7 @@
         </MudText>
     }
 
-    <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddLLMProvider">
+    <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddLLMProvider" Disabled="@this.SettingsManager.ConfigurationData.App.DontAllowUserToAddProvider"> 
         @T("Add Provider")
     </MudButton>
     

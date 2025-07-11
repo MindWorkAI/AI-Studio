@@ -65,3 +65,7 @@ CONFIG["SETTINGS"] = {}
 -- Configure the update behavior:
 -- Allowed values are: NO_CHECK, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- CONFIG["SETTINGS"]["DataApp.UpdateBehavior"] = "NO_CHECK"
+
+-- Configure the user permission to add providers:
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.DontAllowUserToAddProvider"] = false
