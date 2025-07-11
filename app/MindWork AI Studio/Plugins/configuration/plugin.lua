@@ -68,4 +68,4 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the user permission to add providers:
 -- Allowed values are: true, false
--- CONFIG["SETTINGS"]["DataApp.DontAllowUserToAddProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false

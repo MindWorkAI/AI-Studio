@@ -66,5 +66,5 @@ public sealed class DataApp
     /// <summary>
     /// Should the user be allowed to add providers?
     /// </summary>
-    public bool DontAllowUserToAddProvider { get; set; }
+    public bool AllowUserToAddProvider { get; set; } = true;
 }

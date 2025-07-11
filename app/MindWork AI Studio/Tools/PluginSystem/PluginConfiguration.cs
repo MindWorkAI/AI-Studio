@@ -54,10 +54,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = updateBehavior;
         }
         
-        if (settingsTable.TryGetValue(SettingsManager.ToSettingName<DataApp>(x => x.DontAllowUserToAddProvider), out var dontAllowUserToAddProviderValue) && dontAllowUserToAddProviderValue.TryRead<bool>(out var dontAllowUserToAddProviderEntry))
+        if (settingsTable.TryGetValue(SettingsManager.ToSettingName<DataApp>(x => x.AllowUserToAddProvider), out var dontAllowUserToAddProviderValue) && dontAllowUserToAddProviderValue.TryRead<bool>(out var dontAllowUserToAddProviderEntry))
         {
-            SETTINGS_LOCKER.Register<DataApp>(x => x.DontAllowUserToAddProvider, this.Id);
-            SETTINGS_MANAGER.ConfigurationData.App.DontAllowUserToAddProvider = dontAllowUserToAddProviderEntry;
+            SETTINGS_LOCKER.Register<DataApp>(x => x.AllowUserToAddProvider, this.Id);
+            SETTINGS_MANAGER.ConfigurationData.App.AllowUserToAddProvider = dontAllowUserToAddProviderEntry;
         }
 
         //
