@@ -1,6 +1,6 @@
 ﻿using Lua;
 
-namespace AIStudio.Tools.PluginSystem;
+namespace AIStudio.Tools.PluginSystem.Assistants;
 
 public sealed class PluginAssistants : PluginBase
 {

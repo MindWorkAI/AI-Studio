@@ -1,4 +1,4 @@
-﻿namespace AIStudio.Tools.PluginSystem;
+﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public interface IAssistantComponent
 {

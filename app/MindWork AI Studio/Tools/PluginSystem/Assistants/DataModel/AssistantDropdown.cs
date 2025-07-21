@@ -1,4 +1,4 @@
-﻿namespace AIStudio.Tools.PluginSystem;
+﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public class AssistantDropdown : AssistantComponentBase
 {
