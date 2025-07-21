@@ -54,15 +54,16 @@ ASSISTANT = {
             },
             {
                 Type = "Dropdown",
+                ValueType = "string",
+                Default = { Value = "", Display = "Sprache nicht angeben."}
+                Items = {
+                    { Value = "de-DE", Display = "Deutsch" },
+                    { Value = "en-UK", Display = "Englisch (UK)" },
+                    { Value = "en-US", Display = "Englisch (US)" },
+                },
                 Props = {
                     Name = "language",
                     Label = "Sprache",
-                    Default = "Sprache nicht angeben",
-                    Items = {
-                        { Value = "de-DE", Display = "Deutsch" },
-                        { Value = "en-UK", Display = "Englisch (UK)" },
-                        { Value = "en-US", Display = "Englisch (US)" },
-                    }
                 }
             },
             {

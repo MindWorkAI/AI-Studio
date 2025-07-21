@@ -8,13 +8,17 @@ public class AssistantTextArea : AssistantComponentBase
     
     public string Name
     {
-        get => this.Props.TryGetValue(nameof(this.Name), out var val) ? val.ToString() ?? string.Empty : string.Empty;
+        get => this.Props.TryGetValue(nameof(this.Name), out var val) 
+            ? val.ToString() ?? string.Empty 
+            : string.Empty;
         set => this.Props[nameof(this.Name)] = value;
     }
     
     public string Label
     {
-        get => this.Props.TryGetValue(nameof(this.Label), out var val) ? val.ToString() ?? string.Empty : string.Empty;
+        get => this.Props.TryGetValue(nameof(this.Label), out var val) 
+            ? val.ToString() ?? string.Empty 
+            : string.Empty;
         set => this.Props[nameof(this.Label)] = value;
     }
     
