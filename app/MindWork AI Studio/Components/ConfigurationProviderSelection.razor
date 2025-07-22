@@ -1,2 +1,2 @@
-@inherits ConfigurationBaseCore
-<ConfigurationSelect OptionDescription="@T("Preselected provider")" Disabled="@(() => this.IsDisabled)" OptionHelp="@this.HelpText()" Data="@this.FilteredData()" SelectedValue="@this.SelectedValue" SelectionUpdate="@this.SelectionUpdate"/>
+@inherits MSGComponentBase
+<ConfigurationSelect IsLocked="@this.IsLocked" OptionDescription="@T("Preselected provider")" Disabled="@(() => this.Disabled())" OptionHelp="@this.HelpText()" Data="@this.FilteredData()" SelectedValue="@this.SelectedValue" SelectionUpdate="@this.SelectionUpdate"/>

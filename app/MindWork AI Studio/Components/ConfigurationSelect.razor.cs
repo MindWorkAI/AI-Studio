@@ -28,12 +28,22 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     [Parameter]
     public Action<TConfig> SelectionUpdate { get; set; } = _ => { };
     
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    /// <inheritdoc />
+    protected override string Label => this.OptionDescription;
+
+    protected override Variant Variant => Variant.Outlined;
+
+    #endregion
+    
     private async Task OptionChanged(TConfig updatedValue)
     {
         this.SelectionUpdate(updatedValue);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }
-    
-    private static string GetClass => $"{MARGIN_CLASS} rounded-lg";
 }

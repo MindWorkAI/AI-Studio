@@ -42,6 +42,18 @@ public partial class ConfigurationSlider<T> : ConfigurationBaseCore where T : st
     [Parameter]
     public Action<T> ValueUpdate { get; set; } = _ => { };
     
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    /// <inheritdoc />
+    protected override Variant Variant => Variant.Outlined;
+
+    protected override string Label => this.OptionDescription;
+
+    #endregion
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()

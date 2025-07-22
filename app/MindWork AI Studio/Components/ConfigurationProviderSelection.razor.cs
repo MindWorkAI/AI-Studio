@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationProviderSelection : ConfigurationBaseCore
+public partial class ConfigurationProviderSelection : MSGComponentBase
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationProviderSelection).Namespace, nameof(ConfigurationProviderSelection));
     
@@ -25,6 +25,12 @@ public partial class ConfigurationProviderSelection : ConfigurationBaseCore
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
+    
+    [Parameter]
+    public Func<bool> Disabled { get; set; } = () => false;
+    
+    [Parameter]
+    public Func<bool> IsLocked { get; set; } = () => false;
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()

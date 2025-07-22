@@ -75,7 +75,7 @@
         </MudText>
     }
     
-    <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" />
+    <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" Class="mt-3" />
     
     <MudText Typo="Typo.h4" Class="mb-3">
         @T("LLM Provider Confidence")

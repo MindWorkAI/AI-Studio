@@ -47,6 +47,17 @@ public partial class ConfigurationText : ConfigurationBaseCore
     {
         AutoReset = false
     };
+    
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    protected override Variant Variant => Variant.Outlined;
+    
+    protected override string Label => this.OptionDescription;
+
+    #endregion
 
     #region Overrides of ConfigurationBase
 

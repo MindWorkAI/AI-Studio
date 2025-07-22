@@ -31,6 +31,19 @@ public partial class ConfigurationOption : ConfigurationBaseCore
     [Parameter]
     public Action<bool> StateUpdate { get; set; } = _ => { };
     
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    /// <inheritdoc />
+    protected override Variant Variant => Variant.Outlined;
+
+    /// <inheritdoc />
+    protected override string Label => this.OptionDescription;
+
+    #endregion
+    
     private async Task OptionChanged(bool updatedState)
     {
         this.StateUpdate(updatedState);

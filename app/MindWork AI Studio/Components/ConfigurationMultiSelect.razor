@@ -9,10 +9,8 @@
     Strict="@true"
     Disabled="@this.IsDisabled"
     Margin="Margin.Dense"
-    Label="@this.OptionDescription"
-    Class="@GetClass"
-    Variant="Variant.Outlined"
-    HelperText="@this.OptionHelp"
+    Class="rounded-lg"
+    Underline="false"
     SelectedValuesChanged="@this.OptionChanged">
         @foreach (var data in this.Data)
         {

@@ -4,12 +4,20 @@
 {
     @if (!this.Disabled() && this.IsLocked())
     {
-        <MudTooltip Text="@TB("This feature is managed by your organization and has therefore been disabled.")" Arrow="true" Placement="Placement.Top">
-            @this.Body
-        </MudTooltip>
+        <MudField Label="@this.Label" Variant="@this.Variant" Underline="false" HelperText="@this.OptionHelp" Class="@this.Classes" InnerPadding="false">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexStart" Wrap="Wrap.NoWrap" StretchItems="this.StretchItems">
+                @* MudTooltip.RootStyle is set as a workaround for issue -> https://github.com/MudBlazor/MudBlazor/issues/10882 *@
+                <MudTooltip Text="@TB("This feature is managed by your organization and has therefore been disabled.")" Arrow="true" Placement="Placement.Right" RootStyle="display:inline-flex;">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" Class="mr-1"/>
+                </MudTooltip>
+                @this.Body
+            </MudStack>
+        </MudField>
     }
     else
     {
-        @this.Body
+        <MudField Label="@this.Label" Variant="@this.Variant" Underline="false" HelperText="@this.OptionHelp" Class="@this.Classes" InnerPadding="false">
+            @this.Body
+        </MudField>
     }
 }
