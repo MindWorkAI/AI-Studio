@@ -40,45 +40,45 @@ IS_MAINTAINED = true
 DEPRECATION_MESSAGE = ""
 
 ASSISTANT = {
-    Name = "Grammatik- und Rechtschreibprüfung",
-    Description = "Grammatik und Rechtschreibung eines Textes überprüfen.",
-    UI = {
-        Type = "Form",
-        Children = {
+    ["Title"] = "Grammatik- und Rechtschreibprüfung",
+    ["Description"] = "Grammatik und Rechtschreibung eines Textes überprüfen.",
+    ["UI"] = {
+        ["Type"] = "FORM",
+        ["Children"] = {
             {
-                Type = "TextArea",
-                Props = { 
-                    Name = "input", 
-                    Label = "Ihre Eingabe zur Überprüfung" 
+                ["Type"] = "TEXT_AREA",
+                ["Props"] = {
+                    ["Name"] = "input",
+                    ["Label"] = "Ihre Eingabe zur Überprüfung"
                 }
             },
             {
-                Type = "Dropdown",
-                ValueType = "string",
-                Default = { Value = "", Display = "Sprache nicht angeben."}
-                Items = {
-                    { Value = "de-DE", Display = "Deutsch" },
-                    { Value = "en-UK", Display = "Englisch (UK)" },
-                    { Value = "en-US", Display = "Englisch (US)" },
+                ["Type"] = "DROPDOWN",
+                ["ValueType"] = "string",
+                ["Default"] = { ["Value"] = "", ["Display"] = "Sprache nicht angeben." },
+                ["Items"] = {
+                    { ["Value"] = "de-DE", ["Display"] = "Deutsch" },
+                    { ["Value"] = "en-UK", ["Display"] = "Englisch (UK)" },
+                    { ["Value"] = "en-US", ["Display"] = "Englisch (US)" },
                 },
-                Props = {
-                    Name = "language",
-                    Label = "Sprache",
+                ["Props"] = {
+                    ["Name"] = "language",
+                    ["Label"] = "Sprache",
                 }
             },
             {
-                Type = "ProviderSelection",
-                Props = { 
-                    Name = "Anbieter", 
-                    Label = "LLM auswählen" 
+                ["Type"] = "PROVIDER_SELECTION",
+                ["Props"] = {
+                    ["Name"] = "Anbieter",
+                    ["Label"] = "LLM auswählen"
                 }
             },
             {
-                Type = "Button",
-                Props = { 
-                    Name = "submit", 
-                    Text = "Korrekturlesen", 
-                    Action = "OnSubmit" 
+                ["Type"] = "BUTTON",
+                ["Props"] = {
+                    ["Name"] = "submit",
+                    ["Text"] = "Korrekturlesen",
+                    ["Action"] = "OnSubmit"
                 }
             },
         }
