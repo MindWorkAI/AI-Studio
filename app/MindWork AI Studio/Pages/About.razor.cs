@@ -120,6 +120,28 @@ public partial class About : MSGComponentBase
         await this.DeterminePandocVersion();
     }
 
+    private bool showConfigDetails = false;
+    
+    private void ToggleConfigDetails()
+    {
+        this.showConfigDetails = !this.showConfigDetails;
+    }
+    
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await this.JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            this.Snackbar.Add("Copied to clipboard!", Severity.Success);
+        }
+        catch (Exception)
+        {
+            this.Snackbar.Add("Failed to copy to clipboard", Severity.Error);
+        }
+    }
+    
     private string GetEnterpriseEnvironment()
     {
         var configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);

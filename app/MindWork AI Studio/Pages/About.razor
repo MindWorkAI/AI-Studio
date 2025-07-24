@@ -1,4 +1,6 @@
 @attribute [Route(Routes.ABOUT)]
+@using AIStudio.Tools.PluginSystem
+@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -23,7 +25,60 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Business" Text="@this.GetEnterpriseEnvironment()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
+                        @{
+                            var configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+                            var currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
+                        }
+    
+                        @if (!currentEnvironment.IsActive && configPlug is null)
+                        {
+                            <MudText>@T("AI Studio runs without an enterprise configuration.")</MudText>
+                        }
+                        else if (!currentEnvironment.IsActive)
+                        {
+                            <MudText>@T("AI Studio runs with an enterprise configuration using the configuration plugin.")</MudText>
+                            <MudCollapse Expanded="@showConfigDetails">
+                                <MudText Typo="Typo.caption" Class="mt-2">Plugin ID: @configPlug!.Id</MudText>
+                            </MudCollapse>
+                        }
+                        else if (currentEnvironment.IsActive && configPlug is null)
+                        {
+                            <MudText>@T("AI Studio runs with an enterprise configuration. The configuration plugin is not yet available.")</MudText>
+                            <MudCollapse Expanded="@showConfigDetails">
+                                    <MudText Typo="Typo.caption">Config ID: @currentEnvironment.ConfigurationId</MudText>
+                                    <MudText Typo="Typo.caption">Server URL: @currentEnvironment.ConfigurationServerUrl</MudText>
+                            </MudCollapse>
+                        }
+                        else if (currentEnvironment.IsActive)
+                        {
+                            <MudText>@T("AI Studio runs with an enterprise configuration. The configuration plugin is active.")</MudText>
+                            <MudCollapse Expanded="@showConfigDetails">
+                                <div class="d-flex align-center gap-2">
+                                    <MudText Typo="Typo.caption">Config ID: @currentEnvironment.ConfigurationId</MudText>
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" 
+                                                   Size="Size.Small" 
+                                                   OnClick="@(() => CopyToClipboard(currentEnvironment.ConfigurationId.ToString()))" 
+                                                   Title="Copy Config ID" />
+                                </div>
+                                <div class="d-flex align-center gap-2">
+                                    <MudText Typo="Typo.caption">Server URL: @currentEnvironment.ConfigurationServerUrl</MudText>
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" 
+                                                   Size="Size.Small" 
+                                                   OnClick="@(() => CopyToClipboard(currentEnvironment.ConfigurationServerUrl))" 
+                                                   Title="Copy Server URL" />
+                                </div>
+                            </MudCollapse>
+                        }
+    
+                        <MudButton StartIcon="@(showConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" 
+                                   Size="Size.Small" 
+                                   Variant="Variant.Text" 
+                                   Class="mt-1" 
+                                   OnClick="@this.ToggleConfigDetails">
+                            @(showConfigDetails ? "Hide Details" : "Show Details")
+                        </MudButton>
+                    </MudListItem>
                 </MudList>
                 <MudStack Row="true">
                     <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
@@ -48,7 +103,7 @@
                     </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Timeline" Target="_blank" Href="https://github.com/orgs/MindWorkAI/projects/2/views/3">
                         @T("View our project roadmap and help shape AI Studio's future development.")
-                       </MudListItem>
+                    </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.BugReport" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio/issues">
                         @T("Did you find a bug or are you experiencing issues? Report your concern here.")
                     </MudListItem>
