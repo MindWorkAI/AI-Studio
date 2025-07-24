@@ -1,0 +1,5 @@
+﻿<MudTooltip Text=@ToolTipMessage>
+    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                   Size="Size.Small"
+                   OnClick="@(() => CopyToClipboard(this.CopyableContent))"/>
+</MudTooltip>

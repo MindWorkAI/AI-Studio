@@ -58,6 +58,12 @@ public partial class About : MSGComponentBase
 
     private GetLogPathsResponse logPaths;
     
+    private bool showConfigDetails = false;
+    
+    private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+    
+    private EnterpriseEnvironment currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
+    
     #region Overrides of ComponentBase
     
     protected override async Task OnInitializedAsync()
@@ -119,48 +125,14 @@ public partial class About : MSGComponentBase
         await dialogReference.Result;
         await this.DeterminePandocVersion();
     }
-
-    private bool showConfigDetails = false;
     
-    private void ToggleConfigDetails()
+    private void ToggleEnterpriseConfigDetails()
     {
+        // can configPlug and currentEnvironment change?
+        this.configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+        this.currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
+        
         this.showConfigDetails = !this.showConfigDetails;
-    }
-    
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-
-    private async Task CopyToClipboard(string text)
-    {
-        try
-        {
-            await this.JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-            this.Snackbar.Add("Copied to clipboard!", Severity.Success);
-        }
-        catch (Exception)
-        {
-            this.Snackbar.Add("Failed to copy to clipboard", Severity.Error);
-        }
-    }
-    
-    private string GetEnterpriseEnvironment()
-    {
-        var configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
-        var currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
-
-        switch (currentEnvironment)
-        {
-            case { IsActive: false } when configPlug is null:
-                return T("AI Studio runs without an enterprise configuration.");
-            
-            case { IsActive: false }:
-                return string.Format(T("AI Studio runs with an enterprise configuration using the configuration plugin '{0}', without central configuration management."), configPlug.Id);
-            
-            case { IsActive: true } when configPlug is null:
-                return string.Format(T("AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is not yet available."), currentEnvironment.ConfigurationId, currentEnvironment.ConfigurationServerUrl);
-            
-            case { IsActive: true }:
-                return string.Format(T("AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is active."), currentEnvironment.ConfigurationId, currentEnvironment.ConfigurationServerUrl);
-        }
     }
 
     private async Task CopyStartupLogPath()
