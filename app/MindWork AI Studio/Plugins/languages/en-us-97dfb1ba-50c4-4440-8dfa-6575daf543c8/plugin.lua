@@ -4338,6 +4338,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3405978777"] = "The following list sho
 -- Used Rust compiler
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3440211747"] = "Used Rust compiler"
 
+-- Enterprise Configuration ID:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3454644521"] = "Enterprise Configuration ID:"
+
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3494984593"] = "Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"
 

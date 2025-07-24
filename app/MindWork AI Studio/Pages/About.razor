@@ -40,7 +40,7 @@
                             case true when configPlug is null:
                                 <MudText>@T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")</MudText>
                                 <MudCollapse Expanded="@showConfigDetails">
-                                    <MudText>@T("Configuration Plugin ID:") @currentEnvironment.ConfigurationId
+                                    <MudText>@T("Enterprise Configuration ID:") @currentEnvironment.ConfigurationId
                                         <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" CopyableContent=@currentEnvironment.ConfigurationId.ToString()/>
                                     </MudText>
                                     
@@ -52,7 +52,7 @@
                             case true:
                                 <MudText>@T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")</MudText>
                                 <MudCollapse Expanded="@showConfigDetails">
-                                    <MudText Class="ml-4">@T("Configuration Plugin ID:") @currentEnvironment.ConfigurationId
+                                    <MudText Class="ml-4">@T("Enterprise Configuration ID:") @currentEnvironment.ConfigurationId
                                         <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" CopyableContent=@currentEnvironment.ConfigurationId.ToString()/>
                                     </MudText>
                                     
