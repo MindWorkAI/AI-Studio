@@ -164,7 +164,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             //
             // We cannot load the API key for self-hosted providers:
             //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA)
+            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA && this.DataHost is not Host.V_LLM)
             {
                 await this.ReloadModels();
                 await base.OnInitializedAsync();
