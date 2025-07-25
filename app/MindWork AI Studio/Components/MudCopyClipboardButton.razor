@@ -1,5 +1,6 @@
-﻿<MudTooltip Text=@ToolTipMessage>
+﻿@using AIStudio.Chat
+<MudTooltip Text="@this.ToolTipMessage" Placement="Placement.Bottom">
     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                    Size="Size.Small"
-                   OnClick="@(() => CopyToClipboard(this.CopyableContent))"/>
+                   OnClick="@(() => HandleCopyClick())"/>
 </MudTooltip>

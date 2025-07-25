@@ -33,7 +33,7 @@
                                 <MudText>@T("AI Studio runs with an enterprise configuration using the configuration plugin, without central configuration management.")</MudText>
                                 <MudCollapse Expanded="@showConfigDetails">
                                     <MudText>@T("Configuration Plugin ID:") @configPlug!.Id
-                                        <MudCopyClipboardButton CopyableContent=@configPlug!.Id.ToString()/>
+                                        <MudCopyClipboardButton StringContent=@configPlug!.Id.ToString()/>
                                     </MudText>
                                 </MudCollapse>
                                 break;
@@ -41,11 +41,11 @@
                                 <MudText>@T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")</MudText>
                                 <MudCollapse Expanded="@showConfigDetails">
                                     <MudText>@T("Enterprise Configuration ID:") @currentEnvironment.ConfigurationId
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" CopyableContent=@currentEnvironment.ConfigurationId.ToString()/>
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@currentEnvironment.ConfigurationId.ToString()/>
                                     </MudText>
                                     
                                     <MudText>@T("Configuration Server:") @currentEnvironment.ConfigurationServerUrl
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" CopyableContent=@currentEnvironment.ConfigurationServerUrl/>
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@currentEnvironment.ConfigurationServerUrl/>
                                     </MudText>
                                 </MudCollapse>
                                 break;
@@ -53,11 +53,11 @@
                                 <MudText>@T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")</MudText>
                                 <MudCollapse Expanded="@showConfigDetails">
                                     <MudText Class="ml-4">@T("Enterprise Configuration ID:") @currentEnvironment.ConfigurationId
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" CopyableContent=@currentEnvironment.ConfigurationId.ToString()/>
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@currentEnvironment.ConfigurationId.ToString()/>
                                     </MudText>
                                     
                                     <MudText Class="ml-4">@T("Configuration Server:") @currentEnvironment.ConfigurationServerUrl
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" CopyableContent=@currentEnvironment.ConfigurationServerUrl/>
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@currentEnvironment.ConfigurationServerUrl/>
                                     </MudText>
                                 </MudCollapse>
                                 break;

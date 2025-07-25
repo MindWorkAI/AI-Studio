@@ -1,5 +1,7 @@
+@using System.Runtime.CompilerServices
 @using AIStudio.Tools
 @using MudBlazor
+@using AIStudio.Components
 @inherits AIStudio.Components.MSGComponentBase
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
@@ -38,9 +40,8 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
                 </MudTooltip>
             }
-            <MudTooltip Text="@T("Copies the content to the clipboard")" Placement="Placement.Bottom">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" OnClick="@this.CopyToClipboard"/>
-            </MudTooltip>
+            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type"/>
+            
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
