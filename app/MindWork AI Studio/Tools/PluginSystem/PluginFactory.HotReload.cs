@@ -16,10 +16,21 @@ public static partial class PluginFactory
         try
         {
             HOT_RELOAD_WATCHER.IncludeSubdirectories = true;
-            HOT_RELOAD_WATCHER.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-            HOT_RELOAD_WATCHER.Filter = "*.lua";
+            HOT_RELOAD_WATCHER.NotifyFilter = NotifyFilters.CreationTime
+                                              | NotifyFilters.DirectoryName
+                                              | NotifyFilters.FileName
+                                              | NotifyFilters.LastAccess
+                                              | NotifyFilters.LastWrite
+                                              | NotifyFilters.Size;
+            
             HOT_RELOAD_WATCHER.Changed += HotReloadEventHandler;
             HOT_RELOAD_WATCHER.Deleted += HotReloadEventHandler;
+            HOT_RELOAD_WATCHER.Created += HotReloadEventHandler;
+            HOT_RELOAD_WATCHER.Renamed += HotReloadEventHandler;
+            HOT_RELOAD_WATCHER.Error += (_, args) =>
+            {
+                LOG.LogError(args.GetException(), "Error in hot reload watcher.");
+            };
             HOT_RELOAD_WATCHER.EnableRaisingEvents = true;
         }
         catch (Exception e)
