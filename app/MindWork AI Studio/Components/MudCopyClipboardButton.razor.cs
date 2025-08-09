@@ -33,6 +33,12 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     [Parameter]
     public string TooltipMessage { get; set; } = TB("Copies the content to the clipboard");
+
+    /// <summary>
+    /// The size of the button. The default size is small.
+    /// </summary>
+    [Parameter]
+    public Size Size { get; set; } = Size.Small;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;

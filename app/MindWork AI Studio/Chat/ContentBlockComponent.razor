@@ -1,4 +1,3 @@
-@using System.Runtime.CompilerServices
 @using AIStudio.Tools
 @using MudBlazor
 @using AIStudio.Components
@@ -40,8 +39,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
                 </MudTooltip>
             }
-            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type"/>
-            
+            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
