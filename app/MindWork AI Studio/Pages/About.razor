@@ -14,60 +14,75 @@
                 </MudText>
                 <MudList T="string" Class="mb-3">
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Chat" Text="@VersionApp"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Timer" Text="@BuildTime"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionDotnetSdk"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@VersionDotnetRuntime"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@VersionRust"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@VersionPdfium"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Timer" Text="@this.BuildTime"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionDotnetSdk"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@this.VersionDotnetRuntime"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionRust"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@this.VersionPdfium"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Article" Text="@this.versionPandoc"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
-                        @switch (currentEnvironment.IsActive)
+                        @switch (this.currentEnvironment.IsActive)
                         {
-                            case false when configPlug is null:
-                                <MudText>@T("AI Studio runs without an enterprise configuration.")</MudText>
+                            case false when this.configPlug is null:
+                                <MudText>
+                                    @T("AI Studio runs without an enterprise configuration.")
+                                </MudText>
                                 break;
+                                
                             case false:
-                                <MudText>@T("AI Studio runs with an enterprise configuration using the configuration plugin, without central configuration management.")</MudText>
-                                <MudCollapse Expanded="@showConfigDetails">
-                                    <MudText>@T("Configuration Plugin ID:") @configPlug!.Id
-                                        <MudCopyClipboardButton StringContent=@configPlug!.Id.ToString()/>
+                                <MudText>
+                                    @T("AI Studio runs with an enterprise configuration using the configuration plugin, without central configuration management.")
+                                </MudText>
+                                <MudCollapse Expanded="@this.showConfigDetails">
+                                    <MudText>
+                                        @T("Configuration Plugin ID:") @this.configPlug!.Id
+                                        <MudCopyClipboardButton StringContent=@this.configPlug!.Id.ToString()/>
                                     </MudText>
                                 </MudCollapse>
                                 break;
-                            case true when configPlug is null:
-                                <MudText>@T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")</MudText>
-                                <MudCollapse Expanded="@showConfigDetails">
-                                    <MudText>@T("Enterprise Configuration ID:") @currentEnvironment.ConfigurationId
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@currentEnvironment.ConfigurationId.ToString()/>
+                                
+                            case true when this.configPlug is null:
+                                <MudText>
+                                    @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")
+                                </MudText>
+                                <MudCollapse Expanded="@this.showConfigDetails">
+                                    <MudText>
+                                        @T("Enterprise configuration ID:") @this.currentEnvironment.ConfigurationId
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
                                     </MudText>
                                     
-                                    <MudText>@T("Configuration Server:") @currentEnvironment.ConfigurationServerUrl
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@currentEnvironment.ConfigurationServerUrl/>
+                                    <MudText>
+                                        @T("Configuration server:") @this.currentEnvironment.ConfigurationServerUrl
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
                                     </MudText>
                                 </MudCollapse>
                                 break;
+                                
                             case true:
-                                <MudText>@T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")</MudText>
-                                <MudCollapse Expanded="@showConfigDetails">
-                                    <MudText Class="ml-4">@T("Enterprise Configuration ID:") @currentEnvironment.ConfigurationId
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@currentEnvironment.ConfigurationId.ToString()/>
+                                <MudText>
+                                    @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")
+                                </MudText>
+                                <MudCollapse Expanded="@this.showConfigDetails">
+                                    <MudText Class="ml-4">@T("Enterprise Configuration ID:") @this.currentEnvironment.ConfigurationId
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
                                     </MudText>
                                     
-                                    <MudText Class="ml-4">@T("Configuration Server:") @currentEnvironment.ConfigurationServerUrl
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@currentEnvironment.ConfigurationServerUrl/>
+                                    <MudText Class="ml-4">
+                                        @T("Configuration Server:") @this.currentEnvironment.ConfigurationServerUrl
+                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
                                     </MudText>
                                 </MudCollapse>
                                 break;
                         }
 
-                        <MudButton StartIcon="@(showConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                        <MudButton StartIcon="@(this.showConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
                                    Size="Size.Small"
                                    Variant="Variant.Text"
                                    OnClick="@this.ToggleEnterpriseConfigDetails">
-                            @(showConfigDetails ? @T("Hide Details") : @T("Show Details"))
+                            @(this.showConfigDetails ? T("Hide Details") : T("Show Details"))
                         </MudButton>
                     </MudListItem>
                 </MudList>
