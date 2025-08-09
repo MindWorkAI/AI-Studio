@@ -63,6 +63,31 @@ public partial class About : MSGComponentBase
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
     
     private EnterpriseEnvironment currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
+
+    /// <summary>
+    /// Determines whether the enterprise configuration has details that can be shown/hidden.
+    /// Returns true if there are details available, false otherwise.
+    /// </summary>
+    private bool HasEnterpriseConfigurationDetails
+    {
+        get
+        {
+            return this.currentEnvironment.IsActive switch
+            {
+                // Case 1: No enterprise config and no plugin - no details available
+                false when this.configPlug is null => false,
+
+                // Case 2: Enterprise config with plugin but no central management - has details
+                false => true,
+
+                // Case 3: Enterprise config active but no plugin - has details
+                true when this.configPlug is null => true,
+
+                // Case 4: Enterprise config active with plugin - has details
+                true => true
+            };
+        }
+    }
     
     #region Overrides of ComponentBase
     

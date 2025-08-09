@@ -102,12 +102,15 @@
                                 break;
                         }
 
-                        <MudButton StartIcon="@(this.showConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
-                                   Size="Size.Small"
-                                   Variant="Variant.Text"
-                                   OnClick="@this.ToggleEnterpriseConfigDetails">
-                            @(this.showConfigDetails ? T("Hide Details") : T("Show Details"))
-                        </MudButton>
+                        @if (this.HasEnterpriseConfigurationDetails)
+                        {
+                            <MudButton StartIcon="@(this.showEnterpriseConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       Size="Size.Small"
+                                       Variant="Variant.Text"
+                                       OnClick="@this.ToggleEnterpriseConfigDetails">
+                                @(this.showEnterpriseConfigDetails ? T("Hide Details") : T("Show Details"))
+                            </MudButton>
+                        }
                     </MudListItem>
                 </MudList>
                 <MudStack Row="true">
