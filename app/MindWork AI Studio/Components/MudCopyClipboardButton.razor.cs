@@ -48,10 +48,10 @@ public partial class MudCopyClipboardButton : ComponentBase
     
     private async Task HandleCopyClick()
     {
-        if (this.Type == ContentType.NONE)
+        if (this.Type is ContentType.NONE)
             await this.CopyToClipboard(this.StringContent);
         else
-            await this.CopyToClipboard(this.Content!);
+            await this.CopyToClipboard(this.Content);
     }
     
     /// <summary>
@@ -65,8 +65,11 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// <summary>
     /// Copy this block's content to the clipboard.
     /// </summary>
-    private async Task CopyToClipboard(IContent contentToCopy)
+    private async Task CopyToClipboard(IContent? contentToCopy)
     {
+        if (contentToCopy is null)
+            return;
+        
         switch (this.Type)
         {
             case ContentType.TEXT:
