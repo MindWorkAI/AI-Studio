@@ -90,6 +90,14 @@
                                             <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
                                         </div>
                                     </MudText>
+                                    
+                                    <MudText Typo="Typo.body1" Class="ms-3 mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
+                                            <MudCopyClipboardButton StringContent=@this.configPlug!.Id.ToString()/>
+                                        </div>
+                                    </MudText>
                                 </MudCollapse>
                                 break;
                         }
