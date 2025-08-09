@@ -215,7 +215,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                                 await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseEnvironment.ConfigurationId, enterpriseEnvironment.ConfigurationServerUrl);
 
                             // Load (but not start) all plugins without waiting for them:
+                            #if DEBUG
+                            var pluginLoadingTimeout = new CancellationTokenSource();
+                            #else
                             var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                            #endif
                             await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
 
                             // Set up hot reloading for plugins:

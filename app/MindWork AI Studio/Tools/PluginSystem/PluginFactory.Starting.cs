@@ -103,7 +103,7 @@ public static partial class PluginFactory
                 languagePlugin.SetBaseLanguage(BASE_LANGUAGE_PLUGIN);
             
             if(plugin is PluginConfiguration configPlugin)
-                await configPlugin.InitializeAsync();
+                await configPlugin.InitializeAsync(false);
             
             LOG.LogInformation($"Successfully started plugin: Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}'");
             return plugin;

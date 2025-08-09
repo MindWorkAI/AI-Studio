@@ -126,7 +126,6 @@ internal sealed class Program
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<DataSourceService>();
-        builder.Services.AddSingleton<SettingsLocker>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();

@@ -6,7 +6,7 @@ public static class ExpressionExtensions
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(typeof(ExpressionExtensions));
 
-    public static MemberExpression GetMemberExpression<T>(this Expression<Func<T, object>> expression)
+    public static MemberExpression GetMemberExpression<TIn, TOut>(this Expression<Func<TIn, TOut>> expression)
     {
         switch (expression.Body)
         {

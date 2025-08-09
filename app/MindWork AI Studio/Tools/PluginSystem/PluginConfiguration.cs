@@ -1,6 +1,5 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
 
 using Lua;
 
@@ -13,24 +12,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginConfiguration).Namespace, nameof(PluginConfiguration));
     private static readonly ILogger<PluginConfiguration> LOGGER = Program.LOGGER_FACTORY.CreateLogger<PluginConfiguration>();
-    private static readonly SettingsLocker SETTINGS_LOCKER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsLocker>();
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(bool dryRun)
     {
-        if(!this.TryProcessConfiguration(out var issue))
+        if(!this.TryProcessConfiguration(dryRun, out var issue))
             this.pluginIssues.Add(issue);
-        
-        await SETTINGS_MANAGER.StoreSettings();
-        await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+
+        if (!dryRun)
+        {
+            await SETTINGS_MANAGER.StoreSettings();
+            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        }
     }
-    
+
     /// <summary>
     /// Tries to initialize the UI text content of the plugin.
     /// </summary>
+    /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
     /// <param name="message">The error message, when the UI text content could not be read.</param>
     /// <returns>True, when the UI text content could be read successfully.</returns>
-    private bool TryProcessConfiguration(out string message)
+    private bool TryProcessConfiguration(bool dryRun, out string message)
     {
         // Ensure that the main CONFIG table exists and is a valid Lua table:
         if (!this.state.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
@@ -40,25 +42,21 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         }
         
         //
+        // ===========================================
         // Configured settings
+        // ===========================================
         //
         if (!mainTable.TryGetValue("SETTINGS", out var settingsValue) || !settingsValue.TryRead<LuaTable>(out var settingsTable))
         {
             message = TB("The SETTINGS table does not exist or is not a valid table.");
             return false;
         }
-
-        if (settingsTable.TryGetValue(SettingsManager.ToSettingName<DataApp>(x => x.UpdateBehavior), out var updateBehaviorValue) && updateBehaviorValue.TryRead<string>(out var updateBehaviorText) && Enum.TryParse<UpdateBehavior>(updateBehaviorText, true, out var updateBehavior))
-        {
-            SETTINGS_LOCKER.Register<DataApp>(x => x.UpdateBehavior, this.Id);
-            SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = updateBehavior;
-        }
         
-        if (settingsTable.TryGetValue(SettingsManager.ToSettingName<DataApp>(x => x.AllowUserToAddProvider), out var dontAllowUserToAddProviderValue) && dontAllowUserToAddProviderValue.TryRead<bool>(out var dontAllowUserToAddProviderEntry))
-        {
-            SETTINGS_LOCKER.Register<DataApp>(x => x.AllowUserToAddProvider, this.Id);
-            SETTINGS_MANAGER.ConfigurationData.App.AllowUserToAddProvider = dontAllowUserToAddProviderEntry;
-        }
+        // Check for updates, and if so, how often?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UpdateBehavior, this.Id, settingsTable, dryRun);
+        
+        // Allow the user to add providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
 
         //
         // Configured providers
