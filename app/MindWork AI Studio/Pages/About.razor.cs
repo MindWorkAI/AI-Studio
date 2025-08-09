@@ -58,11 +58,9 @@ public partial class About : MSGComponentBase
 
     private GetLogPathsResponse logPaths;
     
-    private bool showEnterpriseConfigDetails = false;
+    private bool showEnterpriseConfigDetails;
 
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
-
-    private EnterpriseEnvironment currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
 
     /// <summary>
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
@@ -72,7 +70,7 @@ public partial class About : MSGComponentBase
     {
         get
         {
-            return this.currentEnvironment.IsActive switch
+            return EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.IsActive switch
             {
                 // Case 1: No enterprise config and no plugin - no details available
                 false when this.configPlug is null => false,
@@ -101,6 +99,23 @@ public partial class About : MSGComponentBase
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
         _ = this.DeterminePandocVersion();
+    }
+
+    #endregion
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                this.configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+        
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     #endregion
@@ -153,10 +168,6 @@ public partial class About : MSGComponentBase
     
     private void ToggleEnterpriseConfigDetails()
     {
-        // can configPlug and currentEnvironment change?
-        this.configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
-        this.currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
-
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
     }
 

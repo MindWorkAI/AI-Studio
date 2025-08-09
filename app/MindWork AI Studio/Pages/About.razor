@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ABOUT)]
+@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -24,7 +25,7 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
-                        @switch (this.currentEnvironment.IsActive)
+                        @switch (EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.IsActive)
                         {
                             case false when this.configPlug is null:
                                 <MudText Typo="Typo.body1">
@@ -55,16 +56,16 @@
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Enterprise configuration ID:") @this.currentEnvironment.ConfigurationId</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
+                                            <span>@T("Enterprise configuration ID:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId.ToString()/>
                                         </div>
                                     </MudText>
 
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration server:") @this.currentEnvironment.ConfigurationServerUrl</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
+                                            <span>@T("Configuration server:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
                                         </div>
                                     </MudText>
                                 </MudCollapse>
@@ -78,16 +79,16 @@
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2 ml-4">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Enterprise configuration ID:") @this.currentEnvironment.ConfigurationId</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
+                                            <span>@T("Enterprise configuration ID:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId.ToString()/>
                                         </div>
                                     </MudText>
 
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2 ml-4">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration server:") @this.currentEnvironment.ConfigurationServerUrl</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
+                                            <span>@T("Configuration server:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
                                         </div>
                                     </MudText>
                                     
