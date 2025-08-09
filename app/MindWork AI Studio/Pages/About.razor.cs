@@ -58,10 +58,10 @@ public partial class About : MSGComponentBase
 
     private GetLogPathsResponse logPaths;
     
-    private bool showConfigDetails = false;
-    
+    private bool showEnterpriseConfigDetails = false;
+
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
-    
+
     private EnterpriseEnvironment currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
 
     /// <summary>
@@ -156,8 +156,8 @@ public partial class About : MSGComponentBase
         // can configPlug and currentEnvironment change?
         this.configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
         this.currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
-        
-        this.showConfigDetails = !this.showConfigDetails;
+
+        this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
     }
 
     private async Task CopyStartupLogPath()
