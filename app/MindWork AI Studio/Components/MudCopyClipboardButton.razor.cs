@@ -32,7 +32,7 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// The tooltip that should be shown to the user.
     /// </summary>
     [Parameter]
-    public string ToolTipMessage { get; set; } = TB("Copies the content to the clipboard");
+    public string TooltipMessage { get; set; } = TB("Copies the content to the clipboard");
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -43,13 +43,9 @@ public partial class MudCopyClipboardButton : ComponentBase
     private async Task HandleCopyClick()
     {
         if (this.Type == ContentType.NONE)
-        {
             await this.CopyToClipboard(this.StringContent);
-        }
         else
-        {
             await this.CopyToClipboard(this.Content!);
-        }
     }
     
     /// <summary>
