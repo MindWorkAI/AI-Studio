@@ -156,3 +156,6 @@ orleans.codegen.cs
 **/.idea/**/uiDesigner.xml
 **/.idea/**/dbnavigator.xml
 **/.vs
+
+# Ignore AI plugin config files:
+/app/.idea/.idea.MindWork AI Studio/.idea/AugmentWebviewStateStore.xml
