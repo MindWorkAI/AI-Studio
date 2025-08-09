@@ -27,52 +27,68 @@
                         @switch (this.currentEnvironment.IsActive)
                         {
                             case false when this.configPlug is null:
-                                <MudText>
+                                <MudText Typo="Typo.body1">
                                     @T("AI Studio runs without an enterprise configuration.")
                                 </MudText>
                                 break;
                                 
                             case false:
-                                <MudText>
-                                    @T("AI Studio runs with an enterprise configuration using the configuration plugin, without central configuration management.")
+                                <MudText Typo="Typo.body1">
+                                    @T("AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management.")
                                 </MudText>
-                                <MudCollapse Expanded="@this.showConfigDetails">
-                                    <MudText>
-                                        @T("Configuration Plugin ID:") @this.configPlug!.Id
-                                        <MudCopyClipboardButton StringContent=@this.configPlug!.Id.ToString()/>
+                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
+                                    <MudText Typo="Typo.body1" Class="ms-3 mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
+                                            <MudCopyClipboardButton StringContent=@this.configPlug!.Id.ToString()/>
+                                        </div>
                                     </MudText>
                                 </MudCollapse>
                                 break;
                                 
                             case true when this.configPlug is null:
-                                <MudText>
+                                <MudText Typo="Typo.body1">
                                     @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")
                                 </MudText>
-                                <MudCollapse Expanded="@this.showConfigDetails">
-                                    <MudText>
-                                        @T("Enterprise configuration ID:") @this.currentEnvironment.ConfigurationId
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
+                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
+                                    <MudText Typo="Typo.body1" Class="ms-3 mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            <span>@T("Enterprise configuration ID:") @this.currentEnvironment.ConfigurationId</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
+                                        </div>
                                     </MudText>
-                                    
-                                    <MudText>
-                                        @T("Configuration server:") @this.currentEnvironment.ConfigurationServerUrl
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
+
+                                    <MudText Typo="Typo.body1" Class="ms-3 mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            <span>@T("Configuration server:") @this.currentEnvironment.ConfigurationServerUrl</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
+                                        </div>
                                     </MudText>
                                 </MudCollapse>
                                 break;
                                 
                             case true:
-                                <MudText>
+                                <MudText Typo="Typo.body1">
                                     @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")
                                 </MudText>
-                                <MudCollapse Expanded="@this.showConfigDetails">
-                                    <MudText Class="ml-4">@T("Enterprise Configuration ID:") @this.currentEnvironment.ConfigurationId
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
+                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
+                                    <MudText Typo="Typo.body1" Class="ms-3 mt-2 mb-2 ml-4">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            <span>@T("Enterprise configuration ID:") @this.currentEnvironment.ConfigurationId</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationId.ToString()/>
+                                        </div>
                                     </MudText>
-                                    
-                                    <MudText Class="ml-4">
-                                        @T("Configuration Server:") @this.currentEnvironment.ConfigurationServerUrl
-                                        <MudCopyClipboardButton ToolTipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
+
+                                    <MudText Typo="Typo.body1" Class="ms-3 mt-2 mb-2 ml-4">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            <span>@T("Configuration server:") @this.currentEnvironment.ConfigurationServerUrl</span>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@this.currentEnvironment.ConfigurationServerUrl/>
+                                        </div>
                                     </MudText>
                                 </MudCollapse>
                                 break;
