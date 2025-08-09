@@ -74,10 +74,8 @@
             @T("No providers configured yet.")
         </MudText>
     }
-
-    <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddLLMProvider">
-        @T("Add Provider")
-    </MudButton>
+    
+    <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" Class="mt-3" />
     
     <MudText Typo="Typo.h4" Class="mb-3">
         @T("LLM Provider Confidence")

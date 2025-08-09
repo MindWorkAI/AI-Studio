@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 using Lua;
@@ -120,8 +121,10 @@ public static partial class PluginFactory
         }
         
         //
+        // =========================================================
         // Next, we have to clean up our settings. It is possible that a configuration plugin was removed.
         // We have to remove the related settings as well:
+        // =========================================================
         //
         var wasConfigurationChanged = false;
         
@@ -150,23 +153,18 @@ public static partial class PluginFactory
         #pragma warning restore MWAIS0001
 
         //
+        // ==========================================================
         // Check all possible settings:
+        // ==========================================================
         //
-        if (SETTINGS_LOCKER.GetConfigurationPluginId<DataApp>(x => x.UpdateBehavior) is var updateBehaviorPluginId && updateBehaviorPluginId != Guid.Empty)
-        {
-            var sourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == updateBehaviorPluginId);
-            if (sourcePlugin is null)
-            {
-                // Remove the locked state:
-                SETTINGS_LOCKER.Remove<DataApp>(x => x.UpdateBehavior);
-                
-                // Reset the setting to the default value:
-                SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = UpdateBehavior.HOURLY;
-                
-                LOG.LogWarning($"The configured update behavior is based on a plugin that is not available anymore. Resetting the setting to the default value: {SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior}.");
-                wasConfigurationChanged = true;
-            }
-        }
+        
+        // Check for updates, and if so, how often?
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateBehavior>(x => x.App, x => x.UpdateBehavior, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Allow the user to add providers?
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, bool>(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
         {
@@ -225,7 +223,7 @@ public static partial class PluginFactory
             
             case PluginType.CONFIGURATION:
                 var configPlug = new PluginConfiguration(isInternal, state, type);
-                await configPlug.InitializeAsync();
+                await configPlug.InitializeAsync(true);
                 return configPlug;
             
             default:

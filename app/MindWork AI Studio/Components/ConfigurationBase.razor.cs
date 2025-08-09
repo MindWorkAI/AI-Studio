@@ -5,7 +5,7 @@ namespace AIStudio.Components;
 /// <summary>
 /// A base class for configuration options.
 /// </summary>
-public partial class ConfigurationBase : MSGComponentBase
+public abstract partial class ConfigurationBase : MSGComponentBase
 {
     /// <summary>
     /// The description of the option, i.e., the name. Should be
@@ -26,7 +26,42 @@ public partial class ConfigurationBase : MSGComponentBase
     [Parameter]
     public Func<bool> Disabled { get; set; } = () => false;
     
-    protected const string MARGIN_CLASS = "mb-6";
+    /// <summary>
+    /// Is the option locked by a configuration plugin?
+    /// </summary>
+    [Parameter]
+    public Func<bool> IsLocked { get; set; } = () => false;
+    
+    /// <summary>
+    /// Should the option be stretched to fill the available space?
+    /// </summary>
+    protected abstract bool Stretch { get; }
+
+    /// <summary>
+    /// The CSS class to apply to the component.
+    /// </summary>
+    protected virtual string GetClassForBase => string.Empty;
+    
+    /// <summary>
+    /// The visual variant of the option.
+    /// </summary>
+    protected virtual Variant Variant => Variant.Text;
+
+    /// <summary>
+    /// The label to display for the option.
+    /// </summary>
+    protected virtual string Label => string.Empty;
+    
+    private StretchItems StretchItems => this.Stretch ? StretchItems.End : StretchItems.None;
+
+    protected bool IsDisabled => this.Disabled() || this.IsLocked();
+    
+    private string Classes => $"{this.GetClassForBase} {MARGIN_CLASS}";
+    
+    private protected virtual RenderFragment? Body => null;
+
+    private const string MARGIN_CLASS = "mb-6";
+    
     protected static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     #region Overrides of ComponentBase
@@ -39,7 +74,9 @@ public partial class ConfigurationBase : MSGComponentBase
     }
 
     #endregion
-
+    
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(ConfigurationBase).Namespace, nameof(ConfigurationBase));
+    
     protected async Task InformAboutChange() => await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 
     #region Overrides of MSGComponentBase

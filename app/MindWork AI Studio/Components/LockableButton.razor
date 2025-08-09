@@ -1,0 +1,5 @@
+@inherits ConfigurationBaseCore
+
+<MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@this.Icon" Disabled="@this.IsDisabled" OnClick="@(async () => await this.ClickAsync())">
+    @this.Text
+</MudButton>

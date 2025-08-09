@@ -4,7 +4,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationText : ConfigurationBase
+public partial class ConfigurationText : ConfigurationBaseCore
 {
     /// <summary>
     /// The text used for the textfield.
@@ -43,10 +43,21 @@ public partial class ConfigurationText : ConfigurationBase
     public int MaxLines { get; set; } = 12;
     
     private string internalText = string.Empty;
-    private Timer timer = new(TimeSpan.FromMilliseconds(500))
+    private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
     {
         AutoReset = false
     };
+    
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    protected override Variant Variant => Variant.Outlined;
+    
+    protected override string Label => this.OptionDescription;
+
+    #endregion
 
     #region Overrides of ConfigurationBase
 
@@ -56,15 +67,11 @@ public partial class ConfigurationText : ConfigurationBase
         await base.OnInitializedAsync();
     }
 
-    #region Overrides of ComponentBase
-
     protected override async Task OnParametersSetAsync()
     {
         this.internalText = this.Text();
         await base.OnParametersSetAsync();
     }
-
-    #endregion
 
     #endregion
 

@@ -71,7 +71,7 @@ public sealed class Data
     /// </summary>
     public uint NextChatTemplateNum { get; set; } = 1;
 
-    public DataApp App { get; init; } = new();
+    public DataApp App { get; init; } = new(x => x.App);
 
     public DataChat Chat { get; init; } = new();
 
