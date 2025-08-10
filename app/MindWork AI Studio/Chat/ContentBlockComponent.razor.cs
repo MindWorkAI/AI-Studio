@@ -1,5 +1,4 @@
 using AIStudio.Components;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -62,12 +61,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
     
     [Inject]
-    private RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-    
-    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     private bool HideContent { get; set; }
@@ -115,29 +108,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     #endregion
-
-    /// <summary>
-    /// Copy this block's content to the clipboard.
-    /// </summary>
-    private async Task CopyToClipboard()
-    {
-        switch (this.Type)
-        {
-            case ContentType.TEXT:
-                var textContent = (ContentText) this.Content;
-                await this.RustService.CopyText2Clipboard(this.Snackbar, textContent.Text);
-                break;
-            
-            default:
-                this.Snackbar.Add(T("Cannot copy this content type to clipboard!"), Severity.Error, config =>
-                {
-                    config.Icon = Icons.Material.Filled.ContentCopy;
-                    config.IconSize = Size.Large;
-                    config.IconColor = Color.Error;
-                });
-                break;
-        }
-    }
     
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
