@@ -15,7 +15,4 @@ public abstract class SettingsPanelBase : MSGComponentBase
     
     [Inject]
     protected RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    protected SettingsLocker SettingsLocker { get; init; } = null!;
 }

@@ -19,16 +19,16 @@ public partial class ConfigurationMinConfidenceSelection : MSGComponentBase
     public Action<ConfidenceLevel> SelectionUpdate { get; set; } = _ => { };
 
     /// <summary>
-    /// Is the selection component disabled?
-    /// </summary>
-    [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
-
-    /// <summary>
     /// Boolean value indicating whether the selection is restricted to a global minimum confidence level.
     /// </summary>
     [Parameter]
     public bool RestrictToGlobalMinimumConfidence { get; set; }
+    
+    [Parameter]
+    public Func<bool> Disabled { get; set; } = () => false;
+    
+    [Parameter]
+    public Func<bool> IsLocked { get; set; } = () => false;
 
     private ConfidenceLevel FilteredSelectedValue()
     {

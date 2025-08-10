@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct, INumber<T>
+public partial class ConfigurationSlider<T> : ConfigurationBaseCore where T : struct, INumber<T>
 {
     /// <summary>
     /// The minimum value for the slider.
@@ -41,6 +41,18 @@ public partial class ConfigurationSlider<T> : ConfigurationBase where T : struct
     /// </summary>
     [Parameter]
     public Action<T> ValueUpdate { get; set; } = _ => { };
+    
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    /// <inheritdoc />
+    protected override Variant Variant => Variant.Outlined;
+
+    protected override string Label => this.OptionDescription;
+
+    #endregion
     
     #region Overrides of ComponentBase
 

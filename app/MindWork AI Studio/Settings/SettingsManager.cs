@@ -349,7 +349,7 @@ public sealed class SettingsManager
         }
     }
 
-    public static string ToSettingName<T>(Expression<Func<T, object>> propertyExpression)
+    public static string ToSettingName<TIn, TOut>(Expression<Func<TIn, TOut>> propertyExpression)
     {
         MemberExpression? memberExpr;
 
@@ -363,6 +363,6 @@ public sealed class SettingsManager
             throw new ArgumentException("Expression must be a property access", nameof(propertyExpression));
 
         // Return the full name of the property, including the class name:
-        return $"{typeof(T).Name}.{memberExpr.Member.Name}";
+        return $"{typeof(TIn).Name}.{memberExpr.Member.Name}";
     }
 }

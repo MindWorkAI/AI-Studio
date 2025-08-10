@@ -137,7 +137,7 @@ public static class SettingsMigrations
             Providers = previousConfig.Providers,
             NextProviderNum = previousConfig.NextProviderNum,
             
-            App = new()
+            App = new(x => x.App)
             {
                 EnableSpellchecking = previousConfig.EnableSpellchecking,
                 IsSavingEnergy = previousConfig.IsSavingEnergy,
