@@ -4183,6 +4183,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1020427799"] = "About MindWork AI Stud
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1107156991"] = "Browse AI Studio's source code on GitHub — we welcome your contributions."
 
+-- This is a private AI Studio installation. It runs without an enterprise configuration.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
+
 -- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1282228996"] = "AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available."
 
@@ -4233,9 +4236,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "This library is used t
 
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
-
--- AI Studio runs without an enterprise configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2244723851"] = "AI Studio runs without an enterprise configuration."
 
 -- OK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2246359087"] = "OK"
