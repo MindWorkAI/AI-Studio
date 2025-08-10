@@ -71,7 +71,7 @@
             </div>
         </ChildContent>
         <FooterContent>
-            <MudStack Row="@true" Wrap="Wrap.Wrap" Class="ma-1">
+            <MudStack Row="@true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Class="ma-1">
                 
                 @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
                 {
