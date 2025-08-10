@@ -31,7 +31,7 @@ pub fn generate_certificate() {
     
     CERTIFICATE_FINGERPRINT.set(certificate_fingerprint.clone()).expect("Could not set the certificate fingerprint.");
     CERTIFICATE.set(certificate_data.cert.pem().as_bytes().to_vec()).expect("Could not set the certificate.");
-    CERTIFICATE_PRIVATE_KEY.set(certificate_data.key_pair.serialize_pem().as_bytes().to_vec()).expect("Could not set the private key.");
+    CERTIFICATE_PRIVATE_KEY.set(certificate_data.signing_key.serialize_pem().as_bytes().to_vec()).expect("Could not set the private key.");
     
     info!("Certificate fingerprint: '{certificate_fingerprint}'.");
     info!("Done generating certificate for the runtime API server.");

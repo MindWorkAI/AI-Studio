@@ -27,7 +27,7 @@
             </ExpansionPanel>
 
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")">
-                <MudMarkdown Value="@this.LastChangeContent" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
+                <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig"/>
             </ExpansionPanel>
 
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")">
@@ -35,7 +35,7 @@
             </ExpansionPanel>
             
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")">
-                <MudMarkdown OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Value="@QUICK_START_GUIDE"/>
+                <MudMarkdown Props="Markdown.DefaultConfig" Value="@QUICK_START_GUIDE"/>
             </ExpansionPanel>
 
         </MudExpansionPanels>
