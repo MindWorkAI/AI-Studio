@@ -7,5 +7,5 @@ public enum Host
     LM_STUDIO,
     LLAMACPP,
     OLLAMA,
-    V_LLM,
+    VLLM,
 }

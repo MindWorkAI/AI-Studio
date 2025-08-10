@@ -100,7 +100,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
-                case Host.V_LLM:
+                case Host.VLLM:
                     return await this.LoadModels(["embed"], [], token, apiKeyProvisional);
             }
 
@@ -127,7 +127,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             {
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
-                case Host.V_LLM:
+                case Host.VLLM:
                     return await this.LoadModels([], ["embed"], token, apiKeyProvisional);
             }
 
