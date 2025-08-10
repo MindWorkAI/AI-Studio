@@ -285,7 +285,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => true,
         LLMProviders.HUGGINGFACE => true,
         
-        LLMProviders.SELF_HOSTED => host is Host.OLLAMA,
+        LLMProviders.SELF_HOSTED => host is (Host.OLLAMA or Host.VLLM),
         
         _ => false,
     };
@@ -322,6 +322,7 @@ public static class LLMProvidersExtensions
 
                 case Host.OLLAMA:
                 case Host.LM_STUDIO:
+                case Host.VLLM:
                     return true;
             }
         }

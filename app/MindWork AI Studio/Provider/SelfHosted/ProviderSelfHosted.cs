@@ -58,8 +58,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             }).ToList()],
             
             // Right now, we only support streaming completions:
-            Stream = true,
-            MaxTokens = -1,
+            Stream = true
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -101,6 +100,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
+                case Host.VLLM:
                     return await this.LoadModels(["embed"], [], token, apiKeyProvisional);
             }
 
@@ -127,6 +127,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             {
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
+                case Host.VLLM:
                     return await this.LoadModels([], ["embed"], token, apiKeyProvisional);
             }
 
