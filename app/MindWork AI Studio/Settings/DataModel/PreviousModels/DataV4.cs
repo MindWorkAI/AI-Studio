@@ -33,7 +33,7 @@ public sealed class DataV4
     /// </summary>
     public uint NextProfileNum { get; set; } = 1;
 
-    public DataApp App { get; init; } = new();
+    public DataApp App { get; init; } = new(x => x.App);
 
     public DataChat Chat { get; init; } = new();
 

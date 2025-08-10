@@ -16,10 +16,21 @@ public static partial class PluginFactory
         try
         {
             HOT_RELOAD_WATCHER.IncludeSubdirectories = true;
-            HOT_RELOAD_WATCHER.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-            HOT_RELOAD_WATCHER.Filter = "*.lua";
+            HOT_RELOAD_WATCHER.NotifyFilter = NotifyFilters.CreationTime
+                                              | NotifyFilters.DirectoryName
+                                              | NotifyFilters.FileName
+                                              | NotifyFilters.LastAccess
+                                              | NotifyFilters.LastWrite
+                                              | NotifyFilters.Size;
+            
             HOT_RELOAD_WATCHER.Changed += HotReloadEventHandler;
             HOT_RELOAD_WATCHER.Deleted += HotReloadEventHandler;
+            HOT_RELOAD_WATCHER.Created += HotReloadEventHandler;
+            HOT_RELOAD_WATCHER.Renamed += HotReloadEventHandler;
+            HOT_RELOAD_WATCHER.Error += (_, args) =>
+            {
+                LOG.LogError(args.GetException(), "Error in hot reload watcher.");
+            };
             HOT_RELOAD_WATCHER.EnableRaisingEvents = true;
         }
         catch (Exception e)
@@ -39,13 +50,13 @@ public static partial class PluginFactory
             var changeType = args.ChangeType.ToString().ToLowerInvariant();
             if (!await HOT_RELOAD_SEMAPHORE.WaitAsync(0))
             {
-                LOG.LogInformation($"File changed ({changeType}): {args.FullPath}. Already processing another change.");
+                LOG.LogInformation($"File changed '{args.FullPath}' (event={changeType}). Already processing another change.");
                 return;
             }
 
             try
             {
-                LOG.LogInformation($"File changed ({changeType}): {args.FullPath}. Reloading plugins...");
+                LOG.LogInformation($"File changed '{args.FullPath}' (event={changeType}). Reloading plugins...");
                 if (File.Exists(HOT_RELOAD_LOCK_FILE))
                 {
                     LOG.LogInformation("Hot reload lock file exists. Waiting for it to be released before proceeding with the reload.");

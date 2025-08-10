@@ -6,7 +6,6 @@ public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginFactory));
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
-    private static readonly SettingsLocker SETTINGS_LOCKER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsLocker>();
     
     private static bool IS_INITIALIZED;
     private static string DATA_DIR = string.Empty;

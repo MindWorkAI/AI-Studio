@@ -1,2 +1,2 @@
 @inherits MSGComponentBase
-<ConfigurationSelect OptionDescription="@T("Preselected provider")" Disabled="@this.Disabled" OptionHelp="@this.HelpText()" Data="@this.FilteredData()" SelectedValue="@this.SelectedValue" SelectionUpdate="@this.SelectionUpdate"/>
+<ConfigurationSelect IsLocked="@this.IsLocked" OptionDescription="@T("Preselected provider")" Disabled="@(() => this.Disabled())" OptionHelp="@this.HelpText()" Data="@this.FilteredData()" SelectedValue="@this.SelectedValue" SelectionUpdate="@this.SelectionUpdate"/>

@@ -20,27 +20,17 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     [Parameter]
     public IEnumerable<ConfigurationSelectData<string>> Data { get; set; } = new List<ConfigurationSelectData<string>>();
     
-    /// <summary>
-    /// Is the selection component disabled?
-    /// </summary>
-    [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
-    
     [Parameter]
     public Func<string> HelpText { get; set; } = () => TB("Select a provider that is preselected.");
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
-
-    #region Overrides of ComponentBase
-
-    protected override async Task OnParametersSetAsync()
-    {
-        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
-        await base.OnParametersSetAsync();
-    }
-
-    #endregion
+    
+    [Parameter]
+    public Func<bool> Disabled { get; set; } = () => false;
+    
+    [Parameter]
+    public Func<bool> IsLocked { get; set; } = () => false;
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
