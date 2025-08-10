@@ -47,6 +47,7 @@ Other News:
 
 Features we have recently released:
 
+- v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
 - v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
 - v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
 - v0.9.44: Added PDF import to the text summarizer, translation, and legal check assistants, allowing you to import PDF files and use them as input for the assistants.
@@ -57,7 +58,6 @@ Features we have recently released:
 - v0.9.26+: Added RAG for external data sources using our [ERI interface](https://mindworkai.org/#eri---external-retrieval-interface) as a preview feature.
 - v0.9.25: Added [xAI](https://x.ai/) as a new provider. xAI provides their Grok models for generating content.
 - v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
-- v0.9.22: Added options for preview features; added embedding provider configuration for RAG (preview) and writer mode (experimental preview).
 
 ## What is AI Studio?
 
@@ -71,7 +71,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
 - **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
-  - [OpenAI](https://openai.com/) (GPT4o, GPT4.1, o1, o3, o4, etc.)
+  - [OpenAI](https://openai.com/) (GPT5, GPT4.1, o1, o3, o4, etc.)
   - [Mistral](https://mistral.ai/)
   - [Anthropic](https://www.anthropic.com/) (Claude)
   - [Google Gemini](https://gemini.google.com)
@@ -79,7 +79,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [DeepSeek](https://www.deepseek.com/en)
   - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
-  - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/)
+  - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
   - [Groq](https://groq.com/)
   - [Fireworks](https://fireworks.ai/)
   - For scientists and employees of research institutions, we also support [Helmholtz](https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570) and [GWDG](https://gwdg.de/services/application-services/ai-services/) AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
