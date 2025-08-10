@@ -8,7 +8,7 @@ namespace AIStudio.Components;
 
 public partial class MudCopyClipboardButton : ComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MudCopyClipboardButton).Namespace, nameof(MudCopyClipboardButton));
 
     /// <summary>
     /// The string, if you want to copy a string.
@@ -78,7 +78,7 @@ public partial class MudCopyClipboardButton : ComponentBase
                 break;
             
             default:
-                this.Snackbar.Add(TB("Cannot copy this content type to clipboard!"), Severity.Error, config =>
+                this.Snackbar.Add(TB("Cannot copy this content type to clipboard."), Severity.Error, config =>
                 {
                     config.Icon = Icons.Material.Filled.ContentCopy;
                     config.IconSize = Size.Large;

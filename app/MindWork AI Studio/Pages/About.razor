@@ -42,7 +42,7 @@
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                             <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
-                                            <MudCopyClipboardButton StringContent=@this.configPlug!.Id.ToString()/>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
                                         </div>
                                     </MudText>
                                 </MudCollapse>
@@ -96,7 +96,7 @@
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                             <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
-                                            <MudCopyClipboardButton StringContent=@this.configPlug!.Id.ToString()/>
+                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
                                         </div>
                                     </MudText>
                                 </MudCollapse>

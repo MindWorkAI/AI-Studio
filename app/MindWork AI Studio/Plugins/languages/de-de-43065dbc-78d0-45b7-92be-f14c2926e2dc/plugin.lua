@@ -1590,8 +1590,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T843057510"] = "Plattformübe
 -- Copies the content to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Kopiert den Inhalt in die Zwischenablage"
 
--- Cannot copy this content type to clipboard!
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T4021525742"] = "Dieser Inhaltstyp kann nicht in die Zwischenablage kopiert werden."
+-- Cannot copy this content type to clipboard.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T3937637647"] = "Dieser Inhaltstyp kann nicht in die Zwischenablage kopiert werden."
 
 -- Alpha phase means that we are working on the last details before the beta phase.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PREVIEWALPHA::T166807685"] = "Alpha-Phase bedeutet, dass wir an den letzten Details arbeiten, bevor die Beta-Phase beginnt."
@@ -4188,6 +4188,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1020427799"] = "Über MindWork AI Stud
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über ihre Beiträge."
 
+-- This is a private AI Studio installation. It runs without an enterprise configuration.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1209549230"] = "Dies ist eine private AI Studio-Installation. Sie läuft ohne Unternehmenskonfiguration."
+
 -- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1282228996"] = "AI Studio läuft mit einer Unternehmenskonfiguration und einem Konfigurationsserver. Das Konfigurations-Plugin ist noch nicht verfügbar."
 
@@ -4215,6 +4218,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1806897624"] = "Wenn Sie auf den jewei
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T185447014"] = "Pandoc-Installation"
 
+-- Copies the configuration plugin ID to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1859295819"] = "Kopiert die Konfigurations-Plugin-ID in die Zwischenablage"
+
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1890416390"] = "Nach Updates suchen"
 
@@ -4238,9 +4244,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "Diese Bibliothek wird 
 
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "Für die sichere Kommunikation zwischen der Benutzeroberfläche und der Laufzeit müssen wir Zertifikate erstellen. Diese Rust-Bibliothek eignet sich hervorragend dafür."
-
--- This is a private AI Studio installation. It runs without an enterprise configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2244723851"] = "Dies ist eine private AI Studio-Installation. Es wird keine Konfiguration einer Organisation verwendet."
 
 -- OK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2246359087"] = "OK"

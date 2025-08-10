@@ -1588,8 +1588,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T843057510"] = "Cross-Platfor
 -- Copies the content to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Copies the content to the clipboard"
 
--- Cannot copy this content type to clipboard!
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T4021525742"] = "Cannot copy this content type to clipboard!"
+-- Cannot copy this content type to clipboard.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T3937637647"] = "Cannot copy this content type to clipboard."
 
 -- Alpha phase means that we are working on the last details before the beta phase.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PREVIEWALPHA::T166807685"] = "Alpha phase means that we are working on the last details before the beta phase."
@@ -4215,6 +4215,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1806897624"] = "By clicking on the res
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T185447014"] = "Pandoc Installation"
+
+-- Copies the configuration plugin ID to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1859295819"] = "Copies the configuration plugin ID to the clipboard"
 
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1890416390"] = "Check for updates"
