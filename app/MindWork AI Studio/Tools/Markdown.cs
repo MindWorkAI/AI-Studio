@@ -2,15 +2,21 @@ namespace AIStudio.Tools;
 
 public static class Markdown
 {
-    public static Typo OverrideHeaderTypo(Typo arg) => arg switch
+    public static MudMarkdownProps DefaultConfig => new()
     {
-        Typo.h1 => Typo.h4,
-        Typo.h2 => Typo.h5,
-        Typo.h3 => Typo.h6,
-        Typo.h4 => Typo.h6,
-        Typo.h5 => Typo.h6,
-        Typo.h6 => Typo.h6,
+        Heading =
+        {
+            OverrideTypo = typo => typo switch
+            {
+                Typo.h1 => Typo.h4,
+                Typo.h2 => Typo.h5,
+                Typo.h3 => Typo.h6,
+                Typo.h4 => Typo.h6,
+                Typo.h5 => Typo.h6,
+                Typo.h6 => Typo.h6,
         
-        _ => arg
+                _ => typo,
+            },
+        }
     };
 }

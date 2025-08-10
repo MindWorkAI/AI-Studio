@@ -5,7 +5,7 @@
             <MudIcon Icon="@Icons.Material.Filled.Update" Size="Size.Large" Class="mr-3"/>
             @this.HeaderText
         </MudText>
-        <MudMarkdown Value="@this.UpdateResponse.Changelog" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
+        <MudMarkdown Value="@this.UpdateResponse.Changelog" Props="Markdown.DefaultConfig"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">

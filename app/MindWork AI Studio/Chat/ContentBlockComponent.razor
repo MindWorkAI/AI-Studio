@@ -71,7 +71,7 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Styling="@this.MarkdownStyling" />
+                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
                             }
                         }
                     }
