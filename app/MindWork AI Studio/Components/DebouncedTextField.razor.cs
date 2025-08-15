@@ -51,6 +51,7 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
     private readonly Timer debounceTimer = new();
     private string text = string.Empty;
     private string lastParameterText = string.Empty;
+    private bool isInitialized;
 
     #region Overrides of ComponentBase
 
@@ -68,20 +69,28 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
             this.InvokeAsync(() => this.WhenTextCanged(this.text));
         };
         
+        this.isInitialized = true;
         await base.OnInitializedAsync();
     }
     
     protected override async Task OnParametersSetAsync()
     {
+        // Ensure the timer uses the latest debouncing interval:
+        if (!this.isInitialized)
+            return;
+        
+        if(Math.Abs(this.debounceTimer.Interval - this.DebounceTime.TotalMilliseconds) > 1)
+            this.debounceTimer.Interval = this.DebounceTime.TotalMilliseconds;
+        
         // Only sync when the parent's parameter actually changed since the last change:
         if (this.Text != this.lastParameterText)
         {
             this.text = this.Text;
             this.lastParameterText = this.Text;
-            
-            this.debounceTimer.Stop();
-            this.debounceTimer.Start();
         }
+        
+        this.debounceTimer.Stop();
+        this.debounceTimer.Start();
         
         await base.OnParametersSetAsync();
     }
