@@ -4,7 +4,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Components;
 
-public partial class DebouncedTextField : MudComponentBase
+public partial class DebouncedTextField : MudComponentBase, IDisposable
 {
     [Parameter]
     public string Label { get; set; } = string.Empty;
@@ -94,4 +94,21 @@ public partial class DebouncedTextField : MudComponentBase
         this.debounceTimer.Stop();
         this.debounceTimer.Start();
     }
+
+    #region IDisposable
+
+    public void Dispose()
+    {
+        try
+        {
+            this.debounceTimer.Stop();
+            this.debounceTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    #endregion
 }
