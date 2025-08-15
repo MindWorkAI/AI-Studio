@@ -50,12 +50,14 @@ public partial class DebouncedTextField : MudComponentBase
     
     private readonly Timer debounceTimer = new();
     private string text = string.Empty;
+    private string lastParameterText = string.Empty;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         this.text = this.Text;
+        this.lastParameterText = this.Text;
         this.debounceTimer.AutoReset = false;
         this.debounceTimer.Interval = this.DebounceTime.TotalMilliseconds;
         this.debounceTimer.Elapsed += (_, _) =>
@@ -67,6 +69,19 @@ public partial class DebouncedTextField : MudComponentBase
         };
         
         await base.OnInitializedAsync();
+    }
+    
+    protected override void OnParametersSet()
+    {
+        // Only sync when the parent's parameter actually changed since the last change:
+        if (this.Text != this.lastParameterText)
+        {
+            this.text = this.Text;
+            this.lastParameterText = this.Text;
+            
+            this.debounceTimer.Stop();
+            this.debounceTimer.Start();
+        }
     }
 
     #endregion
