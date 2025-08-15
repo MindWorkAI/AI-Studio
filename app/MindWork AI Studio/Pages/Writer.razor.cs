@@ -152,4 +152,23 @@ public partial class Writer : MSGComponentBase
         this.suggestion = string.Join(' ', words.Skip(1));
         this.StateHasChanged();
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override void DisposeResources()
+    {
+        try
+        {
+            this.typeTimer.Stop();
+            this.typeTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+        
+        base.DisposeResources();
+    }
+
+    #endregion
 }

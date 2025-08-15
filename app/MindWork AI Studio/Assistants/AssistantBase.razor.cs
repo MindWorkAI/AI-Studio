@@ -384,7 +384,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override void DisposeResources()
     {
-        this.formChangeTimer.Dispose();
+        try
+        {
+            this.formChangeTimer.Stop();
+            this.formChangeTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+        
+        base.DisposeResources();
     }
 
     #endregion

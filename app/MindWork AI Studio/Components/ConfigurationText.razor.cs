@@ -92,4 +92,23 @@ public partial class ConfigurationText : ConfigurationBaseCore
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override void DisposeResources()
+    {
+        try
+        {
+            this.timer.Stop();
+            this.timer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+        
+        base.DisposeResources();
+    }
+
+    #endregion
 }
