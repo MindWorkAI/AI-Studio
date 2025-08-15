@@ -71,7 +71,7 @@ public partial class DebouncedTextField : MudComponentBase
         await base.OnInitializedAsync();
     }
     
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         // Only sync when the parent's parameter actually changed since the last change:
         if (this.Text != this.lastParameterText)
@@ -82,6 +82,8 @@ public partial class DebouncedTextField : MudComponentBase
             this.debounceTimer.Stop();
             this.debounceTimer.Start();
         }
+        
+        await base.OnParametersSetAsync();
     }
 
     #endregion
