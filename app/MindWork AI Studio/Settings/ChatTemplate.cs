@@ -3,8 +3,12 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Settings;
 
-public readonly record struct ChatTemplate(uint Num, string Id, string Name, string SystemPrompt, string PredefinedUserPrompt, List<ContentBlock> ExampleConversation, bool AllowProfileUsage)
+public record ChatTemplate(uint Num, string Id, string Name, string SystemPrompt, string PredefinedUserPrompt, List<ContentBlock> ExampleConversation, bool AllowProfileUsage)
 {
+    public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], false)
+    {
+    }
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
     public static readonly ChatTemplate NO_CHAT_TEMPLATE = new()
