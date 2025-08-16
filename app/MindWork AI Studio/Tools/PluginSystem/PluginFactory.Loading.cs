@@ -151,7 +151,29 @@ public static partial class PluginFactory
             }
         }
         #pragma warning restore MWAIS0001
+        
+        //
+        // Check Chat Templates:
+        //
+        var configuredTemplates = SETTINGS_MANAGER.ConfigurationData.ChatTemplates.ToList();
+        foreach (var configuredTemplate in configuredTemplates)
+        {
+            if(!configuredTemplate.IsEnterpriseConfiguration)
+                continue;
 
+            var templateSourcePluginId = configuredTemplate.EnterpriseConfigurationPluginId;
+            if(templateSourcePluginId == Guid.Empty)
+                continue;
+            
+            var templateSourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == templateSourcePluginId);
+            if(templateSourcePlugin is null)
+            {
+                LOG.LogWarning($"The configured chat template '{configuredTemplate.Name}' (id={configuredTemplate.Id}) is based on a plugin that is not available anymore. Removing the chat template from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(configuredTemplate);
+                wasConfigurationChanged = true;
+            }
+        }
+        
         //
         // ==========================================================
         // Check all possible settings:

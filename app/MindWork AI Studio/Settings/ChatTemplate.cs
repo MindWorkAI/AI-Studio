@@ -3,7 +3,7 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Settings;
 
-public record ChatTemplate(uint Num, string Id, string Name, string SystemPrompt, string PredefinedUserPrompt, List<ContentBlock> ExampleConversation, bool AllowProfileUsage)
+public record ChatTemplate(uint Num, string Id, string Name, string SystemPrompt, string PredefinedUserPrompt, List<ContentBlock> ExampleConversation, bool AllowProfileUsage, bool IsEnterpriseConfiguration = false, Guid EnterpriseConfigurationPluginId = default)
 {
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], false)
     {
@@ -20,6 +20,8 @@ public record ChatTemplate(uint Num, string Id, string Name, string SystemPrompt
         Num = uint.MaxValue,
         ExampleConversation = [],
         AllowProfileUsage = true,
+        EnterpriseConfigurationPluginId = Guid.Empty,
+        IsEnterpriseConfiguration = false,
     };
     
     #region Overrides of ValueType

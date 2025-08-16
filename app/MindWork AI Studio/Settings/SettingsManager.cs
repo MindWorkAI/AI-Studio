@@ -270,11 +270,11 @@ public sealed class SettingsManager
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
     {
         var preselection = component.PreselectedChatTemplate(this);
-        if (preselection != default)
+        if (preselection != ChatTemplate.NO_CHAT_TEMPLATE)
             return preselection;
         
         preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedChatTemplate);
-        return preselection != default ? preselection : ChatTemplate.NO_CHAT_TEMPLATE;
+        return preselection ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)

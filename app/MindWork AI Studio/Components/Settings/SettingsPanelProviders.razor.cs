@@ -54,6 +54,9 @@ public partial class SettingsPanelProviders : SettingsPanelBase
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task EditLLMProvider(AIStudio.Settings.Provider provider)
     {
+        if (provider.IsEnterpriseConfiguration)
+            return;
+        
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.DataNum, provider.Num },

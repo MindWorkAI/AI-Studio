@@ -53,6 +53,9 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     
     private async Task EditChatTemplate(ChatTemplate chatTemplate)
     {
+        if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
+            return;
+        
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.DataNum, chatTemplate.Num },
