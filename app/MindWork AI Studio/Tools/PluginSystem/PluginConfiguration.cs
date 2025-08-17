@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Chat;
 
 using Lua;
 
@@ -265,8 +266,6 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (table.TryGetValue("AllowProfileUsage", out var allowProfileValue) && allowProfileValue.TryRead<bool>(out var allow))
             allowProfileUsage = allow;
         
-        #warning Need to add support for ExampleConversation
-
         template = new()
         {
             Num = 0,
@@ -274,12 +273,59 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             Name = name,
             SystemPrompt = systemPrompt,
             PredefinedUserPrompt = predefinedUserPrompt,
-            ExampleConversation = [],
+            ExampleConversation = ParseExampleConversation(idx, table),
             AllowProfileUsage = allowProfileUsage,
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = this.Id
         };
         
         return true;
+    }
+
+    private static List<ContentBlock> ParseExampleConversation(int idx, LuaTable table)
+    {
+        var exampleConversation = new List<ContentBlock>();
+        if (!table.TryGetValue("ExampleConversation", out var exConvValue) || !exConvValue.TryRead<LuaTable>(out var exConvTable))
+            return exampleConversation;
+        
+        var numBlocks = exConvTable.ArrayLength;
+        for (var j = 1; j <= numBlocks; j++)
+        {
+            var blockValue = exConvTable[j];
+            if (!blockValue.TryRead<LuaTable>(out var blockTable))
+            {
+                LOGGER.LogWarning($"The ExampleConversation entry {j} in chat template {idx} is not a valid table.");
+                continue;
+            }
+            
+            if (!blockTable.TryGetValue("Role", out var roleValue) || !roleValue.TryRead<string>(out var roleText) || !Enum.TryParse<ChatRole>(roleText, true, out var parsedRole))
+            {
+                LOGGER.LogWarning($"The ExampleConversation entry {j} in chat template {idx} does not contain a valid role.");
+                continue;
+            }
+
+            if (!blockTable.TryGetValue("Content", out var contentValue) || !contentValue.TryRead<string>(out var content))
+            {
+                LOGGER.LogWarning($"The ExampleConversation entry {j} in chat template {idx} does not contain a valid content message.");
+                continue;
+            }
+                
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                LOGGER.LogWarning($"The ExampleConversation entry {j} in chat template {idx} contains an empty content message.");
+                continue;
+            }
+                
+            exampleConversation.Add(new ContentBlock
+            {
+                Time = DateTimeOffset.UtcNow,
+                Role = parsedRole,
+                Content = new ContentText { Text = content },
+                ContentType = ContentType.TEXT,
+                HideFromUser = true,
+            });
+        }
+
+        return exampleConversation;
     }
 }
