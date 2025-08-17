@@ -175,6 +175,40 @@ public static partial class PluginFactory
         }
         
         //
+        // Before checking simple settings, validate that still-present configuration plugins haven't removed individual
+        // providers or chat templates they previously managed. If so, remove those items from our settings as well:
+        //
+        #pragma warning disable MWAIS0001
+        foreach (var runningPlugin in RUNNING_PLUGINS.OfType<PluginConfiguration>())
+        {
+            var (providerIds, templateIds) = runningPlugin.GetManagedObjectIds();
+            var cfgPluginId = runningPlugin.Id;
+
+            // Providers managed by this plugin but no longer present in plugin config
+            var providersToRemove = SETTINGS_MANAGER.ConfigurationData.Providers
+                .Where(p => p.IsEnterpriseConfiguration && p.EnterpriseConfigurationPluginId == cfgPluginId && !providerIds.Contains(p.Id))
+                .ToList();
+            foreach (var p in providersToRemove)
+            {
+                LOG.LogWarning($"The configured LLM provider '{p.InstanceName}' (id={p.Id}) was removed from its configuration plugin (id={cfgPluginId}). Removing the provider from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(p);
+                wasConfigurationChanged = true;
+            }
+
+            // Chat templates managed by this plugin but no longer present in plugin config
+            var templatesToRemove = SETTINGS_MANAGER.ConfigurationData.ChatTemplates
+                .Where(t => t.IsEnterpriseConfiguration && t.EnterpriseConfigurationPluginId == cfgPluginId && !templateIds.Contains(t.Id))
+                .ToList();
+            foreach (var t in templatesToRemove)
+            {
+                LOG.LogWarning($"The configured chat template '{t.Name}' (id={t.Id}) was removed from its configuration plugin (id={cfgPluginId}). Removing the chat template from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(t);
+                wasConfigurationChanged = true;
+            }
+        }
+        #pragma warning restore MWAIS0001
+        
+        //
         // ==========================================================
         // Check all possible settings:
         // ==========================================================
