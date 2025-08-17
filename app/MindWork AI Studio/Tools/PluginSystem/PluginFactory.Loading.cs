@@ -153,7 +153,7 @@ public static partial class PluginFactory
         #pragma warning restore MWAIS0001
         
         //
-        // Check Chat Templates:
+        // Check chat templates:
         //
         var configuredTemplates = SETTINGS_MANAGER.ConfigurationData.ChatTemplates.ToList();
         foreach (var configuredTemplate in configuredTemplates)

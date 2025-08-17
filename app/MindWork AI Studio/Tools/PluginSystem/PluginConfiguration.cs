@@ -60,7 +60,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
 
         //
-        // Configured providers
+        // Configured providers:
         //
         if (!mainTable.TryGetValue("LLM_PROVIDERS", out var providersValue) || !providersValue.TryRead<LuaTable>(out var providersTable))
         {
@@ -113,7 +113,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         #pragma warning restore MWAIS0001
         
         //
-        // Configured chat templates
+        // Configured chat templates:
         //
         if (mainTable.TryGetValue("CHAT_TEMPLATES", out var templatesValue) && templatesValue.TryRead<LuaTable>(out var templatesTable))
         {
