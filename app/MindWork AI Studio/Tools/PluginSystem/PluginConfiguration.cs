@@ -90,24 +90,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Apply the configured providers to the system settings:
         //
         #pragma warning disable MWAIS0001
-        foreach (var configuredProvider in configuredProviders)
+        if (!dryRun)
         {
-            // The iterating variable is immutable, so we need to create a local copy:
-            var provider = configuredProvider;
+            foreach (var configuredProvider in configuredProviders)
+            {
+                // The iterating variable is immutable, so we need to create a local copy:
+                var provider = configuredProvider;
 
-            var providerIndex = SETTINGS_MANAGER.ConfigurationData.Providers.FindIndex(p => p.Id == provider.Id);
-            if (providerIndex > -1)
-            {
-                // Case: The provider already exists, we update it:
-                var existingProvider = SETTINGS_MANAGER.ConfigurationData.Providers[providerIndex];
-                provider = provider with { Num = existingProvider.Num }; // Keep the original number
-                SETTINGS_MANAGER.ConfigurationData.Providers[providerIndex] = provider;
-            }
-            else
-            {
-                // Case: The provider does not exist, we add it:
-                provider = provider with { Num = SETTINGS_MANAGER.ConfigurationData.NextProviderNum++ };
-                SETTINGS_MANAGER.ConfigurationData.Providers.Add(provider);
+                var providerIndex = SETTINGS_MANAGER.ConfigurationData.Providers.FindIndex(p => p.Id == provider.Id);
+                if (providerIndex > -1)
+                {
+                    // Case: The provider already exists, we update it:
+                    var existingProvider = SETTINGS_MANAGER.ConfigurationData.Providers[providerIndex];
+                    provider = provider with { Num = existingProvider.Num }; // Keep the original number
+                    SETTINGS_MANAGER.ConfigurationData.Providers[providerIndex] = provider;
+                }
+                else
+                {
+                    // Case: The provider does not exist, we add it:
+                    provider = provider with { Num = SETTINGS_MANAGER.ConfigurationData.NextProviderNum++ };
+                    SETTINGS_MANAGER.ConfigurationData.Providers.Add(provider);
+                }
             }
         }
         #pragma warning restore MWAIS0001
@@ -135,20 +138,26 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             }
             
             // Apply configured chat templates to the system settings:
-            foreach (var configuredTemplate in configuredTemplates)
+            if (!dryRun)
             {
-                var template = configuredTemplate;
-                var tplIndex = SETTINGS_MANAGER.ConfigurationData.ChatTemplates.FindIndex(t => t.Id == template.Id);
-                if (tplIndex > -1)
+                foreach (var configuredTemplate in configuredTemplates)
                 {
-                    var existingTemplate = SETTINGS_MANAGER.ConfigurationData.ChatTemplates[tplIndex];
-                    template = template with { Num = existingTemplate.Num };
-                    SETTINGS_MANAGER.ConfigurationData.ChatTemplates[tplIndex] = template;
-                }
-                else
-                {
-                    template = template with { Num = SETTINGS_MANAGER.ConfigurationData.NextChatTemplateNum++ };
-                    SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Add(template);
+                    // The iterating variable is immutable, so we need to create a local copy:
+                    var template = configuredTemplate;
+                    var tplIndex = SETTINGS_MANAGER.ConfigurationData.ChatTemplates.FindIndex(t => t.Id == template.Id);
+                    if (tplIndex > -1)
+                    {
+                        // Case: The template already exists, we update it:
+                        var existingTemplate = SETTINGS_MANAGER.ConfigurationData.ChatTemplates[tplIndex];
+                        template = template with { Num = existingTemplate.Num };
+                        SETTINGS_MANAGER.ConfigurationData.ChatTemplates[tplIndex] = template;
+                    }
+                    else
+                    {
+                        // Case: The template does not exist, we add it:
+                        template = template with { Num = SETTINGS_MANAGER.ConfigurationData.NextChatTemplateNum++ };
+                        SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Add(template);
+                    }
                 }
             }
         }
