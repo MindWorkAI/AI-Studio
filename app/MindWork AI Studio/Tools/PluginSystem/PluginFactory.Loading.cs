@@ -40,6 +40,8 @@ public static partial class PluginFactory
         if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
             return;
 
+        var configObjectList = new List<PluginConfigurationObject>();
+        
         try
         {
             LOG.LogInformation("Start loading plugins.");
@@ -112,7 +114,8 @@ public static partial class PluginFactory
             }
         
             // Start or restart all plugins:
-            await RestartAllPlugins(cancellationToken);
+            var configObjects = await RestartAllPlugins(cancellationToken);
+            configObjectList.AddRange(configObjects);
         }
         finally
         {
@@ -149,6 +152,16 @@ public static partial class PluginFactory
                 SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
                 wasConfigurationChanged = true;
             }
+            
+            if(!configObjectList.Any(configObject =>
+                configObject.Type is PluginConfigurationObjectType.LLM_PROVIDER &&
+                configObject.ConfigPluginId == providerSourcePluginId &&
+                configObject.Id.ToString() == configuredProvider.Id))
+            {
+                LOG.LogWarning($"The configured LLM provider '{configuredProvider.InstanceName}' (id={configuredProvider.Id}) is not present in the configuration plugin anymore. Removing the provider from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
+                wasConfigurationChanged = true;
+            }
         }
         #pragma warning restore MWAIS0001
         
@@ -172,41 +185,17 @@ public static partial class PluginFactory
                 SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(configuredTemplate);
                 wasConfigurationChanged = true;
             }
-        }
-        
-        //
-        // Before checking simple settings, validate that still-present configuration plugins haven't removed individual
-        // providers or chat templates they previously managed. If so, remove those items from our settings as well:
-        //
-        #pragma warning disable MWAIS0001
-        foreach (var runningPlugin in RUNNING_PLUGINS.OfType<PluginConfiguration>())
-        {
-            var (providerIds, templateIds) = runningPlugin.GetManagedObjectIds();
-            var cfgPluginId = runningPlugin.Id;
-
-            // Providers managed by this plugin but no longer present in plugin config
-            var providersToRemove = SETTINGS_MANAGER.ConfigurationData.Providers
-                .Where(p => p.IsEnterpriseConfiguration && p.EnterpriseConfigurationPluginId == cfgPluginId && !providerIds.Contains(p.Id))
-                .ToList();
-            foreach (var p in providersToRemove)
+            
+            if(!configObjectList.Any(configObject =>
+                configObject.Type is PluginConfigurationObjectType.CHAT_TEMPLATE &&
+                configObject.ConfigPluginId == templateSourcePluginId &&
+                configObject.Id.ToString() == configuredTemplate.Id))
             {
-                LOG.LogWarning($"The configured LLM provider '{p.InstanceName}' (id={p.Id}) was removed from its configuration plugin (id={cfgPluginId}). Removing the provider from the settings.");
-                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(p);
-                wasConfigurationChanged = true;
-            }
-
-            // Chat templates managed by this plugin but no longer present in plugin config
-            var templatesToRemove = SETTINGS_MANAGER.ConfigurationData.ChatTemplates
-                .Where(t => t.IsEnterpriseConfiguration && t.EnterpriseConfigurationPluginId == cfgPluginId && !templateIds.Contains(t.Id))
-                .ToList();
-            foreach (var t in templatesToRemove)
-            {
-                LOG.LogWarning($"The configured chat template '{t.Name}' (id={t.Id}) was removed from its configuration plugin (id={cfgPluginId}). Removing the chat template from the settings.");
-                SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(t);
+                LOG.LogWarning($"The configured chat template '{configuredTemplate.Name}' (id={configuredTemplate.Id}) is not present in the configuration plugin anymore. Removing the chat template from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(configuredTemplate);
                 wasConfigurationChanged = true;
             }
         }
-        #pragma warning restore MWAIS0001
         
         //
         // ==========================================================
