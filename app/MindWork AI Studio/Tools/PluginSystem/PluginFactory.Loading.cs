@@ -40,6 +40,8 @@ public static partial class PluginFactory
         if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
             return;
 
+        var configObjectList = new List<PluginConfigurationObject>();
+        
         try
         {
             LOG.LogInformation("Start loading plugins.");
@@ -112,7 +114,8 @@ public static partial class PluginFactory
             }
         
             // Start or restart all plugins:
-            await RestartAllPlugins(cancellationToken);
+            var configObjects = await RestartAllPlugins(cancellationToken);
+            configObjectList.AddRange(configObjects);
         }
         finally
         {
@@ -149,9 +152,51 @@ public static partial class PluginFactory
                 SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
                 wasConfigurationChanged = true;
             }
+            
+            if(!configObjectList.Any(configObject =>
+                configObject.Type is PluginConfigurationObjectType.LLM_PROVIDER &&
+                configObject.ConfigPluginId == providerSourcePluginId &&
+                configObject.Id.ToString() == configuredProvider.Id))
+            {
+                LOG.LogWarning($"The configured LLM provider '{configuredProvider.InstanceName}' (id={configuredProvider.Id}) is not present in the configuration plugin anymore. Removing the provider from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
+                wasConfigurationChanged = true;
+            }
         }
         #pragma warning restore MWAIS0001
+        
+        //
+        // Check chat templates:
+        //
+        var configuredTemplates = SETTINGS_MANAGER.ConfigurationData.ChatTemplates.ToList();
+        foreach (var configuredTemplate in configuredTemplates)
+        {
+            if(!configuredTemplate.IsEnterpriseConfiguration)
+                continue;
 
+            var templateSourcePluginId = configuredTemplate.EnterpriseConfigurationPluginId;
+            if(templateSourcePluginId == Guid.Empty)
+                continue;
+            
+            var templateSourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == templateSourcePluginId);
+            if(templateSourcePlugin is null)
+            {
+                LOG.LogWarning($"The configured chat template '{configuredTemplate.Name}' (id={configuredTemplate.Id}) is based on a plugin that is not available anymore. Removing the chat template from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(configuredTemplate);
+                wasConfigurationChanged = true;
+            }
+            
+            if(!configObjectList.Any(configObject =>
+                configObject.Type is PluginConfigurationObjectType.CHAT_TEMPLATE &&
+                configObject.ConfigPluginId == templateSourcePluginId &&
+                configObject.Id.ToString() == configuredTemplate.Id))
+            {
+                LOG.LogWarning($"The configured chat template '{configuredTemplate.Name}' (id={configuredTemplate.Id}) is not present in the configuration plugin anymore. Removing the chat template from the settings.");
+                SETTINGS_MANAGER.ConfigurationData.ChatTemplates.Remove(configuredTemplate);
+                wasConfigurationChanged = true;
+            }
+        }
+        
         //
         // ==========================================================
         // Check all possible settings:

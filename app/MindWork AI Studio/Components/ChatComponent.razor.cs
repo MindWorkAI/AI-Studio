@@ -327,7 +327,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
         this.currentChatTemplate = chatTemplate;
-        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
+            this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        
         if(this.ChatThread is null)
             return;
 
@@ -435,7 +437,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
                 Seed = this.RNG.Next(),
-                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
+                Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -673,7 +675,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
                 Seed = this.RNG.Next(),
-                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
+                Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
         
@@ -813,9 +815,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))
         {
-            this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
-            if(this.currentChatTemplate == default)
-                this.currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
+            var selectedTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
+            this.currentChatTemplate = selectedTemplate ?? ChatTemplate.NO_CHAT_TEMPLATE;
         }
     }
 

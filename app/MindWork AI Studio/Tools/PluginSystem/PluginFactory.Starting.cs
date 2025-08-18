@@ -11,9 +11,10 @@ public static partial class PluginFactory
     /// </summary>
     public static IReadOnlyCollection<PluginBase> RunningPlugins => RUNNING_PLUGINS;
     
-    private static async Task RestartAllPlugins(CancellationToken cancellationToken = default)
+    private static async Task<List<PluginConfigurationObject>> RestartAllPlugins(CancellationToken cancellationToken = default)
     {
         LOG.LogInformation("Try to start or restart all plugins.");
+        var configObjects = new List<PluginConfigurationObject>();
         RUNNING_PLUGINS.Clear();
 
         //
@@ -65,7 +66,12 @@ public static partial class PluginFactory
             {
                 if (availablePlugin.IsInternal || SETTINGS_MANAGER.IsPluginEnabled(availablePlugin) || availablePlugin.Type == PluginType.CONFIGURATION)
                     if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
+                    {
+                        if (plugin is PluginConfiguration configPlugin)
+                            configObjects.AddRange(configPlugin.ConfigObjects);
+                        
                         RUNNING_PLUGINS.Add(plugin);
+                    }
             }
             catch (Exception e)
             {
@@ -75,6 +81,7 @@ public static partial class PluginFactory
         
         // Inform all components that the plugins have been reloaded or started:
         await MessageBus.INSTANCE.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
+        return configObjects;
     }
     
     private static async Task<PluginBase> Start(IAvailablePlugin meta, CancellationToken cancellationToken = default)

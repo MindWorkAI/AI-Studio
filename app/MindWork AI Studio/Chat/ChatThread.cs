@@ -109,7 +109,7 @@ public sealed record ChatThread
                 else
                 {
                     var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatThread.SelectedChatTemplate);
-                    if(chatTemplate == default)
+                    if(chatTemplate == null)
                         systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
                     else
                     {
