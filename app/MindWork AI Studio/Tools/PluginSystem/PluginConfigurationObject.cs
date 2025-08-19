@@ -44,8 +44,8 @@ public sealed record PluginConfigurationObject
         IList<IAvailablePlugin> availablePlugins,
         IList<PluginConfigurationObject> configObjectList) where TClass : IConfigurationObject
     {
-        var wasConfigurationChanged = false;
         var configuredObjects = configObjectSelection.Compile()(SETTINGS_MANAGER.ConfigurationData);
+        var leftOverObjects = new List<TClass>();
         foreach (var configuredObject in configuredObjects)
         {
             if(!configuredObject.IsEnterpriseConfiguration)
@@ -59,8 +59,7 @@ public sealed record PluginConfigurationObject
             if(templateSourcePlugin is null)
             {
                 LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is based on a plugin that is not available anymore. Removing the chat template from the settings.");
-                configuredObjects.Remove(configuredObject);
-                wasConfigurationChanged = true;
+                leftOverObjects.Add(configuredObject);
             }
             
             if(!configObjectList.Any(configObject =>
@@ -69,10 +68,14 @@ public sealed record PluginConfigurationObject
                    configObject.Id.ToString() == configuredObject.Id))
             {
                 LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is not present in the configuration plugin anymore. Removing the chat template from the settings.");
-                configuredObjects.Remove(configuredObject);
-                wasConfigurationChanged = true;
+                leftOverObjects.Add(configuredObject);
             }
         }
+        
+        // Remove collected items after enumeration to avoid modifying the collection during iteration:
+        var wasConfigurationChanged = leftOverObjects.Count > 0;
+        foreach (var item in leftOverObjects.Distinct())
+            configuredObjects.Remove(item);
         
         return wasConfigurationChanged;
     }
