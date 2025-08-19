@@ -3,7 +3,16 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Settings;
 
-public record ChatTemplate(uint Num, string Id, string Name, string SystemPrompt, string PredefinedUserPrompt, List<ContentBlock> ExampleConversation, bool AllowProfileUsage, bool IsEnterpriseConfiguration = false, Guid EnterpriseConfigurationPluginId = default)
+public record ChatTemplate(
+    uint Num,
+    string Id,
+    string Name,
+    string SystemPrompt,
+    string PredefinedUserPrompt,
+    List<ContentBlock> ExampleConversation,
+    bool AllowProfileUsage,
+    bool IsEnterpriseConfiguration = false,
+    Guid EnterpriseConfigurationPluginId = default) : IConfigurationObject
 {
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], false)
     {

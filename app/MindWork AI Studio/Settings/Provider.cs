@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Tools.PluginSystem;
+
 using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Settings;
@@ -27,7 +29,7 @@ public readonly record struct Provider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ISecretId
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ISecretId, IConfigurationObject
 {
     #region Overrides of ValueType
 
@@ -56,5 +58,11 @@ public readonly record struct Provider(
     [JsonIgnore]
     public string SecretName => this.InstanceName;
     
+    #endregion
+
+    #region Implementation of IConfigurationObject
+
+    public string Name => this.InstanceName;
+
     #endregion
 }
