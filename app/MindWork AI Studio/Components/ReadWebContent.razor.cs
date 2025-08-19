@@ -20,7 +20,7 @@ public partial class ReadWebContent : MSGComponentBase
     public EventCallback<string> ContentChanged { get; set; }
     
     [Parameter]
-    public AIStudio.Settings.Provider ProviderSettings { get; set; }
+    public AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
     public bool AgentIsRunning { get; set; }
@@ -43,7 +43,7 @@ public partial class ReadWebContent : MSGComponentBase
     private bool urlIsValid;
     private bool isProviderValid;
 
-    private AIStudio.Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
 
     #region Overrides of ComponentBase
 
@@ -86,7 +86,7 @@ public partial class ReadWebContent : MSGComponentBase
             this.StateHasChanged();
             markdown = this.HTMLParser.ParseToMarkdown(html);
             
-            if (this.useContentCleanerAgent)
+            if (this.useContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {
                 this.AgentTextContentCleaner.ProviderSettings = this.providerSettings;
                 var additionalData = new Dictionary<string, string>
@@ -149,7 +149,7 @@ public partial class ReadWebContent : MSGComponentBase
 
     private string? ValidateProvider(bool shouldUseAgent)
     {
-        if(shouldUseAgent && this.providerSettings == default)
+        if(shouldUseAgent && this.providerSettings == AIStudio.Settings.Provider.NONE)
         {
             this.isProviderValid = false;
             return T("Please select a provider to use the cleanup agent.");

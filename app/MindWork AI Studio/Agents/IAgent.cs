@@ -12,7 +12,7 @@ public interface IAgent
     /// <summary>
     /// The provider to use for this agent.
     /// </summary>
-    public AIStudio.Settings.Provider? ProviderSettings { get; set; }
+    public Settings.Provider ProviderSettings { get; set; }
 
     /// <summary>
     /// Processes a chat thread (i.e., context) and returns the updated thread.

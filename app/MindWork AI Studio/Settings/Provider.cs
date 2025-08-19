@@ -18,7 +18,7 @@ namespace AIStudio.Settings;
 /// <param name="IsSelfHosted">Whether the provider is self-hosted.</param>
 /// <param name="Hostname">The hostname of the provider. Useful for self-hosted providers.</param>
 /// <param name="Model">The LLM model to use for chat.</param>
-public readonly record struct Provider(
+public record Provider(
     uint Num,
     string Id,
     string InstanceName,
@@ -31,6 +31,21 @@ public readonly record struct Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ISecretId, IConfigurationObject
 {
+    
+    public static readonly Provider NONE = new();
+
+    public Provider() : this(
+        0,
+        Guid.Empty.ToString(),
+        string.Empty,
+        LLMProviders.NONE,
+        default, 
+        false,
+        false,
+        Guid.Empty)
+    {
+    }
+    
     #region Overrides of ValueType
 
     /// <summary>

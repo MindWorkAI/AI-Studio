@@ -37,7 +37,7 @@ public sealed class DataSourceService
         //       does not mean anything. We cannot filter the data sources by any means.
         //       We return an empty list. Better safe than sorry.
         //
-        if (selectedLLMProvider == default)
+        if (selectedLLMProvider == Settings.Provider.NONE)
         {
             this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
             return new([], []);
