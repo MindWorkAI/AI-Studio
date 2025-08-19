@@ -34,7 +34,7 @@ public partial class ReadWebContent : MSGComponentBase
     [Parameter]
     public bool PreselectContentCleanerAgent { get; set; }
 
-    private Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
+    private readonly Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
     private ProcessStepValue processStep;
     
     private bool showWebContentReader;
