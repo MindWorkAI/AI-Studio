@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace AIStudio.Settings;
+namespace AIStudio.Tools;
 
 public static class ExpressionExtensions
 {
