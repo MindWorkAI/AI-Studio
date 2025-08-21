@@ -1,4 +1,6 @@
 using System.Linq.Expressions;
+using System.Numerics;
+using System.Reflection;
 
 namespace AIStudio.Tools;
 
@@ -31,5 +33,49 @@ public static class ExpressionExtensions
                 LOGGER.LogError($"Expression '{expression}' is not a valid property expression.");
                 throw new ArgumentException($"Expression '{expression}' is not a valid property expression.", nameof(expression));
         }
+    }
+
+    /// <summary>
+    /// Attempts to increment the value of an uint property for a specified object using a
+    /// provided expression.
+    /// </summary>
+    /// <param name="expression">An expression representing the property to be incremented. The property
+    /// must be of type uint and belong to the provided object.</param>
+    /// <param name="data">The object that contains the property referenced by the expression.</param>
+    /// <typeparam name="TIn">The type of the object that contains the property to be incremented.</typeparam>
+    /// <typeparam name="TOut">The type of the property to be incremented.</typeparam>
+    /// <returns>True if the property was successfully incremented, otherwise false.</returns>
+    public static bool TryIncrement<TIn, TOut>(this Expression<Func<TIn, TOut>> expression, TIn data) where TOut : IBinaryInteger<TOut>
+    {
+        // Ensure that the expression body is a member expression:
+        if (expression.Body is not MemberExpression memberExpression)
+            return false;
+
+        // Ensure that the member expression is a property:
+        if (memberExpression.Member is not PropertyInfo propertyInfo)
+            return false;
+        
+        // Ensure that the member expression has a target object:
+        if (memberExpression.Expression is null)
+            return false;
+	
+        // Get the target object for the expression, which is the object containing the property to increment:
+        var targetObjectExpression = Expression.Lambda(memberExpression.Expression, expression.Parameters);
+        
+        // Compile the lambda expression to get the target object
+        // (which is the object containing the property to increment):
+        var targetObject = targetObjectExpression.Compile().DynamicInvoke(data);
+
+        // Was the compilation successful?
+        if (targetObject is null)
+            return false;
+
+        // Read the current value of the property:
+        if (propertyInfo.GetValue(targetObject) is not TOut value)
+            return false;
+
+        // Increment the value:
+        propertyInfo.SetValue(targetObject, value + TOut.CreateChecked(1));
+        return true;
     }
 }
