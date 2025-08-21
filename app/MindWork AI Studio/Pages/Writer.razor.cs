@@ -18,7 +18,7 @@ public partial class Writer : MSGComponentBase
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
     
     private MudTextField<string> textField = null!;
-    private AIStudio.Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
     private ChatThread? chatThread;
     private bool isStreaming;
     private string userInput = string.Empty;

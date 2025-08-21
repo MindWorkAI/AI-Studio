@@ -11,9 +11,9 @@ public partial class ProviderSelection : MSGComponentBase
 {
     [CascadingParameter]
     public AssistantBase<NoComponent>? AssistantBase { get; set; }
-    
+
     [Parameter]
-    public AIStudio.Settings.Provider ProviderSettings { get; set; }
+    public AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderSettingsChanged { get; set; }
@@ -32,7 +32,8 @@ public partial class ProviderSelection : MSGComponentBase
     {
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.AssistantBase?.Component ?? Tools.Components.NONE);
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
-                yield return provider;
+            if (provider.UsedLLMProvider != LLMProviders.NONE)
+                if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+                    yield return provider;
     }
 }

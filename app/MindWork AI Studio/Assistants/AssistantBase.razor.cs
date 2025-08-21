@@ -85,7 +85,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected AIStudio.Settings.Provider providerSettings;
+    protected AIStudio.Settings.Provider providerSettings = Settings.Provider.NONE;
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
@@ -352,7 +352,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task InnerResetForm()
     {
         this.resultingContentBlock = null;
-        this.providerSettings = default;
+        this.providerSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);

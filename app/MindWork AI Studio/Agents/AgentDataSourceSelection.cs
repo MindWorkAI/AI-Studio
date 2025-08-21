@@ -86,7 +86,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                                                                       """;
 
     /// <inheritdoc />
-    public override Settings.Provider? ProviderSettings { get; set; }
+    public override Settings.Provider ProviderSettings { get; set; } = Settings.Provider.NONE;
     
     /// <summary>
     /// The data source selection agent does not work with context. Use
@@ -141,6 +141,11 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
 
         // We start with the provider currently selected by the user:
         var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_DATA_SOURCE_SELECTION, provider.Id, true);
+        if (agentProvider == Settings.Provider.NONE)
+        {
+            logger.LogWarning("No provider is selected for the agent. The agent cannot select data sources.");
+            return [];
+        }
 
         // Assign the provider settings to the agent:
         logger.LogInformation($"The agent for the data source selection uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
