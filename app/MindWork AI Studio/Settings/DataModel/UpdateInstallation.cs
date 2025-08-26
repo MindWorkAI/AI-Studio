@@ -1,6 +1,6 @@
 namespace AIStudio.Settings.DataModel;
 
-public enum UpdateBehaviour
+public enum UpdateInstallation
 {
     MANUAL,
     AUTOMATIC,

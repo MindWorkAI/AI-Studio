@@ -45,7 +45,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// How updates should be installed.
     /// </summary>
-    public UpdateBehaviour UpdateBehaviour { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateBehaviour, UpdateBehaviour.MANUAL);
+    public UpdateInstallation UpdateInstallation { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateInstallation, UpdateInstallation.MANUAL);
     
     /// <summary>
     /// The navigation behavior.

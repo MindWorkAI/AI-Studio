@@ -72,10 +72,10 @@ public static class ConfigurationSelectDataFactory
         yield return new (TB("Check every week"), UpdateInterval.WEEKLY);
     }
 
-    public static IEnumerable<ConfigurationSelectData<UpdateBehaviour>> GetUpdateBehaviourData()
+    public static IEnumerable<ConfigurationSelectData<UpdateInstallation>> GetUpdateBehaviourData()
     {
-        yield return new(TB("Install updates manually"), UpdateBehaviour.MANUAL);
-        yield return new(TB("Install updates automatically"), UpdateBehaviour.AUTOMATIC);
+        yield return new(TB("Install updates manually"), UpdateInstallation.MANUAL);
+        yield return new(TB("Install updates automatically"), UpdateInstallation.AUTOMATIC);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetWorkspaceStorageBehaviorData()

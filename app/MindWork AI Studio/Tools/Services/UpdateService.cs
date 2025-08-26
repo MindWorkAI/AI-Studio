@@ -115,7 +115,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         var response = await this.rust.CheckForUpdate();
         if (response.UpdateIsAvailable)
         {
-            if (this.settingsManager.ConfigurationData.App.UpdateBehaviour is UpdateBehaviour.AUTOMATIC)
+            if (this.settingsManager.ConfigurationData.App.UpdateInstallation is UpdateInstallation.AUTOMATIC)
             {
                 try
                 {
