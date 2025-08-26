@@ -42,10 +42,11 @@ public static class ExpressionExtensions
     /// <param name="expression">An expression representing the property to be incremented. The property
     /// must be of type uint and belong to the provided object.</param>
     /// <param name="data">The object that contains the property referenced by the expression.</param>
+    /// <param name="type">The type of increment operation to perform (e.g., prefix or postfix).</param>
     /// <typeparam name="TIn">The type of the object that contains the property to be incremented.</typeparam>
     /// <typeparam name="TOut">The type of the property to be incremented.</typeparam>
     /// <returns>An IncrementResult object containing the result of the increment operation.</returns>
-    public static IncrementResult<TOut> TryIncrement<TIn, TOut>(this Expression<Func<TIn, TOut>> expression, TIn data) where TOut : IBinaryInteger<TOut>
+    public static IncrementResult<TOut> TryIncrement<TIn, TOut>(this Expression<Func<TIn, TOut>> expression, TIn data, IncrementType type) where TOut : IBinaryInteger<TOut>
     {
         // Ensure that the expression body is a member expression:
         if (expression.Body is not MemberExpression memberExpression)
@@ -53,11 +54,11 @@ public static class ExpressionExtensions
 
         // Ensure that the member expression is a property:
         if (memberExpression.Member is not PropertyInfo propertyInfo)
-            return new(false, TOut.Zero);;
+            return new(false, TOut.Zero);
         
         // Ensure that the member expression has a target object:
         if (memberExpression.Expression is null)
-            return new(false, TOut.Zero);;
+            return new(false, TOut.Zero);
 	
         // Get the target object for the expression, which is the object containing the property to increment:
         var targetObjectExpression = Expression.Lambda(memberExpression.Expression, expression.Parameters);
@@ -68,15 +69,28 @@ public static class ExpressionExtensions
 
         // Was the compilation successful?
         if (targetObject is null)
-            return new(false, TOut.Zero);;
+            return new(false, TOut.Zero);
 
         // Read the current value of the property:
         if (propertyInfo.GetValue(targetObject) is not TOut value)
-            return new(false, TOut.Zero);;
+            return new(false, TOut.Zero);
 
         // Increment the value:
-        var nextValue = value + TOut.CreateChecked(1);
-        propertyInfo.SetValue(targetObject, nextValue);
-        return new(true, nextValue);
+        switch (type)
+        {
+            case IncrementType.PRE:
+                var nextValue = value + TOut.CreateChecked(1);
+                propertyInfo.SetValue(targetObject, nextValue);
+                return new(true, nextValue);
+            
+            case IncrementType.POST:
+                var currentValue = value;
+                var incrementedValue = value + TOut.CreateChecked(1);
+                propertyInfo.SetValue(targetObject, incrementedValue);
+                return new(true, currentValue);
+            
+            default:
+                return new(false, TOut.Zero);
+        }
     }
 }

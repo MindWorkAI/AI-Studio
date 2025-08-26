@@ -131,9 +131,9 @@ public sealed record PluginConfigurationObject
                 // Case: The object does not exist, we have to add it
                 else
                 {
-                    // Case: Increment the next number was successful
-                    if (nextConfigObjectNumSelection.TryIncrement(SETTINGS_MANAGER.ConfigurationData) is { Success: true, UpdatedValue: var nextNum })
+                    if (nextConfigObjectNumSelection.TryIncrement(SETTINGS_MANAGER.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
                     {
+                        // Case: Increment the next number was successful
                         configObject = configObject with { Num = nextNum };
                         storedObjects.Add((TClass)configObject);
                     }
