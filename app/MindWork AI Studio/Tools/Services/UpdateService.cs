@@ -42,14 +42,14 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         //
         // Set the update interval based on the user's settings.
         //
-        this.updateInterval = this.settingsManager.ConfigurationData.App.UpdateBehavior switch
+        this.updateInterval = this.settingsManager.ConfigurationData.App.UpdateInterval switch
         {
-            UpdateBehavior.NO_CHECK => Timeout.InfiniteTimeSpan,
-            UpdateBehavior.ONCE_STARTUP => Timeout.InfiniteTimeSpan,
+            UpdateInterval.NO_CHECK => Timeout.InfiniteTimeSpan,
+            UpdateInterval.ONCE_STARTUP => Timeout.InfiniteTimeSpan,
             
-            UpdateBehavior.HOURLY => TimeSpan.FromHours(1),
-            UpdateBehavior.DAILY => TimeSpan.FromDays(1),
-            UpdateBehavior.WEEKLY => TimeSpan.FromDays(7),
+            UpdateInterval.HOURLY => TimeSpan.FromHours(1),
+            UpdateInterval.DAILY => TimeSpan.FromDays(1),
+            UpdateInterval.WEEKLY => TimeSpan.FromDays(7),
             
             _ => TimeSpan.FromHours(1)
         };
@@ -58,7 +58,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         // When the user doesn't want to check for updates, we can
         // return early.
         //
-        if(this.settingsManager.ConfigurationData.App.UpdateBehavior is UpdateBehavior.NO_CHECK)
+        if(this.settingsManager.ConfigurationData.App.UpdateInterval is UpdateInterval.NO_CHECK)
             return;
         
         //

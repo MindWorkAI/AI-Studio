@@ -40,7 +40,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// If and when we should look for updates.
     /// </summary>
-    public UpdateBehavior UpdateBehavior { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateBehavior, UpdateBehavior.HOURLY);
+    public UpdateInterval UpdateInterval { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateInterval, UpdateInterval.HOURLY);
     
     /// <summary>
     /// The navigation behavior.
