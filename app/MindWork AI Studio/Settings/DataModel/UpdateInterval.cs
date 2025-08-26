@@ -1,6 +1,6 @@
 namespace AIStudio.Settings.DataModel;
 
-public enum UpdateBehavior
+public enum UpdateInterval
 {
     NO_CHECK,
     ONCE_STARTUP,

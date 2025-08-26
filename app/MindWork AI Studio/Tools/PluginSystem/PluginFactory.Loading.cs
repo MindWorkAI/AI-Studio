@@ -139,7 +139,11 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
         
         // Check for update behavior:
-        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateBehavior>(x => x.App, x => x.UpdateBehavior, AVAILABLE_PLUGINS))
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateInterval>(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check for update installation behavior:
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateInstallation>(x => x.App, x => x.UpdateInstallation, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         // Check for users allowed to added providers:

@@ -92,7 +92,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_ERROR, Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM,
-            Event.PLUGINS_RELOADED
+            Event.PLUGINS_RELOADED, Event.INSTALL_UPDATE,
         ]);
         
         // Set the snackbar for the update service:
@@ -143,6 +143,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             switch (triggeredEvent)
             {
+                case Event.INSTALL_UPDATE:
+                    this.performingUpdate = true;
+                    this.StateHasChanged();
+                    break;
+                
                 case Event.UPDATE_AVAILABLE:
                     if (data is UpdateResponse updateResponse)
                     {

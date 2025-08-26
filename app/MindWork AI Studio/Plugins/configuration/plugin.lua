@@ -62,9 +62,13 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 
 CONFIG["SETTINGS"] = {}
 
--- Configure the update behavior:
+-- Configure the update check interval:
 -- Allowed values are: NO_CHECK, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
--- CONFIG["SETTINGS"]["DataApp.UpdateBehavior"] = "NO_CHECK"
+-- CONFIG["SETTINGS"]["DataApp.UpdateInterval"] = "NO_CHECK"
+
+-- Configure how updates are installed:
+-- Allowed values are: MANUAL, AUTOMATIC
+-- CONFIG["SETTINGS"]["DataApp.UpdateInstallation"] = "MANUAL"
 
 -- Configure the user permission to add providers:
 -- Allowed values are: true, false
