@@ -18,9 +18,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Parameter]
     public EventCallback<ChatThread?> ChatThreadChanged { get; set; }
-    
+
     [Parameter]
-    public AIStudio.Settings.Provider Provider { get; set; }
+    public AIStudio.Settings.Provider Provider { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
@@ -634,7 +634,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             default:
             case AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER:
-                if(this.Provider == default)
+                if(this.Provider == AIStudio.Settings.Provider.NONE)
                 {
                     this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
                     await this.ProviderChanged.InvokeAsync(this.Provider);
@@ -797,7 +797,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
             
             case LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER:
-                if(this.Provider == default)
+                if(this.Provider == AIStudio.Settings.Provider.NONE)
                     this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
                 break;
         }
