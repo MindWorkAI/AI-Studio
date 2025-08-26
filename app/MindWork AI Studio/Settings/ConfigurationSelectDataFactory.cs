@@ -63,7 +63,7 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Enter is sending the input"), SendBehavior.ENTER_IS_SENDING);
     }
     
-    public static IEnumerable<ConfigurationSelectData<UpdateInterval>> GetUpdateBehaviorData()
+    public static IEnumerable<ConfigurationSelectData<UpdateInterval>> GetUpdateIntervalData()
     {
         yield return new(TB("No automatic update checks"), UpdateInterval.NO_CHECK);
         yield return new(TB("Once at startup"), UpdateInterval.ONCE_STARTUP);
@@ -71,6 +71,11 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Check every day"), UpdateInterval.DAILY);
         yield return new (TB("Check every week"), UpdateInterval.WEEKLY);
     }
+
+    public static IEnumerable<ConfigurationSelectData<UpdateBehaviour>> GetUpdateBehaviourData()
+    {
+        yield return new(TB("Install updates manually"), UpdateBehaviour.MANUAL);
+        yield return new(TB("Install updates automatically"), UpdateBehaviour.AUTOMATIC);
     }
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceStorageBehavior>> GetWorkspaceStorageBehaviorData()

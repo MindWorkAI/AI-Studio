@@ -18,6 +18,7 @@ public enum Event
     // Update events:
     USER_SEARCH_FOR_UPDATE,
     UPDATE_AVAILABLE,
+    INSTALL_UPDATE,
     
     // Chat events:
     HAS_CHAT_UNSAVED_CHANGES,

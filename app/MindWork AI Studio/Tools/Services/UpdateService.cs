@@ -115,7 +115,25 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         var response = await this.rust.CheckForUpdate();
         if (response.UpdateIsAvailable)
         {
-            await this.messageBus.SendMessage(null, Event.UPDATE_AVAILABLE, response);
+            if (this.settingsManager.ConfigurationData.App.UpdateBehaviour is UpdateBehaviour.AUTOMATIC)
+            {
+                try
+                {
+                    await this.messageBus.SendMessage<bool>(null, Event.INSTALL_UPDATE);
+                    await this.rust.InstallUpdate();
+                }
+                catch (Exception)
+                {
+                    SNACKBAR!.Add(TB("Failed to install update automatically. Please try again manually."), Severity.Error, config =>
+                    {
+                        config.Icon = Icons.Material.Filled.Error;
+                        config.IconSize = Size.Large;
+                        config.IconColor = Color.Error;
+                    });
+                }
+            }
+            else
+                await this.messageBus.SendMessage(null, Event.UPDATE_AVAILABLE, response);
         }
         else
         {
