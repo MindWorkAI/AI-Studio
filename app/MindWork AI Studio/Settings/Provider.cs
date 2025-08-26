@@ -20,7 +20,7 @@ namespace AIStudio.Settings;
 /// <param name="IsSelfHosted">Whether the provider is self-hosted.</param>
 /// <param name="Hostname">The hostname of the provider. Useful for self-hosted providers.</param>
 /// <param name="Model">The LLM model to use for chat.</param>
-public record Provider(
+public sealed record Provider(
     uint Num,
     string Id,
     string InstanceName,
