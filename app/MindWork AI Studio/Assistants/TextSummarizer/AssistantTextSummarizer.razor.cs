@@ -44,6 +44,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
             this.customTargetLanguage = string.Empty;
             this.selectedComplexity = Complexity.NO_CHANGE;
             this.expertInField = string.Empty;
+            this.importantAspects = string.Empty;
         }
     }
     
@@ -55,6 +56,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
             this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
             this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
+            this.importantAspects = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedImportantAspects;
             return true;
         }
         
@@ -67,6 +69,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string customTargetLanguage = string.Empty;
     private Complexity selectedComplexity;
     private string expertInField = string.Empty;
+    private string importantAspects = string.Empty;
 
     #region Overrides of ComponentBase
 
@@ -117,7 +120,12 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
                 {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
                 {this.selectedComplexity.Prompt(this.expertInField)}
                 
-                Please summarize the following text:
+                Put an emphasis on the following aspects when writing your summary:
+                ```
+                {this.importantAspects}
+                ```
+                
+                Please summarize the following text. Only the language of this text is important for your instructions.
                 
                 ```
                 {this.inputText}
