@@ -4,7 +4,9 @@
         <MudText Typo="Typo.body1">
             @this.Message
         </MudText>
-        <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="@T("Chat name")" AutoFocus="@true" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudForm @ref="this.form" Class="mt-4">
+            <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="@T("Chat name")" AutoFocus="@true" UserAttributes="@USER_INPUT_ATTRIBUTES" Validation="@this.ValidateUserInput" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">

@@ -2157,6 +2157,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2237618267"] = "Möchten Sie
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2244038752"] = "Chat löschen"
 
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Bitte geben Sie einen Namen für diesen Chat ein."
+
 -- Move to workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "In einen Arbeitsbereich verschieben"
 
@@ -2168,6 +2171,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Chat in den 
 
 -- Please enter a new or edit the name for your workspace '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Bitte geben Sie einen neuen Namen für ihren Arbeitsbereich „{0}“ ein oder bearbeiten Sie ihn:"
+
+-- Please enter a workspace name.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Bitte geben Sie einen Namen für diesen Arbeitsbereich ein."
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3310482275"] = "Unbenannter Chat"
@@ -4136,6 +4142,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T4004
 
 -- Chat name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T1746586282"] = "Chat-Name"
+
+-- Please enter a value.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T3576780391"] = "Bitte geben Sie einen Wert ein."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Abbrechen"
