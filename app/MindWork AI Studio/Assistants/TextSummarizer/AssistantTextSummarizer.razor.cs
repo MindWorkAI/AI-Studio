@@ -12,13 +12,13 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     protected override string Description => T("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
     
     protected override string SystemPrompt => 
-        """
-        You get a long text as input. The user wants to get a summary of the text.
-        The user might want to change the language of the summary. In this case,
-        you should provide a summary in the requested language. Eventually, the user
-        want to change the complexity of the text. In this case, you should provide
-        a summary with the requested complexity. In any case, do not add any information.
-        """;
+        $"""
+         You get a long text as input. The text is marked with ```. The user wants to get a summary of the text.
+         {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
+         {this.selectedComplexity.Prompt(this.expertInField)}
+         {this.PromptImportantAspects(this.importantAspects)}
+         In any case, only use information that is provided in the text for the summary.
+         """;
     
     protected override bool AllowProfiles => false;
     
@@ -108,6 +108,17 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         return null;
     }
 
+    private string PromptImportantAspects(string importantAspectsForPrompt)
+    {
+        if (string.IsNullOrWhiteSpace(importantAspectsForPrompt))
+            return string.Empty;
+
+        return $"""
+                Emphasize the following aspects in your summary:
+                {importantAspectsForPrompt}
+                """;
+    }
+
     private async Task SummarizeText()
     {
         await this.form!.Validate();
@@ -117,16 +128,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
-                {this.selectedComplexity.Prompt(this.expertInField)}
-                
-                Put an emphasis on the following aspects when writing your summary:
-                ```
-                {this.importantAspects}
-                ```
-                
-                Please summarize the following text. Only the language of this text is important for your instructions.
-                
+                Please summarize the following text:
                 ```
                 {this.inputText}
                 ```

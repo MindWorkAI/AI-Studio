@@ -46,7 +46,7 @@ public static class CommonLanguageExtensions
     
     public static string PromptSummarizing(this CommonLanguages language, string customLanguage) => language switch
     {
-        CommonLanguages.AS_IS => "Do not change the language of the text.",
+        CommonLanguages.AS_IS => "Use the language the text is written in for the summary.",
         CommonLanguages.OTHER => $"Output your summary in {customLanguage}.",
 
         _ => $"Output your summary in {language.Name()} ({language}).",
