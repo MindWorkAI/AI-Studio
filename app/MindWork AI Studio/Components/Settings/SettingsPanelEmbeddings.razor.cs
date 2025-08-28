@@ -90,9 +90,9 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
 
     private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);

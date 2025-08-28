@@ -96,9 +96,9 @@ public partial class SettingsPanelProviders : SettingsPanelBase
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the provider '{0}'?"), provider.InstanceName) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the provider '{0}'?"), provider.InstanceName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -114,9 +114,9 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         }
         else
         {
-            var issueDialogParameters = new DialogParameters
+            var issueDialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", string.Format(T("Couldn't delete the provider '{0}'. The issue: {1}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?"), provider.InstanceName, deleteSecretResponse.Issue) },
+                { x => x.Message, string.Format(T("Couldn't delete the provider '{0}'. The issue: {1}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?"), provider.InstanceName, deleteSecretResponse.Issue) },
             };
         
             var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete LLM Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);

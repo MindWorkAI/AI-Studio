@@ -121,10 +121,10 @@ public static class WorkspaceBehaviour
         if (askForConfirmation)
         {
             var workspaceName = await LoadWorkspaceName(chat.WorkspaceId);
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
                 {
-                    "Message", (chat.WorkspaceId == Guid.Empty) switch
+                    x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
                         true => TB($"Are you sure you want to delete the temporary chat '{chat.Name}'?"),
                         false => TB($"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?"),

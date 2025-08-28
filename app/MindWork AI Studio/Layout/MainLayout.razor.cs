@@ -306,9 +306,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Leave Chat Page"), dialogParameters, DialogOptions.FULLSCREEN);
