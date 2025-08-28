@@ -112,9 +112,30 @@ public partial class Workspaces : MSGComponentBase
         // Enumerate the chat directories:
         foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
         {
-            // Read the `name` file:
+            // Read or create the `name` file (self-heal):
             var chatNamePath = Path.Join(tempChatDirPath, "name");
-            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+            string chatName;
+            try
+            {
+                if (!File.Exists(chatNamePath))
+                {
+                    chatName = T("Unnamed chat");
+                    await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                }
+                else
+                {
+                    chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(chatName))
+                    {
+                        chatName = T("Unnamed chat");
+                        await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                chatName = T("Unnamed chat");
+            }
             
             // Read the last change time of the chat:
             var chatThreadPath = Path.Join(tempChatDirPath, "thread.json");
@@ -158,9 +179,30 @@ public partial class Workspaces : MSGComponentBase
         // Enumerate the workspace directories:
         foreach (var workspaceDirPath in Directory.EnumerateDirectories(workspaceDirectories))
         {
-            // Read the `name` file:
+            // Read or create the `name` file (self-heal):
             var workspaceNamePath = Path.Join(workspaceDirPath, "name");
-            var workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+            string workspaceName;
+            try
+            {
+                if (!File.Exists(workspaceNamePath))
+                {
+                    workspaceName = T("Unnamed workspace");
+                    await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+                }
+                else
+                {
+                    workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(workspaceName))
+                    {
+                        workspaceName = T("Unnamed workspace");
+                        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                workspaceName = T("Unnamed workspace");
+            }
                                 
             workspaces.Add(new TreeItemData<ITreeItem>
             {
@@ -194,9 +236,30 @@ public partial class Workspaces : MSGComponentBase
         // Enumerate the workspace directory:
         foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
         {
-            // Read the `name` file:
+            // Read or create the `name` file (self-heal):
             var chatNamePath = Path.Join(chatPath, "name");
-            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+            string chatName;
+            try
+            {
+                if (!File.Exists(chatNamePath))
+                {
+                    chatName = T("Unnamed chat");
+                    await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                }
+                else
+                {
+                    chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(chatName))
+                    {
+                        chatName = T("Unnamed chat");
+                        await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                chatName = T("Unnamed chat");
+            }
             
             // Read the last change time of the chat:
             var chatThreadPath = Path.Join(chatPath, "thread.json");

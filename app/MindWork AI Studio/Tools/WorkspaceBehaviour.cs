@@ -83,7 +83,33 @@ public static class WorkspaceBehaviour
         
         var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
         var workspaceNamePath = Path.Join(workspacePath, "name");
-        return await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+        
+        try
+        {
+            // If the name file does not exist or is empty, self-heal with a default name.
+            if (!File.Exists(workspaceNamePath))
+            {
+                var defaultName = TB("Unnamed workspace");
+                Directory.CreateDirectory(workspacePath);
+                await File.WriteAllTextAsync(workspaceNamePath, defaultName, Encoding.UTF8);
+                return defaultName;
+            }
+            
+            var name = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                var defaultName = TB("Unnamed workspace");
+                await File.WriteAllTextAsync(workspaceNamePath, defaultName, Encoding.UTF8);
+                return defaultName;
+            }
+            
+            return name;
+        }
+        catch
+        {
+            // On any error, return a localized default without throwing.
+            return TB("Unnamed workspace");
+        }
     }
     
     public static async Task DeleteChat(IDialogService dialogService, Guid workspaceId, Guid chatId, bool askForConfirmation = true)
@@ -124,13 +150,30 @@ public static class WorkspaceBehaviour
     private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
     {
         var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
-        
-        if(Path.Exists(workspacePath))
-            return;
-        
-        Directory.CreateDirectory(workspacePath);
         var workspaceNamePath = Path.Join(workspacePath, "name");
-        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+        
+        if(!Path.Exists(workspacePath))
+            Directory.CreateDirectory(workspacePath);
+        
+        try
+        {
+            // When the name file is missing or empty, write it (self-heal).
+            // Otherwise, keep the existing name:
+            if (!File.Exists(workspaceNamePath))
+            {
+                await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+            }
+            else
+            {
+                var existing = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+                if (string.IsNullOrWhiteSpace(existing))
+                    await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+            }
+        }
+        catch
+        {
+            // Ignore IO issues to avoid interrupting background initialization.
+        }
     }
     
     public static async Task EnsureBiasWorkspace() => await EnsureWorkspace(KnownWorkspaces.BIAS_WORKSPACE_ID, "Bias of the Day");
