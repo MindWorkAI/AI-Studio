@@ -51,9 +51,9 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
 
     private async Task DeleteProfile(Profile profile)
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the profile '{0}'?"), profile.Name) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the profile '{0}'?"), profile.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Profile"), dialogParameters, DialogOptions.FULLSCREEN);

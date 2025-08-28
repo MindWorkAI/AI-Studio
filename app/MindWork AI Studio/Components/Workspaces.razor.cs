@@ -315,9 +315,9 @@ public partial class Workspaces : MSGComponentBase
         // Check if the chat has unsaved changes:
         if (switchToChat && await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -356,10 +356,10 @@ public partial class Workspaces : MSGComponentBase
         if (askForConfirmation)
         {
             var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(chat.WorkspaceId);
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
                 {
-                    "Message", (chat.WorkspaceId == Guid.Empty) switch
+                    x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
                         true => string.Format(T("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
                         false => string.Format(T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
@@ -492,9 +492,9 @@ public partial class Workspaces : MSGComponentBase
         // Determine how many chats are in the workspace:
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -512,11 +512,11 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { "Message", T("Please select the workspace where you want to move the chat to.") },
-            { "SelectedWorkspace", chat.WorkspaceId },
-            { "ConfirmText", T("Move chat") },
+            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.SelectedWorkspace, chat.WorkspaceId },
+            { x => x.ConfirmText, T("Move chat") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -559,9 +559,9 @@ public partial class Workspaces : MSGComponentBase
         // Check if the chat has unsaved changes:
         if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create Chat"), dialogParameters, DialogOptions.FULLSCREEN);
