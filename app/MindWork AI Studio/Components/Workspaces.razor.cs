@@ -396,12 +396,14 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { "Message", string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
-            { "UserInput", chat.Name },
-            { "ConfirmText", T("Rename") },
-            { "ConfirmColor", Color.Info },
+            { x => x.Message, string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
+            { x => x.UserInput, chat.Name },
+            { x => x.ConfirmText, T("Rename") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a chat name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -428,12 +430,14 @@ public partial class Workspaces : MSGComponentBase
         
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(workspaceId);
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { "Message", string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
-            { "UserInput", workspaceName },
-            { "ConfirmText", T("Rename") },
-            { "ConfirmColor", Color.Info },
+            { x => x.Message, string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
+            { x => x.UserInput, workspaceName },
+            { x => x.ConfirmText, T("Rename") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -449,12 +453,14 @@ public partial class Workspaces : MSGComponentBase
 
     private async Task AddWorkspace()
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { "Message", T("Please name your workspace:") },
-            { "UserInput", string.Empty },
-            { "ConfirmText", T("Add workspace") },
-            { "ConfirmColor", Color.Info },
+            { x => x.Message, T("Please name your workspace:") },
+            { x => x.UserInput, string.Empty },
+            { x => x.ConfirmText, T("Add workspace") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Add Workspace"), dialogParameters, DialogOptions.FULLSCREEN);

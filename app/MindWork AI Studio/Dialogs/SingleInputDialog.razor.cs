@@ -20,9 +20,17 @@ public partial class SingleInputDialog : MSGComponentBase
 
     [Parameter]
     public Color ConfirmColor { get; set; } = Color.Error;
-    
+
+    [Parameter]
+    public bool AllowEmptyInput { get; set; }
+
+    [Parameter]
+    public string EmptyInputErrorMessage { get; set; } = string.Empty;
+
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
+    private MudForm form = null!;
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -34,7 +42,22 @@ public partial class SingleInputDialog : MSGComponentBase
 
     #endregion
 
+    private string? ValidateUserInput(string? value)
+    {
+        if (!this.AllowEmptyInput && string.IsNullOrWhiteSpace(value))
+            return string.IsNullOrWhiteSpace(this.EmptyInputErrorMessage) ? T("Please enter a value.") : this.EmptyInputErrorMessage;
+        
+        return null;
+    }
+    
     private void Cancel() => this.MudDialog.Cancel();
     
-    private void Confirm() => this.MudDialog.Close(DialogResult.Ok(this.UserInput));
+    private async Task Confirm()
+    {
+        await this.form.Validate();
+        if(!this.form.IsValid)
+            return;
+        
+        this.MudDialog.Close(DialogResult.Ok(this.UserInput));
+    }
 }
