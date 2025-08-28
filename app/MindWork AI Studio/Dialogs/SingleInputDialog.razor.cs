@@ -23,6 +23,9 @@ public partial class SingleInputDialog : MSGComponentBase
 
     [Parameter]
     public bool AllowEmptyInput { get; set; }
+    
+    [Parameter]
+    public string InputHeaderText { get; set; } = string.Empty;
 
     [Parameter]
     public string EmptyInputErrorMessage { get; set; } = string.Empty;
@@ -42,6 +45,8 @@ public partial class SingleInputDialog : MSGComponentBase
 
     #endregion
 
+    private string GetInputHeaderText => string.IsNullOrWhiteSpace(this.InputHeaderText) ? T("Your Input") : this.InputHeaderText;
+    
     private string? ValidateUserInput(string? value)
     {
         if (!this.AllowEmptyInput && string.IsNullOrWhiteSpace(value))

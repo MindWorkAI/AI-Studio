@@ -399,6 +399,7 @@ public partial class Workspaces : MSGComponentBase
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
             { x => x.Message, string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
+            { x => x.InputHeaderText, T("Chat Name") },
             { x => x.UserInput, chat.Name },
             { x => x.ConfirmText, T("Rename") },
             { x => x.ConfirmColor, Color.Info },
@@ -433,6 +434,7 @@ public partial class Workspaces : MSGComponentBase
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
             { x => x.Message, string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
+            { x => x.InputHeaderText, T("Workspace Name") },
             { x => x.UserInput, workspaceName },
             { x => x.ConfirmText, T("Rename") },
             { x => x.ConfirmColor, Color.Info },
@@ -456,6 +458,7 @@ public partial class Workspaces : MSGComponentBase
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
             { x => x.Message, T("Please name your workspace:") },
+            { x => x.InputHeaderText, T("Workspace Name") },
             { x => x.UserInput, string.Empty },
             { x => x.ConfirmText, T("Add workspace") },
             { x => x.ConfirmColor, Color.Info },
