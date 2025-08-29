@@ -250,6 +250,7 @@ public static class LLMProvidersExtensions
     {
         LLMProviders.FIREWORKS => "https://fireworks.ai/models?show=Serverless",
         LLMProviders.HUGGINGFACE => $"https://huggingface.co/models?inference_provider={inferenceProvider.EndpointsId()}",
+        LLMProviders.PERPLEXITY => "https://docs.perplexity.ai/api-reference/chat-completions-post#body-model",
         _ => string.Empty,
     };
 
@@ -257,6 +258,7 @@ public static class LLMProvidersExtensions
     {
         LLMProviders.FIREWORKS => true,
         LLMProviders.HUGGINGFACE => true,
+        LLMProviders.PERPLEXITY => true,
         _ => false,
     };
     
