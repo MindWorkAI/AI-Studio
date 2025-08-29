@@ -17,7 +17,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
     public override string Id => LLMProviders.PERPLEXITY.ToName();
 
     /// <inheritdoc />
-    public override string InstanceName { get; set; } = "DeepSeek";
+    public override string InstanceName { get; set; } = "Perplexity";
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -34,8 +34,8 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
-        // Prepare the DeepSeek HTTP chat request:
-        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatRequest
+        // Prepare the Perplexity HTTP chat request:
+        var perplexityChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
             
@@ -72,11 +72,11 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
             // Set the content:
-            request.Content = new StringContent(deepSeekChatRequest, Encoding.UTF8, "application/json");
+            request.Content = new StringContent(perplexityChatRequest, Encoding.UTF8, "application/json");
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("DeepSeek", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Perplexity", RequestBuilder, token))
             yield return content;
     }
 

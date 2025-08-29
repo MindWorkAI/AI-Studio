@@ -9,6 +9,7 @@ using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Provider.Perplexity;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Provider.X;
 using AIStudio.Settings;
@@ -87,6 +88,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.ALIBABA_CLOUD => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://www.alibabacloud.com/help/en/model-studio/support/faq-about-alibaba-cloud-model-studio").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+            
+        LLMProviders.PERPLEXITY => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.perplexity.ai/hub/legal/perplexity-api-terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
@@ -122,6 +125,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
+        LLMProviders.PERPLEXITY => false,
         
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -166,6 +170,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.X => new ProviderX(logger) { InstanceName = instanceName },
                 LLMProviders.DEEP_SEEK => new ProviderDeepSeek(logger) { InstanceName = instanceName },
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud(logger) { InstanceName = instanceName },
+                LLMProviders.PERPLEXITY => new ProviderPerplexity(logger) { InstanceName = instanceName },
                 
                 LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
                 LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
@@ -195,6 +200,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => "https://accounts.x.ai/sign-up",
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
         LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
+        LLMProviders.PERPLEXITY => "https://www.perplexity.ai/",
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
@@ -217,6 +223,7 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => "https://fireworks.ai/account/billing",
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
         LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
+        LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
         
         _ => string.Empty,
@@ -233,6 +240,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.PERPLEXITY => true,
         LLMProviders.HUGGINGFACE => true,
         
         _ => false,
@@ -279,6 +287,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => true,
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.PERPLEXITY => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -300,6 +309,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => true,
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.PERPLEXITY => true,
         
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
