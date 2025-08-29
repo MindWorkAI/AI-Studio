@@ -38,6 +38,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => "xAI",
         LLMProviders.DEEP_SEEK => "DeepSeek",
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
+        LLMProviders.PERPLEXITY => "Perplexity",
         
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
