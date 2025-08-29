@@ -16,7 +16,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
          You get a long text as input. The text is marked with ```. The user wants to get a summary of the text.
          {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
          {this.selectedComplexity.Prompt(this.expertInField)}
-         {this.PromptImportantAspects(this.importantAspects)}
+         {this.PromptImportantAspects()}
          In any case, only use information that is provided in the text for the summary.
          """;
     
@@ -108,14 +108,14 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         return null;
     }
 
-    private string PromptImportantAspects(string importantAspectsForPrompt)
+    private string PromptImportantAspects()
     {
-        if (string.IsNullOrWhiteSpace(importantAspectsForPrompt))
+        if (string.IsNullOrWhiteSpace(this.importantAspects))
             return string.Empty;
 
         return $"""
                 Emphasize the following aspects in your summary:
-                {importantAspectsForPrompt}
+                {this.importantAspects}
                 """;
     }
 
