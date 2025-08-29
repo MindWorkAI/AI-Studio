@@ -1224,11 +1224,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T237828418"] = "Zielsprache"
 
+-- (Optional) Important Aspects
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T24391765"] = "(Optional) Wichtige Aspekte"
+
 -- Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T359929871"] = "Fasse einen langen Text zu einer kürzeren Version zusammen und behalte dabei die wichtigsten Punkte bei. Sie können die Sprache des Textes anpassen, um die Zusammenfassung verständlicher zu machen. Außerdem ist es möglich, die Zusammenfassung einfacher zu formulieren, damit sie leichter zu verstehen ist."
 
 -- Please provide your field of expertise.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3610378685"] = "Bitte geben Sie Ihr Fachgebiet an."
+
+-- (Optional) Specify aspects for the LLM to focus on when generating a summary, such as summary length or specific topics to emphasize.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3830285347"] = "(Optional) Spezifizieren Sie Aspekte, auf die das LLM bei der Erstellung einer Zusammenfassung den Fokus legen soll, wie z.B. die Länge der Zusammenfassung oder bestimmte Themen, die hervorgehoben werden sollen."
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3848935911"] = "Benutzerdefinierte Zielsprache"
@@ -3963,11 +3969,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T364
 -- When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the content before summarize it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3660434400"] = "Wenn diese Option aktiviert ist, wird der Content Cleaner-Agent automatisch vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt bereinigen möchten, bevor Sie ihn zusammenfassen."
 
+-- Preselect important aspects
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3705987833"] = "Vorauswahl der Aspekte"
+
 -- When enabled, you can preselect the text summarizer options. This is might be useful when you prefer a specific language, complexity, or LLM.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3820844575"] = "Wenn aktiviert, können Sie die Optionen für die Textzusammenfassung im Voraus auswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Sprache, einen bestimmten Schwierigkeitsgrad oder ein bestimmtes LLM bevorzugen."
 
 -- Which summarizer complexity should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T408530182"] = "Welche Komplexität der Zusammenfassung soll vorausgewählt werden?"
+
+-- Preselect aspects for the LLM to focus on when generating a summary, such as summary length or specific topics to emphasize.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T414420518"] = "Vorausgewählte Aspekte, auf die sich das LLM beim Erstellen einer Zusammenfassung fokussieren soll, wie z.B. die Länge der Zusammenfassung oder bestimmte zu betonende Themen."
 
 -- Preselect your expertise
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T51139714"] = "Wählen Sie Ihr Fachgebiet aus"
