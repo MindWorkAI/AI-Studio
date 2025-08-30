@@ -47,7 +47,7 @@ public sealed class DataTextSummarizer
     public string PreselectedExpertInField { get; set; } = string.Empty;
     
     /// <summary>
-    /// Preselect any important aspects that the Summarizer should take into account?
+    /// Preselect any important aspects that the summarizer should take into account?
     /// </summary>
     public string PreselectedImportantAspects { get; set; } = string.Empty;
     
