@@ -110,11 +110,15 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
         
-        if(modelName.IndexOf("reasoner") is not -1)
+        if(modelName.IndexOf("reasoning") is not -1 ||
+           modelName.IndexOf("deep-research") is not -1)
             return
             [
                 Capability.TEXT_INPUT,
+                Capability.MULTIPLE_IMAGE_INPUT,
+                
                 Capability.TEXT_OUTPUT,
+                Capability.IMAGE_OUTPUT,
                 
                 Capability.ALWAYS_REASONING,
             ];
@@ -122,7 +126,10 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
         return
         [
             Capability.TEXT_INPUT,
+            Capability.MULTIPLE_IMAGE_INPUT,
+            
             Capability.TEXT_OUTPUT,
+            Capability.IMAGE_OUTPUT,
         ];
     }
 
