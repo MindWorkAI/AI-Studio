@@ -1224,11 +1224,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T237828418"] = "Target language"
 
+-- (Optional) Important Aspects
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T24391765"] = "(Optional) Important Aspects"
+
 -- Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T359929871"] = "Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand."
 
 -- Please provide your field of expertise.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3610378685"] = "Please provide your field of expertise."
+
+-- (Optional) Specify aspects for the LLM to focus on when generating a summary, such as summary length or specific topics to emphasize.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3830285347"] = "(Optional) Specify aspects for the LLM to focus on when generating a summary, such as summary length or specific topics to emphasize."
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T3848935911"] = "Custom target language"
@@ -3987,11 +3993,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T364
 -- When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the content before summarize it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3660434400"] = "When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the content before summarize it."
 
+-- Preselect important aspects
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3705987833"] = "Preselect important aspects"
+
 -- When enabled, you can preselect the text summarizer options. This is might be useful when you prefer a specific language, complexity, or LLM.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3820844575"] = "When enabled, you can preselect the text summarizer options. This is might be useful when you prefer a specific language, complexity, or LLM."
 
 -- Which summarizer complexity should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T408530182"] = "Which summarizer complexity should be preselected?"
+
+-- Preselect aspects for the LLM to focus on when generating a summary, such as summary length or specific topics to emphasize.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T414420518"] = "Preselect aspects for the LLM to focus on when generating a summary, such as summary length or specific topics to emphasize."
 
 -- Preselect your expertise
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T51139714"] = "Preselect your expertise"

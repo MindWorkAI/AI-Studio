@@ -12,13 +12,13 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     protected override string Description => T("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
     
     protected override string SystemPrompt => 
-        """
-        You get a long text as input. The user wants to get a summary of the text.
-        The user might want to change the language of the summary. In this case,
-        you should provide a summary in the requested language. Eventually, the user
-        want to change the complexity of the text. In this case, you should provide
-        a summary with the requested complexity. In any case, do not add any information.
-        """;
+        $"""
+         You get a long text as input. The text is marked with ```. The user wants to get a summary of the text.
+         {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
+         {this.selectedComplexity.Prompt(this.expertInField)}
+         {this.PromptImportantAspects()}
+         In any case, only use information that is provided in the text for the summary.
+         """;
     
     protected override bool AllowProfiles => false;
     
@@ -44,6 +44,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
             this.customTargetLanguage = string.Empty;
             this.selectedComplexity = Complexity.NO_CHANGE;
             this.expertInField = string.Empty;
+            this.importantAspects = string.Empty;
         }
     }
     
@@ -55,6 +56,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
             this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
             this.expertInField = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedExpertInField;
+            this.importantAspects = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedImportantAspects;
             return true;
         }
         
@@ -67,6 +69,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string customTargetLanguage = string.Empty;
     private Complexity selectedComplexity;
     private string expertInField = string.Empty;
+    private string importantAspects = string.Empty;
 
     #region Overrides of ComponentBase
 
@@ -105,6 +108,17 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         return null;
     }
 
+    private string PromptImportantAspects()
+    {
+        if (string.IsNullOrWhiteSpace(this.importantAspects))
+            return string.Empty;
+
+        return $"""
+                Emphasize the following aspects in your summary:
+                {this.importantAspects}
+                """;
+    }
+
     private async Task SummarizeText()
     {
         await this.form!.Validate();
@@ -114,11 +128,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.selectedTargetLanguage.PromptSummarizing(this.customTargetLanguage)}
-                {this.selectedComplexity.Prompt(this.expertInField)}
-                
                 Please summarize the following text:
-                
                 ```
                 {this.inputText}
                 ```
