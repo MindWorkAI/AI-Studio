@@ -11,6 +11,15 @@ namespace AIStudio.Provider.Perplexity;
 
 public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://api.perplexity.ai/", logger)
 {
+    private static readonly Model[] KNOWN_MODELS =
+    [
+        new("sonar", "Sonar"),
+        new("sonar-pro", "Sonar Pro"),
+        new("sonar-reasoning", "Sonar Reasoning"),
+        new("sonar-reasoning-pro", "Sonar Reasoning Pro"),
+        new("sonar-deep-research", "Sonar Deep Research"),
+    ];
+    
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -91,7 +100,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(token, apiKeyProvisional);
+        return this.LoadModels();
     }
 
     /// <inheritdoc />
@@ -132,33 +141,8 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             Capability.IMAGE_OUTPUT,
         ];
     }
-
-
+    
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
-    {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data;
-    }
+    private Task<IEnumerable<Model>> LoadModels() => Task.FromResult<IEnumerable<Model>>(KNOWN_MODELS);
 }

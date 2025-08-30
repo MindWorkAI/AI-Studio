@@ -126,13 +126,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
+            
             Model = this.DataLLMProvider switch
             {
-                LLMProviders.FIREWORKS => new Model(this.dataManuallyModel, null),
-                LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
-                LLMProviders.PERPLEXITY => new Model(this.dataManuallyModel, null),
+                LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
                 _ => this.DataModel
             },
+            
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
