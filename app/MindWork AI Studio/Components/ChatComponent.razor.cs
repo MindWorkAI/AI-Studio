@@ -18,9 +18,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Parameter]
     public EventCallback<ChatThread?> ChatThreadChanged { get; set; }
-    
+
     [Parameter]
-    public AIStudio.Settings.Provider Provider { get; set; }
+    public AIStudio.Settings.Provider Provider { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
@@ -587,9 +587,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", "Are you sure you want to start a new chat? All unsaved changes will be lost." },
+                { x => x.Message, "Are you sure you want to start a new chat? All unsaved changes will be lost." },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
@@ -634,7 +634,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             default:
             case AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER:
-                if(this.Provider == default)
+                if(this.Provider == AIStudio.Settings.Provider.NONE)
                 {
                     this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
                     await this.ProviderChanged.InvokeAsync(this.Provider);
@@ -695,9 +695,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
-            var confirmationDialogParameters = new DialogParameters
+            var confirmationDialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
             };
         
             var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
@@ -706,11 +706,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 return;
         }
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { "Message", T("Please select the workspace where you want to move the chat to.") },
-            { "SelectedWorkspace", this.ChatThread?.WorkspaceId },
-            { "ConfirmText", T("Move chat") },
+            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.SelectedWorkspace, this.ChatThread?.WorkspaceId },
+            { x => x.ConfirmText, T("Move chat") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -797,7 +797,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
             
             case LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER:
-                if(this.Provider == default)
+                if(this.Provider == AIStudio.Settings.Provider.NONE)
                     this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
                 break;
         }

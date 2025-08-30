@@ -71,7 +71,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
                                                                         """;
 
     /// <inheritdoc />
-    public override Settings.Provider? ProviderSettings { get; set; }
+    public override Settings.Provider ProviderSettings { get; set; } = Settings.Provider.NONE;
     
     /// <summary>
     /// The retrieval context validation agent does not work with context. Use
@@ -133,6 +133,11 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     {
         // We start with the provider currently selected by the user:
         var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, provider.Id, true);
+        if (agentProvider == Settings.Provider.NONE)
+        {
+            logger.LogWarning("No provider is selected for the agent.");
+            return;
+        }
         
         // Assign the provider settings to the agent:
         logger.LogInformation($"The agent for the retrieval context validation uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");

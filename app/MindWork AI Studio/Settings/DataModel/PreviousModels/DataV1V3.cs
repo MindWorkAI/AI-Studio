@@ -41,7 +41,7 @@ public sealed class DataV1V3
     /// <summary>
     /// If and when we should look for updates.
     /// </summary>
-    public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.ONCE_STARTUP;
+    public UpdateInterval UpdateInterval { get; set; } = UpdateInterval.ONCE_STARTUP;
     
     /// <summary>
     /// The navigation behavior.

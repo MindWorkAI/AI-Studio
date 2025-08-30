@@ -473,9 +473,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         if(this.selectedERIServer is null)
             return;
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the ERI server preset '{0}'?"), this.selectedERIServer.ServerName) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the ERI server preset '{0}'?"), this.selectedERIServer.ServerName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete ERI server preset"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -827,9 +827,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             ? string.Format(T("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
             : string.Format(T("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", message },
+            { x => x.Message, message },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -890,9 +890,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task DeleteRetrievalProcess(RetrievalInfo retrievalInfo)
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Retrieval Process"), dialogParameters, DialogOptions.FULLSCREEN);

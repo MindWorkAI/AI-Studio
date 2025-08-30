@@ -112,9 +112,30 @@ public partial class Workspaces : MSGComponentBase
         // Enumerate the chat directories:
         foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
         {
-            // Read the `name` file:
+            // Read or create the `name` file (self-heal):
             var chatNamePath = Path.Join(tempChatDirPath, "name");
-            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+            string chatName;
+            try
+            {
+                if (!File.Exists(chatNamePath))
+                {
+                    chatName = T("Unnamed chat");
+                    await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                }
+                else
+                {
+                    chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(chatName))
+                    {
+                        chatName = T("Unnamed chat");
+                        await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                chatName = T("Unnamed chat");
+            }
             
             // Read the last change time of the chat:
             var chatThreadPath = Path.Join(tempChatDirPath, "thread.json");
@@ -158,9 +179,30 @@ public partial class Workspaces : MSGComponentBase
         // Enumerate the workspace directories:
         foreach (var workspaceDirPath in Directory.EnumerateDirectories(workspaceDirectories))
         {
-            // Read the `name` file:
+            // Read or create the `name` file (self-heal):
             var workspaceNamePath = Path.Join(workspaceDirPath, "name");
-            var workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+            string workspaceName;
+            try
+            {
+                if (!File.Exists(workspaceNamePath))
+                {
+                    workspaceName = T("Unnamed workspace");
+                    await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+                }
+                else
+                {
+                    workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(workspaceName))
+                    {
+                        workspaceName = T("Unnamed workspace");
+                        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                workspaceName = T("Unnamed workspace");
+            }
                                 
             workspaces.Add(new TreeItemData<ITreeItem>
             {
@@ -194,9 +236,30 @@ public partial class Workspaces : MSGComponentBase
         // Enumerate the workspace directory:
         foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
         {
-            // Read the `name` file:
+            // Read or create the `name` file (self-heal):
             var chatNamePath = Path.Join(chatPath, "name");
-            var chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+            string chatName;
+            try
+            {
+                if (!File.Exists(chatNamePath))
+                {
+                    chatName = T("Unnamed chat");
+                    await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                }
+                else
+                {
+                    chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(chatName))
+                    {
+                        chatName = T("Unnamed chat");
+                        await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                chatName = T("Unnamed chat");
+            }
             
             // Read the last change time of the chat:
             var chatThreadPath = Path.Join(chatPath, "thread.json");
@@ -252,9 +315,9 @@ public partial class Workspaces : MSGComponentBase
         // Check if the chat has unsaved changes:
         if (switchToChat && await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -293,10 +356,10 @@ public partial class Workspaces : MSGComponentBase
         if (askForConfirmation)
         {
             var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(chat.WorkspaceId);
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
                 {
-                    "Message", (chat.WorkspaceId == Guid.Empty) switch
+                    x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
                         true => string.Format(T("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
                         false => string.Format(T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
@@ -333,12 +396,15 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { "Message", string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
-            { "UserInput", chat.Name },
-            { "ConfirmText", T("Rename") },
-            { "ConfirmColor", Color.Info },
+            { x => x.Message, string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
+            { x => x.InputHeaderText, T("Chat Name") },
+            { x => x.UserInput, chat.Name },
+            { x => x.ConfirmText, T("Rename") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a chat name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -365,12 +431,15 @@ public partial class Workspaces : MSGComponentBase
         
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(workspaceId);
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { "Message", string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
-            { "UserInput", workspaceName },
-            { "ConfirmText", T("Rename") },
-            { "ConfirmColor", Color.Info },
+            { x => x.Message, string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
+            { x => x.InputHeaderText, T("Workspace Name") },
+            { x => x.UserInput, workspaceName },
+            { x => x.ConfirmText, T("Rename") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -386,12 +455,15 @@ public partial class Workspaces : MSGComponentBase
 
     private async Task AddWorkspace()
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { "Message", T("Please name your workspace:") },
-            { "UserInput", string.Empty },
-            { "ConfirmText", T("Add workspace") },
-            { "ConfirmColor", Color.Info },
+            { x => x.Message, T("Please name your workspace:") },
+            { x => x.InputHeaderText, T("Workspace Name") },
+            { x => x.UserInput, string.Empty },
+            { x => x.ConfirmText, T("Add workspace") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Add Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -420,9 +492,9 @@ public partial class Workspaces : MSGComponentBase
         // Determine how many chats are in the workspace:
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -440,11 +512,11 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { "Message", T("Please select the workspace where you want to move the chat to.") },
-            { "SelectedWorkspace", chat.WorkspaceId },
-            { "ConfirmText", T("Move chat") },
+            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.SelectedWorkspace, chat.WorkspaceId },
+            { x => x.ConfirmText, T("Move chat") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -487,9 +559,9 @@ public partial class Workspaces : MSGComponentBase
         // Check if the chat has unsaved changes:
         if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create Chat"), dialogParameters, DialogOptions.FULLSCREEN);

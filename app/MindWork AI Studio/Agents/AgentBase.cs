@@ -54,7 +54,7 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
     
     #region Implementation of IAgent
     
-    public abstract AIStudio.Settings.Provider? ProviderSettings { get; set; }
+    public abstract AIStudio.Settings.Provider ProviderSettings { get; set; }
     
     public abstract Task<ChatThread> ProcessContext(ChatThread chatThread, IDictionary<string, string> additionalData);
     
@@ -103,10 +103,9 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
     
     protected async Task AddAIResponseAsync(ChatThread thread, IContent lastUserPrompt, DateTimeOffset time)
     {
-        if(this.ProviderSettings is null)
+        if(this.ProviderSettings == Settings.Provider.NONE)
             return;
         
-        var providerSettings = this.ProviderSettings.Value;
         var aiText = new ContentText
         {
             // We have to wait for the remote
@@ -127,6 +126,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        await aiText.CreateFromProviderAsync(providerSettings.CreateProvider(this.Logger), providerSettings.Model, lastUserPrompt, thread);
+        await aiText.CreateFromProviderAsync(this.ProviderSettings.CreateProvider(this.Logger), this.ProviderSettings.Model, lastUserPrompt, thread);
     }
 }

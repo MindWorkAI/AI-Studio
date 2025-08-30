@@ -21,7 +21,7 @@ public partial class Chat : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
     
     private ChatThread? chatThread;
-    private AIStudio.Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
     private bool workspaceOverlayVisible;
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;

@@ -42,6 +42,9 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
         foreach (var providerId in this.Data)
         {
             var provider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId.Value);
+            if (provider is null)
+                continue;
+            
             if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
                 yield return providerId;
         }

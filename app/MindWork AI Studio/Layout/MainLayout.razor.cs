@@ -92,7 +92,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_ERROR, Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM,
-            Event.PLUGINS_RELOADED
+            Event.PLUGINS_RELOADED, Event.INSTALL_UPDATE,
         ]);
         
         // Set the snackbar for the update service:
@@ -143,6 +143,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             switch (triggeredEvent)
             {
+                case Event.INSTALL_UPDATE:
+                    this.performingUpdate = true;
+                    this.StateHasChanged();
+                    break;
+                
                 case Event.UPDATE_AVAILABLE:
                     if (data is UpdateResponse updateResponse)
                     {
@@ -301,9 +306,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to leave the chat page? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Leave Chat Page"), dialogParameters, DialogOptions.FULLSCREEN);
