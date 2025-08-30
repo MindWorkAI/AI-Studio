@@ -200,7 +200,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => "https://accounts.x.ai/sign-up",
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
         LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
-        LLMProviders.PERPLEXITY => "https://www.perplexity.ai/",
+        LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
      
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
