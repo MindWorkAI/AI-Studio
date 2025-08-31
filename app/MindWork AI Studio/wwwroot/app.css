@@ -141,3 +141,8 @@
 .no-elevation {
     box-shadow: none !important;
 }
+
+.sources-card-header {
+    top: 0em !important;
+    left: 2.2em !important;
+}

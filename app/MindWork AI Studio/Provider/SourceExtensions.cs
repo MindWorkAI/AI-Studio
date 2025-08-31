@@ -32,4 +32,16 @@ public static class SourceExtensions
         
         return sb.ToString();
     }
+    
+    /// <summary>
+    /// Merges a list of added sources into an existing list of sources, avoiding duplicates based on URL and Title.
+    /// </summary>
+    /// <param name="sources">The existing list of sources to merge into.</param>
+    /// <param name="addedSources">The list of sources to add.</param>
+    public static void MergeSources(this IList<Source> sources, IList<ISource> addedSources)
+    {
+        foreach (var addedSource in addedSources)
+            if (sources.All(s => s.URL != addedSource.URL && s.Title != addedSource.Title))
+                sources.Add((Source)addedSource);
+    }
 }

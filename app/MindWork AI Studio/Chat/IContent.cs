@@ -37,6 +37,12 @@ public interface IContent
     /// </summary>
     [JsonIgnore]
     public Func<Task> StreamingDone { get; set; }
+
+    /// <summary>
+    /// The provided sources, if any.
+    /// </summary>
+    [JsonIgnore]
+    public List<Source> Sources { get; set; }
     
     /// <summary>
     /// Uses the provider to create the content.
