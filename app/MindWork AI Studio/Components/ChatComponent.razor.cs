@@ -709,7 +709,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
             { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
-            { x => x.SelectedWorkspace, this.ChatThread?.WorkspaceId },
+            { x => x.SelectedWorkspace, this.ChatThread?.WorkspaceId ?? Guid.Empty },
             { x => x.ConfirmText, T("Move chat") },
         };
         
