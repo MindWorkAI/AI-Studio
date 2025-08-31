@@ -14,7 +14,7 @@ public readonly record struct ResponseStreamLine(string Id, string Object, uint 
     public bool ContainsContent() => this != default && this.Choices.Count > 0;
 
     /// <inheritdoc />
-    public string GetContent() => this.Choices[0].Delta.Content;
+    public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
 }
 
 /// <summary>

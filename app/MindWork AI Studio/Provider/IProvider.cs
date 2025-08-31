@@ -27,7 +27,7 @@ public interface IProvider
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The chat completion stream.</returns>
-    public IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
+    public IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <summary>
     /// Starts an image completion stream.

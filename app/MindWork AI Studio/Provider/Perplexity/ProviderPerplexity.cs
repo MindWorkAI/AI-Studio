@@ -7,18 +7,27 @@ using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
-namespace AIStudio.Provider.Groq;
+namespace AIStudio.Provider.Perplexity;
 
-public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/openai/v1/", logger)
+public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://api.perplexity.ai/", logger)
 {
+    private static readonly Model[] KNOWN_MODELS =
+    [
+        new("sonar", "Sonar"),
+        new("sonar-pro", "Sonar Pro"),
+        new("sonar-reasoning", "Sonar Reasoning"),
+        new("sonar-reasoning-pro", "Sonar Reasoning Pro"),
+        new("sonar-deep-research", "Sonar Deep Research"),
+    ];
+    
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GROQ.ToName();
+    public override string Id => LLMProviders.PERPLEXITY.ToName();
 
     /// <inheritdoc />
-    public override string InstanceName { get; set; } = "Groq";
-
+    public override string InstanceName { get; set; } = "Perplexity";
+    
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
@@ -26,7 +35,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
-
+        
         // Prepare the system prompt:
         var systemPrompt = new Message
         {
@@ -34,8 +43,8 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
         
-        // Prepare the OpenAI HTTP chat request:
-        var groqChatRequest = JsonSerializer.Serialize(new ChatRequest
+        // Prepare the Perplexity HTTP chat request:
+        var perplexityChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
             
@@ -60,10 +69,6 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
-            
-            // Right now, we only support streaming completions:
             Stream = true,
         }, JSON_SERIALIZER_OPTIONS);
 
@@ -76,11 +81,11 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
 
             // Set the content:
-            request.Content = new StringContent(groqChatRequest, Encoding.UTF8, "application/json");
+            request.Content = new StringContent(perplexityChatRequest, Encoding.UTF8, "application/json");
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Groq", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Perplexity", RequestBuilder, token))
             yield return content;
     }
 
@@ -95,13 +100,13 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(token, apiKeyProvisional);
+        return this.LoadModels();
     }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult<IEnumerable<Model>>(Array.Empty<Model>());
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
     
     /// <inheritdoc />
@@ -110,36 +115,34 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
+    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    {
+        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        
+        if(modelName.IndexOf("reasoning") is not -1 ||
+           modelName.IndexOf("deep-research") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.MULTIPLE_IMAGE_INPUT,
+                
+                Capability.TEXT_OUTPUT,
+                Capability.IMAGE_OUTPUT,
+                
+                Capability.ALWAYS_REASONING,
+            ];
+        
+        return
+        [
+            Capability.TEXT_INPUT,
+            Capability.MULTIPLE_IMAGE_INPUT,
+            
+            Capability.TEXT_OUTPUT,
+            Capability.IMAGE_OUTPUT,
+        ];
+    }
+    
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
-    {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n =>
-            !n.Id.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.StartsWith("distil-", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("-tts", StringComparison.OrdinalIgnoreCase));
-    }
+    private Task<IEnumerable<Model>> LoadModels() => Task.FromResult<IEnumerable<Model>>(KNOWN_MODELS);
 }

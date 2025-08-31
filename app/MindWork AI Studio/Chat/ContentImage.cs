@@ -28,6 +28,9 @@ public sealed class ContentImage : IContent, IImageSource
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
 
     /// <inheritdoc />
+    public List<Source> Sources { get; set; } = [];
+
+    /// <inheritdoc />
     public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default)
     {
         throw new NotImplementedException();

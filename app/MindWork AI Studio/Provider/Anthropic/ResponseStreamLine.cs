@@ -13,7 +13,7 @@ public readonly record struct ResponseStreamLine(string Type, int Index, Delta D
     public bool ContainsContent() => this != default && !string.IsNullOrWhiteSpace(this.Delta.Text);
 
     /// <inheritdoc />
-    public string GetContent() => this.Delta.Text;
+    public ContentStreamChunk GetContent() => new(this.Delta.Text, []);
 }
 
 /// <summary>
