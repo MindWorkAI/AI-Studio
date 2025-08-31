@@ -29,7 +29,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
     public override string InstanceName { get; set; } = "Perplexity";
     
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);

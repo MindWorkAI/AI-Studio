@@ -63,7 +63,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract string InstanceName { get; set; }
     
     /// <inheritdoc />
-    public abstract IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
+    public abstract IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <inheritdoc />
     public abstract IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, CancellationToken token = default);
@@ -96,7 +96,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="requestBuilder">A function that builds the request.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The status object of the request.</returns>
-    protected async Task<HttpRateLimitedStreamResult> SendRequest(Func<Task<HttpRequestMessage>> requestBuilder, CancellationToken token = default)
+    private async Task<HttpRateLimitedStreamResult> SendRequest(Func<Task<HttpRequestMessage>> requestBuilder, CancellationToken token = default)
     {
         const int MAX_RETRIES = 6;
         const double RETRY_DELAY_SECONDS = 4;
@@ -189,7 +189,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         return new HttpRateLimitedStreamResult(true, false, string.Empty, response);
     }
 
-    protected async IAsyncEnumerable<string> StreamChatCompletionInternal<T>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where T : struct, IResponseStreamLine
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<T>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where T : struct, IResponseStreamLine
     {
         StreamReader? streamReader = null;
         try

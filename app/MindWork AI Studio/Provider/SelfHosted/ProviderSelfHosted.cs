@@ -18,7 +18,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
     public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
