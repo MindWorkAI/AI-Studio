@@ -30,16 +30,20 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
             yield break;
         
         // Unfortunately, OpenAI changed the name of the system prompt based on the model.
-        // All models that start with "o" (the omni aka reasoning models) and all GPT4o models
-        // have the system prompt named "developer". All other models have the system prompt
-        // named "system". We need to check this to get the correct system prompt.
+        // All models that start with "o" (the omni aka reasoning models), all GPT4o models,
+        // and all newer models have the system prompt named "developer". All other models
+        // have the system prompt named "system". We need to check this to get the correct
+        // system prompt.
         //
         // To complicate it even more: The early versions of reasoning models, which are released
         // before the 17th of December 2024, have no system prompt at all. We need to check this
         // as well.
         
         // Apply the basic rule first:
-        var systemPromptRole = chatModel.Id.StartsWith('o') || chatModel.Id.Contains("4o") ? "developer" : "system";
+        var systemPromptRole =
+            chatModel.Id.StartsWith('o') ||
+            chatModel.Id.StartsWith("gpt-5", StringComparison.Ordinal) ||
+            chatModel.Id.Contains("4o") ? "developer" : "system";
         
         // Check if the model is an early version of the reasoning models:
         systemPromptRole = chatModel.Id switch
