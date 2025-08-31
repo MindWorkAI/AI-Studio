@@ -60,8 +60,6 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,

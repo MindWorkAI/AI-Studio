@@ -20,9 +20,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
-
-    [Inject]
-    protected ThreadSafeRandom RNG { get; init; } = null!;
     
     [Inject]
     protected ISnackbar Snackbar { get; init; } = null!;
@@ -199,7 +196,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
-            Seed = this.RNG.Next(),
             Blocks = [],
         };
     }
@@ -215,7 +211,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             WorkspaceId = workspaceId,
             ChatId = chatId,
             Name = name,
-            Seed = this.RNG.Next(),
             Blocks = [],
         };
         

@@ -35,9 +35,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private ILogger<ChatComponent> Logger { get; set; } = null!;
     
     [Inject]
-    private ThreadSafeRandom RNG { get; init; } = null!;
-    
-    [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
@@ -436,7 +433,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
-                Seed = this.RNG.Next(),
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
@@ -674,7 +670,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
-                Seed = this.RNG.Next(),
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }

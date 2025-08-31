@@ -58,8 +58,6 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            RandomSeed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,

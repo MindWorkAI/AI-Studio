@@ -60,8 +60,6 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,

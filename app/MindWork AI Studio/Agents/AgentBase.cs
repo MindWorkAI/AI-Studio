@@ -73,7 +73,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         WorkspaceId = Guid.Empty,
         ChatId = Guid.NewGuid(),
         Name = string.Empty,
-        Seed = this.RNG.Next(),
         SystemPrompt = systemPrompt,
         Blocks = [],
     };

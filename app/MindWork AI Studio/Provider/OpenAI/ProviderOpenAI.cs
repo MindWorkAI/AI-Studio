@@ -91,8 +91,6 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
