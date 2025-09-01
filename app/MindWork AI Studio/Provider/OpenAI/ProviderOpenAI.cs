@@ -66,7 +66,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
         };
         
         // Prepare the OpenAI HTTP chat request:
-        var openAIChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var openAIChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

@@ -36,7 +36,7 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
         };
         
         // Prepare the AlibabaCloud HTTP chat request:
-        var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

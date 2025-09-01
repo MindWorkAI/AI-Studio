@@ -35,7 +35,7 @@ public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai
         };
         
         // Prepare the GWDG HTTP chat request:
-        var gwdgChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var gwdgChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

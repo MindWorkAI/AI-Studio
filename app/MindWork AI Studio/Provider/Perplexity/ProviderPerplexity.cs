@@ -44,7 +44,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
         };
         
         // Prepare the Perplexity HTTP chat request:
-        var perplexityChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var perplexityChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

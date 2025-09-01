@@ -35,7 +35,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
         };
         
         // Prepare the DeepSeek HTTP chat request:
-        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

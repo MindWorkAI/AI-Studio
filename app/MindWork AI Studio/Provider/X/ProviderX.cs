@@ -35,7 +35,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
         };
         
         // Prepare the xAI HTTP chat request:
-        var xChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

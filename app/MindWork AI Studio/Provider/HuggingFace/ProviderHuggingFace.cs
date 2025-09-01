@@ -40,7 +40,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         };
         
         // Prepare the HuggingFace HTTP chat request:
-        var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             

@@ -35,7 +35,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
         };
         
         // Prepare the Helmholtz HTTP chat request:
-        var helmholtzChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
