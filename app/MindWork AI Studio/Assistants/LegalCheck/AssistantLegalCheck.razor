@@ -3,7 +3,7 @@
 
 @if (!this.SettingsManager.ConfigurationData.LegalCheck.HideWebContentReader)
 {
-    <ReadWebContent @bind-Content="@this.inputLegalDocument" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions && this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions && this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent)"/>
+    <ReadWebContent @bind-Content="@this.inputLegalDocument" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
 }
 
 <ReadFileContent @bind-FileContent="@this.inputLegalDocument"/>

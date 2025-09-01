@@ -37,11 +37,27 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     {
         this.inputLegalDocument = string.Empty;
         this.inputQuestions = string.Empty;
-        this.MightPreselectValues();
+        if (!this.MightPreselectValues())
+        {
+            this.showWebContentReader = false;
+            this.useContentCleanerAgent = false;
+        }
     }
-    
-    protected override bool MightPreselectValues() => false;
 
+    protected override bool MightPreselectValues()
+    {
+        if (this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)
+        {
+            this.showWebContentReader = this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader;
+            this.useContentCleanerAgent = this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent;
+            return true;
+        }
+        
+        return false;
+    }
+
+    private bool showWebContentReader;
+    private bool useContentCleanerAgent;
     private bool isAgentRunning;
     private string inputLegalDocument = string.Empty;
     private string inputQuestions = string.Empty;

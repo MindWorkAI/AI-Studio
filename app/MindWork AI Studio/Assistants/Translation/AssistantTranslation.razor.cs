@@ -40,6 +40,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         this.inputTextLastTranslation = string.Empty;
         if (!this.MightPreselectValues())
         {
+            this.showWebContentReader = false;
+            this.useContentCleanerAgent = false;
             this.liveTranslation = false;
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
@@ -50,6 +52,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     {
         if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
         {
+            this.showWebContentReader = this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader;
+            this.useContentCleanerAgent = this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent;
             this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
@@ -59,6 +63,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         return false;
     }
     
+    private bool showWebContentReader;
+    private bool useContentCleanerAgent;
     private bool liveTranslation;
     private bool isAgentRunning;
     private string inputText = string.Empty;

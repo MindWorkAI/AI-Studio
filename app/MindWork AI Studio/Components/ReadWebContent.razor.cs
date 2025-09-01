@@ -32,13 +32,17 @@ public partial class ReadWebContent : MSGComponentBase
     public bool Preselect { get; set; }
     
     [Parameter]
+    public EventCallback<bool> PreselectChanged { get; set; }
+    
+    [Parameter]
     public bool PreselectContentCleanerAgent { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> PreselectContentCleanerAgentChanged { get; set; }
 
     private readonly Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
     private ProcessStepValue processStep;
     
-    private bool showWebContentReader;
-    private bool useContentCleanerAgent;
     private string providedURL = string.Empty;
     private bool urlIsValid;
     private bool isProviderValid;
@@ -49,15 +53,9 @@ public partial class ReadWebContent : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        if(this.Preselect)
-            this.showWebContentReader = true;
-        
-        if(this.PreselectContentCleanerAgent)
-            this.useContentCleanerAgent = true;
-        
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_TEXT_CONTENT_CLEANER, this.ProviderSettings.Id, true);
         this.providerSettings = this.ProviderSettings;
-        this.ValidateProvider(this.useContentCleanerAgent);
+        this.ValidateProvider(this.PreselectContentCleanerAgent);
         
         await base.OnInitializedAsync();
     }
@@ -67,7 +65,7 @@ public partial class ReadWebContent : MSGComponentBase
         if (!this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)
             this.providerSettings = this.ProviderSettings;
         
-        this.ValidateProvider(this.useContentCleanerAgent);
+        this.ValidateProvider(this.PreselectContentCleanerAgent);
         await base.OnParametersSetAsync();
     }
 
@@ -90,7 +88,7 @@ public partial class ReadWebContent : MSGComponentBase
             this.StateHasChanged();
             markdown = this.HTMLParser.ParseToMarkdown(html);
             
-            if (this.useContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
+            if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {
                 this.AgentTextContentCleaner.ProviderSettings = this.providerSettings;
                 var additionalData = new Dictionary<string, string>
@@ -144,13 +142,23 @@ public partial class ReadWebContent : MSGComponentBase
             if(!this.urlIsValid)
                 return false;
             
-            if(this.useContentCleanerAgent && !this.isProviderValid)
+            if(this.PreselectContentCleanerAgent && !this.isProviderValid)
                 return false;
             
             return true;
         }
     }
 
+    private async Task ShowWebContentReaderChanged(bool state)
+    {
+        await this.PreselectChanged.InvokeAsync(state);
+    }
+    
+    private async Task UseContentCleanerAgentChanged(bool state)
+    {
+        await this.PreselectContentCleanerAgentChanged.InvokeAsync(state);
+    }
+    
     private string? ValidateProvider(bool shouldUseAgent)
     {
         if(shouldUseAgent && this.providerSettings == AIStudio.Settings.Provider.NONE)

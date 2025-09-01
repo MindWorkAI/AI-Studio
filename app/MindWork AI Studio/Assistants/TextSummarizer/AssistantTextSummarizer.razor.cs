@@ -40,6 +40,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         this.inputText = string.Empty;
         if(!this.MightPreselectValues())
         {
+            this.showWebContentReader = false;
+            this.useContentCleanerAgent = false;
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.selectedComplexity = Complexity.NO_CHANGE;
@@ -52,6 +54,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     {
         if (this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)
         {
+            this.showWebContentReader = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectWebContentReader;
+            this.useContentCleanerAgent = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectContentCleanerAgent;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
             this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
@@ -63,6 +67,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         return false;
     }
     
+    private bool showWebContentReader;
+    private bool useContentCleanerAgent;
     private string inputText = string.Empty;
     private bool isAgentRunning;
     private CommonLanguages selectedTargetLanguage;
