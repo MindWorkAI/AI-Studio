@@ -124,7 +124,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     /// <inheritdoc />
     public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(["gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
+        var models = await this.LoadModels(["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
         return models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
                                      !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
                                      !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
@@ -157,6 +157,14 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     
                     Capability.ALWAYS_REASONING,
                 ];
+
+        if (modelName.StartsWith("chatgpt-4o-"))
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                Capability.RESPONSES_API,
+            ];
         
         if (modelName.StartsWith("o3-mini"))
             return
