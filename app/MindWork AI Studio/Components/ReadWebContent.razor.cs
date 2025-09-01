@@ -56,6 +56,7 @@ public partial class ReadWebContent : MSGComponentBase
             this.useContentCleanerAgent = true;
         
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_TEXT_CONTENT_CLEANER, this.ProviderSettings.Id, true);
+        this.providerSettings = this.ProviderSettings;
         await base.OnInitializedAsync();
     }
 
