@@ -240,6 +240,16 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_OUTPUT,
                 ];
         
+        if(modelName is "gpt-5" || modelName.StartsWith("gpt-5-"))
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING, Capability.ALWAYS_REASONING,
+                Capability.RESPONSES_API,
+            ];
+        
         return
             [
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
