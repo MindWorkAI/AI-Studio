@@ -173,6 +173,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_OUTPUT,
                     
                     Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
         
         if(modelName is "gpt-3.5-turbo")
@@ -205,7 +206,8 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.RESPONSES_API,
                 ];
         
         if (modelName.StartsWith("o4-mini") || modelName.StartsWith("o1") || modelName.StartsWith("o3"))
@@ -214,14 +216,8 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
-                ];
-        
-        if(modelName.StartsWith("gpt-3.5"))
-            return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.RESPONSES_API,
                 ];
         
         if(modelName.StartsWith("gpt-4-turbo"))
@@ -230,7 +226,8 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.FUNCTION_CALLING
+                    Capability.FUNCTION_CALLING,
+                    Capability.RESPONSES_API,
                 ];
         
         if(modelName is "gpt-4" || modelName.StartsWith("gpt-4-"))
@@ -238,6 +235,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                 [
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
+                    Capability.RESPONSES_API,
                 ];
         
         if(modelName is "gpt-5" || modelName.StartsWith("gpt-5-"))
@@ -256,6 +254,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.RESPONSES_API,
             ];
     }
     
