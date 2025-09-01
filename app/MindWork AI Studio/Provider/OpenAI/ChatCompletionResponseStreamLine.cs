@@ -9,10 +9,15 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Model">The model used for the response.</param>
 /// <param name="SystemFingerprint">The system fingerprint; together with the seed, this allows you to reproduce the response.</param>
 /// <param name="Choices">The choices made by the AI.</param>
-public readonly record struct ChatCompletionResponseStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<Choice> Choices) : IResponseStreamLine
+public record ChatCompletionResponseStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<Choice> Choices) : IResponseStreamLine
 {
+    public ChatCompletionResponseStreamLine() : this(string.Empty, string.Empty, 0, string.Empty, string.Empty, [])
+    {
+        
+    }
+    
     /// <inheritdoc />
-    public bool ContainsContent() => this != default && this.Choices.Count > 0;
+    public bool ContainsContent() => this.Choices.Count > 0;
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
@@ -23,10 +28,20 @@ public readonly record struct ChatCompletionResponseStreamLine(string Id, string
 /// </summary>
 /// <param name="Index">The index of the choice.</param>
 /// <param name="Delta">The delta text of the choice.</param>
-public readonly record struct Choice(int Index, Delta Delta);
+public record Choice(int Index, Delta Delta)
+{
+    public Choice() : this(0, new (string.Empty))
+    {
+    }
+}
 
 /// <summary>
 /// The delta text of a choice.
 /// </summary>
 /// <param name="Content">The content of the delta text.</param>
-public readonly record struct Delta(string Content);
+public record Delta(string Content)
+{
+    public Delta() : this(string.Empty)
+    {
+    }
+}
