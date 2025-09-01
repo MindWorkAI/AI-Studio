@@ -1,7 +1,7 @@
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
-/// Data model for a line in the response stream, for streaming completions.
+/// Data model for a line in the response stream, for streaming chat completions.
 /// </summary>
 /// <param name="Id">The id of the response.</param>
 /// <param name="Object">The object describing the response.</param>
@@ -9,7 +9,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Model">The model used for the response.</param>
 /// <param name="SystemFingerprint">The system fingerprint; together with the seed, this allows you to reproduce the response.</param>
 /// <param name="Choices">The choices made by the AI.</param>
-public readonly record struct ResponseStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<Choice> Choices) : IResponseStreamLine
+public readonly record struct ChatCompletionResponseStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<Choice> Choices) : IResponseStreamLine
 {
     /// <inheritdoc />
     public bool ContainsContent() => this != default && this.Choices.Count > 0;

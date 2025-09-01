@@ -78,7 +78,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Google", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("Google", RequestBuilder, token))
             yield return content;
     }
 

@@ -76,7 +76,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Helmholtz", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("Helmholtz", RequestBuilder, token))
             yield return content;
     }
 

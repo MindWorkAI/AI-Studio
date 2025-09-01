@@ -81,7 +81,7 @@ public sealed class ProviderHuggingFace : BaseProvider
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("HuggingFace", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("HuggingFace", RequestBuilder, token))
             yield return content;
     }
 

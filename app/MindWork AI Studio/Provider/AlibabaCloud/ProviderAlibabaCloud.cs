@@ -77,7 +77,7 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("AlibabaCloud", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("AlibabaCloud", RequestBuilder, token))
             yield return content;
     }
 

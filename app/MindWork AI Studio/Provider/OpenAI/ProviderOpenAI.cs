@@ -111,6 +111,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
         
         await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("OpenAI", RequestBuilder, token))
             yield return content;
+            await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("OpenAI", RequestBuilder, token))
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
