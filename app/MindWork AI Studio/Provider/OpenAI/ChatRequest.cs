@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
