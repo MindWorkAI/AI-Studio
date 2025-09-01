@@ -132,6 +132,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral medium:
@@ -142,6 +143,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral small:
@@ -152,6 +154,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral saba:
@@ -160,6 +163,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             [
                 Capability.TEXT_INPUT,
                 Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Default:

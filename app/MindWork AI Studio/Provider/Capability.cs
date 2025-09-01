@@ -94,4 +94,14 @@ public enum Capability
     /// The AI model can perform function calling, such as invoking APIs or executing functions.
     /// </summary>
     FUNCTION_CALLING,
+    
+    /// <summary>
+    /// The AI model is used via the Chat Completion API.
+    /// </summary>
+    CHAT_COMPLETION_API,
+    
+    /// <summary>
+    /// The AI model is used via the Responses API.
+    /// </summary>
+    RESPONSES_API,
 }

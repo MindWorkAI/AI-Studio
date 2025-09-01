@@ -122,7 +122,9 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING];
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // Claude 3.7 is able to do reasoning:
         if(modelName.StartsWith("claude-3-7"))
@@ -130,7 +132,9 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING];
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // All other 3.x models are able to process text and images as input:
         if(modelName.StartsWith("claude-3-"))
@@ -138,13 +142,17 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.FUNCTION_CALLING];
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // Any other model is able to process text only:
         return [
             Capability.TEXT_INPUT,
             Capability.TEXT_OUTPUT,
-            Capability.FUNCTION_CALLING];
+            Capability.FUNCTION_CALLING,
+            Capability.CHAT_COMPLETION_API,
+        ];
     }
     
     #endregion
