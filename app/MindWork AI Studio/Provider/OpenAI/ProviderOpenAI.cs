@@ -148,6 +148,24 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
         
+        if (modelName is "gpt-4o-search-preview")
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.CHAT_COMPLETION_API,
+                ];
+        
+        if (modelName is "gpt-4o-mini-search-preview")
+            return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.CHAT_COMPLETION_API,
+                ];
+        
         if (modelName.StartsWith("o1-mini"))
             return
                 [
