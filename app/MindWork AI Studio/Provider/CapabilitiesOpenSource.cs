@@ -174,6 +174,32 @@ public static class CapabilitiesOpenSource
                 ];
         }
         
+        //
+        // OpenAI models:
+        //
+        if (modelName.IndexOf("gpt-oss") is not -1 ||
+            modelName.IndexOf("gpt-3.5") is not -1)
+        {
+            if(modelName.IndexOf("gpt-oss") is not -1)
+                return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            if(modelName.IndexOf("gpt-3.5") is not -1)
+                return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.CHAT_COMPLETION_API,
+                ];
+        }
+        
         // Default:
         return [
             Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
