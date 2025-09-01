@@ -129,8 +129,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                                      !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
                                      !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
                                      !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("o1-pro", StringComparison.OrdinalIgnoreCase));
+                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />
@@ -157,6 +156,22 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     
                     Capability.ALWAYS_REASONING,
                 ];
+        
+        if(modelName is "gpt-3.5-turbo")
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+                Capability.RESPONSES_API,
+            ];
+        
+        if(modelName.StartsWith("gpt-3.5"))
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
 
         if (modelName.StartsWith("chatgpt-4o-"))
             return
