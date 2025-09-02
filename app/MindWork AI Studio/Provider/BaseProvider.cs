@@ -123,10 +123,12 @@ public abstract class BaseProvider : IProvider, ISecretId
                 break;
             }
 
+            var errorBody = await nextResponse.Content.ReadAsStringAsync(token);
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -135,6 +137,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -143,6 +146,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -151,6 +155,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -159,6 +164,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -167,6 +173,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
