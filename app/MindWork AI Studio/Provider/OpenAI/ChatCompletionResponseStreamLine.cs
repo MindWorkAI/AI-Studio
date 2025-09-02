@@ -13,7 +13,6 @@ public record ChatCompletionResponseStreamLine(string Id, string Object, uint Cr
 {
     public ChatCompletionResponseStreamLine() : this(string.Empty, string.Empty, 0, string.Empty, string.Empty, [])
     {
-        
     }
     
     /// <inheritdoc />
