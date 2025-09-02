@@ -96,6 +96,11 @@ public enum Capability
     FUNCTION_CALLING,
     
     /// <summary>
+    /// The AI model can perform web search to retrieve information from the internet.
+    /// </summary>
+    WEB_SEARCH,
+    
+    /// <summary>
     /// The AI model is used via the Chat Completion API.
     /// </summary>
     CHAT_COMPLETION_API,

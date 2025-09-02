@@ -130,6 +130,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
                 Capability.IMAGE_OUTPUT,
                 
                 Capability.ALWAYS_REASONING,
+                Capability.WEB_SEARCH,
                 Capability.CHAT_COMPLETION_API,
             ];
         
@@ -140,6 +141,8 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             
             Capability.TEXT_OUTPUT,
             Capability.IMAGE_OUTPUT,
+            
+            Capability.WEB_SEARCH,
             Capability.CHAT_COMPLETION_API,
         ];
     }

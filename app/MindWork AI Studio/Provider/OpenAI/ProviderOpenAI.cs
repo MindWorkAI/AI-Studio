@@ -155,6 +155,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
                     
+                    Capability.WEB_SEARCH,
                     Capability.CHAT_COMPLETION_API,
                 ];
         
@@ -164,6 +165,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
                     
+                    Capability.WEB_SEARCH,
                     Capability.CHAT_COMPLETION_API,
                 ];
         
@@ -218,6 +220,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_OUTPUT,
                     
                     Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.WEB_SEARCH,
                     Capability.RESPONSES_API,
                 ];
         
@@ -246,6 +249,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING, Capability.ALWAYS_REASONING,
+                Capability.WEB_SEARCH,
                 Capability.RESPONSES_API,
             ];
         

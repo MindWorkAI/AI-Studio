@@ -187,6 +187,7 @@ public static class CapabilitiesOpenSource
                     Capability.TEXT_OUTPUT,
                     
                     Capability.FUNCTION_CALLING,
+                    Capability.WEB_SEARCH,
                     Capability.CHAT_COMPLETION_API,
                 ];
             
