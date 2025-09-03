@@ -1702,7 +1702,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2927391091"] = "Inhalte 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2939928117"] = "Inhalte mit einem LLM-Agenten bereinigen?"
 
 -- Hide web content options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3031774728"] = "Web-Inhaltsoptionen ausblenden"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3031774728"] = "Optionen für Webinhalte ausblenden"
 
 -- Please provide a valid HTTP or HTTPS URL.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T307442288"] = "Bitte geben Sie eine gültige HTTP- oder HTTPS-URL ein."
@@ -1714,7 +1714,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3588401674"] = "Keine In
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3825586228"] = "Bitte geben Sie eine gültige URL ein."
 
 -- Show web content options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T4249712357"] = "Web-Inhalte anzeigen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T4249712357"] = "Optionen für Webinhalte anzeigen"
 
 -- Hide content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T1273315904"] = "Inhalt ausblenden"
@@ -3757,7 +3757,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1591931
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1633101895"] = "Wenn diese Option aktiviert ist, wird der Web-Content-Reader ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas einfacher zu bedienen."
 
 -- Web content reader is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1701127912"] = "Tool zum Lesen von Webinhalten ist nicht vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1701127912"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist nicht vorausgewählt"
 
 -- Content cleaner agent is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
@@ -3778,13 +3778,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2529161
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2746583995"] = "Wenn aktiviert, ist der Content Cleaner Agent vorausgewählt. Das kann nützlich sein, wenn Sie den rechtlichen Inhalt bereinigen möchten, bevor Sie ihn übersetzen."
 
 -- Web content reader is hidden
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2799795311"] = "Tool zum Lesen von Webinhalten ist ausgeblendet"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2799795311"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist ausgeblendet"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3448155331"] = "Schließen"
 
 -- Web content reader is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3641773985"] = "Tool zum Lesen von Webinhalten ist vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3641773985"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist vorausgewählt"
 
 -- Preselect the content cleaner agent?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3649428096"] = "Assistent zur Inhaltsbereinigungs vorauswählen?"
@@ -3796,7 +3796,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4004501
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4033382756"] = "Assistent: Optionen für rechtliche Prüfung"
 
 -- Preselect the web content reader?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T629158142"] = "Tool zum Lesen von Webinhalten vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T629158142"] = "Den Web-Content-Reader zum Lesen von Webinhalten vorauswählen?"
 
 -- Would you like to preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
@@ -3940,7 +3940,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T417092184
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
 
 -- Web content reader is shown
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1030372436"] = "Tool zum Lesen von Webinhalten wird angezeigt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1030372436"] = "Der Web-Content-Reader zum Lesen von Webinhalten wird angezeigt"
 
 -- Preselect the summarizer complexity
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T104409170"] = "Wähle die Sprachkomplexität der Zusammenfassungs aus"
@@ -3958,7 +3958,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T146
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1633101895"] = "Wenn aktiviert, wird der Web-Content-Reader ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas einfacher zu bedienen."
 
 -- Web content reader is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1701127912"] = "Das Tool zum Lesen von Webinhalten ist nicht vorab selektiert"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1701127912"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist nicht vorab selektiert"
 
 -- Assistant: Text Summarizer Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1767527569"] = "Assistent: Optionen zur Textzusammenfassung"
@@ -3988,7 +3988,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T344
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
 -- Web content reader is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3641773985"] = "Tool zum Lesen von Webinhalten ist vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3641773985"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist vorausgewählt"
 
 -- Preselect the content cleaner agent?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3649428096"] = "Den Agenten zur Inhaltsbereinigungs vorauswählen?"
@@ -4012,7 +4012,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T414
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T51139714"] = "Wählen Sie Ihr Fachgebiet aus"
 
 -- Preselect the web content reader?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T629158142"] = "Tool zum Lesen von Webinhalten vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T629158142"] = "Den Web-Content-Reader zum Lesen von Webinhalten vorauswählen?"
 
 -- Content cleaner agent is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
@@ -4021,7 +4021,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T101378
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1016384269"] = "Assistent: Übersetzer-Optionen"
 
 -- Web content reader is shown
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1030372436"] = "Tool zum Lesen von Webinhalten wird angezeigt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1030372436"] = "Der Web-Content-Reader zum Lesen von Webinhalten wird angezeigt"
 
 -- When enabled, you can preselect the translator options. This is might be useful when you prefer a specific target language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1111006275"] = "Wenn diese Option aktiviert ist, können Sie die Übersetzungsoptionen im Voraus auswählen. Das ist nützlich, wenn Sie eine bestimmte Zielsprache oder ein bestimmtes LLM-Modell bevorzugen."
@@ -4039,7 +4039,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T146229
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1633101895"] = "Wenn aktiviert, wird der Web-Content-Reader ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas einfacher zu bedienen."
 
 -- Web content reader is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1701127912"] = "Tool zum Lesen von Webinhalten ist nicht vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1701127912"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist nicht vorausgewählt"
 
 -- Live translation is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1825690873"] = "Live-Übersetzung ist nicht vorausgewählt"
@@ -4060,7 +4060,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T223453
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2435743076"] = "Live-Übersetzung ist vorausgewählt"
 
 -- Web content reader is hidden
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2799795311"] = "Tool zum Lesen von Webinhalten ist ausgeblendet"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2799795311"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist ausgeblendet"
 
 -- No translator options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2866358796"] = "Keine Übersetzungseinstellungen sind vorausgewählt"
@@ -4075,13 +4075,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T344815
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
 -- Web content reader is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3641773985"] = "Tool zum Lesen von Webinhalten ist vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3641773985"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist vorausgewählt"
 
 -- Preselect the content cleaner agent?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
 
 -- Preselect the web content reader?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Tool zum Lesen von Webinhalten vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Den Web-Content-Reader zum Lesen von Webinhalten vorauswählen?"
 
 -- How fast should the live translation react?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T884246296"] = "Wie schnell soll die Live-Übersetzung reagieren?"
