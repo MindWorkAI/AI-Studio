@@ -78,7 +78,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Google", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("Google", RequestBuilder, token))
             yield return content;
     }
 
@@ -136,6 +136,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                     Capability.TEXT_OUTPUT,
                     
                     Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
 
             // Image generation:
@@ -146,6 +147,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                     Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
                     
                     Capability.TEXT_OUTPUT, Capability.IMAGE_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             // Realtime model:
@@ -158,6 +160,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                     Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT,
                     
                     Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             // The 2.0 flash models cannot call functions:
@@ -168,6 +171,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                     Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
                     
                     Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             // The old 1.0 pro vision model:
@@ -177,6 +181,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     
                     Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             // Default to all other Gemini models:
@@ -188,6 +193,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         }
         
@@ -199,6 +205,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
             Capability.TEXT_OUTPUT,
             
             Capability.FUNCTION_CALLING,
+            Capability.CHAT_COMPLETION_API,
         ];
     }
     

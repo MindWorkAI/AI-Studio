@@ -77,7 +77,6 @@ public partial class Writer : MSGComponentBase
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
             Name = string.Empty,
-            Seed = 798798,
             SystemPrompt =  """
                             You are an assistant who helps with writing documents. You receive a sample
                             from a document as input. As output, you provide how the begun sentence could

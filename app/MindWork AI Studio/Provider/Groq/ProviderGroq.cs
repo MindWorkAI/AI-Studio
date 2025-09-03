@@ -60,8 +60,6 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
@@ -80,7 +78,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Groq", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("Groq", RequestBuilder, token))
             yield return content;
     }
 

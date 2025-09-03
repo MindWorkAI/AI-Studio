@@ -35,7 +35,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
         };
         
         // Prepare the xAI HTTP chat request:
-        var xChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -60,8 +60,6 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
@@ -80,7 +78,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("xAI", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("xAI", RequestBuilder, token))
             yield return content;
     }
 

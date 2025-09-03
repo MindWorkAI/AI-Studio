@@ -36,7 +36,7 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
         };
         
         // Prepare the AlibabaCloud HTTP chat request:
-        var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -77,7 +77,7 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("AlibabaCloud", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("AlibabaCloud", RequestBuilder, token))
             yield return content;
     }
 
@@ -156,7 +156,9 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
                     Capability.AUDIO_INPUT, Capability.SPEECH_INPUT,
                     Capability.VIDEO_INPUT,
 
-                    Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT
+                    Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT,
+                    
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             // Check for Qwen 3:
@@ -166,7 +168,8 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             if(modelName.IndexOf("-vl-") is not -1)
@@ -174,6 +177,8 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
+                    
+                    Capability.CHAT_COMPLETION_API,
                 ];
         }
         
@@ -185,7 +190,8 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
                 Capability.TEXT_INPUT, 
                 Capability.TEXT_OUTPUT,
                 
-                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         }
         
@@ -197,7 +203,8 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.ALWAYS_REASONING
+                Capability.ALWAYS_REASONING,
+                Capability.CHAT_COMPLETION_API,
             ];
         }
 
@@ -207,7 +214,8 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
             Capability.TEXT_INPUT,
             Capability.TEXT_OUTPUT,
             
-            Capability.FUNCTION_CALLING
+            Capability.FUNCTION_CALLING,
+            Capability.CHAT_COMPLETION_API,
         ];
     }
     

@@ -35,7 +35,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
         };
         
         // Prepare the DeepSeek HTTP chat request:
-        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -76,7 +76,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("DeepSeek", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("DeepSeek", RequestBuilder, token))
             yield return content;
     }
 
@@ -117,12 +117,14 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
                 Capability.TEXT_OUTPUT,
                 
                 Capability.ALWAYS_REASONING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         return
         [
             Capability.TEXT_INPUT,
             Capability.TEXT_OUTPUT,
+            Capability.CHAT_COMPLETION_API,
         ];
     }
 

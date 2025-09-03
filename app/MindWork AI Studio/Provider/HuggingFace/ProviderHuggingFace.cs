@@ -40,7 +40,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         };
         
         // Prepare the HuggingFace HTTP chat request:
-        var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -81,7 +81,7 @@ public sealed class ProviderHuggingFace : BaseProvider
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("HuggingFace", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("HuggingFace", RequestBuilder, token))
             yield return content;
     }
 

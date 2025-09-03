@@ -17,9 +17,6 @@ public partial class Workspaces : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    private ThreadSafeRandom RNG { get; init; } = null!;
-    
-    [Inject]
     private ILogger<Workspaces> Logger { get; init; } = null!;
     
     [Parameter]
@@ -576,7 +573,6 @@ public partial class Workspaces : MSGComponentBase
             WorkspaceId = workspaceId,
             ChatId = Guid.NewGuid(),
             Name = string.Empty,
-            Seed = this.RNG.Next(),
             SystemPrompt = SystemPrompts.DEFAULT,
             Blocks = [],
         };

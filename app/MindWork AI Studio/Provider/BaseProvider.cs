@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
@@ -39,6 +40,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters = { new AnnotationConverter() }
     };
 
     /// <summary>
@@ -123,10 +125,12 @@ public abstract class BaseProvider : IProvider, ISecretId
                 break;
             }
 
+            var errorBody = await nextResponse.Content.ReadAsStringAsync(token);
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -135,6 +139,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -143,6 +148,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -151,6 +157,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -159,6 +166,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -167,6 +175,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
                 this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
+                this.logger.LogDebug($"Error body: {errorBody}");
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -189,8 +198,20 @@ public abstract class BaseProvider : IProvider, ISecretId
         return new HttpRateLimitedStreamResult(true, false, string.Empty, response);
     }
 
-    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<T>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where T : struct, IResponseStreamLine
+    /// <summary>
+    /// Streams the chat completion from the provider using the Chat Completion API.
+    /// </summary>
+    /// <param name="providerName">The name of the provider.</param>
+    /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <typeparam name="TDelta">The type of the delta lines inside the stream.</typeparam>
+    /// <typeparam name="TAnnotation">The type of the annotation lines inside the stream.</typeparam>
+    /// <returns>The stream of content chunks.</returns>
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<TDelta, TAnnotation>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where TDelta : IResponseStreamLine where TAnnotation : IAnnotationStreamLine
     {
+        // Check if annotations are supported:
+        var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
+        
         StreamReader? streamReader = null;
         try
         {
@@ -217,7 +238,9 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (streamReader is null)
             yield break;
         
+        //
         // Read the stream, line by line:
+        //
         while (true)
         {
             try
@@ -240,7 +263,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                 yield break;
             }
 
+            //
             // Read the next line:
+            //
             string? line;
             try
             {
@@ -266,28 +291,233 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
                 yield break;
 
-            T providerResponse;
+            //
+            // Process annotation lines:
+            //
+            if (annotationSupported && line.Contains("""
+                                                     "annotations":[
+                                                     """, StringComparison.InvariantCulture))
+            {
+                TAnnotation? providerResponse;
+                
+                try
+                {
+                    // We know that the line starts with "data: ". Hence, we can
+                    // skip the first 6 characters to get the JSON data after that.
+                    var jsonData = line[6..];
+
+                    // Deserialize the JSON data:
+                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
+
+                    if (providerResponse is null)
+                        continue;
+                }
+                catch
+                {
+                    // Skip invalid JSON data:
+                    continue;
+                }
+
+                // Skip empty responses:
+                if (!providerResponse.ContainsSources())
+                    continue;
+
+                // Yield the response:
+                yield return new(string.Empty, providerResponse.GetSources());
+            }
+            
+            //
+            // Process delta lines:
+            //
+            else
+            {
+                TDelta? providerResponse;
+                try
+                {
+                    // We know that the line starts with "data: ". Hence, we can
+                    // skip the first 6 characters to get the JSON data after that.
+                    var jsonData = line[6..];
+
+                    // Deserialize the JSON data:
+                    providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
+
+                    if (providerResponse is null)
+                        continue;
+                }
+                catch
+                {
+                    // Skip invalid JSON data:
+                    continue;
+                }
+
+                // Skip empty responses:
+                if (!providerResponse.ContainsContent())
+                    continue;
+
+                // Yield the response:
+                yield return providerResponse.GetContent();
+            }
+        }
+        
+        streamReader.Dispose();
+    }
+
+    /// <summary>
+    /// Streams the chat completion from the provider using the Responses API.
+    /// </summary>
+    /// <param name="providerName">The name of the provider.</param>
+    /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <typeparam name="TDelta">The type of the delta lines inside the stream.</typeparam>
+    /// <typeparam name="TAnnotation">The type of the annotation lines inside the stream.</typeparam>
+    /// <returns>The stream of content chunks.</returns>
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamResponsesInternal<TDelta, TAnnotation>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where TDelta : IResponseStreamLine where TAnnotation : IAnnotationStreamLine
+    {
+        // Check if annotations are supported:
+        var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
+        
+        StreamReader? streamReader = null;
+        try
+        {
+            // Send the request using exponential backoff:
+            var responseData = await this.SendRequest(requestBuilder, token);
+            if(responseData.IsFailedAfterAllRetries)
+            {
+                this.logger.LogError($"The {providerName} responses call failed: {responseData.ErrorMessage}");
+                yield break;
+            }
+            
+            // Open the response stream:
+            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
+
+            // Add a stream reader to read the stream, line by line:
+            streamReader = new StreamReader(providerStream);
+        }
+        catch(Exception e)
+        {
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
+            this.logger.LogError($"Failed to stream responses from {providerName} '{this.InstanceName}': {e.Message}");
+        }
+
+        if (streamReader is null)
+            yield break;
+        
+        //
+        // Read the stream, line by line:
+        //
+        while (true)
+        {
             try
             {
-                // We know that the line starts with "data: ". Hence, we can
-                // skip the first 6 characters to get the JSON data after that.
-                var jsonData = line[6..];
-
-                // Deserialize the JSON data:
-                providerResponse = JsonSerializer.Deserialize<T>(jsonData, JSON_SERIALIZER_OPTIONS);
+                if(streamReader.EndOfStream)
+                    break;
             }
-            catch
+            catch (Exception e)
             {
-                // Skip invalid JSON data:
-                continue;
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
+                break;
+            }
+                
+            // Check if the token is canceled:
+            if (token.IsCancellationRequested)
+            {
+                this.logger.LogWarning($"The user canceled the responses for {providerName} '{this.InstanceName}'.");
+                streamReader.Close();
+                yield break;
             }
 
-            // Skip empty responses:
-            if (!providerResponse.ContainsContent())
-                continue;
+            //
+            // Read the next line:
+            //
+            string? line;
+            try
+            {
+                line = await streamReader.ReadLineAsync(token);
+            }
+            catch (Exception e)
+            {
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                break;
+            }
 
-            // Yield the response:
-            yield return providerResponse.GetContent();
+            // Skip empty lines:
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
+            // Check if the line is the end of the stream:
+            if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
+                yield break;
+            
+            //
+            // Find delta lines:
+            //
+            if (line.StartsWith("""
+                                data: {"type":"response.output_text.delta"
+                                """, StringComparison.InvariantCulture))
+            {
+                TDelta? providerResponse;
+                try
+                {
+                    // We know that the line starts with "data: ". Hence, we can
+                    // skip the first 6 characters to get the JSON data after that.
+                    var jsonData = line[6..];
+
+                    // Deserialize the JSON data:
+                    providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
+
+                    if (providerResponse is null)
+                        continue;
+                }
+                catch
+                {
+                    // Skip invalid JSON data:
+                    continue;
+                }
+
+                // Skip empty responses:
+                if (!providerResponse.ContainsContent())
+                    continue;
+
+                // Yield the response:
+                yield return providerResponse.GetContent();
+            }
+            
+            //
+            // Find annotation added lines:
+            //
+            else if (annotationSupported && line.StartsWith(
+                         """
+                         data: {"type":"response.output_text.annotation.added"
+                         """, StringComparison.InvariantCulture))
+            {
+                TAnnotation? providerResponse;
+                try
+                {
+                    // We know that the line starts with "data: ". Hence, we can
+                    // skip the first 6 characters to get the JSON data after that.
+                    var jsonData = line[6..];
+
+                    // Deserialize the JSON data:
+                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
+
+                    if (providerResponse is null)
+                        continue;
+                }
+                catch
+                {
+                    // Skip invalid JSON data:
+                    continue;
+                }
+
+                // Skip empty responses:
+                if (!providerResponse.ContainsSources())
+                    continue;
+
+                // Yield the response:
+                yield return new(string.Empty, providerResponse.GetSources());
+            }
         }
         
         streamReader.Dispose();

@@ -44,7 +44,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
         };
         
         // Prepare the Perplexity HTTP chat request:
-        var perplexityChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var perplexityChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -85,7 +85,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Perplexity", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, NoChatCompletionAnnotationStreamLine>("Perplexity", RequestBuilder, token))
             yield return content;
     }
 
@@ -130,6 +130,8 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
                 Capability.IMAGE_OUTPUT,
                 
                 Capability.ALWAYS_REASONING,
+                Capability.WEB_SEARCH,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         return
@@ -139,6 +141,9 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             
             Capability.TEXT_OUTPUT,
             Capability.IMAGE_OUTPUT,
+            
+            Capability.WEB_SEARCH,
+            Capability.CHAT_COMPLETION_API,
         ];
     }
     

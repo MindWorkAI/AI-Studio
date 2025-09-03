@@ -35,7 +35,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
         };
         
         // Prepare the Helmholtz HTTP chat request:
-        var helmholtzChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -76,7 +76,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Helmholtz", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("Helmholtz", RequestBuilder, token))
             yield return content;
     }
 

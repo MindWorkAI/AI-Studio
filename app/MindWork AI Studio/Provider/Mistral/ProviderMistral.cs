@@ -58,8 +58,6 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            RandomSeed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
@@ -79,7 +77,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Mistral", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("Mistral", RequestBuilder, token))
             yield return content;
     }
 
@@ -134,6 +132,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral medium:
@@ -144,6 +143,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral small:
@@ -154,6 +154,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral saba:
@@ -162,6 +163,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             [
                 Capability.TEXT_INPUT,
                 Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Default:

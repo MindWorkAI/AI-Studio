@@ -75,7 +75,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("self-hosted provider", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("self-hosted provider", RequestBuilder, token))
             yield return content;
     }
 

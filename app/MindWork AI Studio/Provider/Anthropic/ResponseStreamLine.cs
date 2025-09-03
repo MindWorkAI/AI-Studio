@@ -14,6 +14,21 @@ public readonly record struct ResponseStreamLine(string Type, int Index, Delta D
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Delta.Text, []);
+
+    #region Implementation of IAnnotationStreamLine
+
+    //
+    // Please note: Anthropic's API does not currently support sources in their
+    // OpenAI-compatible response stream.
+    //
+
+    /// <inheritdoc />
+    public bool ContainsSources() => false;
+
+    /// <inheritdoc />
+    public IList<ISource> GetSources() => [];
+
+    #endregion
 }
 
 /// <summary>

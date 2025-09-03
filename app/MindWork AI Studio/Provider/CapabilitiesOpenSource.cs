@@ -34,11 +34,17 @@ public static class CapabilitiesOpenSource
                         Capability.TEXT_OUTPUT,
                         
                         Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
                     ];
 
             // The old vision models cannot do function calling:
             if (modelName.IndexOf("vision") is not -1)
-                return [Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.TEXT_OUTPUT];
+                return [
+                    Capability.TEXT_INPUT,
+                    Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
+                ];
             
             //
             // All models >= 3.1 are able to do function calling:
@@ -53,10 +59,14 @@ public static class CapabilitiesOpenSource
                         Capability.TEXT_OUTPUT,
                         
                         Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
                     ];
 
             // All other llama models can only do text input and output:
-            return [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT];
+            return [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
         }
 
         //
@@ -66,9 +76,16 @@ public static class CapabilitiesOpenSource
         {
             if(modelName.IndexOf("deepseek-r1") is not -1 ||
                modelName.IndexOf("deepseek r1") is not -1)
-                return [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT, Capability.ALWAYS_REASONING];
+                return [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
             
-            return [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT]; 
+            return [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ]; 
         }
         
         //
@@ -77,9 +94,16 @@ public static class CapabilitiesOpenSource
         if (modelName.IndexOf("qwen") is not -1 || modelName.IndexOf("qwq") is not -1)
         {
             if (modelName.IndexOf("qwq") is not -1)
-                return [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT, Capability.ALWAYS_REASONING];
+                return [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
             
-            return [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT];
+            return [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
         }
         
         //
@@ -93,7 +117,8 @@ public static class CapabilitiesOpenSource
                     [
                         Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                         Capability.TEXT_OUTPUT,
-                        Capability.FUNCTION_CALLING
+                        Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
                     ];
             
             if (modelName.IndexOf("3.1") is not -1)
@@ -101,7 +126,8 @@ public static class CapabilitiesOpenSource
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
-                    Capability.FUNCTION_CALLING
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
             
             // Default:
@@ -109,7 +135,8 @@ public static class CapabilitiesOpenSource
                 [
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
-                    Capability.FUNCTION_CALLING
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
         }
         
@@ -123,6 +150,7 @@ public static class CapabilitiesOpenSource
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
                 ];
         
             if(modelName.StartsWith("grok-3-mini"))
@@ -132,6 +160,7 @@ public static class CapabilitiesOpenSource
                     Capability.TEXT_OUTPUT,
                     
                     Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
                 ];
         
             if(modelName.StartsWith("grok-3"))
@@ -141,10 +170,41 @@ public static class CapabilitiesOpenSource
                     Capability.TEXT_OUTPUT,
                     
                     Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+        }
+        
+        //
+        // OpenAI models:
+        //
+        if (modelName.IndexOf("gpt-oss") is not -1 ||
+            modelName.IndexOf("gpt-3.5") is not -1)
+        {
+            if(modelName.IndexOf("gpt-oss") is not -1)
+                return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.WEB_SEARCH,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            if(modelName.IndexOf("gpt-3.5") is not -1)
+                return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.CHAT_COMPLETION_API,
                 ];
         }
         
         // Default:
-        return [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT];
+        return [
+            Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+            Capability.CHAT_COMPLETION_API,
+        ];
     }
 }
