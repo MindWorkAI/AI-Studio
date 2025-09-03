@@ -62,18 +62,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
         
         // Handle configured LLM providers:
-        if (!PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun))
-        {
-            message = TB("At least one configured LLM provider is not valid or could not be parsed, or the LLM_PROVIDERS table does not exist.");
-            return false;
-        }
+        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
         
         // Handle configured chat templates:
-        if (!PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun))
-        {
-            message = TB("At least one configured chat template is not valid or could not be parsed, or the CHAT_TEMPLATES table does not exist.");
-            return false;
-        }
+        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun);
         
         message = string.Empty;
         return true;
