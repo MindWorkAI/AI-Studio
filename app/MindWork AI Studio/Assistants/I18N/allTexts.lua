@@ -5509,14 +5509,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T91464
 -- The SETTINGS table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011"] = "The SETTINGS table does not exist or is not a valid table."
 
--- At least one configured LLM provider is not valid or could not be parsed, or the LLM_PROVIDERS table does not exist.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3262676428"] = "At least one configured LLM provider is not valid or could not be parsed, or the LLM_PROVIDERS table does not exist."
-
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "The CONFIG table does not exist or is not a valid table."
-
--- At least one configured chat template is not valid or could not be parsed, or the CHAT_TEMPLATES table does not exist.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T445358428"] = "At least one configured chat template is not valid or could not be parsed, or the CHAT_TEMPLATES table does not exist."
 
 -- The field IETF_TAG does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T1796010240"] = "The field IETF_TAG does not exist or is not a valid string."
