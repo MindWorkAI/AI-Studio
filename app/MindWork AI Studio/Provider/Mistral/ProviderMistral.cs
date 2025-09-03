@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger)
+public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderMistral> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderMistral>();
+
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.MISTRAL.ToName();
@@ -29,7 +31,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         var systemPrompt = new RegularMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Mistral HTTP chat request:

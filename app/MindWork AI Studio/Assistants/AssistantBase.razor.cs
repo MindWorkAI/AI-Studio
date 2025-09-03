@@ -270,7 +270,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
         
         this.isProcessing = false;
         this.StateHasChanged();

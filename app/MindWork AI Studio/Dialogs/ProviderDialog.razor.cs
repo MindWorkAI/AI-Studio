@@ -79,9 +79,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     public bool IsEditing { get; init; }
     
     [Inject]
-    private ILogger<ProviderDialog> Logger { get; init; } = null!;
-    
-    [Inject]
     private RustService RustService { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
@@ -253,7 +250,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private async Task ReloadModels()
     {
         var currentProviderSettings = this.CreateProviderSettings();
-        var provider = currentProviderSettings.CreateProvider(this.Logger);
+        var provider = currentProviderSettings.CreateProvider();
         if(provider is NoProvider)
             return;
         

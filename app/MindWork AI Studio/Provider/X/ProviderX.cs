@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.X;
 
-public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v1/", logger)
+public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderX> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderX>();
+    
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the xAI HTTP chat request:

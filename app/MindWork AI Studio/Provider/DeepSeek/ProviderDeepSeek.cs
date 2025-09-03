@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.DeepSeek;
 
-public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api.deepseek.com/", logger)
+public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/", LOGGER)
 {
+    private static readonly ILogger<ProviderDeepSeek> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderDeepSeek>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the DeepSeek HTTP chat request:

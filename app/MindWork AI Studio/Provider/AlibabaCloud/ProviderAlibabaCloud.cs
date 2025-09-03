@@ -9,8 +9,9 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.AlibabaCloud;
 
-public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/", logger)
+public sealed class ProviderAlibabaCloud() : BaseProvider("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderAlibabaCloud> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAlibabaCloud>();
 
     #region Implementation of IProvider
 
@@ -32,7 +33,7 @@ public sealed class ProviderAlibabaCloud(ILogger logger) : BaseProvider("https:/
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the AlibabaCloud HTTP chat request:
