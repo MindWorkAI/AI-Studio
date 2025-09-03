@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.GWDG;
 
-public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai.academiccloud.de/v1/", logger)
+public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud.de/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the GWDG HTTP chat request:

@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Groq;
 
-public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/openai/v1/", logger)
+public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderGroq> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGroq>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the OpenAI HTTP chat request:

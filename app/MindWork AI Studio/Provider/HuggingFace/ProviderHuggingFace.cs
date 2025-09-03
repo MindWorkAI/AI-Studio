@@ -11,9 +11,11 @@ namespace AIStudio.Provider.HuggingFace;
 
 public sealed class ProviderHuggingFace : BaseProvider
 {
-    public ProviderHuggingFace(ILogger logger, HFInferenceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", logger)
+    private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
+
+    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
     {
-        logger.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
+        LOGGER.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
     }
 
     #region Implementation of IProvider
@@ -36,7 +38,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the HuggingFace HTTP chat request:

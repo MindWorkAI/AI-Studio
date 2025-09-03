@@ -11,8 +11,10 @@ namespace AIStudio.Provider.OpenAI;
 /// <summary>
 /// The OpenAI provider.
 /// </summary>
-public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.openai.com/v1/", logger)
+public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
+    
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -65,13 +67,13 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
         // Prepare the request path based on the API we are using:
         var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
         
-        this.logger.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
+        LOGGER.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
         
         // Prepare the system prompt:
         var systemPrompt = new Message
         {
             Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
 
         //

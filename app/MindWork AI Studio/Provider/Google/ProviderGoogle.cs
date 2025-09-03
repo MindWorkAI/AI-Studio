@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Google;
 
-public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", logger)
+public class ProviderGoogle() : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", LOGGER)
 {
+    private static readonly ILogger<ProviderGoogle> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGoogle>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public class ProviderGoogle(ILogger logger) : BaseProvider("https://generativela
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Google HTTP chat request:

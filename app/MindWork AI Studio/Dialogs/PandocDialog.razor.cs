@@ -33,7 +33,7 @@ public partial class PandocDialog : MSGComponentBase
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
-    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocDialog");
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocDialog));
     private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/COPYING.md";
     private static string LATEST_PANDOC_VERSION = string.Empty;
 

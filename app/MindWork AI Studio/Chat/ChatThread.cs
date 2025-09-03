@@ -10,6 +10,8 @@ namespace AIStudio.Chat;
 /// </summary>
 public sealed record ChatThread
 {
+    private static readonly ILogger<ChatThread> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatThread>();
+    
     /// <summary>
     /// The unique identifier of the chat thread.
     /// </summary>
@@ -82,9 +84,8 @@ public sealed record ChatThread
     /// </remarks>
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="chatThread">The chat thread to prepare the system prompt for.</param>
-    /// <param name="logger">The logger instance to use.</param>
     /// <returns>The prepared system prompt.</returns>
-    public string PrepareSystemPrompt(SettingsManager settingsManager, ChatThread chatThread, ILogger logger)
+    public string PrepareSystemPrompt(SettingsManager settingsManager, ChatThread chatThread)
     {
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
@@ -121,7 +122,7 @@ public sealed record ChatThread
         // default system prompt:
         chatThread = chatThread with { SystemPrompt = systemPromptTextWithChatTemplate };
         
-        logger.LogInformation(logMessage);
+        LOGGER.LogInformation(logMessage);
         
         //
         // Add augmented data, if available:
@@ -139,9 +140,9 @@ public sealed record ChatThread
         };
         
         if(isAugmentedDataAvailable)
-            logger.LogInformation("Augmented data is available for the chat thread.");
+            LOGGER.LogInformation("Augmented data is available for the chat thread.");
         else
-            logger.LogInformation("No augmented data is available for the chat thread.");
+            LOGGER.LogInformation("No augmented data is available for the chat thread.");
         
         
         //
@@ -177,7 +178,7 @@ public sealed record ChatThread
             }
         }
         
-        logger.LogInformation(logMessage);
+        LOGGER.LogInformation(logMessage);
         return systemPromptText;
     }
 

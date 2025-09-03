@@ -25,7 +25,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// The logger to use.
     /// </summary>
-    protected readonly ILogger logger;
+    private readonly ILogger logger;
 
     static BaseProvider()
     {
@@ -47,10 +47,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// Constructor for the base provider.
     /// </summary>
     /// <param name="url">The base URL for the provider.</param>
-    /// <param name="loggerService">The logger service to use.</param>
-    protected BaseProvider(string url, ILogger loggerService)
+    /// <param name="logger">The logger to use.</param>
+    protected BaseProvider(string url, ILogger logger)
     {
-        this.logger = loggerService;
+        this.logger = logger;
 
         // Set the base URL:
         this.httpClient.BaseAddress = new(url);

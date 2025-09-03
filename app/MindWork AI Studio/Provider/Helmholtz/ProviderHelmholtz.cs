@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Helmholtz;
 
-public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://api.helmholtz-blablador.fz-juelich.de/v1/", logger)
+public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-blablador.fz-juelich.de/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderHelmholtz> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHelmholtz>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Helmholtz HTTP chat request:

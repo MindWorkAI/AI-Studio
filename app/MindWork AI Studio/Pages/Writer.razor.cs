@@ -2,7 +2,6 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 using Timer = System.Timers.Timer;
@@ -11,9 +10,6 @@ namespace AIStudio.Pages;
 
 public partial class Writer : MSGComponentBase
 {
-    [Inject]
-    private ILogger<Chat> Logger { get; init; } = null!;
-    
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
     
@@ -121,7 +117,7 @@ public partial class Writer : MSGComponentBase
         this.isStreaming = true;
         this.StateHasChanged();
         
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, lastUserPrompt, this.chatThread);
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, lastUserPrompt, this.chatThread);
         this.suggestion = aiText.Text;
         
         this.isStreaming = false;

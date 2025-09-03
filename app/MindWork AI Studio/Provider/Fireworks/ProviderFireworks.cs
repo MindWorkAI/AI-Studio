@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
 
-public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.fireworks.ai/inference/v1/", logger)
+public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/inference/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderFireworks> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderFireworks>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Fireworks HTTP chat request:

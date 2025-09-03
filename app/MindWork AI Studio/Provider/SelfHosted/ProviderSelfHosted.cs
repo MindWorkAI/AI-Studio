@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", logger)
+public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", LOGGER)
 {
+    private static readonly ILogger<ProviderSelfHosted> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderSelfHosted>();
+
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.SELF_HOSTED.ToName();
@@ -27,7 +29,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the OpenAI HTTP chat request:
@@ -108,7 +110,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         }
         catch(Exception e)
         {
-            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
         }
     }
@@ -135,7 +137,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         }
         catch(Exception e)
         {
-            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
         }
     }

@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
-public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://api.anthropic.com/v1/", logger)
+public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.com/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
+
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.ANTHROPIC.ToName();
@@ -49,7 +51,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 }
             }).ToList()],
             
-            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
             MaxTokens = 4_096,
             
             // Right now, we only support streaming completions:

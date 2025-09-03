@@ -21,6 +21,8 @@ namespace AIStudio.Provider;
 
 public static class LLMProvidersExtensions
 {
+    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(LLMProvidersExtensions));
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LLMProvidersExtensions).Namespace, nameof(LLMProvidersExtensions));
     
     /// <summary>
@@ -139,54 +141,52 @@ public static class LLMProvidersExtensions
     /// Creates a new provider instance based on the provider value.
     /// </summary>
     /// <param name="providerSettings">The provider settings.</param>
-    /// <param name="logger">The logger to use.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings, ILogger logger)
+    public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider ,logger);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider);
     }
     
     /// <summary>
     /// Creates a new provider instance based on the embedding provider value.
     /// </summary>
     /// <param name="embeddingProviderSettings">The embedding provider settings.</param>
-    /// <param name="logger">The logger to use.</param>
     /// <returns>The provider instance.</returns>
-    public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings, ILogger logger)
+    public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings)
     {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE,logger);
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider , ILogger logger)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider)
     {
         try
         {
             return provider switch
             {
-                LLMProviders.OPEN_AI => new ProviderOpenAI(logger) { InstanceName = instanceName },
-                LLMProviders.ANTHROPIC => new ProviderAnthropic(logger) { InstanceName = instanceName },
-                LLMProviders.MISTRAL => new ProviderMistral(logger) { InstanceName = instanceName },
-                LLMProviders.GOOGLE => new ProviderGoogle(logger) { InstanceName = instanceName },
-                LLMProviders.X => new ProviderX(logger) { InstanceName = instanceName },
-                LLMProviders.DEEP_SEEK => new ProviderDeepSeek(logger) { InstanceName = instanceName },
-                LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud(logger) { InstanceName = instanceName },
-                LLMProviders.PERPLEXITY => new ProviderPerplexity(logger) { InstanceName = instanceName },
+                LLMProviders.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName },
+                LLMProviders.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName },
+                LLMProviders.MISTRAL => new ProviderMistral { InstanceName = instanceName },
+                LLMProviders.GOOGLE => new ProviderGoogle { InstanceName = instanceName },
+                LLMProviders.X => new ProviderX { InstanceName = instanceName },
+                LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName },
+                LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName },
+                LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName },
                 
-                LLMProviders.GROQ => new ProviderGroq(logger) { InstanceName = instanceName },
-                LLMProviders.FIREWORKS => new ProviderFireworks(logger) { InstanceName = instanceName },
-                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(logger, inferenceProvider, model) { InstanceName = instanceName }, 
+                LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName },
+                LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName },
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, model) { InstanceName = instanceName }, 
                 
-                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(logger, host, hostname) { InstanceName = instanceName },
+                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(host, hostname) { InstanceName = instanceName },
                 
-                LLMProviders.HELMHOLTZ => new ProviderHelmholtz(logger) { InstanceName = instanceName },
-                LLMProviders.GWDG => new ProviderGWDG(logger) { InstanceName = instanceName },
+                LLMProviders.HELMHOLTZ => new ProviderHelmholtz { InstanceName = instanceName },
+                LLMProviders.GWDG => new ProviderGWDG { InstanceName = instanceName },
                 
                 _ => new NoProvider(),
             };
         }
         catch (Exception e)
         {
-            logger.LogError($"Failed to create provider: {e.Message}");
+            LOGGER.LogError($"Failed to create provider: {e.Message}");
             return new NoProvider();
         }
     }

@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Perplexity;
 
-public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://api.perplexity.ai/", logger)
+public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.ai/", LOGGER)
 {
+    private static readonly ILogger<ProviderPerplexity> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderPerplexity>();
+
     private static readonly Model[] KNOWN_MODELS =
     [
         new("sonar", "Sonar"),
@@ -40,7 +42,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Perplexity HTTP chat request:
