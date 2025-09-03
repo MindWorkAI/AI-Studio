@@ -76,7 +76,7 @@ public sealed class ProviderGWDG(ILogger logger) : BaseProvider("https://chat-ai
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("GWDG", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("GWDG", RequestBuilder, token))
             yield return content;
     }
 

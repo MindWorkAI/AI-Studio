@@ -55,51 +55,113 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
             
             _ => systemPromptRole,
         };
-        
-        this.logger.LogInformation($"Using the system prompt role '{systemPromptRole}' for model '{chatModel.Id}'.");
 
+        // Read the model capabilities:
+        var modelCapabilities = this.GetModelCapabilities(chatModel);
+        
+        // Check if we are using the Responses API or the Chat Completion API:
+        var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
+        
+        // Prepare the request path based on the API we are using:
+        var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
+        
+        this.logger.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
+        
         // Prepare the system prompt:
         var systemPrompt = new Message
         {
             Role = systemPromptRole,
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
         };
-        
-        // Prepare the OpenAI HTTP chat request:
-        var openAIChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
+
+        //
+        // Prepare the tools we want to use:
+        //
+        IList<Tool> tools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
         {
-            Model = chatModel.Id,
-            
-            // Build the messages:
-            // - First of all the system prompt
-            // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
+            true => [ Tools.WEB_SEARCH ],
+            _ => []
+        };
+        
+        //
+        // Create the request: either for the Responses API or the Chat Completion API
+        //
+        var openAIChatRequest = usingResponsesAPI switch
+        {
+            // Chat Completion API request:
+            false => JsonSerializer.Serialize(new ChatCompletionAPIRequest
             {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => systemPromptRole,
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+                Model = chatModel.Id,
             
-            // Right now, we only support streaming completions:
-            Stream = true,
-        }, JSON_SERIALIZER_OPTIONS);
+                // Build the messages:
+                // - First of all the system prompt
+                // - Then none-empty user and AI messages
+                Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
+                {
+                    Role = n.Role switch
+                    {
+                        ChatRole.USER => "user",
+                        ChatRole.AI => "assistant",
+                        ChatRole.AGENT => "assistant",
+                        ChatRole.SYSTEM => systemPromptRole,
+
+                        _ => "user",
+                    },
+
+                    Content = n.Content switch
+                    {
+                        ContentText text => text.Text,
+                        _ => string.Empty,
+                    }
+                }).ToList()],
+            
+                // Right now, we only support streaming completions:
+                Stream = true,
+            }, JSON_SERIALIZER_OPTIONS),
+            
+            // Responses API request:
+            true => JsonSerializer.Serialize(new ResponsesAPIRequest
+            {
+                Model = chatModel.Id,
+            
+                // Build the messages:
+                // - First of all the system prompt
+                // - Then none-empty user and AI messages
+                Input = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
+                {
+                    Role = n.Role switch
+                    {
+                        ChatRole.USER => "user",
+                        ChatRole.AI => "assistant",
+                        ChatRole.AGENT => "assistant",
+                        ChatRole.SYSTEM => systemPromptRole,
+
+                        _ => "user",
+                    },
+
+                    Content = n.Content switch
+                    {
+                        ContentText text => text.Text,
+                        _ => string.Empty,
+                    }
+                }).ToList()],
+            
+                // Right now, we only support streaming completions:
+                Stream = true,
+                
+                // We do not want to store any data on OpenAI's servers:
+                Store = false,
+                
+                // Tools we want to use:
+                Tools = tools,
+                
+            }, JSON_SERIALIZER_OPTIONS),
+        };
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
             // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+            var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
 
             // Set the authorization header:
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
@@ -108,18 +170,24 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
             request.Content = new StringContent(openAIChatRequest, Encoding.UTF8, "application/json");
             return request;
         }
+
+        if (usingResponsesAPI)
+            await foreach (var content in this.StreamResponsesInternal<ResponsesDeltaStreamLine, ResponsesAnnotationStreamLine>("OpenAI", RequestBuilder, token))
+                yield return content;
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("OpenAI", RequestBuilder, token))
-            yield return content;
-            await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("OpenAI", RequestBuilder, token))
+        else
+            await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("OpenAI", RequestBuilder, token))
+                yield return content;
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+    
     /// <inheritdoc />
     public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
+    
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
@@ -213,7 +281,7 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.RESPONSES_API,
                 ];
         
-        if (modelName.StartsWith("o4-mini") || modelName.StartsWith("o1") || modelName.StartsWith("o3"))
+        if (modelName.StartsWith("o4-mini") || modelName.StartsWith("o3"))
             return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
@@ -223,6 +291,16 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.WEB_SEARCH,
                     Capability.RESPONSES_API,
                 ];
+        
+        if (modelName.StartsWith("o1"))
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                    
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.RESPONSES_API,
+            ];
         
         if(modelName.StartsWith("gpt-4-turbo"))
             return
@@ -241,6 +319,16 @@ public sealed class ProviderOpenAI(ILogger logger) : BaseProvider("https://api.o
                     Capability.TEXT_OUTPUT,
                     Capability.RESPONSES_API,
                 ];
+        
+        if(modelName.StartsWith("gpt-5-nano"))
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING, Capability.ALWAYS_REASONING,
+                Capability.RESPONSES_API,
+            ];
         
         if(modelName is "gpt-5" || modelName.StartsWith("gpt-5-"))
             return

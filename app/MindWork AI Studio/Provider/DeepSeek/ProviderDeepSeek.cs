@@ -76,7 +76,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("DeepSeek", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("DeepSeek", RequestBuilder, token))
             yield return content;
     }
 

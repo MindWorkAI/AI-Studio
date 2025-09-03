@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
@@ -77,7 +78,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Fireworks", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, ChatCompletionAnnotationStreamLine>("Fireworks", RequestBuilder, token))
             yield return content;
     }
 

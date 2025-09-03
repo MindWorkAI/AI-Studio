@@ -77,7 +77,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("Mistral", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("Mistral", RequestBuilder, token))
             yield return content;
     }
 

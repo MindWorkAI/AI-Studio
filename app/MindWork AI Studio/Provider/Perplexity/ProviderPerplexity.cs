@@ -85,7 +85,7 @@ public sealed class ProviderPerplexity(ILogger logger) : BaseProvider("https://a
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Perplexity", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, NoChatCompletionAnnotationStreamLine>("Perplexity", RequestBuilder, token))
             yield return content;
     }
 

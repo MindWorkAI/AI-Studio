@@ -78,7 +78,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("Groq", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("Groq", RequestBuilder, token))
             yield return content;
     }
 

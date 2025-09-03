@@ -15,6 +15,20 @@ public readonly record struct ResponseStreamLine(string Id, string Object, uint 
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
+
+    #region Implementation of IAnnotationStreamLine
+
+    //
+    // Currently, Fireworks does not provide source citations in their response stream.
+    //
+    
+    /// <inheritdoc />
+    public bool ContainsSources() => false;
+
+    /// <inheritdoc />
+    public IList<ISource> GetSources() => [];
+
+    #endregion
 }
 
 /// <summary>

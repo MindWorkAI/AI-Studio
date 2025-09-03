@@ -78,7 +78,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionResponseStreamLine>("xAI", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("xAI", RequestBuilder, token))
             yield return content;
     }
 

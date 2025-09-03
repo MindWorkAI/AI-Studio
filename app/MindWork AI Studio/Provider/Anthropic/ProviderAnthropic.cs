@@ -72,7 +72,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Anthropic", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, NoChatCompletionAnnotationStreamLine>("Anthropic", RequestBuilder, token))
             yield return content;
     }
 
