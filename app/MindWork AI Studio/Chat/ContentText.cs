@@ -11,6 +11,8 @@ namespace AIStudio.Chat;
 /// </summary>
 public sealed class ContentText : IContent
 {
+    private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
+    
     /// <summary>
     /// The minimum time between two streaming events, when the user
     /// enables the energy saving mode.
@@ -46,8 +48,7 @@ public sealed class ContentText : IContent
         
         if(!chatThread.IsLLMProviderAllowed(provider))
         {
-            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
-            logger.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            LOGGER.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
             return chatThread;
         }
 
@@ -61,8 +62,7 @@ public sealed class ContentText : IContent
             }
             catch (Exception e)
             {
-                var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
-                logger.LogError(e, "Skipping the RAG process due to an error.");
+                LOGGER.LogError(e, "Skipping the RAG process due to an error.");
             }
         }
 
