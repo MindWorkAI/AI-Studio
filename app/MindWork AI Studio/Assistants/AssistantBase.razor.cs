@@ -354,6 +354,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         this.ResetForm();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
         
         this.inputIsValid = false;
         this.inputIssues = [];
