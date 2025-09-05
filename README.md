@@ -2,51 +2,82 @@
 Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 
 ## News
-Things we are currently working on:
+<details>
+    <summary> 
+    <h3 style="display:inline-block">
+        Things we are currently working on
+    </h3>
+    </summary>
 
-- Since November 2024: Work on RAG (integration of your data and files) has begun. We will support the integration of local and external data sources. We need to implement the following runtime (Rust) and app (.NET) steps:
+<details>
+    <summary>
+    <h4 style="display:inline-block">
+        RAG (Retrieval-Augmented Generation)
+    </h4>
+    </summary>
 
-  - [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
-  - [x] ~~Define the [External Retrieval Interface (ERI)](https://github.com/MindWorkAI/ERI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/ERI/pull/1))~~
-  - [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
-  - [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
-  - [x] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
-  - [x] ~~App: Implement an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant (PR [#231](https://github.com/MindWorkAI/AI-Studio/pull/231))~~
-  - [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259), [#273](https://github.com/MindWorkAI/AI-Studio/pull/273))~~
-  - [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
-  - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
-  - [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
-  - [ ] App: Implement external embedding providers
-  - [ ] App: Implement the process to vectorize one local file using embeddings
-  - [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
-  - [ ] App: Implement the continuous process of vectorizing data
-  - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
-  - [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
-  - [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
+Since November 2024: Work on RAG (integration of your data and files) has begun. We will support the integration of local and external data sources. We need to implement the following runtime (Rust) and app (.NET) steps:
 
+- [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
+- [x] ~~Define the [External Retrieval Interface (ERI)](https://github.com/MindWorkAI/ERI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/ERI/pull/1))~~
+- [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
+- [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
+- [x] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
+- [x] ~~App: Implement an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant (PR [#231](https://github.com/MindWorkAI/AI-Studio/pull/231))~~
+- [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259), [#273](https://github.com/MindWorkAI/AI-Studio/pull/273))~~
+- [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
+- [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
+- [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
+- [ ] App: Implement external embedding providers
+- [ ] App: Implement the process to vectorize one local file using embeddings
+- [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
+- [ ] App: Implement the continuous process of vectorizing data
+- [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
+- [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
+- [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
 
-- Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[PR #167](https://github.com/MindWorkAI/AI-Studio/pull/167), [PR #226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~, [PR #376](https://github.com/MindWorkAI/AI-Studio/pull/376).
+</details>
 
-- Since March 2025: We have started developing the plugin system. There will be language plugins to offer AI Studio in other languages, configuration plugins to centrally manage certain providers and rules within an organization, and assistant plugins that allow anyone to develop their own assistants. We are using Lua as the plugin language:
-  - [x] ~~Plan & implement the base plugin system ([PR #322](https://github.com/MindWorkAI/AI-Studio/pull/322))~~
-  - [x] ~~Start the plugin system ([PR #372](https://github.com/MindWorkAI/AI-Studio/pull/372))~~
-  - [x] ~~Added hot-reload support for plugins ([PR #377](https://github.com/MindWorkAI/AI-Studio/pull/377), [PR #391](https://github.com/MindWorkAI/AI-Studio/pull/391))~~
-  - [x] ~~Add support for other languages (I18N) to AI Studio ([PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404), [PR #429](https://github.com/MindWorkAI/AI-Studio/pull/429), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
-  - [x] ~~Add an I18N assistant to translate all AI Studio texts to a certain language & culture ([PR #422](https://github.com/MindWorkAI/AI-Studio/pull/422))~~
-  - [x] ~~Provide MindWork AI Studio in German ([PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
-  - [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494), [PR #497](https://github.com/MindWorkAI/AI-Studio/pull/497))~~
-  - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
-  - [ ] Add assistant plugins
+<details>
+    <summary>
+    <h4 style="display:inline-block">
+        Writer Mode
+    </h4>
+    </summary>
 
-Other News:
+Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[PR #167](https://github.com/MindWorkAI/AI-Studio/pull/167), [PR #226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~, [PR #376](https://github.com/MindWorkAI/AI-Studio/pull/376).
 
-- April 2025: We have two active financial supporters: Peer `peerschuett` and Dominic `donework`. Thank you very much for your support. MindWork AI reinvests these donations by passing them on to our AI Studio dependencies ([see here](https://github.com/orgs/MindWorkAI/sponsoring)). In the event that we receive large donations, we will first sign the app ([#56](https://github.com/MindWorkAI/Planning/issues/56)). In case we receive more donations, we will look for and pay staff to develop features for AI Studio.
+</details>
 
-- April 2025: The [German Aerospace Center (DLR)](https://en.wikipedia.org/wiki/German_Aerospace_Center) ([Website](https://www.dlr.de/en)) will use AI Studio at least within the scope of three projects and will also contribute to its further development. This is great news.
+<details>
+    <summary>
+    <h4 style="display:inline-block">
+        Plugin System
+    </h4>
+    </summary>
 
+Since March 2025: We have started developing the plugin system. There will be language plugins to offer AI Studio in other languages, configuration plugins to centrally manage certain providers and rules within an organization, and assistant plugins that allow anyone to develop their own assistants. We are using Lua as the plugin language:
+- [x] ~~Plan & implement the base plugin system ([PR #322](https://github.com/MindWorkAI/AI-Studio/pull/322))~~
+- [x] ~~Start the plugin system ([PR #372](https://github.com/MindWorkAI/AI-Studio/pull/372))~~
+- [x] ~~Added hot-reload support for plugins ([PR #377](https://github.com/MindWorkAI/AI-Studio/pull/377), [PR #391](https://github.com/MindWorkAI/AI-Studio/pull/391))~~
+- [x] ~~Add support for other languages (I18N) to AI Studio ([PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404), [PR #429](https://github.com/MindWorkAI/AI-Studio/pull/429), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
+- [x] ~~Add an I18N assistant to translate all AI Studio texts to a certain language & culture ([PR #422](https://github.com/MindWorkAI/AI-Studio/pull/422))~~
+- [x] ~~Provide MindWork AI Studio in German ([PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
+- [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494), [PR #497](https://github.com/MindWorkAI/AI-Studio/pull/497))~~
+- [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
+- [ ] Add assistant plugins
 
-Features we have recently released:
+</details>
+</details>
 
+<details open>
+    <summary>
+    <h3 style="display:inline-block">
+        Features we have recently released
+    </h3>
+    </summary>
+
+- v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
 - v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
 - v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
@@ -58,6 +89,8 @@ Features we have recently released:
 - v0.9.26+: Added RAG for external data sources using our [ERI interface](https://mindworkai.org/#eri---external-retrieval-interface) as a preview feature.
 - v0.9.25: Added [xAI](https://x.ai/) as a new provider. xAI provides their Grok models for generating content.
 - v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
+ 
+</details>
 
 ## What is AI Studio?
 
@@ -72,6 +105,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
 - **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
   - [OpenAI](https://openai.com/) (GPT5, GPT4.1, o1, o3, o4, etc.)
+  - [Perplexity](https://www.perplexity.ai/)
   - [Mistral](https://mistral.ai/)
   - [Anthropic](https://www.anthropic.com/) (Claude)
   - [Google Gemini](https://gemini.google.com)
@@ -92,7 +126,13 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 
 ## **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
-## Support the Project
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Support the Project
+    </h2>
+    </summary>
+
 Thank you for using MindWork AI Studio and considering supporting its development 😀. Your support helps keep the project alive and ensures continuous improvements and new features.
 
 We offer various ways you can support the project:
@@ -106,7 +146,15 @@ For companies, sponsoring MindWork AI Studio is not only a way to support innova
 To view all available tiers, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
 
-## Planned Features
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Planned Features
+    </h2>
+    </summary>
+
 Here's an exciting look at some of the features we're planning to add to AI Studio in future releases:
 - **Integrating your data**: You'll be able to integrate your data into AI Studio, like your PDF or Office files, or your Markdown notes.
 - **Integration of enterprise data:** It will soon be possible to integrate data from the corporate network using a specified interface ([External Retrieval Interface](https://github.com/MindWorkAI/ERI), ERI for short). This will likely require development work by the organization in question.
@@ -120,13 +168,37 @@ Here's an exciting look at some of the features we're planning to add to AI Stud
 
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
-## Building
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Building
+    </h2>
+    </summary>
+
 You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
 
-## Enterprise IT
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Enterprise IT
+    </h2>
+    </summary>
+
 Do you want to manage AI Studio centrally from your IT department? Yes, that’s possible. [Here’s how it works.](documentation/Enterprise%20IT.md)
 
-## License
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        License
+    </h2>
+    </summary>
+
 MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional source license). Here’s a simple rundown of what that means for you:
 - **Permitted Use**: Feel free to use, copy, modify, and share the software for your own projects, educational purposes, research, or even in professional services. The key is to use it in a way that doesn't compete with our offerings.
 - **Competing Use**: Our only request is that you don't create commercial products or services that replace or compete with MindWork AI Studio or any of our other offerings.
@@ -134,3 +206,5 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
 
 For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
+
+</details>
