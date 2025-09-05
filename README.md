@@ -170,6 +170,8 @@ Here's an exciting look at some of the features we're planning to add to AI Stud
 
 Stay tuned for more updates and enhancements to make MindWork AI Studio even more powerful and versatile 🤩.
 
+If you're interested in learning more about future plans, check out our [roadmap](https://github.com/orgs/MindWorkAI/projects/2/views/3) and our [planning issues](https://github.com/MindWorkAI/Planning/issues).
+
 </details>
 
 <details>
