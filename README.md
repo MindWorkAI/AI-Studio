@@ -1,4 +1,6 @@
 # MindWork AI Studio
+![MindWork AI Studio Logo](app/MindWork%20AI%20Studio/wwwroot/svg/banner.svg)
+
 Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 
 ## News
