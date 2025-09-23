@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Helmholtz;
 
-public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://api.helmholtz-blablador.fz-juelich.de/v1/", logger)
+public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-blablador.fz-juelich.de/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderHelmholtz> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHelmholtz>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -20,7 +22,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
     public override string InstanceName { get; set; } = "Helmholtz Blablador";
     
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -31,11 +33,11 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Helmholtz HTTP chat request:
-        var helmholtzChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -76,7 +78,7 @@ public sealed class ProviderHelmholtz(ILogger logger) : BaseProvider("https://ap
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Helmholtz", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("Helmholtz", RequestBuilder, token))
             yield return content;
     }
 

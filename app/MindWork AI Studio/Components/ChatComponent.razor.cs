@@ -18,9 +18,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Parameter]
     public EventCallback<ChatThread?> ChatThreadChanged { get; set; }
-    
+
     [Parameter]
-    public AIStudio.Settings.Provider Provider { get; set; }
+    public AIStudio.Settings.Provider Provider { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
@@ -33,9 +33,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     private ILogger<ChatComponent> Logger { get; set; } = null!;
-    
-    [Inject]
-    private ThreadSafeRandom RNG { get; init; } = null!;
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -327,7 +324,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
         this.currentChatTemplate = chatTemplate;
-        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
+            this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        
         if(this.ChatThread is null)
             return;
 
@@ -434,8 +433,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 ChatId = Guid.NewGuid(),
                 DataSourceOptions = this.earlyDataSourceOptions,
                 Name = this.ExtractThreadName(this.userInput),
-                Seed = this.RNG.Next(),
-                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
+                Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -530,7 +528,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
             // content to be streamed.
-            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(this.Logger), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
+            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
         }
         
         this.cancellationTokenSource = null;
@@ -585,9 +583,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", "Are you sure you want to start a new chat? All unsaved changes will be lost." },
+                { x => x.Message, "Are you sure you want to start a new chat? All unsaved changes will be lost." },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
@@ -632,7 +630,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             default:
             case AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER:
-                if(this.Provider == default)
+                if(this.Provider == AIStudio.Settings.Provider.NONE)
                 {
                     this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
                     await this.ProviderChanged.InvokeAsync(this.Provider);
@@ -672,8 +670,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 Name = string.Empty,
-                Seed = this.RNG.Next(),
-                Blocks = this.currentChatTemplate == default ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
+                Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
         
@@ -693,9 +690,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
         {
-            var confirmationDialogParameters = new DialogParameters
+            var confirmationDialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { "Message", T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
+                { x => x.Message, T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
             };
         
             var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
@@ -704,11 +701,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 return;
         }
         
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { "Message", T("Please select the workspace where you want to move the chat to.") },
-            { "SelectedWorkspace", this.ChatThread?.WorkspaceId },
-            { "ConfirmText", T("Move chat") },
+            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.SelectedWorkspace, this.ChatThread?.WorkspaceId ?? Guid.Empty },
+            { x => x.ConfirmText, T("Move chat") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -795,7 +792,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
             
             case LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER:
-                if(this.Provider == default)
+                if(this.Provider == AIStudio.Settings.Provider.NONE)
                     this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
                 break;
         }
@@ -813,9 +810,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))
         {
-            this.currentChatTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
-            if(this.currentChatTemplate == default)
-                this.currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
+            var selectedTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
+            this.currentChatTemplate = selectedTemplate ?? ChatTemplate.NO_CHAT_TEMPLATE;
         }
     }
 

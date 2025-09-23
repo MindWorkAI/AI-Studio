@@ -1,6 +1,9 @@
 namespace AIStudio.Provider;
 
-public interface IResponseStreamLine
+/// <summary>
+/// A contract for a streamed response line that may contain content and annotations.
+/// </summary>
+public interface IResponseStreamLine : IAnnotationStreamLine
 {
     /// <summary>
     /// Checks if the response line contains any content.
@@ -12,5 +15,5 @@ public interface IResponseStreamLine
     /// Gets the content of the response line.
     /// </summary>
     /// <returns>The content of the response line.</returns>
-    public string GetContent();
+    public ContentStreamChunk GetContent();
 }

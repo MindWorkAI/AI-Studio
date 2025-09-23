@@ -362,7 +362,10 @@ jobs:
       
           $PDFIUM_URL = "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F$($env:PDFIUM_VERSION)/pdfium-$PDFIUM_FILE"
           Write-Host "Download $PDFIUM_URL ..."
-          $TMP = New-TemporaryFile | Split-Path
+
+          # Create a unique temporary directory (not just a file)
+          $TMP = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+          New-Item -ItemType Directory -Path $TMP -Force | Out-Null
           $ARCHIVE = Join-Path $TMP "pdfium.tgz"
       
           Invoke-WebRequest -Uri $PDFIUM_URL -OutFile $ARCHIVE
@@ -380,8 +383,15 @@ jobs:
           Copy-Item -Path $SRC -Destination $DEST -Force
       
           Write-Host "Cleaning up ..."
-          Remove-Item $ARCHIVE -Force
-          Remove-Item $TMP -Recurse -Force
+          Remove-Item $ARCHIVE -Force -ErrorAction SilentlyContinue
+
+          # Try to remove the temporary directory, but ignore errors if files are still in use
+          try {
+            Remove-Item $TMP -Recurse -Force -ErrorAction Stop
+            Write-Host "Successfully cleaned up temporary directory: $TMP"
+          } catch {
+            Write-Warning "Could not fully clean up temporary directory: $TMP. This is usually harmless as Windows will clean it up later. Error: $($_.Exception.Message)"
+          }
       
       - name: Build .NET project
         run: |

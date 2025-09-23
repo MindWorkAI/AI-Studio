@@ -8,7 +8,7 @@ namespace AIStudio.Components;
 /// Configuration component for selecting many values from a list.
 /// </summary>
 /// <typeparam name="TData">The type of the value to select.</typeparam>
-public partial class ConfigurationMultiSelect<TData> : ConfigurationBase
+public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
 {
     /// <summary>
     /// The data to select from.
@@ -28,6 +28,17 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBase
     [Parameter]
     public Action<HashSet<TData>> SelectionUpdate { get; set; } = _ => { };
     
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    protected override Variant Variant => Variant.Outlined;
+
+    protected override string Label => this.OptionDescription;
+
+    #endregion
+    
     private async Task OptionChanged(IEnumerable<TData?>? updatedValues)
     {
         if(updatedValues is null)
@@ -38,8 +49,6 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBase
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }
-    
-    private static string GetClass => $"{MARGIN_CLASS} rounded-lg";
     
     private string GetMultiSelectionText(List<TData?>? selectedValues)
     {

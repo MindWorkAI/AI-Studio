@@ -22,7 +22,7 @@ public static partial class Pandoc
     private const string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
     
-    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("Pandoc");
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Pandoc));
     private static readonly Version MINIMUM_REQUIRED_VERSION = new (3, 7, 0, 2);
     private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 2);
 

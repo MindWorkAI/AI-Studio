@@ -1,7 +1,16 @@
+using System.Linq.Expressions;
+
 namespace AIStudio.Settings.DataModel;
 
-public sealed class DataApp
+public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = null)
 {
+    /// <summary>
+    /// The default constructor for the JSON deserializer.
+    /// </summary>
+    public DataApp() : this(null)
+    {
+    }
+    
     /// <summary>
     /// The language behavior.
     /// </summary>
@@ -21,7 +30,7 @@ public sealed class DataApp
     /// Should we save energy? When true, we will update content streamed
     /// from the server, i.e., AI, less frequently.
     /// </summary>
-    public bool IsSavingEnergy { get; set; }
+    public bool IsSavingEnergy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.IsSavingEnergy, false);
     
     /// <summary>
     /// Should we enable spellchecking for all input fields?
@@ -31,7 +40,12 @@ public sealed class DataApp
     /// <summary>
     /// If and when we should look for updates.
     /// </summary>
-    public UpdateBehavior UpdateBehavior { get; set; } = UpdateBehavior.HOURLY;
+    public UpdateInterval UpdateInterval { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateInterval, UpdateInterval.HOURLY);
+
+    /// <summary>
+    /// How updates should be installed.
+    /// </summary>
+    public UpdateInstallation UpdateInstallation { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UpdateInstallation, UpdateInstallation.MANUAL);
     
     /// <summary>
     /// The navigation behavior.
@@ -41,7 +55,7 @@ public sealed class DataApp
     /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
-    public PreviewVisibility PreviewVisibility { get; set; } = PreviewVisibility.NONE;
+    public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);
 
     /// <summary>
     /// The enabled preview features.
@@ -58,9 +72,13 @@ public sealed class DataApp
     /// </summary>
     public string PreselectedProfile { get; set; } = string.Empty;
     
-    
     /// <summary>
     /// Should we preselect a chat template for the entire app?
     /// </summary>
     public string PreselectedChatTemplate { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Should the user be allowed to add providers?
+    /// </summary>
+    public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
 }

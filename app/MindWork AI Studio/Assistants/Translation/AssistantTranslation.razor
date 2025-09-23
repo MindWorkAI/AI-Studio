@@ -3,7 +3,7 @@
 
 @if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
 {
-    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" Preselect="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader)" PreselectContentCleanerAgent="@(this.SettingsManager.ConfigurationData.Translation.PreselectOptions && this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent)"/>
+    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.providerSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
 }
 
 <ReadFileContent @bind-FileContent="@this.inputText"/>

@@ -47,6 +47,11 @@ public sealed class DataTextSummarizer
     public string PreselectedExpertInField { get; set; } = string.Empty;
     
     /// <summary>
+    /// Preselect any important aspects that the summarizer should take into account?
+    /// </summary>
+    public string PreselectedImportantAspects { get; set; } = string.Empty;
+    
+    /// <summary>
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;

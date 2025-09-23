@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 using Lua;
@@ -39,6 +40,8 @@ public static partial class PluginFactory
         if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
             return;
 
+        var configObjectList = new List<PluginConfigurationObject>();
+        
         try
         {
             LOG.LogInformation("Start loading plugins.");
@@ -89,10 +92,10 @@ public static partial class PluginFactory
                 
                         case { IsValid: false }:
                             LOG.LogError($"Was not able to load plugin '{pluginMainFile}', because the Lua code is not a valid AI Studio plugin. There are {plugin.Issues.Count()} issues to fix. First issue is: {plugin.Issues.FirstOrDefault()}");
-                            #if DEBUG
+#if DEBUG
                             foreach (var pluginIssue in plugin.Issues)
                                 LOG.LogError($"Plugin issue: {pluginIssue}");
-                            #endif
+#endif
                             continue;
 
                         case { IsMaintained: false }:
@@ -111,7 +114,8 @@ public static partial class PluginFactory
             }
         
             // Start or restart all plugins:
-            await RestartAllPlugins(cancellationToken);
+            var configObjects = await RestartAllPlugins(cancellationToken);
+            configObjectList.AddRange(configObjects);
         }
         finally
         {
@@ -120,53 +124,31 @@ public static partial class PluginFactory
         }
         
         //
-        // Next, we have to clean up our settings. It is possible that a configuration plugin was removed.
-        // We have to remove the related settings as well:
+        // =========================================================
+        // Next, we have to clean up our settings. It is possible
+        // that a configuration plugin was removed. We have to
+        // remove the related settings as well:
+        // =========================================================
         //
-        var wasConfigurationChanged = false;
         
-        //
         // Check LLM providers:
-        //
-        #pragma warning disable MWAIS0001
-        var configuredProviders = SETTINGS_MANAGER.ConfigurationData.Providers.ToList();
-        foreach (var configuredProvider in configuredProviders)
-        {
-            if(!configuredProvider.IsEnterpriseConfiguration)
-                continue;
-
-            var providerSourcePluginId = configuredProvider.EnterpriseConfigurationPluginId;
-            if(providerSourcePluginId == Guid.Empty)
-                continue;
-            
-            var providerSourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == providerSourcePluginId);
-            if(providerSourcePlugin is null)
-            {
-                LOG.LogWarning($"The configured LLM provider '{configuredProvider.InstanceName}' (id={configuredProvider.Id}) is based on a plugin that is not available anymore. Removing the provider from the settings.");
-                SETTINGS_MANAGER.ConfigurationData.Providers.Remove(configuredProvider);
-                wasConfigurationChanged = true;
-            }
-        }
-        #pragma warning restore MWAIS0001
-
-        //
-        // Check all possible settings:
-        //
-        if (SETTINGS_LOCKER.GetConfigurationPluginId<DataApp>(x => x.UpdateBehavior) is var updateBehaviorPluginId && updateBehaviorPluginId != Guid.Empty)
-        {
-            var sourcePlugin = AVAILABLE_PLUGINS.FirstOrDefault(plugin => plugin.Id == updateBehaviorPluginId);
-            if (sourcePlugin is null)
-            {
-                // Remove the locked state:
-                SETTINGS_LOCKER.Remove<DataApp>(x => x.UpdateBehavior);
-                
-                // Reset the setting to the default value:
-                SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior = UpdateBehavior.HOURLY;
-                
-                LOG.LogWarning($"The configured update behavior is based on a plugin that is not available anymore. Resetting the setting to the default value: {SETTINGS_MANAGER.ConfigurationData.App.UpdateBehavior}.");
-                wasConfigurationChanged = true;
-            }
-        }
+        var wasConfigurationChanged = PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, configObjectList);
+        
+        // Check chat templates:
+        if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
+            wasConfigurationChanged = true;
+        
+        // Check for update behavior:
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateInterval>(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check for update installation behavior:
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateInstallation>(x => x.App, x => x.UpdateInstallation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check for users allowed to added providers:
+        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, bool>(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
         {
@@ -225,7 +207,7 @@ public static partial class PluginFactory
             
             case PluginType.CONFIGURATION:
                 var configPlug = new PluginConfiguration(isInternal, state, type);
-                await configPlug.InitializeAsync();
+                await configPlug.InitializeAsync(true);
                 return configPlug;
             
             default:

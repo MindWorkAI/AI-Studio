@@ -21,7 +21,7 @@ public partial class Chat : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
     
     private ChatThread? chatThread;
-    private AIStudio.Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
     private bool workspaceOverlayVisible;
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
@@ -100,6 +100,23 @@ public partial class Chat : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
+    protected override void DisposeResources()
+    {
+        try
+        {
+            this.splitterSaveTimer.Stop();
+            this.splitterSaveTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+        
+        base.DisposeResources();
+    }
+
+    #endregion
+    
     protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         switch (triggeredEvent)
@@ -111,6 +128,4 @@ public partial class Chat : MSGComponentBase
 
         return Task.CompletedTask;
     }
-
-    #endregion
 }

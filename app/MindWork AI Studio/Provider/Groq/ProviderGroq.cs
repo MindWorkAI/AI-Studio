@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Groq;
 
-public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/openai/v1/", logger)
+public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderGroq> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGroq>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -20,7 +22,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
     public override string InstanceName { get; set; } = "Groq";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -31,7 +33,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the OpenAI HTTP chat request:
@@ -60,8 +62,6 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
@@ -80,7 +80,7 @@ public class ProviderGroq(ILogger logger) : BaseProvider("https://api.groq.com/o
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Groq", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("Groq", RequestBuilder, token))
             yield return content;
     }
 

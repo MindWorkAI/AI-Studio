@@ -33,7 +33,7 @@ public partial class PandocDialog : MSGComponentBase
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
-    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger("PandocDialog");
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocDialog));
     private static readonly string LICENCE_URI = "https://raw.githubusercontent.com/jgm/pandoc/refs/heads/main/COPYING.md";
     private static string LATEST_PANDOC_VERSION = string.Empty;
 
@@ -83,9 +83,9 @@ public partial class PandocDialog : MSGComponentBase
     private async Task RejectLicense()
     {
         var message = T("Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?");
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", message },
+            { x => x.Message, message },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Reject Pandoc's Licence"), dialogParameters, DialogOptions.FULLSCREEN);

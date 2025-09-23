@@ -4,12 +4,15 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
 
-public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.fireworks.ai/inference/v1/", logger)
+public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/inference/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderFireworks> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderFireworks>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -19,7 +22,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
     public override string InstanceName { get; set; } = "Fireworks.ai";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -30,7 +33,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Fireworks HTTP chat request:
@@ -77,7 +80,7 @@ public class ProviderFireworks(ILogger logger) : BaseProvider("https://api.firew
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Fireworks", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, ChatCompletionAnnotationStreamLine>("Fireworks", RequestBuilder, token))
             yield return content;
     }
 

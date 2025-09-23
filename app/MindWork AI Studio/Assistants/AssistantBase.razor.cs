@@ -20,9 +20,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
-
-    [Inject]
-    protected ThreadSafeRandom RNG { get; init; } = null!;
     
     [Inject]
     protected ISnackbar Snackbar { get; init; } = null!;
@@ -85,7 +82,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected AIStudio.Settings.Provider providerSettings;
+    protected AIStudio.Settings.Provider providerSettings = Settings.Provider.NONE;
     protected MudForm? form;
     protected bool inputIsValid;
     protected Profile currentProfile = Profile.NO_PROFILE;
@@ -199,7 +196,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
-            Seed = this.RNG.Next(),
             Blocks = [],
         };
     }
@@ -215,7 +211,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             WorkspaceId = workspaceId,
             ChatId = chatId,
             Name = name,
-            Seed = this.RNG.Next(),
             Blocks = [],
         };
         
@@ -275,7 +270,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
         
         this.isProcessing = false;
         this.StateHasChanged();
@@ -352,13 +347,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task InnerResetForm()
     {
         this.resultingContentBlock = null;
-        this.providerSettings = default;
+        this.providerSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
         this.ResetForm();
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
         
         this.inputIsValid = false;
         this.inputIssues = [];
@@ -384,7 +381,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override void DisposeResources()
     {
-        this.formChangeTimer.Dispose();
+        try
+        {
+            this.formChangeTimer.Stop();
+            this.formChangeTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+        
+        base.DisposeResources();
     }
 
     #endregion

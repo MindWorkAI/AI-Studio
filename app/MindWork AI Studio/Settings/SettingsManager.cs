@@ -215,18 +215,18 @@ public sealed class SettingsManager
             return this.ConfigurationData.Providers[0];
 
         // Is there a current provider with a sufficiently high confidence level?
-        Provider currentProvider = default;
+        var currentProvider = Provider.NONE;
         if (currentProviderId is not null && !string.IsNullOrWhiteSpace(currentProviderId))
         {
             var currentProviderProbe = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == currentProviderId);
-            if (currentProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            if (currentProviderProbe is not null && currentProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
                 currentProvider = currentProviderProbe;
         }
         
         // Is there a component-preselected provider with a sufficiently high confidence level?
-        Provider preselectedProvider = default;
+        var preselectedProvider = Provider.NONE;
         var preselectedProviderProbe = component.PreselectedProvider(this);
-        if(preselectedProviderProbe != default && preselectedProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        if(preselectedProviderProbe != Provider.NONE && preselectedProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             preselectedProvider = preselectedProviderProbe;
 
         //
@@ -234,14 +234,14 @@ public sealed class SettingsManager
         //       and the preselected provider is available and has a confidence level
         //       that is high enough.
         //
-        if(usePreselectionBeforeCurrentProvider && preselectedProvider != default)
+        if(usePreselectionBeforeCurrentProvider && preselectedProvider != Provider.NONE)
             return preselectedProvider;
         
         //
         // Case: The current provider is available and has a confidence level that is
         //       high enough.
         //
-        if(currentProvider != default)
+        if(currentProvider != Provider.NONE)
             return currentProvider;
         
         //
@@ -250,11 +250,11 @@ public sealed class SettingsManager
         //       level that is high enough. The preselected provider is available and
         //       has a confidence level that is high enough.
         //
-        if(preselectedProvider != default)
+        if(preselectedProvider != Provider.NONE)
             return preselectedProvider;
 
         // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:
-        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel);
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
     }
 
     public Profile GetPreselectedProfile(Tools.Components component)
@@ -270,11 +270,11 @@ public sealed class SettingsManager
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
     {
         var preselection = component.PreselectedChatTemplate(this);
-        if (preselection != default)
+        if (preselection != ChatTemplate.NO_CHAT_TEMPLATE)
             return preselection;
         
         preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedChatTemplate);
-        return preselection != default ? preselection : ChatTemplate.NO_CHAT_TEMPLATE;
+        return preselection ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
@@ -349,7 +349,7 @@ public sealed class SettingsManager
         }
     }
 
-    public static string ToSettingName<T>(Expression<Func<T, object>> propertyExpression)
+    public static string ToSettingName<TIn, TOut>(Expression<Func<TIn, TOut>> propertyExpression)
     {
         MemberExpression? memberExpr;
 
@@ -363,6 +363,6 @@ public sealed class SettingsManager
             throw new ArgumentException("Expression must be a property access", nameof(propertyExpression));
 
         // Return the full name of the property, including the class name:
-        return $"{typeof(T).Name}.{memberExpr.Member.Name}";
+        return $"{typeof(TIn).Name}.{memberExpr.Member.Name}";
     }
 }

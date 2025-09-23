@@ -58,6 +58,35 @@ public partial class About : MSGComponentBase
 
     private GetLogPathsResponse logPaths;
     
+    private bool showEnterpriseConfigDetails;
+
+    private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+
+    /// <summary>
+    /// Determines whether the enterprise configuration has details that can be shown/hidden.
+    /// Returns true if there are details available, false otherwise.
+    /// </summary>
+    private bool HasEnterpriseConfigurationDetails
+    {
+        get
+        {
+            return EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.IsActive switch
+            {
+                // Case 1: No enterprise config and no plugin - no details available
+                false when this.configPlug is null => false,
+
+                // Case 2: Enterprise config with plugin but no central management - has details
+                false => true,
+
+                // Case 3: Enterprise config active but no plugin - has details
+                true when this.configPlug is null => true,
+
+                // Case 4: Enterprise config active with plugin - has details
+                true => true
+            };
+        }
+    }
+    
     #region Overrides of ComponentBase
     
     protected override async Task OnInitializedAsync()
@@ -70,6 +99,23 @@ public partial class About : MSGComponentBase
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
         _ = this.DeterminePandocVersion();
+    }
+
+    #endregion
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.PLUGINS_RELOADED:
+                this.configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
+        
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     #endregion
@@ -119,26 +165,10 @@ public partial class About : MSGComponentBase
         await dialogReference.Result;
         await this.DeterminePandocVersion();
     }
-
-    private string GetEnterpriseEnvironment()
+    
+    private void ToggleEnterpriseConfigDetails()
     {
-        var configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
-        var currentEnvironment = EnterpriseEnvironmentService.CURRENT_ENVIRONMENT;
-
-        switch (currentEnvironment)
-        {
-            case { IsActive: false } when configPlug is null:
-                return T("AI Studio runs without an enterprise configuration.");
-            
-            case { IsActive: false }:
-                return string.Format(T("AI Studio runs with an enterprise configuration using the configuration plugin '{0}', without central configuration management."), configPlug.Id);
-            
-            case { IsActive: true } when configPlug is null:
-                return string.Format(T("AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is not yet available."), currentEnvironment.ConfigurationId, currentEnvironment.ConfigurationServerUrl);
-            
-            case { IsActive: true }:
-                return string.Format(T("AI Studio runs with an enterprise configuration id '{0}' and configuration server URL '{1}'. The configuration plugin is active."), currentEnvironment.ConfigurationId, currentEnvironment.ConfigurationServerUrl);
-        }
+        this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
     }
 
     private async Task CopyStartupLogPath()

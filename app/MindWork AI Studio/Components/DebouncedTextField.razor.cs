@@ -4,7 +4,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Components;
 
-public partial class DebouncedTextField : MudComponentBase
+public partial class DebouncedTextField : MudComponentBase, IDisposable
 {
     [Parameter]
     public string Label { get; set; } = string.Empty;
@@ -50,12 +50,15 @@ public partial class DebouncedTextField : MudComponentBase
     
     private readonly Timer debounceTimer = new();
     private string text = string.Empty;
+    private string lastParameterText = string.Empty;
+    private bool isInitialized;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         this.text = this.Text;
+        this.lastParameterText = this.Text;
         this.debounceTimer.AutoReset = false;
         this.debounceTimer.Interval = this.DebounceTime.TotalMilliseconds;
         this.debounceTimer.Elapsed += (_, _) =>
@@ -66,7 +69,30 @@ public partial class DebouncedTextField : MudComponentBase
             this.InvokeAsync(() => this.WhenTextCanged(this.text));
         };
         
+        this.isInitialized = true;
         await base.OnInitializedAsync();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        // Ensure the timer uses the latest debouncing interval:
+        if (!this.isInitialized)
+            return;
+        
+        if(Math.Abs(this.debounceTimer.Interval - this.DebounceTime.TotalMilliseconds) > 1)
+            this.debounceTimer.Interval = this.DebounceTime.TotalMilliseconds;
+        
+        // Only sync when the parent's parameter actually changed since the last change:
+        if (this.Text != this.lastParameterText)
+        {
+            this.text = this.Text;
+            this.lastParameterText = this.Text;
+        }
+        
+        this.debounceTimer.Stop();
+        this.debounceTimer.Start();
+        
+        await base.OnParametersSetAsync();
     }
 
     #endregion
@@ -77,4 +103,21 @@ public partial class DebouncedTextField : MudComponentBase
         this.debounceTimer.Stop();
         this.debounceTimer.Start();
     }
+
+    #region IDisposable
+
+    public void Dispose()
+    {
+        try
+        {
+            this.debounceTimer.Stop();
+            this.debounceTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    #endregion
 }

@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.X;
 
-public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v1/", logger)
+public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderX> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderX>();
+    
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -20,7 +22,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
     public override string InstanceName { get; set; } = "xAI";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -31,11 +33,11 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the xAI HTTP chat request:
-        var xChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -60,8 +62,6 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            Seed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
@@ -80,7 +80,7 @@ public sealed class ProviderX(ILogger logger) : BaseProvider("https://api.x.ai/v
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("xAI", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("xAI", RequestBuilder, token))
             yield return content;
     }
 

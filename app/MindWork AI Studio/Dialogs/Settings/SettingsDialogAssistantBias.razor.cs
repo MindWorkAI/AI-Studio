@@ -8,9 +8,9 @@ public partial class SettingsDialogAssistantBias : SettingsDialogBase
     
     private async Task ResetBiasOfTheDayHistory()
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", T("Are you sure you want to reset your bias-of-the-day statistics? The system will no longer remember which biases you already know. As a result, biases you are already familiar with may be addressed again.") },
+            { x => x.Message, T("Are you sure you want to reset your bias-of-the-day statistics? The system will no longer remember which biases you already know. As a result, biases you are already familiar with may be addressed again.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Reset your bias-of-the-day statistics"), dialogParameters, DialogOptions.FULLSCREEN);

@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
-public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://api.anthropic.com/v1/", logger)
+public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.com/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
+
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.ANTHROPIC.ToName();
@@ -18,7 +20,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
     public override string InstanceName { get; set; } = "Anthropic";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -49,7 +51,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 }
             }).ToList()],
             
-            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
             MaxTokens = 4_096,
             
             // Right now, we only support streaming completions:
@@ -72,7 +74,7 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Anthropic", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, NoChatCompletionAnnotationStreamLine>("Anthropic", RequestBuilder, token))
             yield return content;
     }
 
@@ -122,7 +124,9 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING];
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // Claude 3.7 is able to do reasoning:
         if(modelName.StartsWith("claude-3-7"))
@@ -130,7 +134,9 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING];
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // All other 3.x models are able to process text and images as input:
         if(modelName.StartsWith("claude-3-"))
@@ -138,13 +144,17 @@ public sealed class ProviderAnthropic(ILogger logger) : BaseProvider("https://ap
                 Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
-                Capability.FUNCTION_CALLING];
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // Any other model is able to process text only:
         return [
             Capability.TEXT_INPUT,
             Capability.TEXT_OUTPUT,
-            Capability.FUNCTION_CALLING];
+            Capability.FUNCTION_CALLING,
+            Capability.CHAT_COMPLETION_API,
+        ];
     }
     
     #endregion

@@ -24,7 +24,7 @@ public sealed class ContentText : IContent
     public bool InitialRemoteWait { get; set; }
 
     /// <inheritdoc />
-    // [JsonIgnore]
+    [JsonIgnore]
     public bool IsStreaming { get; set; }
 
     /// <inheritdoc />
@@ -34,6 +34,9 @@ public sealed class ContentText : IContent
     /// <inheritdoc />
     [JsonIgnore]
     public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public List<Source> Sources { get; set; } = [];
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -80,7 +83,7 @@ public sealed class ContentText : IContent
             this.InitialRemoteWait = true;
             
             // Iterate over the responses from the AI:
-            await foreach (var deltaText in provider.StreamChatCompletion(chatModel, chatThread, settings, token))
+            await foreach (var contentStreamChunk in provider.StreamChatCompletion(chatModel, chatThread, settings, token))
             {
                 // When the user cancels the request, we stop the loop:
                 if (token.IsCancellationRequested)
@@ -91,7 +94,10 @@ public sealed class ContentText : IContent
                 this.IsStreaming = true;
                 
                 // Add the response to the text:
-                this.Text += deltaText;
+                this.Text += contentStreamChunk;
+                
+                // Merge the sources:
+                this.Sources.MergeSources(contentStreamChunk.Sources);
                 
                 // Notify the UI that the content has changed,
                 // depending on the energy saving mode:

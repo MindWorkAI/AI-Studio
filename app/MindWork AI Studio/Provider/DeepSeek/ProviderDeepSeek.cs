@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.DeepSeek;
 
-public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api.deepseek.com/", logger)
+public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/", LOGGER)
 {
+    private static readonly ILogger<ProviderDeepSeek> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderDeepSeek>();
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -20,7 +22,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
     public override string InstanceName { get; set; } = "DeepSeek";
     
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -31,11 +33,11 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the DeepSeek HTTP chat request:
-        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatRequest
+        var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
             Model = chatModel.Id,
             
@@ -76,7 +78,7 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("DeepSeek", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("DeepSeek", RequestBuilder, token))
             yield return content;
     }
 
@@ -117,12 +119,14 @@ public sealed class ProviderDeepSeek(ILogger logger) : BaseProvider("https://api
                 Capability.TEXT_OUTPUT,
                 
                 Capability.ALWAYS_REASONING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         return
         [
             Capability.TEXT_INPUT,
             Capability.TEXT_OUTPUT,
+            Capability.CHAT_COMPLETION_API,
         ];
     }
 

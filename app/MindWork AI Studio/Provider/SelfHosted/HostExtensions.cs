@@ -9,6 +9,7 @@ public static class HostExtensions
         Host.LM_STUDIO => "LM Studio",
         Host.LLAMACPP => "llama.cpp",
         Host.OLLAMA => "ollama",
+        Host.VLLM => "vLLM",
 
         _ => "Unknown",
     };
@@ -29,6 +30,7 @@ public static class HostExtensions
         {
             case Host.LM_STUDIO:
             case Host.OLLAMA:
+            case Host.VLLM:
                 return true;
             
             default:

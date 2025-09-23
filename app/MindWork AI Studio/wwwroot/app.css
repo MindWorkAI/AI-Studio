@@ -111,6 +111,11 @@
     padding-bottom: 12px;
 }
 
+/* Fixed the margin for the Markdown code blocks */
+.mud-card-content .mud-markdown-body .hljs.mud-markdown-code-highlight {
+    margin-bottom:2em;
+}
+
 .code-block {
     background-color: #2d2d2d;
     color: #f8f8f2;
@@ -140,4 +145,9 @@
 
 .no-elevation {
     box-shadow: none !important;
+}
+
+.sources-card-header {
+    top: 0em !important;
+    left: 2.2em !important;
 }

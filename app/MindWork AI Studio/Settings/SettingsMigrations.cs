@@ -90,7 +90,7 @@ public static class SettingsMigrations
             IsSavingEnergy = previousData.IsSavingEnergy,
             NextProviderNum = previousData.NextProviderNum,
             ShortcutSendBehavior = previousData.ShortcutSendBehavior,
-            UpdateBehavior = previousData.UpdateBehavior,
+            UpdateInterval = previousData.UpdateInterval,
         };
     }
     
@@ -117,7 +117,7 @@ public static class SettingsMigrations
             IsSavingEnergy = previousData.IsSavingEnergy,
             NextProviderNum = previousData.NextProviderNum,
             ShortcutSendBehavior = previousData.ShortcutSendBehavior,
-            UpdateBehavior = previousData.UpdateBehavior,
+            UpdateInterval = previousData.UpdateInterval,
             WorkspaceStorageBehavior = previousData.WorkspaceStorageBehavior,
             WorkspaceStorageTemporaryMaintenancePolicy = previousData.WorkspaceStorageTemporaryMaintenancePolicy,
         };
@@ -137,11 +137,11 @@ public static class SettingsMigrations
             Providers = previousConfig.Providers,
             NextProviderNum = previousConfig.NextProviderNum,
             
-            App = new()
+            App = new(x => x.App)
             {
                 EnableSpellchecking = previousConfig.EnableSpellchecking,
                 IsSavingEnergy = previousConfig.IsSavingEnergy,
-                UpdateBehavior = previousConfig.UpdateBehavior,
+                UpdateInterval = previousConfig.UpdateInterval,
                 NavigationBehavior = previousConfig.NavigationBehavior,
             },
             

@@ -129,6 +129,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
         AllowProfileUsage = this.AllowProfileUsage,
+        
+        EnterpriseConfigurationPluginId = Guid.Empty,
+        IsEnterpriseConfiguration = false,
     };
 
     private void RemoveMessage(ContentBlock item)

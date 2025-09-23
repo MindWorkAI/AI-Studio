@@ -20,7 +20,7 @@ public partial class ReadWebContent : MSGComponentBase
     public EventCallback<string> ContentChanged { get; set; }
     
     [Parameter]
-    public AIStudio.Settings.Provider ProviderSettings { get; set; }
+    public AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
     public bool AgentIsRunning { get; set; }
@@ -32,30 +32,31 @@ public partial class ReadWebContent : MSGComponentBase
     public bool Preselect { get; set; }
     
     [Parameter]
+    public EventCallback<bool> PreselectChanged { get; set; }
+    
+    [Parameter]
     public bool PreselectContentCleanerAgent { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> PreselectContentCleanerAgentChanged { get; set; }
 
-    private Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
+    private readonly Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
     private ProcessStepValue processStep;
     
-    private bool showWebContentReader;
-    private bool useContentCleanerAgent;
     private string providedURL = string.Empty;
     private bool urlIsValid;
     private bool isProviderValid;
 
-    private AIStudio.Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        if(this.Preselect)
-            this.showWebContentReader = true;
-        
-        if(this.PreselectContentCleanerAgent)
-            this.useContentCleanerAgent = true;
-        
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_TEXT_CONTENT_CLEANER, this.ProviderSettings.Id, true);
+        this.providerSettings = this.ProviderSettings;
+        this.ValidateProvider(this.PreselectContentCleanerAgent);
+        
         await base.OnInitializedAsync();
     }
 
@@ -64,6 +65,7 @@ public partial class ReadWebContent : MSGComponentBase
         if (!this.SettingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions)
             this.providerSettings = this.ProviderSettings;
         
+        this.ValidateProvider(this.PreselectContentCleanerAgent);
         await base.OnParametersSetAsync();
     }
 
@@ -86,7 +88,7 @@ public partial class ReadWebContent : MSGComponentBase
             this.StateHasChanged();
             markdown = this.HTMLParser.ParseToMarkdown(html);
             
-            if (this.useContentCleanerAgent)
+            if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {
                 this.AgentTextContentCleaner.ProviderSettings = this.providerSettings;
                 var additionalData = new Dictionary<string, string>
@@ -140,16 +142,26 @@ public partial class ReadWebContent : MSGComponentBase
             if(!this.urlIsValid)
                 return false;
             
-            if(this.useContentCleanerAgent && !this.isProviderValid)
+            if(this.PreselectContentCleanerAgent && !this.isProviderValid)
                 return false;
             
             return true;
         }
     }
 
+    private async Task ShowWebContentReaderChanged(bool state)
+    {
+        await this.PreselectChanged.InvokeAsync(state);
+    }
+    
+    private async Task UseContentCleanerAgentChanged(bool state)
+    {
+        await this.PreselectContentCleanerAgentChanged.InvokeAsync(state);
+    }
+    
     private string? ValidateProvider(bool shouldUseAgent)
     {
-        if(shouldUseAgent && this.providerSettings == default)
+        if(shouldUseAgent && this.providerSettings == AIStudio.Settings.Provider.NONE)
         {
             this.isProviderValid = false;
             return T("Please select a provider to use the cleanup agent.");

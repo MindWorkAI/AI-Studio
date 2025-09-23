@@ -2,7 +2,6 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 using Timer = System.Timers.Timer;
@@ -11,14 +10,11 @@ namespace AIStudio.Pages;
 
 public partial class Writer : MSGComponentBase
 {
-    [Inject]
-    private ILogger<Chat> Logger { get; init; } = null!;
-    
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
     
     private MudTextField<string> textField = null!;
-    private AIStudio.Settings.Provider providerSettings;
+    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
     private ChatThread? chatThread;
     private bool isStreaming;
     private string userInput = string.Empty;
@@ -77,7 +73,6 @@ public partial class Writer : MSGComponentBase
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
             Name = string.Empty,
-            Seed = 798798,
             SystemPrompt =  """
                             You are an assistant who helps with writing documents. You receive a sample
                             from a document as input. As output, you provide how the begun sentence could
@@ -122,7 +117,7 @@ public partial class Writer : MSGComponentBase
         this.isStreaming = true;
         this.StateHasChanged();
         
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(this.Logger), this.providerSettings.Model, lastUserPrompt, this.chatThread);
+        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, lastUserPrompt, this.chatThread);
         this.suggestion = aiText.Text;
         
         this.isStreaming = false;
@@ -152,4 +147,23 @@ public partial class Writer : MSGComponentBase
         this.suggestion = string.Join(' ', words.Skip(1));
         this.StateHasChanged();
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override void DisposeResources()
+    {
+        try
+        {
+            this.typeTimer.Stop();
+            this.typeTimer.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+        
+        base.DisposeResources();
+    }
+
+    #endregion
 }

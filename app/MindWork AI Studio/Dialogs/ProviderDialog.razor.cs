@@ -79,9 +79,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     public bool IsEditing { get; init; }
     
     [Inject]
-    private ILogger<ProviderDialog> Logger { get; init; } = null!;
-    
-    [Inject]
     private RustService RustService { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
@@ -126,12 +123,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
+            
             Model = this.DataLLMProvider switch
             {
-                LLMProviders.FIREWORKS => new Model(this.dataManuallyModel, null),
-                LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
+                LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
                 _ => this.DataModel
             },
+            
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
@@ -158,13 +156,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
             // When using Fireworks or Hugging Face, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
+            if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 this.dataManuallyModel = this.DataModel.Id;
             
             //
             // We cannot load the API key for self-hosted providers:
             //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA)
+            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA && this.DataHost is not Host.VLLM)
             {
                 await this.ReloadModels();
                 await base.OnInitializedAsync();
@@ -241,7 +239,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if ((this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE) && string.IsNullOrWhiteSpace(manuallyModel))
+        if (this.DataLLMProvider.IsLLMModelProvidedManually() && string.IsNullOrWhiteSpace(manuallyModel))
             return T("Please enter a model name.");
         
         return null;
@@ -252,7 +250,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private async Task ReloadModels()
     {
         var currentProviderSettings = this.CreateProviderSettings();
-        var provider = currentProviderSettings.CreateProvider(this.Logger);
+        var provider = currentProviderSettings.CreateProvider();
         if(provider is NoProvider)
             return;
         

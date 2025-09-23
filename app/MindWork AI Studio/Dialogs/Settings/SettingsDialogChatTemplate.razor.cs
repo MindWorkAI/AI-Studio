@@ -53,6 +53,9 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     
     private async Task EditChatTemplate(ChatTemplate chatTemplate)
     {
+        if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
+            return;
+        
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.DataNum, chatTemplate.Num },
@@ -79,9 +82,9 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)
     {
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { "Message", string.Format(T("Are you sure you want to delete the chat template '{0}'?"), chatTemplate.Name) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the chat template '{0}'?"), chatTemplate.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);

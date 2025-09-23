@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.mistral.ai/v1/", logger)
+public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/", LOGGER)
 {
+    private static readonly ILogger<ProviderMistral> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderMistral>();
+
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.MISTRAL.ToName();
@@ -18,7 +20,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
     public override string InstanceName { get; set; } = "Mistral";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
@@ -29,7 +31,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
         var systemPrompt = new RegularMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the Mistral HTTP chat request:
@@ -58,8 +60,6 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                     _ => string.Empty,
                 }
             }).ToList()],
-
-            RandomSeed = chatThread.Seed,
             
             // Right now, we only support streaming completions:
             Stream = true,
@@ -79,7 +79,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("Mistral", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("Mistral", RequestBuilder, token))
             yield return content;
     }
 
@@ -134,6 +134,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral medium:
@@ -144,6 +145,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral small:
@@ -154,6 +156,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
                 Capability.TEXT_OUTPUT,
                 
                 Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Mistral saba:
@@ -162,6 +165,7 @@ public sealed class ProviderMistral(ILogger logger) : BaseProvider("https://api.
             [
                 Capability.TEXT_INPUT,
                 Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
             ];
         
         // Default:

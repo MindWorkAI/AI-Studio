@@ -62,6 +62,38 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 
 CONFIG["SETTINGS"] = {}
 
--- Configure the update behavior:
+-- Configure the update check interval:
 -- Allowed values are: NO_CHECK, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
--- CONFIG["SETTINGS"]["DataApp.UpdateBehavior"] = "NO_CHECK"
+-- CONFIG["SETTINGS"]["DataApp.UpdateInterval"] = "NO_CHECK"
+
+-- Configure how updates are installed:
+-- Allowed values are: MANUAL, AUTOMATIC
+-- CONFIG["SETTINGS"]["DataApp.UpdateInstallation"] = "MANUAL"
+
+-- Configure the user permission to add providers:
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
+
+-- Example chat templates for this configuration:
+CONFIG["CHAT_TEMPLATES"] = {}
+
+-- A simple example chat template:
+CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+    ["Id"] = "00000000-0000-0000-0000-000000000000",
+    ["Name"] = "<user-friendly name of the chat template>",
+    ["SystemPrompt"] = "You are <Company Name>'s helpful AI assistant for <Department Name>. Your task is ...",
+    ["PredefinedUserPrompt"] = "Please help me with ...",
+    ["AllowProfileUsage"] = true,
+    ["ExampleConversation"] = {
+        {
+            -- Allowed values are: USER, AI, SYSTEM
+            ["Role"] = "USER",
+            ["Content"] = "Hello! Can you help me with a quick task?"
+        },
+        {
+            -- Allowed values are: USER, AI, SYSTEM
+            ["Role"] = "AI",
+            ["Content"] = "Of course. What do you need?"
+        }
+    }
+}

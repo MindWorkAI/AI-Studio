@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace AIStudio.Tools;
 
 public sealed class Process<T> where T : struct, Enum
@@ -20,7 +18,7 @@ public sealed class Process<T> where T : struct, Enum
         {
             var value = values[i];
             var stepValue = Convert.ToInt32(value);
-            var stepName = DeriveName(value);
+            var stepName = ProcessStepTextRouter.GetText(value);
 
             this.labels[i] = stepName;
             this.stepsData[value] = new ProcessStepValue(stepValue, stepName);
@@ -31,30 +29,6 @@ public sealed class Process<T> where T : struct, Enum
             if (stepValue > this.max)
                 this.max = stepValue;
         }
-    }
-    
-    private static string DeriveName(T value)
-    {
-        var text = value.ToString();
-        if (!text.Contains('_'))
-        {
-            text = text.ToLowerInvariant();
-            text = char.ToUpperInvariant(text[0]) + text[1..];
-        }
-        else
-        {
-            var parts = text.Split('_');
-            var sb = new StringBuilder();
-            foreach (var part in parts)
-            {
-                sb.Append(char.ToUpperInvariant(part[0]));
-                sb.Append(part[1..].ToLowerInvariant());
-            }
-            
-            text = sb.ToString();
-        }
-        
-        return text;
     }
     
     public string[] Labels => this.labels;

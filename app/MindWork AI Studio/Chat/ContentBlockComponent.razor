@@ -1,5 +1,7 @@
 @using AIStudio.Tools
 @using MudBlazor
+@using AIStudio.Components
+@using AIStudio.Provider
 @inherits AIStudio.Components.MSGComponentBase
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
@@ -14,6 +16,14 @@
             </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
+            @if (this.Content.Sources.Count > 0)
+            {
+                <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
+                    <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
+                        <MudIconButton Icon="@Icons.Material.Filled.Link" />
+                    </MudBadge>
+                </MudTooltip>
+            }
             @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
             {
                 <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
@@ -38,9 +48,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
                 </MudTooltip>
             }
-            <MudTooltip Text="@T("Copies the content to the clipboard")" Placement="Placement.Bottom">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" OnClick="@this.CopyToClipboard"/>
-            </MudTooltip>
+            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
@@ -72,7 +80,11 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo" Styling="@this.MarkdownStyling" />
+                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
+                                @if (textContent.Sources.Count > 0)
+                                {
+                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
+                                }
                             }
                         }
                     }

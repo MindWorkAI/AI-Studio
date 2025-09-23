@@ -30,7 +30,7 @@
                     }
                     else if (!string.IsNullOrWhiteSpace(this.licenseText))
                     {
-                        <MudMarkdown Value="@this.licenseText" OverrideHeaderTypo="@Markdown.OverrideHeaderTypo"/>
+                        <MudMarkdown Value="@this.licenseText" Props="Markdown.DefaultConfig"/>
                     }
                 </ExpansionPanel>
 

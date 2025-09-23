@@ -9,8 +9,10 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", logger)
+public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", LOGGER)
 {
+    private static readonly ILogger<ProviderSelfHosted> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderSelfHosted>();
+
     #region Implementation of IProvider
 
     public override string Id => LLMProviders.SELF_HOSTED.ToName();
@@ -18,7 +20,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
     public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
-    public override async IAsyncEnumerable<string> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
@@ -27,7 +29,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         var systemPrompt = new Message
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread, this.logger),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
         // Prepare the OpenAI HTTP chat request:
@@ -58,8 +60,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             }).ToList()],
             
             // Right now, we only support streaming completions:
-            Stream = true,
-            MaxTokens = -1,
+            Stream = true
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -76,7 +77,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             return request;
         }
         
-        await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine>("self-hosted provider", RequestBuilder, token))
+        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("self-hosted provider", RequestBuilder, token))
             yield return content;
     }
 
@@ -101,6 +102,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
+                case Host.VLLM:
                     return await this.LoadModels(["embed"], [], token, apiKeyProvisional);
             }
 
@@ -108,7 +110,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         }
         catch(Exception e)
         {
-            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
         }
     }
@@ -127,6 +129,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
             {
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
+                case Host.VLLM:
                     return await this.LoadModels([], ["embed"], token, apiKeyProvisional);
             }
 
@@ -134,7 +137,7 @@ public sealed class ProviderSelfHosted(ILogger logger, Host host, string hostnam
         }
         catch(Exception e)
         {
-            this.logger.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
         }
     }
