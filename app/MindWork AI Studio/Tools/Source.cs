@@ -1,4 +1,4 @@
-namespace AIStudio.Provider;
+namespace AIStudio.Tools;
 
 /// <summary>
 /// Data model for a source used in the response.

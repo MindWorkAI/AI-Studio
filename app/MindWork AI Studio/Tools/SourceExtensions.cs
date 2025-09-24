@@ -2,7 +2,7 @@ using System.Text;
 
 using AIStudio.Tools.PluginSystem;
 
-namespace AIStudio.Provider;
+namespace AIStudio.Tools;
 
 public static class SourceExtensions
 {
