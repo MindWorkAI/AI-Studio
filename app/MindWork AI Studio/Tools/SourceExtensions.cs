@@ -13,7 +13,7 @@ public static class SourceExtensions
     /// </summary>
     /// <param name="sources">The list of sources to convert.</param>
     /// <returns>A markdown-formatted string representing the sources.</returns>
-    public static string ToMarkdown(this IList<Source> sources)
+    public static string ToMarkdown(this IList<ISource> sources)
     {
         var sb = new StringBuilder();
         sb.Append("## ");
@@ -38,10 +38,10 @@ public static class SourceExtensions
     /// </summary>
     /// <param name="sources">The existing list of sources to merge into.</param>
     /// <param name="addedSources">The list of sources to add.</param>
-    public static void MergeSources(this IList<Source> sources, IList<ISource> addedSources)
+    public static void MergeSources(this IList<ISource> sources, IList<ISource> addedSources)
     {
         foreach (var addedSource in addedSources)
             if (sources.All(s => s.URL != addedSource.URL && s.Title != addedSource.Title))
-                sources.Add((Source)addedSource);
+                sources.Add(addedSource);
     }
 }

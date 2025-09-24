@@ -42,7 +42,7 @@ public interface IContent
     /// The provided sources, if any.
     /// </summary>
     [JsonIgnore]
-    public List<Source> Sources { get; set; }
+    public List<ISource> Sources { get; set; }
     
     /// <summary>
     /// Uses the provider to create the content.
