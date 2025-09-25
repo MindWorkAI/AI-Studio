@@ -41,7 +41,7 @@ public sealed class ContentText : IContent
     public List<ISource> Sources { get; set; } = [];
 
     /// <inheritdoc />
-    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
+    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return new();
@@ -53,12 +53,12 @@ public sealed class ContentText : IContent
         }
 
         // Call the RAG process. Right now, we only have one RAG process:
-        if (lastPrompt is not null)
+        if (lastUserPrompt is not null)
         {
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
             }
             catch (Exception e)
             {

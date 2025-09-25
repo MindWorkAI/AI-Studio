@@ -48,9 +48,9 @@ public interface IDataSource
     /// <summary>
     /// Perform the data retrieval process.
     /// </summary>
-    /// <param name="lastPrompt">The last prompt from the chat.</param>
+    /// <param name="lastUserPrompt">The last user prompt from the chat.</param>
     /// <param name="thread">The chat thread.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The retrieved data context.</returns>
-    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default);
+    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default);
 }

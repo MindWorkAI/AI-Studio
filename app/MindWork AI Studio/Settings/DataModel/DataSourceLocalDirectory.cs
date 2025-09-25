@@ -34,7 +34,7 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public ushort MaxMatches { get; init; } = 10;
     
     /// <inheritdoc />
-    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
+    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
     {
         IReadOnlyList<IRetrievalContext> retrievalContext = new List<IRetrievalContext>();
         return Task.FromResult(retrievalContext);

@@ -131,7 +131,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
 
     #endregion
 
-    public async Task<List<SelectedDataSource>> PerformSelectionAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default)
+    public async Task<List<SelectedDataSource>> PerformSelectionAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default)
     {
         logger.LogInformation("The AI should select the appropriate data sources.");
 
@@ -154,7 +154,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
         //
         // 2. Prepare the current system and user prompts as input for the agent: 
         //
-        var lastPromptContent = lastPrompt switch
+        var lastPromptContent = lastUserPrompt switch
         {
             ContentText text => text.Text,
 

@@ -47,7 +47,7 @@ public interface IContent
     /// <summary>
     /// Uses the provider to create the content.
     /// </summary>
-    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
+    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatChatThread, CancellationToken token = default);
 
     /// <summary>
     /// Creates a deep copy

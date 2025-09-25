@@ -26,7 +26,7 @@ public sealed class AugmentationOne : IAugmentationProcess
     public string Description => TB("This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.");
     
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
+    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         
@@ -46,7 +46,7 @@ public sealed class AugmentationOne : IAugmentationProcess
             validationAgent.SetLLMProvider(provider);
             
             // Let's validate all retrieval contexts:
-            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastPrompt, chatThread, retrievalContexts, token);
+            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
          
             //
             // Now, filter the retrieval contexts to the most relevant ones:

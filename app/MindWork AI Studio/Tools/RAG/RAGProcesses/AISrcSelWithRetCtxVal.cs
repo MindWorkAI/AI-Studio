@@ -27,7 +27,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     public string Description => TB("This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.");
 
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, CancellationToken token = default)
+    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, CancellationToken token = default)
     {
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
@@ -83,7 +83,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             if (chatThread.DataSourceOptions.AutomaticDataSourceSelection)
             {
                 var dataSourceSelectionProcess = new AgenticSrcSelWithDynHeur();
-                var result = await dataSourceSelectionProcess.SelectDataSourcesAsync(provider, lastPrompt, chatThread, dataSources, token);
+                var result = await dataSourceSelectionProcess.SelectDataSourcesAsync(provider, lastUserPrompt, chatThread, dataSources, token);
                 proceedWithRAG = result.ProceedWithRAG;
                 selectedDataSources = result.SelectedDataSources;
             }
@@ -163,7 +163,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 //
                 var retrievalTasks = new List<Task<IReadOnlyList<IRetrievalContext>>>(selectedDataSources.Count);
                 foreach (var dataSource in selectedDataSources)
-                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThreadWithoutWaitingAIBlock, token));
+                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastUserPrompt, chatThreadWithoutWaitingAIBlock, token));
             
                 //
                 // Wait for all retrieval tasks to finish:
@@ -187,7 +187,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             if (proceedWithRAG)
             {
                 var augmentationProcess = new AugmentationOne();
-                chatThread = await augmentationProcess.ProcessAsync(provider, lastPrompt, chatThread, dataContexts, token);
+                chatThread = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
             }
         }
         

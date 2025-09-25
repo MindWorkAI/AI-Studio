@@ -24,10 +24,10 @@ public interface IDataSourceSelectionProcess
     /// Starts the data source selection process.
     /// </summary>
     /// <param name="provider">The LLM provider. Used as default for data selection agents.</param>
-    /// <param name="lastPrompt">The last prompt that was issued by the user.</param>
+    /// <param name="lastUserPrompt">The last prompt that was issued by the user.</param>
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="dataSources">The allowed data sources yielded by the data source service.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns></returns>
-    public Task<DataSelectionResult> SelectDataSourcesAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default);
+    public Task<DataSelectionResult> SelectDataSourcesAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default);
 }

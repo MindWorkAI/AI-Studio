@@ -147,12 +147,12 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// <summary>
     /// Validate all retrieval contexts against the last user and the system prompt.
     /// </summary>
-    /// <param name="lastPrompt">The last user prompt.</param>
+    /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="retrievalContexts">All retrieval contexts to validate.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validation results.</returns>
-    public async Task<IReadOnlyList<RetrievalContextValidationResult>> ValidateRetrievalContextsAsync(IContent lastPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
+    public async Task<IReadOnlyList<RetrievalContextValidationResult>> ValidateRetrievalContextsAsync(IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
         // Check if the retrieval context validation is enabled:
         if (!this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
@@ -178,7 +178,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             await semaphore.WaitAsync(token);
             
             // Start the next validation task:
-            validationTasks.Add(this.ValidateRetrievalContextAsync(lastPrompt, chatThread, retrievalContext, token, semaphore));
+            validationTasks.Add(this.ValidateRetrievalContextAsync(lastUserPrompt, chatThread, retrievalContext, token, semaphore));
         }
 
         // Wait for all validation tasks to complete:
@@ -193,13 +193,13 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// can call this method in parallel for each retrieval context. You might use
     /// the ValidateRetrievalContextsAsync method to validate all retrieval contexts.
     /// </remarks>
-    /// <param name="lastPrompt">The last user prompt.</param>
+    /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="retrievalContext">The retrieval context to validate.</param>
     /// <param name="token">The cancellation token.</param>
     /// <param name="semaphore">The optional semaphore to limit the number of parallel validations.</param>
     /// <returns>The validation result.</returns>
-    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastPrompt, ChatThread chatThread, IRetrievalContext retrievalContext, CancellationToken token = default, SemaphoreSlim? semaphore = null)
+    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, IRetrievalContext retrievalContext, CancellationToken token = default, SemaphoreSlim? semaphore = null)
     {
         try
         {
@@ -214,7 +214,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             //
             // 1. Prepare the current system and user prompts as input for the agent: 
             //
-            var lastPromptContent = lastPrompt switch
+            var lastPromptContent = lastUserPrompt switch
             {
                 ContentText text => text.Text,
 

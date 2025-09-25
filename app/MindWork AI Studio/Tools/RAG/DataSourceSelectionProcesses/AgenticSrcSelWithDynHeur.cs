@@ -25,7 +25,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
     public string Description => TB("Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.");
     
     /// <inheritdoc />
-    public async Task<DataSelectionResult> SelectDataSourcesAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default)
+    public async Task<DataSelectionResult> SelectDataSourcesAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, AllowedSelectedDataSources dataSources, CancellationToken token = default)
     {
         var proceedWithRAG = true;
         IReadOnlyList<IDataSource> selectedDataSources = [];
@@ -40,7 +40,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
         try
         {
             // Let the AI agent do its work:
-            var aiSelectedDataSources = await selectionAgent.PerformSelectionAsync(provider, lastPrompt, chatThread, dataSources, token);
+            var aiSelectedDataSources = await selectionAgent.PerformSelectionAsync(provider, lastUserPrompt, chatThread, dataSources, token);
 
             // Check if the AI selected any data sources:
             if (aiSelectedDataSources.Count is 0)
