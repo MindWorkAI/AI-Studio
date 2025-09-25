@@ -5,4 +5,4 @@ namespace AIStudio.Tools;
 /// </summary>
 /// <param name="Title">The title of the source.</param>
 /// <param name="URL">The URL of the source.</param>
-public record Source(string Title, string URL) : ISource;
+public record Source(string Title, string URL, SourceOrigin Origin) : ISource;

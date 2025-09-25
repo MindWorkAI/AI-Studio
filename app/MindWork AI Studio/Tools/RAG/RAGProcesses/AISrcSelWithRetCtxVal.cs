@@ -189,6 +189,36 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 var augmentationProcess = new AugmentationOne();
                 chatThread = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
             }
+            
+            //
+            // Add sources from the selected data
+            //
+            
+            // We know that the last block is the AI answer block (cf. check above):
+            var aiAnswerBlock = chatThread.Blocks.Last();
+            var aiAnswerSources = aiAnswerBlock.Content?.Sources;
+            
+            // It should never happen that the AI answer block does not contain a content part.
+            // Just in case, we check this:
+            if(aiAnswerSources is null)
+                return chatThread;
+            
+            var ragSources = new List<ISource>();
+            foreach (var retrievalContext in dataContexts)
+            {
+                var title = retrievalContext.DataSourceName;
+                if(string.IsNullOrWhiteSpace(title))
+                    continue;
+                
+                var link = retrievalContext.Path;
+                if(!link.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                ragSources.Add(new Source(title, link, SourceOrigin.RAG));
+            }
+
+            // Merge the sources, avoiding duplicates:
+            aiAnswerSources.MergeSources(ragSources);
         }
         
         return chatThread;

@@ -30,7 +30,7 @@ public record ChatCompletionAnnotationStreamLine(string Id, string Object, uint 
             {
                 // Check if the annotation is of the expected type and extract the source information:
                 if (annotation is ChatCompletionAnnotatingURL urlAnnotation)
-                    sources.Add(new Source(urlAnnotation.UrlCitation.Title, urlAnnotation.UrlCitation.URL));
+                    sources.Add(new Source(urlAnnotation.UrlCitation.Title, urlAnnotation.UrlCitation.URL, SourceOrigin.LLM));
 
                 //
                 // Check for the unexpected annotation type of the Responses API.
@@ -46,7 +46,7 @@ public record ChatCompletionAnnotationStreamLine(string Id, string Object, uint 
                 //   we are calling the chat completion endpoint.
                 //
                 if (annotation is ResponsesAnnotatingUrlCitationData citationData)
-                    sources.Add(new Source(citationData.Title, citationData.URL));
+                    sources.Add(new Source(citationData.Title, citationData.URL, SourceOrigin.LLM));
             }
         }
 

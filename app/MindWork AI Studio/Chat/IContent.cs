@@ -41,8 +41,12 @@ public interface IContent
     /// <summary>
     /// The provided sources, if any.
     /// </summary>
+    /// <remarks>
+    /// We cannot use ISource here because System.Text.Json does not support
+    /// interface serialization. So we have to use a concrete class.
+    /// </remarks>
     [JsonIgnore]
-    public List<ISource> Sources { get; set; }
+    public List<Source> Sources { get; set; }
     
     /// <summary>
     /// Uses the provider to create the content.
