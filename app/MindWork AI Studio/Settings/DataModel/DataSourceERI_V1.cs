@@ -103,7 +103,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Links = eriContext.Links,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 MatchedText = eriContext.MatchedContent,
-                                DataSourceName = this.Name,
+                                DataSourceName = eriContext.Name,
                                 SurroundingContent = eriContext.SurroundingContent,
                             });
                             break;
@@ -117,7 +117,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Source = eriContext.MatchedContent,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceType = ContentImageSource.BASE64,
-                                DataSourceName = this.Name,
+                                DataSourceName = eriContext.Name,
                             });
                             break;
                         
