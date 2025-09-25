@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 use std::time::Duration;
-use log::{error, info, warn};
+use log::{error, info, trace, warn};
 use once_cell::sync::Lazy;
 use rocket::{get, post};
 use rocket::serde::json::Json;
@@ -12,7 +12,7 @@ use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::time;
 use crate::api_token::APIToken;
 use crate::dotnet::stop_dotnet_server;
-use crate::environment::{is_prod, CONFIG_DIRECTORY, DATA_DIRECTORY};
+use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
 
@@ -78,20 +78,31 @@ pub fn start_tauri() {
                     info!(Source = "Tauri"; "Updater: update is pending!");
                 }
 
-                tauri::UpdaterEvent::DownloadProgress { chunk_length, content_length } => {
-                    info!(Source = "Tauri"; "Updater: downloaded {} of {:?}", chunk_length, content_length);
+                tauri::UpdaterEvent::DownloadProgress { chunk_length, content_length: _ } => {
+                    trace!(Source = "Tauri"; "Updater: downloading chunk of {chunk_length} bytes");
                 }
 
                 tauri::UpdaterEvent::Downloaded => {
                     info!(Source = "Tauri"; "Updater: update has been downloaded!");
                     warn!(Source = "Tauri"; "Try to stop the .NET server now...");
-                    stop_dotnet_server();
+
+                    if is_prod() {
+                        stop_dotnet_server();
+                    } else {
+                        warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
+                    }
                 }
 
                 tauri::UpdaterEvent::Updated => {
                     info!(Source = "Tauri"; "Updater: app has been updated");
                     warn!(Source = "Tauri"; "Try to restart the app now...");
-                    app_handle.restart();
+
+                    if is_prod() {
+                        app_handle.restart();
+                    } else {
+                        warn!(Source = "Tauri"; "Development environment detected; do not restart the app.");
+                    }
+
                 }
 
                 tauri::UpdaterEvent::AlreadyUpToDate => {
@@ -157,6 +168,16 @@ pub async fn change_location_to(url: &str) {
 /// Checks for updates.
 #[get("/updates/check")]
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
+    if is_dev() {
+        warn!(Source = "Updater"; "The app is running in development mode; skipping update check.");
+        return Json(CheckUpdateResponse {
+            update_is_available: false,
+            error: false,
+            new_version: String::from(""),
+            changelog: String::from(""),
+        });
+    }
+
     let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().unwrap().app_handle();
     let response = app_handle.updater().check().await;
     match response {
@@ -212,6 +233,11 @@ pub struct CheckUpdateResponse {
 /// Installs the update.
 #[get("/updates/install")]
 pub async fn install_update(_token: APIToken) {
+    if is_dev() {
+        warn!(Source = "Updater"; "The app is running in development mode; skipping update installation.");
+        return;
+    }
+
     let cloned_response_option = CHECK_UPDATE_RESPONSE.lock().unwrap().clone();
     match cloned_response_option {
         Some(update_response) => {

@@ -32,11 +32,11 @@ public sealed record ResponsesAnnotationStreamLine(string Type, int AnnotationIn
         //   into that type, even though we are calling the Responses API endpoint.
         //
         if (this.Annotation is ChatCompletionAnnotatingURL urlAnnotation)
-            return [new Source(urlAnnotation.UrlCitation.Title, urlAnnotation.UrlCitation.URL)];
+            return [new Source(urlAnnotation.UrlCitation.Title, urlAnnotation.UrlCitation.URL, SourceOrigin.LLM)];
         
         // Check for the expected annotation type of the Responses API:
         if (this.Annotation is ResponsesAnnotatingUrlCitationData urlCitationData)
-            return [new Source(urlCitationData.Title, urlCitationData.URL)];
+            return [new Source(urlCitationData.Title, urlCitationData.URL, SourceOrigin.LLM)];
 
         return [];
     }

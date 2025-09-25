@@ -31,7 +31,7 @@ public sealed class ContentImage : IContent, IImageSource
     public List<Source> Sources { get; set; } = [];
 
     /// <inheritdoc />
-    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default)
+    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatChatThread, CancellationToken token = default)
     {
         throw new NotImplementedException();
     }

@@ -2,7 +2,7 @@ using System.Text;
 
 using AIStudio.Tools.PluginSystem;
 
-namespace AIStudio.Provider;
+namespace AIStudio.Tools;
 
 public static class SourceExtensions
 {
@@ -16,11 +16,43 @@ public static class SourceExtensions
     public static string ToMarkdown(this IList<Source> sources)
     {
         var sb = new StringBuilder();
-        sb.Append("## ");
-        sb.AppendLine(TB("Sources"));
-
+        var ragSources = new List<ISource>();
         var sourceNum = 0;
+        var addedLLMHeaders = false;
         foreach (var source in sources)
+        {
+            switch (source.Origin)
+            {
+                case SourceOrigin.RAG: 
+                    ragSources.Add(source);
+                    break;
+                
+                case SourceOrigin.LLM:
+                    if (!addedLLMHeaders)
+                    {
+                        sb.Append("## ");
+                        sb.AppendLine(TB("Sources provided by the AI"));
+                        addedLLMHeaders = true;
+                    }
+                    
+                    sb.Append($"- [{++sourceNum}] ");
+                    sb.Append('[');
+                    sb.Append(source.Title);
+                    sb.Append("](");
+                    sb.Append(source.URL);
+                    sb.AppendLine(")");
+                    break;
+            }
+        }
+        
+        if(ragSources.Count == 0)
+            return sb.ToString();
+        
+        sb.AppendLine();
+        sb.Append("## ");
+        sb.AppendLine(TB("Sources provided by the data providers"));
+        
+        foreach (var source in ragSources)
         {
             sb.Append($"- [{++sourceNum}] ");
             sb.Append('[');

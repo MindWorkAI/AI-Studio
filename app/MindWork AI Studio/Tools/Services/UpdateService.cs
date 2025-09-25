@@ -115,7 +115,14 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         var response = await this.rust.CheckForUpdate();
         if (response.UpdateIsAvailable)
         {
-            if (this.settingsManager.ConfigurationData.App.UpdateInstallation is UpdateInstallation.AUTOMATIC)
+            // ReSharper disable RedundantAssignment
+            var isDevEnvironment = false;
+            #if DEBUG
+            isDevEnvironment = true;
+            #endif
+            // ReSharper restore RedundantAssignment
+            
+            if (!isDevEnvironment && this.settingsManager.ConfigurationData.App.UpdateInstallation is UpdateInstallation.AUTOMATIC)
             {
                 try
                 {

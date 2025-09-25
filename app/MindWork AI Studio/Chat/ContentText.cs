@@ -11,6 +11,8 @@ namespace AIStudio.Chat;
 /// </summary>
 public sealed class ContentText : IContent
 {
+    private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
+    
     /// <summary>
     /// The minimum time between two streaming events, when the user
     /// enables the energy saving mode.
@@ -39,30 +41,28 @@ public sealed class ContentText : IContent
     public List<Source> Sources { get; set; } = [];
 
     /// <inheritdoc />
-    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
+    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return new();
         
         if(!chatThread.IsLLMProviderAllowed(provider))
         {
-            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
-            logger.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            LOGGER.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
             return chatThread;
         }
 
         // Call the RAG process. Right now, we only have one RAG process:
-        if (lastPrompt is not null)
+        if (lastUserPrompt is not null)
         {
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
             }
             catch (Exception e)
             {
-                var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
-                logger.LogError(e, "Skipping the RAG process due to an error.");
+                LOGGER.LogError(e, "Skipping the RAG process due to an error.");
             }
         }
 
