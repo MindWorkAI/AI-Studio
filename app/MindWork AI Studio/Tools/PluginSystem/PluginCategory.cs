@@ -30,5 +30,4 @@ public enum PluginCategory
     FICTION,
     WRITING,
     CONTENT_CREATION,
-    ASSISTANT,
 }
