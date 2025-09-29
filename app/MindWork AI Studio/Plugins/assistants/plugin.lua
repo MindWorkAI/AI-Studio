@@ -1,34 +1,39 @@
 ﻿require("icon")
 
+-- ------
+-- This is an example of an assistant plugin that will build an assistant for you.
+-- Please replace the placeholders and assign a valid ID.
+-- ------
+
 -- The ID for this plugin:
-ID = "43065dbc-78d0-45b7-92be-f14c2926e2dc"
+ID = "00000000-0000-0000-0000-000000000000"
 
 -- The icon for the plugin:
 ICON_SVG = SVG
 
 -- The name of the plugin:
-NAME = "MindWork AI Studio - German / Deutsch"
+NAME = "<Company Name> - Configuration for <Department Name>"
 
 -- The description of the plugin:
-DESCRIPTION = "Dieses Plugin bietet deutsche Sprachunterstützung für MindWork AI Studio."
+DESCRIPTION = "This is a pre-defined configuration of <Company Name>"
 
 -- The version of the plugin:
 VERSION = "1.0.0"
 
 -- The type of the plugin:
-TYPE = "LANGUAGE"
+TYPE = "ASSISTANT"
 
 -- The authors of the plugin:
-AUTHORS = {"MindWork AI Community"}
+AUTHORS = {"<Company Name>"}
 
 -- The support contact for the plugin:
-SUPPORT_CONTACT = "MindWork AI Community"
+SUPPORT_CONTACT = "<IT Department of Company Name>"
 
 -- The source URL for the plugin:
-SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio"
+SOURCE_URL = "<Any internal Git repository>"
 
 -- The categories for the plugin:
-CATEGORIES = { "ASSISTANT" }
+CATEGORIES = { "CORE" }
 
 -- The target groups for the plugin:
 TARGET_GROUPS = { "EVERYONE" }
@@ -39,6 +44,16 @@ IS_MAINTAINED = true
 -- When the plugin is deprecated, this message will be shown to users:
 DEPRECATION_MESSAGE = ""
 
+ASSISTANT = {
+    ["Title"] = "<Title of your assistant>",
+    ["Description"] = "<Description presented to the users, explaining your assistant>",
+    ["UI"] = {
+        ["Type"] = "FORM",
+        ["Children"] = {}
+    },
+}
+
+-- An example of a assistant that resembles AI Studios translation assistant:
 ASSISTANT = {
     ["Title"] = "Grammatik- und Rechtschreibprüfung",
     ["Description"] = "Grammatik und Rechtschreibung eines Textes überprüfen.",
