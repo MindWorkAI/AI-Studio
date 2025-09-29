@@ -1,8 +1,9 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-
+using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Standard;
 
@@ -209,6 +210,11 @@ public static partial class PluginFactory
                 var configPlug = new PluginConfiguration(isInternal, state, type);
                 await configPlug.InitializeAsync(true);
                 return configPlug;
+            
+            case PluginType.ASSISTANT:
+                var assistantPlugin = new PluginAssistants(isInternal, state, type);
+                assistantPlugin.TryLoad();
+                return assistantPlugin;
             
             default:
                 return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");

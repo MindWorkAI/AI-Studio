@@ -4,19 +4,20 @@ using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
-public sealed class PluginAssistants : PluginBase
+public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type)
 {
-    private static string TB(string fallbackEN) =>
-        I18N.I.T(fallbackEN, typeof(PluginAssistants).Namespace, nameof(PluginAssistants));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginAssistants).Namespace, nameof(PluginAssistants));
 
     private static readonly ILogger<PluginAssistants> LOGGER = Program.LOGGER_FACTORY.CreateLogger<PluginAssistants>();
 
-    public AssistantForm RootComponent { get; set; }
+    public AssistantForm? RootComponent { get; set; }
     public string AssistantTitle { get; set; } = string.Empty;
     private string AssistantDescription { get; set; } = string.Empty;
 
-    public PluginAssistants(bool isInternal, LuaState state, PluginType type) : base(isInternal, state, type)
+    public void TryLoad()
     {
+        if(!this.TryProcessAssistant(out var issue))
+            this.pluginIssues.Add(issue);
     }
 
     /// <summary>
@@ -120,10 +121,7 @@ public sealed class PluginAssistants : PluginBase
             children.Add(comp);
         }
 
-        root = AssistantComponentFactory.CreateComponent(
-            AssistantUiCompontentType.FORM,
-            new Dictionary<string, object>(), 
-            children);
+        root = AssistantComponentFactory.CreateComponent(AssistantUiCompontentType.FORM, new Dictionary<string, object>(), children);
         return true;
     }
 

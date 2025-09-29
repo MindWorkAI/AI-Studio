@@ -5353,6 +5353,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "It seems that Pandoc i
 -- The latest Pandoc version was not found, installing version {0} instead.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "The latest Pandoc version was not found, installing version {0} instead."
 
+-- The ASSISTANT table does not contain a valid description.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2080819991"] = "The ASSISTANT table does not contain a valid description."
+
+-- Failed to parse the UI render tree.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2583341941"] = "Failed to parse the UI render tree."
+
+-- The ASSISTANT table does not contain a valid UI section.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3126717084"] = "The ASSISTANT table does not contain a valid UI section."
+
+-- The ASSISTANT table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T6004146"] = "The ASSISTANT table does not exist or is not a valid table."
+
+-- The ASSISTANT table does not contain a valid title.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T998753547"] = "The ASSISTANT table does not contain a valid title."
+
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "The table AUTHORS does not exist or is using an invalid syntax."
 
