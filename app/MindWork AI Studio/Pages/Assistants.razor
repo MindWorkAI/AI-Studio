@@ -1,5 +1,8 @@
 @using AIStudio.Dialogs.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
+@using AIStudio.Tools.PluginSystem.Assistants
+@using ReverseMarkdown.Converters
 @attribute [Route(Routes.ASSISTANTS)]
 @inherits MSGComponentBase
 
@@ -31,6 +34,14 @@
             <AssistantBlock TSettings="SettingsDialogJobPostings" Name="@T("Job Posting")" Description="@T("Generate a job posting for a given job description.")" Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
             <AssistantBlock TSettings="SettingsDialogLegalCheck" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
             <AssistantBlock TSettings="SettingsDialogIconFinder" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
+            
+            @foreach (var assistant in PluginFactory.RunningPlugins.Where(e => e.Type == PluginType.ASSISTANT))
+            {
+                if (assistant is PluginAssistants assistantPlugin)
+                {
+                    <AssistantBlock TSettings="SettingsDialogTranslation" Name="@T(assistantPlugin.AssistantTitle)" Description="@T(assistantPlugin.Description)" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_DYNAMIC"/>
+                }
+            }
         </MudStack>
 
         <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
