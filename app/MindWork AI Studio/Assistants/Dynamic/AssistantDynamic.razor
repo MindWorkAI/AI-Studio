@@ -1,0 +1,27 @@
+﻿@attribute [Route(Routes.ASSISTANT_DYNAMIC)]
+@using AIStudio.Tools.PluginSystem.Assistants.DataModel
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDynamic>
+
+@foreach (var component in this.RootComponent!.Children)
+{
+    @switch (component.Type)
+    {
+        case AssistantUiCompontentType.TEXT_AREA:
+            if (component is AssistantTextArea textArea)
+            {
+                <MudTextField T="string" @bind-Text="@this.inputText" Label="@textArea.Label" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
+            }
+            break;
+        
+        case AssistantUiCompontentType.PROVIDER_SELECTION:
+            if (component is AssistantProviderSelection providerSelection)
+            {
+                <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+            }
+            break;
+        
+        default:
+            break;
+    }
+}
+
