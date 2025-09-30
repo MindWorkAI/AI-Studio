@@ -12,7 +12,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     public AssistantForm? RootComponent { get; set; }
     public string AssistantTitle { get; set; } = string.Empty;
-    private string AssistantDescription { get; set; } = string.Empty;
+    public string AssistantDescription { get; set; } = string.Empty;
+    public string SystemPrompt { get; set; } = string.Empty;
+    public bool AllowProfiles { get; set; } = true;
 
     public void TryLoad()
     {
@@ -54,9 +56,25 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             message = TB("The ASSISTANT table does not contain a valid description.");
             return false;
         }
+        
+        if (!assistantTable.TryGetValue("SystemPrompt", out var assistantSystemPromptValue) ||
+            !assistantSystemPromptValue.TryRead<string>(out var assistantSystemPrompt))
+        {
+            message = TB("The ASSISTANT table does not contain a valid system prompt.");
+            return false;
+        }
+        
+        if (!assistantTable.TryGetValue("AllowProfiles", out var assistantAllowProfilesValue) ||
+            !assistantAllowProfilesValue.TryRead<bool>(out var assistantAllowProfiles))
+        {
+            message = TB("The ASSISTANT table does not contain a the boolean flag to control the allowance of profiles.");
+            return false;
+        }
 
         this.AssistantTitle = assistantTitle;
         this.AssistantDescription = assistantDescription;
+        this.SystemPrompt = assistantSystemPrompt;
+        this.AllowProfiles = assistantAllowProfiles;
 
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:
         if (!assistantTable.TryGetValue("UI", out var uiVal) || !uiVal.TryRead<LuaTable>(out var uiTable))

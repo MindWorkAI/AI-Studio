@@ -5356,11 +5356,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "The latest Pandoc vers
 -- The ASSISTANT table does not contain a valid description.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2080819991"] = "The ASSISTANT table does not contain a valid description."
 
+-- The ASSISTANT table does not contain a the boolean flag to control the allowance of profiles.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T221472268"] = "The ASSISTANT table does not contain a the boolean flag to control the allowance of profiles."
+
 -- Failed to parse the UI render tree.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2583341941"] = "Failed to parse the UI render tree."
 
 -- The ASSISTANT table does not contain a valid UI section.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3126717084"] = "The ASSISTANT table does not contain a valid UI section."
+
+-- The ASSISTANT table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "The ASSISTANT table does not contain a valid system prompt."
 
 -- The ASSISTANT table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T6004146"] = "The ASSISTANT table does not exist or is not a valid table."
