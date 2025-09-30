@@ -170,7 +170,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             if (!this.TryReadComponentProps(type, propsTable, out props))
                 LOGGER.LogWarning($"Component #{idx} Props could not be fully read.");
         }
-
+        
         var children = new List<IAssistantComponent>();
         if (componentTable.TryGetValue("Children", out var childVal)
             && childVal.TryRead<LuaTable>(out var childTable))
@@ -253,7 +253,60 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return true;
         }
         
+        // AssistantDropdownItem
+        if (val.TryRead<LuaTable>(out var table) && this.TryParseDropdownItem(table, out var item))
+        {
+            result = item;
+            return true;
+        }
+
+        // List<AssistantDropdownItem>
+        if (val.TryRead<LuaTable>(out var listTable) && this.TryParseDropdownItemList(listTable, out var itemList))
+        {
+            result = itemList;
+            return true;
+        }
+        
         result = null!;
         return false;
+    }
+    
+    private bool TryParseDropdownItem(LuaTable table, out AssistantDropdownItem item)
+    {
+        item = new AssistantDropdownItem();
+
+        if (!table.TryGetValue("Value", out var valueVal) || !valueVal.TryRead<string>(out var value))
+            return false;
+
+        if (!table.TryGetValue("Display", out var displayVal) || !displayVal.TryRead<string>(out var display))
+            return false;
+
+        item.Value = value;
+        item.Display = display;
+        return true;
+    }
+
+    
+    private bool TryParseDropdownItemList(LuaTable table, out List<AssistantDropdownItem> items)
+    {
+        items = new List<AssistantDropdownItem>();
+
+        var length = table.ArrayLength;
+        for (var i = 1; i <= length; i++)
+        {
+            var value = table[i];
+
+            if (value.TryRead<LuaTable>(out var subTable) && this.TryParseDropdownItem(subTable, out var item))
+            {
+                items.Add(item);
+            }
+            else
+            {
+                items = null!;
+                return false;
+            }
+        }
+
+        return true;
     }
 }
