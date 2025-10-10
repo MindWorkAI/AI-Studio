@@ -20,6 +20,9 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Groq";
+    
+    /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -35,6 +38,9 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the OpenAI HTTP chat request:
         var groqChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -65,6 +71,7 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -110,8 +117,6 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

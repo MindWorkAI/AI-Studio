@@ -22,6 +22,9 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
     public override string InstanceName { get; set; } = "DeepSeek";
     
     /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
+    
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
@@ -35,6 +38,9 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the DeepSeek HTTP chat request:
         var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -63,6 +69,7 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -108,28 +115,6 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
-    {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        if(modelName.IndexOf("reasoner") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.ALWAYS_REASONING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        return
-        [
-            Capability.TEXT_INPUT,
-            Capability.TEXT_OUTPUT,
-            Capability.CHAT_COMPLETION_API,
-        ];
-    }
-
 
     #endregion
 

@@ -20,6 +20,9 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
+    
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
@@ -31,6 +34,9 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -60,7 +66,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             }).ToList()],
             
             // Right now, we only support streaming completions:
-            Stream = true
+            Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -141,8 +148,6 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             return [];
         }
     }
-    
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model) => CapabilitiesOpenSource.GetCapabilities(model);
     
     #endregion
 

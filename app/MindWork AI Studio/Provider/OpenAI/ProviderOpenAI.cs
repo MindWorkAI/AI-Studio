@@ -22,6 +22,10 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenAI";
+    
+    /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
+    
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -59,7 +63,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         };
 
         // Read the model capabilities:
-        var modelCapabilities = this.GetModelCapabilities(chatModel);
+        var modelCapabilities = Settings.ProviderExtensions.GetModelCapabilitiesOpenAI(chatModel);
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
@@ -84,6 +88,10 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             true => [ Tools.WEB_SEARCH ],
             _ => []
         };
+        
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters, ["input", "store", "tools"]);
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -119,6 +127,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             
                 // Right now, we only support streaming completions:
                 Stream = true,
+                AdditionalApiParameters = apiParameters
             }, JSON_SERIALIZER_OPTIONS),
             
             // Responses API request:
@@ -156,6 +165,9 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 
                 // Tools we want to use:
                 Tools = tools,
+                
+                // Additional api parameters:
+                AdditionalApiParameters = apiParameters
                 
             }, JSON_SERIALIZER_OPTIONS),
         };
@@ -213,144 +225,6 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
     public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(["text-embedding-"], token, apiKeyProvisional);
-    }
-    
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
-    {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        if (modelName is "gpt-4o-search-preview")
-            return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.WEB_SEARCH,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-        
-        if (modelName is "gpt-4o-mini-search-preview")
-            return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.WEB_SEARCH,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-        
-        if (modelName.StartsWith("o1-mini"))
-            return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.ALWAYS_REASONING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-        
-        if(modelName is "gpt-3.5-turbo")
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                Capability.RESPONSES_API,
-            ];
-        
-        if(modelName.StartsWith("gpt-3.5"))
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                Capability.CHAT_COMPLETION_API,
-            ];
-
-        if (modelName.StartsWith("chatgpt-4o-"))
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                Capability.RESPONSES_API,
-            ];
-        
-        if (modelName.StartsWith("o3-mini"))
-            return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
-                    Capability.RESPONSES_API,
-                ];
-        
-        if (modelName.StartsWith("o4-mini") || modelName.StartsWith("o3"))
-            return
-                [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
-                    Capability.WEB_SEARCH,
-                    Capability.RESPONSES_API,
-                ];
-        
-        if (modelName.StartsWith("o1"))
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                    
-                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
-                Capability.RESPONSES_API,
-            ];
-        
-        if(modelName.StartsWith("gpt-4-turbo"))
-            return
-                [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.FUNCTION_CALLING,
-                    Capability.RESPONSES_API,
-                ];
-        
-        if(modelName is "gpt-4" || modelName.StartsWith("gpt-4-"))
-            return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    Capability.RESPONSES_API,
-                ];
-        
-        if(modelName.StartsWith("gpt-5-nano"))
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING, Capability.ALWAYS_REASONING,
-                Capability.RESPONSES_API,
-            ];
-        
-        if(modelName is "gpt-5" || modelName.StartsWith("gpt-5-"))
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING, Capability.ALWAYS_REASONING,
-                Capability.WEB_SEARCH,
-                Capability.RESPONSES_API,
-            ];
-        
-        return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.RESPONSES_API,
-            ];
     }
     
     #endregion

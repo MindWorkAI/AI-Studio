@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
@@ -18,4 +20,7 @@ public record ResponsesAPIRequest(
     public ResponsesAPIRequest() : this(string.Empty, [], true, false, [])
     {
     }
+    
+    [JsonExtensionData]
+    public Dictionary<string, object?>? AdditionalApiParameters { get; init; }
 }

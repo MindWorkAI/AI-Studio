@@ -18,6 +18,9 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
     public override string Id => LLMProviders.ANTHROPIC.ToName();
 
     public override string InstanceName { get; set; } = "Anthropic";
+    
+    /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -26,6 +29,9 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         if(!requestedSecret.Success)
             yield break;
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters, ["system"]);
 
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -52,10 +58,11 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
             }).ToList()],
             
             System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
-            MaxTokens = 4_096,
+            MaxTokens = apiParameters["max_tokens"] as int? ?? 4_096,
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -112,49 +119,6 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
     public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Model>());
-    }
-
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
-    {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        // Claude 4.x models:
-        if(modelName.StartsWith("claude-opus-4") || modelName.StartsWith("claude-sonnet-4"))
-            return [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Claude 3.7 is able to do reasoning:
-        if(modelName.StartsWith("claude-3-7"))
-            return [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // All other 3.x models are able to process text and images as input:
-        if(modelName.StartsWith("claude-3-"))
-            return [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Any other model is able to process text only:
-        return [
-            Capability.TEXT_INPUT,
-            Capability.TEXT_OUTPUT,
-            Capability.FUNCTION_CALLING,
-            Capability.CHAT_COMPLETION_API,
-        ];
     }
     
     #endregion

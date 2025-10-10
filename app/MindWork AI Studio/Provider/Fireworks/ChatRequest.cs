@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.Fireworks;
 
 /// <summary>
@@ -10,4 +12,9 @@ public readonly record struct ChatRequest(
     string Model,
     IList<Message> Messages,
     bool Stream
-);
+)
+{
+    
+    [JsonExtensionData]
+    public Dictionary<string, object?> AdditionalApiParameters { get; init; }
+}

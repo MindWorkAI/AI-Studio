@@ -19,6 +19,8 @@ public interface IProvider
     /// </summary>
     public string InstanceName { get; }
     
+    public string ExpertProviderApiParameters { get; }
+    
     /// <summary>
     /// Starts a chat completion stream.
     /// </summary>
@@ -64,10 +66,4 @@ public interface IProvider
     /// <returns>The list of embedding models.</returns>
     public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
-    /// <summary>
-    /// Get the capabilities of a model.
-    /// </summary>
-    /// <param name="model">The model to get the capabilities for.</param>
-    /// <returns>The capabilities of the model.</returns>
-    public IReadOnlyCollection<Capability> GetModelCapabilities(Model model);
 }

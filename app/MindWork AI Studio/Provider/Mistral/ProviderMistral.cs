@@ -18,6 +18,9 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     public override string Id => LLMProviders.MISTRAL.ToName();
     
     public override string InstanceName { get; set; } = "Mistral";
+    
+    /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -33,6 +36,9 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the Mistral HTTP chat request:
         var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -63,7 +69,8 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
             
             // Right now, we only support streaming completions:
             Stream = true,
-            SafePrompt = false,
+            SafePrompt = apiParameters["safe_prompt"] as bool? ?? false,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -120,56 +127,6 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
-    }
-    
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model)
-    {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        // Pixtral models are able to do process images:
-        if (modelName.IndexOf("pixtral") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Mistral medium:
-        if (modelName.IndexOf("mistral-medium-") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Mistral small:
-        if (modelName.IndexOf("mistral-small-") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Mistral saba:
-        if (modelName.IndexOf("mistral-saba-") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Default:
-        return CapabilitiesOpenSource.GetCapabilities(model);
     }
     
     #endregion

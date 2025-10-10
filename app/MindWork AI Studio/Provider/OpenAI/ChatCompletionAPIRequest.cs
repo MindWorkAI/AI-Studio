@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
@@ -15,4 +17,7 @@ public record ChatCompletionAPIRequest(
     public ChatCompletionAPIRequest() : this(string.Empty, [], true)
     {
     }
+    
+    [JsonExtensionData]
+    public Dictionary<string, object?>? AdditionalApiParameters { get; init; }
 }
