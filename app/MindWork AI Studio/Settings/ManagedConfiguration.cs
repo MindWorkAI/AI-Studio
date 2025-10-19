@@ -146,7 +146,7 @@ public static partial class ManagedConfiguration
 
         configMeta = new NoConfig<TClass, IDictionary<string, string>>(configSelection, propertyExpression)
         {
-            Default = [],
+            Default = new Dictionary<string, string>(),
         };
         return false;
     }
