@@ -232,7 +232,7 @@ public static partial class ManagedConfiguration
 
         return [..defaultValues];
     }
-    
+
     /// <summary>
     /// Registers a configuration setting with a default dictionary of string key-value pairs.
     /// </summary>
@@ -244,16 +244,18 @@ public static partial class ManagedConfiguration
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="defaultValues">The default dictionary of values to use when the setting is not configured.</param>
     /// <typeparam name="TClass">The type of the configuration class from which the property is selected.</typeparam>
+    /// <typeparam name="TDict">>The type of the dictionary within the configuration class.</typeparam>
     /// <returns>A dictionary containing the default values.</returns>
-    public static Dictionary<string, string> Register<TClass>(
+    public static TDict Register<TClass, TDict>(
         Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, Dictionary<string, string>>> propertyExpression,
-        Dictionary<string, string> defaultValues)
+        Expression<Func<TClass, IDictionary<string, string>>> propertyExpression,
+        TDict defaultValues)
+        where TDict : IDictionary<string, string>, new()
     {
         // When called from the JSON deserializer by using the standard constructor,
         // we ignore the register call and return the default value:
         if (configSelection is null)
-            return [];
+            return new();
 
         var configPath = Path(configSelection, propertyExpression);
 
@@ -262,7 +264,7 @@ public static partial class ManagedConfiguration
             return defaultValues;
 
         // Not registered yet, so we register it now:
-        METADATA[configPath] = new ConfigMeta<TClass, Dictionary<string, string>>(configSelection, propertyExpression)
+        METADATA[configPath] = new ConfigMeta<TClass, IDictionary<string, string>>(configSelection, propertyExpression)
         {
             Default = defaultValues,
         };

@@ -622,7 +622,7 @@ public static partial class ManagedConfiguration
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
     public static bool TryProcessConfiguration<TClass>(
         Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, Dictionary<string, string>>> propertyExpression,
+        Expression<Func<TClass, IDictionary<string, string>>> propertyExpression,
         Guid configPluginId,
         LuaTable settings,
         bool dryRun)
@@ -646,7 +646,8 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a dictionary to hold the parsed key-value pairs.
             // Instead of using ArrayLength, we use HashMapCount to get the number of key-value pairs:
             var len = valueTable.HashMapCount;
-            var dict = new Dictionary<string, string>(len);
+            if (len > 0)
+                configuredValue.Clear();
             
             // In order to iterate over all key-value pairs in the Lua table, we have to use TryGetNext.
             // Thus, we initialize the previous key variable to Nil and keep calling TryGetNext until
@@ -663,10 +664,9 @@ public static partial class ManagedConfiguration
                 
                 // If both key and value were read successfully, add them to the dictionary:
                 if (hadKey && hadValue)
-                    dict[key] = value;
+                    configuredValue[key] = value;
             }
 		
-            configuredValue = dict;
             successful = true;
         }
         
