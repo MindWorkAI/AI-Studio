@@ -59,7 +59,7 @@ else
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
     </ExpansionPanel>
     
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@T("Document analysis")">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document analysis") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
         TODO
     </ExpansionPanel>
 </MudExpansionPanels>
