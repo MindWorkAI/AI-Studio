@@ -1,0 +1,65 @@
+@attribute [Route(Routes.ASSISTANT_DOCUMENT_ANALYSIS)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDocumentAnalysis>
+
+@using AIStudio.Settings.DataModel
+
+<PreviewPrototype/>
+<div class="mb-6"></div>
+
+<MudText Typo="Typo.h4" Class="mb-3">
+    @T("Document analysis policies")
+</MudText>
+
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @T("Here you have the option to save different policies for various document analysis assistants and switch between them.")
+</MudJustifiedText>
+
+@if(this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Count is 0)
+{
+    <MudText Typo="Typo.body1" Class="mb-3">
+        @T("You have not yet added any document analysis policies.")
+    </MudText>
+}
+else
+{
+    <MudList T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
+        @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
+        {
+            <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Settings" Value="@policy">
+                @policy.PolicyName
+            </MudListItem>
+        }
+    </MudList>
+}
+
+<MudStack Row="@true" Class="mt-1">
+    <MudButton OnClick="@this.AddPolicy" Variant="Variant.Filled" Color="Color.Primary">
+        @T("Add policy")
+    </MudButton>
+    <MudButton OnClick="@this.RemovePolicy" Disabled="@(this.selectedPolicy?.IsProtected ?? true)" Variant="Variant.Filled" Color="Color.Error">
+        @T("Delete this policy")
+    </MudButton>
+</MudStack>
+
+<hr style="width: 100%; border-width: 0.25ch;" class="mt-6"/>
+
+<MudExpansionPanels Class="mb-3 mt-6" MultiExpansion="@false">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Settings" HeaderText="@T("Settings")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
+        <MudText Typo="Typo.h4" Class="mb-1">
+            @T("Common settings")
+        </MudText>
+        <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyName" Validation="@this.ValidatePolicyName" Immediate="@true" Label="@T("Policy name")" HelperText="@T("Please give your policy a name that provides information about the intended purpose. The name will be displayed to users in AI Studio.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="() => this.PolicyNameWasChanged()"/>
+        <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyDescription" Validation="@this.ValidatePolicyDescription" Immediate="@true" Label="@T("Policy description")" HelperText="@T("Please provide a brief description of your policy. Describe or explain what your policy does. This description will be shown to users in AI Studio.")" Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+        <MudTextSwitch Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
+
+        <MudText Typo="Typo.h4" Class="mt-6 mb-1">
+            @T("Input and output rules")
+        </MudText>
+        <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyAnalysisRules" Validation="@this.ValidateAnalysisRules" Immediate="@true" Label="@T("Analysis rules")" HelperText="@T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+        <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+    </ExpansionPanel>
+    
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@T("Document analysis")">
+        TODO
+    </ExpansionPanel>
+</MudExpansionPanels>
