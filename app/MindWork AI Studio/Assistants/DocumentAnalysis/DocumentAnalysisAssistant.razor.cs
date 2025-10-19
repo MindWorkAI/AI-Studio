@@ -33,6 +33,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         get
         {
             var sb = new StringBuilder();
+            #warning TODO
             return sb.ToString();
         }
     }
