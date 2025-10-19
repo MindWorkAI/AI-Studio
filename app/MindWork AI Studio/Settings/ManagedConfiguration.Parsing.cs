@@ -91,7 +91,7 @@ public static partial class ManagedConfiguration
         LuaTable settings,
         bool dryRun,
         ISpanParsable<TValue>? _ = null)
-        where TValue : ISpanParsable<TValue>
+        where TValue : struct, ISpanParsable<TValue>
     {
         //
         // Handle configured ISpanParsable values
