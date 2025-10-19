@@ -1,7 +1,6 @@
 using System.Text;
 
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
 
 using Lua;
 using Lua.Standard;
@@ -138,16 +137,24 @@ public static partial class PluginFactory
         if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
         
-        // Check for update behavior:
-        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateInterval>(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
+        // Check for the update interval:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
-        // Check for update installation behavior:
-        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, UpdateInstallation>(x => x.App, x => x.UpdateInstallation, AVAILABLE_PLUGINS))
+        // Check for the update installation method:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInstallation, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         // Check for users allowed to added providers:
-        if(ManagedConfiguration.IsConfigurationLeftOver<DataApp, bool>(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check for preview visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreviewVisibility, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check for enabled preview features:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)

@@ -61,6 +61,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to add providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
         
+        // Config: preview features visibility
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
+        
+        // Config: enabled preview features
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.EnabledPreviewFeatures, this.Id, settingsTable, dryRun);
+        
         // Handle configured LLM providers:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
         

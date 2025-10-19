@@ -36,6 +36,7 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     /// <inheritdoc />
     protected override string Label => this.OptionDescription;
 
+    /// <inheritdoc />
     protected override Variant Variant => Variant.Outlined;
 
     #endregion
