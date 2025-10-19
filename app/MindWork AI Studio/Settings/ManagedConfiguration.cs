@@ -4,47 +4,11 @@ using System.Linq.Expressions;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
-using Lua;
-
 namespace AIStudio.Settings;
 
-public static class ManagedConfiguration
+public static partial class ManagedConfiguration
 {
     private static readonly ConcurrentDictionary<string, IConfig> METADATA = new();
-    
-    /// <summary>
-    /// Registers a configuration setting with a default value.
-    /// </summary>
-    /// <remarks>
-    /// When called from the JSON deserializer, the configSelection parameter will be null.
-    /// In this case, the method will return the default value without registering the setting.
-    /// </remarks>
-    /// <param name="configSelection">The expression to select the configuration class.</param>
-    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
-    /// <param name="defaultValue">The default value to use when the setting is not configured.</param>
-    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
-    /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
-    /// <returns>The default value.</returns>
-    public static TValue Register<TClass, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, TValue>> propertyExpression, TValue defaultValue)
-    {
-        // When called from the JSON deserializer by using the standard constructor,
-        // we ignore the register call and return the default value:
-        if(configSelection is null)
-            return defaultValue;
-		
-        var configPath = Path(configSelection, propertyExpression);
-
-        // If the metadata already exists for this configuration path, we return the default value:
-        if (METADATA.ContainsKey(configPath))
-            return defaultValue;
-        
-        METADATA[configPath] = new ConfigMeta<TClass, TValue>(configSelection, propertyExpression)
-        {
-            Default = defaultValue,
-        };
-
-        return defaultValue;
-    }
 
     /// <summary>
     /// Attempts to retrieve the configuration metadata for a given configuration selection and property expression.
@@ -74,80 +38,6 @@ public static class ManagedConfiguration
         };
         
         return false;
-    }
-
-    /// <summary>
-    /// Attempts to process the configuration settings from a Lua table.
-    /// </summary>
-    /// <remarks>
-    /// When the configuration is successfully processed, it updates the configuration metadata with the configured value.
-    /// Furthermore, it locks the managed state of the configuration metadata to the provided configuration plugin ID.
-    /// The setting's value is set to the configured value.
-    /// </remarks>
-    /// <param name="configPluginId">The ID of the related configuration plugin.</param>
-    /// <param name="settings">The Lua table containing the settings to process.</param>
-    /// <param name="configSelection">The expression to select the configuration class.</param>
-    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
-    /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
-    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
-    /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
-    /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
-    public static bool TryProcessConfiguration<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, TValue>> propertyExpression, Guid configPluginId, LuaTable settings, bool dryRun)
-    {
-        if(!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-        
-        var (configuredValue, successful) = configMeta.Default switch
-        {
-            Enum => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredEnumValue) && configuredEnumValue.TryRead<string>(out var configuredEnumText) && Enum.TryParse(typeof(TValue), configuredEnumText, true, out var configuredEnum) ? ((TValue)configuredEnum, true) : (configMeta.Default, false),
-            Guid => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredGuidValue) && configuredGuidValue.TryRead<string>(out var configuredGuidText) && Guid.TryParse(configuredGuidText, out var configuredGuid) ? ((TValue)(object)configuredGuid, true) : (configMeta.Default, false),
-
-            string => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredTextValue) && configuredTextValue.TryRead<string>(out var configuredText) ? ((TValue)(object)configuredText, true) : (configMeta.Default, false),
-            bool => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredBoolValue) && configuredBoolValue.TryRead<bool>(out var configuredState) ? ((TValue)(object)configuredState, true) : (configMeta.Default, false),
-
-            int => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredIntValue) && configuredIntValue.TryRead<int>(out var configuredInt) ? ((TValue)(object)configuredInt, true) : (configMeta.Default, false),
-            double => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredDoubleValue) && configuredDoubleValue.TryRead<double>(out var configuredDouble) ? ((TValue)(object)configuredDouble, true) : (configMeta.Default, false),
-            float => settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredFloatValue) && configuredFloatValue.TryRead<float>(out var configuredFloat) ? ((TValue)(object)configuredFloat, true) : (configMeta.Default, false),
-
-            _ => (configMeta.Default, false),
-        };
-
-        if(dryRun)
-            return successful;
-        
-        switch (successful)
-        {
-            case true:
-                //
-                // Case: the setting was configured, and we could read the value successfully.
-                //
-                configMeta.SetValue(configuredValue);
-                configMeta.LockManagedState(configPluginId);
-                break;
-
-            case false when configMeta.IsLocked && configMeta.MangedByConfigPluginId == configPluginId:
-                //
-                // Case: the setting was configured previously, but we could not read the value successfully.
-                // This happens when the setting was removed from the configuration plugin. We handle that
-                // case only when the setting was locked and managed by the same configuration plugin.
-                //
-                // The other case, when the setting was locked and managed by a different configuration plugin,
-                // is handled by the IsConfigurationLeftOver method, which checks if the configuration plugin
-                // is still available. If it is not available, it resets the managed state of the
-                // configuration setting, allowing it to be reconfigured by a different plugin or left unchanged.
-                //
-                configMeta.ResetManagedState();
-                break;
-            
-            case false:
-                //
-                // Case: the setting was not configured, or we could not read the value successfully.
-                // We do not change the setting, and it remains at whatever value it had before.
-                //
-                break;
-        }
-
-        return successful;
     }
 
     /// <summary>
