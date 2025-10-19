@@ -74,6 +74,18 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
+-- Configure the visibility of preview features:
+-- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL
+-- Please note:
+--      I: that this setting does not hide features that are already enabled.
+--     II: lower levels include all features of the higher levels. E.g. BETA includes RELEASE_CANDIDATE features.
+-- CONFIG["SETTINGS"]["DataApp.PreviewVisibility"] = "NONE"
+
+-- Configure the enabled preview features:
+-- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
+-- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_DOCUMENT_ANALYSIS_2025.
+-- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_DOCUMENT_ANALYSIS_2025" }
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 

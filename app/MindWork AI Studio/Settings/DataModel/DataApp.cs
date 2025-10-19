@@ -60,7 +60,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// The enabled preview features.
     /// </summary>
-    public HashSet<PreviewFeatures> EnabledPreviewFeatures { get; set; } = new();
+    public HashSet<PreviewFeatures> EnabledPreviewFeatures { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnabledPreviewFeatures, []);
     
     /// <summary>
     /// Should we preselect a provider for the entire app?
