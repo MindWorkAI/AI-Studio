@@ -45,7 +45,7 @@ public static class ComponentsExtensions
         
         Components.CHAT => TB("New Chat"),
         
-        _ => Enum.GetName(typeof(Components), component)!,
+        _ => Enum.GetName(component)!,
     };
 
     public static ComponentsData GetData(this Components destination) => destination switch
