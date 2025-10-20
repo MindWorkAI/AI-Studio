@@ -98,6 +98,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             await this.AddPolicy();
             this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.First();
         }
+        
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT).FirstOrDefault();
+        // if (deferredContent is not null)
+            #warning Add handling of deferred content -> load into input area
+            //this.
 
         await base.OnInitializedAsync();
     }
