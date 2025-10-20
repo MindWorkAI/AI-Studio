@@ -16,9 +16,14 @@ public sealed class DataDocumentAnalysisPolicy
 
     /// <summary>
     /// Is this policy protected? If so, it cannot be deleted or modified by the user.
-    /// This is useful for policies that are distributed by the organization.
     /// </summary>
     public bool IsProtected { get; set; }
+
+    /// <summary>
+    /// Is this a managed policy? Managed policies are created and managed by the organization
+    /// and cannot be modified or deleted by the user.
+    /// </summary>
+    public bool IsManaged { get; set; }
 
     /// <summary>
     /// The rules for the document analysis policy.
