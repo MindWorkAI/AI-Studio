@@ -42,6 +42,7 @@ public static class ComponentsExtensions
         Components.JOB_POSTING_ASSISTANT => TB("Job Posting Assistant"),
         Components.ERI_ASSISTANT => TB("ERI Server"),
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         
         Components.CHAT => TB("New Chat"),
         
@@ -62,6 +63,7 @@ public static class ComponentsExtensions
         Components.SYNONYMS_ASSISTANT => new(Event.SEND_TO_SYNONYMS_ASSISTANT, Routes.ASSISTANT_SYNONYMS),
         Components.MY_TASKS_ASSISTANT => new(Event.SEND_TO_MY_TASKS_ASSISTANT, Routes.ASSISTANT_MY_TASKS),
         Components.JOB_POSTING_ASSISTANT => new(Event.SEND_TO_JOB_POSTING_ASSISTANT, Routes.ASSISTANT_JOB_POSTING),
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => new(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT, Routes.ASSISTANT_DOCUMENT_ANALYSIS),
         
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
         
