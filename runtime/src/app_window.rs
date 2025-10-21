@@ -28,6 +28,15 @@ pub fn start_tauri() {
     let app = tauri::Builder::default()
         .setup(move |app| {
             let window = app.get_window("main").expect("Failed to get main window.");
+
+            // Register a callback for file drop events:
+            window.on_window_event(|event|
+                if let tauri::WindowEvent::FileDrop(files) = event {
+                    info!(Source = "Tauri"; "files were dropped: {files:?}");
+                }
+            );
+
+            // Save the main window for later access:
             *MAIN_WINDOW.lock().unwrap() = Some(window);
 
             info!(Source = "Bootloader Tauri"; "Setup is running.");
