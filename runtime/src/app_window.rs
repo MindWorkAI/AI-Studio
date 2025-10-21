@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 use std::time::Duration;
-use log::{error, info, trace, warn};
+use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
 use rocket::{get, post};
 use rocket::serde::json::Json;
@@ -46,84 +46,87 @@ pub fn start_tauri() {
         .build(tauri::generate_context!())
         .expect("Error while running Tauri application");
 
-    app.run(|app_handle, event| match event {
-
-        tauri::RunEvent::WindowEvent { event, label, .. } => {
-            match event {
-                tauri::WindowEvent::CloseRequested { .. } => {
-                    warn!(Source = "Tauri"; "Window '{label}': close was requested.");
-                }
-
-                tauri::WindowEvent::Destroyed => {
-                    warn!(Source = "Tauri"; "Window '{label}': was destroyed.");
-                }
-
-                tauri::WindowEvent::FileDrop(files) => {
-                    info!(Source = "Tauri"; "Window '{label}': files were dropped: {files:?}");
-                }
-
-                _ => (),
-            }
+    app.run(|app_handle, event| {
+        if !matches!(event, tauri::RunEvent::MainEventsCleared) {
+            debug!(Source = "Tauri"; "Event received: {event:?}");
         }
-
-        tauri::RunEvent::Updater(updater_event) => {
-            match updater_event {
-
-                tauri::UpdaterEvent::UpdateAvailable { body, date, version } => {
-                    let body_len = body.len();
-                    info!(Source = "Tauri"; "Updater: update available: body size={body_len} time={date:?} version={version}");
-                }
-
-                tauri::UpdaterEvent::Pending => {
-                    info!(Source = "Tauri"; "Updater: update is pending!");
-                }
-
-                tauri::UpdaterEvent::DownloadProgress { chunk_length, content_length: _ } => {
-                    trace!(Source = "Tauri"; "Updater: downloading chunk of {chunk_length} bytes");
-                }
-
-                tauri::UpdaterEvent::Downloaded => {
-                    info!(Source = "Tauri"; "Updater: update has been downloaded!");
-                    warn!(Source = "Tauri"; "Try to stop the .NET server now...");
-
-                    if is_prod() {
-                        stop_dotnet_server();
-                    } else {
-                        warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
-                    }
-                }
-
-                tauri::UpdaterEvent::Updated => {
-                    info!(Source = "Tauri"; "Updater: app has been updated");
-                    warn!(Source = "Tauri"; "Try to restart the app now...");
-
-                    if is_prod() {
-                        app_handle.restart();
-                    } else {
-                        warn!(Source = "Tauri"; "Development environment detected; do not restart the app.");
+        
+        match event {
+            tauri::RunEvent::WindowEvent { event, label, .. } => {
+                match event {
+                    tauri::WindowEvent::CloseRequested { .. } => {
+                        warn!(Source = "Tauri"; "Window '{label}': close was requested.");
                     }
 
-                }
+                    tauri::WindowEvent::Destroyed => {
+                        warn!(Source = "Tauri"; "Window '{label}': was destroyed.");
+                    }
 
-                tauri::UpdaterEvent::AlreadyUpToDate => {
-                    info!(Source = "Tauri"; "Updater: app is already up to date");
-                }
+                    tauri::WindowEvent::FileDrop(files) => {
+                        info!(Source = "Tauri"; "Window '{label}': files were dropped: {files:?}");
+                    }
 
-                tauri::UpdaterEvent::Error(error) => {
-                    warn!(Source = "Tauri"; "Updater: failed to update: {error}");
+                    _ => (),
                 }
             }
-        }
 
-        tauri::RunEvent::ExitRequested { .. } => {
-            warn!(Source = "Tauri"; "Run event: exit was requested.");
-        }
+            tauri::RunEvent::Updater(updater_event) => {
+                match updater_event {
+                    tauri::UpdaterEvent::UpdateAvailable { body, date, version } => {
+                        let body_len = body.len();
+                        info!(Source = "Tauri"; "Updater: update available: body size={body_len} time={date:?} version={version}");
+                    }
 
-        tauri::RunEvent::Ready => {
-            info!(Source = "Tauri"; "Run event: Tauri app is ready.");
-        }
+                    tauri::UpdaterEvent::Pending => {
+                        info!(Source = "Tauri"; "Updater: update is pending!");
+                    }
 
-        _ => {}
+                    tauri::UpdaterEvent::DownloadProgress { chunk_length, content_length: _ } => {
+                        trace!(Source = "Tauri"; "Updater: downloading chunk of {chunk_length} bytes");
+                    }
+
+                    tauri::UpdaterEvent::Downloaded => {
+                        info!(Source = "Tauri"; "Updater: update has been downloaded!");
+                        warn!(Source = "Tauri"; "Try to stop the .NET server now...");
+
+                        if is_prod() {
+                            stop_dotnet_server();
+                        } else {
+                            warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
+                        }
+                    }
+
+                    tauri::UpdaterEvent::Updated => {
+                        info!(Source = "Tauri"; "Updater: app has been updated");
+                        warn!(Source = "Tauri"; "Try to restart the app now...");
+
+                        if is_prod() {
+                            app_handle.restart();
+                        } else {
+                            warn!(Source = "Tauri"; "Development environment detected; do not restart the app.");
+                        }
+                    }
+
+                    tauri::UpdaterEvent::AlreadyUpToDate => {
+                        info!(Source = "Tauri"; "Updater: app is already up to date");
+                    }
+
+                    tauri::UpdaterEvent::Error(error) => {
+                        warn!(Source = "Tauri"; "Updater: failed to update: {error}");
+                    }
+                }
+            }
+
+            tauri::RunEvent::ExitRequested { .. } => {
+                warn!(Source = "Tauri"; "Run event: exit was requested.");
+            }
+
+            tauri::RunEvent::Ready => {
+                info!(Source = "Tauri"; "Run event: Tauri app is ready.");
+            }
+
+            _ => {}
+        }
     });
 
     warn!(Source = "Tauri"; "Tauri app was stopped.");
