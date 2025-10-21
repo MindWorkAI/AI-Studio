@@ -14,6 +14,7 @@ public enum Event
     SHOW_ERROR,
     SHOW_WARNING,
     SHOW_SUCCESS,
+    TAURI_EVENT_RECEIVED,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,

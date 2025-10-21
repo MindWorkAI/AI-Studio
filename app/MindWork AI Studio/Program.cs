@@ -133,6 +133,11 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
+        
+        // ReSharper disable AccessToDisposedClosure
+        builder.Services.AddHostedService<RustService>(_ => rust);
+        // ReSharper restore AccessToDisposedClosure
+        
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddHubOptions(options =>
