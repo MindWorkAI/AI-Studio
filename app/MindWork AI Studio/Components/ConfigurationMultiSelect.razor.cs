@@ -33,8 +33,10 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     /// <inheritdoc />
     protected override bool Stretch => true;
 
+    /// <inheritdoc />
     protected override Variant Variant => Variant.Outlined;
 
+    /// <inheritdoc />
     protected override string Label => this.OptionDescription;
 
     #endregion
