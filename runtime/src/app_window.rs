@@ -7,7 +7,7 @@ use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
 use tauri::updater::UpdateResponse;
-use tauri::{Manager, PathResolver, Window};
+use tauri::{FileDropEvent, Manager, PathResolver, Window};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::time;
 use crate::api_token::APIToken;
@@ -31,8 +31,30 @@ pub fn start_tauri() {
 
             // Register a callback for file drop events:
             window.on_window_event(|event|
-                if let tauri::WindowEvent::FileDrop(files) = event {
-                    info!(Source = "Tauri"; "files were dropped: {files:?}");
+                match event {
+                    tauri::WindowEvent::FileDrop(drop_event) => {
+                        match drop_event {
+                            FileDropEvent::Hovered(files) => {
+                                info!(Source = "Tauri"; "Files hovered over the window: {files:?}");
+                            },
+
+                            FileDropEvent::Dropped(files) => {
+                                info!(Source = "Tauri"; "Files dropped on the window: {files:?}");
+                            },
+
+                            FileDropEvent::Cancelled => {
+                                info!(Source = "Tauri"; "File drop was cancelled.");
+                            },
+
+                            _ => {}
+                        }
+                    },
+
+                    tauri::WindowEvent::Focused(state) => {
+                        info!(Source = "Tauri"; "Window focus changed: focused={state}");
+                    },
+
+                    _ => {}
                 }
             );
 
