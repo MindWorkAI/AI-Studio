@@ -20,5 +20,5 @@ public readonly record struct ChatRequest(
 {
     
     [JsonExtensionData]
-    public Dictionary<string, object?> AdditionalApiParameters { get; init; }
+    public Dictionary<string, object> AdditionalApiParameters { get; init; }
 }

@@ -22,5 +22,5 @@ public record ResponsesAPIRequest(
     }
     
     [JsonExtensionData]
-    public Dictionary<string, object?>? AdditionalApiParameters { get; init; }
+    public Dictionary<string, object>? AdditionalApiParameters { get; init; }
 }

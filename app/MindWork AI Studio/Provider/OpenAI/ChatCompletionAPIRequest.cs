@@ -19,5 +19,5 @@ public record ChatCompletionAPIRequest(
     }
     
     [JsonExtensionData]
-    public Dictionary<string, object?>? AdditionalApiParameters { get; init; }
+    public Dictionary<string, object>? AdditionalApiParameters { get; init; }
 }
