@@ -530,9 +530,6 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         try
         {
-            // we need to remove line breaks from the JSON string otherwise the server might have problems with parsing the call
-            // var withoutLineBreak = additionalUserProvidedParameters.Replace("\n", string.Empty);
-            
             var json = $"{{{additionalUserProvidedParameters}}}";
             var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
             var dict = this.ConvertToDictionary(jsonDoc);
