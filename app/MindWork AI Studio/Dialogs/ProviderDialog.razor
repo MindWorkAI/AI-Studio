@@ -135,8 +135,8 @@
                 <MudDivider />
                 <MudCollapse Expanded="@this.showExpertProviderSettings">
                     <MudJustifiedText>@T("Please be aware: This is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call.")</MudJustifiedText>
-                    <MudJustifiedText>@T("By default, AI Studio uses the OpenAI-compatible chat/completions API, provided it is supported by the underlying service and model.")</MudJustifiedText>
-                    <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="3" AutoGrow="true" HelperText=@T("Add the parameters in proper json formatting. E.g. \"temperature\": 0.5. Trailing commas have to be removed.") HelperTextOnFocus="true " @bind-Value="@ExpertProviderApiParameters" OnBlur="@OnInputChangeExpertSettings"></MudTextField>
+                    <MudJustifiedText>@T("By default, AI Studio uses the OpenAI-compatible chat/completions API, provided that it is supported by the underlying service and model.")</MudJustifiedText>
+                    <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="3" AutoGrow="true" HelperText=@T("Add the parameters in proper json formatting, e.g., \"temperature\": 0.5. Remove trailing commas.") HelperTextOnFocus="true " @bind-Value="@ExpertProviderApiParameters" OnBlur="@OnInputChangeExpertSettings"></MudTextField>
                 </MudCollapse>
             </MudStack>
             
