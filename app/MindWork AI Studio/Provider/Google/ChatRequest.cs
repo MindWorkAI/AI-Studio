@@ -15,7 +15,5 @@ public readonly record struct ChatRequest(
     bool Stream
 )
 {
-    
-    [JsonExtensionData]
-    public Dictionary<string, object> AdditionalApiParameters { get; init; }
+    public IDictionary<string, string> AdditionalApiParameters { get; init; }
 }

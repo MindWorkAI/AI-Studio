@@ -530,49 +530,46 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// optionally merging additional parameters and removing specific keys.
     /// </summary>
     /// <param name="additionalUserProvidedParameters">A JSON string (without surrounding braces) containing the API parameters to be parsed.</param>
-    /// <param name="defaultParameters">Optional additional parameters to merge into the result. These will overwrite existing keys.</param>
     /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary (case-insensitive). stream, model and messages are removed by default.</param>
-    protected Dictionary<string, object?> ParseApiParameters(
+    protected IDictionary<string, string> ParseApiParameters(
         string additionalUserProvidedParameters,
         IEnumerable<string>? keysToRemove = null)
     {
-        
-        var json = $"{{{additionalUserProvidedParameters}}}";
-        var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
-        var dict = this.ConvertToDictionary(jsonDoc);
-        
-        // Some keys are always removed because we always set them
-        var finalKeysToRemove = keysToRemove?.ToList() ?? new List<string>();
-        finalKeysToRemove.Add("stream");
-        finalKeysToRemove.Add("model");
-        finalKeysToRemove.Add("messages");
+        try
+        {
+            // we need to remove line breaks from the JSON string otherwise the server might have problems with parsing the call
+            var withoutLineBreak = additionalUserProvidedParameters.Replace("\n", string.Empty);
+            
+            var json = $"{{{withoutLineBreak}}}";
+            var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
+            var dict = this.ConvertToDictionary(jsonDoc);
 
-        var removeSet = new HashSet<string>(finalKeysToRemove, StringComparer.OrdinalIgnoreCase);
-        var toRemove = dict.Keys.Where(k => removeSet.Contains(k)).ToList();
-        foreach (var k in toRemove)
-            dict.Remove(k);
+            // Some keys are always removed because we always set them
+            var finalKeysToRemove = keysToRemove?.ToList() ?? new List<string>();
+            finalKeysToRemove.Add("stream");
+            finalKeysToRemove.Add("model");
+            finalKeysToRemove.Add("messages");
 
-        return dict;
+            var removeSet = new HashSet<string>(finalKeysToRemove, StringComparer.OrdinalIgnoreCase);
+            var toRemove = dict.Keys.Where(k => removeSet.Contains(k)).ToList();
+            foreach (var k in toRemove)
+                dict.Remove(k);
+
+            return dict;
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException("Invalid JSON in additionalUserProvidedParameters", ex);
+        }
     }
 
-    private Dictionary<string, object?> ConvertToDictionary(JsonElement element)
+    private IDictionary<string, string> ConvertToDictionary(JsonElement element)
     {
         return element.EnumerateObject()
             .ToDictionary(
                 p => p.Name,
-                p => this.ConvertJsonElement(p.Value)
+                p => p.Value.GetRawText()
             );
     }
-
-    private object? ConvertJsonElement(JsonElement element) => element.ValueKind switch
-    {
-        JsonValueKind.String => element.GetString(),
-        JsonValueKind.Number => element.TryGetInt32(out var i) ? (object)i : element.GetDouble(),
-        JsonValueKind.True => true,
-        JsonValueKind.False => false,
-        JsonValueKind.Object => this.ConvertToDictionary(element),
-        JsonValueKind.Array => element.EnumerateArray().Select(this.ConvertJsonElement).ToList(),
-        JsonValueKind.Null => null,
-        _ => element.ToString()
-    };
+    
 }

@@ -58,7 +58,7 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
             }).ToList()],
             
             System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
-            MaxTokens = apiParameters["max_tokens"] as int? ?? 4_096,
+            MaxTokens = int.TryParse(apiParameters["max_tokens"], out int parsed) ? parsed : 4_096,
             
             // Right now, we only support streaming completions:
             Stream = true,
