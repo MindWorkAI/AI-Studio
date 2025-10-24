@@ -1573,7 +1573,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "�
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Pandoc installieren"
 
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Da mein Arbeitgeber sowohl Windows als auch Linux am Arbeitsplatz nutzt, wollte ich eine plattformübergreifende Lösung, die nahtlos auf allen wichtigen Betriebssystemen, einschließlich macOS, funktioniert. Außerdem wollte ich zeigen, dass es möglich ist, moderne, effiziente und plattformübergreifende Anwendungen zu erstellen, ohne auf Software-Balast, wie z.B. das Electron-Framework, zurückzugreifen. Die Kombination aus .NET und Rust mit Tauri hat sich dabei als hervorragender Technologiestapel für den Bau solch robuster Anwendungen erwiesen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Da mein Arbeitgeber sowohl Windows als auch Linux am Arbeitsplatz nutzt, wollte ich eine plattformübergreifende Lösung, die nahtlos auf allen wichtigen Betriebssystemen, einschließlich macOS, funktioniert. Außerdem wollte ich zeigen, dass es möglich ist, moderne, effiziente und plattformübergreifende Anwendungen zu erstellen, ohne auf Software-Ballast, wie z.B. das Electron-Framework, zurückzugreifen. Die Kombination aus .NET und Rust mit Tauri hat sich dabei als hervorragender Technologiestapel für den Bau solch robuster Anwendungen erwiesen."
 
 -- Limitations of Existing Solutions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1086130692"] = "Einschränkungen bestehender Lösungen"
@@ -4678,7 +4678,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T617579208"] = "Kostenlos"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T649448159"] = "Unabhängigkeit"
 
 -- No bloatware
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T858047957"] = "Keinen unnötigen Software-Balast"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T858047957"] = "Keinen unnötigen Software-Ballast"
 
 -- Here's what makes MindWork AI Studio stand out:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T873851215"] = "Das zeichnet MindWork AI Studio aus:"
