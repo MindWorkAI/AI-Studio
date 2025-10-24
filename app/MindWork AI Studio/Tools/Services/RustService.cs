@@ -8,7 +8,7 @@ namespace AIStudio.Tools.Services;
 /// <summary>
 /// Calling Rust functions.
 /// </summary>
-public sealed partial class RustService : IDisposable
+public sealed partial class RustService : BackgroundService
 {
     private readonly HttpClient http;
 
@@ -59,11 +59,18 @@ public sealed partial class RustService : IDisposable
         this.encryptor = encryptionService;
     }
 
-    #region IDisposable
+    #region Overrides of BackgroundService
 
-    public void Dispose()
+    protected override async Task ExecuteAsync(CancellationToken stopToken)
+    {
+        this.logger?.LogInformation("The Rust service was initialized.");
+        await this.StartStreamTauriEvents(stopToken);
+    }
+    
+    public override void Dispose()
     {
         this.http.Dispose();
+        base.Dispose();
     }
 
     #endregion
