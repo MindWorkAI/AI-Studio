@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.Mistral;
 
 /// <summary>
@@ -14,4 +16,9 @@ public readonly record struct ChatRequest(
     bool Stream,
     int RandomSeed,
     bool SafePrompt = false
-);
+)
+{
+    
+    [JsonExtensionData]
+    public IDictionary<string, object>  AdditionalApiParameters { get; init; }
+}

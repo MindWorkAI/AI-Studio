@@ -78,6 +78,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public bool IsEditing { get; init; }
     
+    [Parameter]
+    public string ExpertProviderApiParameters { get; set; } = string.Empty;
+    
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -94,6 +97,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
+    private bool showExpertProviderSettings = false;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -135,6 +139,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
+            ExpertProviderApiParameters = this.ExpertProviderApiParameters,
         };
     }
 
@@ -149,6 +154,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         #pragma warning disable MWAIS0001
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         #pragma warning restore MWAIS0001
+
+        this.showExpertProviderSettings = !string.IsNullOrEmpty(this.ExpertProviderApiParameters);
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -268,4 +275,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         LLMProviders.SELF_HOSTED => T("(Optional) API Key"),
         _ => T("API Key"),
     };
+    
+    private void ToggleProviderExpertSettings()
+    {
+        this.showExpertProviderSettings = !this.showExpertProviderSettings;
+    }
+    
+    private void OnInputChangeExpertSettings()
+    {
+        this.ExpertProviderApiParameters = this.ExpertProviderApiParameters.TrimEnd(',', ' ');
+    }
 }

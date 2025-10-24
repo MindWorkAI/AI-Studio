@@ -25,6 +25,9 @@ public sealed class ProviderHuggingFace : BaseProvider
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "HuggingFace";
+    
+    /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -40,6 +43,9 @@ public sealed class ProviderHuggingFace : BaseProvider
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the HuggingFace HTTP chat request:
         var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -68,6 +74,7 @@ public sealed class ProviderHuggingFace : BaseProvider
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -113,7 +120,5 @@ public sealed class ProviderHuggingFace : BaseProvider
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 }

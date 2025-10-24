@@ -31,7 +31,8 @@ public sealed record Provider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    string ExpertProviderApiParameters = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -132,6 +133,12 @@ public sealed record Provider(
             LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model configuration.");
             return false;
         }
+        
+        if (!table.TryGetValue("ExpertProviderApiParameters", out var expertProviderApiParametersValue) || !expertProviderApiParametersValue.TryRead<string>(out var expertProviderApiParameters))
+        {
+            LOGGER.LogWarning($"The configured provider {idx} does not contain valid additional api parameters.");
+            return false;
+        }
 
         provider = new Provider
         {
@@ -144,7 +151,8 @@ public sealed record Provider(
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
-            Host = host
+            Host = host,
+            ExpertProviderApiParameters = expertProviderApiParameters,
         };
         
         return true;

@@ -22,6 +22,9 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
     public override string InstanceName { get; set; } = "Helmholtz Blablador";
     
     /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
+    
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
@@ -35,6 +38,9 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the Helmholtz HTTP chat request:
         var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -63,6 +69,7 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -114,8 +121,6 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
             model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase));
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

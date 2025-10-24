@@ -1,8 +1,10 @@
-namespace AIStudio.Provider;
+using AIStudio.Provider;
 
-public static class CapabilitiesOpenSource
+namespace AIStudio.Settings;
+
+public static partial class ProviderExtensions
 {
-    public static IReadOnlyCollection<Capability> GetCapabilities(Model model)
+    public static List<Capability> GetModelCapabilitiesOpenSource(Model model)
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
         

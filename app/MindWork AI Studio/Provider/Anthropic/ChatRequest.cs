@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.Anthropic;
@@ -16,4 +18,9 @@ public readonly record struct ChatRequest(
     int MaxTokens,
     bool Stream,
     string System
-);
+)
+{
+    
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; }
+}

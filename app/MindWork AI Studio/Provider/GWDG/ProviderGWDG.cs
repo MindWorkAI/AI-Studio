@@ -22,6 +22,9 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
     public override string InstanceName { get; set; } = "GWDG SAIA";
     
     /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
+    
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
@@ -35,6 +38,9 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the GWDG HTTP chat request:
         var gwdgChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -63,6 +69,7 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -110,8 +117,6 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
         return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

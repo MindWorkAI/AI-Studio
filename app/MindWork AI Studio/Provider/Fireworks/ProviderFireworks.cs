@@ -20,6 +20,9 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Fireworks.ai";
+    
+    /// <inheritdoc />
+    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -35,6 +38,9 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
         
         // Prepare the Fireworks HTTP chat request:
         var fireworksChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -65,6 +71,7 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -110,7 +117,5 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 }
