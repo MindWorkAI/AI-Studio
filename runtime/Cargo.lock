@@ -2599,7 +2599,7 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
 name = "mindwork-ai-studio"
-version = "0.9.51"
+version = "0.9.52"
 dependencies = [
  "aes",
  "arboard",
