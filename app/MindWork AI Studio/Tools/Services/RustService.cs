@@ -1,6 +1,10 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 
+using AIStudio.Settings;
+
+using Version = System.Version;
+
 // ReSharper disable NotAccessedPositionalProperty.Local
 
 namespace AIStudio.Tools.Services;
@@ -15,6 +19,7 @@ public sealed partial class RustService : BackgroundService
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters = { new TolerantEnumConverter() },
     };
     
     private ILogger<RustService>? logger;
@@ -61,9 +66,15 @@ public sealed partial class RustService : BackgroundService
 
     #region Overrides of BackgroundService
 
+    /// <summary>
+    /// The main execution loop of the Rust service as a background thread.
+    /// </summary>
+    /// <param name="stopToken">The cancellation token to stop the service.</param>
     protected override async Task ExecuteAsync(CancellationToken stopToken)
     {
         this.logger?.LogInformation("The Rust service was initialized.");
+        
+        // Start consuming Tauri events:
         await this.StartStreamTauriEvents(stopToken);
     }
     
