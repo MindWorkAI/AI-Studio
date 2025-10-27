@@ -40,13 +40,15 @@ public partial class RustService
                         // Deserialize the Tauri event:
                         var tauriEvent = JsonSerializer.Deserialize<TauriEvent>(line, this.jsonRustSerializerOptions);
                         
-                        // Log the received event for debugging:
-                        this.logger!.LogDebug("Received Tauri event: {Event}", tauriEvent);
-                        
                         // Forward relevant events to the message bus:
-                        if (tauriEvent != default && tauriEvent.EventType is not TauriEventType.NONE
-                                and not TauriEventType.UNKNOWN and not TauriEventType.PING)
+                        if (tauriEvent != default && tauriEvent.EventType
+                                is not TauriEventType.NONE
+                                and not TauriEventType.UNKNOWN
+                                and not TauriEventType.PING)
+                        {
+                            this.logger!.LogDebug("Received Tauri event {EventType} with {NumPayloadItems} payload items.", tauriEvent.EventType, tauriEvent.Payload.Count);
                             await MessageBus.INSTANCE.SendMessage(null, Event.TAURI_EVENT_RECEIVED, tauriEvent);
+                        }
                     }
                 }
                 
