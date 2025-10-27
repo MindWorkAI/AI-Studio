@@ -33,7 +33,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         get
         {
             var sb = new StringBuilder();
-            #warning TODO
+            #warning Add system prompt for document analysis
             return sb.ToString();
         }
     }
@@ -44,7 +44,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     
     protected override bool ShowSendTo => true;
 
-    protected override string SubmitText => T("Analyze document");
+    protected override string SubmitText => T("Analyze documents");
 
     protected override Func<Task> SubmitAction => this.Analyze;
 
@@ -99,10 +99,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.First();
         }
         
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT).FirstOrDefault();
-        // if (deferredContent is not null)
-            #warning Add handling of deferred content -> load into input area
-            //this.
+        var receivedDeferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT).FirstOrDefault();
+        if (receivedDeferredContent is not null)
+            this.deferredContent = receivedDeferredContent;
 
         await base.OnInitializedAsync();
     }
@@ -137,6 +136,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
+    private string deferredContent = string.Empty;
+    private List<string> loadedDocumentPaths = [];
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     
