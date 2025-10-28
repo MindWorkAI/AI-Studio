@@ -394,6 +394,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Input and output rules
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1714738288"] = "Input and output rules"
 
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1725856265"] = "Description"
+
 -- Yes, protect this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1762380857"] = "Yes, protect this policy"
 
@@ -405,6 +408,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Common settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1963959073"] = "Common settings"
+
+-- The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T206207667"] = "The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted."
 
 -- Document analysis policies
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2064879144"] = "Document analysis policies"
@@ -418,6 +424,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- The name of your policy must be between 6 and 60 characters long.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2435013256"] = "The name of your policy must be between 6 and 60 characters long."
 
+-- Export policy as configuration section
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2556564432"] = "Export policy as configuration section"
+
 -- Are you sure you want to delete the document analysis policy '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2582525917"] = "Are you sure you want to delete the document analysis policy '{0}'?"
 
@@ -429,6 +438,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Analyze documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2894951609"] = "Analyze documents"
+
+-- Documents for the analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3030664641"] = "Documents for the analysis"
 
 -- Analysis rules
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3108719748"] = "Analysis rules"
@@ -3724,9 +3736,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Local Directory"
 
--- When enabled, you can preselect some ERI server options.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T1280666275"] = "When enabled, you can preselect some ERI server options."
-
 -- Assistant: Document Analysis
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T1372406750"] = "Assistant: Document Analysis"
 
@@ -3738,6 +3747,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2
 
 -- Preselect document analysis options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2230062650"] = "Preselect document analysis options?"
+
+-- When enabled, you can preselect some document analysis options.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2301091111"] = "When enabled, you can preselect some document analysis options."
 
 -- No document analysis options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3317802895"] = "No document analysis options are preselected"

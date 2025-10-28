@@ -384,6 +384,117 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T
 -- None
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T810547195"] = "Keine"
 
+-- Please provide a brief description of your policy. Describe or explain what your policy does. This description will be shown to users in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1182372158"] = "Bitte geben Sie eine kurze Beschreibung Ihres Regelwerks an. Beschreiben oder erklären Sie, was das Regelwerk bewirkt. Diese Beschreibung wird den Benutzern in AI Studio angezeigt."
+
+-- No, the policy can be edited
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1286595725"] = "Nein, das Regelwerk kann bearbeitet werden."
+
+-- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Bitte geben Sie eine Beschreibung Ihrer Analysekriterien an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
+
+-- Analysis and output rules
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1714738288"] = "Analyse- und Ausgaberegeln"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1725856265"] = "Beschreibung"
+
+-- Yes, protect this policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1762380857"] = "Ja, dieses Regelwerk schützen"
+
+-- Please give your policy a name that provides information about the intended purpose. The name will be displayed to users in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1786783201"] = "Bitte geben Sie Ihrem Regelwerk einen Namen, der den beabsichtigten Zweck beschreibt. Der Name wird den Nutzern in AI Studio angezeigt."
+
+-- Please provide a description for your policy. This description will be used to inform users about the purpose of your document analysis policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1837166236"] = "Bitte geben Sie eine Beschreibung für Ihr Regelwerk an. Diese Beschreibung wird verwendet, um Benutzer über den Zweck Ihres Regelwerks zur Dokumentenanalyse zu informieren."
+
+-- Common settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1963959073"] = "Allgemeine Einstellungen"
+
+-- The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T206207667"] = "Der Assistent für Dokumentenanalysen hilft Ihnen dabei, Informationen aus Dokumenten basierend auf vordefinierten Regelwerken zu analysieren und zu extrahieren. Sie können Regelwerke für die Dokumentenanalyse erstellen, bearbeiten und verwalten, die festlegen, wie Dokumente verarbeitet werden und welche Informationen extrahiert werden sollen. Einige Regelwerke könnten durch Ihre Organisation geschützt sein und können nicht geändert oder gelöscht werden."
+
+-- Document analysis policies
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2064879144"] = "Regelwerke zur Dokumentenanalyse"
+
+-- Load output rules from document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2168201568"] = "Regeln für die Ausgabe aus einem Dokument laden"
+
+-- Definition
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T222998208"] = "Definition"
+
+-- The name of your policy must be between 6 and 60 characters long.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2435013256"] = "Der Name Ihres Regelwerks muss zwischen 6 und 60 Zeichen lang sein."
+
+-- Export policy as configuration section
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2556564432"] = "Exportieren Sie das Regelwerk als Konfigurationsabschnitt"
+
+-- Are you sure you want to delete the document analysis policy '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2582525917"] = "Möchten Sie das Regelwerk '{0}' wirklich löschen?"
+
+-- Document analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2708005534"] = "Dokumentenanalyse"
+
+-- Policy name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2879019438"] = "Name des Regelwerks"
+
+-- Analyze documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2894951609"] = "Dokumente analysieren"
+
+-- Documents for the analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3030664641"] = "Dokumente für die Analyse"
+
+-- Analysis rules
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3108719748"] = "Regeln zur Analyse"
+
+-- Delete this policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3119086260"] = "Dieses Regelwerk löschen"
+
+-- Policy {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3157740273"] = "Regelwerk {0}"
+
+-- The description of your policy must be between 32 and 512 characters long.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3285636934"] = "Die Beschreibung des Regelwerks muss zwischen 32 und 512 Zeichen lang sein."
+
+-- Add policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3357792182"] = "Regelwerk hinzufügen"
+
+-- You have not yet added any document analysis policies.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3394850216"] = "Sie haben keine Regelwerke zur Dokumentenanalyse hinzugefügt."
+
+-- Document Analysis Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T348883878"] = "Assistent für die Analyse von Dokumenten"
+
+-- A policy with this name already exists. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3584374593"] = "Ein Regelwerk mit diesem Namen existiert bereits. Bitte wählen Sie einen anderen Namen."
+
+-- Load analysis rules from document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3813558135"] = "Regeln für die Analyse aus einem Dokument laden"
+
+-- Output rules
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3918193587"] = "Regeln für die Ausgabe"
+
+-- Preparation for enterprise distribution
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T39557294"] = "Vorbereitung für den Unternehmenseinsatz"
+
+-- Please provide a name for your policy. This name will be used to identify the policy in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T4040507702"] = "Bitte geben Sie einen Namen für Ihr Regelwerk an. Dieser Name wird verwendet, um das Regelwerk in AI Studio zu identifizieren."
+
+-- Delete document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T4293094335"] = "Regelwerk löschen"
+
+-- Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T652187065"] = "Bitte geben Sie eine Beschreibung der Regeln für die Ausgabe an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Ausgabe der Analyse formatiert werden soll."
+
+-- Policy description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T748735777"] = "Regelwerkbeschreibung"
+
+-- Would you like to protect this policy so that you cannot accidentally edit or delete it?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T80597472"] = "Möchten Sie dieses Regelwerk schützen, damit Sie es nicht versehentlich bearbeiten oder löschen können?"
+
+-- Here you have the option to save different policies for various document analysis assistants and switch between them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T848153710"] = "Hier haben Sie die Möglichkeit, verschiedene Regelwerke für unterschiedliche Dokumentenanalysen zu speichern und zwischen ihnen zu wechseln."
+
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage ihrer Angaben."
 
@@ -1368,6 +1479,24 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "Nein, b
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Einstellungen öffnen"
 
+-- Drag and drop files here or click to attach documents.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1647829151"] = "Dateien hierher ziehen und ablegen oder klicken, um Dokumente anzuhängen."
+
+-- Videos are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2928927510"] = "Videos werden noch nicht unterstützt."
+
+-- Images are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T298062956"] = "Bilder werden noch nicht unterstützt."
+
+-- Clear file list
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3759696136"] = "Dateiliste löschen"
+
+-- Executables are not allowed
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4167762413"] = "Ausführbare Dateien sind nicht erlaubt"
+
+-- Select a file to attach
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T595772870"] = "Datei zum Anhängen auswählen"
+
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHANGELOG::T3017574265"] = "Änderungsprotokoll"
 
@@ -1664,6 +1793,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier k�
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Anbieter"
+
+-- Videos are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2928927510"] = "Videos werden noch nicht unterstützt."
 
 -- Images are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T298062956"] = "Bilder werden derzeit nicht unterstützt"
@@ -3606,6 +3738,33 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Lokaler Ordner"
 
+-- Assistant: Document Analysis
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T1372406750"] = "Assistent: Dokumentenanalyse"
+
+-- Most document analysis options can be customized and saved directly in the assistant. For this, the assistant has an auto-save function.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T1870328357"] = "Die meisten Optionen für die Analyse von Dokumenten können im Assistenten angepasst und direkt gespeichert werden. Dafür verfügt der Assistent über eine automatische Speicherfunktion."
+
+-- Would you like to preselect one of your profiles?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2221665527"] = "Möchten Sie eines Ihrer Profile vorab auswählen?"
+
+-- Preselect document analysis options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2230062650"] = "Dokumentenanalyse-Optionen vorab auswählen?"
+
+-- When enabled, you can preselect some document analysis options.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2301091111"] = "Wenn aktiviert, können Sie einige Dokumentanalyse-Optionen vorab auswählen."
+
+-- No document analysis options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3317802895"] = "Keine Dokumentenanalyse-Optionen sind vorausgewählt."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3448155331"] = "Schließen"
+
+-- Document analysis options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3945756386"] = "Dokumentenanalyse-Optionen sind vorausgewählt."
+
+-- Preselect one of your profiles?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T4004501229"] = "Eines Ihrer Profile vorauswählen?"
+
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "Wenn aktiviert, können Sie einige ERI-Serveroptionen vorauswählen."
 
@@ -4479,6 +4638,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T986578435"] = "Pandoc installieren"
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Erhalten Sie Unterstützung beim Programmieren und Debuggen durch ein KI-Modell."
 
+-- Analyze a document regarding defined rules and extract key information.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187"] = "Analysiere ein Dokument hinsichtlich festgelegter Regeln und extrahiere wichtige Informationen."
+
 -- Business
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
 
@@ -4523,6 +4685,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2547582747"] = "Synonyme"
 
 -- Find synonyms for a given word or phrase.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2712131461"] = "Finde Synonyme für ein angegebenes Wort oder eine Phrase."
+
+-- Document Analysis
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2770149758"] = "Dokumentenanalyse"
 
 -- AI Studio Development
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Entwicklung"
@@ -5046,6 +5211,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1587
 -- Read PDF: Preview of our PDF reading system where you can read and extract text from PDF files
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1847148141"] = "PDF-Dateien einlesen: Vorschau unseres PDF-Lesesystems, mit dem Sie Text aus PDF-Dateien einlesen können"
 
+-- Document Analysis: Preview of our document analysis system where you can analyze and extract information from documents
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1848209619"] = "Dokumentenanalyse: Vorschau auf unsere Dokumentenanalyse, mit dem Sie Informationen aus Dokumenten analysieren und extrahieren können."
+
 -- Plugins: Preview of our plugin system where you can extend the functionality of the app
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2056842933"] = "Plugins: Vorschau auf unser Pluginsystems, mit dem Sie die Funktionalität der App erweitern können"
 
@@ -5165,6 +5333,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2684676843"] = "Texte z
 
 -- Synonym Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2921123194"] = "Synonym-Assistent"
+
+-- Document Analysis Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T348883878"] = "Dokumentenanalyse-Assistent"
 
 -- Translation Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3887962308"] = "Übersetzungs-Assistent"
@@ -5603,6 +5774,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T377
 
 -- Executable Files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2217313358"] = "Ausführbare Dateien"
+
+-- All Video Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2850789856"] = "Alle Videodateien"
 
 -- PDF Files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T3108466742"] = "PDF-Dateien"

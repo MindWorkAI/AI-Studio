@@ -20,13 +20,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     
     protected override string Title => T("Document Analysis Assistant");
     
-    protected override string Description => T(
-        """
-                 The document analysis assistant helps you to analyze and extract information from documents
-                 based on predefined policies. You can create, edit, and manage document analysis policies
-                 that define how documents should be processed and what information should be extracted.
-                 Some policies might be protected by your organization and cannot be modified or deleted.
-                 """);
+    protected override string Description => T("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
 
     protected override string SystemPrompt
     {
