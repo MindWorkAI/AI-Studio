@@ -137,7 +137,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
     private string deferredContent = string.Empty;
-    private List<string> loadedDocumentPaths = [];
+    private HashSet<string> loadedDocumentPaths = [];
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     

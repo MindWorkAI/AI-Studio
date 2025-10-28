@@ -8,13 +8,13 @@ namespace AIStudio.Components;
 public partial class AttachDocuments : MSGComponentBase
 {
     [Parameter]
-    public List<string> DocumentPaths { get; set; } = [];
+    public HashSet<string> DocumentPaths { get; set; } = [];
     
     [Parameter]
-    public EventCallback<List<string>> DocumentPathsChanged { get; set; }
+    public EventCallback<HashSet<string>> DocumentPathsChanged { get; set; }
     
     [Parameter]
-    public Func<List<string>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
+    public Func<HashSet<string>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
