@@ -71,6 +71,16 @@ else
     </ExpansionPanel>
     
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document analysis") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
+        <MudText Typo="Typo.h4" Class="mb-1">
+            @T("Description")
+        </MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @this.selectedPolicy?.PolicyDescription
+        </MudJustifiedText>
+        
+        <MudText Typo="Typo.h4" Class="mb-1 mt-6">
+            @T("Documents for the analysis")
+        </MudText>
         <AttachDocuments Name="Document Analysis Files Drop" @bind-DocumentPaths="@this.loadedDocumentPaths"/>
     </ExpansionPanel>
 </MudExpansionPanels>
