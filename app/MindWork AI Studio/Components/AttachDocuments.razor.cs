@@ -8,6 +8,9 @@ namespace AIStudio.Components;
 public partial class AttachDocuments : MSGComponentBase
 {
     [Parameter]
+    public string Name { get; set; } = string.Empty;
+    
+    [Parameter]
     public HashSet<string> DocumentPaths { get; set; } = [];
     
     [Parameter]
@@ -15,6 +18,9 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Parameter]
     public Func<HashSet<string>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
+    
+    [Inject]
+    private ILogger<AttachDocuments> Logger { get; set; } = null!;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -32,19 +38,29 @@ public partial class AttachDocuments : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
+                if(!this.isComponentHovered)
+                {
+                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop hovered event.", this.Name);
+                    return;
+                }
+                
                 this.SetDragClass();
+                this.StateHasChanged();
                 break;
             
             case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                this.ClearDragClass();
+                if(!this.isComponentHovered)
+                {
+                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
+                    return;
+                }
+                
+                #warning Filter unsupported files
                 foreach (var path in paths)
                     this.DocumentPaths.Add(path);
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
-                break;
-            
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-                this.ClearDragClass();
+                this.StateHasChanged();
                 break;
         }
     }
@@ -54,6 +70,8 @@ public partial class AttachDocuments : MSGComponentBase
     private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
     
     private string dragClass = DEFAULT_DRAG_CLASS;
+    
+    private bool isComponentHovered;
 
     private async Task AddFilesManually()
     {
@@ -82,7 +100,23 @@ public partial class AttachDocuments : MSGComponentBase
         await this.OnChange(this.DocumentPaths);
     }
 
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary";
+    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4";
     
     private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
+    
+    private void OnMouseEnter(EventArgs _)
+    {
+        this.Logger.LogDebug("Attach documents component '{Name}' is hovered.", this.Name);
+        this.isComponentHovered = true;
+        this.SetDragClass();
+        this.StateHasChanged();
+    }
+    
+    private void OnMouseLeave(EventArgs _)
+    {
+        this.Logger.LogDebug("Attach documents component '{Name}' is no longer hovered.", this.Name);
+        this.isComponentHovered = false;
+        this.ClearDragClass();
+        this.StateHasChanged();
+    }
 }
