@@ -55,9 +55,14 @@ public partial class AttachDocuments : MSGComponentBase
                     return;
                 }
                 
-                #warning Filter unsupported files
                 foreach (var path in paths)
+                {
+                    if(!await this.IsFileExtensionValid(path))
+                        continue;
+                    
                     this.DocumentPaths.Add(path);
+                }
+
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
                 this.StateHasChanged();
@@ -82,24 +87,38 @@ public partial class AttachDocuments : MSGComponentBase
         if (!File.Exists(selectedFile.SelectedFilePath))
             return;
 
-        var ext = Path.GetExtension(selectedFile.SelectedFilePath).TrimStart('.');
-        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, T("Executables are not allowed")));
+        if (!await this.IsFileExtensionValid(selectedFile.SelectedFilePath))
             return;
-        }
-
-        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, T("Images are not supported yet")));
-            return;
-        }
 
         this.DocumentPaths.Add(selectedFile.SelectedFilePath);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
-    
+
+    private async Task<bool> IsFileExtensionValid(string selectedFile)
+    {
+        var ext = Path.GetExtension(selectedFile).TrimStart('.');
+        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, this.T("Executables are not allowed")));
+            return false;
+        }
+
+        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, this.T("Images are not supported yet")));
+            return false;
+        }
+        
+        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
+            return false;
+        }
+
+        return true;
+    }
+
     private async Task ClearAllFiles()
     {
         this.DocumentPaths.Clear();

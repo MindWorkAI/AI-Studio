@@ -19,7 +19,9 @@ public readonly record struct FileTypeFilter(string FilterName, string[] FilterE
     
     public static FileTypeFilter AllOffice => new(TB("All Office Files"), ["docx", "xlsx", "pptx", "doc", "xls", "ppt", "pdf"]);
     
-    public static FileTypeFilter AllImages => new(TB("All Image Files"), ["jpg", "jpeg", "png", "gif", "bmp", "tiff"]);
+    public static FileTypeFilter AllImages => new(TB("All Image Files"), ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic"]);
+    
+    public static FileTypeFilter AllVideos => new(TB("All Video Files"), ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm"]);
     
     public static FileTypeFilter Executables => new(TB("Executable Files"), ["exe", "app", "bin", "appimage"]);
 }

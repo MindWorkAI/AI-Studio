@@ -38,6 +38,12 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
         
+        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
+            return;
+        }
+        
         var fileContent = await this.RustService.ReadArbitraryFileData(selectedFile.SelectedFilePath, int.MaxValue);
         await this.FileContentChanged.InvokeAsync(fileContent);
     }
