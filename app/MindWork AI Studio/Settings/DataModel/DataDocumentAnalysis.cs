@@ -1,16 +1,7 @@
-using System.Linq.Expressions;
-
 namespace AIStudio.Settings.DataModel;
 
-public sealed class DataDocumentAnalysis(Expression<Func<Data, DataDocumentAnalysis>>? configSelection = null)
+public sealed class DataDocumentAnalysis
 {
-    /// <summary>
-    /// The default constructor for the JSON deserializer.
-    /// </summary>
-    public DataDocumentAnalysis() : this(null)
-    {
-    }
-
     /// <summary>
     /// Configured document analysis policies.
     /// </summary>

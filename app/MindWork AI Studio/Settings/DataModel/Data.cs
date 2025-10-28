@@ -85,7 +85,7 @@ public sealed class Data
     
     public DataERI ERI { get; init; } = new();
     
-    public DataDocumentAnalysis DocumentAnalysis { get; init; } = new(x => x.DocumentAnalysis);
+    public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
