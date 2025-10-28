@@ -8,6 +8,9 @@ namespace AIStudio.Components;
 public partial class ReadFileContent : MSGComponentBase
 {
     [Parameter]
+    public string Text { get; set; } = string.Empty;
+    
+    [Parameter]
     public string FileContent { get; set; } = string.Empty;
     
     [Parameter]
