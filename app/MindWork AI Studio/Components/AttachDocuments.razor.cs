@@ -99,6 +99,13 @@ public partial class AttachDocuments : MSGComponentBase
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
+    
+    private async Task ClearAllFiles()
+    {
+        this.DocumentPaths.Clear();
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
+    }
 
     private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4";
     

@@ -12,4 +12,7 @@
             }
         </MudPaper>
     </MudLink>
+    <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+        @T("Clear file list")
+    </MudButton>
 </div>
