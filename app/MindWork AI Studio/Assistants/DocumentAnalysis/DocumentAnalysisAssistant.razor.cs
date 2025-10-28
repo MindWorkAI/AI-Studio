@@ -136,6 +136,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
+#warning TODO: Use deferred content for document analysis
     private string deferredContent = string.Empty;
     private HashSet<string> loadedDocumentPaths = [];
     
