@@ -14,6 +14,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public string AssistantTitle { get; set; } = string.Empty;
     public string AssistantDescription { get; set; } = string.Empty;
     public string SystemPrompt { get; set; } = string.Empty;
+    public string SubmitText { get; set; } = string.Empty;
     public bool AllowProfiles { get; set; } = true;
 
     public void TryLoad()
@@ -64,6 +65,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return false;
         }
         
+        if (!assistantTable.TryGetValue("SubmitText", out var assistantSubmitTextValue) ||
+            !assistantSubmitTextValue.TryRead<string>(out var assistantSubmitText))
+        {
+            message = TB("The ASSISTANT table does not contain a valid system prompt.");
+            return false;
+        }
+        
         if (!assistantTable.TryGetValue("AllowProfiles", out var assistantAllowProfilesValue) ||
             !assistantAllowProfilesValue.TryRead<bool>(out var assistantAllowProfiles))
         {
@@ -74,6 +82,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.AssistantTitle = assistantTitle;
         this.AssistantDescription = assistantDescription;
         this.SystemPrompt = assistantSystemPrompt;
+        this.SubmitText = assistantSubmitText;
         this.AllowProfiles = assistantAllowProfiles;
 
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:

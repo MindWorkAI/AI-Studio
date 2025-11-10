@@ -9,19 +9,26 @@
         case AssistantUiCompontentType.TEXT_AREA:
             if (component is AssistantTextArea textArea)
             {
-                <MudTextField T="string" @bind-Text="@this.inputText" Label="@textArea.Label" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
+                <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
             }
             break;
-        
+            
+        case AssistantUiCompontentType.DROPDOWN:
+            if (component is AssistantDropdown assistantDropdown)
+            {
+                <DynamicAssistantDropdown Items="@assistantDropdown.Items"
+                                          @bind-Value="@this.selectedTargetLanguage"
+                                          Default="@assistantDropdown.Default"
+                                          Label="@assistantDropdown.Label"
+                                          Icon="@Icons.Material.Filled.Translate"/>
+            }
+            break;
+            
         case AssistantUiCompontentType.PROVIDER_SELECTION:
             if (component is AssistantProviderSelection providerSelection)
             {
                 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
             }
             break;
-        
-        default:
-            break;
     }
 }
-
