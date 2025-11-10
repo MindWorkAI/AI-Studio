@@ -2977,7 +2977,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc wird un
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."
 
 -- Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Bitte beachten Sie, dass Ihre Profilinformationen Teil des System-Prompts werden. Das bedeutet, sie belegen Kontextplatz – den „Speicher“, den das LLM nutzt, um Ihre Anfrage zu verstehen und darauf zu antworten. Wenn Ihr Profil extrem lang ist, kann das LLM Schwierigkeiten haben, sich auf Ihre eigentliche Aufgabe zu konzentrieren."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Bitte beachten Sie, dass Ihre Profilinformationen Teil des System-Prompts werden. Das bedeutet, sie belegen einen Teil des Kontexts – den „Speicher“, den das LLM nutzt, um Ihre Anfrage zu verstehen und darauf zu antworten. Wenn Ihr Profil extrem lang ist, kann das LLM Schwierigkeiten haben, die Aufgabe auszuführen."
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1847791252"] = "Aktualisieren"
