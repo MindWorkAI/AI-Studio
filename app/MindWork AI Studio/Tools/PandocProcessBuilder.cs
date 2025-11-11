@@ -19,6 +19,7 @@ public sealed class PandocProcessBuilder
     private string? providedOutputFile;
     private string? providedInputFormat;
     private string? providedOutputFormat;
+    private bool useStandaloneMode;
     
     private readonly List<string> additionalArguments = new();
     
@@ -57,10 +58,19 @@ public sealed class PandocProcessBuilder
         this.additionalArguments.Add(argument);
         return this;
     }
+
+    public PandocProcessBuilder UseStandaloneMode()
+    {
+        this.useStandaloneMode = true;
+        return this;
+    }
     
     public async Task<PandocPreparedProcess> BuildAsync(RustService rustService)
     {
         var sbArguments = new StringBuilder();
+
+        if (this.useStandaloneMode)
+            sbArguments.Append(" --standalone ");
         
         if(!string.IsNullOrWhiteSpace(this.providedInputFile))
             sbArguments.Append(this.providedInputFile);

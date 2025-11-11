@@ -2,6 +2,7 @@
 @using MudBlazor
 @using AIStudio.Components
 @inherits AIStudio.Components.MSGComponentBase
+
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -45,6 +46,13 @@
             {
                 <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
+                </MudTooltip>
+            }
+
+            @if (this.Role is ChatRole.AI)
+            {
+                <MudTooltip Text="@T("Export Chat to Microsoft Word")" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@this.ExportToWord"/>
                 </MudTooltip>
             }
             <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>

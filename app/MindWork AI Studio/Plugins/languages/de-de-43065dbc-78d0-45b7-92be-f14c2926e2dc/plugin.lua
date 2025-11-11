@@ -1365,6 +1365,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Nachric
 -- No, keep it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "Nein, behalten"
 
+-- Export Chat to Microsoft Word
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Chat in Microsoft Word exportieren"
+
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Einstellungen öffnen"
 
@@ -5352,6 +5355,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "Es scheint, dass Pando
 -- The latest Pandoc version was not found, installing version {0} instead.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "Die neueste Pandoc-Version wurde nicht gefunden, stattdessen wird Version {0} installiert."
 
+-- Error during Microsoft Word export
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3290596792"] = "Fehler beim Exportieren nach Microsoft Word"
+
+-- Microsoft Word export successful
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T4256043333"] = "Export nach Microsoft Word erfolgreich"
+
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
 
@@ -5753,3 +5762,4 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannt
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
+
