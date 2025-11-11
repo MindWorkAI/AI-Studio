@@ -18,7 +18,7 @@
             if (component is AssistantDropdown assistantDropdown)
             {
                 <DynamicAssistantDropdown Items="@assistantDropdown.Items"
-                                          @bind-Value="@this.selectedTargetLanguage"
+                                          @bind-Value="@this.dropdownFields[assistantDropdown.Name]"
                                           Default="@assistantDropdown.Default"
                                           Label="@assistantDropdown.Label"
                                           Icon="@Icons.Material.Filled.Translate"/>

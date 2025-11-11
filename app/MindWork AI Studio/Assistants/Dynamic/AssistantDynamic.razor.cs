@@ -29,6 +29,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private string customTargetLanguage = string.Empty;
     
     private Dictionary<string, string> inputFields = new();
+    private Dictionary<string, string> dropdownFields = new();
     
     protected override void OnInitialized()
     {
@@ -52,6 +53,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                     if (component is AssistantTextArea textArea)
                     {
                         this.inputFields.Add(textArea.Name, textArea.PrefillText);
+                    }
+                    break;
+                case AssistantUiCompontentType.DROPDOWN:
+                    if (component is AssistantDropdown dropdown)
+                    {
+                        this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
                     }
                     break;
             }
@@ -94,27 +101,30 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
+                case AssistantUiCompontentType.DROPDOWN:
+                    if (component is AssistantDropdown dropdown)
+                    {
+                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
+                        {
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                        }
+                    }
+                    break;
                 default:
                     prompt += $"{userInput}{Environment.NewLine}";
                     break;
             }
         }
-        
+
+        Console.WriteLine(prompt);
         return prompt;
     }
     
     private async Task Submit()
     {
         this.CreateChatThread();
-        var time = this.AddUserRequest(
-            $"""
-                
-                The given text is:
-                
-                ---
-                {this.CollectUserPrompt()}
-             """);
-        
+        var time = this.AddUserRequest(this.CollectUserPrompt());
         await this.AddAIResponseAsync(time);
     }
 }

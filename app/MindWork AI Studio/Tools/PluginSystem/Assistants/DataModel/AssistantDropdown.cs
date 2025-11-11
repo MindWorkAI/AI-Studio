@@ -20,6 +20,15 @@ public class AssistantDropdown : AssistantComponentBase
             : string.Empty;
         set => this.Props[nameof(this.Label)] = value;
     }
+    
+    public string UserPrompt
+    {
+        get => this.Props.TryGetValue(nameof(this.UserPrompt), out var v) 
+            ? v.ToString() ?? string.Empty 
+            : string.Empty;
+        set => this.Props[nameof(this.UserPrompt)] = value;
+    }
+    
     public AssistantDropdownItem Default
     {
         get

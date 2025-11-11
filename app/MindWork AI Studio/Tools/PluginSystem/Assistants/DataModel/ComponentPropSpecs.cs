@@ -19,7 +19,7 @@ public static class ComponentPropSpecs
             ),
             [AssistantUiCompontentType.DROPDOWN] = new(
                 required: ["Name", "Label", "Default", "Items"],
-                optional: []
+                optional: ["UserPrompt"]
             ),
             [AssistantUiCompontentType.PROVIDER_SELECTION] = new(
                 required: ["Name", "Label"],

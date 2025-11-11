@@ -1,17 +1,21 @@
 ﻿<MudStack Row="true" Class="mb-3">
     <MudSelect
-        @bind-Value="@this.Value"
+        T="string"
+        Value="@this.Value"
+        ValueChanged="@(val => this.OnValueChanged(val))"
         Label="@this.Label"
         Placeholder="@this.Default.Value"
         AdornmentIcon="@this.Icon"
         Adornment="Adornment.Start"
         Variant="Variant.Outlined"
-        Margin="Margin.Dense">
-            @foreach (var item in Items)
-            {
-                <MudSelectItem Value="@item.Value">
-                    @item.Display
-                </MudSelectItem>
-            }
+        Margin="Margin.Dense"
+        MultiSelection="false"
+        >
+        @foreach (var item in Items)
+        {
+            <MudSelectItem Value="@item.Value">
+                @item.Display
+            </MudSelectItem>
+        }
     </MudSelect>
 </MudStack>

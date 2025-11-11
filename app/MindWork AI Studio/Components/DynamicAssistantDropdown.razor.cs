@@ -29,5 +29,14 @@ namespace AIStudio.Components
 
         [Parameter]
         public string Icon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+        
+        private async Task OnValueChanged(string newValue)
+        {
+            if (this.Value != newValue)
+            {
+                this.Value = newValue;
+                await this.ValueChanged.InvokeAsync(newValue);
+            }
+        }
     }
 }
