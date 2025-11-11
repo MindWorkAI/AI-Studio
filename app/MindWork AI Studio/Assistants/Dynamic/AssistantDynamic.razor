@@ -9,7 +9,8 @@
         case AssistantUiCompontentType.TEXT_AREA:
             if (component is AssistantTextArea textArea)
             {
-                <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
+                var lines = textArea.IsSingleLine ? 1 : 6;
+                <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" ReadOnly="@textArea.ReadOnly" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="@lines" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
             }
             break;
             

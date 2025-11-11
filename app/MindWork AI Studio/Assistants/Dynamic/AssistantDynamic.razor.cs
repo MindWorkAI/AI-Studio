@@ -51,7 +51,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                 case AssistantUiCompontentType.TEXT_AREA:
                     if (component is AssistantTextArea textArea)
                     {
-                        this.inputFields.Add(textArea.Name, string.Empty);
+                        this.inputFields.Add(textArea.Name, textArea.PrefillText);
                     }
                     break;
             }
@@ -78,10 +78,28 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private string CollectUserPrompt()
     {
         var prompt = string.Empty;
-        foreach (var entry in this.inputFields)
+
+        foreach (var component in this.RootComponent!.Children)
         {
-            prompt += $"{entry.Value}{Environment.NewLine}";
+            var userInput = string.Empty;
+            switch (component.Type)
+            {
+                case AssistantUiCompontentType.TEXT_AREA:
+                    if (component is AssistantTextArea textArea)
+                    {
+                        prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.inputFields.TryGetValue(textArea.Name, out userInput))
+                        {
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                        }
+                    }
+                    break;
+                default:
+                    prompt += $"{userInput}{Environment.NewLine}";
+                    break;
+            }
         }
+        
         return prompt;
     }
     

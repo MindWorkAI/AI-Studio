@@ -11,7 +11,7 @@ public static class ComponentPropSpecs
             ),
             [AssistantUiCompontentType.TEXT_AREA] = new(
                 required: ["Name", "Label"],
-                optional: []
+                optional: ["UserPrompt", "PrefillText", "ReadOnly", "IsSingleLine"]
             ),
             [AssistantUiCompontentType.BUTTON] = new(
                 required: ["Name", "Text", "Action"],

@@ -262,14 +262,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return true;
         }
         
-        // AssistantDropdownItem
         if (val.TryRead<LuaTable>(out var table) && this.TryParseDropdownItem(table, out var item))
         {
             result = item;
             return true;
         }
 
-        // List<AssistantDropdownItem>
         if (val.TryRead<LuaTable>(out var listTable) && this.TryParseDropdownItemList(listTable, out var itemList))
         {
             result = itemList;
