@@ -1,5 +1,5 @@
 using AIStudio.Components;
-
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Chat;
@@ -62,6 +62,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private RustService RustService { get; init; } = null!;
 
     private bool HideContent { get; set; }
 
@@ -133,6 +136,11 @@ public partial class ContentBlockComponent : MSGComponentBase
             await this.RemoveBlockFunc(this.Content);
     }
     
+    private async Task ExportToWord()
+    {
+        await PandocExport.ToMicrosoftWord(this.RustService, T("Export Chat to Microsoft Word"), this.Content);
+    }
+    
     private async Task RegenerateBlock()
     {
         if (this.RegenerateFunc is null)
@@ -179,4 +187,5 @@ public partial class ContentBlockComponent : MSGComponentBase
         if (edit.HasValue && edit.Value)
             await this.EditLastUserBlockFunc(this.Content);
     }
+    
 }
