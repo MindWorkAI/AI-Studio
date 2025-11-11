@@ -53,47 +53,57 @@ ASSISTANT = {
     },
 }
 
--- An example of a assistant that resembles AI Studios translation assistant:
+-- usage example with the full feature set:
 ASSISTANT = {
-    ["Title"] = "Grammatik- und Rechtschreibprüfung",
-    ["Description"] = "Grammatik und Rechtschreibung eines Textes überprüfen.",
+    ["Title"] = "<main title of assistant>", -- required
+    ["Description"] = "<assitant description>", -- required
+    ["SystemPrompt"] = "<prompt that fudamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
+    ["SubmitText"] = "<label for submit button>", -- required
+    ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {
             {
-                ["Type"] = "TEXT_AREA",
+                ["Type"] = "TEXT_AREA", -- required
                 ["Props"] = {
-                    ["Name"] = "input",
-                    ["Label"] = "Ihre Eingabe zur Überprüfung"
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
+                    ["PrefillText"] = "<text to show in the field initially>",
+                    ["IsSingleLine"] = false, -- if true, shows a text field instead of an area
+                    ["ReadOnly"] = false -- if true, deactivates user input (make sure to provide a PrefillText)
                 }
             },
             {
-                ["Type"] = "DROPDOWN",
-                ["ValueType"] = "string",
-                ["Default"] = { ["Value"] = "", ["Display"] = "Sprache nicht angeben." },
-                ["Items"] = {
-                    { ["Value"] = "de-DE", ["Display"] = "Deutsch" },
-                    { ["Value"] = "en-UK", ["Display"] = "Englisch (UK)" },
-                    { ["Value"] = "en-US", ["Display"] = "Englisch (US)" },
-                },
+                ["Type"] = "DROPDOWN", -- required
                 ["Props"] = {
-                    ["Name"] = "language",
-                    ["Label"] = "Sprache",
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
+                    ["ValueType"] = "<data type of item values>", -- required
+                    ["Default"] = { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" }, -- required
+                    ["Items"] = {
+                        { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" },
+                        { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" },
+                    } -- required
                 }
             },
             {
-                ["Type"] = "PROVIDER_SELECTION",
+                ["Type"] = "SWITCH",
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["Value"] = true, -- intial switch state
+                    ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
+                    ["LabelOn"] = "<text if state is true>", -- required
+                    ["LabelOff"] = "<text if state is false>" -- required
+                }
+            },
+            {
+                ["Type"] = "PROVIDER_SELECTION", -- required
                 ["Props"] = {
                     ["Name"] = "Anbieter",
                     ["Label"] = "LLM auswählen"
-                }
-            },
-            {
-                ["Type"] = "BUTTON",
-                ["Props"] = {
-                    ["Name"] = "submit",
-                    ["Text"] = "Korrekturlesen",
-                    ["Action"] = "OnSubmit"
                 }
             },
         }
