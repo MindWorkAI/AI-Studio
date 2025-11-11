@@ -30,6 +30,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     
     private Dictionary<string, string> inputFields = new();
     private Dictionary<string, string> dropdownFields = new();
+    private Dictionary<string, bool> switchFields = new();
     
     protected override void OnInitialized()
     {
@@ -61,6 +62,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
                     }
                     break;
+                case AssistantUiCompontentType.SWITCH:
+                    if (component is AssistantSwitch switchComponent)
+                    {
+                        this.switchFields.Add(switchComponent.Name, switchComponent.Value);
+                    }
+                    break;
             }
         }
         base.OnInitialized();
@@ -89,12 +96,13 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         foreach (var component in this.RootComponent!.Children)
         {
             var userInput = string.Empty;
+            var userDecision = false;
             switch (component.Type)
             {
                 case AssistantUiCompontentType.TEXT_AREA:
                     if (component is AssistantTextArea textArea)
                     {
-                        prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}{Environment.NewLine}---{Environment.NewLine}";
+                        prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
                         if (this.inputFields.TryGetValue(textArea.Name, out userInput))
                         {
                             prompt += $"user prompt:{Environment.NewLine}{userInput}";
@@ -104,10 +112,20 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                 case AssistantUiCompontentType.DROPDOWN:
                     if (component is AssistantDropdown dropdown)
                     {
-                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}{Environment.NewLine}---{Environment.NewLine}";
+                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
                         if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
                         {
                             prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                        }
+                    }
+                    break;
+                case AssistantUiCompontentType.SWITCH:
+                    if (component is AssistantSwitch switchComponent)
+                    {
+                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{switchComponent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.switchFields.TryGetValue(switchComponent.Name, out userDecision))
+                        {
+                            prompt += $"user decision:{Environment.NewLine}{userDecision}";
                         }
                     }
                     break;
@@ -117,7 +135,6 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             }
         }
 
-        Console.WriteLine(prompt);
         return prompt;
     }
     

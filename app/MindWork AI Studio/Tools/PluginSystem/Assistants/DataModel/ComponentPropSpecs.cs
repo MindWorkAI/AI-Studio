@@ -25,5 +25,9 @@ public static class ComponentPropSpecs
                 required: ["Name", "Label"],
                 optional: []
             ),
+            [AssistantUiCompontentType.SWITCH] = new(
+                required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
+                optional: ["UserPrompt"]
+            ),
         };
 }

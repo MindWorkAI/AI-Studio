@@ -7,4 +7,5 @@ public enum AssistantUiCompontentType
     BUTTON,
     DROPDOWN,
     PROVIDER_SELECTION,
+    SWITCH,
 }

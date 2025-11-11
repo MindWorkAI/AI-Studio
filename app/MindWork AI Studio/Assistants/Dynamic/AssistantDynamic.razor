@@ -24,11 +24,16 @@
                                           Icon="@Icons.Material.Filled.Translate"/>
             }
             break;
-            
         case AssistantUiCompontentType.PROVIDER_SELECTION:
             if (component is AssistantProviderSelection providerSelection)
             {
                 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+            }
+            break;
+        case AssistantUiCompontentType.SWITCH:
+            if (component is AssistantSwitch assistantSwitch)
+            {
+                <MudTextSwitch Label="@assistantSwitch.Label" @bind-Value="@this.switchFields[assistantSwitch.Name]" LabelOn="@assistantSwitch.LabelOn" LabelOff="@assistantSwitch.LabelOff" />
             }
             break;
     }
