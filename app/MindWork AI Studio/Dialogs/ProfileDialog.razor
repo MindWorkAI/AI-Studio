@@ -42,10 +42,10 @@
                 Lines="6"
                 AutoGrow="@true"
                 MaxLines="12"
-                Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?")"
             />
+            <ReadFileContent @bind-FileContent="@this.DataNeedToKnow"/>
 
             <MudTextField
                 T="string"
@@ -59,12 +59,13 @@
                 Lines="6"
                 AutoGrow="@true"
                 MaxLines="12"
-                Class="mb-3"
+                Class="mt-10"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.")"
             />
+            <ReadFileContent @bind-FileContent="@this.DataActions"/>
 
-            <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            <MudJustifiedText Typo="Typo.body2" Class="mb-3 mt-3">
                 @T("Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.")
             </MudJustifiedText>
             
