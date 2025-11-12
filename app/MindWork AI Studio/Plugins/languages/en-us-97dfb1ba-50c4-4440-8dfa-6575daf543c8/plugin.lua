@@ -2979,6 +2979,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc is dist
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
 
+-- Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task."
+
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1847791252"] = "Update"
 

@@ -129,9 +129,6 @@ public partial class ProfileDialog : MSGComponentBase
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
             return T("Please enter what the LLM should know about you and/or what actions it should take.");
         
-        if(text.Length > 444)
-            return T("The text must not exceed 444 characters.");
-        
         return null;
     }
 
@@ -139,9 +136,6 @@ public partial class ProfileDialog : MSGComponentBase
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
             return T("Please enter what the LLM should know about you and/or what actions it should take.");
-        
-        if(text.Length > 256)
-            return T("The text must not exceed 256 characters.");
         
         return null;
     }
