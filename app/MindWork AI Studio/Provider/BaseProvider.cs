@@ -526,7 +526,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary (case-insensitive). stream, model and messages are removed by default.</param>
     protected IDictionary<string, object> ParseApiParameters(
         string additionalUserProvidedParameters,
-        IEnumerable<string>? keysToRemove = null)
+        params IEnumerable<string> keysToRemove)
     {
         try
         {

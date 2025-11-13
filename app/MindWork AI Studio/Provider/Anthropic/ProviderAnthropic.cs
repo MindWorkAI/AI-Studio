@@ -28,7 +28,7 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
             yield break;
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters, ["system"]);
+        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters, "system");
 
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
