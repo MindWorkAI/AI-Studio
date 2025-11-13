@@ -63,7 +63,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         };
 
         // Read the model capabilities:
-        var modelCapabilities = Settings.ProviderExtensions.GetModelCapabilitiesOpenAI(chatModel);
+        var modelCapabilities = ProviderExtensions.GetModelCapabilitiesOpenAI(chatModel);
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
