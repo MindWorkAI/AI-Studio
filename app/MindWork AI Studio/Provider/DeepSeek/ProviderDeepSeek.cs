@@ -37,7 +37,7 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters();
         
         // Prepare the DeepSeek HTTP chat request:
         var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

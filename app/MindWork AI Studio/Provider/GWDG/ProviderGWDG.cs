@@ -37,7 +37,7 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters();
         
         // Prepare the GWDG HTTP chat request:
         var gwdgChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

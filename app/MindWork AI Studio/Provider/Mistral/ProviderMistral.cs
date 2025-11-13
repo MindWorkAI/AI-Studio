@@ -35,7 +35,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters();
         
         // Prepare the Mistral HTTP chat request:
         var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest

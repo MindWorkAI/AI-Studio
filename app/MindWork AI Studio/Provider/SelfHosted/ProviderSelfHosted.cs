@@ -33,7 +33,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters();
         
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest

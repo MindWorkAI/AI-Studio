@@ -42,7 +42,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters();
         
         // Prepare the HuggingFace HTTP chat request:
         var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
