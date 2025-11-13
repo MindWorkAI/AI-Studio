@@ -36,6 +36,9 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
         // Prepare the DeepSeek HTTP chat request:
         var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
@@ -63,6 +66,7 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -108,28 +112,6 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
-    {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        if(modelName.IndexOf("reasoner") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.ALWAYS_REASONING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        return
-        [
-            Capability.TEXT_INPUT,
-            Capability.TEXT_OUTPUT,
-            Capability.CHAT_COMPLETION_API,
-        ];
-    }
-
 
     #endregion
 

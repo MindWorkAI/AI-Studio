@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
@@ -15,4 +17,8 @@ public record ChatCompletionAPIRequest(
     public ChatCompletionAPIRequest() : this(string.Empty, [], true)
     {
     }
+    
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
 }

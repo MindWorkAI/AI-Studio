@@ -3030,8 +3030,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T900713019"] = "Abbrechen"
 -- The profile name must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T911748898"] = "Der Profilname muss eindeutig sein; der ausgewählte Name wird bereits verwendet."
 
+-- Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1017509792"] = "Bitte beachten Sie: Dieser Bereich ist nur für Expertinnen und Experten. Sie sind dafür verantwortlich, die Korrektheit der zusätzlichen Parameter zu überprüfen, die Sie beim API‑Aufruf angeben. Standardmäßig verwendet AI Studio die OpenAI‑kompatible Chat Completions-API, sofern diese vom zugrunde liegenden Dienst und Modell unterstützt wird."
+
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inferenz-Anbieter"
+
+-- Hide Expert Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1108876344"] = "Experten-Einstellungen ausblenden"
 
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
@@ -3044,6 +3050,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Konto erste
 
 -- Load models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Modelle laden"
+
+-- Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1689135032"] = "Fügen Sie die Parameter in korrekter JSON-Formatierung hinzu, z. B. \"temperature\": 0.5. Entfernen Sie abschließende Kommas. Die üblichen äußeren geschweiften Klammern {} dürfen dabei jedoch nicht verwendet werden."
 
 -- Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1727440780"] = "Hostname"
@@ -3066,11 +3075,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2646845972"] = "Hinzufügen"
 
+-- Additional API parameters
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2728244552"] = "Zusätzliche API-Parameter"
+
 -- No models loaded or available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2810182573"] = "Keine Modelle geladen oder verfügbar."
 
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instanzname"
+
+-- Show Expert Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
 
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Verfügbare Modelle anzeigen"
@@ -4815,8 +4830,8 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1674355816"] = "Es wurde ver
 -- Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1856278860"] = "Der Versuch, die Antwort des LLM-Anbieters '{0}' zu streamen, ist fehlgeschlagen. Der Stream konnte nicht gelesen werden. Die Meldung lautet: '{1}'"
 
--- Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2249520705"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Auch nach {1} Versuchen gab es Probleme mit der Anfrage. Die Nachricht des Anbieters lautet: '{2}'"
+-- Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2181034173"] = "Versuchte, mit dem LLM-Anbieter '{0}' zu kommunizieren. Auch nach {1} Wiederholungsversuchen gab es Probleme mit der Anfrage. Die Meldung des Anbieters lautet: '{2}'."
 
 -- Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2780552614"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Etwas wurde nicht gefunden. Die Meldung des Anbieters lautet: '{1}'"

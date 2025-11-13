@@ -36,6 +36,9 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
         // Prepare the GWDG HTTP chat request:
         var gwdgChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
@@ -63,6 +66,7 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -110,8 +114,6 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
         return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

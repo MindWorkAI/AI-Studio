@@ -72,6 +72,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
             { x => x.IsEditing, true },
             { x => x.DataHost, provider.Host },
             { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
+            { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);

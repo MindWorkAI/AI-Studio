@@ -36,6 +36,9 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
         // Prepare the OpenAI HTTP chat request:
         var groqChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
@@ -65,6 +68,7 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -110,8 +114,6 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
