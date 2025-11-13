@@ -20,9 +20,6 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Google Gemini";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

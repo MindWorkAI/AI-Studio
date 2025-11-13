@@ -20,9 +20,6 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Groq";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

@@ -22,10 +22,6 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenAI";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
-    
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

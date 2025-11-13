@@ -20,9 +20,6 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override string InstanceName { get; set; } = "Self-hosted";
     
     /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
-    
-    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:

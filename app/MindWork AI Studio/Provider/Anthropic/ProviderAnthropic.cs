@@ -18,9 +18,6 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
     public override string Id => LLMProviders.ANTHROPIC.ToName();
 
     public override string InstanceName { get; set; } = "Anthropic";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

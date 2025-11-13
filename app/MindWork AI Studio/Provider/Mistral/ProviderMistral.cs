@@ -18,9 +18,6 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     public override string Id => LLMProviders.MISTRAL.ToName();
     
     public override string InstanceName { get; set; } = "Mistral";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

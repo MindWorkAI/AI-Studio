@@ -22,9 +22,6 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
     public override string InstanceName { get; set; } = "DeepSeek";
     
     /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
-    
-    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:

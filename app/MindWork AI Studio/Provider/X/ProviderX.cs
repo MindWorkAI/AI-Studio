@@ -20,9 +20,6 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "xAI";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

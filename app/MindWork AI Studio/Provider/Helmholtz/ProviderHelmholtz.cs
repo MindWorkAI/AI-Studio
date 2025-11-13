@@ -22,9 +22,6 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
     public override string InstanceName { get; set; } = "Helmholtz Blablador";
     
     /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
-    
-    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:

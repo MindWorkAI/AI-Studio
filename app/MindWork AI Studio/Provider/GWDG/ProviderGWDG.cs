@@ -22,9 +22,6 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
     public override string InstanceName { get; set; } = "GWDG SAIA";
     
     /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
-    
-    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:

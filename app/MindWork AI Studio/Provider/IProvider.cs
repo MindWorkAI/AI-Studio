@@ -19,6 +19,9 @@ public interface IProvider
     /// </summary>
     public string InstanceName { get; }
     
+    /// <summary>
+    /// The additional API parameters.
+    /// </summary>
     public string ExpertProviderApiParameters { get; }
     
     /// <summary>

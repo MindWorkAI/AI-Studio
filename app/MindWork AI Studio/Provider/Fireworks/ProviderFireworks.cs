@@ -20,9 +20,6 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Fireworks.ai";
-    
-    /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

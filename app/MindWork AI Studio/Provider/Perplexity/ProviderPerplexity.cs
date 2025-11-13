@@ -31,10 +31,6 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
     public override string InstanceName { get; set; } = "Perplexity";
     
     /// <inheritdoc />
-    public override string ExpertProviderApiParameters { get; set; } = string.Empty;
-
-    
-    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
