@@ -155,7 +155,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         #pragma warning restore MWAIS0001
 
-        this.showExpertProviderSettings = !string.IsNullOrEmpty(this.ExpertProviderApiParameters);
+        this.showExpertProviderSettings = !string.IsNullOrWhiteSpace(this.ExpertProviderApiParameters);
         
         // When editing, we need to load the data:
         if(this.IsEditing)
