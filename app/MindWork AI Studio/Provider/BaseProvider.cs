@@ -571,12 +571,12 @@ public abstract class BaseProvider : IProvider, ISecretId
             element.TryGetInt64(out var l) ? l :
             element.TryGetDouble(out var d) ? d :
             element.GetDecimal(),
-        JsonValueKind.True => element.GetBoolean(),
-        JsonValueKind.False => element.GetBoolean(),
-        JsonValueKind.Null => null,
-        JsonValueKind.Object => this.ConvertToDictionary(element),
-        JsonValueKind.Array => element.EnumerateArray().Select(this.ConvertJsonValue).ToList(),
-        _ => throw new InvalidOperationException($"Unsupported JSON value kind: {element.ValueKind}")
+        JsonValueKind.True or JsonValueKind.False => element.GetBoolean(),
+        JsonValueKind.Null => string.Empty,
+        JsonValueKind.Object => ConvertToDictionary(element),
+        JsonValueKind.Array => element.EnumerateArray().Select(ConvertJsonValue).ToList(),
+        
+        _ => string.Empty,
     };
     
 }
