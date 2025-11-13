@@ -567,9 +567,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     private static object? ConvertJsonValue(JsonElement element) => element.ValueKind switch
     {
         JsonValueKind.String => element.GetString(),
-        JsonValueKind.Number => element.TryGetInt32(out int i) ? i :
-            element.TryGetInt64(out long l) ? l :
-            element.TryGetDouble(out double d) ? d :
+        JsonValueKind.Number => element.TryGetInt32(out var i) ? i :
+            element.TryGetInt64(out var l) ? l :
+            element.TryGetDouble(out var d) ? d :
             element.GetDecimal(),
         JsonValueKind.True => element.GetBoolean(),
         JsonValueKind.False => element.GetBoolean(),
