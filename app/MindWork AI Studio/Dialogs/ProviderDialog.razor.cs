@@ -97,7 +97,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
-    private bool showExpertProviderSettings = false;
+    private bool showExpertProviderSettings;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
