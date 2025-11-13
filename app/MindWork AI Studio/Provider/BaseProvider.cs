@@ -528,7 +528,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// (case-insensitive). The parameters stream, model, and messages are removed by default.</param>
     protected IDictionary<string, object> ParseApiParameters(
         string additionalUserProvidedParameters,
-        params IEnumerable<string> keysToRemove)
+        params List<string> keysToRemove)
     {
         try
         {
@@ -536,16 +536,15 @@ public abstract class BaseProvider : IProvider, ISecretId
             var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
             var dict = this.ConvertToDictionary(jsonDoc);
 
-            // Some keys are always removed because we always set them
-            var finalKeysToRemove = keysToRemove?.ToList() ?? [];
-            finalKeysToRemove.Add("stream");
-            finalKeysToRemove.Add("model");
-            finalKeysToRemove.Add("messages");
+            // Some keys are always removed because we set them:
+            keysToRemove.Add("stream");
+            keysToRemove.Add("model");
+            keysToRemove.Add("messages");
 
-            var removeSet = new HashSet<string>(finalKeysToRemove, StringComparer.OrdinalIgnoreCase);
-            var toRemove = dict.Keys.Where(k => removeSet.Contains(k)).ToList();
-            foreach (var k in toRemove)
-                dict.Remove(k);
+            // Remove the specified keys (case-insensitive):
+            var removeSet = new HashSet<string>(keysToRemove, StringComparer.OrdinalIgnoreCase);
+            foreach (var key in removeSet)
+                dict.Remove(key);
 
             return dict;
         }
