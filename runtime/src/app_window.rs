@@ -306,6 +306,13 @@ pub struct SelectFileOptions {
     filter: Option<FileTypeFilter>,
 }
 
+#[derive(Clone, Deserialize)]
+pub struct SaveFileOptions {
+    title: String,
+    name_file: Option<PreviousFile>,
+    filter: Option<FileTypeFilter>,
+}
+
 #[derive(Serialize)]
 pub struct DirectorySelectionResponse {
     user_cancelled: bool,
@@ -362,6 +369,55 @@ pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<F
     }
 }
 
+#[post("/save/file", data = "<payload>")]
+pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
+
+    // Create a new file dialog builder:
+    let file_dialog = FileDialogBuilder::new();
+
+    // Set the title of the file dialog:
+    let file_dialog = file_dialog.set_title(&payload.title);
+
+    // Set the file type filter if provided:
+    let file_dialog = match &payload.filter {
+        Some(filter) => {
+            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
+        },
+
+        None => file_dialog,
+    };
+
+    // Set the previous file path if provided:
+    let file_dialog = match &payload.name_file {
+        Some(previous) => {
+            let previous_path = previous.file_path.as_str();
+            file_dialog.set_directory(previous_path)
+        },
+
+        None => file_dialog,
+    };
+
+    // Displays the file dialogue box and select the file:
+    let file_path = file_dialog.save_file();
+    match file_path {
+        Some(path) => {
+            info!("User selected file for writing operation: {path:?}");
+            Json(FileSaveResponse {
+                user_cancelled: false,
+                save_file_path: path.to_str().unwrap().to_string(),
+            })
+        },
+
+        None => {
+            info!("User cancelled file selection.");
+            Json(FileSaveResponse {
+                user_cancelled: true,
+                save_file_path: String::from(""),
+            })
+        },
+    }
+}
+
 #[derive(Clone, Deserialize)]
 pub struct PreviousFile {
     file_path: String,
@@ -371,6 +427,11 @@ pub struct PreviousFile {
 pub struct FileSelectionResponse {
     user_cancelled: bool,
     selected_file_path: String,
+}
+#[derive(Serialize)]
+pub struct FileSaveResponse {
+    user_cancelled: bool,
+    save_file_path: String,
 }
 
 fn set_pdfium_path(path_resolver: PathResolver) {
