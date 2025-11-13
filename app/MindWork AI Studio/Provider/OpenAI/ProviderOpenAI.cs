@@ -162,7 +162,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 // Tools we want to use:
                 Tools = tools,
                 
-                // Additional api parameters:
+                // Additional API parameters:
                 AdditionalApiParameters = apiParameters
                 
             }, JSON_SERIALIZER_OPTIONS),
