@@ -21,6 +21,7 @@ public record ResponsesAPIRequest(
     {
     }
     
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
     [JsonExtensionData]
-    public required IDictionary<string, object> AdditionalApiParameters { get; init; }
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
 }
