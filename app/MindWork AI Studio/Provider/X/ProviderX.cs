@@ -37,7 +37,7 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
+        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the xAI HTTP chat request:
         var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

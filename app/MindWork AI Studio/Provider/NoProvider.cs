@@ -14,7 +14,7 @@ public class NoProvider : IProvider
     public string InstanceName { get; set; } = "None";
 
     /// <inheritdoc />
-    public string ExpertProviderApiParameters { get; set; } = string.Empty;
+    public string AdditionalJsonApiParameters { get; set; } = string.Empty;
 
     public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 

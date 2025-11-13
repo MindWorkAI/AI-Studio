@@ -32,7 +32,7 @@ public sealed record Provider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
-    string ExpertProviderApiParameters = "") : ConfigurationBaseObject, ISecretId
+    string AdditionalJsonApiParameters = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -152,7 +152,7 @@ public sealed record Provider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
-            ExpertProviderApiParameters = expertProviderApiParameters,
+            AdditionalJsonApiParameters = expertProviderApiParameters,
         };
         
         return true;

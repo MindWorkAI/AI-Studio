@@ -79,7 +79,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     public bool IsEditing { get; init; }
     
     [Parameter]
-    public string ExpertProviderApiParameters { get; set; } = string.Empty;
+    public string AdditionalJsonApiParameters { get; set; } = string.Empty;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -97,7 +97,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
-    private bool showExpertProviderSettings;
+    private bool showExpertSettings;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -139,7 +139,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
-            ExpertProviderApiParameters = this.ExpertProviderApiParameters,
+            AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
         };
     }
 
@@ -155,7 +155,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         #pragma warning restore MWAIS0001
 
-        this.showExpertProviderSettings = !string.IsNullOrWhiteSpace(this.ExpertProviderApiParameters);
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters);
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -276,17 +276,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         _ => T("API Key"),
     };
     
-    private void ToggleProviderExpertSettings()
-    {
-        this.showExpertProviderSettings = !this.showExpertProviderSettings;
-    }
-    
+    private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+
     private void OnInputChangeExpertSettings()
     {
-        this.ExpertProviderApiParameters = this.ExpertProviderApiParameters.TrimEnd(',', ' ');
+        this.AdditionalJsonApiParameters = this.AdditionalJsonApiParameters.Trim().TrimEnd(',', ' ');
     }
     
-    private string GetExpertStyles => this.showExpertProviderSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
+    private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 
     private static string GetPlaceholderExpertSettings => 
       """

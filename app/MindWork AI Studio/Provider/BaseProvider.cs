@@ -66,7 +66,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract string InstanceName { get; set; }
 
     /// <inheritdoc />
-    public string ExpertProviderApiParameters { get; init; } = string.Empty;
+    public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />
     public abstract IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);

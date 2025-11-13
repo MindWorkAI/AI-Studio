@@ -22,7 +22,7 @@ public interface IProvider
     /// <summary>
     /// The additional API parameters.
     /// </summary>
-    public string ExpertProviderApiParameters { get; }
+    public string AdditionalJsonApiParameters { get; }
     
     /// <summary>
     /// Starts a chat completion stream.

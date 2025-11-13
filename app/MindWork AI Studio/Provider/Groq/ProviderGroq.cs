@@ -37,7 +37,7 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.ExpertProviderApiParameters);
+        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the OpenAI HTTP chat request:
         var groqChatRequest = JsonSerializer.Serialize(new ChatRequest

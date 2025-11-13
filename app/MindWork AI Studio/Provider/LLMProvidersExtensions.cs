@@ -144,7 +144,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider, providerSettings.ExpertProviderApiParameters);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider, providerSettings.AdditionalJsonApiParameters);
     }
     
     /// <summary>
@@ -163,23 +163,23 @@ public static class LLMProvidersExtensions
         {
             return provider switch
             {
-                LLMProviders.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.MISTRAL => new ProviderMistral { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.GOOGLE => new ProviderGoogle { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.X => new ProviderX { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
+                LLMProviders.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.MISTRAL => new ProviderMistral { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.GOOGLE => new ProviderGoogle { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.X => new ProviderX { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 
-                LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, model) { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter }, 
+                LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, model) { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter }, 
                 
-                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(host, hostname) { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
+                LLMProviders.SELF_HOSTED => new ProviderSelfHosted(host, hostname) { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 
-                LLMProviders.HELMHOLTZ => new ProviderHelmholtz { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
-                LLMProviders.GWDG => new ProviderGWDG { InstanceName = instanceName, ExpertProviderApiParameters = expertProviderApiParameter },
+                LLMProviders.HELMHOLTZ => new ProviderHelmholtz { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+                LLMProviders.GWDG => new ProviderGWDG { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 
                 _ => new NoProvider(),
             };
