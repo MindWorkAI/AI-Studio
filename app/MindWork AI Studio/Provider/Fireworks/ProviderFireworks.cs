@@ -37,7 +37,7 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the Fireworks HTTP chat request:
         var fireworksChatRequest = JsonSerializer.Serialize(new ChatRequest

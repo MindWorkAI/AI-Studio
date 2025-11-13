@@ -46,7 +46,7 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the Perplexity HTTP chat request:
         var perplexityChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

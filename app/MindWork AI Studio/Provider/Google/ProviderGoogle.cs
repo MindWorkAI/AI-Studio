@@ -37,7 +37,7 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the Google HTTP chat request:
         var geminiChatRequest = JsonSerializer.Serialize(new ChatRequest

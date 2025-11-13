@@ -87,7 +87,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters, "input", "store", "tools");
+        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters, "input", "store", "tools");
         
         //
         // Create the request: either for the Responses API or the Chat Completion API

@@ -526,7 +526,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// containing the API parameters to be parsed.</param>
     /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary
     /// (case-insensitive). The parameters stream, model, and messages are removed by default.</param>
-    protected IDictionary<string, object> ParseApiParameters(
+    protected IDictionary<string, object> ParseAdditionalApiParameters(
         string additionalUserProvidedParameters,
         params List<string> keysToRemove)
     {
@@ -578,5 +578,4 @@ public abstract class BaseProvider : IProvider, ISecretId
         
         _ => string.Empty,
     };
-    
 }

@@ -37,7 +37,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider("https://dashscope-int
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the AlibabaCloud HTTP chat request:
         var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

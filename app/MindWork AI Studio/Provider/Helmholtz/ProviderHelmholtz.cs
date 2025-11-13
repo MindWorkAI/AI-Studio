@@ -37,7 +37,7 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
         };
         
         // Parse the API parameters:
-        var apiParameters = this.ParseApiParameters(this.AdditionalJsonApiParameters);
+        var apiParameters = this.ParseAdditionalApiParameters(this.AdditionalJsonApiParameters);
         
         // Prepare the Helmholtz HTTP chat request:
         var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
