@@ -130,6 +130,18 @@
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
             
+            <MudStack>
+                <MudButton OnClick="@this.ToggleExpertSettings">
+                    @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                </MudButton>
+                <MudDivider />
+                <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    <MudJustifiedText Class="mb-5">
+                        @T("Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.")
+                    </MudJustifiedText>
+                    <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                </MudCollapse>
+            </MudStack>
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>

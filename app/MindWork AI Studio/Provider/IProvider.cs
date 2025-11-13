@@ -20,6 +20,11 @@ public interface IProvider
     public string InstanceName { get; }
     
     /// <summary>
+    /// The additional API parameters.
+    /// </summary>
+    public string AdditionalJsonApiParameters { get; }
+    
+    /// <summary>
     /// Starts a chat completion stream.
     /// </summary>
     /// <param name="chatModel">The model to use for chat completion.</param>
@@ -64,10 +69,4 @@ public interface IProvider
     /// <returns>The list of embedding models.</returns>
     public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
-    /// <summary>
-    /// Get the capabilities of a model.
-    /// </summary>
-    /// <param name="model">The model to get the capabilities for.</param>
-    /// <returns>The capabilities of the model.</returns>
-    public IReadOnlyCollection<Capability> GetModelCapabilities(Model model);
 }

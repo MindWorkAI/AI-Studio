@@ -36,6 +36,9 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
         // Prepare the Helmholtz HTTP chat request:
         var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
@@ -63,6 +66,7 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -114,8 +118,6 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
             model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase));
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

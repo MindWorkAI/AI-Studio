@@ -40,7 +40,8 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new AnnotationConverter() }
+        Converters = { new AnnotationConverter() },
+        AllowTrailingCommas = false
     };
 
     /// <summary>
@@ -63,7 +64,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract string InstanceName { get; set; }
-    
+
+    /// <inheritdoc />
+    public string AdditionalJsonApiParameters { get; init; } = string.Empty;
+
     /// <inheritdoc />
     public abstract IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
     
@@ -78,9 +82,6 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
-
-    /// <inheritdoc />
-    public abstract IReadOnlyCollection<Capability> GetModelCapabilities(Model model);
     
     #endregion
     
@@ -129,8 +130,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
-                this.logger.LogDebug($"Error body: {errorBody}");
+                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -138,8 +138,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
-                this.logger.LogDebug($"Error body: {errorBody}");
+                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -147,8 +146,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.NotFound)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
-                this.logger.LogDebug($"Error body: {errorBody}");
+                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -156,8 +154,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.Unauthorized)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
-                this.logger.LogDebug($"Error body: {errorBody}");
+                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -165,8 +162,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.InternalServerError)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
-                this.logger.LogDebug($"Error body: {errorBody}");
+                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -174,8 +170,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.ServiceUnavailable)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError($"Failed request with status code {nextResponse.StatusCode} (message = '{nextResponse.ReasonPhrase}').");
-                this.logger.LogDebug($"Error body: {errorBody}");
+                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -185,13 +180,13 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(timeSeconds > 90)
                 timeSeconds = 90;
             
-            this.logger.LogDebug($"Failed request with status code {nextResponse.StatusCode} (message = '{errorMessage}'). Retrying in {timeSeconds:0.00} seconds.");
+            this.logger.LogDebug("Failed request with status code {ResponseStatusCode} (message = '{ErrorMessage}'). Retrying in {TimeSeconds:0.00} seconds.", nextResponse.StatusCode, errorMessage, timeSeconds);
             await Task.Delay(TimeSpan.FromSeconds(timeSeconds), token);
         }
         
         if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
         {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'"), this.InstanceName, MAX_RETRIES, errorMessage)));
+            await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'."), this.InstanceName, MAX_RETRIES, errorMessage)));
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
 
@@ -522,4 +517,66 @@ public abstract class BaseProvider : IProvider, ISecretId
         
         streamReader.Dispose();
     }
+
+    /// <summary>
+    /// Parse and convert API parameters from a provided JSON string into a dictionary,
+    /// optionally merging additional parameters and removing specific keys.
+    /// </summary>
+    /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary
+    /// (case-insensitive). The parameters stream, model, and messages are removed by default.</param>
+    protected IDictionary<string, object> ParseAdditionalApiParameters(
+        params List<string> keysToRemove)
+    {
+        if(string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters))
+            return new Dictionary<string, object>();
+        
+        try
+        {
+            // Wrap the user-provided parameters in curly brackets to form a valid JSON object:
+            var json = $"{{{this.AdditionalJsonApiParameters}}}";
+            var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
+            var dict = ConvertToDictionary(jsonDoc);
+
+            // Some keys are always removed because we set them:
+            keysToRemove.Add("stream");
+            keysToRemove.Add("model");
+            keysToRemove.Add("messages");
+
+            // Remove the specified keys (case-insensitive):
+            var removeSet = new HashSet<string>(keysToRemove, StringComparer.OrdinalIgnoreCase);
+            foreach (var key in removeSet)
+                dict.Remove(key);
+
+            return dict;
+        }
+        catch (JsonException ex)
+        {
+            this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", ex.Message);
+            return new Dictionary<string, object>();
+        }
+    }
+
+    private static IDictionary<string, object> ConvertToDictionary(JsonElement element)
+    {
+        return element.EnumerateObject()
+            .ToDictionary<JsonProperty, string, object>(
+                p => p.Name,
+                p => ConvertJsonValue(p.Value) ?? string.Empty
+            );
+    }
+
+    private static object? ConvertJsonValue(JsonElement element) => element.ValueKind switch
+    {
+        JsonValueKind.String => element.GetString(),
+        JsonValueKind.Number => element.TryGetInt32(out var i) ? i :
+            element.TryGetInt64(out var l) ? l :
+            element.TryGetDouble(out var d) ? d :
+            element.GetDecimal(),
+        JsonValueKind.True or JsonValueKind.False => element.GetBoolean(),
+        JsonValueKind.Null => string.Empty,
+        JsonValueKind.Object => ConvertToDictionary(element),
+        JsonValueKind.Array => element.EnumerateArray().Select(ConvertJsonValue).ToList(),
+        
+        _ => string.Empty,
+    };
 }
