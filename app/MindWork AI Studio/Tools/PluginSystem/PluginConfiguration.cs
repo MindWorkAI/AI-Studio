@@ -73,6 +73,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Handle configured chat templates:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun);
         
+        // Handle configured profiles:
+        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
+        
         message = string.Empty;
         return true;
     }

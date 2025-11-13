@@ -109,3 +109,14 @@ CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
         }
     }
 }
+
+-- Example profiles for this configuration:
+CONFIG["PROFILES"] = {}
+
+-- A simple profile template:
+CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = {
+    ["Id"] = "00000000-0000-0000-0000-000000000000",
+    ["Name"] = "<user-friendly name of the profile>",
+    ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
+    ["Actions"] = "Please always ensure the portion size is ..."
+}
