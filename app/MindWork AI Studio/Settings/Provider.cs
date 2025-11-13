@@ -134,9 +134,9 @@ public sealed record Provider(
             return false;
         }
         
-        if (!table.TryGetValue("ExpertProviderApiParameters", out var expertProviderApiParametersValue) || !expertProviderApiParametersValue.TryRead<string>(out var expertProviderApiParameters))
+        if (!table.TryGetValue("AdditionalJsonApiParameters", out var additionalJsonApiParametersValue) || !additionalJsonApiParametersValue.TryRead<string>(out var additionalJsonApiParameters))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain valid additional api parameters.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain valid additional JSON API parameters.");
             return false;
         }
 
@@ -152,7 +152,7 @@ public sealed record Provider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
-            AdditionalJsonApiParameters = expertProviderApiParameters,
+            AdditionalJsonApiParameters = additionalJsonApiParameters,
         };
         
         return true;
