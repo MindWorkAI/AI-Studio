@@ -532,6 +532,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         try
         {
+            // Wrap the user-provided parameters in curly brackets to form a valid JSON object:
             var json = $"{{{additionalUserProvidedParameters}}}";
             var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
             var dict = ConvertToDictionary(jsonDoc);
