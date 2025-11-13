@@ -534,7 +534,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             var json = $"{{{additionalUserProvidedParameters}}}";
             var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
-            var dict = this.ConvertToDictionary(jsonDoc);
+            var dict = ConvertToDictionary(jsonDoc);
 
             // Some keys are always removed because we set them:
             keysToRemove.Add("stream");
@@ -554,16 +554,16 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
 
-    private IDictionary<string, object> ConvertToDictionary(JsonElement element)
+    private static IDictionary<string, object> ConvertToDictionary(JsonElement element)
     {
         return element.EnumerateObject()
             .ToDictionary<JsonProperty, string, object>(
                 p => p.Name,
-                p => this.ConvertJsonValue(p.Value) ?? throw new InvalidOperationException()
+                p => ConvertJsonValue(p.Value) ?? string.Empty
             );
     }
 
-    private object? ConvertJsonValue(JsonElement element) => element.ValueKind switch
+    private static object? ConvertJsonValue(JsonElement element) => element.ValueKind switch
     {
         JsonValueKind.String => element.GetString(),
         JsonValueKind.Number => element.TryGetInt32(out int i) ? i :
