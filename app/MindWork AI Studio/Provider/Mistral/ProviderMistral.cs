@@ -66,7 +66,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
             
             // Right now, we only support streaming completions:
             Stream = true,
-            SafePrompt = apiParameters.TryGetValue("safe_prompt", out var value) && value is bool and true,
+            SafePrompt = apiParameters.TryGetValue("safe_prompt", out var value) && value is true,
             AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
