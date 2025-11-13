@@ -527,6 +527,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected IDictionary<string, object> ParseAdditionalApiParameters(
         params List<string> keysToRemove)
     {
+        if(string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters))
+            return new Dictionary<string, object>();
+        
         try
         {
             // Wrap the user-provided parameters in curly brackets to form a valid JSON object:
@@ -548,7 +551,8 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
         catch (JsonException ex)
         {
-            throw new ArgumentException("Invalid JSON in additionalUserProvidedParameters", ex);
+            this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", ex.Message);
+            return new Dictionary<string, object>();
         }
     }
 
