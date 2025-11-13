@@ -522,8 +522,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// Parse and convert API parameters from a provided JSON string into a dictionary,
     /// optionally merging additional parameters and removing specific keys.
     /// </summary>
-    /// <param name="additionalUserProvidedParameters">A JSON string (without surrounding braces) containing the API parameters to be parsed.</param>
-    /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary (case-insensitive). stream, model and messages are removed by default.</param>
+    /// <param name="additionalUserProvidedParameters">A JSON string (without surrounding curly brackets)
+    /// containing the API parameters to be parsed.</param>
+    /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary
+    /// (case-insensitive). The parameters stream, model, and messages are removed by default.</param>
     protected IDictionary<string, object> ParseApiParameters(
         string additionalUserProvidedParameters,
         params IEnumerable<string> keysToRemove)
