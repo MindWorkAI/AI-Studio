@@ -11,4 +11,5 @@ public enum PreviewFeatures
     
     PRE_PLUGINS_2025,
     PRE_READ_PDF_2025,
+    PRE_DOCUMENT_ANALYSIS_2025,
 }

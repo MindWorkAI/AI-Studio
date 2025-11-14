@@ -68,6 +68,7 @@ pub fn start_runtime_api() {
                 crate::dotnet::dotnet_port,
                 crate::dotnet::dotnet_ready,
                 crate::clipboard::set_clipboard,
+                crate::app_window::get_event_stream,
                 crate::app_window::check_for_update,
                 crate::app_window::install_update,
                 crate::app_window::select_directory,

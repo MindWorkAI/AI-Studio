@@ -27,6 +27,7 @@ pub struct Chunk {
     pub stream_id: String,
     pub metadata: Metadata,
 }
+
 impl Chunk {
     pub fn new(content: String, metadata: Metadata) -> Self {
         Chunk { content, stream_id: String::new(), metadata }
