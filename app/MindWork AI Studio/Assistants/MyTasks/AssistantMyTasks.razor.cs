@@ -85,7 +85,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
 
     private string? ValidateProfile(Profile profile)
     {
-        if(profile == default || profile == Profile.NO_PROFILE)
+        if(profile == Profile.NO_PROFILE)
             return T("Please select one of your profiles.");
         
         return null;
