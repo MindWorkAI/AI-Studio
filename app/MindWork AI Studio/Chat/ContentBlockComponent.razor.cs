@@ -138,7 +138,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task ExportToWord()
     {
-        await PandocExport.ToMicrosoftWord(this.RustService, T("Export Chat to Microsoft Word"), this.Content);
+        await PandocExport.ToMicrosoftWord(this.RustService, this.DialogService, T("Export Chat to Microsoft Word"), this.Content);
     }
     
     private async Task RegenerateBlock()

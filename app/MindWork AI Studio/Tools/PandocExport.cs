@@ -1,7 +1,10 @@
 ﻿using System.Diagnostics;
 using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Tools;
 
@@ -11,7 +14,7 @@ public static class PandocExport
     
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
     
-    public static async Task<bool> ToMicrosoftWord(RustService rustService, string dialogTitle, IContent markdownContent)
+    public static async Task<bool> ToMicrosoftWord(RustService rustService, IDialogService dialogService, string dialogTitle, IContent markdownContent)
     {
         var response = await rustService.SaveFile(dialogTitle, new("Microsoft Word", ["docx"]));
         if (response.UserCancelled)
@@ -40,9 +43,25 @@ public static class PandocExport
             await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText);
 
             // Ensure that Pandoc is installed and ready:
-            var pandocState = await Pandoc.CheckAvailabilityAsync(rustService);
+            var pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showSuccessMessage: false);
             if (!pandocState.IsAvailable)
-                return false;
+            {
+                var dialogParameters = new DialogParameters<PandocDialog>
+                {
+                    { x => x.ShowInitialResultInSnackbar, false },
+                };
+                
+                var dialogReference = await dialogService.ShowAsync<PandocDialog>(TB("Pandoc Installation"), dialogParameters, DialogOptions.FULLSCREEN);
+                await dialogReference.Result;
+                
+                pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showSuccessMessage: true);
+                if (!pandocState.IsAvailable)
+                {
+                    LOGGER.LogError("Pandoc is not available after installation attempt.");
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for Microsoft Word export.")));
+                    return false;
+                }
+            }
 
             // Call Pandoc to create the Word file:
             var pandoc = await PandocProcessBuilder
