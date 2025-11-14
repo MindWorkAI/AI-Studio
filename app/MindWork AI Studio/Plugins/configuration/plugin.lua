@@ -119,7 +119,7 @@ CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
     }
 }
 
--- Example profiles for this configuration:
+-- Profiles for this configuration:
 CONFIG["PROFILES"] = {}
 
 -- A simple profile template:
