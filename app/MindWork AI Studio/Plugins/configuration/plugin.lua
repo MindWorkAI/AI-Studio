@@ -47,15 +47,24 @@ DEPRECATION_MESSAGE = ""
 CONFIG = {}
 CONFIG["LLM_PROVIDERS"] = {}
 
--- An example of a configuration for a self-hosted ollama server:
+-- An example of a configuration for a self-hosted server:
 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
     ["Id"] = "00000000-0000-0000-0000-000000000000",
     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
     ["UsedLLMProvider"] = "SELF_HOSTED",
+    
+    -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
     ["Host"] = "OLLAMA",
-    ["Hostname"] = "<https address of the ollama server>",
+    ["Hostname"] = "<https address of the server>",
+    
+    -- Optional: Additional parameters for the API.
+    -- Please refer to the documentation of the selected host for details.
+    -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
+    -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+    -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
+    ["AdditionalJsonApiParameters"] = "",
     ["Model"] = {
-        ["Id"] = "<the ollama model ID>",
+        ["Id"] = "<the model ID>",
         ["DisplayName"] = "<user-friendly name of the model>",
     }
 }

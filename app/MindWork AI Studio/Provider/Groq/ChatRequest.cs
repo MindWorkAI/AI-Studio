@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.Groq;
@@ -14,4 +15,9 @@ public readonly record struct ChatRequest(
     IList<Message> Messages,
     bool Stream,
     int Seed
-);
+)
+{
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
+}
