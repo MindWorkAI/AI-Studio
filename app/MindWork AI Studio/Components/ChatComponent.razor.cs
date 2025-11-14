@@ -801,11 +801,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Try to select the profile:
         if (!string.IsNullOrWhiteSpace(chatProfile))
-        {
-            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile);
-            if(this.currentProfile == default)
-                this.currentProfile = Profile.NO_PROFILE;
-        }
+            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile) ?? Profile.NO_PROFILE;
         
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))

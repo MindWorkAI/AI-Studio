@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.SelfHosted;
 
 /// <summary>
@@ -10,4 +12,9 @@ public readonly record struct ChatRequest(
     string Model,
     IList<Message> Messages,
     bool Stream
-);
+)
+{
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
+}

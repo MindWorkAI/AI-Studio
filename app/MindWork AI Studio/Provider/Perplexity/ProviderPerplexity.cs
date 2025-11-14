@@ -45,6 +45,9 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
         // Prepare the Perplexity HTTP chat request:
         var perplexityChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
         {
@@ -72,6 +75,7 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
                 }
             }).ToList()],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -115,38 +119,6 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
     public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Model>());
-    }
-    
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
-    {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        if(modelName.IndexOf("reasoning") is not -1 ||
-           modelName.IndexOf("deep-research") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.MULTIPLE_IMAGE_INPUT,
-                
-                Capability.TEXT_OUTPUT,
-                Capability.IMAGE_OUTPUT,
-                
-                Capability.ALWAYS_REASONING,
-                Capability.WEB_SEARCH,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        return
-        [
-            Capability.TEXT_INPUT,
-            Capability.MULTIPLE_IMAGE_INPUT,
-            
-            Capability.TEXT_OUTPUT,
-            Capability.IMAGE_OUTPUT,
-            
-            Capability.WEB_SEARCH,
-            Capability.CHAT_COMPLETION_API,
-        ];
     }
     
     #endregion

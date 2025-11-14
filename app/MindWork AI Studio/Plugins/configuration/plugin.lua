@@ -47,15 +47,24 @@ DEPRECATION_MESSAGE = ""
 CONFIG = {}
 CONFIG["LLM_PROVIDERS"] = {}
 
--- An example of a configuration for a self-hosted ollama server:
+-- An example of a configuration for a self-hosted server:
 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
     ["Id"] = "00000000-0000-0000-0000-000000000000",
     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
     ["UsedLLMProvider"] = "SELF_HOSTED",
+    
+    -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
     ["Host"] = "OLLAMA",
-    ["Hostname"] = "<https address of the ollama server>",
+    ["Hostname"] = "<https address of the server>",
+    
+    -- Optional: Additional parameters for the API.
+    -- Please refer to the documentation of the selected host for details.
+    -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
+    -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+    -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
+    ["AdditionalJsonApiParameters"] = "",
     ["Model"] = {
-        ["Id"] = "<the ollama model ID>",
+        ["Id"] = "<the model ID>",
         ["DisplayName"] = "<user-friendly name of the model>",
     }
 }
@@ -86,6 +95,13 @@ CONFIG["SETTINGS"] = {}
 -- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_DOCUMENT_ANALYSIS_2025.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_DOCUMENT_ANALYSIS_2025" }
 
+-- Configure the preselected profile.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- Be aware that the ID must be using the same casing as defined in the profile.
+-- When the ID is using upper case letters, but using lower case letters in this
+-- setting, the preselection will not work.
+-- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 
@@ -108,4 +124,15 @@ CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
             ["Content"] = "Of course. What do you need?"
         }
     }
+}
+
+-- Profiles for this configuration:
+CONFIG["PROFILES"] = {}
+
+-- A simple profile template:
+CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = {
+    ["Id"] = "00000000-0000-0000-0000-000000000000",
+    ["Name"] = "<user-friendly name of the profile>",
+    ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
+    ["Actions"] = "Please always ensure the portion size is ..."
 }

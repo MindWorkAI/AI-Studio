@@ -32,6 +32,9 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
         };
         
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
@@ -60,7 +63,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             }).ToList()],
             
             // Right now, we only support streaming completions:
-            Stream = true
+            Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -141,8 +145,6 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             return [];
         }
     }
-    
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model) => CapabilitiesOpenSource.GetCapabilities(model);
     
     #endregion
 

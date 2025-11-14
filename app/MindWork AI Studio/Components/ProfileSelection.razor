@@ -19,7 +19,7 @@
             <MudDivider/>
             @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
             {
-                <MudMenuItem Icon="@Icons.Material.Filled.Person4" OnClick="() => this.SelectionChanged(profile)">
+                <MudMenuItem Icon="@this.ProfileIcon(profile)" OnClick="() => this.SelectionChanged(profile)">
                     @profile.Name
                 </MudMenuItem>
             }

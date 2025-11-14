@@ -1,11 +1,11 @@
-0.9.51
-2025-09-04 18:02:17 UTC
-226
-9.0.109 (commit 08d4728191)
-9.0.8 (commit aae90fa090)
-1.89.0 (commit 29483883e)
+0.9.53
+2025-11-14 13:14:31 UTC
+228
+9.0.112 (commit 49aa03442a)
+9.0.11 (commit fa7cdded37)
+1.91.1 (commit ed61e7d7e)
 8.12.0
 1.8.1
-ce243913ed4, release
-osx-arm64
+bac0b49dce9, release
+win-x64
 137.0.7215.0

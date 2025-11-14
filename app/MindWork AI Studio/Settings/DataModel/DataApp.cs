@@ -70,7 +70,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Should we preselect a profile for the entire app?
     /// </summary>
-    public string PreselectedProfile { get; set; } = string.Empty;
+    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProfile, string.Empty);
     
     /// <summary>
     /// Should we preselect a chat template for the entire app?
