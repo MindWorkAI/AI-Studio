@@ -58,7 +58,7 @@ public static class PandocExport
                 if (!pandocState.IsAvailable)
                 {
                     LOGGER.LogError("Pandoc is not available after installation attempt.");
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for Microsoft Word export")));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for Microsoft Word export.")));
                     return false;
                 }
             }
