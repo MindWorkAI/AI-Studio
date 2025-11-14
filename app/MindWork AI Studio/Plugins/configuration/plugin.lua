@@ -95,6 +95,13 @@ CONFIG["SETTINGS"] = {}
 -- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_DOCUMENT_ANALYSIS_2025.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_DOCUMENT_ANALYSIS_2025" }
 
+-- Configure the preselected profile.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- Be aware that the ID must be using the same casing as defined in the profile.
+-- When the ID is using upper case letters, but using lower case letters in this
+-- setting, the preselection will not work.
+-- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 
