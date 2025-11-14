@@ -260,11 +260,11 @@ public sealed class SettingsManager
     public Profile GetPreselectedProfile(Tools.Components component)
     {
         var preselection = component.PreselectedProfile(this);
-        if (preselection != default)
+        if (preselection != Profile.NO_PROFILE)
             return preselection;
         
         preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProfile);
-        return preselection != default ? preselection : Profile.NO_PROFILE;
+        return preselection ?? Profile.NO_PROFILE;
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)

@@ -30,14 +30,23 @@
                 <MudTd>@context.Num</MudTd>
                 <MudTd>@context.Name</MudTd>
                 <MudTd>
-                    <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                        <MudTooltip Text="@T("Edit")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditProfile(context)"/>
+                    @if (context.IsEnterpriseConfiguration)
+                    {
+                        <MudTooltip Text="@T("This profile is managed by your organization.")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
                         </MudTooltip>
-                        <MudTooltip Text="@T("Delete")">
-                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteProfile(context)"/>
-                        </MudTooltip>
-                    </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                            <MudTooltip Text="@T("Edit")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditProfile(context)"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Delete")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteProfile(context)"/>
+                            </MudTooltip>
+                        </MudStack>
+                    }
                 </MudTd>
             </RowTemplate>
         </MudTable>

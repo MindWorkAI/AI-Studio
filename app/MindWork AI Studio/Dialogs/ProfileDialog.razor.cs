@@ -67,10 +67,12 @@ public partial class ProfileDialog : MSGComponentBase
     {
         Num = this.DataNum,
         Id = this.DataId,
-        
         Name = this.DataName,
         NeedToKnow = this.DataNeedToKnow,
         Actions = this.DataActions,
+        
+        EnterpriseConfigurationPluginId = Guid.Empty,
+        IsEnterpriseConfiguration = false,
     };
 
     #region Overrides of ComponentBase
