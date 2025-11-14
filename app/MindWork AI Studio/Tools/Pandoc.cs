@@ -37,8 +37,9 @@ public static partial class Pandoc
     /// </summary>
     /// <param name="rustService">Global rust service to access file system and data dir.</param>
     /// <param name="showMessages">Controls if snackbars are shown to the user.</param>
+    /// <param name="showSuccessMessage">Controls if a success snackbar is shown to the user.</param>
     /// <returns>True, if pandoc is available and the minimum required version is met, else false.</returns>
-    public static async Task<PandocInstallation> CheckAvailabilityAsync(RustService rustService, bool showMessages = true)
+    public static async Task<PandocInstallation> CheckAvailabilityAsync(RustService rustService, bool showMessages = true, bool showSuccessMessage = true)
     {
         try
         {
@@ -80,7 +81,7 @@ public static partial class Pandoc
             
             if (installedVersion >= MINIMUM_REQUIRED_VERSION)
             {
-                if (showMessages)
+                if (showMessages && showSuccessMessage)
                     await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} is installed."), installedVersionString)));
                 
                 LOG.LogInformation("Pandoc v{0} is installed and matches the required version (v{1})", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
