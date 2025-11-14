@@ -2994,17 +2994,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2261456575"] = "Was soll die
 -- Please enter a profile name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2386844536"] = "Bitte geben Sie einen Profilnamen ein."
 
--- The text must not exceed 256 characters.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2560188276"] = "Der Text darf 256 Zeichen nicht überschreiten."
-
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2646845972"] = "Hinzufügen"
 
 -- The profile name must not exceed 40 characters.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3243902394"] = "Der Profilname darf nicht länger als 40 Zeichen sein."
-
--- The text must not exceed 444 characters.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3253349421"] = "Der Text darf 444 Zeichen nicht überschreiten."
 
 -- Profile Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3392578705"] = "Profilname"
@@ -3896,6 +3890,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T380451542
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T3865031940"] = "Aktionen"
+
+-- This profile is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4058414654"] = "Dieses Profil wird von Ihrer Organisation verwaltet."
 
 -- Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4125557797"] = "Speichern Sie persönliche Daten über sich in verschiedenen Profilen, damit die KIs ihren persönlichen Kontext kennen. So müssen Sie den Kontext nicht jedes Mal erneut erklären, zum Beispiel in jedem Chat. Wenn Sie verschiedene Rollen haben, können Sie für jede Rolle ein eigenes Profil anlegen."
@@ -5780,4 +5777,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannt
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
-
