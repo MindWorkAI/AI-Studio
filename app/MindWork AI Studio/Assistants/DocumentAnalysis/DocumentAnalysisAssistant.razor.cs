@@ -27,7 +27,39 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         get
         {
             var sb = new StringBuilder();
-            #warning Add system prompt for document analysis
+            
+            sb.Append("# Task description");
+            sb.Append(Environment.NewLine);
+
+            if (this.loadedDocumentPaths.Count > 1)
+            {
+                sb.Append($"Your task is to analyse {this.loadedDocumentPaths.Count} documents.");
+                sb.Append("Different Documents are divided by a horizontal rule in markdown formatting followed by the name of the document.");
+                sb.Append(Environment.NewLine);
+            }
+            else
+            {
+                sb.Append("Your task is to analyse a single document.");
+                sb.Append(Environment.NewLine);
+            }
+
+            var taskDescription = $"""
+                                       The analysis should be done using the policy analysis rules.
+                                       The output should be formatted according to the policy output rules. 
+                                       The rule sets should be followed strictly. 
+                                       Only use information given in the documents or in the policy. 
+                                       Never add any information of your own to it.
+                                       Keep your answers precise, professional and factual. 
+                                       Only answer with the correctly formatted analysis result and do not add any opening or closing remarks.
+                                       Answer in the language that is used by the policy or is stated in the output rules.
+                                    """;
+            
+            sb.Append(taskDescription);
+            sb.Append(Environment.NewLine);
+
+            sb.Append(this.PromptGetActivePolicy());
+            sb.Append(Environment.NewLine);
+            
             return sb.ToString();
         }
     }
@@ -249,6 +281,58 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         return null;
     }
 
+    private string PromptGetActivePolicy()
+    {
+        return $"""
+               # Policy
+               The policy is defined as follows:
+               
+               ## Policy name
+               {this.policyName}
+               
+               ## Policy description 
+               {this.policyDescription}
+               
+               ## Policy analysis rules 
+               {this.policyAnalysisRules}
+               
+               ## Policy output rules
+               {this.policyOutputRules}
+               """;
+    }
+
+    private async Task<string> PromptLoadDocumentsContent()
+    {
+        if (this.loadedDocumentPaths.Count == 0)
+        {
+            return string.Empty;
+        }
+        
+        var sb = new StringBuilder();
+        var count = 1;
+        foreach(var documentPath in this.loadedDocumentPaths)
+        {
+            sb.Append("---");
+            sb.Append(Environment.NewLine);
+            sb.Append($"Document {count} file path: {documentPath}");
+            sb.Append(Environment.NewLine);
+            sb.Append($"Document {count} content:");
+            sb.Append(Environment.NewLine);
+            
+            var fileContent = await this.RustService.ReadArbitraryFileData(documentPath, int.MaxValue);
+            sb.Append($"""
+                       ```
+                       {fileContent}
+                       ```
+                       """);
+            sb.Append(Environment.NewLine);
+            sb.Append(Environment.NewLine);
+            count += 1;
+        }
+        
+        return sb.ToString();
+    }
+
     private async Task Analyze()
     {
         if (this.IsNoPolicySelectedOrProtected)
@@ -259,6 +343,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         if (!this.inputIsValid)
             return;
         
-        #warning Implement document analysis logic
+        this.CreateChatThread();
+        
+        var userRequest = this.AddUserRequest(
+            $"""
+                {await this.PromptLoadDocumentsContent()}
+             """, hideContentFromUser:true);
+
+        await this.AddAIResponseAsync(userRequest);
     }
 }

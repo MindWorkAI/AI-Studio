@@ -41,24 +41,28 @@ else
     </MudButton>
 </MudStack>
 
-<hr style="width: 100%; border-width: 0.25ch;" class="mt-6"/>
-
 <MudExpansionPanels Class="mb-3 mt-6" MultiExpansion="@false">
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Settings" HeaderText="@T("Definition")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Settings" HeaderText="@T("Policy definition")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
         <MudText Typo="Typo.h4" Class="mb-1">
             @T("Common settings")
         </MudText>
+        
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyName" Validation="@this.ValidatePolicyName" Immediate="@true" Label="@T("Policy name")" HelperText="@T("Please give your policy a name that provides information about the intended purpose. The name will be displayed to users in AI Studio.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="() => this.PolicyNameWasChanged()"/>
+        
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyDescription" Validation="@this.ValidatePolicyDescription" Immediate="@true" Label="@T("Policy description")" HelperText="@T("Please provide a brief description of your policy. Describe or explain what your policy does. This description will be shown to users in AI Studio.")" Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+        
         <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsManaged ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
 
         <MudText Typo="Typo.h4" Class="mt-6 mb-1">
             @T("Input and output rules")
         </MudText>
+        
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyAnalysisRules" Validation="@this.ValidateAnalysisRules" Immediate="@true" Label="@T("Analysis rules")" HelperText="@T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+        
         <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules"/>
         
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+        
         <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules"/>
         
         <MudText Typo="Typo.h4" Class="mt-6 mb-1">
@@ -68,12 +72,16 @@ else
         <MudButton StartIcon="@Icons.Material.Filled.FileDownload" Disabled="@this.IsNoPolicySelectedOrProtected" Variant="Variant.Filled" Color="Color.Primary">
             @T("Export policy as configuration section")
         </MudButton>
+        
     </ExpansionPanel>
+    
+    <hr style="width: 100%; border-width: 0.25ch;" class="mt-6"/>
     
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document analysis") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
         <MudText Typo="Typo.h4" Class="mb-1">
             @T("Description")
         </MudText>
+        
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @this.selectedPolicy?.PolicyDescription
         </MudJustifiedText>
@@ -81,6 +89,11 @@ else
         <MudText Typo="Typo.h4" Class="mb-1 mt-6">
             @T("Documents for the analysis")
         </MudText>
+        
         <AttachDocuments Name="Document Analysis Files Drop" @bind-DocumentPaths="@this.loadedDocumentPaths"/>
+        
     </ExpansionPanel>
+    
+    <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+    
 </MudExpansionPanels>
