@@ -136,8 +136,9 @@ public sealed record Provider(
         
         if (!table.TryGetValue("AdditionalJsonApiParameters", out var additionalJsonApiParametersValue) || !additionalJsonApiParametersValue.TryRead<string>(out var additionalJsonApiParameters))
         {
+            // In this case, no reason exists to reject this provider, though.
             LOGGER.LogWarning($"The configured provider {idx} does not contain valid additional JSON API parameters.");
-            return false;
+            additionalJsonApiParameters = string.Empty;
         }
 
         provider = new Provider
