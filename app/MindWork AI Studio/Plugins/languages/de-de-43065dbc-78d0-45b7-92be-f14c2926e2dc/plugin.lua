@@ -420,11 +420,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Load output rules from document
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2168201568"] = "Regeln für die Ausgabe aus einem Dokument laden"
 
--- Definition
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T222998208"] = "Definition"
-
 -- The name of your policy must be between 6 and 60 characters long.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2435013256"] = "Der Name Ihres Regelwerks muss zwischen 6 und 60 Zeichen lang sein."
+
+-- Policy definition
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2491168104"] = "Definition des Regelwerks"
 
 -- Export policy as configuration section
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2556564432"] = "Exportieren Sie das Regelwerk als Konfigurationsabschnitt"
@@ -1797,14 +1797,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier k�
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Anbieter"
 
--- Videos are not supported yet
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2928927510"] = "Videos werden noch nicht unterstützt."
-
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T185447014"] = "Pandoc-Installation"
 
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2596465560"] = "Pandoc wird möglicherweise zum Importieren von Dateien benötigt."
+
+-- Videos are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2928927510"] = "Videos werden noch nicht unterstützt."
 
 -- Images are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T298062956"] = "Bilder werden derzeit nicht unterstützt"
