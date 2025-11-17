@@ -151,4 +151,23 @@ public partial class AttachDocuments : MSGComponentBase
         this.ClearDragClass();
         this.StateHasChanged();
     }
+
+    private async Task RemoveDocumentPathFromDocumentPaths(FileInfo file)
+    {
+        this.DocumentPaths.Remove(file.ToString());
+        
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
+    }
+
+    /// <summary>
+    /// The user might want to check what the Pandoc integration actually extracts from his file and therefore gives the LLM as input. 
+    /// </summary>
+    /// <param name="file">The file to check.</param>
+    private void InvestigateFile(FileInfo file)
+    {
+        # warning Implement Investigation of file 
+        this.Logger.LogDebug("Investigate");
+        return;
+    }
 }
