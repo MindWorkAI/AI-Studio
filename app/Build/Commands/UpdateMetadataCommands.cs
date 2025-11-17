@@ -336,8 +336,9 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
         Console.WriteLine(" done.");
     }
-
-    private async Task UpdateProjectCommitHash()
+    
+    [Command("update-project-hash", Description = "Update the project commit hash")]
+    public async Task UpdateProjectCommitHash()
     {
         const int COMMIT_HASH_INDEX = 8;
         
