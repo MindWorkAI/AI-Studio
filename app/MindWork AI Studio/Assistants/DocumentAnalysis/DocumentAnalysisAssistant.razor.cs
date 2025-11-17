@@ -73,7 +73,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
     protected override Func<Task> SubmitAction => this.Analyze;
 
-    protected override bool SubmitDisabled => this.IsNoPolicySelected;
+    protected override bool SubmitDisabled => (this.IsNoPolicySelected || this.loadedDocumentPaths.Count==0);
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {

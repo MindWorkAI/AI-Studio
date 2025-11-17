@@ -42,7 +42,7 @@ else
 </MudStack>
 
 <MudExpansionPanels Class="mb-3 mt-6" MultiExpansion="@false">
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@T("Policy definition")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@(T("Policy definition") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
         <MudText Typo="Typo.h4" Class="mb-1">
             @T("Common settings")
         </MudText>
@@ -72,10 +72,9 @@ else
         <MudButton StartIcon="@Icons.Material.Filled.FileDownload" Disabled="@this.IsNoPolicySelectedOrProtected" Variant="Variant.Filled" Color="Color.Primary" OnClick="@this.ExportPolicyAsConfiguration">
             @T("Export policy as configuration section")
         </MudButton>
-        
     </ExpansionPanel>
     
-    <hr style="width: 100%; border-width: 0.25ch;" class="mt-6"/>
+    <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
     
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document analysis") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
         <MudText Typo="Typo.h4" Class="mb-1">
@@ -93,7 +92,6 @@ else
         <AttachDocuments Name="Document Analysis Files Drop" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true"/>
         
     </ExpansionPanel>
-    
-    <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-    
 </MudExpansionPanels>
+    
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
