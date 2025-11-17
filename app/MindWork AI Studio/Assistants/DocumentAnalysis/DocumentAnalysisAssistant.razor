@@ -25,7 +25,7 @@ else
     <MudList T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
         @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
         {
-            <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Settings" Value="@policy">
+            <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
                 @policy.PolicyName
             </MudListItem>
         }
@@ -42,7 +42,7 @@ else
 </MudStack>
 
 <MudExpansionPanels Class="mb-3 mt-6" MultiExpansion="@false">
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Settings" HeaderText="@T("Policy definition")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@T("Policy definition")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
         <MudText Typo="Typo.h4" Class="mb-1">
             @T("Common settings")
         </MudText>
@@ -69,7 +69,7 @@ else
             @T("Preparation for enterprise distribution")
         </MudText>
         
-        <MudButton StartIcon="@Icons.Material.Filled.FileDownload" Disabled="@this.IsNoPolicySelectedOrProtected" Variant="Variant.Filled" Color="Color.Primary">
+        <MudButton StartIcon="@Icons.Material.Filled.FileDownload" Disabled="@this.IsNoPolicySelectedOrProtected" Variant="Variant.Filled" Color="Color.Primary" OnClick="@this.ExportPolicyAsConfiguration">
             @T("Export policy as configuration section")
         </MudButton>
         
@@ -90,7 +90,7 @@ else
             @T("Documents for the analysis")
         </MudText>
         
-        <AttachDocuments Name="Document Analysis Files Drop" @bind-DocumentPaths="@this.loadedDocumentPaths"/>
+        <AttachDocuments Name="Document Analysis Files Drop" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true"/>
         
     </ExpansionPanel>
     

@@ -19,6 +19,12 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public Func<HashSet<string>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
     
+    /// <summary>
+    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone. 
+    /// </summary>
+    [Parameter] 
+    public bool CatchAllDocuments { get; set; }
+    
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
     
@@ -38,7 +44,7 @@ public partial class AttachDocuments : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if(!this.isComponentHovered)
+                if(!this.isComponentHovered && !this.CatchAllDocuments)
                 {
                     this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop hovered event.", this.Name);
                     return;
@@ -49,7 +55,7 @@ public partial class AttachDocuments : MSGComponentBase
                 break;
             
             case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                if(!this.isComponentHovered)
+                if(!this.isComponentHovered && !this.CatchAllDocuments)
                 {
                     this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
                     return;

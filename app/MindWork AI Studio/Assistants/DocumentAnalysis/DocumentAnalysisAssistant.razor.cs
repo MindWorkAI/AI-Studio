@@ -29,21 +29,21 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             var sb = new StringBuilder();
             
             sb.Append("# Task description");
-            sb.Append(Environment.NewLine);
+            sb.AppendLine();
 
             if (this.loadedDocumentPaths.Count > 1)
             {
                 sb.Append($"Your task is to analyse {this.loadedDocumentPaths.Count} documents.");
                 sb.Append("Different Documents are divided by a horizontal rule in markdown formatting followed by the name of the document.");
-                sb.Append(Environment.NewLine);
+                sb.AppendLine();
             }
             else
             {
                 sb.Append("Your task is to analyse a single document.");
-                sb.Append(Environment.NewLine);
+                sb.AppendLine();
             }
 
-            var taskDescription = $"""
+            var taskDescription = """
                                        The analysis should be done using the policy analysis rules.
                                        The output should be formatted according to the policy output rules. 
                                        The rule sets should be followed strictly. 
@@ -55,10 +55,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
                                     """;
             
             sb.Append(taskDescription);
-            sb.Append(Environment.NewLine);
+            sb.AppendLine();
 
             sb.Append(this.PromptGetActivePolicy());
-            sb.Append(Environment.NewLine);
             
             return sb.ToString();
         }
@@ -304,20 +303,18 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private async Task<string> PromptLoadDocumentsContent()
     {
         if (this.loadedDocumentPaths.Count == 0)
-        {
             return string.Empty;
-        }
         
         var sb = new StringBuilder();
         var count = 1;
         foreach(var documentPath in this.loadedDocumentPaths)
         {
             sb.Append("---");
-            sb.Append(Environment.NewLine);
+            sb.AppendLine();
             sb.Append($"Document {count} file path: {documentPath}");
-            sb.Append(Environment.NewLine);
+            sb.AppendLine();
             sb.Append($"Document {count} content:");
-            sb.Append(Environment.NewLine);
+            sb.AppendLine();
             
             var fileContent = await this.RustService.ReadArbitraryFileData(documentPath, int.MaxValue);
             sb.Append($"""
@@ -325,8 +322,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
                        {fileContent}
                        ```
                        """);
-            sb.Append(Environment.NewLine);
-            sb.Append(Environment.NewLine);
+            sb.AppendLine();
+            sb.AppendLine();
             count += 1;
         }
         
@@ -335,8 +332,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
     private async Task Analyze()
     {
-        if (this.IsNoPolicySelectedOrProtected)
-            return;
+        // if (this.IsNoPolicySelectedOrProtected)
+        //    return;
 
         await this.AutoSave();
         await this.form!.Validate();
@@ -351,5 +348,19 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
              """, hideContentFromUser:true);
 
         await this.AddAIResponseAsync(userRequest);
+    }
+
+    private async Task ExportPolicyAsConfiguration()
+    {
+        return;
+        
+# warning Implement the export function
+        // do not allow the export of a protected policy
+        if (this.IsNoPolicySelectedOrProtected)
+            return;
+        
+        await this.AutoSave();
+        await this.form!.Validate();
+        
     }
 }
