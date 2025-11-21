@@ -40,7 +40,8 @@
         "resizable": true,
         "title": "MindWork AI Studio",
         "width": 1920,
-        "height": 1080
+        "height": 1080,
+        "fileDropEnabled": true
       }
     ],
     "security": {

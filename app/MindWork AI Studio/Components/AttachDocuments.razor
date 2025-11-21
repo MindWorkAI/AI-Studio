@@ -1,0 +1,20 @@
+@inherits MSGComponentBase
+
+<div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+    <MudLink OnClick="@(() => this.AddFilesManually())" Style="text-decoration: none;">
+        <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
+            <MudText Typo="Typo.h6">
+                @T("Drag and drop files here or click to attach documents.")
+            </MudText>
+            @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
+            {
+                <MudBadge Origin="Origin.TopCenter" Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Overlap="true" Bordered="true" OnClick="@(() => this.InvestigateFile(@fileInfo))">
+                    <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
+                </MudBadge>
+            }
+        </MudPaper>
+    </MudLink>
+    <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+        @T("Clear file list")
+    </MudButton>
+</div>

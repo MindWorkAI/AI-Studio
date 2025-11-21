@@ -20,6 +20,7 @@ public static class PreviewVisibilityExtensions
         if (visibility >= PreviewVisibility.PROTOTYPE)
         {
             features.Add(PreviewFeatures.PRE_RAG_2024);
+            features.Add(PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025);
         }
         
         if (visibility >= PreviewVisibility.EXPERIMENTAL)
