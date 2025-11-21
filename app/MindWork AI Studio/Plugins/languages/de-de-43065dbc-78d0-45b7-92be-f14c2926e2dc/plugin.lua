@@ -393,6 +393,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Bitte geben Sie eine Beschreibung Ihrer Analysekriterien an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
 
+-- Not implemented yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1568777658"] = "Noch nicht implementiert."
+
 -- Analysis and output rules
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1714738288"] = "Analyse- und Ausgaberegeln"
 
@@ -1484,6 +1487,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Einstell
 
 -- Drag and drop files here or click to attach documents.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1647829151"] = "Dateien hierher ziehen und ablegen oder klicken, um Dokumente anzuhängen."
+
+-- Pandoc Load Document Preview
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2686523471"] = "Pandoc-Dokumentvorschau"
 
 -- Videos are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2928927510"] = "Videos werden noch nicht unterstützt."
@@ -3113,6 +3119,21 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Akzeptieren Si
 
 -- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept the GPL and download the archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc wird unter der GNU General Public License v2 (GPL) vertrieben. Wenn Sie auf „GPL akzeptieren und Archiv herunterladen“ klicken, stimmen Sie den Bedingungen der GPL-Lizenz zu. Software unter der GPL ist kostenlos und frei nutzbar."
+
+-- Test how Pandoc loads your document. See the raw content it produces before further processing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T1481857352"] = "Testen Sie, wie Pandoc Ihr Dokument lädt, und überprüfen Sie ob der Inhalt korrekt geladen wird."
+
+-- Content Loaded by Pandoc
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2147198279"] = "Von Pandoc geladener Inhalt"
+
+-- This is the content Pandoc loaded from your document — including headings, lists, and formatting. Use this to verify your document loads as expected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2156541074"] = "Das ist der Inhalt, den Pandoc aus Ihrem Dokument geladen hat – einschließlich Überschriften, Listen und Formatierung. Überprüfen Sie damit, ob Ihr Dokument wie erwartet geladen wird."
+
+-- Load document
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2394358670"] = "Dokument laden"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T900713019"] = "Abbrechen"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."

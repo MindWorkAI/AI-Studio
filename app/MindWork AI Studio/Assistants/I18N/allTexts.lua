@@ -391,6 +391,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents."
 
+-- Not implemented yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1568777658"] = "Not implemented yet."
+
 -- Input and output rules
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1714738288"] = "Input and output rules"
 
@@ -1482,6 +1485,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Set
 
 -- Drag and drop files here or click to attach documents.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1647829151"] = "Drag and drop files here or click to attach documents."
+
+-- Pandoc Load Document Preview
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2686523471"] = "Pandoc Load Document Preview"
 
 -- Videos are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2928927510"] = "Videos are not supported yet"
@@ -3111,6 +3117,21 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Accept the ter
 
 -- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
+
+-- Test how Pandoc loads your document. See the raw content it produces before further processing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T1481857352"] = "Test how Pandoc loads your document. See the raw content it produces before further processing."
+
+-- Content Loaded by Pandoc
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2147198279"] = "Content Loaded by Pandoc"
+
+-- This is the content Pandoc loaded from your document — including headings, lists, and formatting. Use this to verify your document loads as expected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2156541074"] = "This is the content Pandoc loaded from your document — including headings, lists, and formatting. Use this to verify your document loads as expected."
+
+-- Load document
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2394358670"] = "Load document"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T900713019"] = "Cancel"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."

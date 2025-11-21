@@ -173,11 +173,10 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task InvestigateFile(FileInfo file)
     {
         # warning Implement Investigation of file 
-        this.Logger.LogDebug("Investigate");
         
         var dialogParameters = new DialogParameters<PandocDocumentCheckDialog>{};
         
-        var dialogReference = await this.DialogService.ShowAsync<PandocDocumentCheckDialog>("Check document content", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<PandocDocumentCheckDialog>(T("Pandoc Load Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
