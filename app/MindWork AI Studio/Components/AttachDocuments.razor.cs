@@ -1,9 +1,12 @@
+using AIStudio.Dialogs;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
@@ -30,6 +33,9 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private RustService RustService { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
     
     #region Overrides of MSGComponentBase
 
@@ -164,10 +170,17 @@ public partial class AttachDocuments : MSGComponentBase
     /// The user might want to check what the Pandoc integration actually extracts from his file and therefore gives the LLM as input. 
     /// </summary>
     /// <param name="file">The file to check.</param>
-    private void InvestigateFile(FileInfo file)
+    private async Task InvestigateFile(FileInfo file)
     {
         # warning Implement Investigation of file 
         this.Logger.LogDebug("Investigate");
+        
+        var dialogParameters = new DialogParameters<PandocDocumentCheckDialog>{};
+        
+        var dialogReference = await this.DialogService.ShowAsync<PandocDocumentCheckDialog>("Check document content", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
         return;
     }
 }
