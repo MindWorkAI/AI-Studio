@@ -42,10 +42,11 @@ public static class ComponentsExtensions
         Components.JOB_POSTING_ASSISTANT => TB("Job Posting Assistant"),
         Components.ERI_ASSISTANT => TB("ERI Server"),
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         
         Components.CHAT => TB("New Chat"),
         
-        _ => Enum.GetName(typeof(Components), component)!,
+        _ => Enum.GetName(component)!,
     };
 
     public static ComponentsData GetData(this Components destination) => destination switch
@@ -62,6 +63,7 @@ public static class ComponentsExtensions
         Components.SYNONYMS_ASSISTANT => new(Event.SEND_TO_SYNONYMS_ASSISTANT, Routes.ASSISTANT_SYNONYMS),
         Components.MY_TASKS_ASSISTANT => new(Event.SEND_TO_MY_TASKS_ASSISTANT, Routes.ASSISTANT_MY_TASKS),
         Components.JOB_POSTING_ASSISTANT => new(Event.SEND_TO_JOB_POSTING_ASSISTANT, Routes.ASSISTANT_JOB_POSTING),
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => new(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT, Routes.ASSISTANT_DOCUMENT_ANALYSIS),
         
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
         
@@ -84,6 +86,9 @@ public static class ComponentsExtensions
         Components.JOB_POSTING_ASSISTANT => settingsManager.ConfigurationData.JobPostings.PreselectOptions ? settingsManager.ConfigurationData.JobPostings.MinimumProviderConfidence : default,
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
+        
+        #warning Add minimum confidence for DOCUMENT_ANALYSIS_ASSISTANT:
+        //Components.DOCUMENT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.DocumentAnalysis.PreselectOptions ? settingsManager.ConfigurationData.DocumentAnalysis.MinimumProviderConfidence : default,
 
         _ => default,
     };
@@ -108,6 +113,9 @@ public static class ComponentsExtensions
             Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider) : null,
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
             Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
+            
+            #warning Add preselected provider for DOCUMENT_ANALYSIS_ASSISTANT:
+            //Components.DOCUMENT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.DocumentAnalysis.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.DocumentAnalysis.PreselectedProvider) : null,
 
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : null,
 
@@ -123,6 +131,8 @@ public static class ComponentsExtensions
 
     public static Profile PreselectedProfile(this Components component, SettingsManager settingsManager) => component switch
     {
+        #warning Add preselected profile for DOCUMENT_ANALYSIS_ASSISTANT:
+        // Components.DOCUMENT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.DocumentAnalysis.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.DocumentAnalysis.PreselectedProfile) : default,
         Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Agenda.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
         Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Coding.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
         Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.EMail.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,

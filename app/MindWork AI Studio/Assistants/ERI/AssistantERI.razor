@@ -1,7 +1,8 @@
 @attribute [Route(Routes.ASSISTANT_ERI)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogERIServer>
+
 @using AIStudio.Settings.DataModel
 @using MudExtensions
-@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogERIServer>
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
     @T("You can imagine it like this: Hypothetically, when Wikipedia implemented the ERI, it would vectorize all pages using an embedding method. All of Wikipedia’s data would remain with Wikipedia, including the vector database (decentralized approach). Then, any AI Studio user could add Wikipedia as a data source to significantly reduce the hallucination of the LLM in knowledge questions.")

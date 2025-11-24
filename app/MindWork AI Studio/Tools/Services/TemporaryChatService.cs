@@ -24,24 +24,24 @@ public sealed class TemporaryChatService(ILogger<TemporaryChatService> logger, S
             return;
         }
 
-        await this.StartMaintenance();
+        this.StartMaintenance();
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(CHECK_INTERVAL, stoppingToken);
-            await this.StartMaintenance();
+            this.StartMaintenance();
         }
     }
 
     #endregion
 
-    private Task StartMaintenance()
+    private void StartMaintenance()
     {
         logger.LogInformation("Starting maintenance of temporary chat storage.");
         var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
         if(!Directory.Exists(temporaryDirectories))
         {
             logger.LogWarning("Temporary chat storage directory does not exist. End maintenance.");
-            return Task.CompletedTask;
+            return;
         }
 
         foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
@@ -71,7 +71,6 @@ public sealed class TemporaryChatService(ILogger<TemporaryChatService> logger, S
         }
 
         logger.LogInformation("Finished maintenance of temporary chat storage.");
-        return Task.CompletedTask;
     }
     
     public static void Initialize()

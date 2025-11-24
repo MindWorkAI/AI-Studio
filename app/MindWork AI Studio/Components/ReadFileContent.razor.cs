@@ -11,6 +11,9 @@ namespace AIStudio.Components;
 public partial class ReadFileContent : MSGComponentBase
 {
     [Parameter]
+    public string Text { get; set; } = string.Empty;
+    
+    [Parameter]
     public string FileContent { get; set; } = string.Empty;
     
     [Parameter]
@@ -44,6 +47,12 @@ public partial class ReadFileContent : MSGComponentBase
         if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
         {
             await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, T("Images are not supported yet")));
+            return;
+        }
+        
+        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
             return;
         }
         
