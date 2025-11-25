@@ -263,7 +263,7 @@ public sealed class SettingsManager
         if (preselection != Profile.NO_PROFILE)
             return preselection;
         
-        preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProfile);
+        preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedProfile, StringComparison.InvariantCultureIgnoreCase));
         return preselection ?? Profile.NO_PROFILE;
     }
     
@@ -273,7 +273,7 @@ public sealed class SettingsManager
         if (preselection != ChatTemplate.NO_CHAT_TEMPLATE)
             return preselection;
         
-        preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedChatTemplate);
+        preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedChatTemplate, StringComparison.InvariantCultureIgnoreCase));
         return preselection ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
