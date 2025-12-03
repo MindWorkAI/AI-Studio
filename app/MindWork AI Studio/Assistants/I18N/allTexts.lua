@@ -4567,6 +4567,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2777988282"] = "Code in the Rust langu
 -- Show Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T27924674"] = "Show Details"
 
+-- Used Qdrant version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2799791022"] = "Used Qdrant version"
+
 -- View our project roadmap and help shape AI Studio's future development.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2829971158"] = "View our project roadmap and help shape AI Studio's future development."
 
@@ -4674,6 +4677,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T855925638"] = "We use this library to 
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."
+
+-- Qdrant is a vector similarity search engine and vector database. It provides a production-ready service with a convenient API to store, search, and manage points—vectors with an additional payload Qdrant is tailored to extended filtering support.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T95576615"] = "Qdrant is a vector similarity search engine and vector database. It provides a production-ready service with a convenient API to store, search, and manage points—vectors with an additional payload Qdrant is tailored to extended filtering support."
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T986578435"] = "Install Pandoc"

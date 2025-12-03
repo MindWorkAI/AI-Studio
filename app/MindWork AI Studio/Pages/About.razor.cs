@@ -30,6 +30,7 @@ public partial class About : MSGComponentBase
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
+    private static readonly MetaDataDatabasesAttribute META_DATA_DATABASES = ASSEMBLY.GetCustomAttribute<MetaDataDatabasesAttribute>()!;
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
 
@@ -52,6 +53,8 @@ public partial class About : MSGComponentBase
     private string BuildTime => $"{T("Build time")}: {META_DATA.BuildTime}";
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
+    
+    private string VersionQdrant => $"{T("Used Qdrant version")}: {META_DATA_DATABASES.QdrantVersion}";
     
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;

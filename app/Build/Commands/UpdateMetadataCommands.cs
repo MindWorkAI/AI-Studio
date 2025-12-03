@@ -112,6 +112,9 @@ public sealed partial class UpdateMetadataCommands
         
         var pdfiumVersion = await this.ReadPdfiumVersion();
         await Pdfium.InstallAsync(rid, pdfiumVersion);
+
+        var qdrantVersion = await this.ReadQdrantVersion();
+        await Qdrant.InstallAsync(rid, qdrantVersion);
         
         Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
         await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
@@ -322,6 +325,16 @@ public sealed partial class UpdateMetadataCommands
         var shortVersion = currentPdfiumVersion.Split('.')[2];
         
         return shortVersion;
+    }
+
+    private async Task<string> ReadQdrantVersion()
+    {
+        const int QDRANT_VERSION_INDEX = 11;
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        var currentQdrantVersion = lines[QDRANT_VERSION_INDEX].Trim();
+        
+        return currentQdrantVersion;
     }
 
     private async Task UpdateArchitecture(RID rid)

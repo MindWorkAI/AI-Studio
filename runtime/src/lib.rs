@@ -13,3 +13,4 @@ pub mod file_data;
 pub mod metadata;
 pub mod pdfium;
 pub mod pandoc;
+pub mod qdrant;

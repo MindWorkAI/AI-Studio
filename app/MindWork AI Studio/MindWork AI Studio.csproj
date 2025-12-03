@@ -87,6 +87,7 @@
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
             <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
             <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
+            <MetaQdrantVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 11 ])</MetaQdrantVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             
@@ -113,6 +114,9 @@
             </AssemblyAttribute>
             <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataLibraries">
                 <_Parameter1>$(MetaPdfiumVersion)</_Parameter1>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataDatabases">
+                <_Parameter1>$(MetaQdrantVersion)</_Parameter1>
             </AssemblyAttribute>
         </ItemGroup>
         

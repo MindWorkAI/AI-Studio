@@ -20,6 +20,11 @@
             "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
             "sidecar": true,
             "args": true
+          },
+          {
+            "name": "resources/databases/qdrant/qdrant",
+            "sidecar": true,
+            "args": true
           }
         ]
       },
@@ -59,7 +64,8 @@
       "targets": "all",
       "identifier": "com.github.mindwork-ai.ai-studio",
       "externalBin": [
-        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
+        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
+        "resources/databases/qdrant/qdrant"
       ],
       "resources": [
         "resources/*"
