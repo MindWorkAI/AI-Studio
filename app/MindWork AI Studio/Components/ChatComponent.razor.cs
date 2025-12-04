@@ -57,6 +57,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
+    private List<string> fileAttachments = new();
+    private HashSet<string> chatDocumentPaths = [];
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -462,6 +464,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
+                FileAttachments = this.fileAttachments.ToList(), // Create a copy
             };
 
             //
@@ -507,6 +510,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Clear the input field:
         await this.inputField.FocusAsync();
         this.userInput = string.Empty;
+        this.fileAttachments.Clear();
         await this.inputField.BlurAsync();
         
         // Enable the stream state for the chat component:
@@ -575,6 +579,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.hasUnsavedChanges = false;
     }
     
+
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
     {
         //

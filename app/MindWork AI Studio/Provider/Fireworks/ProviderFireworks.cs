@@ -39,6 +39,26 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
         
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        {
+            Role = n.Role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
+                ChatRole.SYSTEM => "system",
+
+                _ => "user",
+            },
+
+            Content = n.Content switch
+            {
+                ContentText text => await text.PrepareContentForAI(),
+                _ => string.Empty,
+            }
+        });
+        
         // Prepare the Fireworks HTTP chat request:
         var fireworksChatRequest = JsonSerializer.Serialize(new ChatRequest
         {
@@ -47,24 +67,7 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
             
             // Right now, we only support streaming completions:
             Stream = true,

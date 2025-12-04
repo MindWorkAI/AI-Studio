@@ -1,20 +1,52 @@
 @inherits MSGComponentBase
 
-<div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
-    <MudLink OnClick="@(() => this.AddFilesManually())" Style="text-decoration: none;">
-        <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
-            <MudText Typo="Typo.h6">
-                @T("Drag and drop files here or click to attach documents.")
-            </MudText>
-            @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
+@if (this.UseSmallForm)
+{
+    <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+            @{
+                var fileInfos = this.DocumentPaths.Select(file => new FileInfo(file)).ToList();
+            }
+            @if (fileInfos.Any())
             {
-                <MudBadge Origin="Origin.TopCenter" Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Overlap="true" Bordered="true" OnClick="@(() => this.InvestigateFile(@fileInfo))">
-                    <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
+                <MudBadge
+                    Content="@this.DocumentPaths.Count"
+                    Color="Color.Primary"
+                    Overlap="true">
+                    <MudIconButton
+                        Icon="@Icons.Material.Filled.AttachFile"
+                        Color="Color.Default"
+                        OnClick="@AddFilesManually"/>
                 </MudBadge>
             }
-        </MudPaper>
-    </MudLink>
-    <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
-        @T("Clear file list")
-    </MudButton>
-</div>
+            else
+            {
+                <MudTooltip Text="@T("Click to attach files")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton
+                        Icon="@Icons.Material.Filled.AttachFile"
+                        Color="Color.Default"
+                        OnClick="@AddFilesManually"/>
+                </MudTooltip>
+            }
+    </div>
+}
+else
+{
+    <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+        <MudLink OnClick="@(() => this.AddFilesManually())" Style="text-decoration: none;">
+            <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
+                <MudText Typo="Typo.h6">
+                    @T("Drag and drop files here or click to attach documents.")
+                </MudText>
+                @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
+                {
+                    <MudBadge Origin="Origin.TopCenter" Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Overlap="true" Bordered="true" OnClick="@(() => this.InvestigateFile(@fileInfo))">
+                        <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
+                    </MudBadge>
+                }
+            </MudPaper>
+        </MudLink>
+        <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+            @T("Clear file list")
+        </MudButton>
+    </div>
+}

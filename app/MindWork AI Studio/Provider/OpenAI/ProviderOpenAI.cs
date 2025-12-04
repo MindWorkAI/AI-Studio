@@ -88,6 +88,26 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
+
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        {
+            Role = n.Role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
+                ChatRole.SYSTEM => systemPromptRole,
+
+                _ => "user",
+            },
+
+            Content = n.Content switch
+            {
+                ContentText text => await text.PrepareContentForAI(),
+                _ => string.Empty,
+            }
+        });
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -102,24 +122,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 // Build the messages:
                 // - First of all the system prompt
                 // - Then none-empty user and AI messages
-                Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-                {
-                    Role = n.Role switch
-                    {
-                        ChatRole.USER => "user",
-                        ChatRole.AI => "assistant",
-                        ChatRole.AGENT => "assistant",
-                        ChatRole.SYSTEM => systemPromptRole,
-
-                        _ => "user",
-                    },
-
-                    Content = n.Content switch
-                    {
-                        ContentText text => text.Text,
-                        _ => string.Empty,
-                    }
-                }).ToList()],
+                Messages = [systemPrompt, ..messages],
             
                 // Right now, we only support streaming completions:
                 Stream = true,

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
@@ -39,6 +40,9 @@ public sealed class ContentText : IContent
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
+    
+    /// <inheritdoc />
+    public List<string> FileAttachments { get; set; } = [];
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -139,9 +143,34 @@ public sealed class ContentText : IContent
         Text = this.Text,
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
+        Sources = [..this.Sources],
+        FileAttachments = [..this.FileAttachments],
     };
 
     #endregion
+
+    public async Task<string> PrepareContentForAI()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(this.Text);
+        
+        if(this.FileAttachments.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("The following files are attached to this message:");
+            foreach(var file in this.FileAttachments)
+            {
+                sb.AppendLine();
+                sb.AppendLine("---------------------------------------");
+                sb.AppendLine($"File path: {file}");
+                sb.AppendLine("File content:");
+                sb.AppendLine("````");
+                sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(file, int.MaxValue));
+                sb.AppendLine("````");
+            }
+        }
+        return sb.ToString();
+    }
     
     /// <summary>
     /// The text content.

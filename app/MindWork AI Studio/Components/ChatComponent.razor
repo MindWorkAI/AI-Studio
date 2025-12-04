@@ -83,6 +83,8 @@
             
             <ChatTemplateSelection CanChatThreadBeUsedForTemplate="@this.CanThreadBeSaved" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
+            <AttachDocuments Name="Document Files Drop" @bind-DocumentPaths="@this.chatDocumentPaths" CatchAllDocuments="true" UseSmallForm="true"/>
+            
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
