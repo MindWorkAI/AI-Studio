@@ -3,7 +3,7 @@ require("icon")
 -- ------
 -- This is an example of a configuration plugin. Please replace
 -- the placeholders and assign a valid ID.
--- IDs should be lower-case.
+-- All IDs should be lower-case.
 -- ------
 
 -- The ID for this plugin:
@@ -98,7 +98,7 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the preselected profile.
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- Using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
+-- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
 -- Example chat templates for this configuration:

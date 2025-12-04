@@ -167,19 +167,19 @@ public static partial class ManagedConfiguration
     /// Furthermore, it locks the managed state of the configuration metadata to the provided configuration plugin ID.
     /// The setting's value is set to the configured value.
     /// </remarks>
-    /// <param name="type">Parameter type of the configuration entry.</param>
+    /// <param name="configuredType">Parameter type of the configuration entry.</param>
     /// <param name="configPluginId">The ID of the related configuration plugin.</param>
     /// <param name="settings">The Lua table containing the settings to process.</param>
     /// <param name="configSelection">The expression to select the configuration class.</param>
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
-    /// <typeparam name="TDataType">The data type of the configuration.</typeparam>
+    /// <typeparam name="TDataType">The data type of the configured value.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
     public static bool TryProcessConfiguration<TClass, TDataType>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, string>> propertyExpression,
-        TDataType type,
+        TDataType configuredType,
         Guid configPluginId,
         LuaTable settings,
         bool dryRun)
@@ -201,12 +201,15 @@ public static partial class ManagedConfiguration
             // Step 2 -- try to read the Lua value as a string:
             if(configuredTextValue.TryRead<string>(out var configuredText))
             {
-                switch (type)
+                switch (configuredType)
                 {
+                    // Case: the read string is a Guid:
                     case Guid:
                         successful = Guid.TryParse(configuredText, out var id);
                         configuredValue = successful ? id.ToString().ToLowerInvariant(): configuredText;
                         break;
+                    
+                    // Case: the read string is just a string:
                     case string:
                         configuredValue = configuredText;
                         successful = true;
