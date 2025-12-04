@@ -176,11 +176,7 @@ public partial class AttachDocuments : MSGComponentBase
         {
             { x => x.FilePath, file.FullName },
         };
-        
-        var dialogReference = await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        //if (dialogResult is null || dialogResult.Canceled)
-        //    return;
-        //return;
+
+        await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 }
