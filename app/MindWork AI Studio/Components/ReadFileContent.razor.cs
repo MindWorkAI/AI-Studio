@@ -54,7 +54,7 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
         
-        var fileContent = await UserFile.LoadFileData(selectedFile.SelectedFilePath, this.RustService, this.DialogService, this.Logger);
+        var fileContent = await UserFile.LoadFileData(selectedFile.SelectedFilePath, this.RustService, this.DialogService);
         await this.FileContentChanged.InvokeAsync(fileContent);
     }
 }

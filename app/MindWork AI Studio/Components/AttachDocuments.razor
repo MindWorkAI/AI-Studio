@@ -1,18 +1,27 @@
 @inherits MSGComponentBase
 
-<div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
-    <MudLink OnClick="@(() => this.AddFilesManually())" Style="text-decoration: none;">
-        <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
-            <MudText Typo="Typo.h6">
-                @T("Drag and drop files here or click to attach documents.")
-            </MudText>
-            @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
-            {
-                <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
-            }
-        </MudPaper>
-    </MudLink>
-    <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
-        @T("Clear file list")
+<MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
+    <MudText Typo="Typo.body1" Inline="true">
+        @T("Drag and drop files into the marked area or click here to attach documents: ")
+    </MudText>
+    <MudButton 
+        Variant="Variant.Filled" 
+        Icon="@Icons.Material.Filled.Add" 
+        Color="Color.Primary" 
+        OnClick="@(() => this.AddFilesManually())"
+        Style="vertical-align: top; margin-top: -2px;"
+        Size="Size.Small"
+        T>@T("Add file")
     </MudButton>
+</MudStack>
+<div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+    <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
+        @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
+        {
+            <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
+        }
+    </MudPaper>
 </div>
+<MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+    @T("Clear file list")
+</MudButton>

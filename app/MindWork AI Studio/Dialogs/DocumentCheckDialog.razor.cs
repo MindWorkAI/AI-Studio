@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Dialogs;
 
 /// <summary>
-/// Check how your file will be loaded by Pandoc.
+/// Check how your file will be loaded.
 /// </summary>
-public partial class PandocDocumentCheckDialog : MSGComponentBase
+public partial class DocumentCheckDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -35,7 +35,7 @@ public partial class PandocDocumentCheckDialog : MSGComponentBase
     {
         if (firstRender && !string.IsNullOrEmpty(this.FilePath))
         {
-            var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService, this.Logger);
+            var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService);
             this.FileContent = fileContent;
             this.StateHasChanged();
         }
