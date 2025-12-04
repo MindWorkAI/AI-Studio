@@ -1,6 +1,6 @@
 ﻿using System.Formats.Asn1;
 using AIStudio.Components;
-
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
@@ -12,9 +12,33 @@ public partial class PandocDocumentCheckDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
-
     
-    private string documentContent = string.Empty;
+    [Parameter]
+    public string FilePath { get; set; } = string.Empty;
     
     private void Cancel() => this.MudDialog.Cancel();
+    
+    [Parameter]
+    public string FileContent { get; set; } = string.Empty;
+    
+    [Inject]
+    private RustService RustService { get; init; } = null!;
+    
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+    
+    [Inject]
+    private ILogger<ReadFileContent> Logger { get; init; } = null!;
+    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(this.FilePath))
+        {
+            var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService, this.Logger);
+            this.FileContent = fileContent;
+            this.StateHasChanged();
+        }
+    }
+    
 }

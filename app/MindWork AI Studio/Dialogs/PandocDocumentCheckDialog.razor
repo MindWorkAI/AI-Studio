@@ -6,14 +6,23 @@
         <PreviewPrototype/>
         
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Test how Pandoc loads your document. See the raw content it produces before further processing.")
+            @T("Test how Pandoc loads your file. Check the raw content it produces before further processing.")
         </MudJustifiedText>
-
-        <ReadFileContent Text="@T("Load document")" @bind-FileContent="@this.documentContent"/>
-
+        
+        @if (FilePath == string.Empty)
+        {
+            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.FileContent"/>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("Loaded file path:") @FilePath
+            </MudJustifiedText>
+        }
+        
         <MudTextField
             T="string"
-            @bind-Text="@this.documentContent"
+            @bind-Text="@this.FileContent"
             AdornmentIcon="@Icons.Material.Filled.Article"
             Adornment="Adornment.Start"
             Immediate="@true"
@@ -23,7 +32,7 @@
             AutoGrow="@true"
             MaxLines="25"
             Class="mt-10"
-            HelperText="@T("This is the content Pandoc loaded from your document — including headings, lists, and formatting. Use this to verify your document loads as expected.")"
+            HelperText="@T("This is the content Pandoc loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"
         />
     </DialogContent>
     <DialogActions>

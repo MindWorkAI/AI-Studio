@@ -8,9 +8,7 @@
             </MudText>
             @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
             {
-                <MudBadge Origin="Origin.TopCenter" Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Overlap="true" Bordered="true" OnClick="@(() => this.InvestigateFile(@fileInfo))">
-                    <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
-                </MudBadge>
+                <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
             }
         </MudPaper>
     </MudLink>
