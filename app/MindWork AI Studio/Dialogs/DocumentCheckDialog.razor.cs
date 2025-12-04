@@ -1,5 +1,4 @@
-﻿using System.Formats.Asn1;
-using AIStudio.Components;
+﻿using AIStudio.Components;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -30,7 +29,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
     [Inject]
     private ILogger<ReadFileContent> Logger { get; init; } = null!;
     
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !string.IsNullOrEmpty(this.FilePath))

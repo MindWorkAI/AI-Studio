@@ -1,5 +1,4 @@
 ﻿using AIStudio.Dialogs;
-using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
