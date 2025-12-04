@@ -31,12 +31,11 @@ public partial class DocumentCheckDialog : MSGComponentBase
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !string.IsNullOrEmpty(this.FilePath))
+        if (firstRender && !string.IsNullOrWhiteSpace(this.FilePath))
         {
             var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService);
             this.FileContent = fileContent;
             this.StateHasChanged();
         }
     }
-    
 }
