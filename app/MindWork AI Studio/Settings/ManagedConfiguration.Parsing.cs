@@ -155,8 +155,7 @@ public static partial class ManagedConfiguration
         LuaTable settings,
         bool dryRun)
     {
-        return TryProcessConfiguration(configSelection, propertyExpression, string.Empty, configPluginId, settings,
-            dryRun);
+        return TryProcessConfiguration(configSelection, propertyExpression, string.Empty, configPluginId, settings, dryRun);
     }
 
     /// <summary>
@@ -206,7 +205,7 @@ public static partial class ManagedConfiguration
                     // Case: the read string is a Guid:
                     case Guid:
                         successful = Guid.TryParse(configuredText, out var id);
-                        configuredValue = successful ? id.ToString().ToLowerInvariant(): configuredText;
+                        configuredValue = successful ? id.ToString().ToLowerInvariant() : configuredText;
                         break;
                     
                     // Case: the read string is just a string:
