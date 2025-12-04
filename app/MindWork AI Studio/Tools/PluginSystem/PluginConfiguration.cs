@@ -77,7 +77,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
         
         // Config: preselected profile?
-        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProfile, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
         
         message = string.Empty;
         return true;
