@@ -16,7 +16,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
     [Parameter]
     public string FilePath { get; set; } = string.Empty;
     
-    private void Cancel() => this.MudDialog.Cancel();
+    private void Close() => this.MudDialog.Cancel();
     
     [Parameter]
     public string FileContent { get; set; } = string.Empty;
