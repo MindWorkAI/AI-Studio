@@ -6,7 +6,7 @@
         <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
         @if (!string.IsNullOrWhiteSpace(this.DataSource.Description))
         {
-            <TextInfoLine Icon="@Icons.Material.Filled.Description" Label="@T("Description")" Value="@this.DataSource.Description" ClipboardTooltipSubject="@T("the description")"/>
+            <TextInfoLines Label="@T("Description")" Value="@this.DataSource.Description" MaxLines="5" ClipboardTooltipSubject="@T("the description")"/>
         }
 
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
