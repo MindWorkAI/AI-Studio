@@ -2907,6 +2907,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"]
 -- Your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
 
+-- Markdown View
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1373123357"] = "Markdown-Ansicht"
+
 -- Load file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2129302565"] = "Datei laden"
 
@@ -2918,6 +2921,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3448155331"] = "Schlie
 
 -- Loaded Content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3529911749"] = "Geladener Inhalt"
+
+-- Simple View
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T428485200"] = "Einfache Ansicht"
 
 -- This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T652739927"] = "Dies ist der Inhalt, den wir aus Ihrer Datei geladen haben – einschließlich Überschriften, Listen und Formatierung. Verwenden Sie dies, um zu überprüfen, ob Ihre Datei wie erwartet geladen wird."
