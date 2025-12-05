@@ -38,4 +38,11 @@ public partial class DocumentCheckDialog : MSGComponentBase
             this.StateHasChanged();
         }
     }
+    
+    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
+
+    private MudMarkdownStyling MarkdownStyling => new()
+    {
+        CodeBlock = { Theme = this.CodeColorPalette },
+    };
 }
