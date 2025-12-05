@@ -188,11 +188,17 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             switch (ds)
             {
                 case DataSourceLocalDirectory localDirectory:
-                    sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'");
+                    if (string.IsNullOrWhiteSpace(localDirectory.Description))
+                        sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'");
+                    else
+                        sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}', description='{localDirectory.Description}'");
                     break;
 
                 case DataSourceLocalFile localFile:
-                    sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'");
+                    if (string.IsNullOrWhiteSpace(localFile.Description))
+                        sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'");
+                    else
+                        sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}', description='{localFile.Description}'");
                     break;
 
                 case IERIDataSource eriDataSource:

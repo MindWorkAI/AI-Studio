@@ -20,6 +20,22 @@
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataDescription"
+                Label="@T("Description")"
+                Class="mb-6"
+                MaxLength="200"
+                Counter="200"
+                Immediate="@true"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Description"
+                AdornmentColor="Color.Info"
+                HelperText="@T("Describe what kind of data this source contains to help the AI select it appropriately.")"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Lines="3"
+            />
+
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
             </MudJustifiedText>
