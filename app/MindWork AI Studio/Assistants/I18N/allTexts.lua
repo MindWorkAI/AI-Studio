@@ -1483,11 +1483,11 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export C
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
--- Drag and drop files here or click to attach documents.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1647829151"] = "Drag and drop files here or click to attach documents."
+-- Drag and drop files into the marked area or click here to attach documents:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
 
--- Pandoc Load Document Preview
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2686523471"] = "Pandoc Load Document Preview"
+-- Document Preview
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T285154968"] = "Document Preview"
 
 -- Videos are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2928927510"] = "Videos are not supported yet"
@@ -1497,6 +1497,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T298062956"] = "Images a
 
 -- Clear file list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3759696136"] = "Clear file list"
+
+-- Add file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4014053962"] = "Add file"
 
 -- Executables are not allowed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4167762413"] = "Executables are not allowed"
@@ -1800,12 +1803,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
-
--- Pandoc Installation
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T185447014"] = "Pandoc Installation"
-
--- Pandoc may be required for importing files.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2596465560"] = "Pandoc may be required for importing files."
 
 -- Videos are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2928927510"] = "Videos are not supported yet"
@@ -2908,6 +2905,30 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"]
 -- Your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T4081226330"] = "Your security policy"
 
+-- Markdown View
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1373123357"] = "Markdown View"
+
+-- Load file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2129302565"] = "Load file"
+
+-- See how we load your file. Review the content before we process it further.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3271853346"] = "See how we load your file. Review the content before we process it further."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3448155331"] = "Close"
+
+-- Loaded Content
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3529911749"] = "Loaded Content"
+
+-- Simple View
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T428485200"] = "Simple View"
+
+-- This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T652739927"] = "This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."
+
+-- File Path
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T729508546"] = "File Path"
+
 -- Embedding Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T1427271797"] = "Embedding Name"
 
@@ -3117,21 +3138,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Accept the ter
 
 -- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
-
--- Test how Pandoc loads your document. See the raw content it produces before further processing.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T1481857352"] = "Test how Pandoc loads your document. See the raw content it produces before further processing."
-
--- Content Loaded by Pandoc
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2147198279"] = "Content Loaded by Pandoc"
-
--- This is the content Pandoc loaded from your document — including headings, lists, and formatting. Use this to verify your document loads as expected.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2156541074"] = "This is the content Pandoc loaded from your document — including headings, lists, and formatting. Use this to verify your document loads as expected."
-
--- Load document
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T2394358670"] = "Load document"
-
--- Cancel
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDOCUMENTCHECKDIALOG::T900713019"] = "Cancel"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
@@ -5874,6 +5880,15 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4174900468"] = "Sources pro
 
 -- Sources provided by the AI
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Sources provided by the AI"
+
+-- Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T185447014"] = "Pandoc Installation"
+
+-- Pandoc may be required for importing files.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T2596465560"] = "Pandoc may be required for importing files."
+
+-- The file path is null or empty and the file therefore can not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "The file path is null or empty and the file therefore can not be loaded."
 
 -- The hostname is not a valid HTTP(S) URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"] = "The hostname is not a valid HTTP(S) URL."
