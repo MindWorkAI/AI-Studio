@@ -2691,11 +2691,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T742006305"] = "
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T951463987"] = "Einbettungen"
 
+-- Describe what data this directory contains to help the AI select it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1136409150"] = "Beschreiben Sie, welche Daten dieses Verzeichnis enthält, um der KI bei der Auswahl zu helfen."
+
 -- Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1265737624"] = "Wählen Sie ein Stammverzeichnis für diese Datenquelle aus. Alle Daten in diesem Verzeichnis und in allen Unterverzeichnissen werden für diese Datenquelle verarbeitet."
 
 -- Selected base directory for this data source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1312296210"] = "Ausgewähltes Stammverzeichnis für diese Datenquelle"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1725856265"] = "Beschreibung"
 
 -- How many matches do you want at most per query?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
@@ -2754,6 +2760,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1101400
 -- Data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T171124909"] = "Name der Datenquellen"
 
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1725856265"] = "Beschreibung"
+
 -- the number of files in the directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T1795263412"] = "die Anzahl der Dateien im Verzeichnis"
 
@@ -2765,6 +2774,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2072700
 
 -- the maximum number of matches per query
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2479753122"] = "die maximale Anzahl an Treffern pro Abfrage"
+
+-- the description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2658359966"] = "Die Beschreibung"
 
 -- the data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
@@ -2814,6 +2826,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYINFODIALOG::T4458586
 -- Select a file for this data source. The content of this file will be processed for the data source.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1190880267"] = "Wählen Sie eine Datei für diese Datenquelle aus. Der Inhalt dieser Datei wird für die Datenquelle verarbeitet."
 
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1725856265"] = "Beschreibung"
+
 -- How many matches do you want at most per query?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
 
@@ -2837,6 +2852,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2814869210"] = "
 
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "Einbettung"
+
+-- Describe what data this file contains to help the AI select it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2859265837"] = "Beschreiben Sie, welche Daten diese Datei enthält, um der KI bei der Auswahl zu helfen."
 
 -- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "Für einige Dateitypen, wie zum Beispiel Office-Dateien, benötigt MindWork AI Studio die Open-Source-Anwendung Pandoc."
@@ -2871,6 +2889,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1294177559"]
 -- Data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T171124909"] = "Name der Datenquelle"
 
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1725856265"] = "Beschreibung"
+
 -- The embedding runs locally or in your organization. Your data is not sent to the cloud.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T1950544032"] = "Die Einbettung erfolgt lokal oder in ihrem Unternehmen. Ihre Daten werden nicht in die Cloud gesendet."
 
@@ -2879,6 +2900,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2235729121"]
 
 -- the maximum number of matches per query
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2479753122"] = "die maximale Anzahl an Treffern pro Abfrage"
+
+-- the description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2658359966"] = "Die Beschreibung"
 
 -- the data source name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T2717738728"] = "den Namen der Datenquelle"
