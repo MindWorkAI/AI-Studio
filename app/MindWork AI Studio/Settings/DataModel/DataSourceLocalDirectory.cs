@@ -20,7 +20,13 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     
     /// <inheritdoc />
     public string Name { get; init; } = string.Empty;
-    
+
+    /// <summary>
+    /// The description of the data source. What kind of data does it contain?
+    /// What is the data source used for?
+    /// </summary>
+    public string Description { get; init; } = string.Empty;
+
     /// <inheritdoc />
     public DataSourceType Type { get; init; } = DataSourceType.NONE;
     

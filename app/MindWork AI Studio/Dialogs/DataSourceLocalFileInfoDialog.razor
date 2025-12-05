@@ -4,6 +4,11 @@
 <MudDialog>
     <DialogContent>
         <TextInfoLine Icon="@Icons.Material.Filled.Tag" Label="@T("Data source name")" Value="@this.DataSource.Name" ClipboardTooltipSubject="@T("the data source name")"/>
+        @if (!string.IsNullOrWhiteSpace(this.DataSource.Description))
+        {
+            <TextInfoLines Label="@T("Description")" Value="@this.DataSource.Description" MaxLines="5" ClipboardTooltipSubject="@T("the description")"/>
+        }
+
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("File path")" Value="@this.DataSource.FilePath" ClipboardTooltipSubject="@T("this path")"/>
         @if (!this.IsFileAvailable)
         {

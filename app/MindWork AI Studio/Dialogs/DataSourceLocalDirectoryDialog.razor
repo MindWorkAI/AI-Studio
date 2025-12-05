@@ -18,6 +18,24 @@
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Variant="Variant.Outlined"
+            />
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataDescription"
+                Label="@T("Description")"
+                Class="mb-6"
+                MaxLength="200"
+                Counter="200"
+                Immediate="@true"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Description"
+                AdornmentColor="Color.Info"
+                HelperText="@T("Describe what data this directory contains to help the AI select it.")"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Variant="Variant.Outlined"
+                Lines="3"
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
