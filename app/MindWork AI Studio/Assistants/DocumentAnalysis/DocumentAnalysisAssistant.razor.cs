@@ -32,7 +32,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         
         POLICY_ANALYSIS_RULES: authoritative instructions for how to analyze.
         
-        POLICY_OUTPUT_RULES: authoritative instructions for how the output should look like.
+        POLICY_OUTPUT_RULES: authoritative instructions for how the answer should look like.
         
         DOCUMENTS: the only content you may analyze.
         
@@ -55,7 +55,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         # Handling missing or ambiguous Information
         
         If POLICY_OUTPUT_RULES define a fallback for insufficient information, use it.
-        Otherwise output exactly the single token: INSUFFICIENT_INFORMATION, followed by a minimal bullet list of the missing items, using the required language.
+        Otherwise answer exactly with a the single token: INSUFFICIENT_INFORMATION, followed by a minimal bullet list of the missing items, using the required language.
         
         # Language
         
@@ -65,7 +65,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         
         # Style and prohibitions
         
-        Keep answers precise, professional, and factual.
+        Keep answers professional, and factual.
         Do not include opening/closing remarks, disclaimers, or meta commentary unless required by POLICY_OUTPUT_RULES.
         Do not quote or summarize POLICY_* unless required by POLICY_OUTPUT_RULES.
         
@@ -75,7 +75,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         
         # Self‑check before sending
         
-        Verify the output matches POLICY_OUTPUT_RULES exactly.
+        Verify the answer matches POLICY_OUTPUT_RULES exactly.
         Verify every statement is attributable to DOCUMENTS or POLICY_*.
         Remove any text not required by POLICY_OUTPUT_RULES.
         
@@ -366,9 +366,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.CreateChatThread();
         
         var userRequest = this.AddUserRequest(
-            $"""
-                {await this.PromptLoadDocumentsContent()}
-             """, hideContentFromUser:true);
+            $"{await this.PromptLoadDocumentsContent()}", hideContentFromUser:true);
 
         await this.AddAIResponseAsync(userRequest);
     }
