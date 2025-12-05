@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
