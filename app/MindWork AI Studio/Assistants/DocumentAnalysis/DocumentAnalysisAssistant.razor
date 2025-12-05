@@ -43,7 +43,7 @@ else
 
 <MudExpansionPanels Class="mb-3 mt-6" MultiExpansion="@false">
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@(T("Policy definition") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
-        <MudText Typo="Typo.h4" Class="mb-1">
+        <MudText Typo="Typo.h5" Class="mb-1">
             @T("Common settings")
         </MudText>
         
@@ -53,7 +53,7 @@ else
         
         <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsManaged ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
 
-        <MudText Typo="Typo.h4" Class="mt-6 mb-1">
+        <MudText Typo="Typo.h5" Class="mt-6 mb-1">
             @T("Analysis and output rules")
         </MudText>
         
@@ -77,7 +77,7 @@ else
         
         <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules"/>
         
-        <MudText Typo="Typo.h4" Class="mt-6 mb-1">
+        <MudText Typo="Typo.h5" Class="mt-6 mb-1">
             @T("Preparation for enterprise distribution")
         </MudText>
         
@@ -91,7 +91,7 @@ else
     <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
     
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
-        <MudText Typo="Typo.h4" Class="mb-1">
+        <MudText Typo="Typo.h5" Class="mb-1">
             @T("Policy Description")
         </MudText>
         
@@ -99,7 +99,7 @@ else
             @this.selectedPolicy?.PolicyDescription
         </MudJustifiedText>
         
-        <MudText Typo="Typo.h4" Class="mb-1 mt-6">
+        <MudText Typo="Typo.h5" Class="mb-1 mt-6">
             @T("Documents for the analysis")
         </MudText>
         
