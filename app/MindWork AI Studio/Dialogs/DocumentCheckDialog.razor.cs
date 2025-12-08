@@ -33,10 +33,21 @@ public partial class DocumentCheckDialog : MSGComponentBase
     {
         if (firstRender && !string.IsNullOrWhiteSpace(this.FilePath))
         {
-            var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService);
-            this.FileContent = fileContent;
-            this.StateHasChanged();
+            try
+            {
+                var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService);
+                this.FileContent = fileContent;
+                this.StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to load file content from '{FilePath}'", this.FilePath);
+                this.FileContent = string.Empty;
+                this.StateHasChanged();
+            }
         }
+        else if (firstRender)
+            this.Logger.LogWarning("Document check dialog opened without a valid file path");
     }
     
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
