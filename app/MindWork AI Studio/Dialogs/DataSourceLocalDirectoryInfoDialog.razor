@@ -41,7 +41,7 @@
         <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
 
         <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("Number of files")" Value="@this.NumberFilesInDirectory" ClipboardTooltipSubject="@T("the number of files in the directory")"/>
-        <TextInfoLines Label="@T("Files list")" MaxLines="14" Value="@this.directoryFiles.ToString()" ClipboardTooltipSubject="@T("the files list")"/>
+        <TextInfoLines Label="@T("Files list")" MaxLines="14" Value="@this.directoryFilesText" ClipboardTooltipSubject="@T("the files list")"/>
         @if (this.directorySizeNumFiles > 100)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Warning" Class="mb-3">

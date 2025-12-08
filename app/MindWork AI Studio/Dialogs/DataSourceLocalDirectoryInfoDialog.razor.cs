@@ -51,6 +51,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
     private long directorySizeBytes;
     private long directorySizeNumFiles;
     private readonly StringBuilder directoryFiles = new();
+    private string directoryFilesText = string.Empty;
     private Task directorySizeTask = Task.CompletedTask;
     
     private bool IsOperationInProgress { get; set; } = true;
@@ -63,6 +64,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
     {
         this.directoryFiles.Append("- ");
         this.directoryFiles.AppendLine(file);
+        this.directoryFilesText = this.directoryFiles.ToString();
     }
 
     private void UpdateDirectorySize(long size)
