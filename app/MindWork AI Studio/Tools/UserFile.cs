@@ -15,7 +15,7 @@ public static class UserFile
     /// Attempts to load the content of a file at the specified path, ensuring Pandoc is installed and available before proceeding.
     /// </summary>
     /// <param name="filePath">The full path to the file to be read. Must not be null or empty.</param>
-    /// <param name="rustService">Rustservice used to read file content.</param>
+    /// <param name="rustService">Rust service used to read file content.</param>
     /// <param name="dialogService">Dialogservice used to display the Pandoc installation dialog if needed.</param>
     public static async Task<string> LoadFileData(string filePath, RustService rustService, IDialogService dialogService)
     {
