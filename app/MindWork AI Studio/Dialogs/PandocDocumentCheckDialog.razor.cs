@@ -12,7 +12,6 @@ public partial class PandocDocumentCheckDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
-
     
     private string documentContent = string.Empty;
     
