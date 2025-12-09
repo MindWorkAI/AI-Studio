@@ -39,6 +39,7 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+    
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     
     #region Overrides of MSGComponentBase
