@@ -463,7 +463,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
-                FileAttachments = this.chatDocumentPaths.ToList(), // Create a copy
+                FileAttachments = this.chatDocumentPaths.ToList(),
             };
 
             //
@@ -578,7 +578,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.hasUnsavedChanges = false;
     }
     
-
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
     {
         //
