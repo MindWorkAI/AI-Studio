@@ -158,8 +158,11 @@ public sealed class ContentText : IContent
         {
             // Check Pandoc availability once before processing file attachments
             var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
-            if (!pandocState.IsAvailable || !pandocState.CheckWasSuccessful)
-                LOGGER.LogWarning("File attachments could not be processed because Pandoc is not available or the version check failed.");
+
+            if (!pandocState.IsAvailable)
+                LOGGER.LogWarning("File attachments could not be processed because Pandoc is not available.");
+            else if (!pandocState.CheckWasSuccessful)
+                LOGGER.LogWarning("File attachments could not be processed because the Pandoc version check failed.");
             else
             {
                 sb.AppendLine();
