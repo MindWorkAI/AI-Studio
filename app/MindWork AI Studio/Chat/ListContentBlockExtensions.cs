@@ -20,6 +20,6 @@ public static class ListContentBlockExtensions
         await Task.WhenAll(messages);
 
         // Select all results:
-        return (IList<TResult>)messages.Select(n => n.Result);
+        return messages.Select(n => n.Result).ToList();
     }
 }
