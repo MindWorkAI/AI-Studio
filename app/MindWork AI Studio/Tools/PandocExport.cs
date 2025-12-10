@@ -25,11 +25,11 @@ public static class PandocExport
 
         LOGGER.LogInformation($"The user chose the path '{response.SaveFilePath}' for the Microsoft Word export.");
 
-        var tempMarkdownFile = Guid.NewGuid().ToString();
-        var tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
-
         try
         {
+            var tempMarkdownFile = Guid.NewGuid().ToString();
+            var tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
+            
             // Extract text content from chat:
             var markdownText = markdownContent switch
             {
