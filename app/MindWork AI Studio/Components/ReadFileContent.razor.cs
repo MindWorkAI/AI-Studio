@@ -1,10 +1,7 @@
-using AIStudio.Dialogs;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
-
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
@@ -21,12 +18,15 @@ public partial class ReadFileContent : MSGComponentBase
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
     [Inject]
     private ILogger<ReadFileContent> Logger { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
     
     private async Task SelectFile()
     {
@@ -57,24 +57,9 @@ public partial class ReadFileContent : MSGComponentBase
         }
         
         // Ensure that Pandoc is installed and ready:
-        var pandocState = await Pandoc.CheckAvailabilityAsync(this.RustService, showSuccessMessage: false);
-        if (!pandocState.IsAvailable)
-        {
-            var dialogParameters = new DialogParameters<PandocDialog>
-            {
-                { x => x.ShowInitialResultInSnackbar, false },
-            };
-                
-            var dialogReference = await this.DialogService.ShowAsync<PandocDialog>(T("Pandoc Installation"), dialogParameters, DialogOptions.FULLSCREEN);
-            await dialogReference.Result;
-                
-            pandocState = await Pandoc.CheckAvailabilityAsync(this.RustService, showSuccessMessage: true);
-            if (!pandocState.IsAvailable)
-            {
-                this.Logger.LogError("Pandoc is not available after installation attempt.");
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, T("Pandoc may be required for importing files.")));
-            }
-        }
+        await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
         
         var fileContent = await this.RustService.ReadArbitraryFileData(selectedFile.SelectedFilePath, int.MaxValue);
         await this.FileContentChanged.InvokeAsync(fileContent);
