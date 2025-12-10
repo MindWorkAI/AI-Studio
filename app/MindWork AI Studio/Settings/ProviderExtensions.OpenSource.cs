@@ -112,6 +112,8 @@ public static partial class ProviderExtensions
         // Mistral models:
         //
         if (modelName.IndexOf("mistral") is not -1 ||
+            modelName.IndexOf("magistral") is not -1 ||
+            modelName.IndexOf("voxtral") is not -1 ||
             modelName.IndexOf("pixtral") is not -1)
         {
             if(modelName.IndexOf("pixtral") is not -1)
@@ -119,15 +121,50 @@ public static partial class ProviderExtensions
                     [
                         Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                         Capability.TEXT_OUTPUT,
+                        
                         Capability.FUNCTION_CALLING,
                         Capability.CHAT_COMPLETION_API,
                     ];
+            
+            if (modelName.IndexOf("mistral-3") is not -1 ||
+                modelName.IndexOf("mistral-large-3") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            if (modelName.IndexOf("voxtral-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.SPEECH_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            // Magistral models:
+            if (modelName.IndexOf("magistral-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                
+                    Capability.FUNCTION_CALLING,
+                    Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
             
             if (modelName.IndexOf("3.1") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
+                    
                     Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
@@ -137,6 +174,7 @@ public static partial class ProviderExtensions
                 [
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
+                    
                     Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];

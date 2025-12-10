@@ -19,6 +19,17 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
+        // Mistral large:
+        if (modelName.IndexOf("mistral-large-") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
         // Mistral medium:
         if (modelName.IndexOf("mistral-medium-") is not -1)
             return
