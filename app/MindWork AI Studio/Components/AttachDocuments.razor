@@ -37,12 +37,12 @@ else
         </MudText>
         <MudButton
             Variant="Variant.Filled"
-            Icon="@Icons.Material.Filled.Add"
+            StartIcon="@Icons.Material.Filled.Add"
             Color="Color.Primary"
             OnClick="@(() => this.AddFilesManually())"
             Style="vertical-align: top; margin-top: -2px;"
-            Size="Size.Small"
-            T>@T("Add file")
+            Size="Size.Small">
+            @T("Add file")
         </MudButton>
     </MudStack>
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
