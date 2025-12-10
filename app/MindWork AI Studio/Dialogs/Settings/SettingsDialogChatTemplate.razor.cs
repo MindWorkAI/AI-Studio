@@ -13,7 +13,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     public ChatThread? ExistingChatThread { get; set; }
     
     #region Overrides of ComponentBase
-
+    
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {

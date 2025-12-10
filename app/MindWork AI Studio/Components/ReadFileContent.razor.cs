@@ -24,6 +24,9 @@ public partial class ReadFileContent : MSGComponentBase
     
     [Inject]
     private ILogger<ReadFileContent> Logger { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
     
     private async Task SelectFile()
     {
@@ -62,6 +65,11 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
 
+        // Ensure that Pandoc is installed and ready:
+        await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
+        
         try
         {
             var fileContent = await UserFile.LoadFileData(selectedFile.SelectedFilePath, this.RustService, this.DialogService);

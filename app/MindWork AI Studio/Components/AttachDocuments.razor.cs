@@ -28,6 +28,9 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter] 
     public bool CatchAllDocuments { get; set; }
     
+    [Parameter]
+    public bool UseSmallForm { get; set; }
+    
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
     
@@ -36,6 +39,8 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+    
+    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     
     #region Overrides of MSGComponentBase
 

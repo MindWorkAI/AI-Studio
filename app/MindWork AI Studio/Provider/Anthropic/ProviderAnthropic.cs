@@ -30,29 +30,32 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("system");
 
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        {
+            Role = n.Role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
+
+                _ => "user",
+            },
+
+            Content = n.Content switch
+            {
+                ContentText text => await text.PrepareContentForAI(),
+                _ => string.Empty,
+            }
+        });
+        
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
             
             // Build the messages:
-            Messages = [..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [..messages],
             
             System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
             MaxTokens = apiParameters.TryGetValue("max_tokens", out var value) && value is int intValue ? intValue : 4_096,

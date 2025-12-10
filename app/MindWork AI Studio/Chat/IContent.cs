@@ -47,6 +47,13 @@ public interface IContent
     /// </remarks>
     [JsonIgnore]
     public List<Source> Sources { get; set; }
+
+    /// <summary>
+    /// Represents a collection of file attachments associated with the content.
+    /// This property contains a list of file paths that are appended
+    /// to the content to provide additional context or resources.
+    /// </summary>
+    public List<string> FileAttachments { get; set; }
     
     /// <summary>
     /// Uses the provider to create the content.

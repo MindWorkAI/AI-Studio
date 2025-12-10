@@ -16,11 +16,19 @@
             </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
+            @if (this.Content.FileAttachments.Count > 0)
+            {
+                <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
+                    <MudBadge Content="@this.Content.FileAttachments.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
+                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile" />
+                    </MudBadge>
+                </MudTooltip>
+            }
             @if (this.Content.Sources.Count > 0)
             {
                 <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
                     <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                        <MudIconButton Icon="@Icons.Material.Filled.Link" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Link"/>
                     </MudBadge>
                 </MudTooltip>
             }
