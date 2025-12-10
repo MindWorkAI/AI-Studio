@@ -25,10 +25,11 @@ public static class PandocExport
 
         LOGGER.LogInformation($"The user chose the path '{response.SaveFilePath}' for the Microsoft Word export.");
 
+        var tempMarkdownFilePath = string.Empty;
         try
         {
             var tempMarkdownFile = Guid.NewGuid().ToString();
-            var tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
+            tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
             
             // Extract text content from chat:
             var markdownText = markdownContent switch
@@ -110,13 +111,16 @@ public static class PandocExport
         finally
         {
             // Try to remove the temp file:
-            try
+            if (!string.IsNullOrWhiteSpace(tempMarkdownFilePath))
             {
-                File.Delete(tempMarkdownFilePath);
-            }
-            catch
-            {
-                LOGGER.LogWarning($"Was not able to delete temporary file: '{tempMarkdownFilePath}'");
+                try
+                {
+                    File.Delete(tempMarkdownFilePath);
+                }
+                catch
+                {
+                    LOGGER.LogWarning($"Was not able to delete temporary file: '{tempMarkdownFilePath}'");
+                }
             }
         }
     }
