@@ -80,11 +80,18 @@ public static class PandocExport
                 return false;
             }
 
+            // Read output streams asynchronously while the process runs (prevents deadlock):
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            // Wait for the process to exit AND for streams to be fully read:
             await process.WaitForExitAsync();
+            await outputTask;
+            var error = await errorTask;
+
             if (process.ExitCode is not 0)
             {
-                var error = await process.StandardError.ReadToEndAsync();
-                LOGGER.LogError($"Pandoc failed with exit code {process.ExitCode}: {error}");
+                LOGGER.LogError("Pandoc failed with exit code {ProcessExitCode}: '{ErrorText}'", process.ExitCode, error);
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during Microsoft Word export")));
                 return false;
             }
