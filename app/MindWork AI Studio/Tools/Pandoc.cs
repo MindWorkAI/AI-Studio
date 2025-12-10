@@ -49,19 +49,26 @@ public static partial class Pandoc
             {
                 if (showMessages)
                     await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, TB("Was not able to check the Pandoc installation.")));
-                
+
                 LOG.LogInformation("The Pandoc process was not started, it was null");
                 return new(false, TB("Was not able to check the Pandoc installation."), false, string.Empty, preparedProcess.IsLocal);
             }
-                
-            var output = await process.StandardOutput.ReadToEndAsync();
+
+            // Read output streams asynchronously while the process runs (prevents deadlock):
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            // Wait for the process to exit AND for streams to be fully read:
             await process.WaitForExitAsync();
+            var output = await outputTask;
+            var error = await errorTask;
+
             if (process.ExitCode != 0)
             {
                 if (showMessages)
                     await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc is not available on the system or the process had issues.")));
-                
-                LOG.LogError("The Pandoc process was exited with code {ProcessExitCode}", process.ExitCode);
+
+                LOG.LogError("The Pandoc process exited with code {ProcessExitCode}. Error output: '{ErrorText}'", process.ExitCode, error);
                 return new(false, TB("Pandoc is not available on the system or the process had issues."), false, string.Empty, preparedProcess.IsLocal);
             }
 
