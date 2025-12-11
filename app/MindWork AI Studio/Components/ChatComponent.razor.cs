@@ -3,7 +3,6 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -38,9 +37,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
-    [Inject]
-    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
-    
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -62,7 +58,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
     private HashSet<string> chatDocumentPaths = [];
-    private bool isPandocAvailable;
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -203,9 +198,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
-
-        // Check if Pandoc is available (no dialog or messages):
-        this.isPandocAvailable = await this.PandocAvailabilityService.IsAvailableAsync();
 
         await base.OnInitializedAsync();
     }

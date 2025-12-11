@@ -39,7 +39,10 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     
     #region Overrides of MSGComponentBase
@@ -71,12 +74,17 @@ public partial class AttachDocuments : MSGComponentBase
                     this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
                     return;
                 }
-                
+
+                // Ensure that Pandoc is installed and ready:
+                await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                    showSuccessMessage: false,
+                    showDialog: true);
+
                 foreach (var path in paths)
                 {
                     if(!await this.IsFileExtensionValid(path))
                         continue;
-                    
+
                     this.DocumentPaths.Add(path);
                 }
 
@@ -97,6 +105,11 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task AddFilesManually()
     {
+        // Ensure that Pandoc is installed and ready:
+        await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
+
         var selectedFile = await this.RustService.SelectFile(T("Select a file to attach"));
         if (selectedFile.UserCancelled)
             return;
