@@ -38,6 +38,26 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
+            
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        {
+            Role = n.Role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
+                ChatRole.SYSTEM => "system",
+
+                _ => "user",
+            },
+
+            Content = n.Content switch
+            {
+                ContentText text => await text.PrepareContentForAI(),
+                _ => string.Empty,
+            }
+        });
         
         // Prepare the Helmholtz HTTP chat request:
         var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -47,24 +67,8 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
+                
             Stream = true,
             AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);

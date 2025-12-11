@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
@@ -28,6 +28,9 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter] 
     public bool CatchAllDocuments { get; set; }
     
+    [Parameter]
+    public bool UseSmallForm { get; set; }
+    
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
     
@@ -36,6 +39,8 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+    
+    private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     
     #region Overrides of MSGComponentBase
 
@@ -167,19 +172,16 @@ public partial class AttachDocuments : MSGComponentBase
     }
 
     /// <summary>
-    /// The user might want to check what the Pandoc integration actually extracts from his file and therefore gives the LLM as input. 
+    /// The user might want to check what we actually extract from his file and therefore give the LLM as an input. 
     /// </summary>
     /// <param name="file">The file to check.</param>
     private async Task InvestigateFile(FileInfo file)
     {
-        # warning Implement Investigation of file 
-        
-        var dialogParameters = new DialogParameters<PandocDocumentCheckDialog>{};
-        
-        var dialogReference = await this.DialogService.ShowAsync<PandocDocumentCheckDialog>(T("Pandoc Load Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-        return;
+        var dialogParameters = new DialogParameters<DocumentCheckDialog>
+        {
+            { x => x.FilePath, file.FullName },
+        };
+
+        await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 }

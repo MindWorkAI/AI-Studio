@@ -3,7 +3,7 @@
 
 @using AIStudio.Settings.DataModel
 
-<PreviewPrototype/>
+<PreviewPrototype ApplyInnerScrollingFix="true"/>
 <div class="mb-6"></div>
 
 <MudText Typo="Typo.h4" Class="mb-3">
@@ -22,7 +22,7 @@
 }
 else
 {
-    <MudList T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
+    <MudList Color="Color.Primary" T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
         @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
         {
             <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
@@ -43,7 +43,7 @@ else
 
 <MudExpansionPanels Class="mb-3 mt-6" MultiExpansion="@false">
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@(T("Policy definition") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(!this.selectedPolicy?.IsProtected ?? true)">
-        <MudText Typo="Typo.h4" Class="mb-1">
+        <MudText Typo="Typo.h5" Class="mb-1">
             @T("Common settings")
         </MudText>
         
@@ -53,19 +53,31 @@ else
         
         <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsManaged ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
 
-        <MudText Typo="Typo.h4" Class="mt-6 mb-1">
-            @T("Input and output rules")
+        <MudText Typo="Typo.h5" Class="mt-6 mb-1">
+            @T("Analysis and output rules")
         </MudText>
+        
+        <MudJustifiedText Typo="Typo.body1" Class="mt-3">
+            @T("Use the analysis and output rules to define how the AI evaluates your documents and formats the results.")
+        </MudJustifiedText>
+        
+        <MudJustifiedText Typo="Typo.body1" Class="mt-3">
+            @T("The analysis rules specify what the AI should pay particular attention to while reviewing the documents you provide, and which aspects it should highlight or save. For example, if you want to extract the potential of green hydrogen for agriculture from a variety of general publications, you can explicitly define this in the analysis rules.")
+        </MudJustifiedText>
         
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyAnalysisRules" Validation="@this.ValidateAnalysisRules" Immediate="@true" Label="@T("Analysis rules")" HelperText="@T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
         
         <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules"/>
         
+        <MudJustifiedText Typo="Typo.body1" Class="mt-3">
+            @T("After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.")
+        </MudJustifiedText>
+        
         <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
         
         <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules"/>
         
-        <MudText Typo="Typo.h4" Class="mt-6 mb-1">
+        <MudText Typo="Typo.h5" Class="mt-6 mb-1">
             @T("Preparation for enterprise distribution")
         </MudText>
         
@@ -78,20 +90,20 @@ else
     
     <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
     
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document analysis") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
-        <MudText Typo="Typo.h4" Class="mb-1">
-            @T("Description")
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
+        <MudText Typo="Typo.h5" Class="mb-1">
+            @T("Policy Description")
         </MudText>
         
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @this.selectedPolicy?.PolicyDescription
         </MudJustifiedText>
         
-        <MudText Typo="Typo.h4" Class="mb-1 mt-6">
+        <MudText Typo="Typo.h5" Class="mb-1 mt-6">
             @T("Documents for the analysis")
         </MudText>
         
-        <AttachDocuments Name="Document Analysis Files Drop" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true"/>
+        <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false"/>
         
     </ExpansionPanel>
 </MudExpansionPanels>

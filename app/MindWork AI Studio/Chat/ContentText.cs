@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
@@ -39,6 +40,9 @@ public sealed class ContentText : IContent
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
+    
+    /// <inheritdoc />
+    public List<string> FileAttachments { get; set; } = [];
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -139,9 +143,58 @@ public sealed class ContentText : IContent
         Text = this.Text,
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
+        Sources = [..this.Sources],
+        FileAttachments = [..this.FileAttachments],
     };
 
     #endregion
+
+    public async Task<string> PrepareContentForAI()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(this.Text);
+
+        if(this.FileAttachments.Count > 0)
+        {
+            // Filter out files that no longer exist
+            var existingFiles = this.FileAttachments.Where(File.Exists).ToList();
+
+            // Log warning for missing files
+            var missingFiles = this.FileAttachments.Except(existingFiles).ToList();
+            if (missingFiles.Count > 0)
+                foreach (var missingFile in missingFiles)
+                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingFile}'", missingFile);
+
+            // Only proceed if there are existing files
+            if (existingFiles.Count > 0)
+            {
+                // Check Pandoc availability once before processing file attachments
+                var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
+
+                if (!pandocState.IsAvailable)
+                    LOGGER.LogWarning("File attachments could not be processed because Pandoc is not available.");
+                else if (!pandocState.CheckWasSuccessful)
+                    LOGGER.LogWarning("File attachments could not be processed because the Pandoc version check failed.");
+                else
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("The following files are attached to this message:");
+                    foreach(var file in existingFiles)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine("---------------------------------------");
+                        sb.AppendLine($"File path: {file}");
+                        sb.AppendLine("File content:");
+                        sb.AppendLine("````");
+                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(file, int.MaxValue));
+                        sb.AppendLine("````");
+                    }
+                }
+            }
+        }
+        
+        return sb.ToString();
+    }
     
     /// <summary>
     /// The text content.

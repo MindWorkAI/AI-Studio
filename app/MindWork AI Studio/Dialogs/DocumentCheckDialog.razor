@@ -1,0 +1,70 @@
+﻿@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("See how we load your file. Review the content before we process it further.")
+        </MudJustifiedText>
+        
+        @if (string.IsNullOrWhiteSpace(this.FilePath))
+        {
+            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.FileContent"/>
+        }
+        else
+        {
+            <MudTextField
+                T="string"
+                @bind-Text="@this.FilePath"
+                AdornmentIcon="@Icons.Material.Filled.FileOpen"
+                Adornment="Adornment.Start"
+                Immediate="@true"
+                Label="@T("File Path")"
+                Variant="Variant.Outlined"
+                Lines="1"
+                MaxLines="3"
+                Class="mt-10"
+                ReadOnly="true"
+                />
+        }
+        
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
+            <MudTabPanel Text="@T("Markdown View")" Icon="@Icons.Material.Filled.TextSnippet">
+                <MudField
+                    Variant="Variant.Outlined"
+                    AdornmentIcon="@Icons.Material.Filled.Article"
+                    Adornment="Adornment.Start"
+                    Label="@T("Loaded Content")"
+                    FullWidth="true"
+                    Class="ma-2 pe-4"
+                    HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"
+                >
+                    <div style="max-height: 40vh; overflow-y: auto;">
+                        <MudMarkdown Value="@this.FileContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling"/>
+                    </div>
+                </MudField>
+            </MudTabPanel>
+            <MudTabPanel Text="@T("Simple View")" Icon="@Icons.Material.Filled.Terminal">
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.FileContent"
+                    AdornmentIcon="@Icons.Material.Filled.Article"
+                    Adornment="Adornment.Start"
+                    Immediate="@true"
+                    Label="@T("Loaded Content")"
+                    Variant="Variant.Outlined"
+                    Lines="6"
+                    AutoGrow="@true"
+                    MaxLines="25"
+                    ReadOnly="true"
+                    Class="ma-2"
+                    HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"/>
+            </MudTabPanel>
+        </MudTabs>
+        
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

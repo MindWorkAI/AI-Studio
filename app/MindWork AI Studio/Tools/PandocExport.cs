@@ -25,11 +25,12 @@ public static class PandocExport
 
         LOGGER.LogInformation($"The user chose the path '{response.SaveFilePath}' for the Microsoft Word export.");
 
-        var tempMarkdownFile = Guid.NewGuid().ToString();
-        var tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
-
+        var tempMarkdownFilePath = string.Empty;
         try
         {
+            var tempMarkdownFile = Guid.NewGuid().ToString();
+            tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
+            
             // Extract text content from chat:
             var markdownText = markdownContent switch
             {
@@ -80,11 +81,18 @@ public static class PandocExport
                 return false;
             }
 
+            // Read output streams asynchronously while the process runs (prevents deadlock):
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            // Wait for the process to exit AND for streams to be fully read:
             await process.WaitForExitAsync();
+            await outputTask;
+            var error = await errorTask;
+
             if (process.ExitCode is not 0)
             {
-                var error = await process.StandardError.ReadToEndAsync();
-                LOGGER.LogError($"Pandoc failed with exit code {process.ExitCode}: {error}");
+                LOGGER.LogError("Pandoc failed with exit code {ProcessExitCode}: '{ErrorText}'", process.ExitCode, error);
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during Microsoft Word export")));
                 return false;
             }
@@ -103,13 +111,16 @@ public static class PandocExport
         finally
         {
             // Try to remove the temp file:
-            try
+            if (!string.IsNullOrWhiteSpace(tempMarkdownFilePath))
             {
-                File.Delete(tempMarkdownFilePath);
-            }
-            catch
-            {
-                LOGGER.LogWarning($"Was not able to delete temporary file: '{tempMarkdownFilePath}'");
+                try
+                {
+                    File.Delete(tempMarkdownFilePath);
+                }
+                catch
+                {
+                    LOGGER.LogWarning($"Was not able to delete temporary file: '{tempMarkdownFilePath}'");
+                }
             }
         }
     }

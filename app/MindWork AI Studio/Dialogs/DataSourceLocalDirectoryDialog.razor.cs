@@ -37,6 +37,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private uint dataNum;
     private string dataId = Guid.NewGuid().ToString();
     private string dataName = string.Empty;
+    private string dataDescription = string.Empty;
     private bool dataUserAcknowledgedCloudEmbedding;
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
@@ -73,6 +74,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataNum = this.DataSource.Num;
             this.dataId = this.DataSource.Id;
             this.dataName = this.DataSource.Name;
+            this.dataDescription = this.DataSource.Description;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
@@ -101,6 +103,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Id = this.dataId,
         Num = this.dataNum,
         Name = this.dataName,
+        Description = this.dataDescription,
         Type = DataSourceType.LOCAL_DIRECTORY,
         EmbeddingId = this.dataEmbeddingId,
         Path = this.dataPath,
