@@ -19,7 +19,29 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionDotnetSdk"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@this.VersionDotnetRuntime"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionRust"/>
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.VersionQdrant"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage">
+                        <MudText Typo="Typo.body1">
+                            @this.VersionDatabase
+                        </MudText>
+                        <MudCollapse Expanded="@showDatabaseDetails">
+                            <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                @foreach (var (Label, Value) in DatabaseClient.GetDisplayInfo())
+                                {
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                        <span>@Label: @Value</span>
+                                        <MudCopyClipboardButton TooltipMessage="@(T("Copies the following to the clipboard")+": "+Value)" StringContent=@Value/>
+                                    </div>
+                                }
+                            </MudText>
+                        </MudCollapse>
+                        <MudButton StartIcon="@(this.showDatabaseDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                   Size="Size.Small"
+                                   Variant="Variant.Text"
+                                   OnClick="@this.ToggleDatabaseDetails">
+                            @(this.showDatabaseDetails ? T("Hide Details") : T("Show Details"))
+                        </MudButton>
+                    </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@this.VersionPdfium"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Article" Text="@this.versionPandoc"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>

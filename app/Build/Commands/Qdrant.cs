@@ -88,11 +88,11 @@ public static class Qdrant
     
     private static Database GetDatabasePath(RID rid) => rid switch
     {
-        RID.LINUX_ARM64 => new("qdrant", "qdrant-aarch64-apple-darwin"),
-        RID.LINUX_X64 => new("qdrant", "qdrant-x86_64-apple-darwin"),
+        RID.OSX_ARM64 => new("qdrant", "qdrant-aarch64-apple-darwin"),
+        RID.OSX_X64 => new("qdrant", "qdrant-x86_64-apple-darwin"),
         
-        RID.OSX_ARM64 => new("qdrant", "qdrant-aarch64-unknown-linux-gnu"),
-        RID.OSX_X64 => new("qdrant", "qdrant-x86_64-unknown-linux-gnu"),
+        RID.LINUX_ARM64 => new("qdrant", "qdrant-aarch64-unknown-linux-gnu"),
+        RID.LINUX_X64 => new("qdrant", "qdrant-x86_64-unknown-linux-gnu"),
         
         RID.WIN_X64 => new("qdrant.exe", "qdrant-x86_64-pc-windows-msvc.exe"),
         
@@ -101,7 +101,7 @@ public static class Qdrant
 
     private static string GetQdrantDownloadUrl(RID rid, string version)
     {
-        var baseUrl = $"https://github.com/qdrant/qdrant/releases/download/{version}/qdrant-";
+        var baseUrl = $"https://github.com/qdrant/qdrant/releases/download/v{version}/qdrant-";
         return rid switch
         {
             RID.LINUX_ARM64 => $"{baseUrl}aarch64-unknown-linux-musl.tar.gz",

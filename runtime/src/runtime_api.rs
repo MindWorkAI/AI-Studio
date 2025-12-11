@@ -67,6 +67,7 @@ pub fn start_runtime_api() {
             .mount("/", routes![
                 crate::dotnet::dotnet_port,
                 crate::dotnet::dotnet_ready,
+                crate::qdrant::qdrant_port,
                 crate::clipboard::set_clipboard,
                 crate::app_window::get_event_stream,
                 crate::app_window::check_for_update,

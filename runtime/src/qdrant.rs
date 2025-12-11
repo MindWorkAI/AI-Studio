@@ -4,8 +4,9 @@ use std::sync::{Arc, Mutex};
 use log::{debug, error, info, warn};
 use once_cell::sync::Lazy;
 use rocket::get;
+use rocket::serde::json::Json;
+use rocket::serde::Serialize;
 use tauri::api::process::{Command, CommandChild, CommandEvent};
-use tauri::Url;
 use crate::api_token::{APIToken};
 use crate::environment::DATA_DIRECTORY;
 
@@ -14,16 +15,28 @@ use crate::environment::DATA_DIRECTORY;
 static QDRANT_SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
 
 // Qdrant server port (default is 6333 for HTTP and 6334 for gRPC)
-static QDRANT_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
+static QDRANT_SERVER_PORT_HTTP: Lazy<u16> = Lazy::new(|| {
     crate::network::get_available_port().unwrap_or(6333)
-}); 
+});
 
-static QDRANT_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+static QDRANT_SERVER_PORT_GRPC: Lazy<u16> = Lazy::new(|| {
+    crate::network::get_available_port().unwrap_or(6334)
+});
+
+#[derive(Serialize)]
+pub struct ProvideQdrantInfo {
+    path: String,
+    port_http: u16,
+    port_grpc: u16,
+}
 
 #[get("/system/qdrant/port")]
-pub fn qdrant_port(_token: APIToken) -> String {
-    let qdrant_port = *QDRANT_SERVER_PORT;
-    format!("{qdrant_port}")
+pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
+    return Json(ProvideQdrantInfo {
+        path: Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").to_str().unwrap().to_string(),
+        port_http: *QDRANT_SERVER_PORT_HTTP,
+        port_grpc: *QDRANT_SERVER_PORT_GRPC,
+    });
 }
 
 /// Starts the Qdrant server in a separate process.
@@ -35,16 +48,14 @@ pub fn start_qdrant_server() {
     let snapshot_path = Path::new(base_path).join("databases").join("qdrant").join("snapshots").to_str().unwrap().to_string();
     let init_path = Path::new(base_path).join("databases").join("qdrant").join(".qdrant-initalized").to_str().unwrap().to_string();
     
-    println!("{}", storage_path);
-    println!("{}", snapshot_path);
-    println!("{}", init_path);
-    
     let qdrant_server_environment = HashMap::from_iter([
-        (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT.to_string()),
+        (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
+        (String::from("QDRANT__SERVICE__GRPC_PORT"), QDRANT_SERVER_PORT_GRPC.to_string()),
         (String::from("QDRANT_INIT_FILE_PATH"), init_path),
         (String::from("QDRANT__STORAGE__STORAGE_PATH"), storage_path),
         (String::from("QDRANT__STORAGE__SNAPSHOTS_PATH"), snapshot_path),
     ]);
+    
     let server_spawn_clone = QDRANT_SERVER.clone();
     tauri::async_runtime::spawn(async move {
         let (mut rx, child) = Command::new_sidecar("qdrant")
@@ -82,30 +93,6 @@ pub fn start_qdrant_server() {
             }
         }
     });
-}
-
-/// This endpoint is called by the Qdrant server or frontend to signal that Qdrant is ready.
-#[get("/system/qdrant/ready")]
-pub async fn qdrant_ready(_token: APIToken) {
-    {
-        let mut initialized = QDRANT_INITIALIZED.lock().unwrap();
-        if *initialized {
-            warn!("Qdrant server was already initialized.");
-            return;
-        }
-        info!("Qdrant server is ready.");
-        *initialized = true;
-    }
-
-    let qdrant_port = *QDRANT_SERVER_PORT;
-    let _url = match Url::parse(format!("http://localhost:{qdrant_port}").as_str()) {
-        Ok(url) => url,
-        Err(msg) => {
-            error!("Error while parsing Qdrant URL: {msg}");
-            return;
-        }
-    };
-
 }
 
 /// Stops the Qdrant server process.

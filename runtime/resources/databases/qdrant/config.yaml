@@ -235,15 +235,15 @@ service:
   max_workers: 0
 
   # Host to bind the service on
-  host: 0.0.0.0
+  host: 127.0.0.1
 
   # HTTP(S) port to bind the service on
-  http_port: 6373
+  # http_port: 6333
 
   # gRPC port to bind the service on.
   # If `null` - gRPC is disabled. Default: null
   # Comment to disable gRPC:
-  grpc_port: 6344
+  # grpc_port: 6334
 
   # Enable CORS headers in REST API.
   # If enabled, browsers would be allowed to query REST endpoints regardless of query origin.
@@ -326,7 +326,7 @@ cluster:
 
 # Set to true to prevent service from sending usage statistics to the developers.
 # Read more: https://qdrant.tech/documentation/guides/telemetry
-telemetry_disabled: false
+telemetry_disabled: true
 
 # TLS configuration.
 # Required if either service.enable_tls or cluster.p2p.enable_tls is true.

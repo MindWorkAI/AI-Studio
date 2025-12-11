@@ -1,6 +1,9 @@
 using AIStudio.Agents;
 using AIStudio.Settings;
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -82,6 +85,24 @@ internal sealed class Program
             return;
         }
         
+        var qdrantInfo = await rust.GetQdrantInfo();
+        if (qdrantInfo.Path == String.Empty)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
+            return;
+        }
+        if (qdrantInfo.PortHttp == 0)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
+            return;
+        }
+
+        if (qdrantInfo.PortGrpc == 0)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
+            return;
+        }
+        
         var builder = WebApplication.CreateBuilder();
         
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
@@ -133,6 +154,7 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
+        builder.Services.AddSingleton<DatabaseClient>(new QdrantClient("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc));
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
@@ -214,6 +236,7 @@ internal sealed class Program
         await encryptionInitializer;
         await rust.AppIsReady();
         programLogger.LogInformation("The AI Studio server is ready.");
+        
         
         TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
         {

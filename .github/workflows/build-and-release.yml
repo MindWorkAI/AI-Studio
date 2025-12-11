@@ -174,7 +174,7 @@ jobs:
           pdfium_version=$(echo $pdfium_version | cut -d'.' -f3)
           
           # Next line is the Qdrant version:
-          qdrant_version=$(sed -n '12p' metadata.txt)
+          qdrant_version="v$(sed -n '12p' metadata.txt)"
           
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
@@ -247,7 +247,7 @@ jobs:
           $pdfium_version = $pdfium_version.Split('.')[2]
           
           # Next line is the necessary Qdrant version:
-          $qdrant_version = $metadata[12]
+          $qdrant_version = "v$metadata[12]"
           
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
@@ -441,7 +441,7 @@ jobs:
               ;;
           esac
 
-          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/${QDRANT_VERSON}/qdrant-{QDRANT_FILE}"
+          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/v${QDRANT_VERSION}/qdrant-{QDRANT_FILE}"
 
           echo "Download Qdrant $QDRANT_URL ..."
           TMP=$(mktemp -d)
@@ -485,7 +485,7 @@ jobs:
             }
           }
           
-          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/${QDRANT_VERSON}/qdrant-{QDRANT_FILE}"
+          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/v${QDRANT_VERSION}/qdrant-{QDRANT_FILE}"
           Write-Host "Download $QDRANT_URL ..."
 
           # Create a unique temporary directory (not just a file)
