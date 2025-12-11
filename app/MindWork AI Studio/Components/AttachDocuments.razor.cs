@@ -39,7 +39,10 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     
     #region Overrides of MSGComponentBase
@@ -71,12 +74,26 @@ public partial class AttachDocuments : MSGComponentBase
                     this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
                     return;
                 }
-                
+
+                // Ensure that Pandoc is installed and ready:
+                var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                    showSuccessMessage: false,
+                    showDialog: true);
+
+                // If Pandoc is not available (user cancelled installation), abort file drop:
+                if (!pandocState.IsAvailable)
+                {
+                    this.Logger.LogInformation("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
+                    this.ClearDragClass();
+                    this.StateHasChanged();
+                    return;
+                }
+
                 foreach (var path in paths)
                 {
                     if(!await this.IsFileExtensionValid(path))
                         continue;
-                    
+
                     this.DocumentPaths.Add(path);
                 }
 
@@ -97,6 +114,18 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task AddFilesManually()
     {
+        // Ensure that Pandoc is installed and ready:
+        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
+
+        // If Pandoc is not available (user cancelled installation), abort file selection:
+        if (!pandocState.IsAvailable)
+        {
+            this.Logger.LogInformation("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+            return;
+        }
+
         var selectedFile = await this.RustService.SelectFile(T("Select a file to attach"));
         if (selectedFile.UserCancelled)
             return;

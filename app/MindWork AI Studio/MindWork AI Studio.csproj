@@ -61,12 +61,6 @@
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="Dialogs\PandocDocumentCheckDialog.razor.cs">
-        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      </Content>
-    </ItemGroup>
-
     <!-- Read the meta data file -->
     <Target Name="ReadMetaData" BeforeTargets="BeforeBuild">
         <Error Text="The ../../metadata.txt file was not found!" Condition="!Exists('../../metadata.txt')" />
