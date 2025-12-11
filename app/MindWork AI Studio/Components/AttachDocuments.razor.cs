@@ -76,9 +76,18 @@ public partial class AttachDocuments : MSGComponentBase
                 }
 
                 // Ensure that Pandoc is installed and ready:
-                await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
                     showSuccessMessage: false,
                     showDialog: true);
+
+                // If Pandoc is not available (user cancelled installation), abort file drop:
+                if (!pandocState.IsAvailable)
+                {
+                    this.Logger.LogInformation("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
+                    this.ClearDragClass();
+                    this.StateHasChanged();
+                    return;
+                }
 
                 foreach (var path in paths)
                 {
@@ -106,9 +115,16 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task AddFilesManually()
     {
         // Ensure that Pandoc is installed and ready:
-        await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
             showSuccessMessage: false,
             showDialog: true);
+
+        // If Pandoc is not available (user cancelled installation), abort file selection:
+        if (!pandocState.IsAvailable)
+        {
+            this.Logger.LogInformation("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+            return;
+        }
 
         var selectedFile = await this.RustService.SelectFile(T("Select a file to attach"));
         if (selectedFile.UserCancelled)
