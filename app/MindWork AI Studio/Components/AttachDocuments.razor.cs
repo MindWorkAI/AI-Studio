@@ -127,14 +127,7 @@ public partial class AttachDocuments : MSGComponentBase
     
     private async Task OpenAttachmentsDialog()
     {
-        var dialogParameters = new DialogParameters<AttachmentsDialog>
-        {
-            { "DocumentPaths", this.DocumentPaths } 
-        };
-        var dialogReference = await this.DialogService.ShowAsync<AttachmentsDialog>("Your Files", dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
     }
 
     private async Task<bool> IsFileExtensionValid(string selectedFile)

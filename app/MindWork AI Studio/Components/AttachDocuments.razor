@@ -13,11 +13,11 @@
                     Content="@this.DocumentPaths.Count"
                     Color="Color.Primary"
                     Overlap="true"
-                    OnClick="@OpenAttachmentsDialog">
+                    OnClick="@this.OpenAttachmentsDialog">
                     <MudIconButton
                         Icon="@Icons.Material.Filled.AttachFile"
                         Color="Color.Default"
-                        OnClick="@AddFilesManually"/>
+                        OnClick="@this.AddFilesManually"/>
                 </MudBadge>
             </MudTooltip>
         }
@@ -27,7 +27,7 @@
                 <MudIconButton
                     Icon="@Icons.Material.Filled.AttachFile"
                     Color="Color.Default"
-                    OnClick="@AddFilesManually"/>
+                    OnClick="@this.AddFilesManually"/>
             </MudTooltip>
         }
     </div>
