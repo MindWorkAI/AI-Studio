@@ -1503,12 +1503,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Ziehen S
 -- Document Preview
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T285154968"] = "Dokumentenvorschau"
 
--- Videos are not supported yet
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2928927510"] = "Videos werden noch nicht unterstützt."
-
--- Images are not supported yet
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T298062956"] = "Bilder werden noch nicht unterstützt."
-
 -- Click to attach files
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3521845090"] = "Klicken, um Dateien anzuhängen"
 
@@ -1517,9 +1511,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3759696136"] = "Dateili
 
 -- Add file
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4014053962"] = "Datei hinzufügen"
-
--- Executables are not allowed
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4167762413"] = "Ausführbare Dateien sind nicht erlaubt"
 
 -- Select a file to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T595772870"] = "Datei zum Anhängen auswählen"
@@ -1824,20 +1815,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Anbiet
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Laden des Dateiinhalts fehlgeschlagen"
 
--- Videos are not supported yet
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2928927510"] = "Videos werden noch nicht unterstützt."
-
--- Images are not supported yet
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T298062956"] = "Bilder werden derzeit nicht unterstützt"
-
 -- Use file content as input
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3499386973"] = "Dokumenteninhalt als Eingabe verwenden"
 
 -- Select file to read its content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T354817589"] = "Datei auswählen, um den Inhalt zu lesen"
-
--- Executables are not allowed
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T4167762413"] = "Ausführbare Dateien sind nicht erlaubt"
 
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "Der Inhalt wird mithilfe eines LLM-Agents bereinigt: Der Hauptinhalt wird extrahiert, Werbung und andere irrelevante Elemente werden nach Möglichkeit entfernt. Relative Links werden nach Möglichkeit in absolute Links umgewandelt, damit sie verwendet werden können."
@@ -4896,9 +4878,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1702902297"] = "Einführung"
 -- Vision
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1892426825"] = "Vision"
 
--- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), Hugging Face, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2183503084"] = "Sie sind an keinen einzelnen Anbieter gebunden. Stattdessen können Sie den Anbieter wählen, der am besten zu ihren Bedürfnissen passt. Derzeit unterstützen wir OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), Hugging Face und selbst gehostete Modelle mit vLLM, llama.cpp, ollama, LM Studio, Groq oder Fireworks. Für Wissenschaftler und Mitarbeiter von Forschungseinrichtungen unterstützen wir auch die KI-Dienste von Helmholtz und GWDG. Diese sind über föderierte Anmeldungen wie eduGAIN für alle 18 Helmholtz-Zentren, die Max-Planck-Gesellschaft, die meisten deutschen und viele internationale Universitäten verfügbar."
-
 -- Let's get started
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2331588413"] = "Los geht's"
 
@@ -4922,6 +4901,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3341379752"] = "Kosteneffizient"
 
 -- Flexibility
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3723223888"] = "Flexibilität"
+
+-- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hugging Face, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3892227145"] = "Sie sind an keinen einzelnen Anbieter gebunden. Stattdessen können Sie den Anbieter wählen, der am besten zu ihren Bedürfnissen passt. Derzeit unterstützen wir OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hugging Face und selbst gehostete Modelle mit vLLM, llama.cpp, ollama, LM Studio, Groq oder Fireworks. Für Wissenschaftler und Mitarbeiter von Forschungseinrichtungen unterstützen wir auch die KI-Dienste von Helmholtz und GWDG. Diese sind über föderierte Anmeldungen wie eduGAIN für alle 18 Helmholtz-Zentren, die Max-Planck-Gesellschaft, die meisten deutschen und viele internationale Universitäten verfügbar."
 
 -- Privacy
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3959064551"] = "Datenschutz"
@@ -5880,6 +5862,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T377
 -- Executable Files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2217313358"] = "Ausführbare Dateien"
 
+-- All Audio Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2575722901"] = "Alle Audiodateien"
+
 -- All Video Files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2850789856"] = "Alle Videodateien"
 
@@ -6008,6 +5993,18 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T878007824"]
 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"] = "Bitte geben Sie das für die Authentifizierung benötigte Geheimnis ein."
+
+-- Audio files are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2919730669"] = "Audio-Dateien werden noch nicht unterstützt."
+
+-- Videos are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2928927510"] = "Videos werden noch nicht unterstützt."
+
+-- Images are not supported yet
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T298062956"] = "Bilder werden derzeit nicht unterstützt."
+
+-- Executables are not allowed
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4167762413"] = "Ausführbare Dateien sind nicht erlaubt"
 
 -- The hostname is not a valid HTTP(S) URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1013354736"] = "Der Hostname ist keine gültige HTTP(S)-URL."
