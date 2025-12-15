@@ -11,6 +11,9 @@ namespace AIStudio.Provider.OpenRouter;
 
 public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/api/v1/", LOGGER)
 {
+    private const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
+    private const string PROJECT_NAME = "MindWork AI Studio";
+
     private static readonly ILogger<ProviderOpenRouter> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenRouter>();
 
     #region Implementation of IProvider
@@ -38,11 +41,7 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
 
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
-
-        // Extract custom header values from API parameters if present
-        const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
-        const string PROJECT_NAME = "MindWork AI Studio";
-
+        
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessages(async n => new Message
         {
