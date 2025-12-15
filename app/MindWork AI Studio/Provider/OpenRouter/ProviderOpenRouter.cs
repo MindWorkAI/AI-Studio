@@ -143,6 +143,10 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        
+        // Set custom headers for project identification:
+        request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
+        request.Headers.Add("X-Title", PROJECT_NAME);
 
         using var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
@@ -181,6 +185,10 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "embeddings/models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        
+        // Set custom headers for project identification:
+        request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
+        request.Headers.Add("X-Title", PROJECT_NAME);
 
         using var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
