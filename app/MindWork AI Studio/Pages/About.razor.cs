@@ -2,6 +2,7 @@ using System.Reflection;
 
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -26,10 +27,14 @@ public partial class About : MSGComponentBase
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
     
+    [Inject]
+    private DatabaseClient DatabaseClient { get; init; } = null!;
+    
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
+    private static readonly MetaDataDatabasesAttribute META_DATA_DATABASES = ASSEMBLY.GetCustomAttribute<MetaDataDatabasesAttribute>()!;
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
 
@@ -53,12 +58,16 @@ public partial class About : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
+    private string VersionDatabase => $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}";
+    
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
 
     private GetLogPathsResponse logPaths;
     
     private bool showEnterpriseConfigDetails;
+
+    private bool showDatabaseDetails = false;
 
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
 
@@ -169,6 +178,11 @@ public partial class About : MSGComponentBase
     private void ToggleEnterpriseConfigDetails()
     {
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
+    }
+    
+    private void ToggleDatabaseDetails()
+    {
+        this.showDatabaseDetails = !this.showDatabaseDetails;
     }
 
     private async Task CopyStartupLogPath()
