@@ -78,6 +78,7 @@ Since March 2025: We have started developing the plugin system. There will be la
         Features we have recently released
     </h3>
     </summary>
+
 - v0.9.55: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, and the possibility to use file attachments in chats.
 - v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
