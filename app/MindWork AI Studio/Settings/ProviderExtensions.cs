@@ -14,7 +14,8 @@ public static partial class ProviderExtensions
         LLMProviders.DEEP_SEEK => GetModelCapabilitiesDeepSeek(provider.Model),
         LLMProviders.ALIBABA_CLOUD => GetModelCapabilitiesAlibaba(provider.Model),
         LLMProviders.PERPLEXITY => GetModelCapabilitiesPerplexity(provider.Model),
-     
+        LLMProviders.OPEN_ROUTER => GetModelCapabilitiesOpenRouter(provider.Model),
+
         LLMProviders.GROQ => GetModelCapabilitiesOpenSource(provider.Model),
         LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(provider.Model),
         LLMProviders.HUGGINGFACE => GetModelCapabilitiesOpenSource(provider.Model),

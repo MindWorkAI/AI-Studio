@@ -9,6 +9,7 @@ using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Provider.OpenRouter;
 using AIStudio.Provider.Perplexity;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Provider.X;
@@ -42,7 +43,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => "DeepSeek",
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
-        
+        LLMProviders.OPEN_ROUTER => "OpenRouter",
+
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
         LLMProviders.HUGGINGFACE => "Hugging Face",
@@ -92,7 +94,9 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://www.alibabacloud.com/help/en/model-studio/support/faq-about-alibaba-cloud-model-studio").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
             
         LLMProviders.PERPLEXITY => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.perplexity.ai/hub/legal/perplexity-api-terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
-        
+
+        LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -128,7 +132,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        
+        LLMProviders.OPEN_ROUTER => false,
+
         //
         // Self-hosted providers are treated as a special case anyway.
         //
@@ -171,7 +176,8 @@ public static class LLMProvidersExtensions
                 LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
-                
+                LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, model) { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter }, 
@@ -201,7 +207,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
         LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
-     
+        LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
+
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
@@ -224,8 +231,9 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
         LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
+        LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
-        
+
         _ => string.Empty,
     };
 
@@ -241,8 +249,9 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
+        LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HUGGINGFACE => true,
-        
+
         _ => false,
     };
 
@@ -288,7 +297,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
-        
+        LLMProviders.OPEN_ROUTER => true,
+
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
@@ -310,7 +320,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
-        
+        LLMProviders.OPEN_ROUTER => true,
+
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
