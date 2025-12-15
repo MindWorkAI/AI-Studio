@@ -8,15 +8,18 @@
         }
         @if (fileInfos.Any())
         {
-            <MudBadge
-                Content="@this.DocumentPaths.Count"
-                Color="Color.Primary"
-                Overlap="true">
-                <MudIconButton
-                    Icon="@Icons.Material.Filled.AttachFile"
-                    Color="Color.Default"
-                    OnClick="@AddFilesManually"/>
-            </MudBadge>
+            <MudTooltip Text="@T("Click to see your attached files")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudBadge
+                    Content="@this.DocumentPaths.Count"
+                    Color="Color.Primary"
+                    Overlap="true"
+                    OnClick="@OpenAttachmentsDialog">
+                    <MudIconButton
+                        Icon="@Icons.Material.Filled.AttachFile"
+                        Color="Color.Default"
+                        OnClick="@AddFilesManually"/>
+                </MudBadge>
+            </MudTooltip>
         }
         else
         {

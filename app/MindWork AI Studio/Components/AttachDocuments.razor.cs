@@ -1,4 +1,5 @@
 using AIStudio.Dialogs;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -10,11 +11,23 @@ using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProfileSelection).Namespace, nameof(ProfileSelection));
+    
     [Parameter]
     public string Name { get; set; } = string.Empty;
     
     [Parameter]
+    public bool Disabled { get; set; }
+    
+    [Parameter]
+    public string DisabledText { get; set; } = string.Empty;
+    
+    private readonly string defaultToolTipText = TB("You can edit your files here");
+    
+    [Parameter]
     public HashSet<string> DocumentPaths { get; set; } = [];
+    
+    private string ToolTipText => this.Disabled ? this.DisabledText : this.defaultToolTipText;
     
     [Parameter]
     public EventCallback<HashSet<string>> DocumentPathsChanged { get; set; }
@@ -110,6 +123,18 @@ public partial class AttachDocuments : MSGComponentBase
         this.DocumentPaths.Add(selectedFile.SelectedFilePath);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
+    }
+    
+    private async Task OpenAttachmentsDialog()
+    {
+        var dialogParameters = new DialogParameters<AttachmentsDialog>
+        {
+            { "DocumentPaths", this.DocumentPaths } 
+        };
+        var dialogReference = await this.DialogService.ShowAsync<AttachmentsDialog>("Your Files", dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
     }
 
     private async Task<bool> IsFileExtensionValid(string selectedFile)

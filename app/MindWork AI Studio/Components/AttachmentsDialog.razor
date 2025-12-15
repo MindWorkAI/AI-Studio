@@ -1,0 +1,19 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <TitleContent>
+        Your attached files
+    </TitleContent>
+    <DialogContent>
+        @foreach (var filePath in this.DocumentPaths)
+        {
+            <MudMenuItem
+                Icon="@Icons.Material.Filled.AttachFile"
+                Label="@Path.GetFileName(filePath)">
+            </MudMenuItem>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
