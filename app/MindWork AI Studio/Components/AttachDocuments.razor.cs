@@ -83,7 +83,7 @@ public partial class AttachDocuments : MSGComponentBase
                 // If Pandoc is not available (user cancelled installation), abort file drop:
                 if (!pandocState.IsAvailable)
                 {
-                    this.Logger.LogInformation("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
+                    this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
                     this.ClearDragClass();
                     this.StateHasChanged();
                     return;
@@ -122,7 +122,7 @@ public partial class AttachDocuments : MSGComponentBase
         // If Pandoc is not available (user cancelled installation), abort file selection:
         if (!pandocState.IsAvailable)
         {
-            this.Logger.LogInformation("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
             return;
         }
 

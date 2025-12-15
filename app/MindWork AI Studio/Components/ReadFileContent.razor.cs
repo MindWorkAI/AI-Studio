@@ -30,6 +30,18 @@ public partial class ReadFileContent : MSGComponentBase
     
     private async Task SelectFile()
     {
+        // Ensure that Pandoc is installed and ready:
+        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
+
+        // Check if Pandoc is available after the check / installation:
+        if (!pandocState.IsAvailable)
+        {
+            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+            return;
+        }
+
         var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
         if (selectedFile.UserCancelled)
         {
@@ -64,11 +76,6 @@ public partial class ReadFileContent : MSGComponentBase
             await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
             return;
         }
-
-        // Ensure that Pandoc is installed and ready:
-        await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-            showSuccessMessage: false,
-            showDialog: true);
         
         try
         {
