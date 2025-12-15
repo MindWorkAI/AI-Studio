@@ -149,17 +149,19 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
         if(!response.IsSuccessStatusCode)
             return [];
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
+        var modelResponse = await response.Content.ReadFromJsonAsync<OpenRouterModelsResponse>(token);
 
-        // Filter out non-text models (image, audio, embedding models)
-        return modelResponse.Data.Where(n =>
-            !n.Id.Contains("whisper", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("dall-e", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("embedding", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("stable-diffusion", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase));
+        // Filter out non-text models (image, audio, embedding models) and convert to Model
+        return modelResponse.Data
+            .Where(n =>
+                !n.Id.Contains("whisper", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("dall-e", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("embedding", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("stable-diffusion", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase))
+            .Select(n => new Model(n.Id, n.Name));
     }
 }
