@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -91,7 +92,7 @@ public partial class AttachDocuments : MSGComponentBase
 
                 foreach (var path in paths)
                 {
-                    if(!await this.IsFileExtensionValid(path))
+                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(path))
                         continue;
 
                     this.DocumentPaths.Add(path);
@@ -133,36 +134,12 @@ public partial class AttachDocuments : MSGComponentBase
         if (!File.Exists(selectedFile.SelectedFilePath))
             return;
 
-        if (!await this.IsFileExtensionValid(selectedFile.SelectedFilePath))
+        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFile.SelectedFilePath))
             return;
 
         this.DocumentPaths.Add(selectedFile.SelectedFilePath);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
-    }
-
-    private async Task<bool> IsFileExtensionValid(string selectedFile)
-    {
-        var ext = Path.GetExtension(selectedFile).TrimStart('.');
-        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, this.T("Executables are not allowed")));
-            return false;
-        }
-
-        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, this.T("Images are not supported yet")));
-            return false;
-        }
-        
-        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
-            return false;
-        }
-
-        return true;
     }
 
     private async Task ClearAllFiles()
