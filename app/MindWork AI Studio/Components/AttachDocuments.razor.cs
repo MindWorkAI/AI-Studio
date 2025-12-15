@@ -161,6 +161,12 @@ public partial class AttachDocuments : MSGComponentBase
             await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
             return false;
         }
+        
+        if (Array.Exists(FileTypeFilter.AllAudio.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.AudioFile, this.T("Audio files are not supported yet")));
+            return false;
+        }
 
         return true;
     }

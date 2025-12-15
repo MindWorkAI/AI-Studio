@@ -77,6 +77,13 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
         
+        if (Array.Exists(FileTypeFilter.AllAudio.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            this.Logger.LogWarning("User attempted to load audio file: {FilePath} with extension: {Extension}", selectedFile.SelectedFilePath, ext);
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.AudioFile, this.T("Audio files are not supported yet")));
+            return;
+        }
+        
         try
         {
             var fileContent = await UserFile.LoadFileData(selectedFile.SelectedFilePath, this.RustService, this.DialogService);
