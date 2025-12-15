@@ -132,7 +132,7 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        LLMProviders.OPEN_ROUTER => false,
+        LLMProviders.OPEN_ROUTER => true,
 
         //
         // Self-hosted providers are treated as a special case anyway.

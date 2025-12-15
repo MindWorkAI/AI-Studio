@@ -122,7 +122,7 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return this.LoadEmbeddingModels(token, apiKeyProvisional);
     }
 
     #endregion
@@ -163,5 +163,33 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
                 !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
                 !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase))
             .Select(n => new Model(n.Id, n.Name));
+    }
+
+    private async Task<IEnumerable<Model>> LoadEmbeddingModels(CancellationToken token, string? apiKeyProvisional = null)
+    {
+        var secretKey = apiKeyProvisional switch
+        {
+            not null => apiKeyProvisional,
+            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            {
+                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+                _ => null,
+            }
+        };
+
+        if (secretKey is null)
+            return [];
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "embeddings/models");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+        using var response = await this.httpClient.SendAsync(request, token);
+        if(!response.IsSuccessStatusCode)
+            return [];
+
+        var modelResponse = await response.Content.ReadFromJsonAsync<OpenRouterModelsResponse>(token);
+
+        // Convert all embedding models to Model
+        return modelResponse.Data.Select(n => new Model(n.Id, n.Name));
     }
 }
