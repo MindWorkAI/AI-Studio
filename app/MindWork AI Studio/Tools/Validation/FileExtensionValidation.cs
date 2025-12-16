@@ -52,4 +52,31 @@ public static class FileExtensionValidation
 
         return true;
     }
+
+    /// <summary>
+    /// Validates that the file is a supported image format and sends appropriate MessageBus notifications when invalid.
+    /// </summary>
+    /// <param name="filePath">The file path to validate.</param>
+    /// <returns>True if valid image, false if invalid (error already sent via MessageBus).</returns>
+    public static async Task<bool> IsImageExtensionValidWithNotifyAsync(string filePath)
+    {
+        var ext = Path.GetExtension(filePath).TrimStart('.');
+        if (string.IsNullOrWhiteSpace(ext))
+        {
+            await MessageBus.INSTANCE.SendError(new(
+                Icons.Material.Filled.ImageNotSupported,
+                TB("File has no extension")));
+            return false;
+        }
+
+        if (!Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        {
+            await MessageBus.INSTANCE.SendError(new(
+                Icons.Material.Filled.ImageNotSupported,
+                TB("Unsupported image format")));
+            return false;
+        }
+
+        return true;
+    }
 }
