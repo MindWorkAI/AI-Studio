@@ -1044,20 +1044,35 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1214535771"] = "Rem
 -- Added Content ({0} entries)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1258080997"] = "Added Content ({0} entries)"
 
+-- No Lua code generated yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1365137848"] = "No Lua code generated yet."
+
 -- Localized Content ({0} entries of {1})
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1492071634"] = "Localized Content ({0} entries of {1})"
 
 -- Select the language plugin used for comparision.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1523568309"] = "Select the language plugin used for comparision."
 
+-- Successfully updated plugin file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1524590750"] = "Successfully updated plugin file."
+
 -- Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1893011391"] = "Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."
+
+-- No language plugin selected.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237325294"] = "No language plugin selected."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237828418"] = "Target language"
 
+-- Write Lua code to language plugin file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T253827221"] = "Write Lua code to language plugin file"
+
 -- Language plugin used for comparision
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T263317578"] = "Language plugin used for comparision"
+
+-- Plugin file not found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T2938065913"] = "Plugin file not found."
 
 -- Localize AI Studio & generate the Lua code
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3055634395"] = "Localize AI Studio & generate the Lua code"
@@ -1089,6 +1104,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T453060723"] = "The 
 -- The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T458999393"] = "The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."
 
+-- Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T628596031"] = "Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file."
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T656744944"] = "Please provide a custom language."
 
@@ -1097,6 +1115,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T851515643"] = "Plea
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T897888480"] = "Localization"
+
+-- Error writing to plugin file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T948564909"] = "Error writing to plugin file."
 
 -- Your icon source
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1302165948"] = "Your icon source"
@@ -6044,4 +6065,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unnamed w
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Delete Chat"
-

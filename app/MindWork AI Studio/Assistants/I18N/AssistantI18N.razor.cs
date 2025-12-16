@@ -56,10 +56,18 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     [
         new ButtonData
         {
+            #if DEBUG
+            Text = T("Write Lua code to language plugin file"),
+            #else
             Text = T("Copy Lua code to clipboard"),
+            #endif
             Icon = Icons.Material.Filled.Extension,
             Color = Color.Default,
+            #if DEBUG
+            AsyncAction = async () => await this.WriteToPluginFile(),
+            #else
             AsyncAction = async () => await this.RustService.CopyText2Clipboard(this.Snackbar, this.finalLuaCode.ToString()),
+            #endif
             DisabledActionParam = () => this.finalLuaCode.Length == 0,
         },
     ];
@@ -368,10 +376,71 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     {
         this.finalLuaCode.Clear();
         LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, commentContent, this.cancellationTokenSource!.Token);
-        
+
         // Next, we must remove the `root::` prefix from the keys:
         this.finalLuaCode.Replace("""UI_TEXT_CONTENT["root::""", """
                                                                  UI_TEXT_CONTENT["
                                                                  """);
     }
+
+    #if DEBUG
+    private async Task WriteToPluginFile()
+    {
+        if (this.selectedLanguagePlugin is null)
+        {
+            this.Snackbar.Add(T("No language plugin selected."), Severity.Error);
+            return;
+        }
+
+        if (this.finalLuaCode.Length == 0)
+        {
+            this.Snackbar.Add(T("No Lua code generated yet."), Severity.Error);
+            return;
+        }
+
+        try
+        {
+            // Determine the plugin file path based on the selected language plugin:
+            var pluginDirectory = Path.Join(Environment.CurrentDirectory, "Plugins", "languages");
+            var pluginId = this.selectedLanguagePluginId.ToString();
+            var ietfTag = this.selectedLanguagePlugin.IETFTag.ToLowerInvariant();
+            var pluginFolderName = $"{ietfTag}-{pluginId}";
+            var pluginFilePath = Path.Join(pluginDirectory, pluginFolderName, "plugin.lua");
+
+            if (!File.Exists(pluginFilePath))
+            {
+                this.Logger.LogError("Plugin file not found: {PluginFilePath}.", pluginFilePath);
+                this.Snackbar.Add(T("Plugin file not found."), Severity.Error);
+                return;
+            }
+
+            // Read the existing plugin file:
+            var existingContent = await File.ReadAllTextAsync(pluginFilePath);
+
+            // Find the position of "UI_TEXT_CONTENT = {}":
+            const string MARKER = "UI_TEXT_CONTENT = {}";
+            var markerIndex = existingContent.IndexOf(MARKER, StringComparison.Ordinal);
+
+            if (markerIndex == -1)
+            {
+                this.Logger.LogError("Could not find 'UI_TEXT_CONTENT = {{}}' marker in plugin file: {PluginFilePath}", pluginFilePath);
+                this.Snackbar.Add(T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file."), Severity.Error);
+                return;
+            }
+
+            // Keep everything before the marker and replace everything from the marker onwards:
+            var metadataSection = existingContent[..markerIndex];
+            var newContent = metadataSection + this.finalLuaCode;
+
+            // Write the updated content back to the file:
+            await File.WriteAllTextAsync(pluginFilePath, newContent);
+            this.Snackbar.Add(T("Successfully updated plugin file."), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Error writing to plugin file.");
+            this.Snackbar.Add(T("Error writing to plugin file."), Severity.Error);
+        }
+    }
+    #endif
 }
