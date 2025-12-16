@@ -10,9 +10,9 @@ public static class ImageHelpers
     /// </summary>
     /// <param name="base64ImageString">The Base64-encoded image string.</param>
     /// <returns>The detected MIME type (e.g., "image/png", "image/jpeg").</returns>
-    public static string DetectMimeType(string base64ImageString)
+    public static string DetectMimeType(ReadOnlySpan<char> base64ImageString)
     {
-        if (string.IsNullOrEmpty(base64ImageString) || base64ImageString.Length < 10)
+        if (base64ImageString.IsWhiteSpace() || base64ImageString.Length < 10)
             return "image"; // Fallback
 
         var header = base64ImageString[..Math.Min(20, base64ImageString.Length)];
