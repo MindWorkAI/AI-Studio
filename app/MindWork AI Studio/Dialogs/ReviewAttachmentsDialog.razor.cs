@@ -33,4 +33,12 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         
         return dialogResult.Data as HashSet<string> ?? documentPaths;
     }
+
+    private void DeleteAttachment(string filePath)
+    {
+        if (this.DocumentPaths.Remove(filePath))
+        {
+            this.StateHasChanged();
+        }
+    }
 }
