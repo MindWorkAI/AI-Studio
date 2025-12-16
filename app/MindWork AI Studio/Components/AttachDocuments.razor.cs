@@ -127,17 +127,21 @@ public partial class AttachDocuments : MSGComponentBase
             return;
         }
 
-        var selectedFile = await this.RustService.SelectFile(T("Select a file to attach"));
-        if (selectedFile.UserCancelled)
+        var selectFiles = await this.RustService.SelectFiles(T("Select a file to attach"));
+        if (selectFiles.UserCancelled)
             return;
 
-        if (!File.Exists(selectedFile.SelectedFilePath))
-            return;
+        foreach (var selectedFilePath in selectFiles.SelectedFilePaths)
+        {
+            if (!File.Exists(selectedFilePath))
+                continue;
 
-        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFile.SelectedFilePath))
-            return;
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFilePath))
+                return;
 
-        this.DocumentPaths.Add(selectedFile.SelectedFilePath);
+            this.DocumentPaths.Add(selectedFilePath);
+        }
+        
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
