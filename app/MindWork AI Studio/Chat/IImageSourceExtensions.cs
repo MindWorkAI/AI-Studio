@@ -1,7 +1,11 @@
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Chat;
 
 public static class IImageSourceExtensions
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
+    
     /// <summary>
     /// Read the image content as a base64 string.
     /// </summary>
@@ -33,8 +37,11 @@ public static class IImageSourceExtensions
                     // Read the length of the content:
                     var lengthBytes = response.Content.Headers.ContentLength;
                     if(lengthBytes > 10_000_000)
+                    {
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The image at the URL is too large (>10 MB). Skipping the image.")));
                         return string.Empty;
-                    
+                    }
+
                     var bytes = await response.Content.ReadAsByteArrayAsync(token);
                     return Convert.ToBase64String(bytes);
                 }
@@ -48,8 +55,11 @@ public static class IImageSourceExtensions
                     // Read the content length:
                     var length = new FileInfo(image.Source).Length;
                     if(length > 10_000_000)
+                    {
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file is too large (>10 MB). Skipping the image.")));
                         return string.Empty;
-                    
+                    }
+
                     var bytes = await File.ReadAllBytesAsync(image.Source, token);
                     return Convert.ToBase64String(bytes);
                 }
