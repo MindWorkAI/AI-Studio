@@ -1044,20 +1044,35 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1214535771"] = "Ent
 -- Added Content ({0} entries)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1258080997"] = "Hinzugefügte Inhalte ({0} Einträge)"
 
+-- No Lua code generated yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1365137848"] = "Es wurde kein Lua-Code generiert."
+
 -- Localized Content ({0} entries of {1})
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1492071634"] = "Lokalisierte Inhalte ({0} von {1} Einträgen)"
 
 -- Select the language plugin used for comparision.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1523568309"] = "Wählen Sie das Sprach-Plugin für den Vergleich aus."
 
+-- Successfully updated plugin file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1524590750"] = "Plugin-Datei erfolgreich aktualisiert."
+
 -- Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1893011391"] = "Das Sprach-Plugin für den Vergleich konnte nicht geladen werden ({0}). Bitte wählen Sie ein gültiges, geladenes und laufendes Sprach-Plugin."
+
+-- No language plugin selected.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237325294"] = "Kein Sprach-Plugin ausgewählt."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T237828418"] = "Zielsprache"
 
+-- Write Lua code to language plugin file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T253827221"] = "Lua-Code für Sprach-Plugin-Datei schreiben"
+
 -- Language plugin used for comparision
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T263317578"] = "Sprach-Plugin für den Vergleich"
+
+-- Plugin file not found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T2938065913"] = "Plugin-Datei nicht gefunden."
 
 -- Localize AI Studio & generate the Lua code
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3055634395"] = "Lokalisiere AI Studio & generiere den Lua-Code"
@@ -1089,6 +1104,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T453060723"] = "Die 
 -- The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T458999393"] = "Das ausgewählte Sprach-Plugin für den Vergleich verwendet das IETF-Tag „{0}“, das nicht mit der ausgewählten Zielsprache „{1}“ übereinstimmt. Bitte wähle ein gültiges, geladenes und laufendes Sprach-Plugin aus, das mit der Zielsprache übereinstimmt."
 
+-- Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T628596031"] = "Konnte den 'UI_TEXT_CONTENT = {}'-Marker in der Plugin-Datei nicht finden."
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
@@ -1097,6 +1115,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T851515643"] = "Bitt
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T897888480"] = "Lokalisierung"
+
+-- Error writing to plugin file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T948564909"] = "Fehler beim Schreiben in die Plugin-Datei."
 
 -- Your icon source
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1302165948"] = "Ihre Icons-Quelle"
@@ -6044,5 +6065,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannt
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
-
-
