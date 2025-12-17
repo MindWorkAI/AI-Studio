@@ -5,35 +5,51 @@
         Your attached files
     </TitleContent>
     <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+        </MudJustifiedText>
+        <MudDivider/>
         @foreach (var filePath in this.DocumentPaths)
         {
             @if (File.Exists(filePath))
             {
                 <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                    <MudIcon Icon="@Icons.Material.Filled.AttachFile" Class="mr-2"/>
+                    <MudTooltip Text="@T("Your attached file")" Placement="Placement.Bottom">
+                        <span class="d-inline-flex align-items-center" style="max-width: 100%;">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachFile" Class="mr-2"/>
+                            <MudText Class="flex-grow-1 overflow-hidden text-ellipsis" Style="white-space: nowrap;">
+                                @Path.GetFileName(filePath)
+                            </MudText>
+                        </span>
+                    </MudTooltip>
 
-                    <MudText Class="flex-grow-1 overflow-hidden text-ellipsis" Style="white-space: nowrap;">
-                        @Path.GetFileName(filePath)
-                    </MudText>
-
+                    <MudTooltip Text="@T("Delete")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                    Color="Color.Error"
                                    Class="ml-2"
                                    OnClick="@(() => DeleteAttachment(filePath))"/>
+                    </MudTooltip>
                 </MudStack>
 
             }
             else
             {
                 <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                    <MudText Class="flex-grow-1 overflow-hidden text-ellipsis" Style="white-space: nowrap;">
-                        <s>@Path.GetFileName(filePath)</s>
-                    </MudText>
+                    <MudTooltip Text="@T("The file was deleted, renamed, or moved")" Placement="Placement.Bottom">
+                        <span class="d-inline-flex align-items-center" style="max-width: 100%;">
+                            <MudIcon Icon="@Icons.Material.Filled.Report" Color="Color.Error" Class="mr-2"/>
+                            <MudText Class="flex-grow-1 overflow-hidden text-ellipsis" Style="white-space: nowrap;">
+                                <s>@Path.GetFileName(filePath)</s>
+                            </MudText>
+                        </span>
+                    </MudTooltip>
                     
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                   Color="Color.Error"
-                                   Class="ml-2"
-                                   OnClick="@(() => DeleteAttachment(filePath))"/>
+                    <MudTooltip Text="@T("Delete")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Class="ml-2"
+                                       OnClick="@(() => DeleteAttachment(filePath))"/>
+                    </MudTooltip>
                 </MudStack>
             }
         }
