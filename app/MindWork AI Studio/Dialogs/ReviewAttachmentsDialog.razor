@@ -8,7 +8,16 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
         </MudJustifiedText>
-        <MudDivider/>
+        
+        <MudDivider Class="mt-3 mb-3"/>
+        
+        @if (!this.DocumentPaths.Any())
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mt-3">
+                @T("There aren’t any file attachments available right now.")
+            </MudJustifiedText>
+        }
+
         @foreach (var filePath in this.DocumentPaths)
         {
             @if (File.Exists(filePath))
