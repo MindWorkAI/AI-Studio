@@ -1,5 +1,4 @@
 using AIStudio.Dialogs;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -11,23 +10,11 @@ using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProfileSelection).Namespace, nameof(ProfileSelection));
-    
     [Parameter]
     public string Name { get; set; } = string.Empty;
     
     [Parameter]
-    public bool Disabled { get; set; }
-    
-    [Parameter]
-    public string DisabledText { get; set; } = string.Empty;
-    
-    private readonly string defaultToolTipText = TB("You can edit your files here");
-    
-    [Parameter]
     public HashSet<string> DocumentPaths { get; set; } = [];
-    
-    private string ToolTipText => this.Disabled ? this.DisabledText : this.defaultToolTipText;
     
     [Parameter]
     public EventCallback<HashSet<string>> DocumentPathsChanged { get; set; }
