@@ -1,12 +1,9 @@
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    private static string TB_APIKeys(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, $"{nameof(RustService)}.APIKeys");
-    
     /// <summary>
     /// Try to get the API key for the given secret ID.
     /// </summary>
@@ -15,8 +12,6 @@ public sealed partial class RustService
     /// <returns>The requested secret.</returns>
     public async Task<RequestedSecret> GetAPIKey(ISecretId secretId, bool isTrying = false)
     {
-        static string TB(string fallbackEN) => TB_APIKeys(fallbackEN);
-        
         var secretRequest = new SelectSecretRequest($"provider::{secretId.SecretId}::{secretId.SecretName}::api_key", Environment.UserName, isTrying);
         var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
@@ -41,8 +36,6 @@ public sealed partial class RustService
     /// <returns>The store secret response.</returns>
     public async Task<StoreSecretResponse> SetAPIKey(ISecretId secretId, string key)
     {
-        static string TB(string fallbackEN) => TB_APIKeys(fallbackEN);
-        
         var encryptedKey = await this.encryptor!.Encrypt(key);
         var request = new StoreSecretRequest($"provider::{secretId.SecretId}::{secretId.SecretName}::api_key", Environment.UserName, encryptedKey);
         var result = await this.http.PostAsJsonAsync("/secrets/store", request, this.jsonRustSerializerOptions);
@@ -66,8 +59,6 @@ public sealed partial class RustService
     /// <returns>The delete secret response.</returns>
     public async Task<DeleteSecretResponse> DeleteAPIKey(ISecretId secretId)
     {
-        static string TB(string fallbackEN) => TB_APIKeys(fallbackEN);
-        
         var request = new SelectSecretRequest($"provider::{secretId.SecretId}::{secretId.SecretName}::api_key", Environment.UserName, false);
         var result = await this.http.PostAsJsonAsync("/secrets/delete", request, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)

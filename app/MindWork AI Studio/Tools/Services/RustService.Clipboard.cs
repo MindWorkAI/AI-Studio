@@ -1,12 +1,9 @@
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    private static string TB_Clipboard(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, $"{nameof(RustService)}.Clipboard");
-    
     /// <summary>
     /// Tries to copy the given text to the clipboard.
     /// </summary>
@@ -14,8 +11,6 @@ public sealed partial class RustService
     /// <param name="text">The text to copy to the clipboard.</param>
     public async Task CopyText2Clipboard(ISnackbar snackbar, string text)
     {
-        static string TB(string fallbackEN) => TB_Clipboard(fallbackEN);
-        
         var message = TB("Successfully copied the text to your clipboard");
         var iconColor = Color.Error;
         var severity = Severity.Error;
