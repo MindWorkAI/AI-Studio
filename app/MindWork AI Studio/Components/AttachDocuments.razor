@@ -3,10 +3,7 @@
 @if (this.UseSmallForm)
 {
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
-        @{
-            var fileInfos = this.DocumentPaths.Select(file => new FileInfo(file)).ToList();
-        }
-        @if (fileInfos.Any())
+        @if (this.DocumentPaths.Any())
         {
             <MudTooltip Text="@T("Click to see your attached files")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudBadge
