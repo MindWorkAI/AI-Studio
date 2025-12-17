@@ -1497,6 +1497,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Chat in 
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Einstellungen öffnen"
 
+-- You can edit your files here
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2038346788"] = "Sie können Ihre Dateien hier bearbeiten"
+
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Ziehen Sie Dateien in den markierten Bereich oder klicken Sie hier, um Dokumente anzuhängen:"
 
@@ -1523,6 +1526,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4167762413"] = "Ausfüh
 
 -- Select a file to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T595772870"] = "Datei zum Anhängen auswählen"
+
+-- Click to see your attached files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T743568733"] = "Klicken Sie, um Ihre angehängten Dateien anzuzeigen"
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHANGELOG::T3017574265"] = "Änderungsprotokoll"
@@ -3416,6 +3422,18 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T900713019"] = "Abbr
 
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T951463987"] = "Einbettungen"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1469573738"] = "Löschen"
+
+-- Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1746160064"] = "Hier sehen Sie alle angehängten Dateien. Dateien, die nicht mehr gefunden werden können (gelöscht, umbenannt oder verschoben), sind mit einem Warnsymbol und einem durchgestrichenen Namen gekennzeichnet. Sie können jede Anlage mit dem Papierkorb-Symbol entfernen."
+
+-- The file was deleted, renamed, or moved
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2203427286"] = "Die Datei wurde gelöscht, umbenannt oder verschoben"
+
+-- Your attached file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T351780500"] = "Ihre angehängte Datei"
 
 -- There is no social event
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1222800281"] = "Es gibt keine gesellschaftliche Veranstaltung."
@@ -6047,5 +6065,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannt
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
-
-

@@ -1497,6 +1497,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export C
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- You can edit your files here
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2038346788"] = "You can edit your files here"
+
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
 
@@ -1523,6 +1526,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4167762413"] = "Executa
 
 -- Select a file to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T595772870"] = "Select a file to attach"
+
+-- Click to see your attached files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T743568733"] = "Click to see your attached files"
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHANGELOG::T3017574265"] = "Changelog"
@@ -3416,6 +3422,18 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T900713019"] = "Canc
 
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T951463987"] = "Embeddings"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1469573738"] = "Delete"
+
+-- Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1746160064"] = "Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon."
+
+-- The file was deleted, renamed, or moved
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2203427286"] = "The file was deleted, renamed, or moved"
+
+-- Your attached file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T351780500"] = "Your attached file"
 
 -- There is no social event
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1222800281"] = "There is no social event"
@@ -6047,4 +6065,3 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unnamed w
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Delete Chat"
-
