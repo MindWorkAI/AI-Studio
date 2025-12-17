@@ -3,7 +3,27 @@
 @if (this.UseSmallForm)
 {
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
-        @if (this.DocumentPaths.Any())
+        @if (this.isDraggingOver)
+        {
+            <MudBadge
+                Content="@this.DocumentPaths.Count"
+                Color="Color.Primary"
+                Overlap="true"
+                Class="cursor-pointer"
+                OnClick="@this.OpenAttachmentsDialog">
+                <MudLink OnClick="@this.AddFilesManually" Style="text-decoration: none;">
+                    <MudTextField T="string"
+                                  Text="@DROP_FILES_HERE_TEXT"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                  Typo="Typo.body2"
+                                  Variant="Variant.Outlined"
+                                  ReadOnly="true"
+                    />
+                </MudLink>
+            </MudBadge>
+        }
+        else if (this.DocumentPaths.Any())
         {
             <MudTooltip Text="@T("Click the paperclip to attach files, or click the number to see your attached files")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudBadge

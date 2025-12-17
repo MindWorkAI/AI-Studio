@@ -1,4 +1,5 @@
 using AIStudio.Dialogs;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -10,6 +11,8 @@ using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AttachDocuments).Namespace, nameof(AttachDocuments));
+    
     [Parameter]
     public string Name { get; set; } = string.Empty;
     
@@ -41,6 +44,11 @@ public partial class AttachDocuments : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
     
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
+
+    private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them");
+    
+    private bool isComponentHovered;
+    private bool isDraggingOver;
     
     #region Overrides of MSGComponentBase
 
@@ -61,7 +69,20 @@ public partial class AttachDocuments : MSGComponentBase
                     return;
                 }
                 
+                this.isDraggingOver = true;
                 this.SetDragClass();
+                this.StateHasChanged();
+                break;
+            
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
+                this.isDraggingOver = false;
+                this.StateHasChanged();
+                break;
+            
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
+                this.isDraggingOver = false;
+                this.isComponentHovered = false;
+                this.ClearDragClass();
                 this.StateHasChanged();
                 break;
             
@@ -82,6 +103,8 @@ public partial class AttachDocuments : MSGComponentBase
 
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
+                this.isDraggingOver = false;
+                this.ClearDragClass();
                 this.StateHasChanged();
                 break;
         }
@@ -93,8 +116,6 @@ public partial class AttachDocuments : MSGComponentBase
     
     private string dragClass = DEFAULT_DRAG_CLASS;
     
-    private bool isComponentHovered;
-
     private async Task AddFilesManually()
     {
         var selectedFile = await this.RustService.SelectFile(T("Select a file to attach"));
