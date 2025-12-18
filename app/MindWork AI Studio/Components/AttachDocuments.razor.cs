@@ -158,7 +158,7 @@ public partial class AttachDocuments : MSGComponentBase
                 continue;
 
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFilePath))
-                return;
+                continue;
 
             this.DocumentPaths.Add(selectedFilePath);
         }
