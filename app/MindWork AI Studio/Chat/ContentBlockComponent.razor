@@ -20,7 +20,8 @@
             {
                 <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
                     <MudBadge Content="@this.Content.FileAttachments.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile" />
+                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile"
+                                       OnClick="@this.OpenAttachmentsDialog"/>
                     </MudBadge>
                 </MudTooltip>
             }

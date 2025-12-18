@@ -1524,23 +1524,29 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- Click the paperclip to attach files, or click the number to see your attached files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Click the paperclip to attach files, or click the number to see your attached files."
+
+-- Drop files here to attach them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T143112277"] = "Drop files here to attach them."
+
+-- Click here to attach files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Click here to attach files."
+
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
 
+-- Select files to attach
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2495931372"] = "Select files to attach"
+
 -- Document Preview
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T285154968"] = "Document Preview"
-
--- Click to attach files
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3521845090"] = "Click to attach files"
 
 -- Clear file list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3759696136"] = "Clear file list"
 
 -- Add file
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4014053962"] = "Add file"
-
--- Select a file to attach
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T595772870"] = "Select a file to attach"
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHANGELOG::T3017574265"] = "Changelog"
@@ -3425,6 +3431,24 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T900713019"] = "Canc
 
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T951463987"] = "Embeddings"
+
+-- Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1746160064"] = "Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon."
+
+-- There aren't any file attachments available right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2111340711"] = "There aren't any file attachments available right now."
+
+-- The file was deleted, renamed, or moved.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3083729256"] = "The file was deleted, renamed, or moved."
+
+-- Your attached file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3154198222"] = "Your attached file."
+
+-- Your attached files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3909191077"] = "Your attached files"
+
+-- Remove this attachment.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T3933470258"] = "Remove this attachment."
 
 -- There is no social event
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1222800281"] = "There is no social event"
