@@ -30,7 +30,7 @@
                             <MudTooltip Text="@T("Your attached file")" Placement="Placement.Bottom">
                                 <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
                                     <MudIcon Icon="@Icons.Material.Filled.AttachFile" Class="mr-2" Style="flex-shrink: 0;"/>
-                                    <MudText Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <MudText Style="white-space: nowrap;">
                                         @Path.GetFileName(filePath)
                                     </MudText>
                                 </span>
@@ -54,7 +54,7 @@
                             <MudTooltip Text="@T("The file was deleted, renamed, or moved")" Placement="Placement.Bottom">
                                 <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
                                     <MudIcon Icon="@Icons.Material.Filled.Report" Color="Color.Error" Class="mr-2" Style="flex-shrink: 0;"/>
-                                    <MudText Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <MudText Style="white-space: nowrap;">
                                         <s>@Path.GetFileName(filePath)</s>
                                     </MudText>
                                 </span>
