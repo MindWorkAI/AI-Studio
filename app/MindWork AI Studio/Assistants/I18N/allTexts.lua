@@ -3421,14 +3421,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T900713019"] = "Canc
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T951463987"] = "Embeddings"
 
--- There aren’t any file attachments available right now.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1302493281"] = "There aren’t any file attachments available right now."
-
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1469573738"] = "Delete"
 
 -- Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1746160064"] = "Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon."
+
+-- There aren't any file attachments available right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2111340711"] = "There aren't any file attachments available right now."
 
 -- The file was deleted, renamed, or moved
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2203427286"] = "The file was deleted, renamed, or moved"
