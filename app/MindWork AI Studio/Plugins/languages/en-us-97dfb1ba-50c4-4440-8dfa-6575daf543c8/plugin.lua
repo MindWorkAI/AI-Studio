@@ -3435,7 +3435,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T951463987"] = "Embe
 -- Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1746160064"] = "Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon."
 
--- There aren't any file attachments available right now.
+-- There aren't any file attachments right now.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2111340711"] = "There aren't any file attachments right now."
 
 -- The file was deleted, renamed, or moved.
@@ -4491,9 +4491,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1258653480"] = "Settings"
 -- Home
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1391791790"] = "Home"
 
--- About
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1491113694"] = "About"
-
 -- Are you sure you want to leave the chat page? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1563130494"] = "Are you sure you want to leave the chat page? All unsaved changes will be lost."
 
@@ -4524,242 +4521,11 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writing"
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Show details"
 
+-- Information
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
+
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T578410699"] = "Chat"
-
--- Startup log file
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1019424746"] = "Startup log file"
-
--- About MindWork AI Studio
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1020427799"] = "About MindWork AI Studio"
-
--- Browse AI Studio's source code on GitHub — we welcome your contributions.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1107156991"] = "Browse AI Studio's source code on GitHub — we welcome your contributions."
-
--- This is a private AI Studio installation. It runs without an enterprise configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
-
--- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1282228996"] = "AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available."
-
--- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
-
--- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
-
--- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T162898512"] = "We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library."
-
--- Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1629800076"] = "Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor."
-
--- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1630237140"] = "AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files."
-
--- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
-
--- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1806897624"] = "By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents."
-
--- Pandoc Installation
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T185447014"] = "Pandoc Installation"
-
--- Copies the configuration plugin ID to the clipboard
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1859295819"] = "Copies the configuration plugin ID to the clipboard"
-
--- Check for updates
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1890416390"] = "Check for updates"
-
--- Vision
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1892426825"] = "Vision"
-
--- In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1915240766"] = "In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library."
-
--- This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1924365263"] = "This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant."
-
--- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T1943216839"] = "We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."
-
--- Copies the server URL to the clipboard
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2037899437"] = "Copies the server URL to the clipboard"
-
--- This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2173617769"] = "This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file."
-
--- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
-
--- OK
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2246359087"] = "OK"
-
--- Configuration server:
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2272122662"] = "Configuration server:"
-
--- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2273492381"] = "We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose."
-
--- AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2280402765"] = "AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management."
-
--- Configuration plugin ID:
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2301484629"] = "Configuration plugin ID:"
-
--- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2329884315"] = "The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."
-
--- Used PDFium version
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2368247719"] = "Used PDFium version"
-
--- installation provided by the system
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2371107659"] = "installation provided by the system"
-
--- Installed Pandoc version: Pandoc is not installed or not available.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2374031539"] = "Installed Pandoc version: Pandoc is not installed or not available."
-
--- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
-
--- Used Open Source Projects
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2557066213"] = "Used Open Source Projects"
-
--- Build time
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T260228112"] = "Build time"
-
--- To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2644379659"] = "To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system."
-
--- Usage log file
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2689995864"] = "Usage log file"
-
--- Logbook
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2706940196"] = "Logbook"
-
--- This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2726131107"] = "This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read."
-
--- Determine Pandoc version, please wait...
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2765814390"] = "Determine Pandoc version, please wait..."
-
--- Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2777988282"] = "Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor."
-
--- Show Details
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T27924674"] = "Show Details"
-
--- View our project roadmap and help shape AI Studio's future development.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2829971158"] = "View our project roadmap and help shape AI Studio's future development."
-
--- Used .NET runtime
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2840227993"] = "Used .NET runtime"
-
--- Explanation
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2840582448"] = "Explanation"
-
--- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T2868174483"] = "The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software."
-
--- Changelog
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3017574265"] = "Changelog"
-
--- Enterprise configuration ID:
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3092349641"] = "Enterprise configuration ID:"
-
--- Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T313276297"] = "Connect AI Studio to your organization's data with our External Retrieval Interface (ERI)."
-
--- Have feature ideas? Submit suggestions for future AI Studio enhancements.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3178730036"] = "Have feature ideas? Submit suggestions for future AI Studio enhancements."
-
--- Hide Details
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3183837919"] = "Hide Details"
-
--- Update Pandoc
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3249965383"] = "Update Pandoc"
-
--- Discover MindWork AI's mission and vision on our official homepage.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3294830584"] = "Discover MindWork AI's mission and vision on our official homepage."
-
--- User-language provided by the OS
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3334355246"] = "User-language provided by the OS"
-
--- The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3405978777"] = "The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:"
-
--- Used Rust compiler
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3440211747"] = "Used Rust compiler"
-
--- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3494984593"] = "Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"
-
--- Motivation
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3563271893"] = "Motivation"
-
--- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3722989559"] = "This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat."
-
--- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3741877842"] = "AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active."
-
--- this version does not met the requirements
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3813932670"] = "this version does not met the requirements"
-
--- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3874337003"] = "This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration."
-
--- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3908558992"] = "Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."
-
--- Installed Pandoc version
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3983971016"] = "Installed Pandoc version"
-
--- Check Pandoc Installation
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T3986423270"] = "Check Pandoc Installation"
-
--- Versions
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4010195468"] = "Versions"
-
--- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4079152443"] = "This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system."
-
--- Community & Code
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4158546761"] = "Community & Code"
-
--- We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4184485147"] = "We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant."
-
--- When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T4229014037"] = "When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project."
-
--- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T566998575"] = "This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow."
-
--- Used .NET SDK
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T585329785"] = "Used .NET SDK"
-
--- Did you find a bug or are you experiencing issues? Report your concern here.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T639371534"] = "Did you find a bug or are you experiencing issues? Report your concern here."
-
--- This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T64689067"] = "This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible."
-
--- Copies the config ID to the clipboard
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T788846912"] = "Copies the config ID to the clipboard"
-
--- installed by AI Studio
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T833849470"] = "installed by AI Studio"
-
--- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T855925638"] = "We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate."
-
--- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."
-
--- Install Pandoc
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ABOUT::T986578435"] = "Install Pandoc"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
@@ -4976,6 +4742,240 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T873851215"] = "Here's what makes MindWo
 
 -- The app is free to use, both for personal and commercial purposes.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T91074375"] = "The app is free to use, both for personal and commercial purposes."
+
+-- Startup log file
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startup log file"
+
+-- Browse AI Studio's source code on GitHub — we welcome your contributions.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Browse AI Studio's source code on GitHub — we welcome your contributions."
+
+-- This is a private AI Studio installation. It runs without an enterprise configuration.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
+
+-- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1282228996"] = "AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available."
+
+-- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
+
+-- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
+
+-- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library."
+
+-- Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Building on .NET, ASP.NET Core, and Blazor, MudBlazor is used as a library for designing and developing the user interface. It is a great project that significantly accelerates the development of advanced user interfaces with Blazor."
+
+-- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files."
+
+-- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
+
+-- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1806897624"] = "By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents."
+
+-- Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T185447014"] = "Pandoc Installation"
+
+-- Copies the configuration plugin ID to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1859295819"] = "Copies the configuration plugin ID to the clipboard"
+
+-- Check for updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1890416390"] = "Check for updates"
+
+-- Vision
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1892426825"] = "Vision"
+
+-- In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1915240766"] = "In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library."
+
+-- This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant."
+
+-- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."
+
+-- Copies the server URL to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Copies the server URL to the clipboard"
+
+-- This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2173617769"] = "This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file."
+
+-- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
+
+-- OK
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2246359087"] = "OK"
+
+-- Configuration server:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2272122662"] = "Configuration server:"
+
+-- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2273492381"] = "We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose."
+
+-- AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2280402765"] = "AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management."
+
+-- Configuration plugin ID:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Configuration plugin ID:"
+
+-- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2329884315"] = "The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."
+
+-- Used PDFium version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2368247719"] = "Used PDFium version"
+
+-- installation provided by the system
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "installation provided by the system"
+
+-- Installed Pandoc version: Pandoc is not installed or not available.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installed Pandoc version: Pandoc is not installed or not available."
+
+-- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
+
+-- Used Open Source Projects
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Used Open Source Projects"
+
+-- Build time
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build time"
+
+-- To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2644379659"] = "To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system."
+
+-- Usage log file
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2689995864"] = "Usage log file"
+
+-- Logbook
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2706940196"] = "Logbook"
+
+-- This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2726131107"] = "This component is used to render Markdown text. This is important because the LLM often responds with Markdown-formatted text, allowing us to present it in a way that is easier to read."
+
+-- Determine Pandoc version, please wait...
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2765814390"] = "Determine Pandoc version, please wait..."
+
+-- Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2777988282"] = "Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor."
+
+-- Show Details
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T27924674"] = "Show Details"
+
+-- View our project roadmap and help shape AI Studio's future development.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2829971158"] = "View our project roadmap and help shape AI Studio's future development."
+
+-- Used .NET runtime
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840227993"] = "Used .NET runtime"
+
+-- Explanation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840582448"] = "Explanation"
+
+-- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software."
+
+-- Changelog
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
+
+-- Enterprise configuration ID:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Enterprise configuration ID:"
+
+-- Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T313276297"] = "Connect AI Studio to your organization's data with our External Retrieval Interface (ERI)."
+
+-- Have feature ideas? Submit suggestions for future AI Studio enhancements.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Have feature ideas? Submit suggestions for future AI Studio enhancements."
+
+-- Hide Details
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Hide Details"
+
+-- Update Pandoc
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3249965383"] = "Update Pandoc"
+
+-- Discover MindWork AI's mission and vision on our official homepage.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3294830584"] = "Discover MindWork AI's mission and vision on our official homepage."
+
+-- User-language provided by the OS
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3334355246"] = "User-language provided by the OS"
+
+-- The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3405978777"] = "The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:"
+
+-- Information about MindWork AI Studio
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3433065373"] = "Information about MindWork AI Studio"
+
+-- Used Rust compiler
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3440211747"] = "Used Rust compiler"
+
+-- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"
+
+-- Motivation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3563271893"] = "Motivation"
+
+-- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat."
+
+-- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3741877842"] = "AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active."
+
+-- this version does not met the requirements
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "this version does not met the requirements"
+
+-- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration."
+
+-- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3908558992"] = "Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."
+
+-- Installed Pandoc version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3983971016"] = "Installed Pandoc version"
+
+-- Check Pandoc Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3986423270"] = "Check Pandoc Installation"
+
+-- Versions
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versions"
+
+-- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system."
+
+-- Community & Code
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
+
+-- We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4184485147"] = "We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant."
+
+-- When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4229014037"] = "When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project."
+
+-- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow."
+
+-- Used .NET SDK
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Used .NET SDK"
+
+-- Did you find a bug or are you experiencing issues? Report your concern here.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Did you find a bug or are you experiencing issues? Report your concern here."
+
+-- This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T64689067"] = "This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible."
+
+-- Copies the config ID to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T788846912"] = "Copies the config ID to the clipboard"
+
+-- installed by AI Studio
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T833849470"] = "installed by AI Studio"
+
+-- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate."
+
+-- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."
+
+-- Install Pandoc
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Install Pandoc"
 
 -- Disable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1430375822"] = "Disable plugin"
