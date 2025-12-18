@@ -32,7 +32,7 @@ Since November 2024: Work on RAG (integration of your data and files) has begun.
 - [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
 - [ ] App: Implement external embedding providers
 - [ ] App: Implement the process to vectorize one local file using embeddings
-- [ ] Runtime: Integration of the vector database [LanceDB](https://github.com/lancedb/lancedb)
+- [ ] Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant)
 - [ ] App: Implement the continuous process of vectorizing data
 - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
 - [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
@@ -79,6 +79,7 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v0.9.55: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, and the possibility to use file attachments in chats.
 - v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
 - v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
@@ -114,6 +115,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [xAI](https://x.ai/) (Grok)
   - [DeepSeek](https://www.deepseek.com/en)
   - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
+  - [OpenRouter](https://openrouter.ai/)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
   - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
   - [Groq](https://groq.com/)

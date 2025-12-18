@@ -2,6 +2,7 @@ using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -42,7 +43,10 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
 
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
@@ -92,12 +96,26 @@ public partial class AttachDocuments : MSGComponentBase
                     this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
                     return;
                 }
-                
+
+                // Ensure that Pandoc is installed and ready:
+                var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                    showSuccessMessage: false,
+                    showDialog: true);
+
+                // If Pandoc is not available (user cancelled installation), abort file drop:
+                if (!pandocState.IsAvailable)
+                {
+                    this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
+                    this.ClearDragClass();
+                    this.StateHasChanged();
+                    return;
+                }
+
                 foreach (var path in paths)
                 {
-                    if(!await this.IsFileExtensionValid(path))
+                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(path))
                         continue;
-                    
+
                     this.DocumentPaths.Add(path);
                 }
 
@@ -118,17 +136,33 @@ public partial class AttachDocuments : MSGComponentBase
     
     private async Task AddFilesManually()
     {
-        var selectedFile = await this.RustService.SelectFile(T("Select a file to attach"));
-        if (selectedFile.UserCancelled)
+        // Ensure that Pandoc is installed and ready:
+        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
+
+        // If Pandoc is not available (user cancelled installation), abort file selection:
+        if (!pandocState.IsAvailable)
+        {
+            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+            return;
+        }
+
+        var selectFiles = await this.RustService.SelectFiles(T("Select a file to attach"));
+        if (selectFiles.UserCancelled)
             return;
 
-        if (!File.Exists(selectedFile.SelectedFilePath))
-            return;
+        foreach (var selectedFilePath in selectFiles.SelectedFilePaths)
+        {
+            if (!File.Exists(selectedFilePath))
+                continue;
 
-        if (!await this.IsFileExtensionValid(selectedFile.SelectedFilePath))
-            return;
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFilePath))
+                return;
 
-        this.DocumentPaths.Add(selectedFile.SelectedFilePath);
+            this.DocumentPaths.Add(selectedFilePath);
+        }
+        
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
@@ -136,30 +170,6 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task OpenAttachmentsDialog()
     {
         this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
-    }
-
-    private async Task<bool> IsFileExtensionValid(string selectedFile)
-    {
-        var ext = Path.GetExtension(selectedFile).TrimStart('.');
-        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, this.T("Executables are not allowed")));
-            return false;
-        }
-
-        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, this.T("Images are not supported yet")));
-            return false;
-        }
-        
-        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
-            return false;
-        }
-
-        return true;
     }
 
     private async Task ClearAllFiles()

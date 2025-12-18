@@ -1,5 +1,5 @@
-using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -30,6 +30,18 @@ public partial class ReadFileContent : MSGComponentBase
     
     private async Task SelectFile()
     {
+        // Ensure that Pandoc is installed and ready:
+        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+            showSuccessMessage: false,
+            showDialog: true);
+
+        // Check if Pandoc is available after the check / installation:
+        if (!pandocState.IsAvailable)
+        {
+            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+            return;
+        }
+
         var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
         if (selectedFile.UserCancelled)
         {
@@ -43,33 +55,12 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
 
-        var ext = Path.GetExtension(selectedFile.SelectedFilePath).TrimStart('.');
-        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
+        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFile.SelectedFilePath))
         {
-            this.Logger.LogWarning("User attempted to load executable file: {FilePath} with extension: {Extension}", selectedFile.SelectedFilePath, ext);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.AppBlocking, T("Executables are not allowed")));
+            this.Logger.LogWarning("User attempted to load unsupported file: {FilePath}", selectedFile.SelectedFilePath);
             return;
         }
 
-        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext,  StringComparison.OrdinalIgnoreCase)))
-        {
-            this.Logger.LogWarning("User attempted to load image file: {FilePath} with extension: {Extension}", selectedFile.SelectedFilePath, ext);
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ImageNotSupported, T("Images are not supported yet")));
-            return;
-        }
-
-        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
-        {
-            this.Logger.LogWarning("User attempted to load video file: {FilePath} with extension: {Extension}", selectedFile.SelectedFilePath, ext);
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FeaturedVideo, this.T("Videos are not supported yet")));
-            return;
-        }
-
-        // Ensure that Pandoc is installed and ready:
-        await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-            showSuccessMessage: false,
-            showDialog: true);
-        
         try
         {
             var fileContent = await UserFile.LoadFileData(selectedFile.SelectedFilePath, this.RustService, this.DialogService);
