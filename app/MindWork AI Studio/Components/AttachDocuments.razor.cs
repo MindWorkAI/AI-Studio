@@ -45,7 +45,7 @@ public partial class AttachDocuments : MSGComponentBase
     
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
 
-    private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them");
+    private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
     
     private bool isComponentHovered;
     private bool isDraggingOver;
