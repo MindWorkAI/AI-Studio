@@ -68,9 +68,9 @@ else
     </MudStack>
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
         <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
-            @foreach (var fileInfo in this.DocumentPaths.Select(file => new FileInfo(file)))
+            @foreach (var filePath in this.DocumentPaths)
             {
-                <MudChip T="string" Color="Color.Dark" Text="@fileInfo.Name" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(@fileInfo))" OnClose="@(() => this.RemoveDocumentPathFromDocumentPaths(@fileInfo))"/>
+                <MudChip T="string" Color="Color.Dark" Text="@Path.GetFileName(filePath)" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(filePath))" OnClose="@(() => this.RemoveDocument(filePath))"/>
             }
         </MudPaper>
     </div>
