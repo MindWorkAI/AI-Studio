@@ -21,54 +21,69 @@
                 </MudJustifiedText>
             }
 
-            @foreach (var filePath in this.DocumentPaths)
-            {
-                @if (File.Exists(filePath))
+            @{
+                var currentFolder = string.Empty;
+                foreach (var filePath in this.DocumentPaths)
                 {
-                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                        <div style="min-width: 0; flex: 1; overflow: hidden;">
-                            <MudTooltip Text="@T("Your attached file.")" Placement="Placement.Bottom">
-                                <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
-                                    <MudIcon Icon="@Icons.Material.Filled.AttachFile" Class="mr-2" Style="flex-shrink: 0;"/>
-                                    <MudText Style="white-space: nowrap;">
-                                        @Path.GetFileName(filePath)
-                                    </MudText>
-                                </span>
+                    var folderPath = Path.GetDirectoryName(filePath);
+                    if (folderPath != currentFolder)
+                    {
+                        currentFolder = folderPath;
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6 mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Folder" Class="mr-2" />
+                            <MudText Typo="Typo.h6">
+                                @folderPath:
+                            </MudText>
+                        </MudStack>
+                    }
+                    
+                    @if (File.Exists(filePath))
+                    {
+                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="ms-3 mb-2">
+                            <div style="min-width: 0; flex: 1; overflow: hidden;">
+                                <MudTooltip Text="@T("Your attached file.")" Placement="Placement.Bottom">
+                                    <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
+                                        <MudIcon Icon="@Icons.Material.Filled.AttachFile" Class="mr-2" Style="flex-shrink: 0;"/>
+                                        <MudText Style="white-space: nowrap;">
+                                            @Path.GetFileName(filePath)
+                                        </MudText>
+                                    </span>
+                                </MudTooltip>
+                            </div>
+
+                            <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Class="ml-2"
+                                               Style="flex-shrink: 0;"
+                                               OnClick="@(() => this.DeleteAttachment(filePath))"/>
                             </MudTooltip>
-                        </div>
+                        </MudStack>
 
-                        <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           Class="ml-2"
-                                           Style="flex-shrink: 0;"
-                                           OnClick="@(() => this.DeleteAttachment(filePath))"/>
-                        </MudTooltip>
-                    </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="ms-3 mb-2">
+                            <div style="min-width: 0; flex: 1; overflow: hidden;">
+                                <MudTooltip Text="@T("The file was deleted, renamed, or moved.")" Placement="Placement.Bottom">
+                                    <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Report" Color="Color.Error" Class="mr-2" Style="flex-shrink: 0;"/>
+                                        <MudText Style="white-space: nowrap;">
+                                            <s>@Path.GetFileName(filePath)</s>
+                                        </MudText>
+                                    </span>
+                                </MudTooltip>
+                            </div>
 
-                }
-                else
-                {
-                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                        <div style="min-width: 0; flex: 1; overflow: hidden;">
-                            <MudTooltip Text="@T("The file was deleted, renamed, or moved.")" Placement="Placement.Bottom">
-                                <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
-                                    <MudIcon Icon="@Icons.Material.Filled.Report" Color="Color.Error" Class="mr-2" Style="flex-shrink: 0;"/>
-                                    <MudText Style="white-space: nowrap;">
-                                        <s>@Path.GetFileName(filePath)</s>
-                                    </MudText>
-                                </span>
+                            <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Class="ml-2"
+                                               Style="flex-shrink: 0;"
+                                               OnClick="@(() => this.DeleteAttachment(filePath))"/>
                             </MudTooltip>
-                        </div>
-
-                        <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           Class="ml-2"
-                                           Style="flex-shrink: 0;"
-                                           OnClick="@(() => this.DeleteAttachment(filePath))"/>
-                        </MudTooltip>
-                    </MudStack>
+                        </MudStack>
+                    }
                 }
             }
         </div>
