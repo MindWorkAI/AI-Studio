@@ -199,9 +199,9 @@ public partial class AttachDocuments : MSGComponentBase
         this.StateHasChanged();
     }
 
-    private async Task RemoveDocumentPathFromDocumentPaths(FileInfo file)
+    private async Task RemoveDocument(string filePath)
     {
-        this.DocumentPaths.Remove(file.ToString());
+        this.DocumentPaths.Remove(filePath);
         
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
@@ -210,12 +210,12 @@ public partial class AttachDocuments : MSGComponentBase
     /// <summary>
     /// The user might want to check what we actually extract from his file and therefore give the LLM as an input. 
     /// </summary>
-    /// <param name="file">The file to check.</param>
-    private async Task InvestigateFile(FileInfo file)
+    /// <param name="filePath">The file to check.</param>
+    private async Task InvestigateFile(string filePath)
     {
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
-            { x => x.FilePath, file.FullName },
+            { x => x.FilePath, filePath },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
