@@ -159,3 +159,6 @@ orleans.codegen.cs
 
 # Ignore AI plugin config files:
 /app/.idea/.idea.MindWork AI Studio/.idea/AugmentWebviewStateStore.xml
+
+# Ignore GitHub Copilot migration files:
+**/copilot.data.migration.*.xml
