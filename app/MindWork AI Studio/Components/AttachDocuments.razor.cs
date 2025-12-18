@@ -48,7 +48,6 @@ public partial class AttachDocuments : MSGComponentBase
     private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
-
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
     
     private bool isComponentHovered;
@@ -106,6 +105,7 @@ public partial class AttachDocuments : MSGComponentBase
                 if (!pandocState.IsAvailable)
                 {
                     this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
+                    this.isDraggingOver = false;
                     this.ClearDragClass();
                     this.StateHasChanged();
                     return;
@@ -148,7 +148,7 @@ public partial class AttachDocuments : MSGComponentBase
             return;
         }
 
-        var selectFiles = await this.RustService.SelectFiles(T("Select a file to attach"));
+        var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
         if (selectFiles.UserCancelled)
             return;
 
