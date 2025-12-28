@@ -5,6 +5,10 @@ namespace AIStudio.Chat;
 /// <summary>
 /// Represents an immutable file attachment with details about its type, name, path, and size.
 /// </summary>
+/// <param name="Type">The type of the file attachment.</param>
+/// <param name="FileName">The name of the file, including extension.</param>
+/// <param name="FilePath">The full path to the file, including the filename and extension.</param>
+/// <param name="FileSizeBytes">The size of the file in bytes.</param>
 public readonly record struct FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
     /// <summary>
