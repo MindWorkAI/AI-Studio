@@ -30,7 +30,7 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
             yield break;
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -40,7 +40,7 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message()
+        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
         {
             Role = n.Role switch
             {

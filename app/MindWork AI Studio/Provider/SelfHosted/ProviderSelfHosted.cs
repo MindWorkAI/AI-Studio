@@ -26,7 +26,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -36,7 +36,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
         {
             Role = n.Role switch
             {

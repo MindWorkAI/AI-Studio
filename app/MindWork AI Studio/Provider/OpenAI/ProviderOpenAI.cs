@@ -70,7 +70,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         LOGGER.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = systemPromptRole,
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -90,7 +90,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
         {
             Role = n.Role switch
             {
@@ -119,9 +119,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             {
                 Model = chatModel.Id,
             
-                // Build the messages:
-                // - First of all the system prompt
-                // - Then none-empty user and AI messages
+                // All messages go into the messages field:
                 Messages = [systemPrompt, ..messages],
             
                 // Right now, we only support streaming completions:
@@ -134,27 +132,8 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
             {
                 Model = chatModel.Id,
             
-                // Build the messages:
-                // - First of all the system prompt
-                // - Then none-empty user and AI messages
-                Input = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-                {
-                    Role = n.Role switch
-                    {
-                        ChatRole.USER => "user",
-                        ChatRole.AI => "assistant",
-                        ChatRole.AGENT => "assistant",
-                        ChatRole.SYSTEM => systemPromptRole,
-
-                        _ => "user",
-                    },
-
-                    Content = n.Content switch
-                    {
-                        ContentText text => text.Text,
-                        _ => string.Empty,
-                    }
-                }).ToList()],
+                // All messages go into the input field:
+                Input = [systemPrompt, ..messages],
             
                 // Right now, we only support streaming completions:
                 Stream = true,

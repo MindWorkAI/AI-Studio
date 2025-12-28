@@ -28,7 +28,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new RegularMessage
+        var systemPrompt = new TextMessage
         {
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -38,7 +38,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
         var apiParameters = this.ParseAdditionalApiParameters();
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new RegularMessage
+        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
         {
             Role = n.Role switch
             {

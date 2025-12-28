@@ -31,7 +31,7 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
         var apiParameters = this.ParseAdditionalApiParameters("system");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
         {
             Role = n.Role switch
             {
