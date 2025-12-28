@@ -40,7 +40,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new AnnotationConverter() },
+        Converters = { new AnnotationConverter(), new MessageBaseConverter() },
         AllowTrailingCommas = false
     };
 
