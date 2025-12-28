@@ -185,7 +185,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyOutputRules = string.Empty;
 #warning Use deferred content for document analysis
     private string deferredContent = string.Empty;
-    private HashSet<string> loadedDocumentPaths = [];
+    private HashSet<FileAttachment> loadedDocumentPaths = [];
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     
@@ -330,13 +330,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         var documentSections = new List<string>();
         var count = 1;
 
-        foreach (var documentPath in this.loadedDocumentPaths)
+        foreach (var fileAttachment in this.loadedDocumentPaths)
         {
-            var fileContent = await this.RustService.ReadArbitraryFileData(documentPath, int.MaxValue);
-        
+            var fileContent = await this.RustService.ReadArbitraryFileData(fileAttachment.FilePath, int.MaxValue);
+
             documentSections.Add($"""
                                   ## DOCUMENT {count}:
-                                  File path: {documentPath}
+                                  File path: {fileAttachment.FilePath}
                                   Content:
                                   ```
                                   {fileContent}
