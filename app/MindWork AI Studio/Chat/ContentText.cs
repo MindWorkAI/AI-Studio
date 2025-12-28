@@ -156,20 +156,17 @@ public sealed class ContentText : IContent
 
         if(this.FileAttachments.Count > 0)
         {
-            // Filter out files that no longer exist:
-            var existingFiles = this.FileAttachments.Where(x => x.Exists).ToList();
+            // Get the list of existing documents:
+            var existingDocuments = this.FileAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
 
             // Log warning for missing files:
-            var missingFiles = this.FileAttachments.Except(existingFiles).ToList();
-            if (missingFiles.Count > 0)
-                foreach (var missingFile in missingFiles)
-                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingFile}'.", missingFile.FilePath);
-
-            // Determine allowed attachments:
-            var numberAllowedExistingFiles = existingFiles.Count(x => x.IsValid);
+            var missingDocuments = this.FileAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
+            if (missingDocuments.Count > 0)
+                foreach (var missingDocument in missingDocuments)
+                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
             
-            // Only proceed if there are existing, allowed files:
-            if (numberAllowedExistingFiles > 0)
+            // Only proceed if there are existing, allowed documents:
+            if (existingDocuments.Count > 0)
             {
                 // Check Pandoc availability once before processing file attachments
                 var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
@@ -182,20 +179,20 @@ public sealed class ContentText : IContent
                 {
                     sb.AppendLine();
                     sb.AppendLine("The following files are attached to this message:");
-                    foreach(var file in existingFiles)
+                    foreach(var document in existingDocuments)
                     {
-                        if (file.IsForbidden)
+                        if (document.IsForbidden)
                         {
-                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", file.FilePath);
+                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
                             continue;
                         }
                         
                         sb.AppendLine();
                         sb.AppendLine("---------------------------------------");
-                        sb.AppendLine($"File path: {file.FilePath}");
+                        sb.AppendLine($"File path: {document.FilePath}");
                         sb.AppendLine("File content:");
                         sb.AppendLine("````");
-                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(file.FilePath, int.MaxValue));
+                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
                         sb.AppendLine("````");
                     }
                 }
