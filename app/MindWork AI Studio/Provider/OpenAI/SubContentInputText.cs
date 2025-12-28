@@ -6,9 +6,9 @@ namespace AIStudio.Provider.OpenAI;
 /// <remarks>
 /// Right now, this is used only by OpenAI in its responses API.
 /// </remarks>
-public record SubContentInputText(ContentType Type, string Text) : ISubContent
+public record SubContentInputText(SubContentType Type, string Text) : ISubContent
 {
-    public SubContentInputText() : this(ContentType.INPUT_TEXT, string.Empty)
+    public SubContentInputText() : this(SubContentType.INPUT_TEXT, string.Empty)
     {
     }
 }

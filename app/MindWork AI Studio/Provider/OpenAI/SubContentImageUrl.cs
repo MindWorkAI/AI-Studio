@@ -3,9 +3,9 @@ namespace AIStudio.Provider.OpenAI;
 /// <summary>
 /// Image sub-content for multimodal messages.
 /// </summary>
-public record SubContentImageUrl(ContentType Type, string ImageUrl) : ISubContent
+public record SubContentImageUrl(SubContentType Type, string ImageUrl) : ISubContent
 {
-    public SubContentImageUrl() : this(ContentType.IMAGE_URL, string.Empty)
+    public SubContentImageUrl() : this(SubContentType.IMAGE_URL, string.Empty)
     {
     }
 }

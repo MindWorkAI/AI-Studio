@@ -1,9 +1,9 @@
-namespace AIStudio.Provider.OpenAI;
+namespace AIStudio.Provider;
 
 /// <summary>
-/// Content types for OpenAI API interactions when using multimodal messages.
+/// Sub content types for OpenAI-compatible API interactions when using multimodal messages.
 /// </summary>
-public enum ContentType
+public enum SubContentType
 {
     /// <summary>
     /// Default type for user prompts in multimodal messages. This type is supported across all providers.
@@ -23,12 +23,17 @@ public enum ContentType
     INPUT_IMAGE,
     
     /// <summary>
-    /// Right now only supported by OpenAI (responses & chat completion API), Google (chat completions API), and Mistral (chat completions API).
-    /// </summary>
-    INPUT_AUDIO,
-    
-    /// <summary>
     /// Default type for images in multimodal messages. This type is supported across all providers.
     /// </summary>
     IMAGE_URL,
+    
+    /// <summary>
+    /// The image type is used exclusively by Anthropic's messages API.
+    /// </summary>
+    IMAGE,
+    
+    /// <summary>
+    /// Right now only supported by OpenAI (responses & chat completion API), Google (chat completions API), and Mistral (chat completions API).
+    /// </summary>
+    INPUT_AUDIO,
 }

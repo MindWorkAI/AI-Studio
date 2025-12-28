@@ -6,9 +6,9 @@ namespace AIStudio.Provider.OpenAI;
 /// <remarks>
 /// Right now, this is used only by OpenAI in its responses API.
 /// </remarks>
-public record SubContentInputImage(ContentType Type, string ImageUrl) : ISubContent
+public record SubContentInputImage(SubContentType Type, string ImageUrl) : ISubContent
 {
-    public SubContentInputImage() : this(ContentType.INPUT_IMAGE, string.Empty)
+    public SubContentInputImage() : this(SubContentType.INPUT_IMAGE, string.Empty)
     {
     }
 }
