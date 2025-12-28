@@ -13,11 +13,14 @@ namespace AIStudio.Provider;
 /// </remarks>
 public sealed class MessageBaseConverter : JsonConverter<IMessageBase>
 {
-    public override IMessageBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    private static readonly ILogger<MessageBaseConverter> LOGGER = Program.LOGGER_FACTORY.CreateLogger<MessageBaseConverter>();
+    
+    public override IMessageBase? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         // Deserialization is not needed for request objects, as messages are only serialized
         // when sending requests to LLM providers.
-        throw new NotImplementedException("Deserializing IMessageBase is not supported. This converter is only used for serializing request messages.");
+        LOGGER.LogError("Deserializing IMessageBase is not supported. This converter is only used for serializing request messages.");
+        return null;
     }
 
     public override void Write(Utf8JsonWriter writer, IMessageBase value, JsonSerializerOptions options)
