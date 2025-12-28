@@ -57,7 +57,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
-    private HashSet<string> chatDocumentPaths = [];
+    private HashSet<FileAttachment> chatDocumentPaths = [];
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -464,7 +464,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
-                FileAttachments = this.chatDocumentPaths.ToList(),
+                FileAttachments = [..this.chatDocumentPaths],
             };
 
             //
