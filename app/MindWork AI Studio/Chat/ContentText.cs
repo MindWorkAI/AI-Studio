@@ -42,7 +42,7 @@ public sealed class ContentText : IContent
     public List<Source> Sources { get; set; } = [];
     
     /// <inheritdoc />
-    public List<string> FileAttachments { get; set; } = [];
+    public List<FileAttachment> FileAttachments { get; set; } = [];
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
