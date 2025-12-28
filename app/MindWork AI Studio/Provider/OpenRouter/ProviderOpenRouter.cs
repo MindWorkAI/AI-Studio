@@ -57,7 +57,7 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

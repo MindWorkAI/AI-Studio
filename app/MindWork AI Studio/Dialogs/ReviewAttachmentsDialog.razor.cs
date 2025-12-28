@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
 
@@ -13,20 +14,20 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
-    public HashSet<string> DocumentPaths { get; set; } = new();
-    
+    public HashSet<FileAttachment> DocumentPaths { get; set; } = new();
+
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
-    
+
     private void Close() => this.MudDialog.Close(DialogResult.Ok(this.DocumentPaths));
-    
-    public static async Task<HashSet<string>> OpenDialogAsync(IDialogService dialogService, params HashSet<string> documentPaths)
+
+    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, params HashSet<FileAttachment> documentPaths)
     {
         var dialogParameters = new DialogParameters<ReviewAttachmentsDialog>
         {
-            { x => x.DocumentPaths, documentPaths } 
+            { x => x.DocumentPaths, documentPaths }
         };
-        
+
         var dialogReference = await dialogService.ShowAsync<ReviewAttachmentsDialog>(TB("Your attached files"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
@@ -34,13 +35,13 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
 
         if (dialogResult.Data is null)
             return documentPaths;
-        
-        return dialogResult.Data as HashSet<string> ?? documentPaths;
+
+        return dialogResult.Data as HashSet<FileAttachment> ?? documentPaths;
     }
 
-    private void DeleteAttachment(string filePath)
+    private void DeleteAttachment(FileAttachment fileAttachment)
     {
-        if (this.DocumentPaths.Remove(filePath))
+        if (this.DocumentPaths.Remove(fileAttachment))
         {
             this.StateHasChanged();
         }

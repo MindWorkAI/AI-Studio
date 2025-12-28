@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -16,15 +17,15 @@ public partial class AttachDocuments : MSGComponentBase
     
     [Parameter]
     public string Name { get; set; } = string.Empty;
-    
+
     [Parameter]
-    public HashSet<string> DocumentPaths { get; set; } = [];
-    
+    public HashSet<FileAttachment> DocumentPaths { get; set; } = [];
+
     [Parameter]
-    public EventCallback<HashSet<string>> DocumentPathsChanged { get; set; }
-    
+    public EventCallback<HashSet<FileAttachment>> DocumentPathsChanged { get; set; }
+
     [Parameter]
-    public Func<HashSet<string>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
+    public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
     
     /// <summary>
     /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone. 
@@ -116,7 +117,7 @@ public partial class AttachDocuments : MSGComponentBase
                     if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(path))
                         continue;
 
-                    this.DocumentPaths.Add(path);
+                    this.DocumentPaths.Add(FileAttachment.FromPath(path));
                 }
 
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
@@ -160,7 +161,7 @@ public partial class AttachDocuments : MSGComponentBase
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFilePath))
                 continue;
 
-            this.DocumentPaths.Add(selectedFilePath);
+            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
         }
         
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
@@ -199,23 +200,23 @@ public partial class AttachDocuments : MSGComponentBase
         this.StateHasChanged();
     }
 
-    private async Task RemoveDocument(string filePath)
+    private async Task RemoveDocument(FileAttachment fileAttachment)
     {
-        this.DocumentPaths.Remove(filePath);
-        
+        this.DocumentPaths.Remove(fileAttachment);
+
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
 
     /// <summary>
-    /// The user might want to check what we actually extract from his file and therefore give the LLM as an input. 
+    /// The user might want to check what we actually extract from his file and therefore give the LLM as an input.
     /// </summary>
-    /// <param name="filePath">The file to check.</param>
-    private async Task InvestigateFile(string filePath)
+    /// <param name="fileAttachment">The file to check.</param>
+    private async Task InvestigateFile(FileAttachment fileAttachment)
     {
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
-            { x => x.FilePath, filePath },
+            { x => x.FilePath, fileAttachment.FilePath },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

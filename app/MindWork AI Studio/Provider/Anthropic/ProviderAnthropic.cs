@@ -44,7 +44,7 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

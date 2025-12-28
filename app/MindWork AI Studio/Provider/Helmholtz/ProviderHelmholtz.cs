@@ -54,7 +54,7 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

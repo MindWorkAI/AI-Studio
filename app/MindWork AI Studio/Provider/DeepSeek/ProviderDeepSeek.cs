@@ -54,7 +54,7 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

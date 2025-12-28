@@ -54,7 +54,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider("https://dashscope-int
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

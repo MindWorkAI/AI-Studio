@@ -32,7 +32,7 @@ public sealed class ContentImage : IContent, IImageSource
     public List<Source> Sources { get; set; } = [];
 
     /// <inheritdoc />
-    public List<string> FileAttachments { get; set; } = [];
+    public List<FileAttachment> FileAttachments { get; set; } = [];
 
     /// <inheritdoc />
     public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatChatThread, CancellationToken token = default)

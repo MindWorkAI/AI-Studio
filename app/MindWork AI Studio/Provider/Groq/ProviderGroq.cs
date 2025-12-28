@@ -54,7 +54,7 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

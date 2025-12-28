@@ -50,7 +50,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
             Content = n.Content switch
             {
-                ContentText text =>  await text.PrepareContentForAI(),
+                ContentText text =>  await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

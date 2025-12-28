@@ -54,7 +54,7 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });
