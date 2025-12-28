@@ -17,8 +17,8 @@ public static class FileExtensionValidation
     /// <returns>True if valid, false if invalid (error/warning already sent via MessageBus).</returns>
     public static async Task<bool> IsExtensionValidWithNotifyAsync(string filePath)
     {
-        var ext = Path.GetExtension(filePath).TrimStart('.');
-        if (Array.Exists(FileTypeFilter.Executables.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        var ext = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
+        if(FileTypeFilter.Executables.FilterExtensions.Contains(ext))
         {
             await MessageBus.INSTANCE.SendError(new(
                 Icons.Material.Filled.AppBlocking,
@@ -26,7 +26,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if (Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        if(FileTypeFilter.AllImages.FilterExtensions.Contains(ext))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.ImageNotSupported,
@@ -34,7 +34,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if (Array.Exists(FileTypeFilter.AllVideos.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        if(FileTypeFilter.AllVideos.FilterExtensions.Contains(ext))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.FeaturedVideo,
@@ -42,7 +42,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if (Array.Exists(FileTypeFilter.AllAudio.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        if(FileTypeFilter.AllAudio.FilterExtensions.Contains(ext))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.AudioFile,
