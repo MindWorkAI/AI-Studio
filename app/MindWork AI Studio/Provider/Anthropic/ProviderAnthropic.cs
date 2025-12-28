@@ -27,27 +27,18 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
         if(!requestedSecret.Success)
             yield break;
         
+        // Prepare the system prompt:
+        var systemPrompt = new TextMessage
+        {
+            Role = "system",
+            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+        };
+        
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("system");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
         
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -55,9 +46,8 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
             Model = chatModel.Id,
             
             // Build the messages:
-            Messages = [..messages],
+            Messages = [systemPrompt, ..messages],
             
-            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
             MaxTokens = apiParameters.TryGetValue("max_tokens", out var value) && value is int intValue ? intValue : 4_096,
             
             // Right now, we only support streaming completions:
