@@ -13,7 +13,7 @@ public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
 
-    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
+    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base(LLMProviders.HUGGINGFACE, $"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
     {
         LOGGER.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
     }

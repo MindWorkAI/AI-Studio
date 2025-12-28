@@ -11,7 +11,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <summary>
 /// The OpenAI provider.
 /// </summary>
-public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/", LOGGER)
+public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https://api.openai.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
     
@@ -59,7 +59,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         };
 
         // Read the model capabilities:
-        var modelCapabilities = ProviderExtensions.GetModelCapabilitiesOpenAI(chatModel);
+        var modelCapabilities = this.Provider.GetModelCapabilities(chatModel);
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);

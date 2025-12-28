@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.X;
 
-public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
+public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderX> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderX>();
     

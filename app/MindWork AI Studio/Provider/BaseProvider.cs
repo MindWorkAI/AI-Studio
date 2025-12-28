@@ -47,17 +47,22 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// Constructor for the base provider.
     /// </summary>
+    /// <param name="provider">The provider enum value.</param>
     /// <param name="url">The base URL for the provider.</param>
     /// <param name="logger">The logger to use.</param>
-    protected BaseProvider(string url, ILogger logger)
+    protected BaseProvider(LLMProviders provider, string url, ILogger logger)
     {
         this.logger = logger;
+        this.Provider = provider;
 
         // Set the base URL:
         this.httpClient.BaseAddress = new(url);
     }
     
     #region Handling of IProvider, which all providers must implement
+    
+    /// <inheritdoc />
+    public LLMProviders Provider { get; }
     
     /// <inheritdoc />
     public abstract string Id { get; }

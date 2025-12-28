@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
-public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.com/v1/", LOGGER)
+public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "https://api.anthropic.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
 

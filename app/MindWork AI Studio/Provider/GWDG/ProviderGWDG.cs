@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.GWDG;
 
-public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud.de/v1/", LOGGER)
+public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://chat-ai.academiccloud.de/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
