@@ -27,7 +27,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
-    private ILogger<ReadFileContent> Logger { get; init; } = null!;
+    private ILogger<DocumentCheckDialog> Logger { get; init; } = null!;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
