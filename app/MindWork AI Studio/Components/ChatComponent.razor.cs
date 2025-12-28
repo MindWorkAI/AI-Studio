@@ -464,7 +464,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
-                FileAttachments = [..this.chatDocumentPaths],
+                FileAttachments = [..this.chatDocumentPaths.Where(x => x.IsValid)],
             };
 
             //

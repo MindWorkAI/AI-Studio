@@ -332,6 +332,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
         foreach (var fileAttachment in this.loadedDocumentPaths)
         {
+            if (fileAttachment.IsForbidden)
+            {
+                this.Logger.LogWarning($"Skipping forbidden file: '{fileAttachment.FilePath}'.");
+                continue;
+            }
+            
             var fileContent = await this.RustService.ReadArbitraryFileData(fileAttachment.FilePath, int.MaxValue);
 
             documentSections.Add($"""

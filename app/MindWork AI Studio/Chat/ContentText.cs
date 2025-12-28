@@ -165,8 +165,11 @@ public sealed class ContentText : IContent
                 foreach (var missingFile in missingFiles)
                     LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingFile}'.", missingFile.FilePath);
 
-            // Only proceed if there are existing files
-            if (existingFiles.Count > 0)
+            // Determine allowed attachments:
+            var numberAllowedExistingFiles = existingFiles.Count(x => x.IsValid);
+            
+            // Only proceed if there are existing, allowed files:
+            if (numberAllowedExistingFiles > 0)
             {
                 // Check Pandoc availability once before processing file attachments
                 var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
@@ -181,6 +184,12 @@ public sealed class ContentText : IContent
                     sb.AppendLine("The following files are attached to this message:");
                     foreach(var file in existingFiles)
                     {
+                        if (file.IsForbidden)
+                        {
+                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", file.FilePath);
+                            continue;
+                        }
+                        
                         sb.AppendLine();
                         sb.AppendLine("---------------------------------------");
                         sb.AppendLine($"File path: {file.FilePath}");
