@@ -156,14 +156,14 @@ public sealed class ContentText : IContent
 
         if(this.FileAttachments.Count > 0)
         {
-            // Filter out files that no longer exist
-            var existingFiles = this.FileAttachments.Where(File.Exists).ToList();
+            // Filter out files that no longer exist:
+            var existingFiles = this.FileAttachments.Where(x => x.Exists).ToList();
 
-            // Log warning for missing files
+            // Log warning for missing files:
             var missingFiles = this.FileAttachments.Except(existingFiles).ToList();
             if (missingFiles.Count > 0)
                 foreach (var missingFile in missingFiles)
-                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingFile}'", missingFile);
+                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingFile}'.", missingFile.FilePath);
 
             // Only proceed if there are existing files
             if (existingFiles.Count > 0)
@@ -183,10 +183,10 @@ public sealed class ContentText : IContent
                     {
                         sb.AppendLine();
                         sb.AppendLine("---------------------------------------");
-                        sb.AppendLine($"File path: {file}");
+                        sb.AppendLine($"File path: {file.FilePath}");
                         sb.AppendLine("File content:");
                         sb.AppendLine("````");
-                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(file, int.MaxValue));
+                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(file.FilePath, int.MaxValue));
                         sb.AppendLine("````");
                     }
                 }
