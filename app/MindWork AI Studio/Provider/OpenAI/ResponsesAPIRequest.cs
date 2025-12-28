@@ -12,7 +12,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Tools">The tools to use for the request.</param>
 public record ResponsesAPIRequest(
     string Model,
-    IList<Message> Input,
+    IList<TextMessage> Input,
     bool Stream,
     bool Store,
     IList<Tool> Tools)

@@ -10,7 +10,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Stream">Whether to stream the chat completion.</param>
 public record ChatCompletionAPIRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     bool Stream
 )
 {

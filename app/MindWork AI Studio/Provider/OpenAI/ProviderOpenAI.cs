@@ -70,7 +70,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         LOGGER.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = systemPromptRole,
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -90,7 +90,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
+        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
         {
             Role = n.Role switch
             {
@@ -137,7 +137,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 // Build the messages:
                 // - First of all the system prompt
                 // - Then none-empty user and AI messages
-                Input = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
+                Input = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new TextMessage
                 {
                     Role = n.Role switch
                     {
