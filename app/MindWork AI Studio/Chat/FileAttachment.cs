@@ -8,9 +8,19 @@ namespace AIStudio.Chat;
 public readonly record struct FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
     /// <summary>
-    /// Gets a value indicating whether the file still exists on the file system.`
+    /// Gets a value indicating whether the file still exists on the file system.
     /// </summary>
     public bool Exists => File.Exists(this.FilePath);
+
+    /// <summary>
+    /// Gets a value indicating whether the file type is forbidden and should not be attached.
+    /// </summary>
+    public bool IsForbidden => this.Type == FileAttachmentType.FORBIDDEN;
+
+    /// <summary>
+    /// Gets a value indicating whether the file type is valid and allowed to be attached.
+    /// </summary>
+    public bool IsValid => this.Type != FileAttachmentType.FORBIDDEN;
 
     /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,
