@@ -63,7 +63,7 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

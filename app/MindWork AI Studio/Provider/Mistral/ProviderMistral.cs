@@ -52,7 +52,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

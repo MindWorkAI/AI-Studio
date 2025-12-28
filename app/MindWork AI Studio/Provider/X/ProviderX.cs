@@ -54,7 +54,7 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
 
             Content = n.Content switch
             {
-                ContentText text => await text.PrepareContentForAI(),
+                ContentText text => await text.PrepareTextContentForAI(),
                 _ => string.Empty,
             }
         });

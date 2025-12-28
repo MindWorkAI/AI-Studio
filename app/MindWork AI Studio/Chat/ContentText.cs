@@ -149,7 +149,7 @@ public sealed class ContentText : IContent
 
     #endregion
 
-    public async Task<string> PrepareContentForAI()
+    public async Task<string> PrepareTextContentForAI()
     {
         var sb = new StringBuilder();
         sb.AppendLine(this.Text);
