@@ -195,6 +195,14 @@ public sealed class ContentText : IContent
                         sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
                         sb.AppendLine("````");
                     }
+                    
+                    var numImages = this.FileAttachments.Count(x => x is { IsImage: true, Exists: true });
+                    if (numImages > 0)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                        sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
+                    }
                 }
             }
         }
