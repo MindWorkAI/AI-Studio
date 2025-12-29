@@ -102,6 +102,15 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            if(modelName.IndexOf("-vl-") is not -1)
+                return [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
             return [
                 Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
                 Capability.CHAT_COMPLETION_API,
