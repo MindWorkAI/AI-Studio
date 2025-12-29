@@ -250,6 +250,43 @@ public static partial class ProviderExtensions
                 ];
         }
         
+        //
+        // Z AI / GLM models:
+        //
+        if (modelName.IndexOf("glm") is not -1)
+        {
+            if(modelName.IndexOf("v") is not -1)
+                return 
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.OPTIONAL_REASONING,
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            if (modelName.IndexOf("glm-4-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.OPTIONAL_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+        }
+        
         // Default:
         return [
             Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
