@@ -12,19 +12,36 @@ namespace AIStudio.Chat;
 public readonly record struct FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
     /// <summary>
-    /// Gets a value indicating whether the file still exists on the file system.
-    /// </summary>
-    public bool Exists => File.Exists(this.FilePath);
-
-    /// <summary>
     /// Gets a value indicating whether the file type is forbidden and should not be attached.
     /// </summary>
-    public bool IsForbidden => this.Type == FileAttachmentType.FORBIDDEN;
+    /// <remarks>
+    /// The state is determined once during construction and does not change.
+    /// </remarks>
+    public bool IsForbidden { get; } = Type == FileAttachmentType.FORBIDDEN;
 
     /// <summary>
     /// Gets a value indicating whether the file type is valid and allowed to be attached.
     /// </summary>
-    public bool IsValid => this.Type != FileAttachmentType.FORBIDDEN;
+    /// <remarks>
+    /// The state is determined once during construction and does not change.
+    /// </remarks>
+    public bool IsValid { get; } = Type != FileAttachmentType.FORBIDDEN;
+
+    /// <summary>
+    /// Gets a value indicating whether the file type is an image.
+    /// </summary>
+    /// <remarks>
+    /// The state is determined once during construction and does not change.
+    /// </remarks>
+    public bool IsImage { get; } = Type == FileAttachmentType.IMAGE;
+
+    /// <summary>
+    /// Gets a value indicating whether the file still exists on the file system.
+    /// </summary>
+    /// <remarks>
+    /// This property checks the file system each time it is accessed.
+    /// </remarks>
+    public bool Exists => File.Exists(this.FilePath);
 
     /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,
