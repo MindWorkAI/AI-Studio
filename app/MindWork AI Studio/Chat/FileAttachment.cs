@@ -9,7 +9,7 @@ namespace AIStudio.Chat;
 /// <param name="FileName">The name of the file, including extension.</param>
 /// <param name="FilePath">The full path to the file, including the filename and extension.</param>
 /// <param name="FileSizeBytes">The size of the file in bytes.</param>
-public readonly record struct FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
+public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
     /// <summary>
     /// Gets a value indicating whether the file type is forbidden and should not be attached.
@@ -55,7 +55,13 @@ public readonly record struct FileAttachment(FileAttachmentType Type, string Fil
         var fileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
         var type = DetermineFileType(filePath);
 
-        return new FileAttachment(type, fileName, filePath, fileSize);
+        return type switch
+        {
+            FileAttachmentType.DOCUMENT => new FileAttachment(type, fileName, filePath, fileSize),
+            FileAttachmentType.IMAGE => new FileAttachmentImage(fileName, filePath, fileSize),
+            
+            _ => new FileAttachment(type, fileName, filePath, fileSize),
+        };
     }
 
     /// <summary>
