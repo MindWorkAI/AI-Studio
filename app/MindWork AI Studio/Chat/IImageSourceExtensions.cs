@@ -6,6 +6,64 @@ public static class IImageSourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
     
+    public static string DetermineMimeType(this IImageSource image)
+    {
+        switch (image.SourceType)
+        {
+            case ContentImageSource.BASE64:
+            {
+                // Try to detect the mime type from the base64 string:
+                var base64Data = image.Source;
+                if (base64Data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var mimeEnd = base64Data.IndexOf(';');
+                    if (mimeEnd > 5)
+                    {
+                        return base64Data[5..mimeEnd];
+                    }
+                }
+
+                // Fallback:
+                return "application/octet-stream";
+            }
+
+            case ContentImageSource.URL:
+            {
+                // Try to detect the mime type from the URL extension:
+                var uri = new Uri(image.Source);
+                var extension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
+                return extension switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".gif" => "image/gif",
+                    ".bmp" => "image/bmp",
+                    ".webp" => "image/webp",
+
+                    _ => "application/octet-stream"
+                };
+            }
+
+            case ContentImageSource.LOCAL_PATH:
+            {
+                var extension = Path.GetExtension(image.Source).ToLowerInvariant();
+                return extension switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".gif" => "image/gif",
+                    ".bmp" => "image/bmp",
+                    ".webp" => "image/webp",
+
+                    _ => "application/octet-stream"
+                };
+            }
+
+            default:
+                return "application/octet-stream";
+        }
+    }
+    
     /// <summary>
     /// Read the image content as a base64 string.
     /// </summary>
