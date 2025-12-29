@@ -1,8 +1,10 @@
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -40,7 +42,14 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new AnnotationConverter(), new MessageBaseConverter() },
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower),
+            new AnnotationConverter(),
+            new MessageBaseConverter(),
+            new SubContentConverter(),
+            new SubContentImageSourceConverter(),
+        },
         AllowTrailingCommas = false
     };
 
