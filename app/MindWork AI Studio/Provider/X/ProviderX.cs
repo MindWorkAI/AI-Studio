@@ -40,7 +40,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync(this.Provider, chatModel);
         
         // Prepare the xAI HTTP chat request:
         var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

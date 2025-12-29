@@ -10,8 +10,14 @@ public static class ListContentBlockExtensions
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
     /// <param name="roleTransformer">A function that transforms each content block into a message result asynchronously.</param>
+    /// <param name="selectedProvider">The selected LLM provider.</param>
+    /// <param name="selectedModel">The selected model.</param>
     /// <returns>An asynchronous task that resolves to a list of transformed results.</returns>
-    public static async Task<IList<IMessageBase>> BuildMessagesAsync(this List<ContentBlock> blocks, Func<ChatRole, string> roleTransformer)
+    public static async Task<IList<IMessageBase>> BuildMessagesAsync(
+        this List<ContentBlock> blocks,
+        LLMProviders selectedProvider,
+        Model selectedModel,
+        Func<ChatRole, string> roleTransformer)
     {
         var messageTaskList = new List<Task<IMessageBase>>(blocks.Count);
         foreach (var block in blocks)
@@ -45,8 +51,13 @@ public static class ListContentBlockExtensions
     /// Processes a list of content blocks using standard role transformations to create message results asynchronously.
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
+    /// <param name="selectedProvider">The selected LLM provider.</param>
+    /// <param name="selectedModel">The selected model.</param>
     /// <returns>>An asynchronous task that resolves to a list of transformed message results.</returns>
-    public static async Task<IList<IMessageBase>> BuildMessagesUsingStandardRolesAsync(this List<ContentBlock> blocks) => await blocks.BuildMessagesAsync(StandardRoleTransformer);
+    public static async Task<IList<IMessageBase>> BuildMessagesUsingStandardRolesAsync(
+        this List<ContentBlock> blocks,
+        LLMProviders selectedProvider,
+        Model selectedModel) => await blocks.BuildMessagesAsync(selectedProvider, selectedModel, StandardRoleTransformer);
 
     private static string StandardRoleTransformer(ChatRole role) => role switch
     {

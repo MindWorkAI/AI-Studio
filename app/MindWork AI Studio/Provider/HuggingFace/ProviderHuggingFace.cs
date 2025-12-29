@@ -45,7 +45,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var message = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
+        var message = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync(this.Provider, chatModel);
         
         // Prepare the HuggingFace HTTP chat request:
         var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

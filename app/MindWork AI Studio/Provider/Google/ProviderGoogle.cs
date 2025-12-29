@@ -40,7 +40,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync(this.Provider, chatModel);
         
         // Prepare the Google HTTP chat request:
         var geminiChatRequest = JsonSerializer.Serialize(new ChatRequest

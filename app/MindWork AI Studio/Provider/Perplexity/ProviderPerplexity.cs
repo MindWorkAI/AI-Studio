@@ -49,7 +49,7 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync(this.Provider, chatModel);
         
         // Prepare the Perplexity HTTP chat request:
         var perplexityChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
