@@ -182,8 +182,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 
             }, JSON_SERIALIZER_OPTIONS),
         };
-
-        Console.WriteLine($"==============> {openAIChatRequest}");
         
         async Task<HttpRequestMessage> RequestBuilder()
         {
