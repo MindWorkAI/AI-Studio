@@ -40,7 +40,7 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, "h
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
         
         // Prepare the DeepSeek HTTP chat request:
         var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

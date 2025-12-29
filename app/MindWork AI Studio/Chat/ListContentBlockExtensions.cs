@@ -11,7 +11,7 @@ public static class ListContentBlockExtensions
     /// <param name="blocks">The list of content blocks to process.</param>
     /// <param name="roleTransformer">A function that transforms each content block into a message result asynchronously.</param>
     /// <returns>An asynchronous task that resolves to a list of transformed results.</returns>
-    public static async Task<IList<IMessageBase>> BuildMessages(this List<ContentBlock> blocks, Func<ChatRole, string> roleTransformer)
+    public static async Task<IList<IMessageBase>> BuildMessagesAsync(this List<ContentBlock> blocks, Func<ChatRole, string> roleTransformer)
     {
         var messages = blocks
             .Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text))
@@ -38,7 +38,7 @@ public static class ListContentBlockExtensions
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
     /// <returns>>An asynchronous task that resolves to a list of transformed message results.</returns>
-    public static async Task<IList<IMessageBase>> BuildMessagesUsingStandardRoles(this List<ContentBlock> blocks) => await blocks.BuildMessages(StandardRoleTransformer);
+    public static async Task<IList<IMessageBase>> BuildMessagesUsingStandardRolesAsync(this List<ContentBlock> blocks) => await blocks.BuildMessagesAsync(StandardRoleTransformer);
 
     private static string StandardRoleTransformer(ChatRole role) => role switch
     {

@@ -40,7 +40,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
         var apiParameters = this.ParseAdditionalApiParameters();
             
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
         
         // Prepare the Helmholtz HTTP chat request:
         var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

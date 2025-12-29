@@ -38,7 +38,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
         var apiParameters = this.ParseAdditionalApiParameters();
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
         
         // Prepare the Mistral HTTP chat request:
         var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest

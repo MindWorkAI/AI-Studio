@@ -40,7 +40,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
         
         // Prepare the OpenAI HTTP chat request:
         var groqChatRequest = JsonSerializer.Serialize(new ChatRequest

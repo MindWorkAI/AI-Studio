@@ -31,7 +31,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
         var apiParameters = this.ParseAdditionalApiParameters("system");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(role => role switch
+        var messages = await chatThread.Blocks.BuildMessagesAsync(role => role switch
         {
             ChatRole.USER => "user",
             ChatRole.AI => "assistant",

@@ -36,7 +36,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
         
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest

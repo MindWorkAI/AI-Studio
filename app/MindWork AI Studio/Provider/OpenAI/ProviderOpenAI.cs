@@ -90,7 +90,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(role => role switch
+        var messages = await chatThread.Blocks.BuildMessagesAsync(role => role switch
         {
             ChatRole.USER => "user",
             ChatRole.AI => "assistant",

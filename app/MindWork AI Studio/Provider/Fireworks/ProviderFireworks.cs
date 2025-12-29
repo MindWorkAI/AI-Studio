@@ -40,7 +40,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRoles();
+        var messages = await chatThread.Blocks.BuildMessagesUsingStandardRolesAsync();
         
         // Prepare the Fireworks HTTP chat request:
         var fireworksChatRequest = JsonSerializer.Serialize(new ChatRequest
