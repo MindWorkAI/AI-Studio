@@ -34,9 +34,15 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
-        
-        // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardsAsync(this.Provider, chatModel);
+
+        // Build the list of messages. The image format depends on the host:
+        // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
+        // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
+        var messages = host switch
+        {
+            Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
+            _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
+        };
         
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest

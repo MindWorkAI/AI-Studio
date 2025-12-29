@@ -40,7 +40,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingStandardsAsync(this.Provider, chatModel);
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the AlibabaCloud HTTP chat request:
         var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

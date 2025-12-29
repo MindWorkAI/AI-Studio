@@ -134,11 +134,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 },
                 
                 // Chat Completion API uses IMAGE_URL:
-                false => new SubContentImageUrl
+                false => new SubContentImageUrlNested
                 {
-                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                        : string.Empty,
+                    ImageUrl = new SubContentImageUrlData
+                    {
+                        Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                            ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                            : string.Empty,
+                    },
                 }
             });
         

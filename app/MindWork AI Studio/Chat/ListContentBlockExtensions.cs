@@ -99,13 +99,20 @@ public static class ListContentBlockExtensions
     }
 
     /// <summary>
-    /// Processes a list of content blocks using standard role transformations to create message results asynchronously.
+    /// Processes a list of content blocks using direct image URL format to create message results asynchronously.
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
     /// <param name="selectedProvider">The selected LLM provider.</param>
     /// <param name="selectedModel">The selected model.</param>
-    /// <returns>>An asynchronous task that resolves to a list of transformed message results.</returns>
-    public static async Task<IList<IMessageBase>> BuildMessagesUsingStandardsAsync(
+    /// <returns>An asynchronous task that resolves to a list of transformed message results.</returns>
+    /// <remarks>
+    /// Uses direct image URL format where the image data is placed directly in the image_url field:
+    /// <code>
+    /// { "type": "image_url", "image_url": "data:image/jpeg;base64,..." }
+    /// </code>
+    /// This format is used by OpenAI, Mistral, and Ollama.
+    /// </remarks>
+    public static async Task<IList<IMessageBase>> BuildMessagesUsingDirectImageUrlAsync(
         this List<ContentBlock> blocks,
         LLMProviders selectedProvider,
         Model selectedModel) => await blocks.BuildMessagesAsync(
@@ -113,20 +120,54 @@ public static class ListContentBlockExtensions
             selectedModel,
             StandardRoleTransformer,
             StandardTextSubContentFactory,
-            StandardImageSubContentFactory);
+            DirectImageSubContentFactory);
+
+    /// <summary>
+    /// Processes a list of content blocks using nested image URL format to create message results asynchronously.
+    /// </summary>
+    /// <param name="blocks">The list of content blocks to process.</param>
+    /// <param name="selectedProvider">The selected LLM provider.</param>
+    /// <param name="selectedModel">The selected model.</param>
+    /// <returns>An asynchronous task that resolves to a list of transformed message results.</returns>
+    /// <remarks>
+    /// Uses nested image URL format where the image data is wrapped in an object:
+    /// <code>
+    /// { "type": "image_url", "image_url": { "url": "data:image/jpeg;base64,..." } }
+    /// </code>
+    /// This format is used by LM Studio, VLLM, llama.cpp, and other OpenAI-compatible providers.
+    /// </remarks>
+    public static async Task<IList<IMessageBase>> BuildMessagesUsingNestedImageUrlAsync(
+        this List<ContentBlock> blocks,
+        LLMProviders selectedProvider,
+        Model selectedModel) => await blocks.BuildMessagesAsync(
+            selectedProvider,
+            selectedModel,
+            StandardRoleTransformer,
+            StandardTextSubContentFactory,
+            NestedImageSubContentFactory);
 
     private static ISubContent StandardTextSubContentFactory(string text) => new SubContentText
     {
         Text = text,
     };
-    
-    private static async Task<ISubContent> StandardImageSubContentFactory(FileAttachmentImage attachment) => new SubContentImageUrl
+
+    private static async Task<ISubContent> DirectImageSubContentFactory(FileAttachmentImage attachment) => new SubContentImageUrl
     {
         ImageUrl = await attachment.TryAsBase64() is (true, var base64Content)
             ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
             : string.Empty,
     };
-    
+
+    private static async Task<ISubContent> NestedImageSubContentFactory(FileAttachmentImage attachment) => new SubContentImageUrlNested
+    {
+        ImageUrl = new SubContentImageUrlData
+        {
+            Url = await attachment.TryAsBase64() is (true, var base64Content)
+                ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                : string.Empty,
+        },
+    };
+
     private static string StandardRoleTransformer(ChatRole role) => role switch
     {
         ChatRole.USER => "user",

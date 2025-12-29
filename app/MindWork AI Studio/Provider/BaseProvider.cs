@@ -49,6 +49,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             new MessageBaseConverter(),
             new SubContentConverter(),
             new SubContentImageSourceConverter(),
+            new SubContentImageUrlConverter(),
         },
         AllowTrailingCommas = false
     };
