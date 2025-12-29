@@ -13,24 +13,32 @@ public static class ListContentBlockExtensions
     /// <returns>An asynchronous task that resolves to a list of transformed results.</returns>
     public static async Task<IList<IMessageBase>> BuildMessagesAsync(this List<ContentBlock> blocks, Func<ChatRole, string> roleTransformer)
     {
-        var messages = blocks
-            .Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text))
-            .Select(async n => new TextMessage
-                {
-                    Role = roleTransformer(n.Role),
-                    Content = n.Content switch
-                    {
-                        ContentText text => await text.PrepareTextContentForAI(),
-                        _ => string.Empty,
-                    }
-            })
-            .ToList();
-        
-        // Await all messages:
-        await Task.WhenAll(messages);
+        var messageTaskList = new List<Task<IMessageBase>>(blocks.Count);
+        foreach (var block in blocks)
+        {
+            switch (block.Content)
+            {
+                case ContentText text when block.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace(text.Text):
+                    messageTaskList.Add(CreateTextMessageAsync(block, text));
+                    break;
+            }
+        }
 
+        // Await all messages:
+        await Task.WhenAll(messageTaskList);
+        
         // Select all results:
-        return messages.Select(n => n.Result).Cast<IMessageBase>().ToList();
+        return messageTaskList.Select(n => n.Result).ToList();
+        
+        // Local function to create a text message asynchronously.
+        Task<IMessageBase> CreateTextMessageAsync(ContentBlock block, ContentText text)
+        {
+            return Task.Run(async () => new TextMessage
+            {
+                Role = roleTransformer(block.Role),
+                Content = await text.PrepareTextContentForAI(),
+            } as IMessageBase);
+        }
     }
     
     /// <summary>
