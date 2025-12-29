@@ -90,15 +90,57 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesAsync(this.Provider, chatModel, role => role switch
-        {
-            ChatRole.USER => "user",
-            ChatRole.AI => "assistant",
-            ChatRole.AGENT => "assistant",
-            ChatRole.SYSTEM => systemPromptRole,
+        var messages = await chatThread.Blocks.BuildMessagesAsync(
+            this.Provider, chatModel,
 
-            _ => "user",
-        });
+            // OpenAI-specific role mapping:
+            role => role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
+                ChatRole.SYSTEM => systemPromptRole,
+
+                _ => "user",
+            },
+
+            // OpenAI's text sub-content depends on the model, whether we are using
+            // the Responses API or the Chat Completion API:
+            text => usingResponsesAPI switch
+            {
+                // Responses API uses INPUT_TEXT:
+                true => new SubContentInputText
+                {
+                    Text = text,
+                },
+
+                // Chat Completion API uses TEXT:
+                false => new SubContentText
+                {
+                    Text = text,
+                },
+            },
+
+            // OpenAI's image sub-content depends on the model as well,
+            // whether we are using the Responses API or the Chat Completion API:
+            async attachment => usingResponsesAPI switch
+            {
+                // Responses API uses INPUT_IMAGE:
+                true => new SubContentInputImage
+                {
+                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                        : string.Empty,
+                },
+                
+                // Chat Completion API uses IMAGE_URL:
+                false => new SubContentImageUrl
+                {
+                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                        : string.Empty,
+                }
+            });
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -141,6 +183,8 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
             }, JSON_SERIALIZER_OPTIONS),
         };
 
+        Console.WriteLine($"==============> {openAIChatRequest}");
+        
         async Task<HttpRequestMessage> RequestBuilder()
         {
             // Build the HTTP post request:

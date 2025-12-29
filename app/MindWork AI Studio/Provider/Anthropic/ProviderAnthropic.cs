@@ -31,14 +31,38 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
         var apiParameters = this.ParseAdditionalApiParameters("system");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesAsync(this.Provider, chatModel, role => role switch
-        {
-            ChatRole.USER => "user",
-            ChatRole.AI => "assistant",
-            ChatRole.AGENT => "assistant",
+        var messages = await chatThread.Blocks.BuildMessagesAsync(
+            this.Provider, chatModel,
+            
+            // Anthropic-specific role mapping:
+            role => role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
 
-            _ => "user",
-        });
+                _ => "user",
+            },
+            
+            // Anthropic uses the standard text sub-content:
+            text => new SubContentText
+            {
+                Text = text,
+            },
+            
+            // Anthropic-specific image sub-content:
+            async attachment => new SubContentImage
+            {
+                Source = new SubContentBase64Image
+                {
+                    Data = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                        ? base64Content
+                        : string.Empty,
+                    
+                    MediaType = attachment.DetermineMimeType(),
+                }
+            }
+        );
         
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
