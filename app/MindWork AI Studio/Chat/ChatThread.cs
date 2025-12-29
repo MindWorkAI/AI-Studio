@@ -238,7 +238,7 @@ public sealed record ChatThread
         {
             var (contentData, contentType) = block.Content switch
             {
-                ContentImage image => (await image.AsBase64(token), Tools.ERIClient.DataModel.ContentType.IMAGE),
+                ContentImage image => (await image.TryAsBase64(token) is (success: true, { } base64Image) ? base64Image : string.Empty, Tools.ERIClient.DataModel.ContentType.IMAGE),
                 ContentText text => (text.Text, Tools.ERIClient.DataModel.ContentType.TEXT),
                 
                 _ => (string.Empty, Tools.ERIClient.DataModel.ContentType.UNKNOWN),
