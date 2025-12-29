@@ -15,7 +15,7 @@ public sealed class ProviderHuggingFace : BaseProvider
 
     public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base(LLMProviders.HUGGINGFACE, $"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
     {
-        LOGGER.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
+        LOGGER.LogInformation($"We use the inference provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
     }
 
     #region Implementation of IProvider
