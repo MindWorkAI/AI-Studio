@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Chat;
@@ -9,6 +11,9 @@ namespace AIStudio.Chat;
 /// <param name="FileName">The name of the file, including extension.</param>
 /// <param name="FilePath">The full path to the file, including the filename and extension.</param>
 /// <param name="FileSizeBytes">The size of the file in bytes.</param>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(FileAttachment), typeDiscriminator: "file")]
+[JsonDerivedType(typeof(FileAttachmentImage), typeDiscriminator: "image")]
 public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
     /// <summary>
