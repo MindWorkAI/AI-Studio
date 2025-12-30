@@ -219,7 +219,7 @@ public partial class AttachDocuments : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
-            { x => x.FilePath, fileAttachment.FilePath },
+            { x => x.Document, fileAttachment },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

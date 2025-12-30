@@ -1,4 +1,5 @@
-﻿using AIStudio.Components;
+﻿using AIStudio.Chat;
+using AIStudio.Components;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -13,7 +14,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Parameter]
-    public string FilePath { get; set; } = string.Empty;
+    public FileAttachment? Document { get; set; }
     
     private void Close() => this.MudDialog.Cancel();
     
@@ -31,23 +32,26 @@ public partial class DocumentCheckDialog : MSGComponentBase
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !string.IsNullOrWhiteSpace(this.FilePath))
+        if (firstRender && this.Document is not null)
         {
             try
             {
-                var fileContent = await UserFile.LoadFileData(this.FilePath, this.RustService, this.DialogService);
-                this.FileContent = fileContent;
-                this.StateHasChanged();
+                if (!this.Document.IsImage)
+                {
+                    var fileContent = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService);
+                    this.FileContent = fileContent;
+                    this.StateHasChanged();
+                }
             }
             catch (Exception ex)
             {
-                this.Logger.LogError(ex, "Failed to load file content from '{FilePath}'", this.FilePath);
+                this.Logger.LogError(ex, "Failed to load file content from '{FilePath}'", this.Document);
                 this.FileContent = string.Empty;
                 this.StateHasChanged();
             }
         }
         else if (firstRender)
-            this.Logger.LogWarning("Document check dialog opened without a valid file path");
+            this.Logger.LogWarning("Document check dialog opened without a valid file path.");
     }
     
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;

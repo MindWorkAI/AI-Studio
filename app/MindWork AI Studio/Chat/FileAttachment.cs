@@ -36,6 +36,11 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     public bool IsImage { get; } = Type == FileAttachmentType.IMAGE;
 
     /// <summary>
+    /// Gets the file path formatted as a file URL (file:///).
+    /// </summary>
+    public string FilePathAsUrl { get; } = $"file:///{FilePath.Replace('\\', '/')}";
+    
+    /// <summary>
     /// Gets a value indicating whether the file still exists on the file system.
     /// </summary>
     /// <remarks>
