@@ -207,7 +207,7 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<string>> GetChatTemplatesData(IEnumerable<ChatTemplate> chatTemplates)
     {
         foreach (var chatTemplate in chatTemplates.GetAllChatTemplates())
-            yield return new(chatTemplate.Name, chatTemplate.Id);
+            yield return new(chatTemplate.GetSafeName(), chatTemplate.Id);
     }
     
     public static IEnumerable<ConfigurationSelectData<ConfidenceSchemes>> GetConfidenceSchemesData()
