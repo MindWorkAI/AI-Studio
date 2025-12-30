@@ -46,4 +46,18 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
             this.StateHasChanged();
         }
     }
+    
+    /// <summary>
+    /// The user might want to check what we actually extract from his file and therefore give the LLM as an input.
+    /// </summary>
+    /// <param name="fileAttachment">The file to check.</param>
+    private async Task InvestigateFile(FileAttachment fileAttachment)
+    {
+        var dialogParameters = new DialogParameters<DocumentCheckDialog>
+        {
+            { x => x.Document, fileAttachment },
+        };
+
+        await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
 }
