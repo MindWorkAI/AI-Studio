@@ -31,7 +31,7 @@
             @if (this.Document?.IsImage ?? false)
             {
                 <MudTabPanel Text="@T("Image View")" Icon="@Icons.Material.Filled.Image">
-                    <MudImage ObjectFit="ObjectFit.ScaleDown" Src="@this.Document.FilePathAsUrl"/>
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Src="@this.imageDataUrl"/>
                 </MudTabPanel>
             }
             else

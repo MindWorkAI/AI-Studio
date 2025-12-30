@@ -30,13 +30,29 @@ public partial class DocumentCheckDialog : MSGComponentBase
     [Inject]
     private ILogger<DocumentCheckDialog> Logger { get; init; } = null!;
     
+    private string imageDataUrl = string.Empty;
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && this.Document is not null)
         {
             try
             {
-                if (!this.Document.IsImage)
+                if (this.Document.IsImage)
+                {
+                    // Load image as Base64 data URL since browsers cannot access local file:// URLs:
+                    if (this.Document is FileAttachmentImage imageAttachment)
+                    {
+                        var (success, base64Content) = await imageAttachment.TryAsBase64();
+                        if (success)
+                        {
+                            var mimeType = imageAttachment.DetermineMimeType();
+                            this.imageDataUrl = ImageHelpers.ToDataUrl(base64Content, mimeType);
+                            this.StateHasChanged();
+                        }
+                    }
+                }
+                else
                 {
                     var fileContent = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService);
                     this.FileContent = fileContent;
