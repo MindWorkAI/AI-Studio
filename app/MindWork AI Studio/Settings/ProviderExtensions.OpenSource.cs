@@ -168,7 +168,8 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
-            if (modelName.IndexOf("3.1") is not -1)
+            if (modelName.IndexOf("3.1") is not -1 ||
+                modelName.IndexOf("3.2") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
