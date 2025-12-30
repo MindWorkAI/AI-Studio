@@ -16,6 +16,8 @@ public record ChatTemplate(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
+    private const string USE_NO_CHAT_TEMPLATE_TEXT = "Use no chat template";
+
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], false)
     {
     }
@@ -26,7 +28,7 @@ public record ChatTemplate(
     
     public static readonly ChatTemplate NO_CHAT_TEMPLATE = new()
     {
-        Name = TB("Use no chat template"),
+        Name = TB(USE_NO_CHAT_TEMPLATE_TEXT), // Cannot be localized due to being a static readonly field
         SystemPrompt = string.Empty,
         PredefinedUserPrompt = string.Empty,
         Id = Guid.Empty.ToString(),
@@ -43,9 +45,26 @@ public record ChatTemplate(
     /// Returns a string that represents the profile in a human-readable format.
     /// </summary>
     /// <returns>A string that represents the profile in a human-readable format.</returns>
-    public override string ToString() => this.Name;
+    public override string ToString() => this.GetSafeName();
 
     #endregion
+
+    /// <summary>
+    /// Gets the name of this chat template. If it is the NO_CHAT_TEMPLATE, it returns a localized string.
+    /// </summary>
+    /// <remarks>
+    /// Why not using the Name property directly? Because the Name property of NO_CHAT_TEMPLATE cannot be
+    /// localized because it is a static readonly field. So we need this method to return a localized
+    /// string instead.
+    /// </remarks>
+    /// <returns>The name of this chat template.</returns>
+    public string GetSafeName()
+    {
+        if(this == NO_CHAT_TEMPLATE)
+            return TB(USE_NO_CHAT_TEMPLATE_TEXT);
+        
+        return this.Name;
+    }
     
     public string ToSystemPrompt()
     {
