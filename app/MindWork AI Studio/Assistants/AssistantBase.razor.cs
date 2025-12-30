@@ -217,12 +217,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return chatId;
     }
     
-    protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false)
+    protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
     {
         var time = DateTimeOffset.Now;
         this.lastUserPrompt = new ContentText
         {
             Text = request,
+            FileAttachments = attachments,
         };
         
         this.chatThread!.Blocks.Add(new ContentBlock
