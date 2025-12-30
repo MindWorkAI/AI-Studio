@@ -4,7 +4,7 @@ namespace AIStudio.Settings;
 
 public static partial class ProviderExtensions
 {
-    public static List<Capability> GetModelCapabilitiesAlibaba(Model model)
+    private static List<Capability> GetModelCapabilitiesAlibaba(Model model)
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
         

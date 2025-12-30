@@ -4,7 +4,7 @@ namespace AIStudio.Settings;
 
 public static partial class ProviderExtensions
 {
-    public static List<Capability> GetModelCapabilitiesGoogle(Model model)
+    private static List<Capability> GetModelCapabilitiesGoogle(Model model)
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
 

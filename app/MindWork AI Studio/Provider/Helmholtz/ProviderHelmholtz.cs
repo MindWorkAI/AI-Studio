@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Helmholtz;
 
-public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-blablador.fz-juelich.de/v1/", LOGGER)
+public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "https://api.helmholtz-blablador.fz-juelich.de/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderHelmholtz> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHelmholtz>();
 
@@ -40,24 +40,7 @@ public sealed class ProviderHelmholtz() : BaseProvider("https://api.helmholtz-bl
         var apiParameters = this.ParseAdditionalApiParameters();
             
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Helmholtz HTTP chat request:
         var helmholtzChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

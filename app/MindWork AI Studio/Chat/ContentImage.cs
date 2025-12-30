@@ -47,6 +47,8 @@ public sealed class ContentImage : IContent, IImageSource
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
         SourceType = this.SourceType,
+        Sources = [..this.Sources],
+        FileAttachments = [..this.FileAttachments],
     };
 
     #endregion

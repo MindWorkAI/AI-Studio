@@ -1,8 +1,10 @@
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -40,24 +42,37 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new AnnotationConverter(), new MessageBaseConverter() },
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower),
+            new AnnotationConverter(),
+            new MessageBaseConverter(),
+            new SubContentConverter(),
+            new SubContentImageSourceConverter(),
+            new SubContentImageUrlConverter(),
+        },
         AllowTrailingCommas = false
     };
 
     /// <summary>
     /// Constructor for the base provider.
     /// </summary>
+    /// <param name="provider">The provider enum value.</param>
     /// <param name="url">The base URL for the provider.</param>
     /// <param name="logger">The logger to use.</param>
-    protected BaseProvider(string url, ILogger logger)
+    protected BaseProvider(LLMProviders provider, string url, ILogger logger)
     {
         this.logger = logger;
+        this.Provider = provider;
 
         // Set the base URL:
         this.httpClient.BaseAddress = new(url);
     }
     
     #region Handling of IProvider, which all providers must implement
+    
+    /// <inheritdoc />
+    public LLMProviders Provider { get; }
     
     /// <inheritdoc />
     public abstract string Id { get; }

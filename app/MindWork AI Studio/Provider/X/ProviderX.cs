@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.X;
 
-public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
+public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderX> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderX>();
     
@@ -40,24 +40,7 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the xAI HTTP chat request:
         var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

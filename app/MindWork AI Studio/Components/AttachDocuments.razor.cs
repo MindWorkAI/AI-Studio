@@ -36,6 +36,9 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool UseSmallForm { get; set; }
     
+    [Parameter]
+    public AIStudio.Settings.Provider? Provider { get; set; }
+    
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
     
@@ -114,7 +117,7 @@ public partial class AttachDocuments : MSGComponentBase
 
                 foreach (var path in paths)
                 {
-                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(path))
+                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.Provider))
                         continue;
 
                     this.DocumentPaths.Add(FileAttachment.FromPath(path));
@@ -158,7 +161,7 @@ public partial class AttachDocuments : MSGComponentBase
             if (!File.Exists(selectedFilePath))
                 continue;
 
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFilePath))
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.Provider))
                 continue;
 
             this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
@@ -216,7 +219,7 @@ public partial class AttachDocuments : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
-            { x => x.FilePath, fileAttachment.FilePath },
+            { x => x.Document, fileAttachment },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

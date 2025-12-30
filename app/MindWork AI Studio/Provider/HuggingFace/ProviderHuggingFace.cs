@@ -13,9 +13,9 @@ public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
 
-    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
+    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base(LLMProviders.HUGGINGFACE, $"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
     {
-        LOGGER.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
+        LOGGER.LogInformation($"We use the inference provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
     }
 
     #region Implementation of IProvider
@@ -45,24 +45,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var message = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var message = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the HuggingFace HTTP chat request:
         var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

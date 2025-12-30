@@ -933,10 +933,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         if (this.cancellationTokenSource is not null)
         {
-            if(!this.cancellationTokenSource.IsCancellationRequested)
-                await this.cancellationTokenSource.CancelAsync();
+            try
+            {
+                if(!this.cancellationTokenSource.IsCancellationRequested)
+                    await this.cancellationTokenSource.CancelAsync();
             
-            this.cancellationTokenSource.Dispose();
+                this.cancellationTokenSource.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 

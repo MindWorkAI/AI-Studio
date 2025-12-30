@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.AlibabaCloud;
 
-public sealed class ProviderAlibabaCloud() : BaseProvider("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/", LOGGER)
+public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_CLOUD, "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderAlibabaCloud> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAlibabaCloud>();
 
@@ -40,24 +40,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider("https://dashscope-int
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the AlibabaCloud HTTP chat request:
         var alibabaCloudChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

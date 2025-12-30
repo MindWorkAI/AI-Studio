@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.DeepSeek;
 
-public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/", LOGGER)
+public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, "https://api.deepseek.com/", LOGGER)
 {
     private static readonly ILogger<ProviderDeepSeek> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderDeepSeek>();
 
@@ -40,24 +40,7 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the DeepSeek HTTP chat request:
         var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

@@ -46,19 +46,24 @@
                                 </MudTooltip>
                             </div>
 
-                            <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Class="ml-2"
-                                               Style="flex-shrink: 0;"
-                                               OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                            </MudTooltip>
+                            <MudToolBar WrapContent="true" Gutters="false" Class="ml-2" Style="flex-shrink: 0; min-height: 1em;">
+                                <MudTooltip Text="@T("Preview what we send to the AI.")" Placement="Placement.Bottom">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
+                                </MudTooltip>
+                            
+                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                </MudTooltip>
+                            </MudToolBar>
                         </MudStack>
-
                     }
                     else
                     {
-                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="ms-3 mb-2">
+                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="ms-3">
                             <div style="min-width: 0; flex: 1; overflow: hidden;">
                                 <MudTooltip Text="@T("The file was deleted, renamed, or moved.")" Placement="Placement.Bottom">
                                     <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
@@ -70,13 +75,17 @@
                                 </MudTooltip>
                             </div>
 
-                            <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Class="ml-2"
-                                               Style="flex-shrink: 0;"
-                                               OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                            </MudTooltip>
+                            <MudToolBar WrapContent="true" Gutters="false" Class="ml-2" Style="flex-shrink: 0; min-height: 1em;">
+                                <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                               Color="Color.Primary"
+                                               Disabled="true"/>
+                            
+                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                </MudTooltip>
+                            </MudToolBar>
                         </MudStack>
                     }
                 }
@@ -85,7 +94,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
-            Close
+            @T("Close")
         </MudButton>
     </DialogActions>
 </MudDialog>

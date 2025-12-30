@@ -11,7 +11,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <summary>
 /// The OpenAI provider.
 /// </summary>
-public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/", LOGGER)
+public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https://api.openai.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
     
@@ -59,7 +59,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         };
 
         // Read the model capabilities:
-        var modelCapabilities = ProviderExtensions.GetModelCapabilitiesOpenAI(chatModel);
+        var modelCapabilities = this.Provider.GetModelCapabilities(chatModel);
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
@@ -90,9 +90,11 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
+        var messages = await chatThread.Blocks.BuildMessagesAsync(
+            this.Provider, chatModel,
+
+            // OpenAI-specific role mapping:
+            role => role switch
             {
                 ChatRole.USER => "user",
                 ChatRole.AI => "assistant",
@@ -102,12 +104,46 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 _ => "user",
             },
 
-            Content = n.Content switch
+            // OpenAI's text sub-content depends on the model, whether we are using
+            // the Responses API or the Chat Completion API:
+            text => usingResponsesAPI switch
             {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+                // Responses API uses INPUT_TEXT:
+                true => new SubContentInputText
+                {
+                    Text = text,
+                },
+
+                // Chat Completion API uses TEXT:
+                false => new SubContentText
+                {
+                    Text = text,
+                },
+            },
+
+            // OpenAI's image sub-content depends on the model as well,
+            // whether we are using the Responses API or the Chat Completion API:
+            async attachment => usingResponsesAPI switch
+            {
+                // Responses API uses INPUT_IMAGE:
+                true => new SubContentInputImage
+                {
+                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                        : string.Empty,
+                },
+                
+                // Chat Completion API uses IMAGE_URL:
+                false => new SubContentImageUrlNested
+                {
+                    ImageUrl = new SubContentImageUrlData
+                    {
+                        Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                            ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                            : string.Empty,
+                    },
+                }
+            });
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -149,7 +185,7 @@ public sealed class ProviderOpenAI() : BaseProvider("https://api.openai.com/v1/"
                 
             }, JSON_SERIALIZER_OPTIONS),
         };
-
+        
         async Task<HttpRequestMessage> RequestBuilder()
         {
             // Build the HTTP post request:

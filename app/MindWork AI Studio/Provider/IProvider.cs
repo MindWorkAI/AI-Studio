@@ -9,6 +9,11 @@ namespace AIStudio.Provider;
 public interface IProvider
 {
     /// <summary>
+    /// The provider type.
+    /// </summary>
+    public LLMProviders Provider { get; }
+    
+    /// <summary>
     /// The provider's ID.
     /// </summary>
     public string Id { get; }

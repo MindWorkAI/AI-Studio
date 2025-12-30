@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/", LOGGER)
+public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "https://api.mistral.ai/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderMistral> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderMistral>();
 
@@ -38,24 +38,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
         var apiParameters = this.ParseAdditionalApiParameters();
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Mistral HTTP chat request:
         var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest

@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
 
-public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/inference/v1/", LOGGER)
+public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https://api.fireworks.ai/inference/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderFireworks> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderFireworks>();
 
@@ -40,24 +40,7 @@ public class ProviderFireworks() : BaseProvider("https://api.fireworks.ai/infere
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Fireworks HTTP chat request:
         var fireworksChatRequest = JsonSerializer.Serialize(new ChatRequest

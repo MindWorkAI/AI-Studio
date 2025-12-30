@@ -83,7 +83,7 @@
             
             <ChatTemplateSelection CanChatThreadBeUsedForTemplate="@this.CanThreadBeSaved" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
 
-            <AttachDocuments Name="File Attachments" @bind-DocumentPaths="@this.chatDocumentPaths" CatchAllDocuments="true" UseSmallForm="true"/>
+            <AttachDocuments Name="File Attachments" @bind-DocumentPaths="@this.chatDocumentPaths" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider"/>
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {

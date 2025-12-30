@@ -55,7 +55,7 @@ public partial class ReadFileContent : MSGComponentBase
             return;
         }
 
-        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(selectedFile.SelectedFilePath))
+        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.DIRECTLY_LOADING_CONTENT, selectedFile.SelectedFilePath))
         {
             this.Logger.LogWarning("User attempted to load unsupported file: {FilePath}", selectedFile.SelectedFilePath);
             return;

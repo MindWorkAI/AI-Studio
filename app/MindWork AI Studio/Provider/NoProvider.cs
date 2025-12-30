@@ -9,6 +9,8 @@ public class NoProvider : IProvider
 {
     #region Implementation of IProvider
 
+    public LLMProviders Provider => LLMProviders.NONE;
+    
     public string Id => "none";
 
     public string InstanceName { get; set; } = "None";

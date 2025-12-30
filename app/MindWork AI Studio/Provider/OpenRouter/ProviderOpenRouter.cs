@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.OpenRouter;
 
-public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/api/v1/", LOGGER)
+public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER, "https://openrouter.ai/api/v1/", LOGGER)
 {
     private const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
     private const string PROJECT_NAME = "MindWork AI Studio";
@@ -43,24 +43,7 @@ public sealed class ProviderOpenRouter() : BaseProvider("https://openrouter.ai/a
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
 
         // Prepare the OpenRouter HTTP chat request:
         var openRouterChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest

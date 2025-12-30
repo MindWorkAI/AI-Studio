@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider($"{hostname}{host.BaseURL()}", LOGGER)
+public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider(LLMProviders.SELF_HOSTED, $"{hostname}{host.BaseURL()}", LOGGER)
 {
     private static readonly ILogger<ProviderSelfHosted> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderSelfHosted>();
 
@@ -34,26 +34,15 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
-        
-        // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
+
+        // Build the list of messages. The image format depends on the host:
+        // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
+        // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
+        var messages = host switch
         {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text =>  await text.PrepareTextContentForAI(),
-                _ => string.Empty,
-            }
-        });
+            Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
+            _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
+        };
         
         // Prepare the OpenAI HTTP chat request:
         var providerChatRequest = JsonSerializer.Serialize(new ChatRequest

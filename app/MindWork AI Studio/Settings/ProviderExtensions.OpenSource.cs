@@ -4,7 +4,7 @@ namespace AIStudio.Settings;
 
 public static partial class ProviderExtensions
 {
-    public static List<Capability> GetModelCapabilitiesOpenSource(Model model)
+    private static List<Capability> GetModelCapabilitiesOpenSource(Model model)
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
         
@@ -102,6 +102,15 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            if(modelName.IndexOf("-vl-") is not -1)
+                return [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
             return [
                 Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
                 Capability.CHAT_COMPLETION_API,
@@ -159,7 +168,8 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
-            if (modelName.IndexOf("3.1") is not -1)
+            if (modelName.IndexOf("3.1") is not -1 ||
+                modelName.IndexOf("3.2") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
@@ -237,6 +247,43 @@ public static partial class ProviderExtensions
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
                     
+                    Capability.CHAT_COMPLETION_API,
+                ];
+        }
+        
+        //
+        // Z AI / GLM models:
+        //
+        if (modelName.IndexOf("glm") is not -1)
+        {
+            if(modelName.IndexOf("v") is not -1)
+                return 
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.OPTIONAL_REASONING,
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            if (modelName.IndexOf("glm-4-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            return 
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.FUNCTION_CALLING,
+                    Capability.OPTIONAL_REASONING,
                     Capability.CHAT_COMPLETION_API,
                 ];
         }

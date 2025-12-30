@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Chat;
@@ -9,22 +11,47 @@ namespace AIStudio.Chat;
 /// <param name="FileName">The name of the file, including extension.</param>
 /// <param name="FilePath">The full path to the file, including the filename and extension.</param>
 /// <param name="FileSizeBytes">The size of the file in bytes.</param>
-public readonly record struct FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(FileAttachment), typeDiscriminator: "file")]
+[JsonDerivedType(typeof(FileAttachmentImage), typeDiscriminator: "image")]
+public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
-    /// <summary>
-    /// Gets a value indicating whether the file still exists on the file system.
-    /// </summary>
-    public bool Exists => File.Exists(this.FilePath);
-
     /// <summary>
     /// Gets a value indicating whether the file type is forbidden and should not be attached.
     /// </summary>
-    public bool IsForbidden => this.Type == FileAttachmentType.FORBIDDEN;
+    /// <remarks>
+    /// The state is determined once during construction and does not change.
+    /// </remarks>
+    public bool IsForbidden { get; } = Type == FileAttachmentType.FORBIDDEN;
 
     /// <summary>
     /// Gets a value indicating whether the file type is valid and allowed to be attached.
     /// </summary>
-    public bool IsValid => this.Type != FileAttachmentType.FORBIDDEN;
+    /// <remarks>
+    /// The state is determined once during construction and does not change.
+    /// </remarks>
+    public bool IsValid { get; } = Type != FileAttachmentType.FORBIDDEN;
+
+    /// <summary>
+    /// Gets a value indicating whether the file type is an image.
+    /// </summary>
+    /// <remarks>
+    /// The state is determined once during construction and does not change.
+    /// </remarks>
+    public bool IsImage { get; } = Type == FileAttachmentType.IMAGE;
+
+    /// <summary>
+    /// Gets the file path for loading the file from the web browser-side (Blazor).
+    /// </summary>
+    public string FilePathAsUrl { get; } = FileHandler.CreateFileUrl(FilePath);
+    
+    /// <summary>
+    /// Gets a value indicating whether the file still exists on the file system.
+    /// </summary>
+    /// <remarks>
+    /// This property checks the file system each time it is accessed.
+    /// </remarks>
+    public bool Exists => File.Exists(this.FilePath);
 
     /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,
@@ -38,7 +65,13 @@ public readonly record struct FileAttachment(FileAttachmentType Type, string Fil
         var fileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
         var type = DetermineFileType(filePath);
 
-        return new FileAttachment(type, fileName, filePath, fileSize);
+        return type switch
+        {
+            FileAttachmentType.DOCUMENT => new FileAttachment(type, fileName, filePath, fileSize),
+            FileAttachmentType.IMAGE => new FileAttachmentImage(fileName, filePath, fileSize),
+            
+            _ => new FileAttachment(type, fileName, filePath, fileSize),
+        };
     }
 
     /// <summary>

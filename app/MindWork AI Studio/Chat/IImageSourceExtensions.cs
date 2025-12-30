@@ -6,27 +6,89 @@ public static class IImageSourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
     
+    public static string DetermineMimeType(this IImageSource image)
+    {
+        switch (image.SourceType)
+        {
+            case ContentImageSource.BASE64:
+            {
+                // Try to detect the mime type from the base64 string:
+                var base64Data = image.Source;
+                if (base64Data.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var mimeEnd = base64Data.IndexOf(';');
+                    if (mimeEnd > 5)
+                    {
+                        return base64Data[5..mimeEnd];
+                    }
+                }
+
+                // Fallback:
+                return "application/octet-stream";
+            }
+
+            case ContentImageSource.URL:
+            {
+                // Try to detect the mime type from the URL extension:
+                var uri = new Uri(image.Source);
+                var extension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
+                return extension switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".gif" => "image/gif",
+                    ".bmp" => "image/bmp",
+                    ".webp" => "image/webp",
+
+                    _ => "application/octet-stream"
+                };
+            }
+
+            case ContentImageSource.LOCAL_PATH:
+            {
+                var extension = Path.GetExtension(image.Source).ToLowerInvariant();
+                return extension switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".gif" => "image/gif",
+                    ".bmp" => "image/bmp",
+                    ".webp" => "image/webp",
+
+                    _ => "application/octet-stream"
+                };
+            }
+
+            default:
+                return "application/octet-stream";
+        }
+    }
+    
     /// <summary>
     /// Read the image content as a base64 string.
     /// </summary>
     /// <remarks>
     /// The images are directly converted to base64 strings. The maximum
     /// size of the image is around 10 MB. If the image is larger, the method
-    /// returns an empty string.
-    /// 
+    /// returns an empty string.<br/>
+    /// <br/>
     /// As of now, this method does no sort of image processing. LLMs usually
     /// do not work with arbitrary image sizes. In the future, we might have
-    /// to resize the images before sending them to the model.
+    /// to resize the images before sending them to the model.<br/>
+    /// <br/>
+    /// Note as well that this method returns just the base64 string without
+    /// any data URI prefix (like "data:image/png;base64,"). The caller has
+    /// to take care of that if needed.
     /// </remarks>
     /// <param name="image">The image source.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The image content as a base64 string; might be empty.</returns>
-    public static async Task<string> AsBase64(this IImageSource image, CancellationToken token = default)
+    public static async Task<(bool success, string base64Content)> TryAsBase64(this IImageSource image, CancellationToken token = default)
     {
         switch (image.SourceType)
         {
             case ContentImageSource.BASE64:
-                return image.Source;
+                return (success: true, image.Source);
             
             case ContentImageSource.URL:
             {
@@ -39,14 +101,15 @@ public static class IImageSourceExtensions
                     if(lengthBytes > 10_000_000)
                     {
                         await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The image at the URL is too large (>10 MB). Skipping the image.")));
-                        return string.Empty;
+                        return (success: false, string.Empty);
                     }
 
                     var bytes = await response.Content.ReadAsByteArrayAsync(token);
-                    return Convert.ToBase64String(bytes);
+                    return (success: true, Convert.ToBase64String(bytes));
                 }
 
-                return string.Empty;
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("Failed to download the image from the URL. Skipping the image.")));
+                return (success: false, string.Empty);
             }
 
             case ContentImageSource.LOCAL_PATH:
@@ -57,17 +120,18 @@ public static class IImageSourceExtensions
                     if(length > 10_000_000)
                     {
                         await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file is too large (>10 MB). Skipping the image.")));
-                        return string.Empty;
+                        return (success: false, string.Empty);
                     }
 
                     var bytes = await File.ReadAllBytesAsync(image.Source, token);
-                    return Convert.ToBase64String(bytes);
+                    return (success: true, Convert.ToBase64String(bytes));
                 }
 
-                return string.Empty;
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file does not exist. Skipping the image.")));
+                return (success: false, string.Empty);
             
             default:
-                return string.Empty;
+                return (success: false, string.Empty);
         }
     }
 }

@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
-public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.com/v1/", LOGGER)
+public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "https://api.anthropic.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
 
@@ -31,9 +31,11 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
         var apiParameters = this.ParseAdditionalApiParameters("system");
 
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new TextMessage
-        {
-            Role = n.Role switch
+        var messages = await chatThread.Blocks.BuildMessagesAsync(
+            this.Provider, chatModel,
+            
+            // Anthropic-specific role mapping:
+            role => role switch
             {
                 ChatRole.USER => "user",
                 ChatRole.AI => "assistant",
@@ -41,13 +43,26 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
 
                 _ => "user",
             },
-
-            Content = n.Content switch
+            
+            // Anthropic uses the standard text sub-content:
+            text => new SubContentText
             {
-                ContentText text => await text.PrepareTextContentForAI(),
-                _ => string.Empty,
+                Text = text,
+            },
+            
+            // Anthropic-specific image sub-content:
+            async attachment => new SubContentImage
+            {
+                Source = new SubContentBase64Image
+                {
+                    Data = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                        ? base64Content
+                        : string.Empty,
+                    
+                    MediaType = attachment.DetermineMimeType(),
+                }
             }
-        });
+        );
         
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
