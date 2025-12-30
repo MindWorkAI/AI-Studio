@@ -36,9 +36,9 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     public bool IsImage { get; } = Type == FileAttachmentType.IMAGE;
 
     /// <summary>
-    /// Gets the file path formatted as a file URL (file:///).
+    /// Gets the file path for loading the file from the web browser-side (Blazor).
     /// </summary>
-    public string FilePathAsUrl { get; } = $"file:///{FilePath.Replace('\\', '/')}";
+    public string FilePathAsUrl { get; } = FileHandler.CreateFileUrl(FilePath);
     
     /// <summary>
     /// Gets a value indicating whether the file still exists on the file system.
