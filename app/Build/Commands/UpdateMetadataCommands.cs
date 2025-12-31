@@ -90,7 +90,7 @@ public sealed partial class UpdateMetadataCommands
             await this.UpdateTauriVersion();
             await this.UpdateProjectCommitHash();
             await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "..", "..", "LICENSE.md")));
-            await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "About.razor.cs")));
+            await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "Information.razor.cs")));
             Console.WriteLine();
         }
     }
