@@ -22,9 +22,9 @@
       },
       "LuaCSharp": {
         "type": "Direct",
-        "requested": "[0.5.0, )",
-        "resolved": "0.5.0",
-        "contentHash": "F2dco41jmVwntVJeF4LOknomgNjjVMAZOPgIOJQdObxUQrbNiKJulH4ZInWiZXhHSHpwhocVVjepwzfa8BpfMA=="
+        "requested": "[0.5.1, )",
+        "resolved": "0.5.1",
+        "contentHash": "VJ/ibHuMEgsxja+qalzb3szYGhpN7/ZCiJJWw1zBGEb3Xd43MWNrbXSsUMdxJudTdmYaLMe3wjHZjxdw29zbUg=="
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",

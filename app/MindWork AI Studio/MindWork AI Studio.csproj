@@ -53,7 +53,7 @@
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="ReverseMarkdown" Version="4.7.1" />
-      <PackageReference Include="LuaCSharp" Version="0.5.0" />
+      <PackageReference Include="LuaCSharp" Version="0.5.1" />
     </ItemGroup>
 
     <ItemGroup>
