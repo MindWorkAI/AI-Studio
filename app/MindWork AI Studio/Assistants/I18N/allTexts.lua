@@ -2443,6 +2443,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2147062613"] = "Profile
 -- Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs."
 
+-- File Attachments
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2294745309"] = "File Attachments"
+
 -- Role
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2418769465"] = "Role"
 
@@ -2481,6 +2484,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3016903701"] = "The nam
 
 -- Image content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3094908719"] = "Image content"
+
+-- You can attach files that will be automatically included when using this chat template. These files will be added to the first message sent in any chat using this template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3108503534"] = "You can attach files that will be automatically included when using this chat template. These files will be added to the first message sent in any chat using this template."
 
 -- Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3127437308"] = "Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats."
@@ -5193,6 +5199,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Un
 
 -- no model selected
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "no model selected"
+
+-- Use no chat template
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T4258819635"] = "Use no chat template"
 
 -- Navigation never expands, but there are tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033"] = "Navigation never expands, but there are tooltips"

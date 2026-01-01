@@ -79,7 +79,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments, if any:
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
@@ -328,7 +332,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = chatTemplate;
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
             this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments (replaces existing):
+        this.chatDocumentPaths.Clear();
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         if(this.ChatThread is null)
             return;
 
@@ -677,9 +686,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
-        
+
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments:
+        this.chatDocumentPaths.Clear();
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();
         

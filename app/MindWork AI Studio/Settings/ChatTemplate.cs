@@ -12,13 +12,12 @@ public record ChatTemplate(
     string SystemPrompt,
     string PredefinedUserPrompt,
     List<ContentBlock> ExampleConversation,
+    List<FileAttachment> FileAttachments,
     bool AllowProfileUsage,
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
-    private const string USE_NO_CHAT_TEMPLATE_TEXT = "Use no chat template";
-
-    public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], false)
+    public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], [], false)
     {
     }
     
@@ -28,12 +27,13 @@ public record ChatTemplate(
     
     public static readonly ChatTemplate NO_CHAT_TEMPLATE = new()
     {
-        Name = TB(USE_NO_CHAT_TEMPLATE_TEXT), // Cannot be localized due to being a static readonly field
+        Name = TB("Use no chat template"), // Cannot be localized due to being a static readonly field
         SystemPrompt = string.Empty,
         PredefinedUserPrompt = string.Empty,
         Id = Guid.Empty.ToString(),
         Num = uint.MaxValue,
         ExampleConversation = [],
+        FileAttachments = [],
         AllowProfileUsage = true,
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
@@ -61,7 +61,7 @@ public record ChatTemplate(
     public string GetSafeName()
     {
         if(this == NO_CHAT_TEMPLATE)
-            return TB(USE_NO_CHAT_TEMPLATE_TEXT);
+            return TB("Use no chat template");
         
         return this.Name;
     }
@@ -102,7 +102,9 @@ public record ChatTemplate(
         var allowProfileUsage = false;
         if (table.TryGetValue("AllowProfileUsage", out var allowProfileValue) && allowProfileValue.TryRead<bool>(out var allow))
             allowProfileUsage = allow;
-        
+
+        var fileAttachments = ParseFileAttachments(idx, table);
+
         template = new ChatTemplate
         {
             Num = 0,
@@ -111,6 +113,7 @@ public record ChatTemplate(
             SystemPrompt = systemPrompt,
             PredefinedUserPrompt = predefinedUserPrompt,
             ExampleConversation = ParseExampleConversation(idx, table),
+            FileAttachments = fileAttachments,
             AllowProfileUsage = allowProfileUsage,
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
@@ -164,5 +167,27 @@ public record ChatTemplate(
         }
 
         return exampleConversation;
+    }
+
+    private static List<FileAttachment> ParseFileAttachments(int idx, LuaTable table)
+    {
+        var fileAttachments = new List<FileAttachment>();
+        if (!table.TryGetValue("FileAttachments", out var fileAttValue) || !fileAttValue.TryRead<LuaTable>(out var fileAttTable))
+            return fileAttachments;
+
+        var numAttachments = fileAttTable.ArrayLength;
+        for (var attachmentNum = 1; attachmentNum <= numAttachments; attachmentNum++)
+        {
+            var attachmentValue = fileAttTable[attachmentNum];
+            if (!attachmentValue.TryRead<string>(out var filePath))
+            {
+                LOGGER.LogWarning("The FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} is not a valid string.", attachmentNum, idx);
+                continue;
+            }
+
+            fileAttachments.Add(FileAttachment.FromPath(filePath));
+        }
+
+        return fileAttachments;
     }
 }

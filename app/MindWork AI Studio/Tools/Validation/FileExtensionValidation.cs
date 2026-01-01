@@ -32,15 +32,16 @@ public static class FileExtensionValidation
         /// </summary>
         ATTACHING_CONTENT,
     }
-    
+
     /// <summary>
     /// Validates the file extension and sends appropriate MessageBus notifications when invalid.
     /// </summary>
     /// <param name="useCae">The validation use case.</param>
     /// <param name="filePath">The file path to validate.</param>
+    /// <param name="validateMediaFileTypes">Whether to validate media file types against provider capabilities.</param>
     /// <param name="provider">The selected provider.</param>
     /// <returns>True if valid, false if invalid (error/warning already sent via MessageBus).</returns>
-    public static async Task<bool> IsExtensionValidWithNotifyAsync(UseCase useCae, string filePath, Settings.Provider? provider = null)
+    public static async Task<bool> IsExtensionValidWithNotifyAsync(UseCase useCae, string filePath, bool validateMediaFileTypes = true, Settings.Provider? provider = null)
     {
         var ext = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
         if(FileTypeFilter.Executables.FilterExtensions.Contains(ext))
@@ -62,6 +63,10 @@ public static class FileExtensionValidation
                         Icons.Material.Filled.ImageNotSupported,
                         TB("Images are not supported at this place")));
                     return false;
+                
+                // In this use case, we don't validate the provider capabilities:
+                case UseCase.ATTACHING_CONTENT when !validateMediaFileTypes:
+                    return true;
                 
                 // In this use case, we can check the provider capabilities:
                 case UseCase.ATTACHING_CONTENT when capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) ||

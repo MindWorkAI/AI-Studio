@@ -34,6 +34,10 @@ public enum Event
     // RAG events:
     RAG_AUTO_DATA_SOURCES_SELECTED,
     
+    // File attachment events:
+    REGISTER_FILE_DROP_AREA,
+    UNREGISTER_FILE_DROP_AREA,
+    
     // Send events:
     SEND_TO_GRAMMAR_SPELLING_ASSISTANT,
     SEND_TO_ICON_FINDER_ASSISTANT,

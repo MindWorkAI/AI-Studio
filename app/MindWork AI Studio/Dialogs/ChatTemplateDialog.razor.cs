@@ -50,7 +50,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter]
     public IReadOnlyCollection<ContentBlock> ExampleConversation { get; init; } = [];
 
-    [Parameter] 
+    [Parameter]
+    public IReadOnlyCollection<FileAttachment> FileAttachments { get; init; } = [];
+
+    [Parameter]
     public bool AllowProfileUsage { get; set; } = true;
     
     [Parameter] 
@@ -71,6 +74,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     
     private bool dataIsValid;
     private List<ContentBlock> dataExampleConversation = [];
+    private HashSet<FileAttachment> fileAttachments = [];
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -95,6 +99,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
             this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
+            this.fileAttachments = [..this.FileAttachments];
         }
 
         if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
@@ -128,6 +133,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         SystemPrompt = this.DataSystemPrompt,
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
+        FileAttachments = [..this.fileAttachments],
         AllowProfileUsage = this.AllowProfileUsage,
         
         EnterpriseConfigurationPluginId = Guid.Empty,
