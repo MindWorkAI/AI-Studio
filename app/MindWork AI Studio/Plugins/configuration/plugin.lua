@@ -125,6 +125,33 @@ CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
     }
 }
 
+-- An example chat template with file attachments:
+-- This template automatically attaches specified files when the user selects it.
+CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+    ["Id"] = "00000000-0000-0000-0000-000000000001",
+    ["Name"] = "Document Analysis Template",
+    ["SystemPrompt"] = "You are an expert document analyst. Please analyze the attached documents and provide insights.",
+    ["PredefinedUserPrompt"] = "Please analyze the attached company guidelines and summarize the key points.",
+    ["AllowProfileUsage"] = true,
+    -- Optional: Pre-attach files that will be automatically included when using this template.
+    -- These files will be loaded when the user selects this chat template.
+    -- Note: File paths must be absolute paths and accessible to all users.
+    ["FileAttachments"] = {
+        "G:\\Company\\Documents\\Guidelines.pdf",
+        "G:\\Company\\Documents\\CompanyPolicies.docx"
+    },
+    ["ExampleConversation"] = {
+        {
+            ["Role"] = "USER",
+            ["Content"] = "I have attached the company documents for analysis."
+        },
+        {
+            ["Role"] = "AI",
+            ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
+        }
+    }
+}
+
 -- Profiles for this configuration:
 CONFIG["PROFILES"] = {}
 

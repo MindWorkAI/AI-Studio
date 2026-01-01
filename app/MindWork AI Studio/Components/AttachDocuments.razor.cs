@@ -36,6 +36,15 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool UseSmallForm { get; set; }
     
+    /// <summary>
+    /// When true, validate media file types before attaching. Default is true. That means that
+    /// the user cannot attach unsupported media file types when the provider or model does not
+    /// support them. Set it to false in order to disable this validation. This is useful for places
+    /// where the user might want to prepare a template.
+    /// </summary>
+    [Parameter]
+    public bool ValidateMediaFileTypes { get; set; } = true;
+    
     [Parameter]
     public AIStudio.Settings.Provider? Provider { get; set; }
     
@@ -117,7 +126,7 @@ public partial class AttachDocuments : MSGComponentBase
 
                 foreach (var path in paths)
                 {
-                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.Provider))
+                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                         continue;
 
                     this.DocumentPaths.Add(FileAttachment.FromPath(path));
@@ -161,7 +170,7 @@ public partial class AttachDocuments : MSGComponentBase
             if (!File.Exists(selectedFilePath))
                 continue;
 
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.Provider))
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
                 continue;
 
             this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
