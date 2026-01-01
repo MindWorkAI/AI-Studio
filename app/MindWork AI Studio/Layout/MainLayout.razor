@@ -20,6 +20,13 @@
                                 </MudNavLink>
                             }
                         </MudNavMenu>
+                        
+                        <MudToggleIconButton Toggled="@this.isRecording"
+                                             ToggledChanged="@this.OnRecordingToggled"
+                                             Icon="@Icons.Material.Filled.Mic" 
+                                             ToggledIcon="@Icons.Material.Filled.Stop"
+                                             Color="Color.Primary"
+                                             ToggledColor="Color.Error" />
                     </MudDrawer>
                 </MudDrawerContainer>
             }
@@ -41,6 +48,13 @@
                             }
                         }
                     </MudNavMenu>
+                    
+                    <MudToggleIconButton Toggled="@this.isRecording"
+                                         ToggledChanged="@this.OnRecordingToggled"
+                                         Icon="@Icons.Material.Filled.Mic" 
+                                         ToggledIcon="@Icons.Material.Filled.Stop"
+                                         Color="Color.Primary"
+                                         ToggledColor="Color.Error" />
                 </MudPaper>
             }
         }
