@@ -17,8 +17,6 @@ public record ChatTemplate(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
-    private const string USE_NO_CHAT_TEMPLATE_TEXT = "Use no chat template";
-
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], [], false)
     {
     }
@@ -29,7 +27,7 @@ public record ChatTemplate(
     
     public static readonly ChatTemplate NO_CHAT_TEMPLATE = new()
     {
-        Name = TB(USE_NO_CHAT_TEMPLATE_TEXT), // Cannot be localized due to being a static readonly field
+        Name = TB("Use no chat template"), // Cannot be localized due to being a static readonly field
         SystemPrompt = string.Empty,
         PredefinedUserPrompt = string.Empty,
         Id = Guid.Empty.ToString(),
@@ -63,7 +61,7 @@ public record ChatTemplate(
     public string GetSafeName()
     {
         if(this == NO_CHAT_TEMPLATE)
-            return TB(USE_NO_CHAT_TEMPLATE_TEXT);
+            return TB("Use no chat template");
         
         return this.Name;
     }
