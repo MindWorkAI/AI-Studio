@@ -103,7 +103,7 @@ else
             @T("Documents for the analysis")
         </MudText>
         
-        <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.providerSettings"/>
+        <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.providerSettings"/>
         
     </ExpansionPanel>
 </MudExpansionPanels>

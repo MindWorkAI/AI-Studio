@@ -86,9 +86,10 @@
             </MudJustifiedText>
             <AttachDocuments
                 Name="ChatTemplateFileAttachments"
+                Layer="@DropLayers.DIALOGS"
                 @bind-DocumentPaths="@this.fileAttachments"
                 UseSmallForm="false"
-                CatchAllDocuments="false"
+                CatchAllDocuments="true"
                 ValidateMediaFileTypes="false"
             />
 
