@@ -41,10 +41,10 @@
                     {
                         <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                             <MudTooltip Text="@T("Edit")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditChatTemplate(context)"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditChatTemplate(context))"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Delete")">
-                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteChatTemplate(context)"/>
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteChatTemplate(context))"/>
                             </MudTooltip>
                         </MudStack>
                     }
