@@ -5368,6 +5368,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1848
 -- Plugins: Preview of our plugin system where you can extend the functionality of the app
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2056842933"] = "Plugins: Preview of our plugin system where you can extend the functionality of the app"
 
+-- Speech to Text: Preview of our speech to text system where you can transcribe recordings and audio files into text
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T221133923"] = "Speech to Text: Preview of our speech to text system where you can transcribe recordings and audio files into text"
+
 -- RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2708939138"] = "RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company"
 
