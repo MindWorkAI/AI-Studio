@@ -26,3 +26,39 @@ window.clearDiv = function (divName) {
 window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
+
+let mediaRecorder;
+let audioChunks = [];
+
+window.audioRecorder = {
+    start: async function () {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.start();
+    },
+
+    stop: async function () {
+        return new Promise((resolve) => {
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const arrayBuffer = await blob.arrayBuffer();
+                const base64 = btoa(
+                    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+                );
+
+                // Tracks stoppen, damit das Mic-Icon verschwindet
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                resolve(base64);
+            };
+            mediaRecorder.stop();
+        });
+    }
+};

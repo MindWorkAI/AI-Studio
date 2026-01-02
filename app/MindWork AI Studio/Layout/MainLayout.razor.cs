@@ -39,6 +39,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
     
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+    
+    [Inject]
+    private HttpClient HttpClient { get; init; } = null!;
+    
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
@@ -53,6 +59,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private UpdateResponse? currentUpdateResponse;
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
+    private bool isRecording;
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
     
@@ -340,6 +347,33 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.SettingsManager.IsDarkMode = this.useDarkMode;
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
+    }
+    
+    private async Task OnRecordingToggled(bool toggled)
+    {
+        if (toggled)
+        {
+            await this.JsRuntime.InvokeVoidAsync("audioRecorder.start");
+            this.isRecording = true;
+        }
+        else
+        {
+            var base64Audio = await this.JsRuntime.InvokeAsync<string>("audioRecorder.stop");
+            this.isRecording = false;
+            this.StateHasChanged();
+            
+            await this.SendAudioToBackend(base64Audio);
+        }
+    }
+
+    private async Task SendAudioToBackend(string base64Audio)
+    {
+        var audioBytes = Convert.FromBase64String(base64Audio);
+        
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent(audioBytes), "audio", "recording.webm");
+
+        await this.HttpClient.PostAsync("/audio/upload", content);
     }
 
     #region Implementation of IDisposable
