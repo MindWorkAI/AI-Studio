@@ -2,11 +2,9 @@ namespace AIStudio.Tools.MIME;
 
 public class Builder
 {
-    protected Builder()
+    private Builder()
     {
     }
-
-    protected BaseType baseType;
     
     public static Builder Create() => new();
     
@@ -48,33 +46,13 @@ public class Builder
         }
     }
     
-    public ApplicationBuilder UseApplication() 
-    {
-        this.baseType = BaseType.APPLICATION;
-        return (ApplicationBuilder)this;
-    }
-    
-    public TextBuilder UseText() 
-    {
-        this.baseType = BaseType.TEXT;
-        return (TextBuilder)this;
-    }
-    
-    public AudioBuilder UseAudio() 
-    {
-        this.baseType = BaseType.AUDIO;
-        return (AudioBuilder)this;
-    }
-    
-    public ImageBuilder UseImage() 
-    {
-        this.baseType = BaseType.IMAGE;
-        return (ImageBuilder)this;
-    }
-    
-    public VideoBuilder UseVideo() 
-    {
-        this.baseType = BaseType.VIDEO;
-        return (VideoBuilder)this;
-    }
+    public ApplicationBuilder UseApplication() => ApplicationBuilder.Create();
+
+    public TextBuilder UseText() => TextBuilder.Create();
+
+    public AudioBuilder UseAudio() => AudioBuilder.Create();
+
+    public ImageBuilder UseImage() => ImageBuilder.Create();
+
+    public VideoBuilder UseVideo() => VideoBuilder.Create();
 }

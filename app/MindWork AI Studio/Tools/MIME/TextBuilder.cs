@@ -1,10 +1,15 @@
 namespace AIStudio.Tools.MIME;
 
-public class TextBuilder : Builder, ISubtype
+public class TextBuilder : ISubtype
 {
-    private TextBuilder()
+    private readonly BaseType baseType;
+    
+    private TextBuilder(BaseType baseType)
     {
+        this.baseType = baseType;
     }
+
+    public static TextBuilder Create() => new(BaseType.TEXT);
     
     private TextSubtype subtype;
 

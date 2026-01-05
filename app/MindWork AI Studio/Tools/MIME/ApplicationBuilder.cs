@@ -1,10 +1,15 @@
 namespace AIStudio.Tools.MIME;
 
-public class ApplicationBuilder : Builder, ISubtype
+public class ApplicationBuilder : ISubtype
 {
-    private ApplicationBuilder()
+    private readonly BaseType baseType;
+    
+    private ApplicationBuilder(BaseType baseType)
     {
+        this.baseType = baseType;
     }
+
+    public static ApplicationBuilder Create() => new(BaseType.APPLICATION);
     
     private ApplicationSubtype subtype;
     

@@ -1,10 +1,15 @@
 namespace AIStudio.Tools.MIME;
 
-public class ImageBuilder : Builder, ISubtype
+public class ImageBuilder : ISubtype
 {
-    private ImageBuilder()
+    private readonly BaseType baseType;
+    
+    private ImageBuilder(BaseType baseType)
     {
+        this.baseType = baseType;
     }
+
+    public static ImageBuilder Create() => new(BaseType.IMAGE);
 
     private ImageSubtype subtype;
 

@@ -1,10 +1,15 @@
 namespace AIStudio.Tools.MIME;
 
-public class VideoBuilder : Builder, ISubtype
+public class VideoBuilder : ISubtype
 {
-    private VideoBuilder()
+    private readonly BaseType baseType;
+    
+    private VideoBuilder(BaseType baseType)
     {
+        this.baseType = baseType;
     }
+
+    public static VideoBuilder Create() => new(BaseType.VIDEO);
     
     private VideoSubtype subtype;
 

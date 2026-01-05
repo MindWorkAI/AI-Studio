@@ -1,10 +1,15 @@
 namespace AIStudio.Tools.MIME;
 
-public class AudioBuilder : Builder, ISubtype
+public class AudioBuilder : ISubtype
 {
-    private AudioBuilder()
+    private readonly BaseType baseType;
+    
+    private AudioBuilder(BaseType baseType)
     {
+        this.baseType = baseType;
     }
+
+    public static AudioBuilder Create() => new(BaseType.AUDIO);
 
     private AudioSubtype subtype;
 
