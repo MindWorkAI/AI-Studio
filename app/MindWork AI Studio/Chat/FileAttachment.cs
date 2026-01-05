@@ -95,7 +95,8 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
         // Check if it's an allowed document file (PDF, Text, or Office):
         if (FileTypeFilter.PDF.FilterExtensions.Contains(extension) ||
             FileTypeFilter.Text.FilterExtensions.Contains(extension) ||
-            FileTypeFilter.AllOffice.FilterExtensions.Contains(extension))
+            FileTypeFilter.AllOffice.FilterExtensions.Contains(extension) ||
+            FileTypeFilter.AllSourceCode.FilterExtensions.Contains(extension))
             return FileAttachmentType.DOCUMENT;
 
         // All other file types are forbidden:
