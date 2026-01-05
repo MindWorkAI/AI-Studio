@@ -2,14 +2,13 @@ namespace AIStudio.Tools.MIME;
 
 public class VideoBuilder : ISubtype
 {
-    private readonly BaseType baseType;
-    
-    private VideoBuilder(BaseType baseType)
+    private const BaseType BASE_TYPE = BaseType.VIDEO;
+
+    private VideoBuilder()
     {
-        this.baseType = baseType;
     }
 
-    public static VideoBuilder Create() => new(BaseType.VIDEO);
+    public static VideoBuilder Create() => new();
     
     private VideoSubtype subtype;
 
@@ -40,7 +39,7 @@ public class VideoBuilder : ISubtype
     public MIMEType Build() => new()
     {
         Type = this,
-        TextRepresentation = $"{this.baseType}/{this.subtype}".ToLowerInvariant()
+        TextRepresentation = $"{BASE_TYPE}/{this.subtype}".ToLowerInvariant()
     };
 
     #endregion

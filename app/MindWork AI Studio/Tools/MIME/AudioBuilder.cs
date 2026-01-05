@@ -2,14 +2,13 @@ namespace AIStudio.Tools.MIME;
 
 public class AudioBuilder : ISubtype
 {
-    private readonly BaseType baseType;
-    
-    private AudioBuilder(BaseType baseType)
+    private const BaseType BASE_TYPE = BaseType.AUDIO;
+
+    private AudioBuilder()
     {
-        this.baseType = baseType;
     }
 
-    public static AudioBuilder Create() => new(BaseType.AUDIO);
+    public static AudioBuilder Create() => new();
 
     private AudioSubtype subtype;
 
@@ -45,7 +44,7 @@ public class AudioBuilder : ISubtype
     public MIMEType Build() => new()
     {
         Type = this,
-        TextRepresentation = $"{this.baseType}/{this.subtype}".ToLowerInvariant()
+        TextRepresentation = $"{BASE_TYPE}/{this.subtype}".ToLowerInvariant()
     };
 
     #endregion

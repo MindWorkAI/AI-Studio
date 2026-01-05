@@ -2,14 +2,13 @@ namespace AIStudio.Tools.MIME;
 
 public class ImageBuilder : ISubtype
 {
-    private readonly BaseType baseType;
-    
-    private ImageBuilder(BaseType baseType)
+    private const BaseType BASE_TYPE = BaseType.IMAGE;
+
+    private ImageBuilder()
     {
-        this.baseType = baseType;
     }
 
-    public static ImageBuilder Create() => new(BaseType.IMAGE);
+    public static ImageBuilder Create() => new();
 
     private ImageSubtype subtype;
 
@@ -42,7 +41,7 @@ public class ImageBuilder : ISubtype
     public MIMEType Build() => new()
     {
         Type = this,
-        TextRepresentation = $"{this.baseType}/{this.subtype}".ToLowerInvariant()
+        TextRepresentation = $"{BASE_TYPE}/{this.subtype}".ToLowerInvariant()
     };
 
     #endregion

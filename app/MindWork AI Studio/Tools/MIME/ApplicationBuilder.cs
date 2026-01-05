@@ -2,14 +2,13 @@ namespace AIStudio.Tools.MIME;
 
 public class ApplicationBuilder : ISubtype
 {
-    private readonly BaseType baseType;
-    
-    private ApplicationBuilder(BaseType baseType)
+    private const BaseType BASE_TYPE = BaseType.APPLICATION;
+
+    private ApplicationBuilder()
     {
-        this.baseType = baseType;
     }
 
-    public static ApplicationBuilder Create() => new(BaseType.APPLICATION);
+    public static ApplicationBuilder Create() => new();
     
     private ApplicationSubtype subtype;
     
@@ -52,15 +51,15 @@ public class ApplicationBuilder : ISubtype
         Type = this,
         TextRepresentation = this.subtype switch
         {
-            ApplicationSubtype.EXCEL_OLD => $"{this.baseType}/vnd.ms-excel".ToLowerInvariant(),
-            ApplicationSubtype.WORD_OLD => $"{this.baseType}/vnd.ms-word".ToLowerInvariant(),
-            ApplicationSubtype.POWERPOINT_OLD => $"{this.baseType}/vnd.ms-powerpoint".ToLowerInvariant(),
+            ApplicationSubtype.EXCEL_OLD => $"{BASE_TYPE}/vnd.ms-excel".ToLowerInvariant(),
+            ApplicationSubtype.WORD_OLD => $"{BASE_TYPE}/vnd.ms-word".ToLowerInvariant(),
+            ApplicationSubtype.POWERPOINT_OLD => $"{BASE_TYPE}/vnd.ms-powerpoint".ToLowerInvariant(),
             
-            ApplicationSubtype.EXCEL => $"{this.baseType}/vnd.openxmlformats-officedocument.spreadsheetml.sheet".ToLowerInvariant(),
-            ApplicationSubtype.WORD => $"{this.baseType}/vnd.openxmlformats-officedocument.wordprocessingml.document".ToLowerInvariant(),
-            ApplicationSubtype.POWERPOINT => $"{this.baseType}/vnd.openxmlformats-officedocument.presentationml.presentation".ToLowerInvariant(),
+            ApplicationSubtype.EXCEL => $"{BASE_TYPE}/vnd.openxmlformats-officedocument.spreadsheetml.sheet".ToLowerInvariant(),
+            ApplicationSubtype.WORD => $"{BASE_TYPE}/vnd.openxmlformats-officedocument.wordprocessingml.document".ToLowerInvariant(),
+            ApplicationSubtype.POWERPOINT => $"{BASE_TYPE}/vnd.openxmlformats-officedocument.presentationml.presentation".ToLowerInvariant(),
             
-            _ => $"{this.baseType}/{this.subtype}".ToLowerInvariant()
+            _ => $"{BASE_TYPE}/{this.subtype}".ToLowerInvariant()
         }
     };
 
