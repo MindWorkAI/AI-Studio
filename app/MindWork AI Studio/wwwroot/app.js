@@ -102,13 +102,17 @@ window.audioRecorder = {
     stop: async function () {
         return new Promise((resolve) => {
             mediaRecorder.onstop = async () => {
+
+                // Stop all tracks to release the microphone:
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                // Next, process the recorded audio data:
                 const blob = new Blob(audioChunks, { type: actualRecordingMimeType });
                 const arrayBuffer = await blob.arrayBuffer();
                 const base64 = btoa(
                     new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
                 );
-
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
                 resolve({
                     data: base64,
                     mimeType: actualRecordingMimeType,
