@@ -1,4 +1,3 @@
-using AIStudio.Settings;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.Services;
 
@@ -6,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public partial class VoiceRecorder : IDisposable
+public partial class VoiceRecorder : MSGComponentBase
 {
     [Inject]
     private ILogger<VoiceRecorder> Logger { get; init; } = null!;
@@ -16,9 +15,6 @@ public partial class VoiceRecorder : IDisposable
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    private SettingsManager SettingsManager { get; set; } = null!;
 
     private bool isRecording;
     private FileStream? currentRecordingStream;
@@ -176,7 +172,9 @@ public partial class VoiceRecorder : IDisposable
         public bool ChangedMimeType { get; init; }
     }
 
-    public void Dispose()
+    #region Overrides of MSGComponentBase
+
+    protected override void DisposeResources()
     {
         // Clean up recording resources if still active:
         if (this.currentRecordingStream is not null)
@@ -187,5 +185,8 @@ public partial class VoiceRecorder : IDisposable
 
         this.dotNetReference?.Dispose();
         this.dotNetReference = null;
+        base.DisposeResources();
     }
+
+    #endregion
 }
