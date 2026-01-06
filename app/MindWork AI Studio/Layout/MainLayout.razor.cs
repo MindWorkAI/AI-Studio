@@ -363,7 +363,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.FLAC).Build()
                 );
 
-            this.Logger.LogInformation($"Starting audio recording with preferred MIME types: {string.Join<MIMEType>(", ", mimeTypes)}");
+            this.Logger.LogInformation("Starting audio recording with preferred MIME types: {PreferredMimeTypes}", string.Join<MIMEType>(", ", mimeTypes));
             // var array = mimeTypes.ToStringArray().Cast<object?>().ToArray();
             
             var mimeTypeStrings = mimeTypes.ToStringArray();
@@ -374,7 +374,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
             if(result.ChangedMimeType)
-                this.Logger.LogWarning($"The recorded audio MIME type was changed to '{result.MimeType}'.");
+                this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
             
             this.isRecording = false;
             this.StateHasChanged();

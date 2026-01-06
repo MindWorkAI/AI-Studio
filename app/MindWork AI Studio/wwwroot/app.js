@@ -42,7 +42,7 @@ window.audioRecorder = {
         }
         
         // Log sent mime types for debugging:
-        console.log('Requested mime types:', desiredMimeTypes);
+        console.log('Audio recording - requested mime types: ', desiredMimeTypes);
 
         let mimeTypes = desiredMimeTypes.filter(type => typeof type === 'string' && type.trim() !== '');
         
@@ -63,32 +63,30 @@ window.audioRecorder = {
             }
         });
         
-        console.log('Final mime types to check (included defaults):', mimeTypes);
+        console.log('Audio recording - final mime types to check (included defaults): ', mimeTypes);
 
         // Find the first supported mime type:
         actualRecordingMimeType = mimeTypes.find(type =>
             type === '' || MediaRecorder.isTypeSupported(type)
         ) || '';
 
-        console.log('Selected mime type for recording:', actualRecordingMimeType);
+        console.log('Audio recording - the browser selected the following mime type for recording: ', actualRecordingMimeType);
         const options = actualRecordingMimeType ? { mimeType: actualRecordingMimeType } : {};
         mediaRecorder = new MediaRecorder(stream, options);
 
         // In case the browser changed the mime type:
         actualRecordingMimeType = mediaRecorder.mimeType;
+        console.log('Audio recording - actual mime type used by the browser: ', actualRecordingMimeType);
         
         // Check the list of desired mime types against the actual one:
         if (!desiredMimeTypes.includes(actualRecordingMimeType)) {
             changedMimeType = true;
-            console.warn(`Requested mime types ('${desiredMimeTypes.join(', ')}') do not include the actual mime type used by MediaRecorder ('${actualRecordingMimeType}').`);
+            console.warn(`Audio recording - requested mime types ('${desiredMimeTypes.join(', ')}') do not include the actual mime type used by the browser ('${actualRecordingMimeType}').`);
         } else {
             changedMimeType = false;
         }
         
-        console.log('Actual mime type used by MediaRecorder:', actualRecordingMimeType);
-        
         audioChunks = [];
-
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 audioChunks.push(event.data);
@@ -101,6 +99,8 @@ window.audioRecorder = {
 
     stop: async function () {
         return new Promise((resolve) => {
+            
+            // Add an event listener to handle the stop event:
             mediaRecorder.onstop = async () => {
 
                 // Stop all tracks to release the microphone:
@@ -119,6 +119,8 @@ window.audioRecorder = {
                     changedMimeType: changedMimeType,
                 });
             };
+            
+            // Finally, stop the recording (which will actually trigger the onstop event):
             mediaRecorder.stop();
         });
     }
