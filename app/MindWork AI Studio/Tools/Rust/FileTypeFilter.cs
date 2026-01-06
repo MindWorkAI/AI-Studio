@@ -27,8 +27,8 @@ public readonly record struct FileTypeFilter(string FilterName, string[] FilterE
     
     public static FileTypeFilter AllSourceCode => new(TB("All Source Code Files"), 
         [
-            // C#:
-            "cs",
+            // .NET
+            "cs", "vb", "fs", "razor", "aspx", "cshtml", "csproj",
             
             // Java:
             "java",
