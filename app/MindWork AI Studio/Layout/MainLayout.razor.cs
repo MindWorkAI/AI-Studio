@@ -428,7 +428,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     }
 
     [JSInvokable]
-    public async Task OnAudioChunkReceived(string base64Chunk)
+    public async Task OnAudioChunkReceived(byte[] chunkBytes)
     {
         if (this.currentRecordingStream is null)
         {
@@ -438,10 +438,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
         try
         {
-            var chunkBytes = Convert.FromBase64String(base64Chunk);
             await this.currentRecordingStream.WriteAsync(chunkBytes);
             await this.currentRecordingStream.FlushAsync();
-            
+        
             this.Logger.LogDebug("Wrote {ByteCount} bytes to recording stream.", chunkBytes.Length);
         }
         catch (Exception ex)

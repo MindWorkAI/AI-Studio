@@ -93,13 +93,10 @@ window.audioRecorder = {
         mediaRecorder.ondataavailable = async (event) => {
             if (event.data.size > 0) {
                 const arrayBuffer = await event.data.arrayBuffer();
-                const base64 = btoa(
-                    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-                );
-                
-                // Send chunk to .NET immediately:
+                const uint8Array = new Uint8Array(arrayBuffer);
+
                 try {
-                    await dotnetReference.invokeMethodAsync('OnAudioChunkReceived', base64);
+                    await dotnetReference.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
                 } catch (error) {
                     console.error('Error sending audio chunk to .NET:', error);
                 }
