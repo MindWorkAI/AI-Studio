@@ -364,7 +364,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 );
 
             this.Logger.LogInformation("Starting audio recording with preferred MIME types: {PreferredMimeTypes}", string.Join<MIMEType>(", ", mimeTypes));
-            // var array = mimeTypes.ToStringArray().Cast<object?>().ToArray();
             
             var mimeTypeStrings = mimeTypes.ToStringArray();
             await this.JsRuntime.InvokeVoidAsync("audioRecorder.start", (object)mimeTypeStrings);
