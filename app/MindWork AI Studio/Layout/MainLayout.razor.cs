@@ -436,9 +436,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     private sealed class AudioRecordingResult
     {
-        public string Data { get; set; } = string.Empty;
-        public string MimeType { get; set; } = string.Empty;
-        public bool ChangedMimeType { get; set; }
+        public string Data { get; init; } = string.Empty;
+        
+        public string MimeType { get; init; } = string.Empty;
+        
+        public bool ChangedMimeType { get; init; }
     }
 
     #region Implementation of IDisposable
