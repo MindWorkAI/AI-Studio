@@ -95,7 +95,7 @@ window.audioRecorder = {
             }
         };
 
-        mediaRecorder.start();
+        mediaRecorder.start(3000); // read the recorded data in 3-second chunks
         return actualRecordingMimeType;
     },
 
