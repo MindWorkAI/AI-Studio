@@ -58,6 +58,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
     private bool isRecording;
+    private FileStream? currentRecordingStream;
+    private string? currentRecordingPath;
+    private string? currentRecordingMimeType;
+    private DotNetObjectReference<MainLayout>? dotNetReference;
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
     
@@ -362,8 +366,19 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
             this.Logger.LogInformation("Starting audio recording with preferred MIME types: {PreferredMimeTypes}", string.Join<MIMEType>(", ", mimeTypes));
             
+            // Create a DotNetObjectReference to pass to JavaScript:
+            this.dotNetReference = DotNetObjectReference.Create(this);
+            
+            // Initialize the file stream for writing chunks:
+            await this.InitializeRecordingStream();
+            
             var mimeTypeStrings = mimeTypes.ToStringArray();
-            await this.JsRuntime.InvokeVoidAsync("audioRecorder.start", (object)mimeTypeStrings);
+            var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
+            
+            // Store the MIME type for later use:
+            this.currentRecordingMimeType = actualMimeType;
+            
+            this.Logger.LogInformation("Audio recording started with MIME type: {ActualMimeType}", actualMimeType);
             this.isRecording = true;
         }
         else
@@ -372,10 +387,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             if(result.ChangedMimeType)
                 this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
             
+            // Close and finalize the recording stream:
+            await this.FinalizeRecordingStream();
+            
             this.isRecording = false;
             this.StateHasChanged();
-
-            await this.SendAudioToBackend(result);
         }
     }
 
@@ -397,18 +413,71 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         return mimeTypes;
     }
 
-    private async Task SendAudioToBackend(AudioRecordingResult recording)
+    private async Task InitializeRecordingStream()
     {
-        var audioBytes = Convert.FromBase64String(recording.Data);
-        var extension = GetFileExtension(recording.MimeType);
         var dataDirectory = await this.RustService.GetDataDirectory();
         var recordingDirectory = Path.Combine(dataDirectory, "audioRecordings");
-        if(!Path.Exists(recordingDirectory))
+        if(!Directory.Exists(recordingDirectory))
             Directory.CreateDirectory(recordingDirectory);
         
-        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}{extension}";
-        var filePath = Path.Combine(recordingDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, audioBytes);
+        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}.audio";
+        this.currentRecordingPath = Path.Combine(recordingDirectory, fileName);
+        this.currentRecordingStream = new FileStream(this.currentRecordingPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 8192, useAsync: true);
+        
+        this.Logger.LogInformation("Initialized audio recording stream: {RecordingPath}", this.currentRecordingPath);
+    }
+
+    [JSInvokable]
+    public async Task OnAudioChunkReceived(string base64Chunk)
+    {
+        if (this.currentRecordingStream is null)
+        {
+            this.Logger.LogWarning("Received audio chunk but no recording stream is active.");
+            return;
+        }
+
+        try
+        {
+            var chunkBytes = Convert.FromBase64String(base64Chunk);
+            await this.currentRecordingStream.WriteAsync(chunkBytes);
+            await this.currentRecordingStream.FlushAsync();
+            
+            this.Logger.LogDebug("Wrote {ByteCount} bytes to recording stream.", chunkBytes.Length);
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Error writing audio chunk to stream.");
+        }
+    }
+
+    private async Task FinalizeRecordingStream()
+    {
+        if (this.currentRecordingStream is not null)
+        {
+            await this.currentRecordingStream.FlushAsync();
+            await this.currentRecordingStream.DisposeAsync();
+            this.currentRecordingStream = null;
+            
+            // Rename the file with the correct extension based on MIME type:
+            if (this.currentRecordingPath is not null && this.currentRecordingMimeType is not null)
+            {
+                var extension = GetFileExtension(this.currentRecordingMimeType);
+                var newPath = Path.ChangeExtension(this.currentRecordingPath, extension);
+                
+                if (File.Exists(this.currentRecordingPath))
+                {
+                    File.Move(this.currentRecordingPath, newPath, overwrite: true);
+                    this.Logger.LogInformation("Finalized audio recording: {RecordingPath}", newPath);
+                }
+            }
+        }
+        
+        this.currentRecordingPath = null;
+        this.currentRecordingMimeType = null;
+        
+        // Dispose the .NET reference:
+        this.dotNetReference?.Dispose();
+        this.dotNetReference = null;
     }
     
     private static string GetFileExtension(string mimeType)
@@ -430,8 +499,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     private sealed class AudioRecordingResult
     {
-        public string Data { get; init; } = string.Empty;
-        
+
         public string MimeType { get; init; } = string.Empty;
         
         public bool ChangedMimeType { get; init; }
@@ -442,6 +510,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
+        
+        // Clean up recording resources if still active:
+        if (this.currentRecordingStream is not null)
+        {
+            this.currentRecordingStream.Dispose();
+            this.currentRecordingStream = null;
+        }
+        
+        this.dotNetReference?.Dispose();
+        this.dotNetReference = null;
     }
 
     #endregion

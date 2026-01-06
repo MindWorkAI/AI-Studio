@@ -28,12 +28,15 @@ window.scrollToBottom = function(element) {
 }
 
 let mediaRecorder;
-let audioChunks = [];
 let actualRecordingMimeType;
 let changedMimeType = false;
+let dotnetReference = null;
 
 window.audioRecorder = {
-    start: async function (desiredMimeTypes = []) {
+    start: async function (dotnetRef, desiredMimeTypes = []) {
+        // Store the .NET reference for callbacks:
+        dotnetReference = dotnetRef;
+        
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // When only one mime type is provided as a string, convert it to an array:
@@ -86,10 +89,20 @@ window.audioRecorder = {
             changedMimeType = false;
         }
         
-        audioChunks = [];
-        mediaRecorder.ondataavailable = (event) => {
+        // Stream each chunk directly to .NET as it becomes available:
+        mediaRecorder.ondataavailable = async (event) => {
             if (event.data.size > 0) {
-                audioChunks.push(event.data);
+                const arrayBuffer = await event.data.arrayBuffer();
+                const base64 = btoa(
+                    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+                );
+                
+                // Send chunk to .NET immediately:
+                try {
+                    await dotnetReference.invokeMethodAsync('OnAudioChunkReceived', base64);
+                } catch (error) {
+                    console.error('Error sending audio chunk to .NET:', error);
+                }
             }
         };
 
@@ -106,18 +119,14 @@ window.audioRecorder = {
                 // Stop all tracks to release the microphone:
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
                 
-                // Next, process the recorded audio data:
-                const blob = new Blob(audioChunks, { type: actualRecordingMimeType });
-                const arrayBuffer = await blob.arrayBuffer();
-                const base64 = btoa(
-                    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-                );
-                
+                // No need to process data here anymore, just signal completion:
                 resolve({
-                    data: base64,
                     mimeType: actualRecordingMimeType,
                     changedMimeType: changedMimeType,
                 });
+                
+                // Clear the .NET reference:
+                dotnetReference = null;
             };
             
             // Finally, stop the recording (which will actually trigger the onstop event):
