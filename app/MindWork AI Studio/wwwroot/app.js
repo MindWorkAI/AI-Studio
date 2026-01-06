@@ -30,13 +30,9 @@ window.scrollToBottom = function(element) {
 let mediaRecorder;
 let actualRecordingMimeType;
 let changedMimeType = false;
-let dotnetReference = null;
 
 window.audioRecorder = {
     start: async function (dotnetRef, desiredMimeTypes = []) {
-        // Store the .NET reference for callbacks:
-        dotnetReference = dotnetRef;
-        
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // When only one mime type is provided as a string, convert it to an array:
@@ -96,7 +92,7 @@ window.audioRecorder = {
                 const uint8Array = new Uint8Array(arrayBuffer);
 
                 try {
-                    await dotnetReference.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
+                    await dotnetRef.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
                 } catch (error) {
                     console.error('Error sending audio chunk to .NET:', error);
                 }
@@ -121,9 +117,6 @@ window.audioRecorder = {
                     mimeType: actualRecordingMimeType,
                     changedMimeType: changedMimeType,
                 });
-                
-                // Clear the .NET reference:
-                dotnetReference = null;
             };
             
             // Finally, stop the recording (which will actually trigger the onstop event):
