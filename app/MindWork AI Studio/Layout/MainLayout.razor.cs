@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -353,27 +354,91 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         if (toggled)
         {
-            await this.JsRuntime.InvokeVoidAsync("audioRecorder.start");
+            var mimeTypes = GetPreferredMimeTypes(
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP3).Build(),
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.AIFF).Build(),
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WAV).Build(),
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.FLAC).Build()
+                );
+
+            this.Logger.LogInformation($"Starting audio recording with preferred MIME types: {string.Join<MIMEType>(", ", mimeTypes)}");
+            // var array = mimeTypes.ToStringArray().Cast<object?>().ToArray();
+            
+            var mimeTypeStrings = mimeTypes.ToStringArray();
+            await this.JsRuntime.InvokeVoidAsync("audioRecorder.start", (object)mimeTypeStrings);
             this.isRecording = true;
         }
         else
         {
-            var base64Audio = await this.JsRuntime.InvokeAsync<string>("audioRecorder.stop");
+            var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
+            if(result.ChangedMimeType)
+                this.Logger.LogWarning($"The recorded audio MIME type was changed to '{result.MimeType}'.");
+            
             this.isRecording = false;
             this.StateHasChanged();
-            
-            await this.SendAudioToBackend(base64Audio);
+
+            await this.SendAudioToBackend(result);
         }
     }
 
-    private async Task SendAudioToBackend(string base64Audio)
+    private static MIMEType[] GetPreferredMimeTypes(params MIMEType[] mimeTypes)
     {
-        var audioBytes = Convert.FromBase64String(base64Audio);
+        // Default list if no parameters provided:
+        if (mimeTypes.Length is 0)
+        {
+            var audioBuilder = Builder.Create().UseAudio();
+            return
+            [
+                audioBuilder.UseSubtype(AudioSubtype.WEBM).Build(),
+                audioBuilder.UseSubtype(AudioSubtype.OGG).Build(),
+                audioBuilder.UseSubtype(AudioSubtype.MP4).Build(),
+                audioBuilder.UseSubtype(AudioSubtype.MPEG).Build(),
+            ];
+        }
+
+        return mimeTypes;
+    }
+
+    private async Task SendAudioToBackend(AudioRecordingResult recording)
+    {
+        #warning No need to send the recording to the backend (Blazor Hybrid)
+        var audioBytes = Convert.FromBase64String(recording.Data);
         
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent(audioBytes), "audio", "recording.webm");
-
+        var fileContent = new ByteArrayContent(audioBytes);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recording.MimeType);
+        
+        var extension = GetFileExtension(recording.MimeType);
+        content.Add(fileContent, "audio", $"recording{extension}");
+        content.Add(new StringContent(recording.MimeType), "mimeType");
+        
         await this.HttpClient.PostAsync("/audio/upload", content);
+    }
+    
+    private static string GetFileExtension(string mimeType)
+    {
+        // Codec-Parameter entfernen für Matching
+        var baseMimeType = mimeType.Split(';')[0].Trim().ToLowerInvariant();
+        
+        return baseMimeType switch
+        {
+            "audio/webm" => ".webm",
+            "audio/ogg" => ".ogg",
+            "audio/mp4" => ".m4a",
+            "audio/mpeg" => ".mp3",
+            "audio/wav" => ".wav",
+            "audio/x-wav" => ".wav",
+            _ => ".audio"  // Fallback
+        };
+    }
+    
+    private sealed class AudioRecordingResult
+    {
+        public string Data { get; set; } = string.Empty;
+        public string MimeType { get; set; } = string.Empty;
+        public bool ChangedMimeType { get; set; }
     }
 
     #region Implementation of IDisposable
