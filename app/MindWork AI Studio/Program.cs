@@ -192,7 +192,6 @@ internal sealed class Program
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
         app.Use(FileHandler.HandlerAsync);
-        app.AddAudioRecorderHandlers();
 
 #if DEBUG
         app.UseStaticFiles();

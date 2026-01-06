@@ -403,18 +403,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     private async Task SendAudioToBackend(AudioRecordingResult recording)
     {
-        #warning No need to send the recording to the backend (Blazor Hybrid)
         var audioBytes = Convert.FromBase64String(recording.Data);
-        
-        using var content = new MultipartFormDataContent();
-        var fileContent = new ByteArrayContent(audioBytes);
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recording.MimeType);
-        
         var extension = GetFileExtension(recording.MimeType);
-        content.Add(fileContent, "audio", $"recording{extension}");
-        content.Add(new StringContent(recording.MimeType), "mimeType");
+        var dataDirectory = await this.RustService.GetDataDirectory();
+        var recordingDirectory = Path.Combine(dataDirectory, "audioRecordings");
+        if(!Path.Exists(recordingDirectory))
+            Directory.CreateDirectory(recordingDirectory);
         
-        await this.HttpClient.PostAsync("/audio/upload", content);
+        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}{extension}";
+        var filePath = Path.Combine(recordingDirectory, fileName);
+        await File.WriteAllBytesAsync(filePath, audioBytes);
     }
     
     private static string GetFileExtension(string mimeType)
