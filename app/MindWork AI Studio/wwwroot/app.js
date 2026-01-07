@@ -30,6 +30,7 @@ window.scrollToBottom = function(element) {
 let mediaRecorder;
 let actualRecordingMimeType;
 let changedMimeType = false;
+let pendingChunkUploads = 0;
 
 window.audioRecorder = {
     start: async function (dotnetRef, desiredMimeTypes = []) {
@@ -84,17 +85,22 @@ window.audioRecorder = {
         } else {
             changedMimeType = false;
         }
-        
+
+        // Reset the pending uploads counter:
+        pendingChunkUploads = 0;
+
         // Stream each chunk directly to .NET as it becomes available:
         mediaRecorder.ondataavailable = async (event) => {
             if (event.data.size > 0) {
-                const arrayBuffer = await event.data.arrayBuffer();
-                const uint8Array = new Uint8Array(arrayBuffer);
-
+                pendingChunkUploads++;
                 try {
+                    const arrayBuffer = await event.data.arrayBuffer();
+                    const uint8Array = new Uint8Array(arrayBuffer);
                     await dotnetRef.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
                 } catch (error) {
                     console.error('Error sending audio chunk to .NET:', error);
+                } finally {
+                    pendingChunkUploads--;
                 }
             }
         };
@@ -108,6 +114,14 @@ window.audioRecorder = {
             
             // Add an event listener to handle the stop event:
             mediaRecorder.onstop = async () => {
+
+                // Wait for all pending chunk uploads to complete before finalizing:
+                console.log(`Audio recording - waiting for ${pendingChunkUploads} pending uploads.`);
+                while (pendingChunkUploads > 0) {
+                    await new Promise(r => setTimeout(r, 10)); // wait 10 ms before checking again
+                }
+                
+                console.log('Audio recording - all chunks uploaded, finalizing.');
 
                 // Stop all tracks to release the microphone:
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
