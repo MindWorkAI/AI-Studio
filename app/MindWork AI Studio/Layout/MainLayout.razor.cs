@@ -39,9 +39,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
     
-    [Inject]
-    private IJSRuntime JsRuntime { get; init; } = null!;
-    
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
     private string PaddingLeft => this.navBarOpen ? $"padding-left: {NAVBAR_EXPANDED_WIDTH_INT - NAVBAR_COLLAPSED_WIDTH_INT}em;" : "padding-left: 0em;";
