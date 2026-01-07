@@ -341,7 +341,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
     }
-
+    
     #region Implementation of IDisposable
 
     public void Dispose()

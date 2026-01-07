@@ -1,3 +1,4 @@
+using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Chat;
@@ -6,7 +7,7 @@ public static class IImageSourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
     
-    public static string DetermineMimeType(this IImageSource image)
+    public static MIMEType DetermineMimeType(this IImageSource image)
     {
         switch (image.SourceType)
         {
@@ -18,13 +19,11 @@ public static class IImageSourceExtensions
                 {
                     var mimeEnd = base64Data.IndexOf(';');
                     if (mimeEnd > 5)
-                    {
-                        return base64Data[5..mimeEnd];
-                    }
+                        return Builder.FromTextRepresentation(base64Data[5..mimeEnd]);
                 }
 
                 // Fallback:
-                return "application/octet-stream";
+                return Builder.Create().UseApplication().UseSubtype(ApplicationSubtype.OCTET_STREAM).Build();
             }
 
             case ContentImageSource.URL:
@@ -32,38 +31,36 @@ public static class IImageSourceExtensions
                 // Try to detect the mime type from the URL extension:
                 var uri = new Uri(image.Source);
                 var extension = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
-                return extension switch
-                {
-                    ".png" => "image/png",
-                    ".jpg" or ".jpeg" => "image/jpeg",
-                    ".gif" => "image/gif",
-                    ".bmp" => "image/bmp",
-                    ".webp" => "image/webp",
-
-                    _ => "application/octet-stream"
-                };
+                return DeriveMIMETypeFromExtension(extension);
             }
 
             case ContentImageSource.LOCAL_PATH:
             {
                 var extension = Path.GetExtension(image.Source).ToLowerInvariant();
-                return extension switch
-                {
-                    ".png" => "image/png",
-                    ".jpg" or ".jpeg" => "image/jpeg",
-                    ".gif" => "image/gif",
-                    ".bmp" => "image/bmp",
-                    ".webp" => "image/webp",
-
-                    _ => "application/octet-stream"
-                };
+                return DeriveMIMETypeFromExtension(extension);
             }
 
             default:
-                return "application/octet-stream";
+                return Builder.Create().UseApplication().UseSubtype(ApplicationSubtype.OCTET_STREAM).Build();
         }
     }
-    
+
+    private static MIMEType DeriveMIMETypeFromExtension(string extension)
+    {
+        var imageBuilder = Builder.Create().UseImage();
+        return extension switch
+        {
+            ".png" => imageBuilder.UseSubtype(ImageSubtype.PNG).Build(),
+            ".jpg" or ".jpeg" => imageBuilder.UseSubtype(ImageSubtype.JPEG).Build(),
+            ".gif" => imageBuilder.UseSubtype(ImageSubtype.GIF).Build(),
+            ".webp" => imageBuilder.UseSubtype(ImageSubtype.WEBP).Build(),
+            ".tiff" or ".tif" => imageBuilder.UseSubtype(ImageSubtype.TIFF).Build(),
+            ".heic" or ".heif" => imageBuilder.UseSubtype(ImageSubtype.HEIC).Build(),
+
+            _ => Builder.Create().UseApplication().UseSubtype(ApplicationSubtype.OCTET_STREAM).Build()
+        };
+    }
+
     /// <summary>
     /// Read the image content as a base64 string.
     /// </summary>

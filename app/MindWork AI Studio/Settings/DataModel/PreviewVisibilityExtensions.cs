@@ -21,6 +21,7 @@ public static class PreviewVisibilityExtensions
         {
             features.Add(PreviewFeatures.PRE_RAG_2024);
             features.Add(PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025);
+            features.Add(PreviewFeatures.PRE_SPEECH_TO_TEXT_2026);
         }
         
         if (visibility >= PreviewVisibility.EXPERIMENTAL)

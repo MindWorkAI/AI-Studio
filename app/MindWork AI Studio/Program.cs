@@ -83,7 +83,6 @@ internal sealed class Program
         }
         
         var builder = WebApplication.CreateBuilder();
-        
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
             kestrelServerOptions.ConfigureEndpointDefaults(listenOptions =>
