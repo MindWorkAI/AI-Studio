@@ -35,7 +35,7 @@
             }
             else
             {
-                <MudPaper Width="4em" Class="mud-height-full absolute">
+                <MudPaper Width="4em" Class="mud-height-full absolute" Style="display: flex; flex-direction: column;">
                     <MudNavMenu>
                         @foreach (var navBarItem in this.navItems)
                         {
@@ -51,9 +51,9 @@
                             }
                         }
                     </MudNavMenu>
-                    
+
                     <MudSpacer/>
-                    
+
                     <MudStack AlignItems="AlignItems.Center">
                         <MudToolBar WrapContent="true">
                             <VoiceRecorder />
