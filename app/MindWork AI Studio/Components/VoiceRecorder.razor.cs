@@ -22,6 +22,8 @@ public partial class VoiceRecorder : MSGComponentBase
     private string? currentRecordingMimeType;
     private DotNetObjectReference<VoiceRecorder>? dotNetReference;
     
+    private string Tooltip => this.isRecording ? T("Stop recording and start transcription") : T("Start recording your voice for a transcription");
+    
     private async Task OnRecordingToggled(bool toggled)
     {
         if (toggled)

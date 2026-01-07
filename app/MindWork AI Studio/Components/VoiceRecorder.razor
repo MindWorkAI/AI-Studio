@@ -5,10 +5,12 @@
 
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
 {
-    <MudToggleIconButton Toggled="@this.isRecording"
-                         ToggledChanged="@this.OnRecordingToggled"
-                         Icon="@Icons.Material.Filled.Mic"
-                         ToggledIcon="@Icons.Material.Filled.Stop"
-                         Color="Color.Primary"
-                         ToggledColor="Color.Error"/>
+    <MudTooltip Text="@this.Tooltip">
+        <MudToggleIconButton Toggled="@this.isRecording"
+                             ToggledChanged="@this.OnRecordingToggled"
+                             Icon="@Icons.Material.Filled.Mic"
+                             ToggledIcon="@Icons.Material.Filled.Stop"
+                             Color="Color.Primary"
+                             ToggledColor="Color.Error"/>
+    </MudTooltip>
 }
