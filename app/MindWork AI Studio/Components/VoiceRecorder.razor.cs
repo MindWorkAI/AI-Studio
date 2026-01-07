@@ -16,6 +16,7 @@ public partial class VoiceRecorder : MSGComponentBase
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    private uint numReceivedChunks;
     private bool isRecording;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
@@ -37,7 +38,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.FLAC).Build()
             );
 
-            this.Logger.LogInformation("Starting audio recording with preferred MIME types: {PreferredMimeTypes}", string.Join<MIMEType>(", ", mimeTypes));
+            this.Logger.LogInformation("Starting audio recording with preferred MIME types: '{PreferredMimeTypes}'.", string.Join<MIMEType>(", ", mimeTypes));
 
             // Create a DotNetObjectReference to pass to JavaScript:
             this.dotNetReference = DotNetObjectReference.Create(this);
@@ -51,7 +52,7 @@ public partial class VoiceRecorder : MSGComponentBase
             // Store the MIME type for later use:
             this.currentRecordingMimeType = actualMimeType;
 
-            this.Logger.LogInformation("Audio recording started with MIME type: {ActualMimeType}", actualMimeType);
+            this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
             this.isRecording = true;
         }
         else
@@ -88,6 +89,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
     private async Task InitializeRecordingStream()
     {
+        this.numReceivedChunks = 0;
         var dataDirectory = await this.RustService.GetDataDirectory();
         var recordingDirectory = Path.Combine(dataDirectory, "audioRecordings");
         if (!Directory.Exists(recordingDirectory))
@@ -97,7 +99,7 @@ public partial class VoiceRecorder : MSGComponentBase
         this.currentRecordingPath = Path.Combine(recordingDirectory, fileName);
         this.currentRecordingStream = new FileStream(this.currentRecordingPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 8192, useAsync: true);
 
-        this.Logger.LogInformation("Initialized audio recording stream: {RecordingPath}", this.currentRecordingPath);
+        this.Logger.LogInformation("Initialized audio recording stream: '{RecordingPath}'.", this.currentRecordingPath);
     }
 
     [JSInvokable]
@@ -111,6 +113,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
         try
         {
+            this.numReceivedChunks++;
             await this.currentRecordingStream.WriteAsync(chunkBytes);
             await this.currentRecordingStream.FlushAsync();
 
@@ -139,7 +142,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 if (File.Exists(this.currentRecordingPath))
                 {
                     File.Move(this.currentRecordingPath, newPath, overwrite: true);
-                    this.Logger.LogInformation("Finalized audio recording: {RecordingPath}", newPath);
+                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}'.", this.numReceivedChunks, newPath);
                 }
             }
         }
