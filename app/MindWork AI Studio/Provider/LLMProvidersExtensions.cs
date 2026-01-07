@@ -338,7 +338,7 @@ public static class LLMProvidersExtensions
             switch (host)
             {
                 case Host.NONE:
-                case Host.LLAMACPP:
+                case Host.LLAMA_CPP:
                 default:
                     return false;
 

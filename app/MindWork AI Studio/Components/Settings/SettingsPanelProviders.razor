@@ -34,7 +34,7 @@
                 {
                     @GetLLMProviderModelName(context)
                 }
-                else if (context.UsedLLMProvider is LLMProviders.SELF_HOSTED && context.Host is not Host.LLAMACPP)
+                else if (context.UsedLLMProvider is LLMProviders.SELF_HOSTED && context.Host is not Host.LLAMA_CPP)
                 {
                     @GetLLMProviderModelName(context)
                 }

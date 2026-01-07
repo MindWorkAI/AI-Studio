@@ -91,7 +91,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         {
             switch (host)
             {
-                case Host.LLAMACPP:
+                case Host.LLAMA_CPP:
                     // Right now, llama.cpp only supports one model.
                     // There is no API to list the model(s).
                     return [ new Provider.Model("as configured by llama.cpp", null) ];

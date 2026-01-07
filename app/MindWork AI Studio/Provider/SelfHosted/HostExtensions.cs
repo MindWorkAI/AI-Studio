@@ -7,7 +7,7 @@ public static class HostExtensions
         Host.NONE => "None",
 
         Host.LM_STUDIO => "LM Studio",
-        Host.LLAMACPP => "llama.cpp",
+        Host.LLAMA_CPP => "llama.cpp",
         Host.OLLAMA => "ollama",
         Host.VLLM => "vLLM",
 
@@ -34,7 +34,7 @@ public static class HostExtensions
                 return true;
             
             default:
-            case Host.LLAMACPP:
+            case Host.LLAMA_CPP:
                 return false;
         }
     }
