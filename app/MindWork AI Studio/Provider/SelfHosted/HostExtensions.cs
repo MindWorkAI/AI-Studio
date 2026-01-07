@@ -24,7 +24,7 @@ public static class HostExtensions
         _ => "chat/completions",
     };
     
-    public static bool AreEmbeddingsSupported(this Host host)
+    public static bool IsEmbeddingSupported(this Host host)
     {
         switch (host)
         {
