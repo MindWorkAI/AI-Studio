@@ -35,7 +35,7 @@
                 <MudTd>@context.Num</MudTd>
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
-                <MudTd>@this.GetEmbeddingProviderModelName(context)</MudTd>
+                <MudTd>@GetEmbeddingProviderModelName(context)</MudTd>
                 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
@@ -43,10 +43,10 @@
                             <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
                         </MudTooltip>
                         <MudTooltip Text="@T("Edit")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditEmbeddingProvider(context)"/>
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
                         </MudTooltip>
                         <MudTooltip Text="@T("Delete")">
-                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteEmbeddingProvider(context)"/>
+                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEmbeddingProvider(context))"/>
                         </MudTooltip>
                     </MudStack>
                 </MudTd>

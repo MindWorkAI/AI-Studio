@@ -32,11 +32,11 @@
             <MudTd>
                 @if (context.UsedLLMProvider is not LLMProviders.SELF_HOSTED)
                 {
-                    @this.GetLLMProviderModelName(context)
+                    @GetLLMProviderModelName(context)
                 }
                 else if (context.UsedLLMProvider is LLMProviders.SELF_HOSTED && context.Host is not Host.LLAMACPP)
                 {
-                    @this.GetLLMProviderModelName(context)
+                    @GetLLMProviderModelName(context)
                 }
                 else
                 {
@@ -57,10 +57,10 @@
                             <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
                         </MudTooltip>
                         <MudTooltip Text="@T("Edit")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditLLMProvider(context)"/>
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditLLMProvider(context))"/>
                         </MudTooltip>
                         <MudTooltip Text="@T("Delete")">
-                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteLLMProvider(context)"/>
+                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteLLMProvider(context))"/>
                         </MudTooltip>
                     }
                 </MudStack>

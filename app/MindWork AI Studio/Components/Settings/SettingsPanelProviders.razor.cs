@@ -134,7 +134,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
+    private static string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
     {
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
