@@ -6,7 +6,7 @@
             @if (this.CurrentProfile != Profile.NO_PROFILE)
             {
                 <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Person4" IconColor="Color.Default">
-                    @this.CurrentProfile.Name
+                    @this.CurrentProfile.GetSafeName()
                 </MudButton>
             }
             else
@@ -20,7 +20,7 @@
             @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
             {
                 <MudMenuItem Icon="@this.ProfileIcon(profile)" OnClick="() => this.SelectionChanged(profile)">
-                    @profile.Name
+                    @profile.GetSafeName()
                 </MudMenuItem>
             }
         </ChildContent>
