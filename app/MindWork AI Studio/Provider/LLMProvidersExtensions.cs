@@ -110,7 +110,7 @@ public static class LLMProvidersExtensions
     /// </summary>
     /// <param name="llmProvider">The provider to check.</param>
     /// <returns>True if the provider supports embeddings; otherwise, false.</returns>
-    public static bool ProvideEmbeddings(this LLMProviders llmProvider) => llmProvider switch
+    public static bool ProvideEmbeddingAPI(this LLMProviders llmProvider) => llmProvider switch
     {
         //
         // Providers that support embeddings:

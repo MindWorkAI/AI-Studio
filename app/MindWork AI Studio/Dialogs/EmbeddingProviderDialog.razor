@@ -10,7 +10,7 @@
                 <MudSelect @bind-Value="@this.DataLLMProvider"  Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
-                        if (provider.ProvideEmbeddings() || provider is LLMProviders.NONE)
+                        if (provider.ProvideEmbeddingAPI() || provider is LLMProviders.NONE)
                         {
                             <MudSelectItem Value="@provider">
                                 @provider.ToName()
