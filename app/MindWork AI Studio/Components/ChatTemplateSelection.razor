@@ -7,7 +7,7 @@
             @if (this.CurrentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
             {
                 <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.RateReview" IconColor="Color.Default">
-                    @this.CurrentChatTemplate.Name
+                    @this.CurrentChatTemplate.GetSafeName()
                 </MudButton>
             }
             else
