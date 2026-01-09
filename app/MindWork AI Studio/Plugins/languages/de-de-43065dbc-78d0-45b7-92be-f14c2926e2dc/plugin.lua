@@ -2388,11 +2388,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T428040679"] = "Erstellung von In
 -- Useful assistants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T586430036"] = "Nützliche Assistenten"
 
+-- Failed to create the transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1689988905"] = "Der Anbieter für die Transkription konnte nicht erstellt werden."
+
 -- Stop recording and start transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T224155287"] = "Aufnahme beenden und Transkription starten"
 
 -- Start recording your voice for a transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2372624045"] = "Beginnen Sie mit der Aufnahme Ihrer Stimme für eine Transkription"
+
+-- Transcription in progress...
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2851219233"] = "Transkription läuft …"
+
+-- The configured transcription provider was not found.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T331613105"] = "Der konfigurierte Anbieter für die Transkription wurde nicht gefunden."
+
+-- The configured transcription provider does not meet the minimum confidence level.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3834149033"] = "Der konfigurierte Anbieter für die Transkription erfüllt nicht das erforderliche Mindestmaß an Vertrauenswürdigkeit."
+
+-- An error occurred during transcription.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T588743762"] = "Während der Transkription ist ein Fehler aufgetreten."
+
+-- No transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T663630295"] = "Es ist kein Anbieter für die Transkription konfiguriert."
+
+-- The transcription result is empty.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "Das Ergebnis der Transkription ist leer."
 
 -- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Möchten Sie den Chat „{0}“ im Arbeitsbereich „{1}“ wirklich löschen?"

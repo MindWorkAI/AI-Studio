@@ -2388,11 +2388,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T428040679"] = "Content creation"
 -- Useful assistants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T586430036"] = "Useful assistants"
 
+-- Failed to create the transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1689988905"] = "Failed to create the transcription provider."
+
 -- Stop recording and start transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T224155287"] = "Stop recording and start transcription"
 
 -- Start recording your voice for a transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2372624045"] = "Start recording your voice for a transcription"
+
+-- Transcription in progress...
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2851219233"] = "Transcription in progress..."
+
+-- The configured transcription provider was not found.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T331613105"] = "The configured transcription provider was not found."
+
+-- The configured transcription provider does not meet the minimum confidence level.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3834149033"] = "The configured transcription provider does not meet the minimum confidence level."
+
+-- An error occurred during transcription.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T588743762"] = "An error occurred during transcription."
+
+-- No transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T663630295"] = "No transcription provider is configured."
+
+-- The transcription result is empty.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "The transcription result is empty."
 
 -- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"
