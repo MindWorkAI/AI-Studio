@@ -561,16 +561,35 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
             request.Content = form;
-        
-            if(requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
-	
+
+            // Handle the authorization header based on the provider:
+            switch (this.Provider)
+            {
+                case LLMProviders.SELF_HOSTED:
+                    if(requestedSecret.Success)
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    
+                    break;
+                
+                default:
+                    if(!requestedSecret.Success)
+                    {
+                        this.logger.LogError("No valid API key available for transcription request.");
+                        return string.Empty;
+                    }
+                    
+                    break;
+            }
+            
             using var response = await this.httpClient.SendAsync(request, token);
             var responseBody = response.Content.ReadAsStringAsync(token).Result;
         
             if (!response.IsSuccessStatusCode)
+            {
+                this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
                 return string.Empty;
-        
+            }
+
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
             if(transcriptionResponse is null)
             {

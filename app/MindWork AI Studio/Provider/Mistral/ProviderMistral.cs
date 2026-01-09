@@ -85,7 +85,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
     /// <inheritdoc />
     public override async Task<string> TranscribeAudioAsync(Provider.Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
 
