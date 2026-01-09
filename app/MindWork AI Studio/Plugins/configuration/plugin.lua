@@ -88,6 +88,24 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     }
 -- }
 
+-- Embedding providers for local RAG (Retrieval-Augmented Generation) functionality:
+CONFIG["EMBEDDING_PROVIDERS"] = {}
+
+-- An example of an embedding provider configuration:
+-- CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name for the embedding provider>",
+--     ["UsedLLMProvider"] = "SELF_HOSTED",
+--
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     ["Host"] = "OLLAMA",
+--     ["Hostname"] = "<https address of the server>",
+--     ["Model"] = {
+--         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
+--         ["DisplayName"] = "<user-friendly name of the model>",
+--     }
+-- }
+
 CONFIG["SETTINGS"] = {}
 
 -- Configure the update check interval:
