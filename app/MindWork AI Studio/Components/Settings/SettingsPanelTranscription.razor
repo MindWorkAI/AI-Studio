@@ -4,10 +4,10 @@
 
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
 {
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.VoiceChat" HeaderText="@T("Configure Transcription")">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.VoiceChat" HeaderText="@T("Configure Transcription Providers")">
         <PreviewPrototype ApplyInnerScrollingFix="true"/>
         <MudText Typo="Typo.h4" Class="mb-3">
-            @T("Configured Transcription")
+            @T("Configured Transcription Providers")
         </MudText>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the \"Configure providers\" section.")

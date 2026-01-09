@@ -4,10 +4,10 @@
 
 @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
 {
-    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="@T("Configure Embeddings")">
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="@T("Configure Embedding Providers")">
         <PreviewPrototype ApplyInnerScrollingFix="true"/>
         <MudText Typo="Typo.h4" Class="mb-3">
-            @T("Configured Embeddings")
+            @T("Configured Embedding Providers")
         </MudText>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and 'joyful' would be more alike than those for 'happy' and 'sad'.")
