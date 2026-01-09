@@ -97,6 +97,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
+
+    /// <inheritdoc />
+    public abstract Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     #endregion
     

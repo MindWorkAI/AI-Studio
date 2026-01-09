@@ -101,6 +101,17 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
         return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
+        return Task.FromResult<IEnumerable<Model>>(
+            new List<Model>
+            {
+                new("whisper-large-v2", "Whisper v2 Large"),
+            });
+    }
+    
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

@@ -136,6 +136,12 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+    
     #endregion
     
     private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)

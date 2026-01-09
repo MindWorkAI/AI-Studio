@@ -6,6 +6,7 @@ public enum Host
 
     LM_STUDIO,
     LLAMA_CPP,
+    WHISPER_CPP,
     OLLAMA,
     VLLM,
 }

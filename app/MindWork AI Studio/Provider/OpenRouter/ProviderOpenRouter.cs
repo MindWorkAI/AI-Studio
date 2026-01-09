@@ -106,6 +106,12 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     {
         return this.LoadEmbeddingModels(token, apiKeyProvisional);
     }
+    
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
 
     #endregion
 

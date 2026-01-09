@@ -8,6 +8,7 @@ public static class HostExtensions
 
         Host.LM_STUDIO => "LM Studio",
         Host.LLAMA_CPP => "llama.cpp",
+        Host.WHISPER_CPP => "whisper.cpp",
         Host.OLLAMA => "ollama",
         Host.VLLM => "vLLM",
 
@@ -24,6 +25,27 @@ public static class HostExtensions
         _ => "chat/completions",
     };
     
+    public static string TranscriptionURL(this Host host) => host switch
+    {
+        _ => "audio/transcriptions",
+    };
+    
+    public static bool IsChatSupported(this Host host)
+    {
+        switch (host)
+        {
+            case Host.WHISPER_CPP:
+                return false;
+            
+            default:
+            case Host.OLLAMA:
+            case Host.VLLM:
+            case Host.LM_STUDIO:
+            case Host.LLAMA_CPP:
+                return true;
+        }
+    }
+    
     public static bool IsEmbeddingSupported(this Host host)
     {
         switch (host)
@@ -34,6 +56,22 @@ public static class HostExtensions
                 return true;
             
             default:
+            case Host.LLAMA_CPP:
+                return false;
+        }
+    }
+    
+    public static bool IsTranscriptionSupported(this Host host)
+    {
+        switch (host)
+        {
+            case Host.OLLAMA:
+            case Host.VLLM:
+            case Host.WHISPER_CPP:
+                return true;
+            
+            default:
+            case Host.LM_STUDIO:
             case Host.LLAMA_CPP:
                 return false;
         }

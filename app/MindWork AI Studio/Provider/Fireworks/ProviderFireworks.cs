@@ -100,5 +100,16 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult<IEnumerable<Model>>(
+            new List<Model>
+            {
+                new("whisper-v3", "Whisper v3"),
+                new("whisper-v3-turbo", "Whisper v3 Turbo"),
+            });
+    }
+    
     #endregion
 }

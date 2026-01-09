@@ -104,5 +104,11 @@ public sealed class ProviderHuggingFace : BaseProvider
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+    
     #endregion
 }
