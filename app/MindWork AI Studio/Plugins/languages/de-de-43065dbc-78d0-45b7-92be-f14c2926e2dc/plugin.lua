@@ -2025,6 +2025,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1599198973"]
 -- Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"] = "Möchten Sie eines ihrer Profile als Standard für die gesamte App festlegen? Wenn Sie einem Assistenten ein anderes Profil zuweisen, hat dieses immer Vorrang."
 
+-- Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1834486728"] = "Wählen Sie für die Transkription Ihrer Stimme einen Anbieter für Transkriptionen aus. Ohne einen ausgewählten Anbieter wird die Diktier- und Transkriptions-Funktion deaktiviert."
+
 -- Select the language behavior for the app. The default is to use the system language. You might want to choose a language manually?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T186780842"] = "Wählen Sie das Sprachverhalten für die App aus. Standardmäßig wird die Systemsprache verwendet. Möchten Sie die Sprache manuell einstellen?"
 
@@ -2036,6 +2039,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"]
 
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Wählen Sie die Sprache für die App aus."
+
+-- Disable dictation and transcription
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T215381891"] = "Diktieren und Transkribieren deaktivieren"
 
 -- Language behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"] = "Sprachverhalten"
@@ -2066,6 +2072,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"]
 
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "Wenn aktiviert, ist die Rechtschreibprüfung in allen Eingabefeldern aktiv. Je nach Betriebssystem werden Fehler möglicherweise nicht visuell hervorgehoben, aber ein Rechtsklick kann dennoch Korrekturvorschläge anzeigen."
+
+-- Select a transcription provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4174666315"] = "Wählen Sie einen Transkriptionsanbieter aus"
 
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Verhalten der Navigationsleiste"

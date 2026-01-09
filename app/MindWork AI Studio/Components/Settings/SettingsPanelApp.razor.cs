@@ -1,9 +1,23 @@
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelApp : SettingsPanelBase
 {
+    private IEnumerable<ConfigurationSelectData<string>> GetFilteredTranscriptionProviders()
+    {
+        yield return new(T("Disable dictation and transcription"), string.Empty);
+
+        var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.APP_SETTINGS);
+        foreach (var provider in this.SettingsManager.ConfigurationData.TranscriptionProviders)
+        {
+            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+                yield return new(provider.Name, provider.Id);
+        }
+    }
+
     private void UpdatePreviewFeatures(PreviewVisibility previewVisibility)
     {
         this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;

@@ -203,6 +203,12 @@ public static class ConfigurationSelectDataFactory
         foreach (var profile in profiles.GetAllProfiles())
             yield return new(profile.Name, profile.Id);
     }
+
+    public static IEnumerable<ConfigurationSelectData<string>> GetTranscriptionProvidersData(IEnumerable<TranscriptionProvider> transcriptionProviders)
+    {
+        foreach (var provider in transcriptionProviders)
+            yield return new(provider.Name, provider.Id);
+    }
     
     public static IEnumerable<ConfigurationSelectData<string>> GetChatTemplatesData(IEnumerable<ChatTemplate> chatTemplates)
     {

@@ -78,6 +78,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string PreselectedChatTemplate { get; set; } = string.Empty;
 
     /// <summary>
+    /// Which transcription provider should be used?
+    /// </summary>
+    public string UseTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UseTranscriptionProvider, string.Empty);
+
+    /// <summary>
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
