@@ -96,7 +96,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
 
     #endregion
     
-    private bool SelectedCloudEmbedding => !this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.dataEmbeddingId).IsSelfHosted;
+    private bool SelectedCloudEmbedding => !this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.dataEmbeddingId)?.IsSelfHosted ?? false;
 
     private DataSourceLocalFile CreateDataSource() => new()
     {
