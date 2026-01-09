@@ -15,6 +15,11 @@
                 <SettingsPanelEmbeddings AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)" @bind-AvailableEmbeddingProviders="@this.availableEmbeddingProviders"/>
             }
             
+            @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
+            {
+                <SettingsPanelTranscription AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)" @bind-AvailableTranscriptionProviders="@this.availableTranscriptionProviders"/>
+            }
+            
             <SettingsPanelApp AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))

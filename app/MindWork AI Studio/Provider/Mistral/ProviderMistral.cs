@@ -113,6 +113,17 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        // Source: https://docs.mistral.ai/capabilities/audio_transcription
+        return Task.FromResult<IEnumerable<Provider.Model>>(
+            new List<Provider.Model>
+            {
+                new("voxtral-mini-latest", "Voxtral Mini Latest"),
+            });
+    }
+    
     #endregion
     
     private async Task<ModelsResponse> LoadModelList(string? apiKeyProvisional, CancellationToken token)

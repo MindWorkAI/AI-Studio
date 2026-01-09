@@ -74,4 +74,11 @@ public interface IProvider
     /// <returns>The list of embedding models.</returns>
     public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
+    /// <summary>
+    /// Load all possible transcription models that can be used with this provider.
+    /// </summary>
+    /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
+    /// <param name="token">>The cancellation token.</param>
+    /// <returns>>The list of transcription models.</returns>
+    public Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
 }

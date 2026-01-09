@@ -70,7 +70,7 @@ public sealed class ProviderValidation
 
     public string? ValidatingModel(Model model)
     {
-        if(this.GetProvider() is LLMProviders.SELF_HOSTED && this.GetHost() == Host.LLAMACPP)
+        if(this.GetProvider() is LLMProviders.SELF_HOSTED && this.GetHost() == Host.LLAMA_CPP)
             return null;
         
         if (model == default)

@@ -6,12 +6,15 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.SelfHosted;
 
 public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider(LLMProviders.SELF_HOSTED, $"{hostname}{host.BaseURL()}", LOGGER)
 {
     private static readonly ILogger<ProviderSelfHosted> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderSelfHosted>();
+    
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
 
     #region Implementation of IProvider
 
@@ -91,7 +94,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         {
             switch (host)
             {
-                case Host.LLAMACPP:
+                case Host.LLAMA_CPP:
                     // Right now, llama.cpp only supports one model.
                     // There is no API to list the model(s).
                     return [ new Provider.Model("as configured by llama.cpp", null) ];
@@ -135,6 +138,35 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         {
             LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
             return [];
+        }
+    }
+    
+    /// <inheritdoc />
+    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        try
+        {
+            switch (host)
+            {
+                case Host.WHISPER_CPP:
+                    return Task.FromResult<IEnumerable<Provider.Model>>(
+                        new List<Provider.Model>
+                        {
+                            new("loaded-model", TB("Model as configured by whisper.cpp")),
+                        });
+                
+                case Host.OLLAMA:
+                case Host.VLLM:
+                    return this.LoadModels([], [], token, apiKeyProvisional);
+                
+                default:
+                    return Task.FromResult(Enumerable.Empty<Provider.Model>());
+            }
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError(e, "Failed to load transcription models from self-hosted provider.");
+            return Task.FromResult(Enumerable.Empty<Provider.Model>());
         }
     }
     

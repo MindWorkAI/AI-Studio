@@ -10,7 +10,7 @@
                 <MudSelect @bind-Value="@this.DataLLMProvider"  Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
-                        if (provider.ProvideEmbeddingAPI() || provider is LLMProviders.NONE)
+                        if (provider.ProvideTranscriptionAPI() || provider is LLMProviders.NONE)
                         {
                             <MudSelectItem Value="@provider">
                                 @provider.ToName()
@@ -47,7 +47,7 @@
                 <MudSelect @bind-Value="@this.DataHost" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
                     @foreach (Host host in Enum.GetValues(typeof(Host)))
                     {
-                        if (host.IsEmbeddingSupported())
+                        if (host.IsTranscriptionSupported())
                         {
                             <MudSelectItem Value="@host">
                                 @host.Name()
@@ -59,7 +59,7 @@
 
             <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                 <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                    @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
+                    @if (this.DataLLMProvider.IsTranscriptionModelProvidedManually(this.DataHost))
                     {
                         <MudTextField
                             T="string"
@@ -71,7 +71,7 @@
                             AdornmentColor="Color.Info"
                             Validation="@this.ValidateManuallyModel"
                             UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                            HelperText="@T("Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.")"
+                            HelperText="@T("Currently, we cannot query the transcription models for the selected provider and/or host. Therefore, please enter the model name manually.")"
                         />
                     }
                     else

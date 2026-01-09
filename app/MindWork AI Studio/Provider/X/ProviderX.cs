@@ -101,6 +101,12 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai
         return Task.FromResult<IEnumerable<Model>>([]);
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+    
     #endregion
     
     private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)

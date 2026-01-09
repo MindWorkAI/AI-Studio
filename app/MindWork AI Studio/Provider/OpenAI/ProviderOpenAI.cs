@@ -241,6 +241,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         return this.LoadModels(["text-embedding-"], token, apiKeyProvisional);
     }
     
+    /// <inheritdoc />
+    public override async Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        var models = await this.LoadModels(["whisper-", "gpt-"], token, apiKeyProvisional);
+        return models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
+                                     model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase));
+    }
+    
     #endregion
 
     private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)

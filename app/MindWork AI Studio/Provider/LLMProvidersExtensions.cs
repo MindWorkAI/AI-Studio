@@ -110,7 +110,7 @@ public static class LLMProvidersExtensions
     /// </summary>
     /// <param name="llmProvider">The provider to check.</param>
     /// <returns>True if the provider supports embeddings; otherwise, false.</returns>
-    public static bool ProvideEmbeddings(this LLMProviders llmProvider) => llmProvider switch
+    public static bool ProvideEmbeddingAPI(this LLMProviders llmProvider) => llmProvider switch
     {
         //
         // Providers that support embeddings:
@@ -141,6 +141,43 @@ public static class LLMProvidersExtensions
         
         _ => false,
     };
+    
+    public static bool ProvideTranscriptionAPI(this LLMProviders llmProvider) => llmProvider switch
+    {
+        //
+        // Providers that support transcription:
+        //
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.FIREWORKS => true,
+        LLMProviders.GWDG => true,
+        
+        //
+        // Providers that support transcription but provide no OpenAI-compatible API yet:
+        //
+        LLMProviders.ALIBABA_CLOUD => false,
+        LLMProviders.GOOGLE => false,
+        
+        //
+        // Providers that do not support transcription:
+        //
+        LLMProviders.OPEN_ROUTER => false,
+        LLMProviders.GROQ => false,
+        LLMProviders.ANTHROPIC => false,
+        LLMProviders.X => false,
+        LLMProviders.DEEP_SEEK => false,
+        LLMProviders.HUGGINGFACE => false,
+        LLMProviders.PERPLEXITY => false,
+        
+        LLMProviders.HELMHOLTZ => false,
+
+        //
+        // Self-hosted providers are treated as a special case anyway.
+        //
+        LLMProviders.SELF_HOSTED => true,
+        
+        _ => false,
+    };
 
     /// <summary>
     /// Creates a new provider instance based on the provider value.
@@ -160,6 +197,16 @@ public static class LLMProvidersExtensions
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings)
     {
         return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE);
+    }
+    
+    /// <summary>
+    /// Creates a new provider instance based on the speech provider value.
+    /// </summary>
+    /// <param name="transcriptionProviderSettings">The speech provider settings.</param>
+    /// <returns>The provider instance.</returns>
+    public static IProvider CreateProvider(this TranscriptionProvider transcriptionProviderSettings)
+    {
+        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.Model, HFInferenceProvider.NONE);
     }
     
     private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider, string expertProviderApiParameter = "")
@@ -274,6 +321,11 @@ public static class LLMProvidersExtensions
         LLMProviders.SELF_HOSTED => host is not Host.LM_STUDIO,
         _ => false,
     };
+    
+    public static bool IsTranscriptionModelProvidedManually(this LLMProviders provider, Host host) => provider switch
+    {
+        _ => false,
+    };
 
     public static bool IsHostNeeded(this LLMProviders provider) => provider switch
     {
@@ -338,13 +390,14 @@ public static class LLMProvidersExtensions
             switch (host)
             {
                 case Host.NONE:
-                case Host.LLAMACPP:
+                case Host.LLAMA_CPP:
                 default:
                     return false;
 
                 case Host.OLLAMA:
                 case Host.LM_STUDIO:
                 case Host.VLLM:
+                case Host.WHISPER_CPP:
                     return true;
             }
         }

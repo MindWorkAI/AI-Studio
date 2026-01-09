@@ -112,6 +112,11 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
             .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+    }
     
     #endregion
 

@@ -15,7 +15,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
     [Parameter]
     public EventCallback<List<ConfigurationSelectData<string>>> AvailableEmbeddingProvidersChanged { get; set; }
     
-    private string GetEmbeddingProviderModelName(EmbeddingProvider provider)
+    private static string GetEmbeddingProviderModelName(EmbeddingProvider provider)
     {
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
