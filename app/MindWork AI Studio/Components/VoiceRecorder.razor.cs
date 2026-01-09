@@ -1,3 +1,4 @@
+using AIStudio.Provider;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.Services;
 
@@ -9,21 +10,30 @@ public partial class VoiceRecorder : MSGComponentBase
 {
     [Inject]
     private ILogger<VoiceRecorder> Logger { get; init; } = null!;
-    
+
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
-    
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
+
     private uint numReceivedChunks;
     private bool isRecording;
+    private bool isTranscribing;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
     private string? currentRecordingMimeType;
+    private string? finalRecordingPath;
     private DotNetObjectReference<VoiceRecorder>? dotNetReference;
-    
-    private string Tooltip => this.isRecording ? T("Stop recording and start transcription") : T("Start recording your voice for a transcription");
+
+    private string Tooltip => this.isTranscribing
+        ? T("Transcription in progress...")
+        : this.isRecording
+            ? T("Stop recording and start transcription")
+            : T("Start recording your voice for a transcription");
     
     private async Task OnRecordingToggled(bool toggled)
     {
@@ -66,6 +76,10 @@ public partial class VoiceRecorder : MSGComponentBase
 
             this.isRecording = false;
             this.StateHasChanged();
+
+            // Start transcription if we have a recording and a configured provider:
+            if (this.finalRecordingPath is not null)
+                await this.TranscribeRecordingAsync();
         }
     }
 
@@ -127,6 +141,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
     private async Task FinalizeRecordingStream()
     {
+        this.finalRecordingPath = null;
         if (this.currentRecordingStream is not null)
         {
             await this.currentRecordingStream.FlushAsync();
@@ -142,6 +157,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 if (File.Exists(this.currentRecordingPath))
                 {
                     File.Move(this.currentRecordingPath, newPath, overwrite: true);
+                    this.finalRecordingPath = newPath;
                     this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}'.", this.numReceivedChunks, newPath);
                 }
             }
@@ -168,6 +184,105 @@ public partial class VoiceRecorder : MSGComponentBase
             "audio/x-wav" => ".wav",
             _ => ".audio" // Fallback
         };
+    }
+
+    private async Task TranscribeRecordingAsync()
+    {
+        if (this.finalRecordingPath is null)
+            return;
+
+        this.isTranscribing = true;
+        this.StateHasChanged();
+
+        try
+        {
+            // Get the configured transcription provider ID:
+            var transcriptionProviderId = this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider;
+            if (string.IsNullOrWhiteSpace(transcriptionProviderId))
+            {
+                this.Logger.LogWarning("No transcription provider is configured.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("No transcription provider is configured.")));
+                return;
+            }
+
+            // Find the transcription provider in the list of configured providers:
+            var transcriptionProviderSettings = this.SettingsManager.ConfigurationData.TranscriptionProviders
+                .FirstOrDefault(x => x.Id == transcriptionProviderId);
+
+            if (transcriptionProviderSettings is null)
+            {
+                this.Logger.LogWarning("The configured transcription provider with ID '{ProviderId}' was not found.", transcriptionProviderId);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider was not found.")));
+                return;
+            }
+
+            // Check the confidence level:
+            var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.NONE);
+            var providerConfidence = transcriptionProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager);
+            if (providerConfidence.Level < minimumLevel)
+            {
+                this.Logger.LogWarning(
+                    "The configured transcription provider '{ProviderName}' has a confidence level of '{ProviderLevel}', which is below the minimum required level of '{MinimumLevel}'.",
+                    transcriptionProviderSettings.Name,
+                    providerConfidence.Level,
+                    minimumLevel);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider does not meet the minimum confidence level.")));
+                return;
+            }
+
+            // Create the provider instance:
+            var provider = transcriptionProviderSettings.CreateProvider();
+            if (provider.Provider is LLMProviders.NONE)
+            {
+                this.Logger.LogError("Failed to create the transcription provider instance.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("Failed to create the transcription provider.")));
+                return;
+            }
+
+            // Call the transcription API:
+            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.Name, transcriptionProviderSettings.Model.DisplayName);
+            var transcribedText = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
+
+            if (string.IsNullOrWhiteSpace(transcribedText))
+            {
+                this.Logger.LogWarning("The transcription result is empty.");
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The transcription result is empty.")));
+                return;
+            }
+
+            this.Logger.LogInformation("Transcription completed successfully. Result length: {Length} characters.", transcribedText.Length);
+
+            // Play the transcription done sound effect:
+            await this.JsRuntime.InvokeVoidAsync("playSound", "/sounds/transcription_done.ogg");
+
+            // Copy the transcribed text to the clipboard:
+            await this.RustService.CopyText2Clipboard(this.Snackbar, transcribedText);
+
+            // Delete the recording file:
+            try
+            {
+                if (File.Exists(this.finalRecordingPath))
+                {
+                    File.Delete(this.finalRecordingPath);
+                    this.Logger.LogInformation("Deleted the recording file '{RecordingPath}'.", this.finalRecordingPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", this.finalRecordingPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "An error occurred during transcription.");
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("An error occurred during transcription.")));
+        }
+        finally
+        {
+            this.finalRecordingPath = null;
+            this.isTranscribing = false;
+            this.StateHasChanged();
+        }
     }
 
     private sealed class AudioRecordingResult
