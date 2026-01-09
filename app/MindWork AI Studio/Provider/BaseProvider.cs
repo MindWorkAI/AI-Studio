@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -6,9 +7,14 @@ using System.Text.Json.Serialization;
 using AIStudio.Chat;
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
+using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+
+using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Provider;
 
@@ -88,6 +94,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, CancellationToken token = default);
+    
+    /// <inheritdoc />
+    public abstract Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <inheritdoc />
     public abstract Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
@@ -536,6 +545,48 @@ public abstract class BaseProvider : IProvider, ISecretId
         streamReader.Dispose();
     }
 
+    protected async Task<string> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
+    {
+        try
+        {
+            using var form = new MultipartFormDataContent();
+            var mimeType = Builder.FromFilename(audioFilePath);
+        
+            await using var fileStream = File.OpenRead(audioFilePath);
+            using var fileContent = new StreamContent(fileStream);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+
+            form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
+            form.Add(new StringContent(transcriptionModel.Id), "model");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
+            request.Content = form;
+        
+            if(requestedSecret.Success)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+	
+            using var response = await this.httpClient.SendAsync(request, token);
+            var responseBody = response.Content.ReadAsStringAsync(token).Result;
+        
+            if (!response.IsSuccessStatusCode)
+                return string.Empty;
+        
+            var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
+            if(transcriptionResponse is null)
+            {
+                this.logger.LogError("Was not able to deserialize the transcription response.");
+                return string.Empty;
+            }
+
+            return transcriptionResponse.Text;
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
+            return string.Empty;
+        }
+    }
+    
     /// <summary>
     /// Parse and convert API parameters from a provided JSON string into a dictionary,
     /// optionally merging additional parameters and removing specific keys.
