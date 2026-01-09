@@ -27,28 +27,28 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+window.playSound = function(soundPath) {
+    try {
+        const audio = new Audio(soundPath);
+        audio.play().catch(error => {
+            console.warn('Failed to play sound effect:', error);
+        });
+    } catch (error) {
+        console.warn('Error creating audio element:', error);
+    }
+};
+
 let mediaRecorder;
 let actualRecordingMimeType;
 let changedMimeType = false;
 let pendingChunkUploads = 0;
 
 window.audioRecorder = {
-    playSound: function(soundPath) {
-        try {
-            const audio = new Audio(soundPath);
-            audio.play().catch(error => {
-                console.warn('Failed to play sound effect:', error);
-            });
-        } catch (error) {
-            console.warn('Error creating audio element:', error);
-        }
-    },
-
     start: async function (dotnetRef, desiredMimeTypes = []) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // Play start recording sound effect:
-        this.playSound('/sounds/start_recording.ogg');
+        window.playSound('/sounds/start_recording.ogg');
 
         // When only one mime type is provided as a string, convert it to an array:
         if (typeof desiredMimeTypes === 'string') {
@@ -138,7 +138,7 @@ window.audioRecorder = {
                 console.log('Audio recording - all chunks uploaded, finalizing.');
 
                 // Play stop recording sound effect:
-                window.audioRecorder.playSound('/sounds/stop_recording.ogg');
+                window.playSound('/sounds/stop_recording.ogg');
 
                 // Stop all tracks to release the microphone:
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
