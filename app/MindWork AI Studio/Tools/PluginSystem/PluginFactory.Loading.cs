@@ -133,6 +133,10 @@ public static partial class PluginFactory
         // Check LLM providers:
         var wasConfigurationChanged = PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, configObjectList);
 
+        // Check transcription providers:
+        if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, configObjectList))
+            wasConfigurationChanged = true;
+
         // Check embedding providers:
         if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
@@ -167,6 +171,10 @@ public static partial class PluginFactory
         
         // Check for enabled preview features:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check for the transcription provider:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UseTranscriptionProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)

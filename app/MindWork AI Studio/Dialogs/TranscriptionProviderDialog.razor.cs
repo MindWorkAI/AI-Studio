@@ -137,6 +137,8 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
+            IsEnterpriseConfiguration = false,
+            EnterpriseConfigurationPluginId = Guid.Empty,
         };
     }
     

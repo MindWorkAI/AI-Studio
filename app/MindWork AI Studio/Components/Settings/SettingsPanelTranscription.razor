@@ -33,18 +33,27 @@
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
                 <MudTd>@GetTranscriptionProviderModelName(context)</MudTd>
-                
+
                 <MudTd>
-                    <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                        <MudTooltip Text="@T("Open Dashboard")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
-                        </MudTooltip>
-                        <MudTooltip Text="@T("Edit")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditTranscriptionProvider(context))"/>
-                        </MudTooltip>
-                        <MudTooltip Text="@T("Delete")">
-                            <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteTranscriptionProvider(context))"/>
-                        </MudTooltip>
+                    <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                        @if (context.IsEnterpriseConfiguration)
+                        {
+                            <MudTooltip Text="@T("This transcription provider is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="@T("Open Dashboard")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Edit")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditTranscriptionProvider(context))"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Delete")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteTranscriptionProvider(context))"/>
+                            </MudTooltip>
+                        }
                     </MudStack>
                 </MudTd>
             </RowTemplate>
