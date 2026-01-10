@@ -17,14 +17,15 @@ public sealed partial class RustService
         if (!result.IsSuccessStatusCode)
         {
             if(!isTrying)
-                this.logger!.LogError($"Failed to get the API key for secret ID '{secretId.SecretId}' due to an API issue: '{result.StatusCode}'");
+                this.logger!.LogError($"Failed to get the API key for 'provider::{secretId.SecretId}::{secretId.SecretName}::api_key' due to an API issue: '{result.StatusCode}'");
             return new RequestedSecret(false, new EncryptedText(string.Empty), TB("Failed to get the API key due to an API issue."));
         }
         
         var secret = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
         if (!secret.Success && !isTrying)
-            this.logger!.LogError($"Failed to get the API key for secret ID '{secretId.SecretId}': '{secret.Issue}'");
+            this.logger!.LogError($"Failed to get the API key for 'provider::{secretId.SecretId}::{secretId.SecretName}::api_key': '{secret.Issue}'");
         
+        this.logger!.LogDebug($"Successfully retrieved the API key for 'provider::{secretId.SecretId}::{secretId.SecretName}::api_key'.");
         return secret;
     }
     
@@ -41,14 +42,15 @@ public sealed partial class RustService
         var result = await this.http.PostAsJsonAsync("/secrets/store", request, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
         {
-            this.logger!.LogError($"Failed to store the API key for secret ID '{secretId.SecretId}' due to an API issue: '{result.StatusCode}'");
+            this.logger!.LogError($"Failed to store the API key for 'provider::{secretId.SecretId}::{secretId.SecretName}::api_key' due to an API issue: '{result.StatusCode}'");
             return new StoreSecretResponse(false, TB("Failed to get the API key due to an API issue."));
         }
         
         var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>(this.jsonRustSerializerOptions);
         if (!state.Success)
-            this.logger!.LogError($"Failed to store the API key for secret ID '{secretId.SecretId}': '{state.Issue}'");
+            this.logger!.LogError($"Failed to store the API key for 'provider::{secretId.SecretId}::{secretId.SecretName}::api_key': '{state.Issue}'");
         
+        this.logger!.LogDebug($"Successfully stored the API key for 'provider::{secretId.SecretId}::{secretId.SecretName}::api_key'.");
         return state;
     }
     
