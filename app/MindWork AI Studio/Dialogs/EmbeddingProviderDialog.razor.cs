@@ -197,7 +197,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataId;
+    public string SecretId => this.DataLLMProvider.ToName();
     
     public string SecretName => this.DataName;
 
