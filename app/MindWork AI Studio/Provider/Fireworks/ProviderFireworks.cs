@@ -110,11 +110,12 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
+        // Source: https://docs.fireworks.ai/api-reference/audio-transcriptions#param-model
         return Task.FromResult<IEnumerable<Model>>(
             new List<Model>
             {
                 new("whisper-v3", "Whisper v3"),
-                new("whisper-v3-turbo", "Whisper v3 Turbo"),
+                // new("whisper-v3-turbo", "Whisper v3 Turbo"), // does not work
             });
     }
     

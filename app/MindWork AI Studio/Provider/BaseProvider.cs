@@ -571,6 +571,16 @@ public abstract class BaseProvider : IProvider, ISecretId
                     
                     break;
                 
+                case LLMProviders.FIREWORKS:
+                    if(!requestedSecret.Success)
+                    {
+                        this.logger.LogError("No valid API key available for transcription request.");
+                        return string.Empty;
+                    }
+                    
+                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    break;
+                
                 default:
                     if(!requestedSecret.Success)
                     {
@@ -578,6 +588,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return string.Empty;
                     }
                     
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
                     break;
             }
             
