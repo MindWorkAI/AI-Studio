@@ -190,7 +190,7 @@ public partial class Information : MSGComponentBase
 
         ## Notice
 
-        Copyright 2025 Thorsten Sommer
+        Copyright 2026 Thorsten Sommer
 
         ## Terms and Conditions
 

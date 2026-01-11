@@ -64,11 +64,11 @@
       },
       "ReverseMarkdown": {
         "type": "Direct",
-        "requested": "[4.7.1, )",
-        "resolved": "4.7.1",
-        "contentHash": "Tz8yJXg8J1O9xJn6fXzjeEcLTYjfwbauCGwK4f/dpxOOpo3iniXIggmRlJ7F91yHJPB0Gm4lk1/qV0Jxip4a8A==",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "Zw7ODMO/P8b4ua9qFdsmZPkPmYGCcSfwhKo8+81PCS0e6P21c9sOlYwVJ3MCEWZAGW+CXJBdF3FKtXKWZWzFTg==",
         "dependencies": {
-          "HtmlAgilityPack": "1.12.1"
+          "HtmlAgilityPack": "1.12.4"
         }
       },
       "BuildBundlerMinifier": {
