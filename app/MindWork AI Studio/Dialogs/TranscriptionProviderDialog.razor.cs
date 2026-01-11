@@ -248,6 +248,12 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     }
 
     private void Cancel() => this.MudDialog.Cancel();
+
+    private void OnAPIKeyChanged(string apiKey)
+    {
+        this.dataAPIKey = apiKey;
+        this.dataAPIKeyStorageIssue = string.Empty;
+    }
     
     private async Task ReloadModels()
     {
