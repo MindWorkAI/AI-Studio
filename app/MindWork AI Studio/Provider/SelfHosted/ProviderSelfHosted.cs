@@ -26,7 +26,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: true);
         
         // Prepare the system prompt:
         var systemPrompt = new TextMessage
@@ -91,7 +91,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     /// <inheritdoc />
     public override async Task<string> TranscribeAudioAsync(Provider.Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, isTrying: true);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER, isTrying: true);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, host, token);
     }
     
@@ -109,7 +109,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels(["embed"], [], token, apiKeyProvisional);
+                    return await this.LoadModels( SecretStoreType.LLM_PROVIDER, ["embed"], [], token, apiKeyProvisional);
             }
 
             return [];
@@ -136,7 +136,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels([], ["embed"], token, apiKeyProvisional);
+                    return await this.LoadModels( SecretStoreType.EMBEDDING_PROVIDER, [], ["embed"], token, apiKeyProvisional);
             }
 
             return [];
@@ -164,7 +164,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return this.LoadModels([], [], token, apiKeyProvisional);
+                    return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], token, apiKeyProvisional);
                 
                 default:
                     return Task.FromResult(Enumerable.Empty<Provider.Model>());
@@ -179,12 +179,12 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     
     #endregion
 
-    private async Task<IEnumerable<Provider.Model>> LoadModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Provider.Model>> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, isTrying: true) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: true) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

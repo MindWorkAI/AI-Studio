@@ -107,7 +107,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.LLM_PROVIDER);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
