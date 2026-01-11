@@ -138,6 +138,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     protected override async Task OnInitializedAsync()
     {
+        // Call the base initialization first so that the I18N is ready:
+        await base.OnInitializedAsync();
+        
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
@@ -179,8 +182,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
             await this.ReloadModels();
         }
-        
-        await base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
