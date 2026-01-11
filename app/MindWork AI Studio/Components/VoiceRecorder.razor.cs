@@ -249,6 +249,12 @@ public partial class VoiceRecorder : MSGComponentBase
                 await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The transcription result is empty.")));
                 return;
             }
+            
+            // Replace line breaks with spaces:
+            transcribedText = transcribedText.Replace("\r", " ").Replace("\n", " ");
+            
+            // Replace two spaces with a single space:
+            transcribedText = transcribedText.Replace("  ", " ");
 
             this.Logger.LogInformation("Transcription completed successfully. Result length: {Length} characters.", transcribedText.Length);
 
