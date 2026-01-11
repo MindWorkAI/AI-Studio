@@ -250,6 +250,9 @@ public partial class VoiceRecorder : MSGComponentBase
                 return;
             }
             
+            // Remove trailing and leading whitespace:
+            transcribedText = transcribedText.Trim();
+            
             // Replace line breaks with spaces:
             transcribedText = transcribedText.Replace("\r", " ").Replace("\n", " ");
             
