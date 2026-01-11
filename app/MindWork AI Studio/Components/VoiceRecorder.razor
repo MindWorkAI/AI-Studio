@@ -6,11 +6,18 @@
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager) && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
 {
     <MudTooltip Text="@this.Tooltip">
-        <MudToggleIconButton Toggled="@this.isRecording"
-                             ToggledChanged="@this.OnRecordingToggled"
-                             Icon="@Icons.Material.Filled.Mic"
-                             ToggledIcon="@Icons.Material.Filled.Stop"
-                             Color="Color.Primary"
-                             ToggledColor="Color.Error"/>
+        @if (this.isTranscribing)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary"/>
+        }
+        else
+        {
+            <MudToggleIconButton Toggled="@this.isRecording"
+                                 ToggledChanged="@this.OnRecordingToggled"
+                                 Icon="@Icons.Material.Filled.Mic"
+                                 ToggledIcon="@Icons.Material.Filled.Stop"
+                                 Color="Color.Primary"
+                                 ToggledColor="Color.Error"/>
+        }
     </MudTooltip>
 }

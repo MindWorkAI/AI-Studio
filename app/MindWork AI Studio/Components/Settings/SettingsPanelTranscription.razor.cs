@@ -100,13 +100,13 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.TRANSCRIPTION_PROVIDER);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.TranscriptionProviders.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
-        
+
         await this.UpdateTranscriptionProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }

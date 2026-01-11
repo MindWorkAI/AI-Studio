@@ -25,7 +25,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
 
@@ -81,6 +81,13 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override async Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
@@ -103,11 +110,12 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
+        // Source: https://docs.fireworks.ai/api-reference/audio-transcriptions#param-model
         return Task.FromResult<IEnumerable<Model>>(
             new List<Model>
             {
                 new("whisper-v3", "Whisper v3"),
-                new("whisper-v3-turbo", "Whisper v3 Turbo"),
+                // new("whisper-v3-turbo", "Whisper v3 Turbo"), // does not work
             });
     }
     

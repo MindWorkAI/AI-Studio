@@ -38,6 +38,8 @@ public class NoProvider : IProvider
         yield break;
     }
 
+    public Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default) => Task.FromResult(string.Empty);
+    
     public IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => [ Capability.NONE ];
 
     #endregion
