@@ -1,11 +1,11 @@
-0.10.0
-2025-12-31 14:04:01 UTC
-230
+26.1.1
+2026-01-11 15:53:55 UTC
+231
 9.0.112 (commit 49aa03442a)
 9.0.11 (commit fa7cdded37)
 1.92.0 (commit ded5c06cf)
 8.15.0
 1.8.1
-783782bad99, release
+4cf44e91d2c, release
 osx-arm64
 137.0.7215.0
