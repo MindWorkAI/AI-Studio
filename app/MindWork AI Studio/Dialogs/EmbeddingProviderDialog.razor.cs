@@ -241,10 +241,14 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     private void Cancel() => this.MudDialog.Cancel();
 
-    private void OnAPIKeyChanged(string apiKey)
+    private async Task OnAPIKeyChanged(string apiKey)
     {
         this.dataAPIKey = apiKey;
-        this.dataAPIKeyStorageIssue = string.Empty;
+        if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
+        {
+            this.dataAPIKeyStorageIssue = string.Empty;
+            await this.form.Validate();
+        }
     }
     
     private async Task ReloadModels()
