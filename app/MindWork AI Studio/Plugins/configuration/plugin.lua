@@ -75,7 +75,7 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 
 -- An example of a transcription provider configuration:
 -- CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
---     ["Id"] = "00000000-0000-0000-0000-000000000001",
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
 --     ["Name"] = "<user-friendly name for the transcription provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
