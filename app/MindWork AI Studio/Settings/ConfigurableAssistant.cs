@@ -5,6 +5,9 @@ namespace AIStudio.Settings;
 /// </summary>
 public enum ConfigurableAssistant
 {
+    NONE = 0,
+    UNKNOWN = 1,
+    
     GRAMMAR_SPELLING_ASSISTANT,
     ICON_FINDER_ASSISTANT,
     REWRITE_ASSISTANT,
