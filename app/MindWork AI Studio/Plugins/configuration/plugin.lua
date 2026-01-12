@@ -143,6 +143,16 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
 -- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
 
+-- Configure which assistants should be hidden from the UI.
+-- Allowed values are:
+--   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
+--   TRANSLATION_ASSISTANT, AGENDA_ASSISTANT, CODING_ASSISTANT,
+--   TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT, LEGAL_CHECK_ASSISTANT,
+--   SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT, JOB_POSTING_ASSISTANT,
+--   BIAS_DAY_ASSISTANT, ERI_ASSISTANT, DOCUMENT_ANALYSIS_ASSISTANT,
+--   I18N_ASSISTANT
+-- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 

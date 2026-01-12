@@ -177,6 +177,10 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UseTranscriptionProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
+        // Check for hidden assistants:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HiddenAssistants, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
         if (wasConfigurationChanged)
         {
             await SETTINGS_MANAGER.StoreSettings();
