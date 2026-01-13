@@ -6,11 +6,11 @@ use std::path::{absolute, PathBuf};
 use std::sync::OnceLock;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
-use log::kv;
+use log::{kv, Level};
 use log::kv::{Key, Value, VisitSource};
-use rocket::get;
+use rocket::{get, post};
 use rocket::serde::json::Json;
-use rocket::serde::Serialize;
+use rocket::serde::{Deserialize, Serialize};
 use crate::api_token::APIToken;
 use crate::environment::is_dev;
 
@@ -65,6 +65,7 @@ pub fn init_logging() {
         .duplicate_to_stdout(Duplicate::All)
         .use_utc()
         .format_for_files(file_logger_format)
+        .set_palette("196;208;34;7;8".to_string()) // error, warn, info, debug, trace
         .format_for_stderr(terminal_colored_logger_format)
         .format_for_stdout(terminal_colored_logger_format)
         .start().expect("Cannot start logging");
@@ -231,9 +232,88 @@ pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
     })
 }
 
+/// Converts a .NET log level string to a Rust log::Level.
+fn parse_dotnet_log_level(level: &str) -> Level {
+    match level {
+        "Trace" | "Debug" => Level::Debug,
+        "Information" => Level::Info,
+        "Warning" => Level::Warn,
+        "Error" | "Critical" => Level::Error,
+
+        _ => Level::Error, // Fallback for unknown levels
+    }
+}
+
+/// Logs a message with the specified level, including optional exception and stack trace.
+fn log_with_level(
+    level: Level,
+    category: &str,
+    message: &str,
+    exception: Option<&String>,
+    stack_trace: Option<&String>
+) {
+    // Log the main message:
+    log::log!(level, Source = ".NET Server", Comp = category; "{message}");
+
+    // Log exception if present:
+    if let Some(ex) = exception {
+        log::log!(level, Source = ".NET Server", Comp = category; "  Exception: {ex}");
+    }
+
+    // Log stack trace if present:
+    if let Some(stack_trace) = stack_trace {
+        for line in stack_trace.lines() {
+            log::log!(level, Source = ".NET Server", Comp = category; "    {line}");
+        }
+    }
+}
+
+/// Logs an event from the .NET server.
+#[post("/log/event", data = "<event>")]
+pub fn log_event(_token: APIToken, event: Json<LogEvent>) -> Json<LogEventResponse> {
+    let event = event.into_inner();
+    let level = parse_dotnet_log_level(&event.level);
+    let message = event.message.as_str();
+    let category = event.category.as_str();
+
+    log_with_level(
+        level,
+        category,
+        message,
+        event.exception.as_ref(),
+        event.stack_trace.as_ref()
+    );
+
+    // Log warning for unknown levels:
+    if !matches!(event.level.as_str(), "Trace" | "Debug" | "Information" | "Warning" | "Error" | "Critical") {
+        log::warn!(Source = ".NET Server", Comp = category; "Unknown log level '{}' received.", event.level);
+    }
+
+    Json(LogEventResponse { success: true, issue: String::new() })
+}
+
 /// The response the get log paths request.
 #[derive(Serialize)]
 pub struct LogPathsResponse {
     log_startup_path: String,
     log_app_path: String,
+}
+
+/// A log event from the .NET server.
+#[derive(Deserialize)]
+#[allow(unused)]
+pub struct LogEvent {
+    timestamp: String,
+    level: String,
+    category: String,
+    message: String,
+    exception: Option<String>,
+    stack_trace: Option<String>,
+}
+
+/// The response to a log event request.
+#[derive(Serialize)]
+pub struct LogEventResponse {
+    success: bool,
+    issue: String,
 }

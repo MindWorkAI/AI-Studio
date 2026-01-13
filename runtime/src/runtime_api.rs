@@ -86,6 +86,7 @@ pub fn start_runtime_api() {
                 crate::environment::read_enterprise_env_config_server_url,
                 crate::file_data::extract_data,
                 crate::log::get_log_paths,
+                crate::log::log_event,
             ])
             .ignite().await.unwrap()
             .launch().await.unwrap();
