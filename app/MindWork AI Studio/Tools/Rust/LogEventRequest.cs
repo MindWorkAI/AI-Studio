@@ -5,5 +5,6 @@ public readonly record struct LogEventRequest(
     string Level,
     string Category,
     string Message,
-    string? Exception
+    string? Exception,
+    string? StackTrace
 );

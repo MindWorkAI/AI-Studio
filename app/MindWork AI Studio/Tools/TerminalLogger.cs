@@ -33,17 +33,26 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
         var timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
         var logLevel = logEntry.LogLevel.ToString();
         var category = logEntry.Category;
-        var exception = logEntry.Exception?.ToString();
+        var exceptionMessage = logEntry.Exception?.Message;
+        var stackTrace = logEntry.Exception?.StackTrace;
         var colorCode = GetColorForLogLevel(logEntry.LogLevel);
 
-        textWriter.Write($"{colorCode}[{timestamp}] {logLevel} [{category}]{ANSI_RESET} {message}");
-        if (exception is not null)
-            textWriter.Write($" Exception: {exception}");
-
-        textWriter.WriteLine();
+        textWriter.Write($"[{colorCode}{timestamp}{ANSI_RESET}] {colorCode}{logLevel}{ANSI_RESET} [{category}] {colorCode}{message}{ANSI_RESET}");
+        if (logEntry.Exception is not null)
+        {
+            textWriter.Write($"   {colorCode}Exception: {exceptionMessage}{ANSI_RESET}");
+            if (stackTrace is not null)
+            {
+                textWriter.WriteLine();
+                foreach (var line in stackTrace.Split('\n'))
+                    textWriter.WriteLine($"      {line.TrimEnd()}");
+            }
+        }
+        else
+            textWriter.WriteLine();
 
         // Send log event to Rust via API (fire-and-forget):
-        RUST_SERVICE?.LogEvent(timestamp, logLevel, category, message, exception);
+        RUST_SERVICE?.LogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace);
     }
 
     private static string GetColorForLogLevel(LogLevel logLevel) => logLevel switch

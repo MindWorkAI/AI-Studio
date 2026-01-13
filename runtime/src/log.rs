@@ -240,16 +240,58 @@ pub fn log_event(_token: APIToken, event: Json<LogEvent>) -> Json<LogEventRespon
 
     // Log with the appropriate level
     match event.level.as_str() {
-        "Trace" | "Debug" => debug!(Source = ".NET Server", Comp = category; "{message}"),
-        "Information" => info!(Source = ".NET Server", Comp = category; "{message}"),
-        "Warning" => warn!(Source = ".NET Server", Comp = category; "{message}"),
-        "Error" | "Critical" => {
+        "Trace" | "Debug" => {
+            debug!(Source = ".NET Server", Comp = category; "{message}");
             if let Some(ref ex) = event.exception {
-                error!(Source = ".NET Server", Comp = category; "{message} Exception: {ex}")
-            } else {
-                error!(Source = ".NET Server", Comp = category; "{message}")
+                debug!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
+            }
+
+            if let Some(ref stack_trace) = event.stack_trace {
+                for line in stack_trace.lines() {
+                    debug!(Source = ".NET Server", Comp = category; "    {line}");
+                }
             }
         },
+
+        "Information" => {
+            info!(Source = ".NET Server", Comp = category; "{message}");
+            if let Some(ref ex) = event.exception {
+                info!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
+            }
+
+            if let Some(ref stack_trace) = event.stack_trace {
+                for line in stack_trace.lines() {
+                    info!(Source = ".NET Server", Comp = category; "    {line}");
+                }
+            }
+        },
+
+        "Warning" => {
+            warn!(Source = ".NET Server", Comp = category; "{message}");
+            if let Some(ref ex) = event.exception {
+                warn!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
+            }
+
+            if let Some(ref stack_trace) = event.stack_trace {
+                for line in stack_trace.lines() {
+                    warn!(Source = ".NET Server", Comp = category; "    {line}");
+                }
+            }
+        },
+
+        "Error" | "Critical" => {
+            error!(Source = ".NET Server", Comp = category; "{message}");
+            if let Some(ref ex) = event.exception {
+                error!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
+            }
+
+            if let Some(ref stack_trace) = event.stack_trace {
+                for line in stack_trace.lines() {
+                    error!(Source = ".NET Server", Comp = category; "    {line}");
+                }
+            }
+        },
+
         _ => error!(Source = ".NET Server", Comp = category; "{message} (unknown log level '{}')", event.level),
     }
 
@@ -272,6 +314,7 @@ pub struct LogEvent {
     category: String,
     message: String,
     exception: Option<String>,
+    stack_trace: Option<String>,
 }
 
 /// The response to a log event request.
