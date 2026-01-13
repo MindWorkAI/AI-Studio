@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,7 +15,7 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     private static RustService? RUST_SERVICE;
 
     // Buffer for early log events before RustService is available
-    private static readonly ConcurrentQueue<BufferedLogEvent> EARLY_LOG_BUFFER = new();
+    private static readonly ConcurrentQueue<LogEventRequest> EARLY_LOG_BUFFER = new();
 
     // ANSI color codes for log levels
     private const string ANSI_RESET = "\x1b[0m";
@@ -36,10 +37,10 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
         {
             service.LogEvent(
                 bufferedEvent.Timestamp,
-                bufferedEvent.LogLevel,
+                bufferedEvent.Level,
                 bufferedEvent.Category,
                 bufferedEvent.Message,
-                bufferedEvent.ExceptionMessage,
+                bufferedEvent.Exception,
                 bufferedEvent.StackTrace
             );
         }
@@ -77,21 +78,9 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
         else
         {
             // Buffer early log events until RustService is available
-            EARLY_LOG_BUFFER.Enqueue(new BufferedLogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace));
+            EARLY_LOG_BUFFER.Enqueue(new LogEventRequest(timestamp, logLevel, category, message, exceptionMessage, stackTrace));
         }
     }
-
-    /// <summary>
-    /// Represents a buffered log event for early logging before RustService is available.
-    /// </summary>
-    private readonly record struct BufferedLogEvent(
-        string Timestamp,
-        string LogLevel,
-        string Category,
-        string Message,
-        string? ExceptionMessage,
-        string? StackTrace
-    );
 
     private static string GetColorForLogLevel(LogLevel logLevel) => logLevel switch
     {
