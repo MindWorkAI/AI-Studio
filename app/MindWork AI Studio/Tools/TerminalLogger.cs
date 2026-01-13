@@ -14,10 +14,10 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
 
     private static RustService? RUST_SERVICE;
 
-    // Buffer for early log events before RustService is available
+    // Buffer for early log events before the RustService is available:
     private static readonly ConcurrentQueue<LogEventRequest> EARLY_LOG_BUFFER = new();
 
-    // ANSI color codes for log levels
+    // ANSI color codes for log levels:
     private const string ANSI_RESET = "\x1b[0m";
     private const string ANSI_GRAY = "\x1b[90m";      // Trace, Debug
     private const string ANSI_GREEN = "\x1b[32m";     // Information
@@ -32,7 +32,7 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     {
         RUST_SERVICE = service;
 
-        // Flush all buffered early log events to Rust in original order
+        // Flush all buffered early log events to Rust in the original order:
         while (EARLY_LOG_BUFFER.TryDequeue(out var bufferedEvent))
         {
             service.LogEvent(
@@ -72,14 +72,11 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
 
         // Send log event to Rust via API (fire-and-forget):
         if (RUST_SERVICE is not null)
-        {
             RUST_SERVICE.LogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace);
-        }
+        
+        // Buffer early log events until the RustService is available:
         else
-        {
-            // Buffer early log events until RustService is available
             EARLY_LOG_BUFFER.Enqueue(new LogEventRequest(timestamp, logLevel, category, message, exceptionMessage, stackTrace));
-        }
     }
 
     private static string GetColorForLogLevel(LogLevel logLevel) => logLevel switch
@@ -90,6 +87,7 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
         LogLevel.Warning => ANSI_YELLOW,
         LogLevel.Error => ANSI_RED,
         LogLevel.Critical => ANSI_RED,
+        
         _ => ANSI_RESET
     };
 }

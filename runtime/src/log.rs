@@ -276,7 +276,6 @@ pub fn log_event(_token: APIToken, event: Json<LogEvent>) -> Json<LogEventRespon
     let message = event.message.as_str();
     let category = event.category.as_str();
 
-    // Log with the parsed level
     log_with_level(
         level,
         category,
