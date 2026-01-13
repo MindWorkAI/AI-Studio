@@ -344,7 +344,7 @@ jobs:
           echo "Cleaning up ..."
           rm -fr "$TMP"
           
-      - name: Install PDFium (Windows)
+      - name: Deploy PDFium (Windows)
         if: matrix.platform == 'windows-latest'
         env:
           PDFIUM_VERSION: ${{ env.PDFIUM_VERSION }}
@@ -464,7 +464,7 @@ jobs:
           echo "Cleaning up ..."
           rm -fr "$TMP"
 
-      - name: Install Qdrant (Windows)
+      - name: Deploy Qdrant (Windows)
         if: matrix.platform == 'windows-latest'
         env:
           QDRANT_VERSION: ${{ env.QDRANT_VERSION }}
@@ -478,6 +478,11 @@ jobs:
               $QDRANT_FILE = "x86_64-pc-windows-msvc.zip"
               $DB_SOURCE = "qdrant.exe"
               $DB_TARGET = "qdrant.exe"
+            }
+            "win-arm64" {
+              $QDRANT_FILE = "x86_64-pc-windows-msvc.zip"
+              $DB_SOURCE = "qdrant.exe"
+              $DB_TARGET = "qdrant.exe""
             }
             default {
               Write-Error "Unknown platform: $($env:DOTNET_RUNTIME)"

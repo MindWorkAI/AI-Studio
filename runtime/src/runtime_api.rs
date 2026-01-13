@@ -3,7 +3,7 @@ use once_cell::sync::Lazy;
 use rocket::config::Shutdown;
 use rocket::figment::Figment;
 use rocket::routes;
-use crate::certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
+use crate::runtime_certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use crate::environment::is_dev;
 use crate::network::get_available_port;
 

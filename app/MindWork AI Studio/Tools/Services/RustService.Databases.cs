@@ -9,7 +9,7 @@ public sealed partial class RustService
         try
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-            var response = await this.http.GetFromJsonAsync<QdrantInfo>("/system/qdrant/port", this.jsonRustSerializerOptions, cts.Token);
+            var response = await this.http.GetFromJsonAsync<QdrantInfo>("/system/qdrant/info", this.jsonRustSerializerOptions, cts.Token);
             return response;
         }
         catch (Exception e)
@@ -20,6 +20,8 @@ public sealed partial class RustService
                 Path = string.Empty,
                 PortHttp = 0,
                 PortGrpc = 0,
+                Fingerprint = string.Empty,
+                ApiToken = string.Empty,
             };
         }
     }

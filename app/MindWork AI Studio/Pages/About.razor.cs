@@ -70,6 +70,8 @@ public partial class About : MSGComponentBase
     private bool showDatabaseDetails = false;
 
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+    
+    private List<(string Label, string Value)> DatabaseDisplayInfo = new();
 
     /// <summary>
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
@@ -104,6 +106,11 @@ public partial class About : MSGComponentBase
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
+        
+        await foreach (var item in this.DatabaseClient.GetDisplayInfo())
+        {
+            this.DatabaseDisplayInfo.Add(item);
+        }
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:

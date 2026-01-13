@@ -10,4 +10,6 @@ public record struct QdrantInfo
     public string Path { get; init; }
     public int PortHttp { get; init; }
     public int PortGrpc { get; init; }
+    public string Fingerprint { get; init; }
+    public string ApiToken { get; init; }
 }

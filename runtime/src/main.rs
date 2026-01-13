@@ -6,7 +6,7 @@ extern crate core;
 
 use log::{info, warn};
 use mindwork_ai_studio::app_window::start_tauri;
-use mindwork_ai_studio::certificate::{generate_certificate};
+use mindwork_ai_studio::runtime_certificate::{generate_runtime_certificate};
 use mindwork_ai_studio::dotnet::start_dotnet_server;
 use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
@@ -46,7 +46,7 @@ async fn main() {
         info!("Running in production mode.");
     }
 
-    generate_certificate();
+    generate_runtime_certificate();
     start_runtime_api();
     
     if is_dev() {

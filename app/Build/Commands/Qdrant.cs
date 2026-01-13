@@ -91,10 +91,11 @@ public static class Qdrant
         RID.OSX_ARM64 => new("qdrant", "qdrant-aarch64-apple-darwin"),
         RID.OSX_X64 => new("qdrant", "qdrant-x86_64-apple-darwin"),
         
-        RID.LINUX_ARM64 => new("qdrant", "qdrant-aarch64-unknown-linux-gnu"),
+        RID.LINUX_ARM64 => new("qdrant", "qdrant-aarch64-unknown-linux-musl"),
         RID.LINUX_X64 => new("qdrant", "qdrant-x86_64-unknown-linux-gnu"),
         
         RID.WIN_X64 => new("qdrant.exe", "qdrant-x86_64-pc-windows-msvc.exe"),
+        RID.WIN_ARM64 => new("qdrant.exe", "qdrant-aarch64-pc-windows-msvc.exe"),
         
         _ => new(string.Empty, string.Empty),
     };
@@ -111,7 +112,7 @@ public static class Qdrant
             RID.OSX_X64 => $"{baseUrl}x86_64-apple-darwin.tar.gz",
             
             RID.WIN_X64 => $"{baseUrl}x86_64-pc-windows-msvc.zip",
-            #warning We have to handle Qdrant for Windows ARM
+            RID.WIN_ARM64 => $"{baseUrl}x86_64-pc-windows-msvc.zip",
             
             _ => string.Empty,
         };

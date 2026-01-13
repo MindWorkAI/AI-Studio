@@ -1,57 +1,29 @@
 ﻿namespace AIStudio.Tools.Databases;
 
-public abstract class DatabaseClient
+public abstract class DatabaseClient(string name, string path)
 {
-    public string Name { get; }
-    private string Path { get; }
-
-    public DatabaseClient(string name, string path)
-    {
-        this.Name = name;
-        this.Path = path;
-    }
+    public string Name => name;
+    private string Path => path;
+    protected ILogger<DatabaseClient>? logger;
     
-    public abstract IEnumerable<(string Label, string Value)> GetDisplayInfo();
+    public abstract IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo();
 
     public string GetStorageSize()
     {
-        if (string.IsNullOrEmpty(this.Path))
+        if (string.IsNullOrWhiteSpace(this.Path))
         {
-            Console.WriteLine($"Error: Database path '{this.Path}' cannot be null or empty.");
+            this.logger!.LogError($"Error: Database path '{this.Path}' cannot be null or empty.");
             return "0 B";
         }
 
         if (!Directory.Exists(this.Path))
         {
-            Console.WriteLine($"Error: Database path '{this.Path}' does not exist.");
+            this.logger!.LogError($"Error: Database path '{this.Path}' does not exist.");
             return "0 B";
         }
-        long size = 0;
-        var stack = new Stack<string>();
-        stack.Push(this.Path);
-        while (stack.Count > 0)
-        {
-            string directory = stack.Pop();
-            try
-            {
-                var files = Directory.GetFiles(directory);
-                size += files.Sum(file => new FileInfo(file).Length);
-                var subDirectories = Directory.GetDirectories(directory);
-                foreach (var subDirectory in subDirectories)
-                {
-                    stack.Push(subDirectory);
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-                Console.WriteLine($"No access to {directory}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error encountered while processing {directory}: ");
-                Console.WriteLine($"{ ex.Message}");
-            }
-        }
+        var files = Directory.EnumerateFiles(this.Path, "*", SearchOption.AllDirectories)
+            .Where(file => !System.IO.Path.GetDirectoryName(file)!.Contains("cert", StringComparison.OrdinalIgnoreCase));
+        var size = files.Sum(file => new FileInfo(file).Length);
         return FormatBytes(size);
     }
     
@@ -68,4 +40,11 @@ public abstract class DatabaseClient
     
         return $"{size:0##} {suffixes[suffixIndex]}";
     }
+    
+    public void SetLogger(ILogger<DatabaseClient> logService)
+    {
+        this.logger = logService;
+    }
+
+    public abstract void Dispose();
 }

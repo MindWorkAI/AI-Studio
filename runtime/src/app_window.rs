@@ -17,7 +17,7 @@ use crate::dotnet::stop_dotnet_server;
 use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
-use crate::qdrant::start_qdrant_server;
+use crate::qdrant::{start_qdrant_server, stop_qdrant_server};
 
 /// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
@@ -174,6 +174,7 @@ pub fn start_tauri() {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
+                stop_qdrant_server();
             }
 
             RunEvent::Ready => {

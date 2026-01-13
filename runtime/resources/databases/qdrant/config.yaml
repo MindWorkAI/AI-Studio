@@ -332,10 +332,10 @@ telemetry_disabled: true
 # Required if either service.enable_tls or cluster.p2p.enable_tls is true.
 tls:
   # Server certificate chain file
-  cert: ./tls/cert.pem
+  # cert: ./tls/cert.pem
 
   # Server private key file
-  key: ./tls/key.pem
+  # key: ./tls/key.pem
 
   # Certificate authority certificate file.
   # This certificate will be used to validate the certificates

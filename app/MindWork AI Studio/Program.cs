@@ -27,6 +27,7 @@ internal sealed class Program
     public static string API_TOKEN = null!;
     public static IServiceProvider SERVICE_PROVIDER = null!;
     public static ILoggerFactory LOGGER_FACTORY = null!;
+    public static DatabaseClient DATABASE_CLIENT = null!;
     
     public static async Task Main()
     {
@@ -102,6 +103,20 @@ internal sealed class Program
             Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
             return;
         }
+
+        if (qdrantInfo.Fingerprint == string.Empty)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
+            return;
+        }
+        
+        if (qdrantInfo.ApiToken == string.Empty)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
+            return;
+        }
+
+        var databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
         
         var builder = WebApplication.CreateBuilder();
         
@@ -155,7 +170,7 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
-        builder.Services.AddSingleton<DatabaseClient>(new QdrantClient("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc));
+        builder.Services.AddSingleton<DatabaseClient>(databaseClient);
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
@@ -211,6 +226,10 @@ internal sealed class Program
 
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
+        
+        var databaseLogger = app.Services.GetRequiredService<ILogger<DatabaseClient>>();
+        databaseClient.SetLogger(databaseLogger);
+        DATABASE_CLIENT = databaseClient;
 
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
@@ -238,7 +257,6 @@ internal sealed class Program
         await rust.AppIsReady();
         programLogger.LogInformation("The AI Studio server is ready.");
         
-        
         TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
         {
             programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
@@ -248,6 +266,7 @@ internal sealed class Program
         await serverTask;
         
         RUST_SERVICE.Dispose();
+        DATABASE_CLIENT.Dispose();
         PluginFactory.Dispose();
         programLogger.LogInformation("The AI Studio server was stopped.");
     }
