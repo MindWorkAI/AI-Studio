@@ -216,7 +216,16 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     {
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.ValidateSelectedModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
@@ -243,7 +252,28 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     {
         if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
             return T("Please enter a transcription model name.");
-        
+
+        return null;
+    }
+
+    private string? ValidateSelectedModel(Model model)
+    {
+        // Exception for self-hosted whisper.cpp - no model selection needed:
+        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is Host.WHISPER_CPP)
+            return null;
+
+        // For manually entered models, this validation doesn't apply:
+        if (this.DataLLMProvider.IsTranscriptionModelProvidedManually(this.DataHost))
+            return null;
+
+        // For NONE providers, no validation is needed yet:
+        if (this.DataLLMProvider is LLMProviders.NONE)
+            return null;
+
+        // Check if a model is selected:
+        if (model == default)
+            return T("Please select a transcription model.");
+
         return null;
     }
 

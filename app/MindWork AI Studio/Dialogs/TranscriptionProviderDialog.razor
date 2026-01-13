@@ -90,7 +90,7 @@
                             <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="@T("Model")"
                                        OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
                                        AdornmentColor="Color.Info" Adornment="Adornment.Start"
-                                       Validation="@this.providerValidation.ValidatingModel">
+                                       Validation="@this.ValidateSelectedModel">
                                 @foreach (var model in this.availableModels)
                                 {
                                     <MudSelectItem Value="@model">
