@@ -65,6 +65,7 @@ pub fn init_logging() {
         .duplicate_to_stdout(Duplicate::All)
         .use_utc()
         .format_for_files(file_logger_format)
+        .set_palette("196;208;34;7;8".to_string()) // error, warn, info, debug, trace
         .format_for_stderr(terminal_colored_logger_format)
         .format_for_stdout(terminal_colored_logger_format)
         .start().expect("Cannot start logging");
