@@ -12,4 +12,27 @@ public sealed partial class RustService
     {
         return await this.http.GetFromJsonAsync<GetLogPathsResponse>("/log/paths", this.jsonRustSerializerOptions);
     }
+
+    /// <summary>
+    /// Sends a log event to the Rust runtime.
+    /// </summary>
+    /// <param name="timestamp">The timestamp of the log event.</param>
+    /// <param name="level">The log level.</param>
+    /// <param name="category">The category of the log event.</param>
+    /// <param name="message">The log message.</param>
+    /// <param name="exception">Optional exception details.</param>
+    public void LogEvent(string timestamp, string level, string category, string message, string? exception = null)
+    {
+        try
+        {
+            // Fire-and-forget the log event to avoid blocking:
+            var request = new LogEventRequest(timestamp, level, category, message, exception);
+            _ = this.http.PostAsJsonAsync("/log/event", request, this.jsonRustSerializerOptions);
+        }
+        catch
+        {
+            Console.WriteLine("Failed to send log event to Rust service.");
+            // Ignore errors to avoid log loops
+        }
+    }
 }

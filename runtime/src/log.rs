@@ -6,11 +6,11 @@ use std::path::{absolute, PathBuf};
 use std::sync::OnceLock;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
-use log::kv;
+use log::{debug, error, info, kv, warn};
 use log::kv::{Key, Value, VisitSource};
-use rocket::get;
+use rocket::{get, post};
 use rocket::serde::json::Json;
-use rocket::serde::Serialize;
+use rocket::serde::{Deserialize, Serialize};
 use crate::api_token::APIToken;
 use crate::environment::is_dev;
 
@@ -231,9 +231,52 @@ pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
     })
 }
 
+/// Logs an event from the .NET server.
+#[post("/log/event", data = "<event>")]
+pub fn log_event(_token: APIToken, event: Json<LogEvent>) -> Json<LogEventResponse> {
+    let event = event.into_inner();
+    let message = &event.message.as_str();
+    let category = &event.category.as_str();
+
+    // Log with the appropriate level
+    match event.level.as_str() {
+        "Trace" | "Debug" => debug!(Source = ".NET Server", Comp = category; "{message}"),
+        "Information" => info!(Source = ".NET Server", Comp = category; "{message}"),
+        "Warning" => warn!(Source = ".NET Server", Comp = category; "{message}"),
+        "Error" | "Critical" => {
+            if let Some(ref ex) = event.exception {
+                error!(Source = ".NET Server", Comp = category; "{message} Exception: {ex}")
+            } else {
+                error!(Source = ".NET Server", Comp = category; "{message}")
+            }
+        },
+        _ => error!(Source = ".NET Server", Comp = category; "{message} (unknown log level '{}')", event.level),
+    }
+
+    Json(LogEventResponse { success: true, issue: String::new() })
+}
+
 /// The response the get log paths request.
 #[derive(Serialize)]
 pub struct LogPathsResponse {
     log_startup_path: String,
     log_app_path: String,
+}
+
+/// A log event from the .NET server.
+#[derive(Deserialize)]
+#[allow(unused)]
+pub struct LogEvent {
+    timestamp: String,
+    level: String,
+    category: String,
+    message: String,
+    exception: Option<String>,
+}
+
+/// The response to a log event request.
+#[derive(Serialize)]
+pub struct LogEventResponse {
+    success: bool,
+    issue: String,
 }

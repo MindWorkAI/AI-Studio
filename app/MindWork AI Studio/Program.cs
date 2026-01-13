@@ -185,6 +185,7 @@ internal sealed class Program
         var rustLogger = app.Services.GetRequiredService<ILogger<RustService>>();
         rust.SetLogger(rustLogger);
         rust.SetEncryptor(encryption);
+        TerminalLogger.SetRustService(rust);
 
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
