@@ -6,7 +6,7 @@ use std::path::{absolute, PathBuf};
 use std::sync::OnceLock;
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
-use log::{debug, error, info, kv, warn};
+use log::{kv, Level};
 use log::kv::{Key, Value, VisitSource};
 use rocket::{get, post};
 use rocket::serde::json::Json;
@@ -231,68 +231,62 @@ pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
     })
 }
 
+/// Converts a .NET log level string to a Rust log::Level.
+fn parse_dotnet_log_level(level: &str) -> Level {
+    match level {
+        "Trace" | "Debug" => Level::Debug,
+        "Information" => Level::Info,
+        "Warning" => Level::Warn,
+        "Error" | "Critical" => Level::Error,
+
+        _ => Level::Error, // Fallback for unknown levels
+    }
+}
+
+/// Logs a message with the specified level, including optional exception and stack trace.
+fn log_with_level(
+    level: Level,
+    category: &str,
+    message: &str,
+    exception: Option<&String>,
+    stack_trace: Option<&String>
+) {
+    // Log the main message:
+    log::log!(level, Source = ".NET Server", Comp = category; "{message}");
+
+    // Log exception if present:
+    if let Some(ex) = exception {
+        log::log!(level, Source = ".NET Server", Comp = category; "  Exception: {ex}");
+    }
+
+    // Log stack trace if present:
+    if let Some(stack_trace) = stack_trace {
+        for line in stack_trace.lines() {
+            log::log!(level, Source = ".NET Server", Comp = category; "    {line}");
+        }
+    }
+}
+
 /// Logs an event from the .NET server.
 #[post("/log/event", data = "<event>")]
 pub fn log_event(_token: APIToken, event: Json<LogEvent>) -> Json<LogEventResponse> {
     let event = event.into_inner();
-    let message = &event.message.as_str();
-    let category = &event.category.as_str();
+    let level = parse_dotnet_log_level(&event.level);
+    let message = event.message.as_str();
+    let category = event.category.as_str();
 
-    // Log with the appropriate level
-    match event.level.as_str() {
-        "Trace" | "Debug" => {
-            debug!(Source = ".NET Server", Comp = category; "{message}");
-            if let Some(ref ex) = event.exception {
-                debug!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
-            }
+    // Log with the parsed level
+    log_with_level(
+        level,
+        category,
+        message,
+        event.exception.as_ref(),
+        event.stack_trace.as_ref()
+    );
 
-            if let Some(ref stack_trace) = event.stack_trace {
-                for line in stack_trace.lines() {
-                    debug!(Source = ".NET Server", Comp = category; "    {line}");
-                }
-            }
-        },
-
-        "Information" => {
-            info!(Source = ".NET Server", Comp = category; "{message}");
-            if let Some(ref ex) = event.exception {
-                info!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
-            }
-
-            if let Some(ref stack_trace) = event.stack_trace {
-                for line in stack_trace.lines() {
-                    info!(Source = ".NET Server", Comp = category; "    {line}");
-                }
-            }
-        },
-
-        "Warning" => {
-            warn!(Source = ".NET Server", Comp = category; "{message}");
-            if let Some(ref ex) = event.exception {
-                warn!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
-            }
-
-            if let Some(ref stack_trace) = event.stack_trace {
-                for line in stack_trace.lines() {
-                    warn!(Source = ".NET Server", Comp = category; "    {line}");
-                }
-            }
-        },
-
-        "Error" | "Critical" => {
-            error!(Source = ".NET Server", Comp = category; "{message}");
-            if let Some(ref ex) = event.exception {
-                error!(Source = ".NET Server", Comp = category; "  Exception: {ex}");
-            }
-
-            if let Some(ref stack_trace) = event.stack_trace {
-                for line in stack_trace.lines() {
-                    error!(Source = ".NET Server", Comp = category; "    {line}");
-                }
-            }
-        },
-
-        _ => error!(Source = ".NET Server", Comp = category; "{message} (unknown log level '{}')", event.level),
+    // Log warning for unknown levels:
+    if !matches!(event.level.as_str(), "Trace" | "Debug" | "Information" | "Warning" | "Error" | "Critical") {
+        log::warn!(Source = ".NET Server", Comp = category; "Unknown log level '{}' received.", event.level);
     }
 
     Json(LogEventResponse { success: true, issue: String::new() })
