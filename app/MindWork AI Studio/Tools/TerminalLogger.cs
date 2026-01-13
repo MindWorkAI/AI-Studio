@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,6 +13,9 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
 
     private static RustService? RUST_SERVICE;
 
+    // Buffer for early log events before RustService is available
+    private static readonly ConcurrentQueue<BufferedLogEvent> EARLY_LOG_BUFFER = new();
+
     // ANSI color codes for log levels
     private const string ANSI_RESET = "\x1b[0m";
     private const string ANSI_GRAY = "\x1b[90m";      // Trace, Debug
@@ -19,12 +24,25 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     private const string ANSI_RED = "\x1b[91m";       // Error, Critical
 
     /// <summary>
-    /// Sets the Rust service for logging events.
+    /// Sets the Rust service for logging events and flushes any buffered early log events.
     /// </summary>
     /// <param name="service">The Rust service instance.</param>
     public static void SetRustService(RustService service)
     {
         RUST_SERVICE = service;
+
+        // Flush all buffered early log events to Rust in original order
+        while (EARLY_LOG_BUFFER.TryDequeue(out var bufferedEvent))
+        {
+            service.LogEvent(
+                bufferedEvent.Timestamp,
+                bufferedEvent.LogLevel,
+                bufferedEvent.Category,
+                bufferedEvent.Message,
+                bufferedEvent.ExceptionMessage,
+                bufferedEvent.StackTrace
+            );
+        }
     }
 
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
@@ -52,8 +70,28 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
             textWriter.WriteLine();
 
         // Send log event to Rust via API (fire-and-forget):
-        RUST_SERVICE?.LogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace);
+        if (RUST_SERVICE is not null)
+        {
+            RUST_SERVICE.LogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace);
+        }
+        else
+        {
+            // Buffer early log events until RustService is available
+            EARLY_LOG_BUFFER.Enqueue(new BufferedLogEvent(timestamp, logLevel, category, message, exceptionMessage, stackTrace));
+        }
     }
+
+    /// <summary>
+    /// Represents a buffered log event for early logging before RustService is available.
+    /// </summary>
+    private readonly record struct BufferedLogEvent(
+        string Timestamp,
+        string LogLevel,
+        string Category,
+        string Message,
+        string? ExceptionMessage,
+        string? StackTrace
+    );
 
     private static string GetColorForLogLevel(LogLevel logLevel) => logLevel switch
     {
