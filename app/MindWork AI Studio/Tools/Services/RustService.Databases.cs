@@ -15,14 +15,7 @@ public sealed partial class RustService
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return new QdrantInfo
-            {
-                Path = string.Empty,
-                PortHttp = 0,
-                PortGrpc = 0,
-                Fingerprint = string.Empty,
-                ApiToken = string.Empty,
-            };
+            return default;
         }
     }
 }

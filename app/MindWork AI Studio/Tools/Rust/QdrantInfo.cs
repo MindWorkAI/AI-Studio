@@ -3,7 +3,7 @@
 /// <summary>
 /// The response of the Qdrant information request.
 /// </summary>
-public record struct QdrantInfo
+public readonly record struct QdrantInfo
 {
     public string Path { get; init; }
     
