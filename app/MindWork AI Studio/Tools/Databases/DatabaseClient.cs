@@ -3,7 +3,9 @@
 public abstract class DatabaseClient(string name, string path)
 {
     public string Name => name;
+    
     private string Path => path;
+    
     protected ILogger<DatabaseClient>? logger;
     
     public abstract IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo();

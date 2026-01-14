@@ -106,10 +106,12 @@ pub fn start_qdrant_server() {
                     } else {
                         debug!(Source = "Qdrant Server"; "{line}");
                     }
-                }
+                },
+            
                 CommandEvent::Stderr(line) => {
                     error!(Source = "Qdrant Server (stderr)"; "{line}");
-                }
+                },
+            
                 _ => {}
             }
         }
@@ -132,9 +134,7 @@ pub fn stop_qdrant_server() {
 
 pub fn create_temp_tls_files(path: PathBuf) -> Result<(PathBuf, PathBuf), Box<dyn std::error::Error>> {
     let (certificate, cert_private_key, cert_fingerprint) = generate_certificate();
-    
     let temp_dir = init_tmpdir_in(path);
-
     let cert_path = temp_dir.join("cert.pem");
     let key_path = temp_dir.join("key.pem");
 

@@ -6,10 +6,13 @@ namespace AIStudio.Tools.Databases.Qdrant;
 public class QdrantClientImplementation : DatabaseClient
 {
     private int HttpPort { get; }
+    
     private int GrpcPort { get; }
     private string IpAddress => "localhost";
     private QdrantClient GrpcClient { get; }
+    
     private string Fingerprint { get; }
+    
     private string ApiToken { get; }
     
     public QdrantClientImplementation(string name, string path, int httpPort, int grpcPort, string fingerprint, string apiToken): base(name, path)

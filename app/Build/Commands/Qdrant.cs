@@ -44,7 +44,8 @@ public static class Qdrant
             {
                 using var archive = new ZipArchive(zStream, ZipArchiveMode.Read);
                 archive.ExtractToDirectory(qdrantTmpExtractPath.FullName, overwriteFiles: true);
-            } else
+            }
+            else
             {
                 await using var uncompressedStream = new GZipStream(zStream, CompressionMode.Decompress);
                 await TarFile.ExtractToDirectoryAsync(uncompressedStream, qdrantTmpExtractPath.FullName, true);   
@@ -63,7 +64,7 @@ public static class Qdrant
         }
         
         var qdrantDBSourcePath = Path.Join(qdrantTmpExtractPath.FullName, database.Path);
-        var qdrantDBTargetPath = Path.Join(cwd, "resources", "databases", "qdrant",database.Filename);
+        var qdrantDBTargetPath = Path.Join(cwd, "resources", "databases", "qdrant", database.Filename);
         if (!File.Exists(qdrantDBSourcePath))
         {
             Console.WriteLine($" failed to find the database file '{qdrantDBSourcePath}'");
