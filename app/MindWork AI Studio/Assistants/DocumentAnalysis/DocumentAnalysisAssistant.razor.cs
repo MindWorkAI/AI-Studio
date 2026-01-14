@@ -118,10 +118,40 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
     protected override bool SubmitDisabled => (this.IsNoPolicySelected || this.loadedDocumentPaths.Count==0);
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    protected override ChatThread ConvertToChatThread
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+        get
+        {
+            if (this.chatThread is not null)
+            {
+                var convertThread = new ChatThread();
+                convertThread = convertThread with
+                {
+                    SystemPrompt = SystemPrompts.DEFAULT,
+                    Blocks =
+                    [
+                        new ContentBlock()
+                        {
+                            Role = ChatRole.USER,
+                            HideFromUser = false,
+                            ContentType = ContentType.TEXT,
+                            Content = new ContentText()
+                            {
+                                Text = this.T("Your previous document from the Document Analysis Assistant."),
+                                FileAttachments = this.loadedDocumentPaths.ToList(),
+                            }
+                        },
+                        this.chatThread.Blocks.Last(),
+                    ]
+                };
+                return convertThread;
+            }
+            return new ChatThread
+            {
+                SystemPrompt = SystemPrompts.DEFAULT
+            };
+        }
+    }
 
     protected override void ResetForm()
     {
