@@ -14,7 +14,11 @@ public sealed partial class RustService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            if(this.logger is not null)
+                this.logger.LogError(e, "Error while fetching Qdrant info from Rust service.");
+            else
+                Console.WriteLine($"Error while fetching Qdrant info from Rust service: '{e}'.");
+            
             return default;
         }
     }
