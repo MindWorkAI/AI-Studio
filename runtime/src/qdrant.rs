@@ -59,7 +59,7 @@ pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 pub fn start_qdrant_server() {
     
     let base_path = DATA_DIRECTORY.get().unwrap();
-    let (cert_path, key_path) =create_temp_tls_files(Path::new(base_path).join("databases").join("qdrant")).unwrap();
+    let (cert_path, key_path) = create_temp_tls_files(Path::new(base_path).join("databases").join("qdrant")).unwrap();
     
     let storage_path = Path::new(base_path).join("databases").join("qdrant").join("storage").to_str().unwrap().to_string();
     let snapshot_path = Path::new(base_path).join("databases").join("qdrant").join("snapshots").to_str().unwrap().to_string();
