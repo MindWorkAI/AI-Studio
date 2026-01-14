@@ -120,7 +120,6 @@ pub fn start_qdrant_server() {
 
 /// Stops the Qdrant server process.
 pub fn stop_qdrant_server() {
-    drop_tmpdir();
     if let Some(server_process) = QDRANT_SERVER.lock().unwrap().take() {
         let server_kill_result = server_process.kill();
         match server_kill_result {
@@ -130,6 +129,8 @@ pub fn stop_qdrant_server() {
     } else {
         warn!(Source = "Qdrant"; "Qdrant server process was not started or is already stopped.");
     }
+
+    drop_tmpdir();
 }
 
 pub fn create_temp_tls_files(path: PathBuf) -> Result<(PathBuf, PathBuf), Box<dyn std::error::Error>> {
