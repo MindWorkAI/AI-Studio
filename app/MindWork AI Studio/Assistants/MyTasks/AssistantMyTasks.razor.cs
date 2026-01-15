@@ -33,7 +33,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
-        SystemPrompt = SystemPrompts.Default,
+        SystemPrompt = SystemPrompts.DEFAULT,
     };
 
     protected override void ResetForm()

@@ -120,7 +120,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
-        SystemPrompt = SystemPrompts.Default,
+        SystemPrompt = SystemPrompts.DEFAULT,
     };
 
     protected override void ResetForm()

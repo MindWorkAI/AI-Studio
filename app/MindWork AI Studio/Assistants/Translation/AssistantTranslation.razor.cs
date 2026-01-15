@@ -31,7 +31,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
-        SystemPrompt = SystemPrompts.Default,
+        SystemPrompt = SystemPrompts.DEFAULT,
     };
     
     protected override void ResetForm()

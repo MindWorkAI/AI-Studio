@@ -53,7 +53,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
-        SystemPrompt = SystemPrompts.Default,
+        SystemPrompt = SystemPrompts.DEFAULT,
     };
 
     protected override void ResetForm()
