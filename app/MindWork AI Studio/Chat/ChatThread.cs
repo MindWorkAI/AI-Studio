@@ -189,7 +189,7 @@ public sealed record ChatThread
         var nowLocal = DateTime.Now;
         var currentDateTime = string.Create(
             new CultureInfo("en-US"),
-            $"Today is {nowUtc:MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:MMMM d, yyyy h:mm tt} (local time)."
+            $"Today is {nowUtc:dddd, MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:dddd, MMMM d, yyyy h:mm tt} (local time)."
         );
 
         return $"""
