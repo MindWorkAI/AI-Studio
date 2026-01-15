@@ -1,6 +1,20 @@
+using System.Globalization;
+
 namespace AIStudio.Chat;
 
 public static class SystemPrompts
 {
-    public static readonly string DEFAULT = $"You are a helpful assistant! Today is {DateTime.Today:yyyy-MM-dd}.";
+    public static string Default
+    {
+        get
+        {
+            var nowUtc = DateTime.UtcNow;
+            var nowLocal = DateTime.Now;
+            
+            return string.Create(
+                new CultureInfo("en-US"),
+                $"Today is {nowUtc:MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:MMMM d, yyyy h:mm tt} (local time)."
+            );
+        }
+    }
 }

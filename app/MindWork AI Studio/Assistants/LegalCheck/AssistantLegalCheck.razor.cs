@@ -30,7 +30,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
+        SystemPrompt = SystemPrompts.Default,
     };
     
     protected override void ResetForm()

@@ -263,7 +263,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private void UseDefaultSystemPrompt()
     {
-        this.DataSystemPrompt = SystemPrompts.DEFAULT;
+        this.DataSystemPrompt = SystemPrompts.Default;
     }
 
     private void Cancel() => this.MudDialog.Cancel();

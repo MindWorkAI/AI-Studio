@@ -573,7 +573,7 @@ public partial class Workspaces : MSGComponentBase
             WorkspaceId = workspaceId,
             ChatId = Guid.NewGuid(),
             Name = string.Empty,
-            SystemPrompt = SystemPrompts.DEFAULT,
+            SystemPrompt = SystemPrompts.Default,
             Blocks = [],
         };
         
