@@ -25,13 +25,6 @@ fn main() {
         },
         Err(_) => {
             println!("cargo: warning= The environment variable 'MINDWORK_START_DEV_ENV' was not found.");
-            if let Err(e) = kill_zombie_qdrant_process(){
-                println!("cargo:warning=Error: {e}");
-                return;
-            };
-            if let Err(e) = delete_old_certificates() {
-                println!("cargo: warning= Failed to delete old certificates: {e}");
-            }
         }
     }
     tauri_build::build();

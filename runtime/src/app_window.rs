@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::sync::Mutex;
 use std::time::Duration;
 use log::{debug, error, info, trace, warn};
@@ -14,7 +13,7 @@ use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
-use crate::dotnet::{cleanup_dotnet_server, stop_dotnet_server, PID_FILE_NAME};
+use crate::dotnet::{cleanup_dotnet_server, stop_dotnet_server};
 use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
