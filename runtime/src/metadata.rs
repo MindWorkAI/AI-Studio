@@ -16,6 +16,7 @@ pub struct MetaData {
     pub app_commit_hash: String,
     pub architecture: String,
     pub pdfium_version: String,
+    pub qdrant_version: String,
 }
 
 impl MetaData {
@@ -39,6 +40,7 @@ impl MetaData {
         let app_commit_hash = metadata_lines.next().unwrap();
         let architecture = metadata_lines.next().unwrap();
         let pdfium_version = metadata_lines.next().unwrap();
+        let qdrant_version = metadata_lines.next().unwrap();
 
         let metadata = MetaData {
             architecture: architecture.to_string(),
@@ -52,6 +54,7 @@ impl MetaData {
             rust_version: rust_version.to_string(),
             tauri_version: tauri_version.to_string(),
             pdfium_version: pdfium_version.to_string(),
+            qdrant_version: qdrant_version.to_string(),
         };
 
         *META_DATA.lock().unwrap() = Some(metadata.clone());

@@ -8,15 +8,16 @@ use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
 use tauri::updater::UpdateResponse;
-use tauri::{FileDropEvent, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent};
+use tauri::{FileDropEvent, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent, generate_context};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
-use crate::dotnet::stop_dotnet_server;
+use crate::dotnet::{cleanup_dotnet_server, stop_dotnet_server};
 use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
+use crate::qdrant::{cleanup_qdrant, start_qdrant_server, stop_qdrant_server};
 
 /// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
@@ -91,13 +92,21 @@ pub fn start_tauri() {
             DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not abe to set the data directory.")).unwrap();
             CONFIG_DIRECTORY.set(app.path_resolver().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
 
+            if is_prod() {
+                cleanup_qdrant().expect("Zombie processes of Qdrant were not killed");
+                cleanup_dotnet_server();
+            }
+
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
             set_pdfium_path(app.path_resolver());
+
+            start_qdrant_server();
+
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .build(tauri::generate_context!())
+        .build(generate_context!())
         .expect("Error while running Tauri application");
 
     // The app event handler:
@@ -170,6 +179,7 @@ pub fn start_tauri() {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
+                stop_qdrant_server();
             }
 
             RunEvent::Ready => {
@@ -433,6 +443,7 @@ pub async fn install_update(_token: APIToken) {
     let cloned_response_option = CHECK_UPDATE_RESPONSE.lock().unwrap().clone();
     match cloned_response_option {
         Some(update_response) => {
+            stop_qdrant_server();
             update_response.download_and_install().await.unwrap();
         },
 
