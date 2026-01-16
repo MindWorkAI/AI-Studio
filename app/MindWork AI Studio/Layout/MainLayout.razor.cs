@@ -264,7 +264,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
         yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
         yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
-        yield return new(T("About"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
+        yield return new(T("Information"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
         yield return new(T("Settings"), Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
     }
 
@@ -341,7 +341,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
     }
-
+    
     #region Implementation of IDisposable
 
     public void Dispose()

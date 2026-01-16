@@ -573,6 +573,56 @@ pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<F
     }
 }
 
+/// Let the user select some files.
+#[post("/select/files", data = "<payload>")]
+pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FilesSelectionResponse> {
+
+    // Create a new file dialog builder:
+    let file_dialog = FileDialogBuilder::new();
+
+    // Set the title of the file dialog:
+    let file_dialog = file_dialog.set_title(&payload.title);
+
+    // Set the file type filter if provided:
+    let file_dialog = match &payload.filter {
+        Some(filter) => {
+            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
+        },
+
+        None => file_dialog,
+    };
+
+    // Set the previous file path if provided:
+    let file_dialog = match &payload.previous_file {
+        Some(previous) => {
+            let previous_path = previous.file_path.as_str();
+            file_dialog.set_directory(previous_path)
+        },
+
+        None => file_dialog,
+    };
+
+    // Show the file dialog and get the selected file path:
+    let file_paths = file_dialog.pick_files();
+    match file_paths {
+        Some(paths) => {
+            info!("User selected {} files.", paths.len());
+            Json(FilesSelectionResponse {
+                user_cancelled: false,
+                selected_file_paths: paths.iter().map(|p| p.to_str().unwrap().to_string()).collect(),
+            })
+        }
+
+        None => {
+            info!("User cancelled file selection.");
+            Json(FilesSelectionResponse {
+                user_cancelled: true,
+                selected_file_paths: Vec::new(),
+            })
+        },
+    }
+}
+
 #[post("/save/file", data = "<payload>")]
 pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
 
@@ -632,6 +682,13 @@ pub struct FileSelectionResponse {
     user_cancelled: bool,
     selected_file_path: String,
 }
+
+#[derive(Serialize)]
+pub struct FilesSelectionResponse {
+    user_cancelled: bool,
+    selected_file_paths: Vec<String>,
+}
+
 #[derive(Serialize)]
 pub struct FileSaveResponse {
     user_cancelled: bool,

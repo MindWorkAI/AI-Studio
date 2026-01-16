@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Version = System.Version;
 
@@ -14,6 +15,8 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 public sealed partial class RustService : BackgroundService
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
+    
     private readonly HttpClient http;
 
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()

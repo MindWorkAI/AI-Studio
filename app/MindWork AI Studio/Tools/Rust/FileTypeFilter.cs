@@ -21,7 +21,60 @@ public readonly record struct FileTypeFilter(string FilterName, string[] FilterE
     
     public static FileTypeFilter AllImages => new(TB("All Image Files"), ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic"]);
     
-    public static FileTypeFilter AllVideos => new(TB("All Video Files"), ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm"]);
+    public static FileTypeFilter AllVideos => new(TB("All Video Files"), ["mp4", "m4v", "avi", "mkv", "mov", "wmv", "flv", "webm"]);
+    
+    public static FileTypeFilter AllAudio => new(TB("All Audio Files"), ["mp3", "wav", "wave", "aac", "flac", "ogg", "m4a", "wma", "alac", "aiff", "m4b"]);
+    
+    public static FileTypeFilter AllSourceCode => new(TB("All Source Code Files"), 
+        [
+            // .NET
+            "cs", "vb", "fs", "razor", "aspx", "cshtml", "csproj",
+            
+            // Java:
+            "java",
+            
+            // Python:
+            "py",
+            
+            // JavaScript/TypeScript:
+            "js", "ts",
+            
+            // C/C++:
+            "c", "cpp", "h", "hpp",
+            
+            // Ruby:
+            "rb",
+            
+            // Go:
+            "go",
+            
+            // Rust:
+            "rs",
+            
+            // Lua:
+            "lua",
+            
+            // PHP:
+            "php",
+            
+            // HTML/CSS:
+            "html", "css",
+            
+            // Swift/Kotlin:
+            "swift", "kt",
+            
+            // Shell scripts:
+            "sh", "bash",
+            
+            // Logging files:
+            "log",
+            
+            // JSON/YAML/XML:
+            "json", "yaml", "yml", "xml",
+            
+            // Config files:
+            "ini", "cfg", "toml", "plist",
+        ]);
     
     public static FileTypeFilter Executables => new(TB("Executable Files"), ["exe", "app", "bin", "appimage"]);
 }

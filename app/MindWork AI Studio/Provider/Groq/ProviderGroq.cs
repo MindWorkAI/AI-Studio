@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Groq;
 
-public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LOGGER)
+public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.com/openai/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderGroq> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGroq>();
 
@@ -25,12 +25,12 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -40,24 +40,7 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the OpenAI HTTP chat request:
         var groqChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -98,17 +81,23 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult<IEnumerable<Model>>(Array.Empty<Model>());
+        return Task.FromResult<IEnumerable<Model>>([]);
     }
     
     /// <inheritdoc />
@@ -117,14 +106,20 @@ public class ProviderGroq() : BaseProvider("https://api.groq.com/openai/v1/", LO
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+    
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

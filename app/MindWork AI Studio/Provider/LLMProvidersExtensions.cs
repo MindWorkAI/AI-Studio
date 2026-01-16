@@ -9,6 +9,7 @@ using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Provider.OpenRouter;
 using AIStudio.Provider.Perplexity;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Provider.X;
@@ -42,7 +43,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => "DeepSeek",
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
-        
+        LLMProviders.OPEN_ROUTER => "OpenRouter",
+
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
         LLMProviders.HUGGINGFACE => "Hugging Face",
@@ -92,7 +94,9 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => Confidence.CHINA_NO_TRAINING.WithRegion("Asia").WithSources("https://www.alibabacloud.com/help/en/model-studio/support/faq-about-alibaba-cloud-model-studio").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
             
         LLMProviders.PERPLEXITY => Confidence.USA_NO_TRAINING.WithRegion("America, U.S.").WithSources("https://www.perplexity.ai/hub/legal/perplexity-api-terms-of-service").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
-        
+
+        LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -106,7 +110,7 @@ public static class LLMProvidersExtensions
     /// </summary>
     /// <param name="llmProvider">The provider to check.</param>
     /// <returns>True if the provider supports embeddings; otherwise, false.</returns>
-    public static bool ProvideEmbeddings(this LLMProviders llmProvider) => llmProvider switch
+    public static bool ProvideEmbeddingAPI(this LLMProviders llmProvider) => llmProvider switch
     {
         //
         // Providers that support embeddings:
@@ -128,7 +132,45 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
+        LLMProviders.OPEN_ROUTER => true,
+
+        //
+        // Self-hosted providers are treated as a special case anyway.
+        //
+        LLMProviders.SELF_HOSTED => true,
         
+        _ => false,
+    };
+    
+    public static bool ProvideTranscriptionAPI(this LLMProviders llmProvider) => llmProvider switch
+    {
+        //
+        // Providers that support transcription:
+        //
+        LLMProviders.OPEN_AI => true,
+        LLMProviders.MISTRAL => true,
+        LLMProviders.FIREWORKS => true,
+        LLMProviders.GWDG => true,
+        
+        //
+        // Providers that support transcription but provide no OpenAI-compatible API yet:
+        //
+        LLMProviders.ALIBABA_CLOUD => false,
+        LLMProviders.GOOGLE => false,
+        
+        //
+        // Providers that do not support transcription:
+        //
+        LLMProviders.OPEN_ROUTER => false,
+        LLMProviders.GROQ => false,
+        LLMProviders.ANTHROPIC => false,
+        LLMProviders.X => false,
+        LLMProviders.DEEP_SEEK => false,
+        LLMProviders.HUGGINGFACE => false,
+        LLMProviders.PERPLEXITY => false,
+        
+        LLMProviders.HELMHOLTZ => false,
+
         //
         // Self-hosted providers are treated as a special case anyway.
         //
@@ -157,6 +199,16 @@ public static class LLMProvidersExtensions
         return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE);
     }
     
+    /// <summary>
+    /// Creates a new provider instance based on the speech provider value.
+    /// </summary>
+    /// <param name="transcriptionProviderSettings">The speech provider settings.</param>
+    /// <returns>The provider instance.</returns>
+    public static IProvider CreateProvider(this TranscriptionProvider transcriptionProviderSettings)
+    {
+        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.Model, HFInferenceProvider.NONE);
+    }
+    
     private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider, string expertProviderApiParameter = "")
     {
         try
@@ -171,7 +223,8 @@ public static class LLMProvidersExtensions
                 LLMProviders.DEEP_SEEK => new ProviderDeepSeek { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
-                
+                LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
+
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter },
                 LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, model) { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter }, 
@@ -201,7 +254,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/sign_up",
         LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
-     
+        LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
+
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/login",
@@ -224,8 +278,9 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => "https://platform.deepseek.com/usage",
         LLMProviders.ALIBABA_CLOUD => "https://usercenter2-intl.aliyun.com/billing",
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
+        LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
-        
+
         _ => string.Empty,
     };
 
@@ -241,8 +296,9 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
+        LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HUGGINGFACE => true,
-        
+
         _ => false,
     };
 
@@ -263,6 +319,11 @@ public static class LLMProvidersExtensions
     public static bool IsEmbeddingModelProvidedManually(this LLMProviders provider, Host host) => provider switch
     {
         LLMProviders.SELF_HOSTED => host is not Host.LM_STUDIO,
+        _ => false,
+    };
+    
+    public static bool IsTranscriptionModelProvidedManually(this LLMProviders provider, Host host) => provider switch
+    {
         _ => false,
     };
 
@@ -288,7 +349,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
-        
+        LLMProviders.OPEN_ROUTER => true,
+
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
@@ -310,7 +372,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
-        
+        LLMProviders.OPEN_ROUTER => true,
+
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
@@ -327,13 +390,14 @@ public static class LLMProvidersExtensions
             switch (host)
             {
                 case Host.NONE:
-                case Host.LLAMACPP:
+                case Host.LLAMA_CPP:
                 default:
                     return false;
 
                 case Host.OLLAMA:
                 case Host.LM_STUDIO:
                 case Host.VLLM:
+                case Host.WHISPER_CPP:
                     return true;
             }
         }

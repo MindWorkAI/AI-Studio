@@ -1,4 +1,5 @@
 using AIStudio.Components;
+using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -188,4 +189,9 @@ public partial class ContentBlockComponent : MSGComponentBase
             await this.EditLastUserBlockFunc(this.Content);
     }
     
+    private async Task OpenAttachmentsDialog()
+    {
+        var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
+        this.Content.FileAttachments = result.ToList();
+    }
 }

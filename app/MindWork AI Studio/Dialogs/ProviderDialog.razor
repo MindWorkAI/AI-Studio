@@ -22,7 +22,7 @@
             
             @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
             {
-                <SecretInputField @bind-Secret="@this.dataAPIKey" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
+                <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
             }
 
             @if (this.DataLLMProvider.IsHostnameNeeded())
@@ -44,9 +44,12 @@
                 <MudSelect @bind-Value="@this.DataHost" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
                     @foreach (Host host in Enum.GetValues(typeof(Host)))
                     {
-                        <MudSelectItem Value="@host">
-                            @host.Name()
-                        </MudSelectItem>
+                        @if (host.IsChatSupported())
+                        {
+                            <MudSelectItem Value="@host">
+                                @host.Name()
+                            </MudSelectItem>
+                        }
                     }
                 </MudSelect>
             }
@@ -84,11 +87,12 @@
                             AdornmentColor="Color.Info"
                             Validation="@this.ValidateManuallyModel"
                             UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                            HelperText="@T("Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.")"
                         />
                     }
                     else
                     {
-                        <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="this.ReloadModels">
+                        <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
                             @T("Load models")
                         </MudButton>
                         @if(this.availableModels.Count is 0)

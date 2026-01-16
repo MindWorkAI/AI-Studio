@@ -53,11 +53,11 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
     ["Id"] = "00000000-0000-0000-0000-000000000000",
     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
     ["UsedLLMProvider"] = "SELF_HOSTED",
-    
+
     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
     ["Host"] = "OLLAMA",
     ["Hostname"] = "<https address of the server>",
-    
+
     -- Optional: Additional parameters for the API.
     -- Please refer to the documentation of the selected host for details.
     -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
@@ -69,6 +69,42 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
         ["DisplayName"] = "<user-friendly name of the model>",
     }
 }
+
+-- Transcription providers for voice-to-text functionality:
+CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
+
+-- An example of a transcription provider configuration:
+-- CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name for the transcription provider>",
+--     ["UsedLLMProvider"] = "SELF_HOSTED",
+--
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and WHISPER_CPP
+--     ["Host"] = "WHISPER_CPP",
+--     ["Hostname"] = "<https address of the server>",
+--     ["Model"] = {
+--         ["Id"] = "<the model ID>",
+--         ["DisplayName"] = "<user-friendly name of the model>",
+--     }
+-- }
+
+-- Embedding providers for local RAG (Retrieval-Augmented Generation) functionality:
+CONFIG["EMBEDDING_PROVIDERS"] = {}
+
+-- An example of an embedding provider configuration:
+-- CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name for the embedding provider>",
+--     ["UsedLLMProvider"] = "SELF_HOSTED",
+--
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     ["Host"] = "OLLAMA",
+--     ["Hostname"] = "<https address of the server>",
+--     ["Model"] = {
+--         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
+--         ["DisplayName"] = "<user-friendly name of the model>",
+--     }
+-- }
 
 CONFIG["SETTINGS"] = {}
 
@@ -101,6 +137,22 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
+-- Configure the transcription provider for voice-to-text functionality.
+-- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
+-- Without a selected transcription provider, dictation and transcription features will be disabled.
+-- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
+-- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
+
+-- Configure which assistants should be hidden from the UI.
+-- Allowed values are:
+--   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
+--   TRANSLATION_ASSISTANT, AGENDA_ASSISTANT, CODING_ASSISTANT,
+--   TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT, LEGAL_CHECK_ASSISTANT,
+--   SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT, JOB_POSTING_ASSISTANT,
+--   BIAS_DAY_ASSISTANT, ERI_ASSISTANT, DOCUMENT_ANALYSIS_ASSISTANT,
+--   I18N_ASSISTANT
+-- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 
@@ -121,6 +173,33 @@ CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
             -- Allowed values are: USER, AI, SYSTEM
             ["Role"] = "AI",
             ["Content"] = "Of course. What do you need?"
+        }
+    }
+}
+
+-- An example chat template with file attachments:
+-- This template automatically attaches specified files when the user selects it.
+CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+    ["Id"] = "00000000-0000-0000-0000-000000000001",
+    ["Name"] = "Document Analysis Template",
+    ["SystemPrompt"] = "You are an expert document analyst. Please analyze the attached documents and provide insights.",
+    ["PredefinedUserPrompt"] = "Please analyze the attached company guidelines and summarize the key points.",
+    ["AllowProfileUsage"] = true,
+    -- Optional: Pre-attach files that will be automatically included when using this template.
+    -- These files will be loaded when the user selects this chat template.
+    -- Note: File paths must be absolute paths and accessible to all users.
+    ["FileAttachments"] = {
+        "G:\\Company\\Documents\\Guidelines.pdf",
+        "G:\\Company\\Documents\\CompanyPolicies.docx"
+    },
+    ["ExampleConversation"] = {
+        {
+            ["Role"] = "USER",
+            ["Content"] = "I have attached the company documents for analysis."
+        },
+        {
+            ["Role"] = "AI",
+            ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
         }
     }
 }

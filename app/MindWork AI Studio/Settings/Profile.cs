@@ -22,7 +22,7 @@ public record Profile(
     
     public static readonly Profile NO_PROFILE = new()
     {
-        Name = TB("Use no profile"),
+        Name = TB("Use no profile"), // Cannot be localized due to being a static readonly field
         NeedToKnow = string.Empty,
         Actions = string.Empty,
         Id = Guid.Empty.ToString(),
@@ -38,6 +38,23 @@ public record Profile(
     public override string ToString() => this.Name;
 
     #endregion
+    
+    /// <summary>
+    /// Gets the name of this profile. If it is the NO_PROFILE, it returns a localized string.
+    /// </summary>
+    /// <remarks>
+    /// Why not using the Name property directly? Because the Name property of NO_PROFILE cannot be
+    /// localized because it is a static readonly field. So we need this method to return a localized
+    /// string instead.
+    /// </remarks>
+    /// <returns>The name of this profile.</returns>
+    public string GetSafeName()
+    {
+        if(this == NO_PROFILE)
+            return TB("Use no profile");
+        
+        return this.Name;
+    }
     
     public string ToSystemPrompt()
     {

@@ -79,6 +79,8 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.1.1: Added the option to attach files, including images, to chat templates; added support for source code file attachments in chats and document analysis; added a preview feature for recording your own voice for transcription; fixed various bugs in provider dialogs and profile selection.
+- v0.10.0: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, the possibility to use file attachments in chats, and support for images as input.
 - v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
 - v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
@@ -89,8 +91,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.9.31: Added Helmholtz & GWDG as LLM providers. This is a huge improvement for many researchers out there who can use these providers for free. We added DeepSeek as a provider as well.
 - v0.9.29: Added agents to support the RAG process (selecting the best data sources & validating retrieved data as part of the augmentation process)
 - v0.9.26+: Added RAG for external data sources using our [ERI interface](https://mindworkai.org/#eri---external-retrieval-interface) as a preview feature.
-- v0.9.25: Added [xAI](https://x.ai/) as a new provider. xAI provides their Grok models for generating content.
-- v0.9.23: Added support for OpenAI `o` models (`o1`, `o1-mini`, `o3`, etc.); added also an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant as a preview feature behind the RAG feature flag. Your own ERI server can be used to gain access to, e.g., your enterprise data from within AI Studio.
  
 </details>
 
@@ -114,6 +114,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [xAI](https://x.ai/) (Grok)
   - [DeepSeek](https://www.deepseek.com/en)
   - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
+  - [OpenRouter](https://openrouter.ai/)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
   - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
   - [Groq](https://groq.com/)

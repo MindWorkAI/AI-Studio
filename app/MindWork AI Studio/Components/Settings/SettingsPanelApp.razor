@@ -29,4 +29,9 @@
 
     <ConfigurationProviderSelection Component="Components.APP_SETTINGS" Data="@this.AvailableLLMProvidersFunc()" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreselectedProvider = selectedValue)" HelpText="@(() => T("Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence."))"/>
     <ConfigurationSelect OptionDescription="@T("Preselect one of your profiles?")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreselectedProfile = selectedValue)" OptionHelp="@T("Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.PreselectedProfile, out var meta) && meta.IsLocked"/>
+
+    @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
+    {
+        <ConfigurationSelect OptionDescription="@T("Select a transcription provider")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider)" Data="@this.GetFilteredTranscriptionProviders()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider = selectedValue)" OptionHelp="@T("Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.UseTranscriptionProvider, out var meta) && meta.IsLocked"/>
+    }
 </ExpansionPanel>

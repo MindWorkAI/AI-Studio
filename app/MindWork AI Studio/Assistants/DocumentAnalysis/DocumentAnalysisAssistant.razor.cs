@@ -1,3 +1,5 @@
+using System.Text;
+
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
@@ -34,11 +36,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         
         DOCUMENTS: the only content you may analyze.
         
+        Maybe, there are image files attached. IMAGES may contain important information. Use them as part of your analysis.
+        
         {this.GetDocumentTaskDescription()}
         
         # Scope and precedence
         
-        Use only information explicitly contained in DOCUMENTS and/or POLICY_*.
+        Use only information explicitly contained in DOCUMENTS, IMAGES, and/or POLICY_*.
         You may paraphrase but must not add facts, assumptions, or outside knowledge.
         Content decisions are governed by POLICY_ANALYSIS_RULES; formatting is governed by POLICY_OUTPUT_RULES.
         If there is a conflict between DOCUMENTS and POLICY_*, follow POLICY_ANALYSIS_RULES for analysis and POLICY_OUTPUT_RULES for formatting. Do not invent reconciliations.
@@ -46,7 +50,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         # Process
         
         1) Read POLICY_ANALYSIS_RULES and POLICY_OUTPUT_RULES end to end.
-        2) Extract only the information from DOCUMENTS that POLICY_ANALYSIS_RULES permits.
+        2) Extract only the information from DOCUMENTS and IMAGES that POLICY_ANALYSIS_RULES permits.
         3) Perform the analysis strictly according to POLICY_ANALYSIS_RULES.
         4) Produce the final answer strictly according to POLICY_OUTPUT_RULES.
         
@@ -74,16 +78,33 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         # Self‑check before sending
         
         Verify the answer matches POLICY_OUTPUT_RULES exactly.
-        Verify every statement is attributable to DOCUMENTS or POLICY_*.
+        Verify every statement is attributable to DOCUMENTS, IMAGES, or POLICY_*.
         Remove any text not required by POLICY_OUTPUT_RULES.
         
         {this.PromptGetActivePolicy()}
         """;
 
-    private string GetDocumentTaskDescription() =>
-        this.loadedDocumentPaths.Count > 1
-            ? $"Your task is to analyze {this.loadedDocumentPaths.Count} DOCUMENTS. Different DOCUMENTS are divided by a horizontal rule in markdown formatting followed by the name of the document."
-            : "Your task is to analyze a single document.";
+    private string GetDocumentTaskDescription()
+    {
+        var numDocuments = this.loadedDocumentPaths.Count(x => x is { Exists: true, IsImage: false });
+        var numImages = this.loadedDocumentPaths.Count(x => x is { Exists: true, IsImage: true });
+        
+        return (numDocuments, numImages) switch
+        {
+            (0, 1) => "Your task is to analyze a single image file attached as a document.",
+            (0, > 1) => $"Your task is to analyze {numImages} image file(s) attached as documents.",
+            
+            (1, 0) => "Your task is to analyze a single DOCUMENT.",
+            (1, 1) => "Your task is to analyze a single DOCUMENT and 1 image file attached as a document.",
+            (1, > 1) => $"Your task is to analyze a single DOCUMENT and {numImages} image file(s) attached as documents.",
+            
+            (> 0, 0) => $"Your task is to analyze {numDocuments} DOCUMENTS. Different DOCUMENTS are divided by a horizontal rule in markdown formatting followed by the name of the document.",
+            (> 0, 1) => $"Your task is to analyze {numDocuments} DOCUMENTS and 1 image file attached as a document. Different DOCUMENTS are divided by a horizontal rule in Markdown formatting followed by the name of the document.",
+            (> 0, > 0) => $"Your task is to analyze {numDocuments} DOCUMENTS and {numImages} image file(s) attached as documents. Different DOCUMENTS are divided by a horizontal rule in Markdown formatting followed by the name of the document.",
+            
+            _ => "Your task is to analyze a single DOCUMENT."
+        };
+    }
 
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
@@ -185,7 +206,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyOutputRules = string.Empty;
 #warning Use deferred content for document analysis
     private string deferredContent = string.Empty;
-    private HashSet<string> loadedDocumentPaths = [];
+    private HashSet<FileAttachment> loadedDocumentPaths = [];
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     
@@ -327,31 +348,68 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         if (this.loadedDocumentPaths.Count == 0)
             return string.Empty;
 
-        var documentSections = new List<string>();
-        var count = 1;
+        var documents = this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: false }).ToList();
+        var sb = new StringBuilder();
 
-        foreach (var documentPath in this.loadedDocumentPaths)
+        if (documents.Count > 0)
         {
-            var fileContent = await this.RustService.ReadArbitraryFileData(documentPath, int.MaxValue);
-        
-            documentSections.Add($"""
-                                  ## DOCUMENT {count}:
-                                  File path: {documentPath}
-                                  Content:
-                                  ```
-                                  {fileContent}
-                                  ```
+            sb.AppendLine("""
+                          # DOCUMENTS:
 
-                                  ---
-                                  """);
-            count++;
+                          """);
         }
 
-        return $"""
-                # DOCUMENTS:
+        var numDocuments = 1;
+        foreach (var document in documents)
+        {
+            if (document.IsForbidden)
+            {
+                this.Logger.LogWarning($"Skipping forbidden file: '{document.FilePath}'.");
+                continue;
+            }
 
-                {string.Join("\n", documentSections)}
-                """;
+            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            sb.AppendLine($"""
+                           
+                           ## DOCUMENT {numDocuments}:
+                           File path: {document.FilePath}
+                           Content:
+                           ```
+                           {fileContent}
+                           ```
+
+                           ---
+                           
+                           """);
+            numDocuments++;
+        }
+
+        var numImages = this.loadedDocumentPaths.Count(x => x is { IsImage: true, Exists: true });
+        if (numImages > 0)
+        {
+            if (documents.Count == 0)
+            {
+                sb.AppendLine($"""
+
+                               There are {numImages} image file(s) attached as documents.
+                               Please consider them as documents as well and use them to
+                               answer accordingly.
+
+                               """);
+            }
+            else
+            {
+                sb.AppendLine($"""
+
+                               Additionally, there are {numImages} image file(s) attached.
+                               Please consider them as documents as well and use them to
+                               answer accordingly.
+
+                               """);
+            }
+        }
+
+        return sb.ToString();
     }
 
     private async Task Analyze()
@@ -364,7 +422,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.CreateChatThread();
         
         var userRequest = this.AddUserRequest(
-            $"{await this.PromptLoadDocumentsContent()}", hideContentFromUser:true);
+            await this.PromptLoadDocumentsContent(),
+            hideContentFromUser: true,
+            this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: true }).ToList());
 
         await this.AddAIResponseAsync(userRequest);
     }

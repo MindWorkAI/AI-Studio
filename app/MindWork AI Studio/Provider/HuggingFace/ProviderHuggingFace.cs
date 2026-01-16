@@ -13,9 +13,9 @@ public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
 
-    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base($"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
+    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base(LLMProviders.HUGGINGFACE, $"https://router.huggingface.co/{hfProvider.Endpoints(model)}", LOGGER)
     {
-        LOGGER.LogInformation($"We use the inferende provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
+        LOGGER.LogInformation($"We use the inference provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
     }
 
     #region Implementation of IProvider
@@ -30,12 +30,12 @@ public sealed class ProviderHuggingFace : BaseProvider
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -45,24 +45,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var message = await chatThread.Blocks.BuildMessages(async n => new Message
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var message = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the HuggingFace HTTP chat request:
         var huggingfaceChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -102,6 +85,12 @@ public sealed class ProviderHuggingFace : BaseProvider
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
@@ -117,6 +106,12 @@ public sealed class ProviderHuggingFace : BaseProvider
     
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+    
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }

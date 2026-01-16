@@ -15,7 +15,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
     [Parameter]
     public EventCallback<List<ConfigurationSelectData<string>>> AvailableEmbeddingProvidersChanged { get; set; }
     
-    private string GetEmbeddingProviderModelName(EmbeddingProvider provider)
+    private static string GetEmbeddingProviderModelName(EmbeddingProvider provider)
     {
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
@@ -100,13 +100,13 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.EMBEDDING_PROVIDER);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
-        
+
         await this.UpdateEmbeddingProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }

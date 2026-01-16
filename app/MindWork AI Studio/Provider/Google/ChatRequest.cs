@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.Google;
 
@@ -11,7 +10,7 @@ namespace AIStudio.Provider.Google;
 /// <param name="Stream">Whether to stream the chat completion.</param>
 public readonly record struct ChatRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     bool Stream
 )
 {

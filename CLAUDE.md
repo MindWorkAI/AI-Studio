@@ -13,7 +13,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 - **Providers:** Multi-provider architecture supporting OpenAI, Anthropic, Google, Mistral, Perplexity, self-hosted models, and others
 - **Plugin System:** Lua-based plugin system for language packs, configuration, and future assistant plugins
 
-## Building and Running
+## Building
 
 ### Prerequisites
 - .NET 9 SDK
@@ -22,39 +22,16 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 - Tauri prerequisites (platform-specific dependencies)
 - **Note:** Development on Linux is discouraged due to complex Tauri dependencies that vary by distribution
 
-### One-Time Setup
+### Build
 ```bash
 cd app/Build
 dotnet run build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
-### Development Workflow
-Run these commands in separate terminals:
-
-**Terminal 1 - Start Rust runtime:**
-```bash
-cd runtime
-cargo tauri dev --no-watch
-```
-
-**Terminal 2 - Start .NET app:**
-```bash
-cd "app/MindWork AI Studio"
-dotnet run
-```
-
-The app will start in the Tauri window. Hot reload is supported for .NET code changes.
-
-### Building for Production
-```bash
-cd app/Build
-dotnet run build
-```
-Creates a release build for the current platform and architecture. Output is in `runtime/target/release/`.
 
 ### Running Tests
-Currently no automated test suite exists in the repository.
+Currently, no automated test suite exists in the repository.
 
 ## Architecture Details
 
@@ -125,6 +102,14 @@ Plugins can configure:
 - Preview features visibility
 - Preselected profiles
 - Chat templates
+- etc.
+
+When adding configuration options, update:
+- `app/MindWork AI Studio/Tools/PluginSystem/PluginConfiguration.cs`: In method `TryProcessConfiguration` register new options.
+- `app/MindWork AI Studio/Tools/PluginSystem/PluginFactory.Loading.cs`: In method `LoadAll` check for leftover configuration.
+- The corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)`, when adding config options (in contrast to complex config. objects)
+- `app/MindWork AI Studio/Tools/PluginSystem/PluginConfigurationObject.cs` for parsing logic of complex configuration objects.
+- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document the new configuration option.
 
 ## RAG (Retrieval-Augmented Generation)
 

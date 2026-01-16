@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Google;
 
-public class ProviderGoogle() : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", LOGGER)
+public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://generativelanguage.googleapis.com/v1beta/openai/", LOGGER)
 {
     private static readonly ILogger<ProviderGoogle> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGoogle>();
 
@@ -25,12 +25,12 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
             Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
@@ -40,24 +40,7 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
         var apiParameters = this.ParseAdditionalApiParameters();
         
         // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessages(async n => new Message
-        {
-            Role = n.Role switch
-            {
-                ChatRole.USER => "user",
-                ChatRole.AI => "assistant",
-                ChatRole.AGENT => "assistant",
-                ChatRole.SYSTEM => "system",
-
-                _ => "user",
-            },
-
-            Content = n.Content switch
-            {
-                ContentText text => await text.PrepareContentForAI(),
-                _ => string.Empty,
-            }
-        });
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Google HTTP chat request:
         var geminiChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -100,9 +83,15 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Provider.Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
+
+    /// <inheritdoc />
     public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModels(token, apiKeyProvisional);
+        var modelResponse = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
         if(modelResponse == default)
             return [];
         
@@ -119,7 +108,7 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
 
     public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModels(token, apiKeyProvisional);
+        var modelResponse = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
         if(modelResponse == default)
             return [];
         
@@ -129,15 +118,20 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
             .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
     }
     
+    /// <inheritdoc />
+    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+    }
     
     #endregion
 
-    private async Task<ModelsResponse> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelsResponse> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

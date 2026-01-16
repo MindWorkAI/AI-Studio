@@ -1,12 +1,20 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
+using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
+using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+
+using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Provider;
 
@@ -40,24 +48,37 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new AnnotationConverter() },
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower),
+            new AnnotationConverter(),
+            new MessageBaseConverter(),
+            new SubContentConverter(),
+            new SubContentImageSourceConverter(),
+            new SubContentImageUrlConverter(),
+        },
         AllowTrailingCommas = false
     };
 
     /// <summary>
     /// Constructor for the base provider.
     /// </summary>
+    /// <param name="provider">The provider enum value.</param>
     /// <param name="url">The base URL for the provider.</param>
     /// <param name="logger">The logger to use.</param>
-    protected BaseProvider(string url, ILogger logger)
+    protected BaseProvider(LLMProviders provider, string url, ILogger logger)
     {
         this.logger = logger;
+        this.Provider = provider;
 
         // Set the base URL:
         this.httpClient.BaseAddress = new(url);
     }
     
     #region Handling of IProvider, which all providers must implement
+    
+    /// <inheritdoc />
+    public LLMProviders Provider { get; }
     
     /// <inheritdoc />
     public abstract string Id { get; }
@@ -75,6 +96,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, CancellationToken token = default);
     
     /// <inheritdoc />
+    public abstract Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
+    
+    /// <inheritdoc />
     public abstract Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     /// <inheritdoc />
@@ -82,6 +106,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
+
+    /// <inheritdoc />
+    public abstract Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     #endregion
     
@@ -130,7 +157,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -138,7 +165,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -146,7 +173,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.NotFound)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -154,7 +181,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.Unauthorized)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -162,7 +189,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.InternalServerError)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -170,7 +197,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if(nextResponse.StatusCode is HttpStatusCode.ServiceUnavailable)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
-                this.logger.LogError("Failed request with status code {ResposeStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
             }
@@ -518,6 +545,78 @@ public abstract class BaseProvider : IProvider, ISecretId
         streamReader.Dispose();
     }
 
+    protected async Task<string> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
+    {
+        try
+        {
+            using var form = new MultipartFormDataContent();
+            var mimeType = Builder.FromFilename(audioFilePath);
+        
+            await using var fileStream = File.OpenRead(audioFilePath);
+            using var fileContent = new StreamContent(fileStream);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+
+            form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
+            form.Add(new StringContent(transcriptionModel.Id), "model");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
+            request.Content = form;
+
+            // Handle the authorization header based on the provider:
+            switch (this.Provider)
+            {
+                case LLMProviders.SELF_HOSTED:
+                    if(requestedSecret.Success)
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    
+                    break;
+                
+                case LLMProviders.FIREWORKS:
+                    if(!requestedSecret.Success)
+                    {
+                        this.logger.LogError("No valid API key available for transcription request.");
+                        return string.Empty;
+                    }
+                    
+                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    break;
+                
+                default:
+                    if(!requestedSecret.Success)
+                    {
+                        this.logger.LogError("No valid API key available for transcription request.");
+                        return string.Empty;
+                    }
+                    
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    break;
+            }
+            
+            using var response = await this.httpClient.SendAsync(request, token);
+            var responseBody = response.Content.ReadAsStringAsync(token).Result;
+        
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+                return string.Empty;
+            }
+
+            var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
+            if(transcriptionResponse is null)
+            {
+                this.logger.LogError("Was not able to deserialize the transcription response.");
+                return string.Empty;
+            }
+
+            return transcriptionResponse.Text;
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
+            return string.Empty;
+        }
+    }
+    
     /// <summary>
     /// Parse and convert API parameters from a provided JSON string into a dictionary,
     /// optionally merging additional parameters and removing specific keys.

@@ -14,6 +14,7 @@ public static class PreviewFeaturesExtensions
         PreviewFeatures.PRE_PLUGINS_2025 => TB("Plugins: Preview of our plugin system where you can extend the functionality of the app"),
         PreviewFeatures.PRE_READ_PDF_2025 => TB("Read PDF: Preview of our PDF reading system where you can read and extract text from PDF files"),
         PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025 => TB("Document Analysis: Preview of our document analysis system where you can analyze and extract information from documents"),
+        PreviewFeatures.PRE_SPEECH_TO_TEXT_2026 => TB("Transcription: Preview of our speech to text system where you can transcribe recordings and audio files into text"),
         
         _ => TB("Unknown preview feature")
     };

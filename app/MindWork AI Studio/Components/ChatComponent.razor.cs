@@ -3,7 +3,6 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -38,9 +37,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
-    [Inject]
-    private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
-    
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -61,8 +57,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
-    private HashSet<string> chatDocumentPaths = [];
-    private bool isPandocAvailable;
+    private HashSet<FileAttachment> chatDocumentPaths = [];
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -84,7 +79,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments, if any:
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
@@ -203,9 +202,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
-
-        // Check if Pandoc is available (no dialog or messages):
-        this.isPandocAvailable = await this.PandocAvailabilityService.IsAvailableAsync();
 
         await base.OnInitializedAsync();
     }
@@ -336,7 +332,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = chatTemplate;
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
             this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments (replaces existing):
+        this.chatDocumentPaths.Clear();
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         if(this.ChatThread is null)
             return;
 
@@ -472,7 +473,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
-                FileAttachments = this.chatDocumentPaths.ToList(),
+                FileAttachments = [..this.chatDocumentPaths.Where(x => x.IsValid)],
             };
 
             //
@@ -685,9 +686,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
-        
+
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments:
+        this.chatDocumentPaths.Clear();
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();
         
@@ -941,10 +947,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         if (this.cancellationTokenSource is not null)
         {
-            if(!this.cancellationTokenSource.IsCancellationRequested)
-                await this.cancellationTokenSource.CancelAsync();
+            try
+            {
+                if(!this.cancellationTokenSource.IsCancellationRequested)
+                    await this.cancellationTokenSource.CancelAsync();
             
-            this.cancellationTokenSource.Dispose();
+                this.cancellationTokenSource.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 

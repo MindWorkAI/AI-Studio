@@ -77,7 +77,22 @@
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your predefined user input.")"
             />
-            
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("File Attachments")
+            </MudText>
+            <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                @T("You can attach files that will be automatically included when using this chat template. These files will be added to the first message sent in any chat using this template.")
+            </MudJustifiedText>
+            <AttachDocuments
+                Name="ChatTemplateFileAttachments"
+                Layer="@DropLayers.DIALOGS"
+                @bind-DocumentPaths="@this.fileAttachments"
+                UseSmallForm="false"
+                CatchAllDocuments="true"
+                ValidateMediaFileTypes="false"
+            />
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Profile Usage")
             </MudText>

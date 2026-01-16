@@ -107,7 +107,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider);
+        var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.LLM_PROVIDER);
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);
@@ -134,7 +134,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
+    private static string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
     {
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();

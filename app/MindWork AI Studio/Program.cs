@@ -119,7 +119,6 @@ internal sealed class Program
         var databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
         
         var builder = WebApplication.CreateBuilder();
-        
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
             kestrelServerOptions.ConfigureEndpointDefaults(listenOptions =>
@@ -223,6 +222,7 @@ internal sealed class Program
         var rustLogger = app.Services.GetRequiredService<ILogger<RustService>>();
         rust.SetLogger(rustLogger);
         rust.SetEncryptor(encryption);
+        TerminalLogger.SetRustService(rust);
 
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
@@ -233,6 +233,7 @@ internal sealed class Program
 
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
+        app.Use(FileHandler.HandlerAsync);
 
 #if DEBUG
         app.UseStaticFiles();

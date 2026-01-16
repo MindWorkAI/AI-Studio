@@ -1,0 +1,73 @@
+@using AIStudio.Provider
+@using AIStudio.Settings.DataModel
+@inherits SettingsPanelBase
+
+@if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
+{
+    <ExpansionPanel HeaderIcon="@Icons.Material.Filled.VoiceChat" HeaderText="@T("Configure Transcription Providers")">
+        <PreviewPrototype ApplyInnerScrollingFix="true"/>
+        <MudText Typo="Typo.h4" Class="mb-3">
+            @T("Configured Transcription Providers")
+        </MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the 'Configure providers' section.")
+        </MudJustifiedText>
+        
+        <MudTable Items="@this.SettingsManager.ConfigurationData.TranscriptionProviders" Hover="@true" Class="border-dashed border rounded-lg">
+            <ColGroup>
+                <col style="width: 3em;"/>
+                <col style="width: 12em;"/>
+                <col style="width: 12em;"/>
+                <col/>
+                <col style="width: 16em;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>@T("Name")</MudTh>
+                <MudTh>@T("Provider")</MudTh>
+                <MudTh>@T("Model")</MudTh>
+                <MudTh>@T("Actions")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Num</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
+                <MudTd>@GetTranscriptionProviderModelName(context)</MudTd>
+
+                <MudTd>
+                    <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
+                        @if (context.IsEnterpriseConfiguration)
+                        {
+                            <MudTooltip Text="@T("This transcription provider is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="@T("Open Dashboard")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.OpenInBrowser" Href="@context.UsedLLMProvider.GetDashboardURL()" Target="_blank" Disabled="@(!context.UsedLLMProvider.HasDashboard())"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Edit")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditTranscriptionProvider(context))"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Delete")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteTranscriptionProvider(context))"/>
+                            </MudTooltip>
+                        }
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if (this.SettingsManager.ConfigurationData.TranscriptionProviders.Count == 0)
+        {
+            <MudText Typo="Typo.h6" Class="mt-3">
+                @T("No transcription provider configured yet.")
+            </MudText>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddTranscriptionProvider">
+            @T("Add transcription provider")
+        </MudButton>
+    </ExpansionPanel>
+}

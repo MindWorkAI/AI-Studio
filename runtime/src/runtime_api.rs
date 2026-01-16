@@ -74,6 +74,7 @@ pub fn start_runtime_api() {
                 crate::app_window::install_update,
                 crate::app_window::select_directory,
                 crate::app_window::select_file,
+                crate::app_window::select_files,
                 crate::app_window::save_file,
                 crate::secret::get_secret,
                 crate::secret::store_secret,
@@ -86,6 +87,7 @@ pub fn start_runtime_api() {
                 crate::environment::read_enterprise_env_config_server_url,
                 crate::file_data::extract_data,
                 crate::log::get_log_paths,
+                crate::log::log_event,
             ])
             .ignite().await.unwrap()
             .launch().await.unwrap();

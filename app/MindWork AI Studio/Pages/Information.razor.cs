@@ -16,14 +16,14 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Pages;
 
-public partial class About : MSGComponentBase
+public partial class Information : MSGComponentBase
 {
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
     
@@ -36,7 +36,7 @@ public partial class About : MSGComponentBase
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
     private static readonly MetaDataDatabasesAttribute META_DATA_DATABASES = ASSEMBLY.GetCustomAttribute<MetaDataDatabasesAttribute>()!;
     
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(About).Namespace, nameof(About));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Information).Namespace, nameof(Information));
 
     private string osLanguage = string.Empty;
     
@@ -211,7 +211,7 @@ public partial class About : MSGComponentBase
 
         ## Notice
 
-        Copyright 2025 Thorsten Sommer
+        Copyright 2026 Thorsten Sommer
 
         ## Terms and Conditions
 

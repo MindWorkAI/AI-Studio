@@ -12,18 +12,23 @@
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <SettingsPanelEmbeddings AvailableLLMProvidersFunc="() => this.availableLLMProviders" @bind-AvailableEmbeddingProviders="@this.availableEmbeddingProviders"/>
+                <SettingsPanelEmbeddings AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)" @bind-AvailableEmbeddingProviders="@this.availableEmbeddingProviders"/>
             }
             
-            <SettingsPanelApp AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+            @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
+            {
+                <SettingsPanelTranscription AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)" @bind-AvailableTranscriptionProviders="@this.availableTranscriptionProviders"/>
+            }
+            
+            <SettingsPanelApp AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <SettingsPanelAgentDataSourceSelection AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
-                <SettingsPanelAgentRetrievalContextValidation AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+                <SettingsPanelAgentDataSourceSelection AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+                <SettingsPanelAgentRetrievalContextValidation AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
             }
 
-            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="() => this.availableLLMProviders"/>
+            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
         </MudExpansionPanels>
     </InnerScrolling>
 </div>

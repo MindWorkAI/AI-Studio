@@ -9,6 +9,7 @@ public partial class Settings : MSGComponentBase
 {
     private List<ConfigurationSelectData<string>> availableLLMProviders = new();
     private List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
+    private List<ConfigurationSelectData<string>> availableTranscriptionProviders = new();
 
     #region Overrides of ComponentBase
 

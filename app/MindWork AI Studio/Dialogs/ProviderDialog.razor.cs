@@ -147,6 +147,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     protected override async Task OnInitializedAsync()
     {
+        // Call the base initialization first so that the I18N is ready:
+        await base.OnInitializedAsync();
+        
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
@@ -177,7 +180,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             }
             
             // Load the API key:
-            var requestedSecret = await this.RustService.GetAPIKey(this, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
+            var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
             else
@@ -192,8 +195,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
             await this.ReloadModels();
         }
-        
-        await base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -232,7 +233,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKey))
         {
             // Store the API key in the OS secure storage:
-            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey);
+            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.LLM_PROVIDER);
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
@@ -253,6 +254,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     }
 
     private void Cancel() => this.MudDialog.Cancel();
+
+    private async Task OnAPIKeyChanged(string apiKey)
+    {
+        this.dataAPIKey = apiKey;
+        if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
+        {
+            this.dataAPIKeyStorageIssue = string.Empty;
+            await this.form.Validate();
+        }
+    }
     
     private async Task ReloadModels()
     {

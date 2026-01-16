@@ -15,7 +15,8 @@ public enum LLMProviders
     DEEP_SEEK = 11,
     ALIBABA_CLOUD = 12,
     PERPLEXITY = 14,
-    
+    OPEN_ROUTER = 15,
+
     FIREWORKS = 5,
     GROQ = 6,
     HUGGINGFACE = 13,

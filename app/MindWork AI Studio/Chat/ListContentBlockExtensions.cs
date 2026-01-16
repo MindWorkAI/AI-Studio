@@ -1,4 +1,8 @@
-﻿namespace AIStudio.Chat;
+﻿using AIStudio.Provider;
+using AIStudio.Provider.OpenAI;
+using AIStudio.Settings;
+
+namespace AIStudio.Chat;
 
 public static class ListContentBlockExtensions
 {
@@ -6,20 +10,171 @@ public static class ListContentBlockExtensions
     /// Processes a list of content blocks by transforming them into a collection of message results asynchronously.
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
-    /// <param name="transformer">A function that transforms each content block into a message result asynchronously.</param>
-    /// <typeparam name="TResult">The type of the result produced by the transformation function.</typeparam>
+    /// <param name="roleTransformer">A function that transforms each content block into a message result asynchronously.</param>
+    /// <param name="selectedProvider">The selected LLM provider.</param>
+    /// <param name="selectedModel">The selected model.</param>
+    /// <param name="textSubContentFactory">A factory function to create text sub-content.</param>
+    /// <param name="imageSubContentFactory">A factory function to create image sub-content.</param>
     /// <returns>An asynchronous task that resolves to a list of transformed results.</returns>
-    public static async Task<IList<TResult>> BuildMessages<TResult>(this List<ContentBlock> blocks, Func<ContentBlock, Task<TResult>> transformer)
+    public static async Task<IList<IMessageBase>> BuildMessagesAsync(
+        this List<ContentBlock> blocks,
+        LLMProviders selectedProvider,
+        Model selectedModel,
+        Func<ChatRole, string> roleTransformer,
+        Func<string, ISubContent> textSubContentFactory,
+        Func<FileAttachmentImage, Task<ISubContent>> imageSubContentFactory)
     {
-        var messages = blocks
-            .Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text))
-            .Select(transformer)
-            .ToList();
+        var capabilities = selectedProvider.GetModelCapabilities(selectedModel);
+        var canProcessImages = capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT) ||
+                               capabilities.Contains(Capability.SINGLE_IMAGE_INPUT);
         
-        // Await all messages:
-        await Task.WhenAll(messages);
+        var messageTaskList = new List<Task<IMessageBase>>(blocks.Count);
+        foreach (var block in blocks)
+        {
+            switch (block.Content)
+            {
+                // The prompt may or may not contain image(s), but the provider/model cannot process images.
+                // Thus, we treat it as a regular text message.
+                case ContentText text when block.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace(text.Text) && !canProcessImages:
+                    messageTaskList.Add(CreateTextMessageAsync(block, text));
+                    break;
+                
+                // The regular case for text content without images:
+                case ContentText text when block.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace(text.Text) && !text.FileAttachments.ContainsImages():
+                    messageTaskList.Add(CreateTextMessageAsync(block, text));
+                    break;
+                
+                // Text prompt with images as attachments, and the provider/model can process images:
+                case ContentText text when block.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace(text.Text) && text.FileAttachments.ContainsImages():
+                    messageTaskList.Add(CreateMultimodalMessageAsync(block, text, textSubContentFactory, imageSubContentFactory));
+                    break;
+            }
+        }
 
+        // Await all messages:
+        await Task.WhenAll(messageTaskList);
+        
         // Select all results:
-        return messages.Select(n => n.Result).ToList();
+        return messageTaskList.Select(n => n.Result).ToList();
+        
+        // Local function to create a text message asynchronously.
+        Task<IMessageBase> CreateTextMessageAsync(ContentBlock block, ContentText text)
+        {
+            return Task.Run(async () => new TextMessage
+            {
+                Role = roleTransformer(block.Role),
+                Content = await text.PrepareTextContentForAI(),
+            } as IMessageBase);
+        }
+        
+        // Local function to create a multimodal message asynchronously.
+        Task<IMessageBase> CreateMultimodalMessageAsync(
+            ContentBlock block,
+            ContentText text,
+            Func<string, ISubContent> innerTextSubContentFactory,
+            Func<FileAttachmentImage, Task<ISubContent>> innerImageSubContentFactory)
+        {
+            return Task.Run(async () =>
+            {
+                var imagesTasks = text.FileAttachments
+                    .Where(x => x is { IsImage: true, Exists: true })
+                    .Cast<FileAttachmentImage>()
+                    .Select(innerImageSubContentFactory)
+                    .ToList();
+                
+                Task.WaitAll(imagesTasks);
+                var images = imagesTasks.Select(t => t.Result).ToList();
+                
+                return new MultimodalMessage
+                {
+                    Role = roleTransformer(block.Role),
+                    Content =
+                    [
+                        innerTextSubContentFactory(await text.PrepareTextContentForAI()),
+                        ..images,
+                    ]
+                } as IMessageBase;
+            });
+        }
     }
+
+    /// <summary>
+    /// Processes a list of content blocks using direct image URL format to create message results asynchronously.
+    /// </summary>
+    /// <param name="blocks">The list of content blocks to process.</param>
+    /// <param name="selectedProvider">The selected LLM provider.</param>
+    /// <param name="selectedModel">The selected model.</param>
+    /// <returns>An asynchronous task that resolves to a list of transformed message results.</returns>
+    /// <remarks>
+    /// Uses direct image URL format where the image data is placed directly in the image_url field:
+    /// <code>
+    /// { "type": "image_url", "image_url": "data:image/jpeg;base64,..." }
+    /// </code>
+    /// This format is used by OpenAI, Mistral, and Ollama.
+    /// </remarks>
+    public static async Task<IList<IMessageBase>> BuildMessagesUsingDirectImageUrlAsync(
+        this List<ContentBlock> blocks,
+        LLMProviders selectedProvider,
+        Model selectedModel) => await blocks.BuildMessagesAsync(
+            selectedProvider,
+            selectedModel,
+            StandardRoleTransformer,
+            StandardTextSubContentFactory,
+            DirectImageSubContentFactory);
+
+    /// <summary>
+    /// Processes a list of content blocks using nested image URL format to create message results asynchronously.
+    /// </summary>
+    /// <param name="blocks">The list of content blocks to process.</param>
+    /// <param name="selectedProvider">The selected LLM provider.</param>
+    /// <param name="selectedModel">The selected model.</param>
+    /// <returns>An asynchronous task that resolves to a list of transformed message results.</returns>
+    /// <remarks>
+    /// Uses nested image URL format where the image data is wrapped in an object:
+    /// <code>
+    /// { "type": "image_url", "image_url": { "url": "data:image/jpeg;base64,..." } }
+    /// </code>
+    /// This format is used by LM Studio, VLLM, llama.cpp, and other OpenAI-compatible providers.
+    /// </remarks>
+    public static async Task<IList<IMessageBase>> BuildMessagesUsingNestedImageUrlAsync(
+        this List<ContentBlock> blocks,
+        LLMProviders selectedProvider,
+        Model selectedModel) => await blocks.BuildMessagesAsync(
+            selectedProvider,
+            selectedModel,
+            StandardRoleTransformer,
+            StandardTextSubContentFactory,
+            NestedImageSubContentFactory);
+
+    private static ISubContent StandardTextSubContentFactory(string text) => new SubContentText
+    {
+        Text = text,
+    };
+
+    private static async Task<ISubContent> DirectImageSubContentFactory(FileAttachmentImage attachment) => new SubContentImageUrl
+    {
+        ImageUrl = await attachment.TryAsBase64() is (true, var base64Content)
+            ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+            : string.Empty,
+    };
+
+    private static async Task<ISubContent> NestedImageSubContentFactory(FileAttachmentImage attachment) => new SubContentImageUrlNested
+    {
+        ImageUrl = new SubContentImageUrlData
+        {
+            Url = await attachment.TryAsBase64() is (true, var base64Content)
+                ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                : string.Empty,
+        },
+    };
+
+    private static string StandardRoleTransformer(ChatRole role) => role switch
+    {
+        ChatRole.USER => "user",
+        ChatRole.AI => "assistant",
+        ChatRole.AGENT => "assistant",
+        ChatRole.SYSTEM => "system",
+
+        _ => "user",
+    };
 }

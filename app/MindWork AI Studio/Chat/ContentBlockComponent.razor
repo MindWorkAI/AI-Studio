@@ -20,7 +20,8 @@
             {
                 <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
                     <MudBadge Content="@this.Content.FileAttachments.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile" />
+                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile"
+                                       OnClick="@this.OpenAttachmentsDialog"/>
                     </MudBadge>
                 </MudTooltip>
             }
@@ -107,9 +108,21 @@
                     break;
 
                 case ContentType.IMAGE:
-                    if (this.Content is ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent)
+                    if (this.Content is ContentImage imageContent)
                     {
-                        <MudImage Src="@imageContent.Source"/>
+                        var imageSrc = imageContent.SourceType switch
+                        {
+                            ContentImageSource.BASE64 => ImageHelpers.ToDataUrl(imageContent.Source),
+                            ContentImageSource.URL => imageContent.Source,
+                            ContentImageSource.LOCAL_PATH => imageContent.Source,
+                            
+                            _ => string.Empty
+                        };
+
+                        if (!string.IsNullOrWhiteSpace(imageSrc))
+                        {
+                            <MudImage Src="@imageSrc" />
+                        }
                     }
 
                     break;

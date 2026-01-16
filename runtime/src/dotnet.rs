@@ -3,7 +3,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
-use log::{debug, error, info, warn};
+use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use rocket::get;
 use tauri::api::process::{Command, CommandChild, CommandEvent};
@@ -106,43 +106,11 @@ pub fn start_dotnet_server() {
         *server_spawn_clone.lock().unwrap() = Some(child);
 
         // Log the output of the .NET server:
+        // NOTE: Log events are sent via structured HTTP API calls.
+        // This loop serves for fundamental output (e.g., startup errors).
         while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
-
-            // Remove newline characters from the end:
             let line = line.trim_end();
-
-            // Starts the line with '=>'?
-            if line.starts_with("=>") {
-                // Yes. This means that the line is a log message from the .NET server.
-                // The format is: '<YYYY-MM-dd HH:mm:ss.fff> [<log level>] <source>: <message>'.
-                // We try to parse this line and log it with the correct log level:
-                let line = line.trim_start_matches("=>").trim();
-                let parts = line.split_once(": ").unwrap();
-                let left_part = parts.0.trim();
-                let message = parts.1.trim();
-                let parts = left_part.split_once("] ").unwrap();
-                let level = parts.0.split_once("[").unwrap().1.trim();
-                let source = parts.1.trim();
-                match level {
-                    "Trace" => debug!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Debug" => debug!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Information" => info!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Warning" => warn!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Error" => error!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Critical" => error!(Source = ".NET Server", Comp = source; "{message}"),
-
-                    _ => error!(Source = ".NET Server", Comp = source; "{message} (unknown log level '{level}')"),
-                }
-            } else {
-                let lower_line = line.to_lowercase();
-                if lower_line.contains("error") {
-                    error!(Source = ".NET Server"; "{line}");
-                } else if lower_line.contains("warning") {
-                    warn!(Source = ".NET Server"; "{line}");
-                } else {
-                    info!(Source = ".NET Server"; "{line}");
-                }
-            }
+            info!(Source = ".NET Server (stdout)"; "{line}");
         }
     });
 

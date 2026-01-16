@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using AIStudio.Provider.OpenAI;
 
 namespace AIStudio.Provider.Groq;
 
@@ -12,7 +11,7 @@ namespace AIStudio.Provider.Groq;
 /// <param name="Seed">The seed for the chat completion.</param>
 public readonly record struct ChatRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     bool Stream,
     int Seed
 )

@@ -42,7 +42,7 @@ public sealed class ContentText : IContent
     public List<Source> Sources { get; set; } = [];
     
     /// <inheritdoc />
-    public List<string> FileAttachments { get; set; } = [];
+    public List<FileAttachment> FileAttachments { get; set; } = [];
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -149,24 +149,24 @@ public sealed class ContentText : IContent
 
     #endregion
 
-    public async Task<string> PrepareContentForAI()
+    public async Task<string> PrepareTextContentForAI()
     {
         var sb = new StringBuilder();
         sb.AppendLine(this.Text);
 
         if(this.FileAttachments.Count > 0)
         {
-            // Filter out files that no longer exist
-            var existingFiles = this.FileAttachments.Where(File.Exists).ToList();
+            // Get the list of existing documents:
+            var existingDocuments = this.FileAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
 
-            // Log warning for missing files
-            var missingFiles = this.FileAttachments.Except(existingFiles).ToList();
-            if (missingFiles.Count > 0)
-                foreach (var missingFile in missingFiles)
-                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingFile}'", missingFile);
-
-            // Only proceed if there are existing files
-            if (existingFiles.Count > 0)
+            // Log warning for missing files:
+            var missingDocuments = this.FileAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
+            if (missingDocuments.Count > 0)
+                foreach (var missingDocument in missingDocuments)
+                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
+            
+            // Only proceed if there are existing, allowed documents:
+            if (existingDocuments.Count > 0)
             {
                 // Check Pandoc availability once before processing file attachments
                 var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
@@ -179,15 +179,29 @@ public sealed class ContentText : IContent
                 {
                     sb.AppendLine();
                     sb.AppendLine("The following files are attached to this message:");
-                    foreach(var file in existingFiles)
+                    foreach(var document in existingDocuments)
                     {
+                        if (document.IsForbidden)
+                        {
+                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
+                            continue;
+                        }
+                        
                         sb.AppendLine();
                         sb.AppendLine("---------------------------------------");
-                        sb.AppendLine($"File path: {file}");
+                        sb.AppendLine($"File path: {document.FilePath}");
                         sb.AppendLine("File content:");
                         sb.AppendLine("````");
-                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(file, int.MaxValue));
+                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
                         sb.AppendLine("````");
+                    }
+                    
+                    var numImages = this.FileAttachments.Count(x => x is { IsImage: true, Exists: true });
+                    if (numImages > 0)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                        sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
                     }
                 }
             }

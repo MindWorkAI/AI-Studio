@@ -74,7 +74,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 LatestUserPrompt = lastUserPrompt switch
                 {
                     ContentText text => text.Text,
-                    ContentImage image => await image.AsBase64(token),
+                    ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                        ? base64Image 
+                        : string.Empty,
                     _ => string.Empty
                 },
                 

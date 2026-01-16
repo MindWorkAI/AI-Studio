@@ -13,13 +13,32 @@ namespace Build.Commands;
 public sealed partial class UpdateMetadataCommands
 {
     [Command("release", Description = "Prepare & build the next release")]
-    public async Task Release(PrepareAction action)
+    public async Task Release(
+        [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
+        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
-        
+
+        // Validate parameters: either action or version must be specified, but not both:
+        if (action == PrepareAction.NONE && string.IsNullOrWhiteSpace(version))
+        {
+            Console.WriteLine("- Error: You must specify either --action (-a) or --version (-v).");
+            return;
+        }
+
+        if (action != PrepareAction.NONE && !string.IsNullOrWhiteSpace(version))
+        {
+            Console.WriteLine("- Error: You cannot specify both --action and --version. Please use only one.");
+            return;
+        }
+
+        // If version is specified, use SET action:
+        if (!string.IsNullOrWhiteSpace(version))
+            action = PrepareAction.SET;
+
         // Prepare the metadata for the next release:
-        await this.PerformPrepare(action, true);
+        await this.PerformPrepare(action, true, version);
         
         // Build once to allow the Rust compiler to read the changed metadata
         // and to update all .NET artifacts:
@@ -53,10 +72,29 @@ public sealed partial class UpdateMetadataCommands
     }
     
     [Command("prepare", Description = "Prepare the metadata for the next release")]
-    public async Task Prepare(PrepareAction action)
+    public async Task Prepare(
+        [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
+        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
+
+        // Validate parameters: either action or version must be specified, but not both:
+        if (action == PrepareAction.NONE && string.IsNullOrWhiteSpace(version))
+        {
+            Console.WriteLine("- Error: You must specify either --action (-a) or --version (-v).");
+            return;
+        }
+
+        if (action != PrepareAction.NONE && !string.IsNullOrWhiteSpace(version))
+        {
+            Console.WriteLine("- Error: You cannot specify both --action and --version. Please use only one.");
+            return;
+        }
+
+        // If version is specified, use SET action:
+        if (!string.IsNullOrWhiteSpace(version))
+            action = PrepareAction.SET;
 
         Console.WriteLine("==============================");
         Console.Write("- Are you trying to prepare a new release? (y/n) ");
@@ -66,18 +104,18 @@ public sealed partial class UpdateMetadataCommands
             Console.WriteLine("- Please use the 'release' command instead");
             return;
         }
-        
-        await this.PerformPrepare(action, false);
+
+        await this.PerformPrepare(action, false, version);
     }
 
-    private async Task PerformPrepare(PrepareAction action, bool internalCall)
+    private async Task PerformPrepare(PrepareAction action, bool internalCall, string? version = null)
     {
         if(internalCall)
             Console.WriteLine("==============================");
-        
+
         Console.WriteLine("- Prepare the metadata for the next release ...");
-        
-        var appVersion = await this.UpdateAppVersion(action);
+
+        var appVersion = await this.UpdateAppVersion(action, version);
         if (!string.IsNullOrWhiteSpace(appVersion.VersionText))
         {
             var buildNumber = await this.IncreaseBuildNumber();
@@ -90,7 +128,7 @@ public sealed partial class UpdateMetadataCommands
             await this.UpdateTauriVersion();
             await this.UpdateProjectCommitHash();
             await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "..", "..", "LICENSE.md")));
-            await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "About.razor.cs")));
+            await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "Information.razor.cs")));
             Console.WriteLine();
         }
     }
@@ -243,17 +281,6 @@ public sealed partial class UpdateMetadataCommands
         var nextBuildNumber = currentBuildNumber + 1;
         
         //
-        // We assume that most of the time, there will be patch releases:
-        //
-        var nextMajor = currentAppVersion.Major;
-        var nextMinor = currentAppVersion.Minor;
-        var nextPatch = currentAppVersion.Patch + 1;
-        
-        var nextAppVersion = $"{nextMajor}.{nextMinor}.{nextPatch}";
-        var nextChangelogFilename = $"v{nextAppVersion}.md";
-        var nextChangelogFilePath = Path.Combine(pathChangelogs, nextChangelogFilename);
-        
-        //
         // Regarding the next build time: We assume that the next release will take place in one week from now.
         // Thus, we check how many days this month has left. In the end, we want to predict the year and month
         // for the next build. Day, hour, minute and second are all set to x.
@@ -262,6 +289,19 @@ public sealed partial class UpdateMetadataCommands
         var nextBuildYear = (DateTime.Today + TimeSpan.FromDays(7)).Year;
         var nextBuildTimeString = $"{nextBuildYear}-{nextBuildMonth:00}-xx xx:xx UTC";
 
+        //
+        // We assume that most of the time, there will be patch releases:
+        //
+        // skipping the first 2 digits for major version
+        var nextBuildYearShort = nextBuildYear - 2000;
+        var nextMajor = nextBuildYearShort;
+        var nextMinor = nextBuildMonth;
+        var nextPatch = currentAppVersion.Major != nextBuildYearShort || currentAppVersion.Minor != nextBuildMonth ? 1 : currentAppVersion.Patch + 1;
+        
+        var nextAppVersion = $"{nextMajor}.{nextMinor}.{nextPatch}";
+        var nextChangelogFilename = $"v{nextAppVersion}.md";
+        var nextChangelogFilePath = Path.Combine(pathChangelogs, nextChangelogFilename);
+        
         var changelogHeader = $"""
                                # v{nextAppVersion}, build {nextBuildNumber} ({nextBuildTimeString})
                                
@@ -368,49 +408,69 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
 
-    private async Task<AppVersion> UpdateAppVersion(PrepareAction action)
+    private async Task<AppVersion> UpdateAppVersion(PrepareAction action, string? version = null)
     {
         const int APP_VERSION_INDEX = 0;
-        
+
         if (action == PrepareAction.NONE)
         {
             Console.WriteLine("- No action specified. Skipping app version update.");
             return new(string.Empty, 0, 0, 0);
         }
-        
+
         var pathMetadata = Environment.GetMetadataPath();
         var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
         var currentAppVersionLine = lines[APP_VERSION_INDEX].Trim();
-        var currentAppVersion = AppVersionRegex().Match(currentAppVersionLine);
-        var currentPatch = int.Parse(currentAppVersion.Groups["patch"].Value);
-        var currentMinor = int.Parse(currentAppVersion.Groups["minor"].Value);
-        var currentMajor = int.Parse(currentAppVersion.Groups["major"].Value);
-        
-        switch (action)
+
+        int newMajor, newMinor, newPatch;
+        if (action == PrepareAction.SET && !string.IsNullOrWhiteSpace(version))
         {
-            case PrepareAction.PATCH:
-                currentPatch++;
-                break;
-            
-            case PrepareAction.MINOR:
-                currentPatch = 0;
-                currentMinor++;
-                break;
-            
-            case PrepareAction.MAJOR:
-                currentPatch = 0;
-                currentMinor = 0;
-                currentMajor++;
-                break;
+            // Parse the provided version string:
+            var versionMatch = AppVersionRegex().Match(version);
+            if (!versionMatch.Success)
+            {
+                Console.WriteLine($"- Error: Invalid version format '{version}'. Expected format: major.minor.patch (e.g., 26.1.2)");
+                return new(string.Empty, 0, 0, 0);
+            }
+
+            newMajor = int.Parse(versionMatch.Groups["major"].Value);
+            newMinor = int.Parse(versionMatch.Groups["minor"].Value);
+            newPatch = int.Parse(versionMatch.Groups["patch"].Value);
         }
-        
-        var updatedAppVersion = $"{currentMajor}.{currentMinor}.{currentPatch}";
+        else
+        {
+            // Parse current version and increment based on action:
+            var currentAppVersion = AppVersionRegex().Match(currentAppVersionLine);
+            newPatch = int.Parse(currentAppVersion.Groups["patch"].Value);
+            newMinor = int.Parse(currentAppVersion.Groups["minor"].Value);
+            newMajor = int.Parse(currentAppVersion.Groups["major"].Value);
+
+            switch (action)
+            {
+                case PrepareAction.BUILD:
+                    newPatch++;
+                    break;
+
+                case PrepareAction.MONTH:
+                    newPatch = 1;
+                    newMinor++;
+                    break;
+
+                case PrepareAction.YEAR:
+                    newPatch = 1;
+                    newMinor = 1;
+                    newMajor++;
+                    break;
+            }
+        }
+
+        var updatedAppVersion = $"{newMajor}.{newMinor}.{newPatch}";
         Console.WriteLine($"- Updating app version from '{currentAppVersionLine}' to '{updatedAppVersion}'.");
-        
+
         lines[APP_VERSION_INDEX] = updatedAppVersion;
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
-        
-        return new(updatedAppVersion, currentMajor, currentMinor, currentPatch);
+
+        return new(updatedAppVersion, newMajor, newMinor, newPatch);
     }
 
     private async Task UpdateLicenceYear(string licenceFilePath)

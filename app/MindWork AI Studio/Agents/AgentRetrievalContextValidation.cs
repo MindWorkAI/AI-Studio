@@ -219,7 +219,9 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
                 ContentText text => text.Text,
 
                 // Image prompts may be empty, e.g., when the image is too large:
-                ContentImage image => await image.AsBase64(token),
+                ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                    ? base64Image 
+                    : string.Empty,
 
                 // Other content types are not supported yet:
                 _ => string.Empty,
