@@ -2,7 +2,13 @@ use log::info;
 use rcgen::generate_simple_self_signed;
 use sha2::{Sha256, Digest};
 
-pub fn generate_certificate() -> (Vec<u8>, Vec<u8>, String) {
+pub struct Certificate {
+    pub certificate: Vec<u8>,
+    pub private_key: Vec<u8>,
+    pub fingerprint: String,
+}
+
+pub fn generate_certificate() -> Certificate {
     
     let subject_alt_names = vec!["localhost".to_string()];
     let certificate_data = generate_simple_self_signed(subject_alt_names).unwrap();
@@ -18,5 +24,9 @@ pub fn generate_certificate() -> (Vec<u8>, Vec<u8>, String) {
     
     info!("Certificate fingerprint: '{certificate_fingerprint}'.");
     
-    (certificate_data.cert.pem().as_bytes().to_vec(), certificate_data.signing_key.serialize_pem().as_bytes().to_vec(), certificate_fingerprint.clone())
+    Certificate {
+        certificate: certificate_data.cert.pem().as_bytes().to_vec(),
+        private_key: certificate_data.signing_key.serialize_pem().as_bytes().to_vec(),
+        fingerprint: certificate_fingerprint.clone()
+    }
 }

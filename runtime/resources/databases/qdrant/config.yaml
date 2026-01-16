@@ -249,10 +249,11 @@ service:
   # If enabled, browsers would be allowed to query REST endpoints regardless of query origin.
   # More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
   # Default: true
-  enable_cors: true
+  enable_cors: false
 
   # Enable HTTPS for the REST and gRPC API
-  enable_tls: false
+  # TLS is enabled in AI Studio through environment variables when instantiating Qdrant as a sidecar.
+  # enable_tls: false
 
   # Check user HTTPS client certificate against CA file specified in tls config
   verify_https_client_certificate: false

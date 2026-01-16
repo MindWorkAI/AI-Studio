@@ -1,4 +1,6 @@
 ﻿use std::collections::HashMap;
+use std::{fs};
+use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -14,6 +16,7 @@ use crate::environment::DATA_DIRECTORY;
 use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
 use tempfile::{TempDir, Builder};
+use crate::zombie_process_remover::{kill_zombie_process, log_potential_zombie_process};
 
 // Qdrant server process started in a separate process and can communicate
 // via HTTP or gRPC with the .NET server and the runtime process
@@ -35,6 +38,8 @@ static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
 
 static TMPDIR: Lazy<Mutex<Option<TempDir>>> = Lazy::new(|| Mutex::new(None));
 
+const PID_FILE_NAME: &str = "qdrant.pid";
+
 #[derive(Serialize)]
 pub struct ProvideQdrantInfo {
     path: String,
@@ -46,24 +51,30 @@ pub struct ProvideQdrantInfo {
 
 #[get("/system/qdrant/info")]
 pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
-    return Json(ProvideQdrantInfo {
+    Json(ProvideQdrantInfo {
         path: Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").to_str().unwrap().to_string(),
         port_http: *QDRANT_SERVER_PORT_HTTP,
         port_grpc: *QDRANT_SERVER_PORT_GRPC,
         fingerprint: CERTIFICATE_FINGERPRINT.get().expect("Certificate fingerprint not available").to_string(),
         api_token: API_TOKEN.to_hex_text().to_string(),
-    });
+    })
 }
 
 /// Starts the Qdrant server in a separate process.
-pub fn start_qdrant_server() {
+pub fn start_qdrant_server(){
     
     let base_path = DATA_DIRECTORY.get().unwrap();
-    let (cert_path, key_path) =create_temp_tls_files(Path::new(base_path).join("databases").join("qdrant")).unwrap();
+    let path = Path::new(base_path).join("databases").join("qdrant");
+    if !path.exists() {
+        if let Err(e) = fs::create_dir_all(&path){
+            error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e.to_string());
+        };
+    }
+    let (cert_path, key_path) =create_temp_tls_files(&path).unwrap();
     
-    let storage_path = Path::new(base_path).join("databases").join("qdrant").join("storage").to_str().unwrap().to_string();
-    let snapshot_path = Path::new(base_path).join("databases").join("qdrant").join("snapshots").to_str().unwrap().to_string();
-    let init_path = Path::new(base_path).join("databases").join("qdrant").join(".qdrant-initalized").to_str().unwrap().to_string();
+    let storage_path = path.join("storage").to_str().unwrap().to_string();
+    let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
+    let init_path = path.join(".qdrant-initalized").to_str().unwrap().to_string();
     
     let qdrant_server_environment = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
@@ -88,6 +99,7 @@ pub fn start_qdrant_server() {
 
         let server_pid = child.pid();
         info!(Source = "Bootloader Qdrant"; "Qdrant server process started with PID={server_pid}.");
+        log_potential_zombie_process(path.join(PID_FILE_NAME), server_pid.to_string().as_str());
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
@@ -118,7 +130,6 @@ pub fn start_qdrant_server() {
 
 /// Stops the Qdrant server process.
 pub fn stop_qdrant_server() {
-    drop_tmpdir();
     if let Some(server_process) = QDRANT_SERVER.lock().unwrap().take() {
         let server_kill_result = server_process.kill();
         match server_kill_result {
@@ -128,10 +139,15 @@ pub fn stop_qdrant_server() {
     } else {
         warn!(Source = "Qdrant"; "Qdrant server process was not started or is already stopped.");
     }
+    drop_tmpdir();
+    if let Err(e) = cleanup_qdrant(){
+        warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
+    }
 }
 
-pub fn create_temp_tls_files(path: PathBuf) -> Result<(PathBuf, PathBuf), Box<dyn std::error::Error>> {
-    let (certificate, cert_private_key, cert_fingerprint) = generate_certificate();
+/// Create temporary directory with TLS relevant files
+pub fn create_temp_tls_files(path: &PathBuf) -> Result<(PathBuf, PathBuf), Box<dyn Error>> {
+    let cert = generate_certificate();
     
     let temp_dir = init_tmpdir_in(path);
 
@@ -139,12 +155,12 @@ pub fn create_temp_tls_files(path: PathBuf) -> Result<(PathBuf, PathBuf), Box<dy
     let key_path = temp_dir.join("key.pem");
 
     let mut cert_file = File::create(&cert_path)?;
-    cert_file.write_all(&*certificate)?;
+    cert_file.write_all(&*cert.certificate)?;
 
     let mut key_file = File::create(&key_path)?;
-    key_file.write_all(&*cert_private_key)?;
+    key_file.write_all(&*cert.private_key)?;
     
-    CERTIFICATE_FINGERPRINT.set(cert_fingerprint).expect("Could not set the certificate fingerprint.");
+    CERTIFICATE_FINGERPRINT.set(cert.fingerprint).expect("Could not set the certificate fingerprint.");
 
     Ok((cert_path, key_path))
 }
@@ -165,4 +181,36 @@ pub fn drop_tmpdir() {
     let mut guard = TMPDIR.lock().unwrap();
     *guard = None;
     warn!(Source = "Qdrant"; "Temporary directory for TLS was dropped.");
+}
+
+/// Remove old Pid files and kill the corresponding processes
+pub fn cleanup_qdrant() -> Result<(), Box<dyn Error>> {
+    let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").join(PID_FILE_NAME);
+    kill_zombie_process(pid_path, "qdrant.exe")?;
+    delete_old_certificates()?;
+    Ok(())
+}
+
+pub fn delete_old_certificates() -> Result<(), Box<dyn Error>> {
+    let dir_path =  Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant");
+
+    if !dir_path.exists() {
+        return Ok(());
+    }
+
+    for entry in fs::read_dir(dir_path)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_dir() {
+            let file_name = entry.file_name();
+            let folder_name = file_name.to_string_lossy();
+
+            if folder_name.starts_with("cert-") {
+                fs::remove_dir_all(&path)?;
+                warn!(Source="Qdrant"; "Removed old certificates in: {}", path.display());
+            }
+        }
+    }
+    Ok(())
 }

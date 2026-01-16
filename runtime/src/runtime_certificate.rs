@@ -16,11 +16,11 @@ pub fn generate_runtime_certificate() {
     
     info!("Try to generate a TLS certificate for the runtime API server...");
 
-    let (certificate, cer_private_key, cer_fingerprint) = generate_certificate();
+    let cert = generate_certificate();
     
-    CERTIFICATE_FINGERPRINT.set(cer_fingerprint).expect("Could not set the certificate fingerprint.");
-    CERTIFICATE.set(certificate).expect("Could not set the certificate.");
-    CERTIFICATE_PRIVATE_KEY.set(cer_private_key).expect("Could not set the private key.");
+    CERTIFICATE_FINGERPRINT.set(cert.fingerprint).expect("Could not set the certificate fingerprint.");
+    CERTIFICATE.set(cert.certificate).expect("Could not set the certificate.");
+    CERTIFICATE_PRIVATE_KEY.set(cert.private_key).expect("Could not set the private key.");
     
     info!("Done generating certificate for the runtime API server.");
 }

@@ -16,3 +16,4 @@ pub mod pandoc;
 pub mod qdrant;
 pub mod certificate_factory;
 pub mod runtime_api_token;
+pub mod zombie_process_remover;

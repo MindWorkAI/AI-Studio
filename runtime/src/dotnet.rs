@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
@@ -12,9 +13,10 @@ use crate::runtime_api_token::API_TOKEN;
 use crate::app_window::change_location_to;
 use crate::runtime_certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
-use crate::environment::is_dev;
+use crate::environment::{is_dev, DATA_DIRECTORY};
 use crate::network::get_available_port;
 use crate::runtime_api::API_SERVER_PORT;
+use crate::zombie_process_remover::{kill_zombie_process, log_potential_zombie_process};
 
 // The .NET server is started in a separate process and communicates with this
 // runtime process via IPC. However, we do net start the .NET server in
@@ -26,6 +28,8 @@ static DOTNET_SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc:
 static DOTNET_SERVER_PORT: Lazy<u16> = Lazy::new(|| get_available_port().unwrap());
 
 static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+
+pub const PID_FILE_NAME: &str = "mindwork_ai_studio.pid";
 
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
@@ -94,9 +98,9 @@ pub fn start_dotnet_server() {
                 .envs(dotnet_server_environment)
                 .spawn()
                 .expect("Failed to spawn .NET server process.");
-
         let server_pid = child.pid();
         info!(Source = "Bootloader .NET"; "The .NET server process started with PID={server_pid}.");
+        log_potential_zombie_process(Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME), server_pid.to_string().as_str());
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
@@ -141,6 +145,7 @@ pub fn start_dotnet_server() {
             }
         }
     });
+
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.
@@ -184,5 +189,14 @@ pub fn stop_dotnet_server() {
         }
     } else {
         warn!("The .NET server process was not started or is already stopped.");
+    }
+    cleanup_dotnet_server();
+}
+
+/// Remove old Pid files and kill the corresponding processes
+pub fn cleanup_dotnet_server() {
+    let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME);
+    if let Err(e) = kill_zombie_process(pid_path, "mindworkAIStudioServer.exe"){
+        warn!(Source = ".NET"; "Error during the cleanup of .NET: {}", e);
     }
 }

@@ -62,19 +62,19 @@ public static class Qdrant
             return;
         }
         
-        var qdrantDBSourcePath = Path.Join(qdrantTmpExtractPath.FullName, database.Path);
-        var qdrantDBTargetPath = Path.Join(cwd, "resources", "databases", "qdrant",database.Filename);
-        if (!File.Exists(qdrantDBSourcePath))
+        var qdrantDbSourcePath = Path.Join(qdrantTmpExtractPath.FullName, database.Path);
+        var qdrantDbTargetPath = Path.Join(cwd, "target", "databases", "qdrant",database.Filename);
+        if (!File.Exists(qdrantDbSourcePath))
         {
-            Console.WriteLine($" failed to find the database file '{qdrantDBSourcePath}'");
+            Console.WriteLine($" failed to find the database file '{qdrantDbSourcePath}'");
             return;
         }
         
-        Directory.CreateDirectory(Path.Join(cwd, "resources", "databases", "qdrant"));
-        if (File.Exists(qdrantDBTargetPath))
-            File.Delete(qdrantDBTargetPath);
+        Directory.CreateDirectory(Path.Join(cwd, "target", "databases", "qdrant"));
+        if (File.Exists(qdrantDbTargetPath))
+            File.Delete(qdrantDbTargetPath);
         
-        File.Copy(qdrantDBSourcePath, qdrantDBTargetPath);
+        File.Copy(qdrantDbSourcePath, qdrantDbTargetPath);
         
         //
         // Cleanup:
@@ -91,7 +91,7 @@ public static class Qdrant
         RID.OSX_ARM64 => new("qdrant", "qdrant-aarch64-apple-darwin"),
         RID.OSX_X64 => new("qdrant", "qdrant-x86_64-apple-darwin"),
         
-        RID.LINUX_ARM64 => new("qdrant", "qdrant-aarch64-unknown-linux-musl"),
+        RID.LINUX_ARM64 => new("qdrant", "qdrant-aarch64-unknown-linux-gnu"),
         RID.LINUX_X64 => new("qdrant", "qdrant-x86_64-unknown-linux-gnu"),
         
         RID.WIN_X64 => new("qdrant.exe", "qdrant-x86_64-pc-windows-msvc.exe"),
