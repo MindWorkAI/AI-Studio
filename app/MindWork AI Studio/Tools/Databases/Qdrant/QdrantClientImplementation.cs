@@ -6,10 +6,13 @@ namespace AIStudio.Tools.Databases.Qdrant;
 public class QdrantClientImplementation : DatabaseClient
 {
     private int HttpPort { get; }
+    
     private int GrpcPort { get; }
-    private string IpAddress => "localhost";
+    
     private QdrantClient GrpcClient { get; }
+    
     private string Fingerprint { get; }
+    
     private string ApiToken { get; }
     
     public QdrantClientImplementation(string name, string path, int httpPort, int grpcPort, string fingerprint, string apiToken): base(name, path)
@@ -21,9 +24,11 @@ public class QdrantClientImplementation : DatabaseClient
         this.GrpcClient = this.CreateQdrantClient();
     }
     
+    private const string IP_ADDRESS = "localhost";
+    
     public QdrantClient CreateQdrantClient()
     {
-        var address = "https://" + this.IpAddress + ":" + this.GrpcPort;
+        var address = "https://" + IP_ADDRESS + ":" + this.GrpcPort;
         var channel = QdrantChannel.ForAddress(address, new ClientConfiguration
         {
             ApiKey = this.ApiToken,

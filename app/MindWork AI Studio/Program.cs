@@ -87,7 +87,7 @@ internal sealed class Program
         }
         
         var qdrantInfo = await rust.GetQdrantInfo();
-        if (qdrantInfo.Path == String.Empty)
+        if (qdrantInfo.Path == string.Empty)
         {
             Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
             return;

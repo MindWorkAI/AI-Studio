@@ -14,15 +14,12 @@ public sealed partial class RustService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            return new QdrantInfo
-            {
-                Path = string.Empty,
-                PortHttp = 0,
-                PortGrpc = 0,
-                Fingerprint = string.Empty,
-                ApiToken = string.Empty,
-            };
+            if(this.logger is not null)
+                this.logger.LogError(e, "Error while fetching Qdrant info from Rust service.");
+            else
+                Console.WriteLine($"Error while fetching Qdrant info from Rust service: '{e}'.");
+            
+            return default;
         }
     }
 }

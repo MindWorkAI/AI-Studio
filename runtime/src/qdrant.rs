@@ -118,10 +118,12 @@ pub fn start_qdrant_server(){
                     } else {
                         debug!(Source = "Qdrant Server"; "{line}");
                     }
-                }
+                },
+            
                 CommandEvent::Stderr(line) => {
                     error!(Source = "Qdrant Server (stderr)"; "{line}");
-                }
+                },
+            
                 _ => {}
             }
         }
@@ -139,6 +141,7 @@ pub fn stop_qdrant_server() {
     } else {
         warn!(Source = "Qdrant"; "Qdrant server process was not started or is already stopped.");
     }
+
     drop_tmpdir();
     if let Err(e) = cleanup_qdrant(){
         warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
@@ -150,7 +153,6 @@ pub fn create_temp_tls_files(path: &PathBuf) -> Result<(PathBuf, PathBuf), Box<d
     let cert = generate_certificate();
     
     let temp_dir = init_tmpdir_in(path);
-
     let cert_path = temp_dir.join("cert.pem");
     let key_path = temp_dir.join("key.pem");
 

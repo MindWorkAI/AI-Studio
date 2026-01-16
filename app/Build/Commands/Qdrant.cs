@@ -44,7 +44,8 @@ public static class Qdrant
             {
                 using var archive = new ZipArchive(zStream, ZipArchiveMode.Read);
                 archive.ExtractToDirectory(qdrantTmpExtractPath.FullName, overwriteFiles: true);
-            } else
+            }
+            else
             {
                 await using var uncompressedStream = new GZipStream(zStream, CompressionMode.Decompress);
                 await TarFile.ExtractToDirectoryAsync(uncompressedStream, qdrantTmpExtractPath.FullName, true);   
