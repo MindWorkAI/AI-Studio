@@ -327,6 +327,32 @@ public static class LLMProvidersExtensions
         _ => false,
     };
 
+    /// <summary>
+    /// Determines if the model selection should be completely hidden for LLM providers.
+    /// This is the case when the host does not support model selection (e.g., llama.cpp).
+    /// </summary>
+    /// <param name="provider">The provider.</param>
+    /// <param name="host">The host for self-hosted providers.</param>
+    /// <returns>True if model selection should be hidden; otherwise, false.</returns>
+    public static bool IsLLMModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
+    {
+        LLMProviders.SELF_HOSTED => host is Host.LLAMA_CPP,
+        _ => false,
+    };
+
+    /// <summary>
+    /// Determines if the model selection should be completely hidden for transcription providers.
+    /// This is the case when the host does not support model selection (e.g., whisper.cpp).
+    /// </summary>
+    /// <param name="provider">The provider.</param>
+    /// <param name="host">The host for self-hosted providers.</param>
+    /// <returns>True if model selection should be hidden; otherwise, false.</returns>
+    public static bool IsTranscriptionModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
+    {
+        LLMProviders.SELF_HOSTED => host is Host.WHISPER_CPP,
+        _ => false,
+    };
+
     public static bool IsHostNeeded(this LLMProviders provider) => provider switch
     {
         LLMProviders.SELF_HOSTED => true,
@@ -391,13 +417,13 @@ public static class LLMProvidersExtensions
             {
                 case Host.NONE:
                 case Host.LLAMA_CPP:
+                case Host.WHISPER_CPP:
                 default:
                     return false;
 
                 case Host.OLLAMA:
                 case Host.LM_STUDIO:
                 case Host.VLLM:
-                case Host.WHISPER_CPP:
                     return true;
             }
         }

@@ -126,19 +126,29 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private AIStudio.Settings.Provider CreateProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
+
+        // Determine the model based on the provider and host configuration:
+        Model model;
+        if (this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+        {
+            // Use system model placeholder for hosts that don't support model selection (e.g., llama.cpp):
+            model = Model.SYSTEM_MODEL;
+        }
+        else if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
+        {
+            // These providers require manual model entry:
+            model = new Model(this.dataManuallyModel, null);
+        }
+        else
+            model = this.DataModel;
+
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
-            
-            Model = this.DataLLMProvider switch
-            {
-                LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
-                _ => this.DataModel
-            },
-            
+            Model = model,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,

@@ -113,25 +113,32 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     private TranscriptionProvider CreateTranscriptionProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
-        Model model = default;
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
+
+        // Determine the model based on the provider and host configuration:
+        Model model;
+        if (this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
+        {
+            // Use system model placeholder for hosts that don't support model selection (e.g., whisper.cpp):
+            model = Model.SYSTEM_MODEL;
+        }
+        else if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
         {
             switch (this.DataHost)
             {
                 case Host.OLLAMA:
                     model = new Model(this.dataManuallyModel, null);
                     break;
-                
+
                 case Host.VLLM:
                 case Host.LM_STUDIO:
-                case Host.WHISPER_CPP:
+                default:
                     model = this.DataModel;
                     break;
             }
         }
         else
             model = this.DataModel;
-        
+
         return new()
         {
             Num = this.DataNum,
