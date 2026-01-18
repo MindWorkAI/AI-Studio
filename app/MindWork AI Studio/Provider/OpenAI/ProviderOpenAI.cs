@@ -73,7 +73,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         var systemPrompt = new TextMessage
         {
             Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
 
         //
