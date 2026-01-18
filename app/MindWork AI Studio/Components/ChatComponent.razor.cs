@@ -97,10 +97,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             // Use chat thread sent by the user:
             this.ChatThread = deferredContent;
-            this.ChatThread = this.ChatThread with
-            {
-                IncludeDateTime = true,
-            };
+            this.ChatThread.IncludeDateTime = true;
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
