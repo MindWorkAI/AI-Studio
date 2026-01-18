@@ -115,6 +115,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
+            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
         };
     }
 
@@ -222,7 +223,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         await this.form.Validate();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.providerValidation.ValidatingModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;

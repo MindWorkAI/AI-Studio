@@ -102,6 +102,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
+            IsModelProvidedManually = () => this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is Host.OLLAMA,
         };
     }
     
@@ -208,7 +209,16 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     {
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.providerValidation.ValidatingModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
