@@ -149,31 +149,30 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
             switch (host)
             {
                 case Host.WHISPER_CPP:
-                    return Task.FromResult<IEnumerable<Provider.Model>>(
-                        new List<Provider.Model>
-                        {
-                            new("loaded-model", TB("Model as configured by whisper.cpp")),
-                        });
+                    return new List<Provider.Model>
+                    {
+                        new("loaded-model", TB("Model as configured by whisper.cpp")),
+                    };
                 
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], token, apiKeyProvisional);
+                    return await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], token, apiKeyProvisional);
                 
                 default:
-                    return Task.FromResult(Enumerable.Empty<Provider.Model>());
+                    return [];
             }
         }
         catch (Exception e)
         {
-            LOGGER.LogError(e, "Failed to load transcription models from self-hosted provider.");
-            return Task.FromResult(Enumerable.Empty<Provider.Model>());
+            LOGGER.LogError($"Failed to load transcription models from self-hosted provider: {e.Message}");
+            return [];
         }
     }
     
