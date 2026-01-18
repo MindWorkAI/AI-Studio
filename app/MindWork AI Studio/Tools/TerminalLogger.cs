@@ -64,7 +64,7 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
             {
                 textWriter.WriteLine();
                 foreach (var line in stackTrace.Split('\n'))
-                    textWriter.WriteLine($"      {line.TrimEnd()}");
+                    textWriter.WriteLine($"      {colorCode}{line.TrimEnd()}{ANSI_RESET}");
             }
         }
         else

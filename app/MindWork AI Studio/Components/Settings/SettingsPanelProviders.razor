@@ -1,6 +1,5 @@
 @using AIStudio.Provider
 @using AIStudio.Settings
-@using AIStudio.Provider.SelfHosted
 @inherits SettingsPanelBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="@T("Configure LLM Providers")">
@@ -29,20 +28,7 @@
             <MudTd>@context.Num</MudTd>
             <MudTd>@context.InstanceName</MudTd>
             <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
-            <MudTd>
-                @if (context.UsedLLMProvider is not LLMProviders.SELF_HOSTED)
-                {
-                    @GetLLMProviderModelName(context)
-                }
-                else if (context.UsedLLMProvider is LLMProviders.SELF_HOSTED && context.Host is not Host.LLAMA_CPP)
-                {
-                    @GetLLMProviderModelName(context)
-                }
-                else
-                {
-                    @T("as selected by provider")
-                }
-            </MudTd>
+            <MudTd>@this.GetLLMProviderModelName(context)</MudTd>
             <MudTd>
                 <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
                     @if (context.IsEnterpriseConfiguration)

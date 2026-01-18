@@ -554,10 +554,22 @@ public abstract class BaseProvider : IProvider, ISecretId
         
             await using var fileStream = File.OpenRead(audioFilePath);
             using var fileContent = new StreamContent(fileStream);
+            
+            // Set the content type based on the file extension:
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
-
+            
+            // Add the file content to the form data:
             form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
-            form.Add(new StringContent(transcriptionModel.Id), "model");
+
+            //
+            // Add the model name to the form data. Ensure that a model name is always provided.
+            // Otherwise, the StringContent constructor will throw an exception.
+            //
+            var modelName = transcriptionModel.Id;
+            if (string.IsNullOrWhiteSpace(modelName))
+                modelName = "placeholder";
+            
+            form.Add(new StringContent(modelName), "model");
 
             using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
             request.Content = form;
