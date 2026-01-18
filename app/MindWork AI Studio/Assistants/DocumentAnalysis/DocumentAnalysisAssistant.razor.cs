@@ -137,7 +137,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
                             ContentType = ContentType.TEXT,
                             Content = new ContentText()
                             {
-                                Text = this.T("Your previous document from the Document Analysis Assistant."),
                                 FileAttachments = this.loadedDocumentPaths.ToList(),
                             }
                         },
@@ -149,6 +148,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             return new ChatThread
             {
                 SystemPrompt = SystemPrompts.DEFAULT
+                            Text = this.T("The result of your previous document analysis session."),
             };
         }
     }
