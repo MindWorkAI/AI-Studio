@@ -8,8 +8,6 @@ using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 
-using Microsoft.Extensions.Logging;
-
 namespace AIStudio.Tools;
 
 public static class WorkspaceBehaviour
