@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,7 +13,20 @@ namespace AIStudio.Tools;
 public static class WorkspaceBehaviour
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
-    
+
+    /// <summary>
+    /// Semaphores for synchronizing chat storage operations per chat.
+    /// This prevents race conditions when multiple threads try to write
+    /// the same chat file simultaneously.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> CHAT_STORAGE_SEMAPHORES = new();
+
+    private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId)
+    {
+        var key = $"{workspaceId}_{chatId}";
+        return CHAT_STORAGE_SEMAPHORES.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+    }
+
     public static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -37,35 +51,50 @@ public static class WorkspaceBehaviour
 
     public static async Task StoreChat(ChatThread chat)
     {
-        string chatDirectory;
-        if (chat.WorkspaceId == Guid.Empty)
-            chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
-        else
-            chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+        // Acquire the semaphore for this specific chat to prevent concurrent writes to the same file:
+        var semaphore = GetChatSemaphore(chat.WorkspaceId, chat.ChatId);
+        await semaphore.WaitAsync();
         
-        // Ensure the directory exists:
-        Directory.CreateDirectory(chatDirectory);
-        
-        // Save the chat name:
-        var chatNamePath = Path.Join(chatDirectory, "name");
-        await File.WriteAllTextAsync(chatNamePath, chat.Name);
-        
-        // Save the thread as thread.json:
-        var chatPath = Path.Join(chatDirectory, "thread.json");
-        await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
+        try
+        {
+            string chatDirectory;
+            if (chat.WorkspaceId == Guid.Empty)
+                chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
+            else
+                chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+
+            // Ensure the directory exists:
+            Directory.CreateDirectory(chatDirectory);
+
+            // Save the chat name:
+            var chatNamePath = Path.Join(chatDirectory, "name");
+            await File.WriteAllTextAsync(chatNamePath, chat.Name);
+
+            // Save the thread as thread.json:
+            var chatPath = Path.Join(chatDirectory, "thread.json");
+            await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
     public static async Task<ChatThread?> LoadChat(LoadChat loadChat)
     {
-        var chatPath = loadChat.WorkspaceId == Guid.Empty
-            ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
-            : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
-
-        if(!Directory.Exists(chatPath))
-            return null;
+        // Acquire the semaphore for this specific chat to prevent concurrent read/writes to the same file:
+        var semaphore = GetChatSemaphore(loadChat.WorkspaceId, loadChat.ChatId);
+        await semaphore.WaitAsync();
         
         try
         {
+            var chatPath = loadChat.WorkspaceId == Guid.Empty
+                ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
+                : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
+
+            if(!Directory.Exists(chatPath))
+                return null;
+            
             var chatData = await File.ReadAllTextAsync(Path.Join(chatPath, "thread.json"), Encoding.UTF8);
             var chat = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
             return chat;
@@ -73,6 +102,10 @@ public static class WorkspaceBehaviour
         catch (Exception)
         {
             return null;
+        }
+        finally
+        {
+            semaphore.Release();
         }
     }
     
@@ -144,7 +177,18 @@ public static class WorkspaceBehaviour
         else
             chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
 
-        Directory.Delete(chatDirectory, true);
+        // Acquire the semaphore to prevent deleting while another thread is writing:
+        var semaphore = GetChatSemaphore(workspaceId, chatId);
+        await semaphore.WaitAsync();
+        
+        try
+        {
+            Directory.Delete(chatDirectory, true);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
     private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
