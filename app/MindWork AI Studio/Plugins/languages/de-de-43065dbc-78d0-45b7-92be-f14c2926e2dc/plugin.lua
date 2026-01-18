@@ -2170,7 +2170,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T172585
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1806589097"] = "Anbieter hinzufügen"
 
 -- Configure LLM Providers
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1810190350"] = "Anbieter für LLM konfigurieren"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1810190350"] = "Anbieter für LLMs konfigurieren"
 
 -- Edit LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1868766523"] = "LLM-Anbieter bearbeiten"
@@ -2206,7 +2206,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T284206
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2911731076"] = "Noch keine Anbieter konfiguriert."
 
 -- Configured LLM Providers
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3019870540"] = "Konfigurierte Anbieter für LLM"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3019870540"] = "Konfigurierte Anbieter für LLMs"
 
 -- as selected by provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3082210376"] = "wie vom Anbieter ausgewählt"
@@ -2302,7 +2302,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Möchten Sie den Anbieter für Transkriptionen „{0}“ wirklich löschen?"
 
 -- With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the \"Configure providers\" section.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T584860404"] = "Mit Unterstützung von Modellen für Transkriptionen kann MindWork AI Studio menschliche Sprache in Text umwandeln. Das ist zum Beispiel hilfreich, wenn Sie Texte diktieren möchten. Sie können aus speziellen Modellen für Transkriptionen wählen, jedoch nicht aus multimodalen LLMs (Large Language Models), die sowohl Sprache als auch Text verarbeiten können. Die Einrichtung multimodaler Modelle erfolgt im Abschnitt „Anbieter für LLM konfigurieren“."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T584860404"] = "Mit Unterstützung von Modellen für Transkriptionen kann MindWork AI Studio menschliche Sprache in Text umwandeln. Das ist zum Beispiel hilfreich, wenn Sie Texte diktieren möchten. Sie können aus speziellen Modellen für Transkriptionen wählen, jedoch nicht aus multimodalen LLMs (Large Language Models), die sowohl Sprache als auch Text verarbeiten können. Die Einrichtung multimodaler Modelle erfolgt im Abschnitt „Anbieter für LLMs konfigurieren“."
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T900237532"] = "Anbieter"

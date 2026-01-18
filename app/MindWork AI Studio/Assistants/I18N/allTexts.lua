@@ -3205,6 +3205,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T290547799"] = "Cur
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T416738168"] = "Model selection"
 
+-- We are currently unable to communicate with the provider to load models. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T504465522"] = "We are currently unable to communicate with the provider to load models. Please try again later."
+
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T808120719"] = "Host"
 
@@ -3417,6 +3420,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Currently, 
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T416738168"] = "Model selection"
+
+-- We are currently unable to communicate with the provider to load models. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "We are currently unable to communicate with the provider to load models. Please try again later."
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
@@ -4635,6 +4641,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3703662664"] =
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T416738168"] = "Model selection"
+
+-- We are currently unable to communicate with the provider to load models. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T504465522"] = "We are currently unable to communicate with the provider to load models. Please try again later."
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T808120719"] = "Host"
