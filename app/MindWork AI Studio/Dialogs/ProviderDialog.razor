@@ -116,6 +116,12 @@
                         }
                     }
                 </MudStack>
+                @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-3">
+                        @this.dataLoadingModelsIssue
+                    </MudAlert>
+                }
             </MudField>
 
             @* ReSharper disable once CSharpWarnings::CS8974 *@

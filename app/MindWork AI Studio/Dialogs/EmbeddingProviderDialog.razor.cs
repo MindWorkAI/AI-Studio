@@ -71,7 +71,10 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
+
+    [Inject]
+    private ILogger<EmbeddingProviderDialog> Logger { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -85,7 +88,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
-    
+    private string dataLoadingModelsIssue = string.Empty;
+
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
     
@@ -263,18 +267,27 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     private async Task ReloadModels()
     {
+        this.dataLoadingModelsIssue = string.Empty;
         var currentEmbeddingProviderSettings = this.CreateEmbeddingProviderSettings();
         var provider = currentEmbeddingProviderSettings.CreateProvider();
-        if(provider is NoProvider)
+        if (provider is NoProvider)
             return;
-        
-        var models = await provider.GetEmbeddingModels(this.dataAPIKey);
-        
-        // Order descending by ID means that the newest models probably come first:
-        var orderedModels = models.OrderByDescending(n => n.Id);
-        
-        this.availableModels.Clear();
-        this.availableModels.AddRange(orderedModels);
+
+        try
+        {
+            var models = await provider.GetEmbeddingModels(this.dataAPIKey);
+
+            // Order descending by ID means that the newest models probably come first:
+            var orderedModels = models.OrderByDescending(n => n.Id);
+
+            this.availableModels.Clear();
+            this.availableModels.AddRange(orderedModels);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
+            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+        }
     }
     
     private string APIKeyText => this.DataLLMProvider switch
