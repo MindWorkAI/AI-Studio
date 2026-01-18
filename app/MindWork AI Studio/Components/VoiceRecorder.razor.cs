@@ -25,15 +25,23 @@ public partial class VoiceRecorder : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
-        // Initialize sound effects. This "warms up" the AudioContext and preloads all sounds for reliable playback:
-        await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+
+        try
+        {
+            // Initialize sound effects. This "warms up" the AudioContext and preloads all sounds for reliable playback:
+            await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Failed to initialize sound effects.");
+        }
     }
 
     #endregion
 
     private uint numReceivedChunks;
     private bool isRecording;
+    private bool isPreparing;
     private bool isTranscribing;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
@@ -51,9 +59,19 @@ public partial class VoiceRecorder : MSGComponentBase
     {
         if (toggled)
         {
-            // Warm up sound effects:
-            await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+            this.isPreparing = true;
+            this.StateHasChanged();
             
+            try
+            {
+                // Warm up sound effects:
+                await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to initialize sound effects.");
+            }
+
             var mimeTypes = GetPreferredMimeTypes(
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
@@ -71,20 +89,40 @@ public partial class VoiceRecorder : MSGComponentBase
             // Initialize the file stream for writing chunks:
             await this.InitializeRecordingStream();
 
-            var mimeTypeStrings = mimeTypes.ToStringArray();
-            var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
+            try
+            {
+                var mimeTypeStrings = mimeTypes.ToStringArray();
+                var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
 
-            // Store the MIME type for later use:
-            this.currentRecordingMimeType = actualMimeType;
+                // Store the MIME type for later use:
+                this.currentRecordingMimeType = actualMimeType;
 
-            this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
-            this.isRecording = true;
+                this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
+                this.isPreparing = false;
+                this.isRecording = true;
+            }
+            catch (Exception e)
+            {
+                this.Logger.LogError(e, "Failed to start audio recording.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to start audio recording.")));
+
+                // Clean up the recording stream if starting failed:
+                await this.FinalizeRecordingStream();
+            }
         }
         else
         {
-            var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
-            if (result.ChangedMimeType)
-                this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+            try
+            {
+                var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
+                if (result.ChangedMimeType)
+                    this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+            }
+            catch (Exception e)
+            {
+                this.Logger.LogError(e, "Failed to stop audio recording.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to stop audio recording.")));
+            }
 
             // Close and finalize the recording stream:
             await this.FinalizeRecordingStream();
@@ -280,8 +318,15 @@ public partial class VoiceRecorder : MSGComponentBase
 
             this.Logger.LogInformation("Transcription completed successfully. Result length: {Length} characters.", transcribedText.Length);
 
-            // Play the transcription done sound effect:
-            await this.JsRuntime.InvokeVoidAsync("playSound", "/sounds/transcription_done.ogg");
+            try
+            {
+                // Play the transcription done sound effect:
+                await this.JsRuntime.InvokeVoidAsync("playSound", "/sounds/transcription_done.ogg");
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to play transcription done sound effect.");
+            }
 
             // Copy the transcribed text to the clipboard:
             await this.RustService.CopyText2Clipboard(this.Snackbar, transcribedText);
@@ -320,7 +365,15 @@ public partial class VoiceRecorder : MSGComponentBase
         // Wait a moment for any queued sounds to finish playing, then release the microphone.
         // This allows Bluetooth headsets to switch back to A2DP profile without interrupting audio:
         await Task.Delay(1_800);
-        await this.JsRuntime.InvokeVoidAsync("audioRecorder.releaseMicrophone");
+
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("audioRecorder.releaseMicrophone");
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "Failed to release the microphone.");
+        }
     }
 
     private sealed class AudioRecordingResult

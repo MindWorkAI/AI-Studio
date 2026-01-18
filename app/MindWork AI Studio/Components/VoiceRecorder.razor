@@ -6,7 +6,7 @@
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager) && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
 {
     <MudTooltip Text="@this.Tooltip">
-        @if (this.isTranscribing)
+        @if (this.isTranscribing || this.isPreparing)
         {
             <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary"/>
         }
