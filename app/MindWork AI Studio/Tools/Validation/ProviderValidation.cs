@@ -19,7 +19,9 @@ public sealed class ProviderValidation
     public Func<IEnumerable<string>> GetUsedInstanceNames { get; init; } = () => [];
 
     public Func<Host> GetHost { get; init; } = () => Host.NONE;
-    
+
+    public Func<bool> IsModelProvidedManually { get; init; } = () => false;
+
     public string? ValidatingHostname(string hostname)
     {
         if(this.GetProvider() != LLMProviders.SELF_HOSTED)
@@ -70,12 +72,22 @@ public sealed class ProviderValidation
 
     public string? ValidatingModel(Model model)
     {
-        if(this.GetProvider() is LLMProviders.SELF_HOSTED && this.GetHost() == Host.LLAMA_CPP)
+        // For NONE providers, no validation is needed:
+        if (this.GetProvider() is LLMProviders.NONE)
             return null;
-        
+
+        // For self-hosted llama.cpp or whisper.cpp, no model selection needed
+        // (model is loaded at startup):
+        if (this.GetProvider() is LLMProviders.SELF_HOSTED && this.GetHost() is Host.LLAMA_CPP or Host.WHISPER_CPP)
+            return null;
+
+        // For manually entered models, this validation doesn't apply:
+        if (this.IsModelProvidedManually())
+            return null;
+
         if (model == default)
             return TB("Please select a model.");
-        
+
         return null;
     }
 

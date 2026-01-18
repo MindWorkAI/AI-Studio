@@ -9,6 +9,22 @@ namespace AIStudio.Provider;
 /// <param name="DisplayName">The model's display name.</param>
 public readonly record struct Model(string Id, string? DisplayName)
 {
+    /// <summary>
+    /// Special model ID used when the model is selected by the system/host
+    /// and cannot be changed by the user (e.g., llama.cpp, whisper.cpp).
+    /// </summary>
+    private const string SYSTEM_MODEL_ID = "::system::";
+
+    /// <summary>
+    /// Creates a system-configured model placeholder.
+    /// </summary>
+    public static readonly Model SYSTEM_MODEL = new(SYSTEM_MODEL_ID, null);
+
+    /// <summary>
+    /// Checks if this model is the system-configured placeholder.
+    /// </summary>
+    public bool IsSystemModel => this == SYSTEM_MODEL;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Model).Namespace, nameof(Model));
     
     #region Overrides of ValueType

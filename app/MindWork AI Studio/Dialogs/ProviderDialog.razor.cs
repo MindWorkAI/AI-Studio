@@ -84,6 +84,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private ILogger<ProviderDialog> Logger { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     /// <summary>
@@ -97,6 +100,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
+    private string dataLoadingModelsIssue = string.Empty;
     private bool showExpertSettings;
     
     // We get the form reference from Blazor code to validate it manually:
@@ -115,25 +119,36 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
+            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
         };
     }
 
     private AIStudio.Settings.Provider CreateProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
+
+        // Determine the model based on the provider and host configuration:
+        Model model;
+        if (this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+        {
+            // Use system model placeholder for hosts that don't support model selection (e.g., llama.cpp):
+            model = Model.SYSTEM_MODEL;
+        }
+        else if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
+        {
+            // These providers require manual model entry:
+            model = new Model(this.dataManuallyModel, null);
+        }
+        else
+            model = this.DataModel;
+
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
-            
-            Model = this.DataLLMProvider switch
-            {
-                LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
-                _ => this.DataModel
-            },
-            
+            Model = model,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
@@ -222,7 +237,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         await this.form.Validate();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.providerValidation.ValidatingModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
@@ -264,21 +288,40 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             await this.form.Validate();
         }
     }
+
+    private void OnHostChanged(Host selectedHost)
+    {
+        // When the host changes, reset the model selection state:
+        this.DataHost = selectedHost;
+        this.DataModel = default;
+        this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
     
     private async Task ReloadModels()
     {
+        this.dataLoadingModelsIssue = string.Empty;
         var currentProviderSettings = this.CreateProviderSettings();
         var provider = currentProviderSettings.CreateProvider();
-        if(provider is NoProvider)
+        if (provider is NoProvider)
             return;
-        
-        var models = await provider.GetTextModels(this.dataAPIKey);
-        
-        // Order descending by ID means that the newest models probably come first:
-        var orderedModels = models.OrderByDescending(n => n.Id);
-        
-        this.availableModels.Clear();
-        this.availableModels.AddRange(orderedModels);
+
+        try
+        {
+            var models = await provider.GetTextModels(this.dataAPIKey);
+
+            // Order descending by ID means that the newest models probably come first:
+            var orderedModels = models.OrderByDescending(n => n.Id);
+
+            this.availableModels.Clear();
+            this.availableModels.AddRange(orderedModels);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
+            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+        }
     }
     
     private string APIKeyText => this.DataLLMProvider switch

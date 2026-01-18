@@ -134,8 +134,12 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private static string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
+    private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)
     {
+        // For system models, return localized text:
+        if (provider.Model.IsSystemModel)
+            return T("Uses the provider-configured model");
+
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;

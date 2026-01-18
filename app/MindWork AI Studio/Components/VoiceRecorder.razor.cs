@@ -242,7 +242,7 @@ public partial class VoiceRecorder : MSGComponentBase
             {
                 this.Logger.LogWarning(
                     "The configured transcription provider '{ProviderName}' has a confidence level of '{ProviderLevel}', which is below the minimum required level of '{MinimumLevel}'.",
-                    transcriptionProviderSettings.Name,
+                    transcriptionProviderSettings.UsedLLMProvider,
                     providerConfidence.Level,
                     minimumLevel);
                 await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider does not meet the minimum confidence level.")));
@@ -259,7 +259,7 @@ public partial class VoiceRecorder : MSGComponentBase
             }
 
             // Call the transcription API:
-            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.Name, transcriptionProviderSettings.Model.DisplayName);
+            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.UsedLLMProvider, transcriptionProviderSettings.Model.ToString());
             var transcribedText = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
 
             if (string.IsNullOrWhiteSpace(transcribedText))
