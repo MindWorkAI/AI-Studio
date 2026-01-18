@@ -279,7 +279,17 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             await this.form.Validate();
         }
     }
-    
+
+    private void OnHostChanged(Host selectedHost)
+    {
+        // When the host changes, reset the model selection state:
+        this.DataHost = selectedHost;
+        this.DataModel = default;
+        this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
     private async Task ReloadModels()
     {
         this.dataLoadingModelsIssue = string.Empty;
