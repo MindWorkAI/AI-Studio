@@ -457,6 +457,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             return;
         
         this.CreateChatThread();
+        this.chatThread!.IncludeDateTime = true;
         
         var userRequest = this.AddUserRequest(
             await this.PromptLoadDocumentsContent(),

@@ -33,7 +33,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai
         var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
         
         // Parse the API parameters:

@@ -72,7 +72,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
             // Build the messages:
             Messages = [..messages],
             
-            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            System = chatThread.PrepareSystemPrompt(settingsManager),
             MaxTokens = apiParameters.TryGetValue("max_tokens", out var value) && value is int intValue ? intValue : 4_096,
             
             // Right now, we only support streaming completions:

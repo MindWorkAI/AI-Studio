@@ -33,7 +33,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
         var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
         
         // Parse the API parameters:

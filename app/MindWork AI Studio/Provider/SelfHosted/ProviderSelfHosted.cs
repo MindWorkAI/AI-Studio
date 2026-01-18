@@ -32,7 +32,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
         
         // Parse the API parameters:

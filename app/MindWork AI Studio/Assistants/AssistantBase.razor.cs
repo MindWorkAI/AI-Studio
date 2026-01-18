@@ -190,6 +190,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.chatThread = new()
         {
+            IncludeDateTime = false,
             SelectedProvider = this.providerSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.currentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -205,6 +206,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var chatId = Guid.NewGuid();
         this.chatThread = new()
         {
+            IncludeDateTime = false,
             SelectedProvider = this.providerSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.currentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
