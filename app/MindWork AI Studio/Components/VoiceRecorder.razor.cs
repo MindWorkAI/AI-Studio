@@ -20,6 +20,18 @@ public partial class VoiceRecorder : MSGComponentBase
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
 
+    #region Overrides of MSGComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        // Initialize sound effects. This "warms up" the AudioContext and preloads all sounds for reliable playback:
+        await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+    }
+
+    #endregion
+
     private uint numReceivedChunks;
     private bool isRecording;
     private bool isTranscribing;
@@ -39,6 +51,9 @@ public partial class VoiceRecorder : MSGComponentBase
     {
         if (toggled)
         {
+            // Warm up sound effects:
+            await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+            
             var mimeTypes = GetPreferredMimeTypes(
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
@@ -189,7 +204,11 @@ public partial class VoiceRecorder : MSGComponentBase
     private async Task TranscribeRecordingAsync()
     {
         if (this.finalRecordingPath is null)
+        {
+            // No recording to transcribe, but still release the microphone:
+            await this.ReleaseMicrophoneAsync();
             return;
+        }
 
         this.isTranscribing = true;
         this.StateHasChanged();
@@ -288,10 +307,20 @@ public partial class VoiceRecorder : MSGComponentBase
         }
         finally
         {
+            await this.ReleaseMicrophoneAsync();
+
             this.finalRecordingPath = null;
             this.isTranscribing = false;
             this.StateHasChanged();
         }
+    }
+
+    private async Task ReleaseMicrophoneAsync()
+    {
+        // Wait a moment for any queued sounds to finish playing, then release the microphone.
+        // This allows Bluetooth headsets to switch back to A2DP profile without interrupting audio:
+        await Task.Delay(1_800);
+        await this.JsRuntime.InvokeVoidAsync("audioRecorder.releaseMicrophone");
     }
 
     private sealed class AudioRecordingResult
