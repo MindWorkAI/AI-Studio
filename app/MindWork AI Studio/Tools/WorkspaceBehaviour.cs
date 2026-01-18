@@ -8,10 +8,14 @@ using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 
+using Microsoft.Extensions.Logging;
+
 namespace AIStudio.Tools;
 
 public static class WorkspaceBehaviour
 {
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(WorkspaceBehaviour));
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
 
     /// <summary>
@@ -21,10 +25,37 @@ public static class WorkspaceBehaviour
     /// </summary>
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> CHAT_STORAGE_SEMAPHORES = new();
 
+    /// <summary>
+    /// Timeout for acquiring the chat storage semaphore.
+    /// </summary>
+    private static readonly TimeSpan SEMAPHORE_TIMEOUT = TimeSpan.FromSeconds(6);
+
     private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId)
     {
         var key = $"{workspaceId}_{chatId}";
         return CHAT_STORAGE_SEMAPHORES.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+    }
+
+    /// <summary>
+    /// Tries to acquire the chat storage semaphore within the configured timeout.
+    /// </summary>
+    /// <param name="workspaceId">The workspace ID.</param>
+    /// <param name="chatId">The chat ID.</param>
+    /// <param name="callerName">The name of the calling method for logging purposes.</param>
+    /// <returns>A tuple containing whether the semaphore was acquired and the semaphore instance.</returns>
+    private static async Task<(bool Acquired, SemaphoreSlim Semaphore)> TryAcquireChatSemaphoreAsync(Guid workspaceId, Guid chatId, string callerName)
+    {
+        var semaphore = GetChatSemaphore(workspaceId, chatId);
+        var acquired = await semaphore.WaitAsync(SEMAPHORE_TIMEOUT);
+
+        if (!acquired)
+            LOG.LogWarning("Failed to acquire chat storage semaphore within {Timeout} seconds for workspace '{WorkspaceId}', chat '{ChatId}' in method '{CallerName}'. Skipping operation to prevent potential race conditions or deadlocks.",
+                SEMAPHORE_TIMEOUT.TotalSeconds,
+                workspaceId,
+                chatId,
+                callerName);
+
+        return (acquired, semaphore);
     }
 
     public static readonly JsonSerializerOptions JSON_OPTIONS = new()
@@ -51,10 +82,11 @@ public static class WorkspaceBehaviour
 
     public static async Task StoreChat(ChatThread chat)
     {
-        // Acquire the semaphore for this specific chat to prevent concurrent writes to the same file:
-        var semaphore = GetChatSemaphore(chat.WorkspaceId, chat.ChatId);
-        await semaphore.WaitAsync();
-        
+        // Try to acquire the semaphore for this specific chat to prevent concurrent writes to the same file:
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(StoreChat));
+        if (!acquired)
+            return;
+
         try
         {
             string chatDirectory;
@@ -82,10 +114,11 @@ public static class WorkspaceBehaviour
 
     public static async Task<ChatThread?> LoadChat(LoadChat loadChat)
     {
-        // Acquire the semaphore for this specific chat to prevent concurrent read/writes to the same file:
-        var semaphore = GetChatSemaphore(loadChat.WorkspaceId, loadChat.ChatId);
-        await semaphore.WaitAsync();
-        
+        // Try to acquire the semaphore for this specific chat to prevent concurrent read/writes to the same file:
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(loadChat.WorkspaceId, loadChat.ChatId, nameof(LoadChat));
+        if (!acquired)
+            return null;
+
         try
         {
             var chatPath = loadChat.WorkspaceId == Guid.Empty
@@ -94,7 +127,7 @@ public static class WorkspaceBehaviour
 
             if(!Directory.Exists(chatPath))
                 return null;
-            
+
             var chatData = await File.ReadAllTextAsync(Path.Join(chatPath, "thread.json"), Encoding.UTF8);
             var chat = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
             return chat;
@@ -177,10 +210,11 @@ public static class WorkspaceBehaviour
         else
             chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
 
-        // Acquire the semaphore to prevent deleting while another thread is writing:
-        var semaphore = GetChatSemaphore(workspaceId, chatId);
-        await semaphore.WaitAsync();
-        
+        // Try to acquire the semaphore to prevent deleting while another thread is writing:
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChat));
+        if (!acquired)
+            return;
+
         try
         {
             Directory.Delete(chatDirectory, true);
