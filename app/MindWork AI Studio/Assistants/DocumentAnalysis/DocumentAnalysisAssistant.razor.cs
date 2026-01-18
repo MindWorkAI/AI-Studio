@@ -122,7 +122,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     {
         get
         {
-            if (this.chatThread is null)
+            if (this.chatThread is null || this.chatThread.Blocks.Count < 2)
             {
                 return new ChatThread
                 {
@@ -141,6 +141,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
                     // that includes the loaded document paths and a standard message about the previous analysis session:
                     new ContentBlock
                     {
+                        Time = this.chatThread.Blocks.First().Time,
                         Role = ChatRole.USER,
                         HideFromUser = false,
                         ContentType = ContentType.TEXT,
