@@ -41,6 +41,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
     private uint numReceivedChunks;
     private bool isRecording;
+    private bool isPreparing;
     private bool isTranscribing;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
@@ -58,6 +59,9 @@ public partial class VoiceRecorder : MSGComponentBase
     {
         if (toggled)
         {
+            this.isPreparing = true;
+            this.StateHasChanged();
+            
             try
             {
                 // Warm up sound effects:
@@ -94,6 +98,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 this.currentRecordingMimeType = actualMimeType;
 
                 this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
+                this.isPreparing = false;
                 this.isRecording = true;
             }
             catch (Exception e)
