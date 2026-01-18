@@ -27,15 +27,120 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
-// Shared audio context for sound effects (Web Audio API does not register with Media Session):
+// Shared the audio context for sound effects (Web Audio API does not register with Media Session):
 let soundEffectContext = null;
+
+// Cache for decoded sound effect audio buffers:
 const soundEffectCache = new Map();
+
+// Track the preload state:
+let soundEffectsPreloaded = false;
+
+// Queue system: tracks when the next sound can start playing.
+// This prevents sounds from overlapping and getting "swallowed" by the audio system:
+let nextAvailablePlayTime = 0;
+
+// Minimum gap between sounds in seconds (small buffer to ensure clean transitions):
+const SOUND_GAP_SECONDS = 0.55;
+
+// List of all sound effects used in the app:
+const SOUND_EFFECT_PATHS = [
+    '/sounds/start_recording.ogg',
+    '/sounds/stop_recording.ogg',
+    '/sounds/transcription_done.ogg'
+];
+
+// Initialize the audio context with low-latency settings.
+// Should be called from a user interaction (click, keypress)
+// to satisfy browser autoplay policies:
+window.initSoundEffects = async function() {
+    
+    if (soundEffectContext && soundEffectContext.state !== 'closed') {
+        // Already initialized, just ensure it's running:
+        if (soundEffectContext.state === 'suspended') {
+            await soundEffectContext.resume();
+        }
+        
+        return;
+    }
+
+    try {
+        // Create the context with the interactive latency hint for the lowest latency:
+        soundEffectContext = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'interactive'
+        });
+
+        // Resume immediately (needed for Safari/macOS):
+        if (soundEffectContext.state === 'suspended') {
+            await soundEffectContext.resume();
+        }
+
+        // Reset the queue timing:
+        nextAvailablePlayTime = 0;
+
+        //
+        // Play a very short silent buffer to "warm up" the audio pipeline.
+        // This helps prevent the first real sound from being cut off:
+        //
+        const silentBuffer = soundEffectContext.createBuffer(1, 1, soundEffectContext.sampleRate);
+        const silentSource = soundEffectContext.createBufferSource();
+        silentSource.buffer = silentBuffer;
+        silentSource.connect(soundEffectContext.destination);
+        silentSource.start(0);
+
+        console.log('Sound effects - AudioContext initialized with latency:', soundEffectContext.baseLatency);
+
+        // Preload all sound effects in parallel:
+        if (!soundEffectsPreloaded) {
+            await window.preloadSoundEffects();
+        }
+    } catch (error) {
+        console.warn('Failed to initialize sound effects:', error);
+    }
+};
+
+// Preload all sound effect files into the cache:
+window.preloadSoundEffects = async function() {
+    if (soundEffectsPreloaded) {
+        return;
+    }
+
+    // Ensure that the context exists:
+    if (!soundEffectContext || soundEffectContext.state === 'closed') {
+        soundEffectContext = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'interactive'
+        });
+    }
+
+    console.log('Sound effects - preloading', SOUND_EFFECT_PATHS.length, 'sound files...');
+
+    const preloadPromises = SOUND_EFFECT_PATHS.map(async (soundPath) => {
+        try {
+            const response = await fetch(soundPath);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await soundEffectContext.decodeAudioData(arrayBuffer);
+            soundEffectCache.set(soundPath, audioBuffer);
+            
+            console.log('Sound effects - preloaded:', soundPath, 'duration:', audioBuffer.duration.toFixed(2), 's');
+        } catch (error) {
+            console.warn('Sound effects - failed to preload:', soundPath, error);
+        }
+    });
+
+    await Promise.all(preloadPromises);
+    soundEffectsPreloaded = true;
+    console.log('Sound effects - all files preloaded');
+};
 
 window.playSound = async function(soundPath) {
     try {
-        // Create or reuse the audio context:
+        // Initialize context if needed (fallback if initSoundEffects wasn't called):
         if (!soundEffectContext || soundEffectContext.state === 'closed') {
-            soundEffectContext = new (window.AudioContext || window.webkitAudioContext)();
+            soundEffectContext = new (window.AudioContext || window.webkitAudioContext)({
+                latencyHint: 'interactive'
+            });
+            
+            nextAvailablePlayTime = 0;
         }
 
         // Resume if suspended (browser autoplay policy):
@@ -47,19 +152,36 @@ window.playSound = async function(soundPath) {
         let audioBuffer = soundEffectCache.get(soundPath);
 
         if (!audioBuffer) {
-            // Fetch and decode the audio file:
+            // Fetch and decode the audio file (fallback if not preloaded):
+            console.log('Sound effects - loading on demand:', soundPath);
             const response = await fetch(soundPath);
             const arrayBuffer = await response.arrayBuffer();
             audioBuffer = await soundEffectContext.decodeAudioData(arrayBuffer);
             soundEffectCache.set(soundPath, audioBuffer);
         }
 
-        // Create a new source node and play:
+        // Calculate when this sound should start:
+        const currentTime = soundEffectContext.currentTime;
+        let startTime;
+
+        if (currentTime >= nextAvailablePlayTime) {
+            // No sound is playing, or the previous sound has finished; start immediately:
+            startTime = 0; // 0 means "now" in Web Audio API
+            nextAvailablePlayTime = currentTime + audioBuffer.duration + SOUND_GAP_SECONDS;
+        } else {
+            // A sound is still playing; schedule this sound to start after it:
+            startTime = nextAvailablePlayTime;
+            nextAvailablePlayTime = startTime + audioBuffer.duration + SOUND_GAP_SECONDS;
+            console.log('Sound effects - queued:', soundPath, 'will play in', (startTime - currentTime).toFixed(2), 's');
+        }
+        
+        // Create a new source node and schedule playback:
         const source = soundEffectContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(soundEffectContext.destination);
-        source.start(0);
-
+        source.start(startTime);
+        console.log('Sound effects - playing:', soundPath);
+        
     } catch (error) {
         console.warn('Failed to play sound effect:', error);
     }
@@ -70,12 +192,24 @@ let actualRecordingMimeType;
 let changedMimeType = false;
 let pendingChunkUploads = 0;
 
+// Store the media stream so we can close the microphone later:
+let activeMediaStream = null;
+
+// Delay in milliseconds to wait after getUserMedia() for Bluetooth profile switch (A2DP → HFP):
+const BLUETOOTH_PROFILE_SWITCH_DELAY_MS = 1_600;
+
 window.audioRecorder = {
     start: async function (dotnetRef, desiredMimeTypes = []) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        activeMediaStream = stream;
+
+        // Wait for Bluetooth headsets to complete the profile switch from A2DP to HFP.
+        // This prevents the first sound from being cut off during the switch:
+        console.log('Audio recording - waiting for Bluetooth profile switch...');
+        await new Promise(r => setTimeout(r, BLUETOOTH_PROFILE_SWITCH_DELAY_MS));
 
         // Play start recording sound effect:
-        window.playSound('/sounds/start_recording.ogg');
+        await window.playSound('/sounds/start_recording.ogg');
 
         // When only one mime type is provided as a string, convert it to an array:
         if (typeof desiredMimeTypes === 'string') {
@@ -165,11 +299,17 @@ window.audioRecorder = {
                 console.log('Audio recording - all chunks uploaded, finalizing.');
 
                 // Play stop recording sound effect:
-                window.playSound('/sounds/stop_recording.ogg');
+                await window.playSound('/sounds/stop_recording.ogg');
 
-                // Stop all tracks to release the microphone:
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                
+                //
+                // IMPORTANT: Do NOT release the microphone here!
+                // Bluetooth headsets switch profiles (HFP → A2DP) when the microphone is released,
+                // which causes audio to be interrupted. We keep the microphone open so that the
+                // stop_recording and transcription_done sounds can play without interruption.
+                //
+                // Call window.audioRecorder.releaseMicrophone() after the last sound has played.
+                //
+
                 // No need to process data here anymore, just signal completion:
                 resolve({
                     mimeType: actualRecordingMimeType,
@@ -180,5 +320,16 @@ window.audioRecorder = {
             // Finally, stop the recording (which will actually trigger the onstop event):
             mediaRecorder.stop();
         });
+    },
+
+    // Release the microphone after all sounds have been played.
+    // This should be called after the transcription_done sound to allow
+    // Bluetooth headsets to switch back to A2DP profile without interrupting audio:
+    releaseMicrophone: function () {
+        if (activeMediaStream) {
+            console.log('Audio recording - releasing microphone (Bluetooth will switch back to A2DP)');
+            activeMediaStream.getTracks().forEach(track => track.stop());
+            activeMediaStream = null;
+        }
     }
 };
