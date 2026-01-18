@@ -15,8 +15,12 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
     [Parameter]
     public EventCallback<List<ConfigurationSelectData<string>>> AvailableTranscriptionProvidersChanged { get; set; }
     
-    private static string GetTranscriptionProviderModelName(TranscriptionProvider provider)
+    private string GetTranscriptionProviderModelName(TranscriptionProvider provider)
     {
+        // For system models, return localized text:
+        if (provider.Model.IsSystemModel)
+            return T("Uses the provider-configured model");
+
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
