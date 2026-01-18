@@ -132,6 +132,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
             return new ChatThread
             {
+                ChatId = Guid.NewGuid(),
                 Name = string.Format(T("{0} - Document Analysis Session"), this.selectedPolicy?.PolicyName ?? T("Empty")),
                 SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks =
