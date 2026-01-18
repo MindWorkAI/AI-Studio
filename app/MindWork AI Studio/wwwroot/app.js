@@ -27,14 +27,41 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
-window.playSound = function(soundPath) {
+// Shared audio context for sound effects (Web Audio API does not register with Media Session):
+let soundEffectContext = null;
+const soundEffectCache = new Map();
+
+window.playSound = async function(soundPath) {
     try {
-        const audio = new Audio(soundPath);
-        audio.play().catch(error => {
-            console.warn('Failed to play sound effect:', error);
-        });
+        // Create or reuse the audio context:
+        if (!soundEffectContext || soundEffectContext.state === 'closed') {
+            soundEffectContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // Resume if suspended (browser autoplay policy):
+        if (soundEffectContext.state === 'suspended') {
+            await soundEffectContext.resume();
+        }
+
+        // Check the cache for already decoded audio:
+        let audioBuffer = soundEffectCache.get(soundPath);
+
+        if (!audioBuffer) {
+            // Fetch and decode the audio file:
+            const response = await fetch(soundPath);
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffer = await soundEffectContext.decodeAudioData(arrayBuffer);
+            soundEffectCache.set(soundPath, audioBuffer);
+        }
+
+        // Create a new source node and play:
+        const source = soundEffectContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(soundEffectContext.destination);
+        source.start(0);
+
     } catch (error) {
-        console.warn('Error creating audio element:', error);
+        console.warn('Failed to play sound effect:', error);
     }
 };
 
