@@ -14,7 +14,8 @@ public sealed class PandocProcessBuilder
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
-    
+    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
+
     private string? providedInputFile;
     private string? providedOutputFile;
     private string? providedInputFormat;
@@ -116,25 +117,62 @@ public sealed class PandocProcessBuilder
         // Any local installation should be preferred over the system-wide installation.
         //
         var localInstallationRootDirectory = await Pandoc.GetPandocDataFolder(rustService);
-        try
+
+        //
+        // Check if the data directory path is valid:
+        //
+        if (string.IsNullOrWhiteSpace(localInstallationRootDirectory))
+            LOGGER.LogWarning("The local data directory path is empty or null. Cannot search for local Pandoc installation.");
+        
+        else if (!Directory.Exists(localInstallationRootDirectory))
+            LOGGER.LogWarning("The local Pandoc installation directory does not exist: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
+        
+        else
         {
+            //
+            // The directory exists, search for the pandoc executable:
+            //
             var executableName = PandocExecutableName;
-            var subdirectories = Directory.GetDirectories(localInstallationRootDirectory, "*", SearchOption.AllDirectories);
-            foreach (var subdirectory in subdirectories)
+            LOGGER.LogDebug("Searching for Pandoc executable '{ExecutableName}' in: '{LocalInstallationRootDirectory}'.", executableName, localInstallationRootDirectory);
+
+            try
             {
-                var pandocPath = Path.Combine(subdirectory, executableName);
-                if (File.Exists(pandocPath))
-                    return new(pandocPath, true);
+                //
+                // First, check the root directory itself:
+                //
+                var rootExecutablePath = Path.Combine(localInstallationRootDirectory, executableName);
+                if (File.Exists(rootExecutablePath))
+                {
+                    LOGGER.LogInformation("Found local Pandoc installation at the root path: '{Path}'.", rootExecutablePath);
+                    return new(rootExecutablePath, true);
+                }
+
+                //
+                // Then, search all subdirectories:
+                //
+                var subdirectories = Directory.GetDirectories(localInstallationRootDirectory, "*", SearchOption.AllDirectories);
+                foreach (var subdirectory in subdirectories)
+                {
+                    var pandocPath = Path.Combine(subdirectory, executableName);
+                    if (File.Exists(pandocPath))
+                    {
+                        LOGGER.LogInformation("Found local Pandoc installation at: '{Path}'.", pandocPath);
+                        return new(pandocPath, true);
+                    }
+                }
+
+                LOGGER.LogWarning("No Pandoc executable found in local installation directory or its subdirectories.");
+            }
+            catch (Exception ex)
+            {
+                LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
             }
         }
-        catch
-        {
-            // ignored
-        }
-        
+
         //
-        // When no local installation was found, we assume that the pandoc executable is in the system PATH.
+        // When no local installation was found, we assume that the pandoc executable is in the system PATH:
         //
+        LOGGER.LogWarning("Falling back to system PATH for the Pandoc executable: '{ExecutableName}'.", PandocExecutableName);
         return new(PandocExecutableName, false);
     }
     

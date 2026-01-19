@@ -44,13 +44,15 @@ public static partial class Pandoc
         try
         {
             var preparedProcess = await PreparePandocProcess().AddArgument("--version").BuildAsync(rustService);
+            LOG.LogDebug("Checking Pandoc availability using executable: '{Executable}' (IsLocal: {IsLocal}).", preparedProcess.StartInfo.FileName, preparedProcess.IsLocal);
+
             using var process = Process.Start(preparedProcess.StartInfo);
             if (process == null)
             {
                 if (showMessages)
                     await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Help, TB("Was not able to check the Pandoc installation.")));
 
-                LOG.LogInformation("The Pandoc process was not started, it was null");
+                LOG.LogInformation("The Pandoc process was not started, it was null. Executable path: '{Executable}'.", preparedProcess.StartInfo.FileName);
                 return new(false, TB("Was not able to check the Pandoc installation."), false, string.Empty, preparedProcess.IsLocal);
             }
 
@@ -105,8 +107,8 @@ public static partial class Pandoc
         {
             if (showMessages)
                 await MessageBus.INSTANCE.SendError(new (@Icons.Material.Filled.AppsOutage, TB("It seems that Pandoc is not installed.")));
-            
-            LOG.LogError("Pandoc is not installed and threw an exception: {0}", e.Message);
+
+            LOG.LogError(e, "Pandoc availability check failed. This usually means Pandoc is not installed or not in the system PATH.");
             return new(false, TB("It seems that Pandoc is not installed."), false, string.Empty, false);
         }
     }
