@@ -16,6 +16,9 @@ public sealed class PandocProcessBuilder
     private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
 
+    // Tracks whether the first log has been written to avoid log spam on repeated calls:
+    private static bool HAS_LOGGED_ONCE;
+
     private string? providedInputFile;
     private string? providedOutputFile;
     private string? providedInputFormat;
@@ -113,67 +116,94 @@ public sealed class PandocProcessBuilder
     private static async Task<PandocExecutable> PandocExecutablePath(RustService rustService)
     {
         //
-        // First, we try to find the pandoc executable in the data directory.
-        // Any local installation should be preferred over the system-wide installation.
+        // Determine if we should log (only on the first call):
         //
-        var localInstallationRootDirectory = await Pandoc.GetPandocDataFolder(rustService);
+        var shouldLog = !HAS_LOGGED_ONCE;
 
-        //
-        // Check if the data directory path is valid:
-        //
-        if (string.IsNullOrWhiteSpace(localInstallationRootDirectory))
-            LOGGER.LogWarning("The local data directory path is empty or null. Cannot search for local Pandoc installation.");
-        
-        else if (!Directory.Exists(localInstallationRootDirectory))
-            LOGGER.LogWarning("The local Pandoc installation directory does not exist: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
-        
-        else
+        try
         {
             //
-            // The directory exists, search for the pandoc executable:
+            // First, we try to find the pandoc executable in the data directory.
+            // Any local installation should be preferred over the system-wide installation.
             //
-            var executableName = PandocExecutableName;
-            LOGGER.LogDebug("Searching for Pandoc executable '{ExecutableName}' in: '{LocalInstallationRootDirectory}'.", executableName, localInstallationRootDirectory);
+            var localInstallationRootDirectory = await Pandoc.GetPandocDataFolder(rustService);
 
-            try
+            //
+            // Check if the data directory path is valid:
+            //
+            if (string.IsNullOrWhiteSpace(localInstallationRootDirectory))
+            {
+                if (shouldLog)
+                    LOGGER.LogWarning("The local data directory path is empty or null. Cannot search for local Pandoc installation.");
+            }
+            else if (!Directory.Exists(localInstallationRootDirectory))
+            {
+                if (shouldLog)
+                    LOGGER.LogWarning("The local Pandoc installation directory does not exist: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
+            }
+            else
             {
                 //
-                // First, check the root directory itself:
+                // The directory exists, search for the pandoc executable:
                 //
-                var rootExecutablePath = Path.Combine(localInstallationRootDirectory, executableName);
-                if (File.Exists(rootExecutablePath))
-                {
-                    LOGGER.LogInformation("Found local Pandoc installation at the root path: '{Path}'.", rootExecutablePath);
-                    return new(rootExecutablePath, true);
-                }
+                var executableName = PandocExecutableName;
+                if (shouldLog)
+                    LOGGER.LogInformation("Searching for Pandoc executable '{ExecutableName}' in: '{LocalInstallationRootDirectory}'.", executableName, localInstallationRootDirectory);
 
-                //
-                // Then, search all subdirectories:
-                //
-                var subdirectories = Directory.GetDirectories(localInstallationRootDirectory, "*", SearchOption.AllDirectories);
-                foreach (var subdirectory in subdirectories)
+                try
                 {
-                    var pandocPath = Path.Combine(subdirectory, executableName);
-                    if (File.Exists(pandocPath))
+                    //
+                    // First, check the root directory itself:
+                    //
+                    var rootExecutablePath = Path.Combine(localInstallationRootDirectory, executableName);
+                    if (File.Exists(rootExecutablePath))
                     {
-                        LOGGER.LogInformation("Found local Pandoc installation at: '{Path}'.", pandocPath);
-                        return new(pandocPath, true);
+                        if (shouldLog)
+                            LOGGER.LogInformation("Found local Pandoc installation at the root path: '{Path}'.", rootExecutablePath);
+
+                        HAS_LOGGED_ONCE = true;
+                        return new(rootExecutablePath, true);
                     }
+
+                    //
+                    // Then, search all subdirectories:
+                    //
+                    var subdirectories = Directory.GetDirectories(localInstallationRootDirectory, "*", SearchOption.AllDirectories);
+                    foreach (var subdirectory in subdirectories)
+                    {
+                        var pandocPath = Path.Combine(subdirectory, executableName);
+                        if (File.Exists(pandocPath))
+                        {
+                            if (shouldLog)
+                                LOGGER.LogInformation("Found local Pandoc installation at: '{Path}'.", pandocPath);
+
+                            HAS_LOGGED_ONCE = true;
+                            return new(pandocPath, true);
+                        }
+                    }
+
+                    if (shouldLog)
+                        LOGGER.LogWarning("No Pandoc executable found in local installation directory or its subdirectories.");
                 }
+                catch (Exception ex)
+                {
+                    if (shouldLog)
+                        LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
+                }
+            }
 
-                LOGGER.LogWarning("No Pandoc executable found in local installation directory or its subdirectories.");
-            }
-            catch (Exception ex)
-            {
-                LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
-            }
+            //
+            // When no local installation was found, we assume that the pandoc executable is in the system PATH:
+            //
+            if (shouldLog)
+                LOGGER.LogWarning("Falling back to system PATH for the Pandoc executable: '{ExecutableName}'.", PandocExecutableName);
+            
+            return new(PandocExecutableName, false);
         }
-
-        //
-        // When no local installation was found, we assume that the pandoc executable is in the system PATH:
-        //
-        LOGGER.LogWarning("Falling back to system PATH for the Pandoc executable: '{ExecutableName}'.", PandocExecutableName);
-        return new(PandocExecutableName, false);
+        finally
+        {
+            HAS_LOGGED_ONCE = true;
+        }
     }
     
     /// <summary>
