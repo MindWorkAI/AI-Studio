@@ -13,7 +13,10 @@ public sealed class PandocProcessBuilder
 {
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
-    private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
+
+    // Use runtime detection instead of metadata to ensure correct RID on dev machines:
+    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID METADATA_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
 
     // Tracks whether the first log has been written to avoid log spam on repeated calls:
@@ -122,6 +125,19 @@ public sealed class PandocProcessBuilder
 
         try
         {
+            //
+            // Log a warning if the runtime-detected RID differs from the metadata RID.
+            // This can happen on dev machines where the metadata.txt contains stale values.
+            // We always use the runtime-detected RID for correct behavior.
+            //
+            if (shouldLog && CPU_ARCHITECTURE != METADATA_ARCHITECTURE)
+            {
+                LOGGER.LogWarning(
+                    "Runtime-detected RID '{RuntimeRID}' differs from metadata RID '{MetadataRID}'. Using runtime-detected RID. This is expected on dev machines where metadata.txt may be outdated.",
+                    CPU_ARCHITECTURE.ToUserFriendlyName(),
+                    METADATA_ARCHITECTURE.ToUserFriendlyName());
+            }
+
             //
             // First, we try to find the pandoc executable in the data directory.
             // Any local installation should be preferred over the system-wide installation.
