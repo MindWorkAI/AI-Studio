@@ -8,7 +8,7 @@ use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
 use tauri::updater::UpdateResponse;
-use tauri::{FileDropEvent, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent};
+use tauri::{FileDropEvent, GlobalShortcutManager, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::sync::broadcast;
 use tokio::time;
@@ -65,6 +65,9 @@ pub fn start_tauri() {
             // Get the main window:
             let window = app.get_window("main").expect("Failed to get main window.");
 
+            // Clone the event sender for the global shortcut handler before moving it into the window event closure:
+            let shortcut_event_sender = event_sender.clone();
+
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
             // are only available in the window event handler (is a bug, cf. https://github.com/tauri-apps/tauri/issues/14338):
@@ -82,6 +85,24 @@ pub fn start_tauri() {
 
             // Save the main window for later access:
             *MAIN_WINDOW.lock().unwrap() = Some(window);
+
+            // Register global shortcuts for voice recording toggle.
+            // CmdOrControl+1 will be Cmd+1 on macOS and Ctrl+1 on Windows/Linux:
+            let mut shortcut_manager = app.global_shortcut_manager();
+            match shortcut_manager.register("CmdOrControl+1", move || {
+                info!(Source = "Tauri"; "Global shortcut CmdOrControl+1 triggered for voice recording toggle.");
+                let event = Event::new(TauriEventType::GlobalShortcutPressed, vec!["voice_recording_toggle".to_string()]);
+                let sender = shortcut_event_sender.clone();
+                tauri::async_runtime::spawn(async move {
+                    match sender.send(event) {
+                        Ok(_) => {},
+                        Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
+                    }
+                });
+            }) {
+                Ok(_) => info!(Source = "Bootloader Tauri"; "Global shortcut CmdOrControl+1 registered successfully."),
+                Err(error) => error!(Source = "Bootloader Tauri"; "Failed to register global shortcut: {error}"),
+            }
 
             info!(Source = "Bootloader Tauri"; "Setup is running.");
             let data_path = app.path_resolver().app_local_data_dir().unwrap();
@@ -323,6 +344,8 @@ pub enum TauriEventType {
     FileDropHovered,
     FileDropDropped,
     FileDropCanceled,
+
+    GlobalShortcutPressed,
 }
 
 /// Changes the location of the main window to the given URL.
