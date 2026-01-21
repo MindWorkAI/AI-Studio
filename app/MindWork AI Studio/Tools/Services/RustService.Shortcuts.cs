@@ -1,3 +1,4 @@
+// ReSharper disable NotAccessedPositionalProperty.Local
 namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
