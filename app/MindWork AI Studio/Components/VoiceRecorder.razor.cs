@@ -1,5 +1,4 @@
 using AIStudio.Provider;
-using AIStudio.Tools;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -144,6 +143,10 @@ public partial class VoiceRecorder : MSGComponentBase
 
                 // Clean up the recording stream if starting failed:
                 await this.FinalizeRecordingStream();
+            }
+            finally
+            {
+                this.StateHasChanged();
             }
         }
         else

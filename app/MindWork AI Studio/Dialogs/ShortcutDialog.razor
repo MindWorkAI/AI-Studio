@@ -1,0 +1,63 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Keyboard" Class="mr-2"/>
+            @T("Configure Keyboard Shortcut")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused.")
+        </MudJustifiedText>
+
+        <MudPaper Class="pa-4 mb-3 d-flex align-center justify-center shortcut-capture-area"
+                  Style="min-height: 80px; cursor: pointer;"
+                  Elevation="2"
+                  @onclick="@this.FocusInput">
+            @* Hidden input to capture keyboard events *@
+            <input type="text"
+                   @ref="this.hiddenInput"
+                   @onkeydown="@this.HandleKeyDown"
+                   style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;"
+                   autocomplete="off"
+                   readonly />
+            @if (string.IsNullOrWhiteSpace(this.currentShortcut))
+            {
+                <MudText Typo="Typo.h6" Color="Color.Secondary">
+                    @T("Press a key combination...")
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h5" Color="Color.Primary">
+                    @this.GetDisplayShortcut()
+                </MudText>
+            }
+        </MudPaper>
+
+        @if (!string.IsNullOrWhiteSpace(this.validationMessage))
+        {
+            <MudAlert Severity="@this.validationSeverity" Class="mb-3">
+                @this.validationMessage
+            </MudAlert>
+        }
+
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+            @T("Supported modifiers: Ctrl/Cmd, Shift, Alt. Example: Ctrl+Shift+R")
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.ClearShortcut" Variant="Variant.Text" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Clear">
+            @T("Clear Shortcut")
+        </MudButton>
+        <MudSpacer/>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.hasValidationError">
+            @T("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

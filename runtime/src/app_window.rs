@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
 use log::{debug, error, info, trace, warn};
@@ -26,6 +27,9 @@ static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<UpdateResponse<tauri::Wry>>>> = 
 
 /// The event broadcast sender for Tauri events.
 static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::new(|| Mutex::new(None));
+
+/// Stores the currently registered global shortcuts (name -> shortcut string).
+static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<String, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Starts the Tauri app.
 pub fn start_tauri() {
@@ -65,9 +69,6 @@ pub fn start_tauri() {
             // Get the main window:
             let window = app.get_window("main").expect("Failed to get main window.");
 
-            // Clone the event sender for the global shortcut handler before moving it into the window event closure:
-            let shortcut_event_sender = event_sender.clone();
-
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
             // are only available in the window event handler (is a bug, cf. https://github.com/tauri-apps/tauri/issues/14338):
@@ -85,24 +86,6 @@ pub fn start_tauri() {
 
             // Save the main window for later access:
             *MAIN_WINDOW.lock().unwrap() = Some(window);
-
-            // Register global shortcuts for voice recording toggle.
-            // CmdOrControl+1 will be Cmd+1 on macOS and Ctrl+1 on Windows/Linux:
-            let mut shortcut_manager = app.global_shortcut_manager();
-            match shortcut_manager.register("CmdOrControl+1", move || {
-                info!(Source = "Tauri"; "Global shortcut CmdOrControl+1 triggered for voice recording toggle.");
-                let event = Event::new(TauriEventType::GlobalShortcutPressed, vec!["voice_recording_toggle".to_string()]);
-                let sender = shortcut_event_sender.clone();
-                tauri::async_runtime::spawn(async move {
-                    match sender.send(event) {
-                        Ok(_) => {},
-                        Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
-                    }
-                });
-            }) {
-                Ok(_) => info!(Source = "Bootloader Tauri"; "Global shortcut CmdOrControl+1 registered successfully."),
-                Err(error) => error!(Source = "Bootloader Tauri"; "Failed to register global shortcut: {error}"),
-            }
 
             info!(Source = "Bootloader Tauri"; "Setup is running.");
             let data_path = app.path_resolver().app_local_data_dir().unwrap();
@@ -704,6 +687,232 @@ pub struct FilesSelectionResponse {
 pub struct FileSaveResponse {
     user_cancelled: bool,
     save_file_path: String,
+}
+
+/// Request payload for registering a global shortcut.
+#[derive(Clone, Deserialize)]
+pub struct RegisterShortcutRequest {
+    /// The name/identifier for the shortcut (e.g., "voice_recording_toggle").
+    name: String,
+
+    /// The shortcut string in Tauri format (e.g., "CmdOrControl+1").
+    /// Use empty string to unregister the shortcut.
+    shortcut: String,
+}
+
+/// Response for shortcut registration.
+#[derive(Serialize)]
+pub struct ShortcutResponse {
+    success: bool,
+    error_message: String,
+}
+
+/// Registers or updates a global shortcut. If the shortcut string is empty,
+/// the existing shortcut for that name will be unregistered.
+#[post("/shortcuts/register", data = "<payload>")]
+pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
+    let name = payload.name.clone();
+    let new_shortcut = payload.shortcut.clone();
+
+    info!(Source = "Tauri"; "Registering global shortcut '{name}' with key '{new_shortcut}'.");
+
+    // Get the main window to access the global shortcut manager:
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot register shortcut: main window not available.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let mut shortcut_manager = main_window.app_handle().global_shortcut_manager();
+    let mut registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+
+    // Unregister the old shortcut if one exists for this name:
+    if let Some(old_shortcut) = registered_shortcuts.get(&name) {
+        if !old_shortcut.is_empty() {
+            match shortcut_manager.unregister(old_shortcut.as_str()) {
+                Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{name}'."),
+                Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
+            }
+        }
+    }
+
+    // When the new shortcut is empty, we're done (just unregistering):
+    if new_shortcut.is_empty() {
+        registered_shortcuts.remove(&name);
+        info!(Source = "Tauri"; "Shortcut '{name}' has been disabled.");
+        return Json(ShortcutResponse {
+            success: true,
+            error_message: String::new(),
+        });
+    }
+
+    // Get the event broadcast sender for the shortcut callback:
+    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
+    let event_sender = match event_broadcast_lock.as_ref() {
+        Some(sender) => sender.clone(),
+        None => {
+            error!(Source = "Tauri"; "Cannot register shortcut: event broadcast not initialized.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Event broadcast not initialized".to_string(),
+            });
+        }
+    };
+
+    drop(event_broadcast_lock);
+
+    // Register the new shortcut:
+    let shortcut_name = name.clone();
+    match shortcut_manager.register(new_shortcut.as_str(), move || {
+        info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
+        let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
+        let sender = event_sender.clone();
+        tauri::async_runtime::spawn(async move {
+            match sender.send(event) {
+                Ok(_) => {},
+                Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
+            }
+        });
+    })
+    {
+        Ok(_) => {
+            info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{name}'.");
+            registered_shortcuts.insert(name, new_shortcut);
+            Json(ShortcutResponse {
+                success: true,
+                error_message: String::new(),
+            })
+        },
+
+        Err(error) => {
+            let error_msg = format!("Failed to register shortcut: {error}");
+            error!(Source = "Tauri"; "{error_msg}");
+            Json(ShortcutResponse {
+                success: false,
+                error_message: error_msg,
+            })
+        }
+    }
+}
+
+/// Request payload for validating a shortcut.
+#[derive(Clone, Deserialize)]
+pub struct ValidateShortcutRequest {
+    /// The shortcut string to validate (e.g., "CmdOrControl+1").
+    shortcut: String,
+}
+
+/// Response for shortcut validation.
+#[derive(Serialize)]
+pub struct ShortcutValidationResponse {
+    is_valid: bool,
+    error_message: String,
+    has_conflict: bool,
+    conflict_description: String,
+}
+
+/// Validates a shortcut string without registering it.
+/// Checks if the shortcut syntax is valid and if it
+/// conflicts with existing shortcuts.
+#[post("/shortcuts/validate", data = "<payload>")]
+pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest>) -> Json<ShortcutValidationResponse> {
+    let shortcut = payload.shortcut.clone();
+
+    // Empty shortcuts are always valid (means "disabled"):
+    if shortcut.is_empty() {
+        return Json(ShortcutValidationResponse {
+            is_valid: true,
+            error_message: String::new(),
+            has_conflict: false,
+            conflict_description: String::new(),
+        });
+    }
+
+    // Check if the shortcut is already registered:
+    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+    for (name, registered_shortcut) in registered_shortcuts.iter() {
+        if registered_shortcut.eq_ignore_ascii_case(&shortcut) {
+            return Json(ShortcutValidationResponse {
+                is_valid: true,
+                error_message: String::new(),
+                has_conflict: true,
+                conflict_description: format!("Already used by: {}", name),
+            });
+        }
+    }
+
+    drop(registered_shortcuts);
+
+    // Try to parse the shortcut to validate syntax.
+    // We can't easily validate without registering in Tauri 1.x,
+    // so we do basic syntax validation here:
+    let is_valid = validate_shortcut_syntax(&shortcut);
+
+    if is_valid {
+        Json(ShortcutValidationResponse {
+            is_valid: true,
+            error_message: String::new(),
+            has_conflict: false,
+            conflict_description: String::new(),
+        })
+    } else {
+        Json(ShortcutValidationResponse {
+            is_valid: false,
+            error_message: format!("Invalid shortcut syntax: {}", shortcut),
+            has_conflict: false,
+            conflict_description: String::new(),
+        })
+    }
+}
+
+/// Validates the syntax of a shortcut string.
+fn validate_shortcut_syntax(shortcut: &str) -> bool {
+    let parts: Vec<&str> = shortcut.split('+').collect();
+    if parts.is_empty() {
+        return false;
+    }
+
+    let mut has_key = false;
+    for part in parts {
+        let part_lower = part.to_lowercase();
+        match part_lower.as_str() {
+            // Modifiers
+            "cmdorcontrol" | "commandorcontrol" | "ctrl" | "control" | "cmd" | "command" |
+            "shift" | "alt" | "meta" | "super" | "option" => continue,
+
+            // Keys - letters
+            "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" |
+            "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" => has_key = true,
+
+            // Keys - numbers
+            "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => has_key = true,
+
+            // Keys - function keys
+            _ if part_lower.starts_with('f') && part_lower[1..].parse::<u32>().is_ok() => has_key = true,
+
+            // Keys - special
+            "space" | "enter" | "tab" | "escape" | "backspace" | "delete" | "insert" |
+            "home" | "end" | "pageup" | "pagedown" |
+            "up" | "down" | "left" | "right" |
+            "arrowup" | "arrowdown" | "arrowleft" | "arrowright" |
+            "minus" | "equal" | "bracketleft" | "bracketright" | "backslash" |
+            "semicolon" | "quote" | "backquote" | "comma" | "period" | "slash" => has_key = true,
+
+            // Keys - numpad
+            _ if part_lower.starts_with("num") => has_key = true,
+
+            // Unknown
+            _ => return false,
+        }
+    }
+
+    has_key
 }
 
 fn set_pdfium_path(path_resolver: PathResolver) {
