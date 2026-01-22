@@ -1678,8 +1678,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T36724776
 -- No shortcut configured
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T3099115336"] = "No shortcut configured"
 
--- Configure
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T373171691"] = "Configure"
+-- Change shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "Change shortcut"
 
 -- Configure Keyboard Shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Configure Keyboard Shortcut"
@@ -4651,11 +4651,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3060573513"] = "Please incl
 -- Shortcut is valid and available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3159532525"] = "Shortcut is valid and available."
 
--- Supported modifiers: Ctrl/Cmd, Shift, Alt. Example: Ctrl+Shift+R
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3774517957"] = "Supported modifiers: Ctrl/Cmd, Shift, Alt. Example: Ctrl+Shift+R"
+-- Define a shortcut
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3734850493"] = "Define a shortcut"
 
 -- Configure Keyboard Shortcut
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T636303786"] = "Configure Keyboard Shortcut"
+
+-- Supported modifiers: Ctrl/Cmd, Shift, Alt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T889258890"] = "Supported modifiers: Ctrl/Cmd, Shift, Alt."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T900713019"] = "Cancel"
