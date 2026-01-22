@@ -153,6 +153,16 @@ CONFIG["SETTINGS"] = {}
 --   I18N_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
+-- Configure a global shortcut for starting and stopping dictation.
+-- 
+-- The format follows the Rust and Tauri conventions. Especially,
+-- when you want to use the CTRL key on Windows (or the CMD key on macOS),
+-- please use "CmdOrControl" as the key name. All parts of the shortcut
+-- must be separated by a plus sign (+).
+--
+-- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
+-- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 
