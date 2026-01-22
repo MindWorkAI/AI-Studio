@@ -11,45 +11,38 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused.")
         </MudJustifiedText>
-
-        <MudPaper Class="pa-4 mb-3 d-flex align-center justify-center shortcut-capture-area"
-                  Style="min-height: 80px; cursor: pointer;"
-                  Elevation="2"
-                  @onclick="@this.FocusInput">
-            @* Hidden input to capture keyboard events *@
-            <input type="text"
-                   @ref="this.hiddenInput"
-                   @onkeydown="@this.HandleKeyDown"
-                   style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;"
-                   autocomplete="off"
-                   readonly />
-            @if (string.IsNullOrWhiteSpace(this.currentShortcut))
-            {
-                <MudText Typo="Typo.h6" Color="Color.Secondary">
-                    @T("Press a key combination...")
-                </MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.h5" Color="Color.Primary">
-                    @this.GetDisplayShortcut()
-                </MudText>
-            }
-        </MudPaper>
-
+        
+        <MudFocusTrap DefaultFocus="DefaultFocus.FirstChild">
+            <MudTextField
+                @ref="@this.inputField"
+                T="string"
+                Text="@this.ShowText"
+                Variant="Variant.Outlined"
+                Label="@T("Define a shortcut")"
+                Placeholder="@T("Press a key combination...")"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Keyboard"
+                Immediate="@true"
+                TextUpdateSuppression="false"
+                OnKeyDown="@this.HandleKeyDown"
+                OnBlur="@this.HandleBlur"
+                UserAttributes="@USER_INPUT_ATTRIBUTES"
+                AutoFocus="true"
+                KeyDownPreventDefault="true"
+                KeyUpPreventDefault="true"
+                HelperText="@T("Supported modifiers: Ctrl/Cmd, Shift, Alt.")"
+                Class="me-3"/>
+        </MudFocusTrap>
+        
         @if (!string.IsNullOrWhiteSpace(this.validationMessage))
         {
-            <MudAlert Severity="@this.validationSeverity" Class="mb-3">
+            <MudAlert Severity="@this.validationSeverity" Variant="Variant.Filled" Class="mb-3">
                 @this.validationMessage
             </MudAlert>
         }
-
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
-            @T("Supported modifiers: Ctrl/Cmd, Shift, Alt. Example: Ctrl+Shift+R")
-        </MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.ClearShortcut" Variant="Variant.Text" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Clear">
+        <MudButton OnClick="@this.ClearShortcut" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Clear">
             @T("Clear Shortcut")
         </MudButton>
         <MudSpacer/>

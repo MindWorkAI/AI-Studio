@@ -28,44 +28,42 @@ public partial class ShortcutDialog : MSGComponentBase
     /// </summary>
     [Parameter]
     public string ShortcutName { get; set; } = string.Empty;
+    
+    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
-    private ElementReference hiddenInput;
     private string currentShortcut = string.Empty;
     private string validationMessage = string.Empty;
     private Severity validationSeverity = Severity.Info;
     private bool hasValidationError;
 
-    // Current key state
+    //
+    // Current key state:
+    //
     private bool hasCtrl;
     private bool hasShift;
     private bool hasAlt;
     private bool hasMeta;
     private string? currentKey;
-
-    private bool isFirstRender = true;
+    private MudTextField<string>? inputField;
 
     #region Overrides of ComponentBase
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
+        
+        // Configure the spellchecking for the user input:
+        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
+        
         this.currentShortcut = this.InitialShortcut;
         this.ParseExistingShortcut();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-
-        // Auto-focus the hidden input when the dialog opens
-        if (this.isFirstRender)
-        {
-            this.isFirstRender = false;
-            await this.hiddenInput.FocusAsync();
-        }
-    }
-
     #endregion
+    
+    private string ShowText => string.IsNullOrWhiteSpace(this.currentShortcut)
+        ? T("Press a key combination...")
+        : this.GetDisplayShortcut();
 
     private void ParseExistingShortcut()
     {
@@ -107,15 +105,9 @@ public partial class ShortcutDialog : MSGComponentBase
         }
     }
 
-    private async Task FocusInput()
-    {
-        // Focus the hidden input to capture keyboard events
-        await this.hiddenInput.FocusAsync();
-    }
-
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        // Ignore pure modifier key presses
+        // Ignore pure modifier key presses:
         if (IsModifierKey(e.Code))
         {
             this.UpdateModifiers(e);
@@ -124,10 +116,9 @@ public partial class ShortcutDialog : MSGComponentBase
             return;
         }
 
-        // Update modifiers
         this.UpdateModifiers(e);
 
-        // Get the key
+        // Get the key:
         this.currentKey = TranslateKeyCode(e.Code);
 
         // Validate: must have at least one modifier + a key
@@ -140,11 +131,10 @@ public partial class ShortcutDialog : MSGComponentBase
             return;
         }
 
-        // Build the shortcut string
         this.UpdateShortcutString();
-
-        // Validate the shortcut
         await this.ValidateShortcut();
+        
+        this.StateHasChanged();
     }
 
     private void UpdateModifiers(KeyboardEventArgs e)
@@ -213,10 +203,7 @@ public partial class ShortcutDialog : MSGComponentBase
 
     private string GetDisplayShortcut()
     {
-        if (string.IsNullOrWhiteSpace(this.currentShortcut))
-            return string.Empty;
-
-        // Convert internal format to display format
+        // Convert internal format to display format:
         return this.currentShortcut
             .Replace("CmdOrControl", OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl")
             .Replace("CommandOrControl", OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl");
@@ -376,4 +363,10 @@ public partial class ShortcutDialog : MSGComponentBase
         // Default: return as-is
         _ => code,
     };
+
+    private void HandleBlur()
+    {
+        // Re-focus the input field to keep capturing keys:
+        this.inputField?.FocusAsync();
+    }
 }
