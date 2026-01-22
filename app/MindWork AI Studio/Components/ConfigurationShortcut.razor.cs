@@ -75,7 +75,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ShortcutDialog>(
-            this.T("Configure Keyboard Shortcut"),
+             this.T("Configure Keyboard Shortcut"),
             dialogParameters,
             DialogOptions.FULLSCREEN);
 

@@ -4654,9 +4654,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3159532525"] = "Shortcut is
 -- Define a shortcut
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3734850493"] = "Define a shortcut"
 
--- Configure Keyboard Shortcut
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T636303786"] = "Configure Keyboard Shortcut"
-
 -- Supported modifiers: Ctrl/Cmd, Shift, Alt.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T889258890"] = "Supported modifiers: Ctrl/Cmd, Shift, Alt."
 

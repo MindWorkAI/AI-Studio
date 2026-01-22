@@ -4656,9 +4656,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3159532525"] = "Der Tastatu
 -- Define a shortcut
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3734850493"] = "Tastaturkurzbefehl festlegen"
 
--- Configure Keyboard Shortcut
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T636303786"] = "Tastaturkurzbefehl konfigurieren"
-
 -- Supported modifiers: Ctrl/Cmd, Shift, Alt.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T889258890"] = "Unterstützte Modifikatortasten: Strg/Cmd, Umschalt, Alt."
 
