@@ -5,7 +5,7 @@
     <MudText Typo="Typo.body1" Class="flex-grow-1">
         @if (string.IsNullOrWhiteSpace(this.Shortcut()))
         {
-            <span style="color: var(--mud-palette-text-secondary);">@T("No shortcut configured")</span>
+            @T("No shortcut configured")
         }
         else
         {
@@ -19,7 +19,8 @@
                Size="Size.Small"
                StartIcon="@Icons.Material.Filled.Edit"
                OnClick="@this.OpenDialog"
-               Disabled="@this.IsDisabled">
-        @T("Configure")
+               Disabled="@this.IsDisabled"
+               Class="mb-1">
+        @T("Change shortcut")
     </MudButton>
 </MudStack>
