@@ -67,6 +67,9 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         this.logger.LogInformation("Registering global shortcuts.");
         foreach (var shortcutId in Enum.GetValues<Shortcut>())
         {
+            if(shortcutId is Shortcut.NONE)
+                continue;
+            
             var shortcut = this.GetShortcutValue(shortcutId);
             var isEnabled = this.IsShortcutAllowed(shortcutId);
 
