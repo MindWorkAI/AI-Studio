@@ -8,6 +8,7 @@ use rocket::response::stream::TextStream;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
+use strum_macros::Display;
 use tauri::updater::UpdateResponse;
 use tauri::{FileDropEvent, GlobalShortcutManager, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent};
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -32,20 +33,11 @@ static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::ne
 static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<Shortcut, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Enum identifying global keyboard shortcuts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum Shortcut {
     None = 0,
     VoiceRecordingToggle,
-}
-
-impl Shortcut {
-    /// Returns the display name for logging.
-    pub fn display_name(&self) -> &'static str {
-        match self {
-            Shortcut::None => "none",
-            Shortcut::VoiceRecordingToggle => "voice_recording_toggle",
-        }
-    }
 }
 
 /// Starts the Tauri app.
@@ -731,7 +723,7 @@ fn register_shortcut_with_callback(
     // Match the shortcut registration to transform the Tauri result into the Rust result:
     //
     match shortcut_manager.register(shortcut, move || {
-        info!(Source = "Tauri"; "Global shortcut triggered for '{}'.", shortcut_id.display_name());
+        info!(Source = "Tauri"; "Global shortcut triggered for '{}'.", shortcut_id);
         let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_id.to_string()]);
         let sender = event_sender.clone();
         tauri::async_runtime::spawn(async move {
@@ -753,7 +745,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     let id = payload.id;
     let new_shortcut = payload.shortcut.clone();
 
-    info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id.display_name());
+    info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
 
     // Get the main window to access the global shortcut manager:
     let main_window_lock = MAIN_WINDOW.lock().unwrap();
@@ -775,7 +767,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     if let Some(old_shortcut) = registered_shortcuts.get(&id) {
         if !old_shortcut.is_empty() {
             match shortcut_manager.unregister(old_shortcut.as_str()) {
-                Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id.display_name()),
+                Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id),
                 Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
             }
         }
@@ -784,7 +776,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     // When the new shortcut is empty, we're done (just unregistering):
     if new_shortcut.is_empty() {
         registered_shortcuts.remove(&id);
-        info!(Source = "Tauri"; "Shortcut '{}' has been disabled.", id.display_name());
+        info!(Source = "Tauri"; "Shortcut '{}' has been disabled.", id);
         return Json(ShortcutResponse {
             success: true,
             error_message: String::new(),
@@ -809,7 +801,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     // Register the new shortcut:
     match register_shortcut_with_callback(&mut shortcut_manager, &new_shortcut, id, event_sender) {
         Ok(_) => {
-            info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{}'.", id.display_name());
+            info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{}'.", id);
             registered_shortcuts.insert(id, new_shortcut);
             Json(ShortcutResponse {
                 success: true,
@@ -869,7 +861,7 @@ pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest
                 is_valid: true,
                 error_message: String::new(),
                 has_conflict: true,
-                conflict_description: format!("Already used by: {}", name.display_name()),
+                conflict_description: format!("Already used by: {}", name),
             });
         }
     }
@@ -924,8 +916,8 @@ pub fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
     for (name, shortcut) in registered_shortcuts.iter() {
         if !shortcut.is_empty() {
             match shortcut_manager.unregister(shortcut.as_str()) {
-                Ok(_) => info!(Source = "Tauri"; "Temporarily unregistered shortcut '{shortcut}' for '{}'.", name.display_name()),
-                Err(error) => warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{}': {error}", name.display_name()),
+                Ok(_) => info!(Source = "Tauri"; "Temporarily unregistered shortcut '{shortcut}' for '{}'.", name),
+                Err(error) => warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{}': {error}", name),
             }
         }
     }
@@ -980,11 +972,11 @@ pub fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
 
         match register_shortcut_with_callback(&mut shortcut_manager, shortcut, *shortcut_id, event_sender.clone()) {
             Ok(_) => {
-                info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{}'.", shortcut_id.display_name());
+                info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{}'.", shortcut_id);
                 success_count += 1;
             },
 
-            Err(error) => warn!(Source = "Tauri"; "Failed to re-register shortcut '{shortcut}' for '{}': {error}", shortcut_id.display_name()),
+            Err(error) => warn!(Source = "Tauri"; "Failed to re-register shortcut '{shortcut}' for '{}': {error}", shortcut_id),
         }
     }
 

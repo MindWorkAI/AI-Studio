@@ -39,6 +39,7 @@ pdfium-render = "0.8.34"
 sys-locale = "0.3.2"
 cfg-if = "1.0.1"
 pptx-to-md = "0.4.0"
+strum_macros = "0.27"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 url = "2.5.7"

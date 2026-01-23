@@ -2772,6 +2772,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "strum_macros",
  "sys-locale",
  "tauri",
  "tauri-build",
@@ -4766,6 +4767,18 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "strum_macros"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.93",
+]
 
 [[package]]
 name = "subtle"
