@@ -528,13 +528,7 @@ pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<F
     let file_dialog = file_dialog.set_title(&payload.title);
 
     // Set the file type filter if provided:
-    let file_dialog = match &payload.filter {
-        Some(filter) => {
-            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        },
-
-        None => file_dialog,
-    };
+    let file_dialog = apply_filter(file_dialog, &payload.filter);
 
     // Set the previous file path if provided:
     let file_dialog = match &payload.previous_file {
@@ -578,13 +572,7 @@ pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<
     let file_dialog = file_dialog.set_title(&payload.title);
 
     // Set the file type filter if provided:
-    let file_dialog = match &payload.filter {
-        Some(filter) => {
-            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        },
-
-        None => file_dialog,
-    };
+    let file_dialog = apply_filter(file_dialog, &payload.filter);
 
     // Set the previous file path if provided:
     let file_dialog = match &payload.previous_file {
@@ -627,13 +615,7 @@ pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileS
     let file_dialog = file_dialog.set_title(&payload.title);
 
     // Set the file type filter if provided:
-    let file_dialog = match &payload.filter {
-        Some(filter) => {
-            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        },
-
-        None => file_dialog,
-    };
+    let file_dialog = apply_filter(file_dialog, &payload.filter);
 
     // Set the previous file path if provided:
     let file_dialog = match &payload.name_file {
@@ -669,6 +651,18 @@ pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileS
 #[derive(Clone, Deserialize)]
 pub struct PreviousFile {
     file_path: String,
+}
+
+/// Applies an optional file type filter to a FileDialogBuilder.
+fn apply_filter(file_dialog: FileDialogBuilder, filter: &Option<FileTypeFilter>) -> FileDialogBuilder {
+    match filter {
+        Some(f) => file_dialog.add_filter(
+            &f.filter_name,
+            &f.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>(),
+        ),
+
+        None => file_dialog,
+    }
 }
 
 #[derive(Serialize)]
