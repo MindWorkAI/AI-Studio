@@ -707,6 +707,36 @@ pub struct ShortcutResponse {
     error_message: String,
 }
 
+/// Internal helper function to register a shortcut with its callback.
+/// This is used by both `register_shortcut` and `resume_shortcuts` to
+/// avoid code duplication.
+fn register_shortcut_with_callback(
+    shortcut_manager: &mut impl tauri::GlobalShortcutManager,
+    shortcut: &str,
+    name: &str,
+    event_sender: broadcast::Sender<Event>,
+) -> Result<(), tauri::Error> {
+    let shortcut_name = name.to_string();
+
+    //
+    // Match the shortcut registration to transform the Tauri result into the Rust result:
+    //
+    match shortcut_manager.register(shortcut, move || {
+        info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
+        let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
+        let sender = event_sender.clone();
+        tauri::async_runtime::spawn(async move {
+            match sender.send(event) {
+                Ok(_) => {}
+                Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
+            }
+        });
+    }) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.into()),
+    }
+}
+
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
 #[post("/shortcuts/register", data = "<payload>")]
@@ -768,19 +798,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     drop(event_broadcast_lock);
 
     // Register the new shortcut:
-    let shortcut_name = name.clone();
-    match shortcut_manager.register(new_shortcut.as_str(), move || {
-        info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
-        let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
-        let sender = event_sender.clone();
-        tauri::async_runtime::spawn(async move {
-            match sender.send(event) {
-                Ok(_) => {},
-                Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
-            }
-        });
-    })
-    {
+    match register_shortcut_with_callback(&mut shortcut_manager, &new_shortcut, &name, event_sender) {
         Ok(_) => {
             info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{name}'.");
             registered_shortcuts.insert(name, new_shortcut);
@@ -951,19 +969,7 @@ pub fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
             continue;
         }
 
-        let shortcut_name = name.clone();
-        let sender = event_sender.clone();
-        match shortcut_manager.register(shortcut.as_str(), move || {
-            info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
-            let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
-            let sender = sender.clone();
-            tauri::async_runtime::spawn(async move {
-                match sender.send(event) {
-                    Ok(_) => {},
-                    Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
-                }
-            });
-        }) {
+        match register_shortcut_with_callback(&mut shortcut_manager, shortcut, name, event_sender.clone()) {
             Ok(_) => {
                 info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{name}'.");
                 success_count += 1;
