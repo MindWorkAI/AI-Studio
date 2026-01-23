@@ -27,7 +27,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     /// An action which is called when the shortcut was changed.
     /// </summary>
     [Parameter]
-    public Func<string, Task> ShortcutUpdate { get; set; } = _ => Task.CompletedTask;
+    public Action<string> ShortcutUpdate { get; set; } = _ => { };
 
     /// <summary>
     /// The name/identifier of the shortcut (used for conflict detection and registration).
@@ -94,7 +94,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
 
             if (dialogResult.Data is string newShortcut)
             {
-                await this.ShortcutUpdate(newShortcut);
+                this.ShortcutUpdate(newShortcut);
                 await this.SettingsManager.StoreSettings();
                 await this.InformAboutChange();
             }

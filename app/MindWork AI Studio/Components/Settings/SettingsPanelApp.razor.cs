@@ -35,10 +35,4 @@ public partial class SettingsPanelApp : SettingsPanelBase
         this.SettingsManager.ConfigurationData.App.LanguagePluginId = pluginId;
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
     }
-
-    private async Task UpdateVoiceRecordingShortcut(string shortcut)
-    {
-        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording = shortcut;
-        await this.RustService.UpdateGlobalShortcut("voice_recording_toggle", shortcut);
-    }
 }
