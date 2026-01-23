@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 
@@ -57,44 +58,51 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         }
     }
 
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(
-        ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
-        => Task.FromResult<TResult?>(default);
+    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) => Task.FromResult<TResult?>(default);
 
     #endregion
 
     private async Task RegisterAllShortcuts()
     {
         this.logger.LogInformation("Registering global shortcuts.");
-        
-        //
-        // Voice recording shortcut (preview feature)
-        //
-        if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.settingsManager))
+        foreach (var shortcutId in Enum.GetValues<Shortcut>())
         {
-            var shortcut = this.settingsManager.ConfigurationData.App.ShortcutVoiceRecording;
-            if (!string.IsNullOrWhiteSpace(shortcut))
+            var shortcut = this.GetShortcutValue(shortcutId);
+            var isEnabled = this.IsShortcutAllowed(shortcutId);
+
+            if (isEnabled && !string.IsNullOrWhiteSpace(shortcut))
             {
-                var success = await this.rustService.UpdateGlobalShortcut("voice_recording_toggle", shortcut);
+                var success = await this.rustService.UpdateGlobalShortcut(shortcutId, shortcut);
                 if (success)
-                    this.logger.LogInformation("Global shortcut 'voice_recording_toggle' ({Shortcut}) registered.", shortcut);
+                    this.logger.LogInformation("Global shortcut '{ShortcutId}' ({Shortcut}) registered.", shortcutId, shortcut);
                 else
-                    this.logger.LogWarning("Failed to register global shortcut 'voice_recording_toggle' ({Shortcut}).", shortcut);
+                    this.logger.LogWarning("Failed to register global shortcut '{ShortcutId}' ({Shortcut}).", shortcutId, shortcut);
             }
             else
             {
-                // Disable shortcut when empty
-                await this.rustService.UpdateGlobalShortcut("voice_recording_toggle", string.Empty);
+                // Disable the shortcut when empty or feature is disabled:
+                await this.rustService.UpdateGlobalShortcut(shortcutId, string.Empty);
             }
         }
-        else
-        {
-            // Disable the shortcut when the preview feature is disabled:
-            await this.rustService.UpdateGlobalShortcut("voice_recording_toggle", string.Empty);
-        }
-        
+
         this.logger.LogInformation("Global shortcuts registration completed.");
     }
+
+    private string GetShortcutValue(Shortcut name) => name switch
+    {
+        Shortcut.VOICE_RECORDING_TOGGLE => this.settingsManager.ConfigurationData.App.ShortcutVoiceRecording,
+        
+        _ => string.Empty,
+    };
+
+    private bool IsShortcutAllowed(Shortcut name) => name switch
+    {
+        // Voice recording is a preview feature:
+        Shortcut.VOICE_RECORDING_TOGGLE => PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.settingsManager),
+        
+        // Other shortcuts are always allowed:
+        _ => true,
+    };
 
     public static void Initialize() => IS_INITIALIZED = true;
 }

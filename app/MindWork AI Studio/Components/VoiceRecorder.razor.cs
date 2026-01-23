@@ -47,11 +47,12 @@ public partial class VoiceRecorder : MSGComponentBase
         {
             case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.GLOBAL_SHORTCUT_PRESSED } tauriEvent:
                 // Check if this is the voice recording toggle shortcut:
-                if (tauriEvent.Payload.Count > 0 && tauriEvent.Payload[0] == "voice_recording_toggle")
+                if (tauriEvent.TryGetShortcut(out var shortcutId) && shortcutId == Shortcut.VOICE_RECORDING_TOGGLE)
                 {
                     this.Logger.LogInformation("Global shortcut triggered for voice recording toggle.");
                     await this.ToggleRecordingFromShortcut();
                 }
+                
                 break;
         }
     }

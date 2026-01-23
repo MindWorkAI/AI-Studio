@@ -1,4 +1,5 @@
 using AIStudio.Components;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -24,10 +25,10 @@ public partial class ShortcutDialog : MSGComponentBase
     public string InitialShortcut { get; set; } = string.Empty;
 
     /// <summary>
-    /// The name/identifier of the shortcut for conflict detection.
+    /// The identifier of the shortcut for conflict detection.
     /// </summary>
     [Parameter]
-    public string ShortcutName { get; set; } = string.Empty;
+    public Shortcut ShortcutId { get; set; }
     
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 

@@ -1,4 +1,6 @@
 // ReSharper disable NotAccessedPositionalProperty.Local
+using AIStudio.Tools.Rust;
+
 namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
@@ -6,35 +8,35 @@ public sealed partial class RustService
     /// <summary>
     /// Registers or updates a global keyboard shortcut.
     /// </summary>
-    /// <param name="name">The name/identifier for the shortcut (e.g., "voice_recording_toggle").</param>
+    /// <param name="shortcutId">The identifier for the shortcut.</param>
     /// <param name="shortcut">The shortcut string in Tauri format (e.g., "CmdOrControl+1"). Use empty string to disable.</param>
     /// <returns>True if the shortcut was registered successfully, false otherwise.</returns>
-    public async Task<bool> UpdateGlobalShortcut(string name, string shortcut)
+    public async Task<bool> UpdateGlobalShortcut(Shortcut shortcutId, string shortcut)
     {
         try
         {
-            var request = new RegisterShortcutRequest(name, shortcut);
+            var request = new RegisterShortcutRequest(shortcutId, shortcut);
             var response = await this.http.PostAsJsonAsync("/shortcuts/register", request, this.jsonRustSerializerOptions);
 
             if (!response.IsSuccessStatusCode)
             {
-                this.logger?.LogError("Failed to register global shortcut '{Name}' due to network error: {StatusCode}", name, response.StatusCode);
+                this.logger?.LogError("Failed to register global shortcut '{ShortcutId}' due to network error: {StatusCode}", shortcutId, response.StatusCode);
                 return false;
             }
 
             var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(this.jsonRustSerializerOptions);
             if (result is null || !result.Success)
             {
-                this.logger?.LogError("Failed to register global shortcut '{Name}': {Error}", name, result?.ErrorMessage ?? "Unknown error");
+                this.logger?.LogError("Failed to register global shortcut '{ShortcutId}': {Error}", shortcutId, result?.ErrorMessage ?? "Unknown error");
                 return false;
             }
 
-            this.logger?.LogInformation("Global shortcut '{Name}' registered successfully with key '{Shortcut}'.", name, shortcut);
+            this.logger?.LogInformation("Global shortcut '{ShortcutId}' registered successfully with key '{Shortcut}'.", shortcutId, shortcut);
             return true;
         }
         catch (Exception ex)
         {
-            this.logger?.LogError(ex, "Exception while registering global shortcut '{Name}'.", name);
+            this.logger?.LogError(ex, "Exception while registering global shortcut '{ShortcutId}'.", shortcutId);
             return false;
         }
     }
@@ -136,7 +138,7 @@ public sealed partial class RustService
         }
     }
 
-    private sealed record RegisterShortcutRequest(string Name, string Shortcut);
+    private sealed record RegisterShortcutRequest(Shortcut ShortcutId, string Shortcut);
 
     private sealed record ShortcutResponse(bool Success, string ErrorMessage);
 
@@ -151,5 +153,5 @@ public sealed partial class RustService
 /// <param name="IsValid">Whether the shortcut syntax is valid.</param>
 /// <param name="ErrorMessage">Error message if not valid.</param>
 /// <param name="HasConflict">Whether the shortcut conflicts with another registered shortcut.</param>
-/// <param name="ConflictDescription">Description of the conflict if any.</param>
+/// <param name="ConflictDescription">Description of the conflict, if any.</param>
 public sealed record ShortcutValidationResult(bool IsValid, string ErrorMessage, bool HasConflict, string ConflictDescription);

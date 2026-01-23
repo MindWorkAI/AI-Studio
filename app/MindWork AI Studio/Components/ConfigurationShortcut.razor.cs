@@ -1,4 +1,5 @@
 using AIStudio.Dialogs;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -33,7 +34,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     /// The name/identifier of the shortcut (used for conflict detection and registration).
     /// </summary>
     [Parameter]
-    public string ShortcutName { get; set; } = string.Empty;
+    public Shortcut ShortcutId { get; init; }
 
     /// <summary>
     /// The icon to display.
@@ -80,7 +81,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
             var dialogParameters = new DialogParameters<ShortcutDialog>
             {
                 { x => x.InitialShortcut, this.Shortcut() },
-                { x => x.ShortcutName, this.ShortcutName },
+                { x => x.ShortcutId, this.ShortcutId },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ShortcutDialog>(
