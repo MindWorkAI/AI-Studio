@@ -31,6 +31,9 @@ static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::ne
 /// Stores the currently registered global shortcuts (name -> shortcut string).
 static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<String, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
+/// Flag to temporarily suspend shortcut processing (shortcuts remain registered but events are not sent).
+static SHORTCUTS_SUSPENDED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+
 /// Starts the Tauri app.
 pub fn start_tauri() {
     info!("Starting Tauri app...");
@@ -770,6 +773,13 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     // Register the new shortcut:
     let shortcut_name = name.clone();
     match shortcut_manager.register(new_shortcut.as_str(), move || {
+        // Check if shortcuts are suspended:
+        let is_suspended = *SHORTCUTS_SUSPENDED.lock().unwrap();
+        if is_suspended {
+            debug!(Source = "Tauri"; "Global shortcut '{shortcut_name}' triggered but processing is suspended.");
+            return;
+        }
+
         info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
         let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
         let sender = event_sender.clone();
@@ -869,6 +879,32 @@ pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest
             conflict_description: String::new(),
         })
     }
+}
+
+/// Suspends shortcut processing. Shortcuts remain registered, but events are not sent.
+/// This is useful when opening a dialog to configure shortcuts, so the user can
+/// press the current shortcut to re-enter it without triggering the action.
+#[post("/shortcuts/suspend")]
+pub fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+    let mut suspended = SHORTCUTS_SUSPENDED.lock().unwrap();
+    *suspended = true;
+    info!(Source = "Tauri"; "Shortcut processing has been suspended.");
+    Json(ShortcutResponse {
+        success: true,
+        error_message: String::new(),
+    })
+}
+
+/// Resumes shortcut processing after it was suspended.
+#[post("/shortcuts/resume")]
+pub fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+    let mut suspended = SHORTCUTS_SUSPENDED.lock().unwrap();
+    *suspended = false;
+    info!(Source = "Tauri"; "Shortcut processing has been resumed.");
+    Json(ShortcutResponse {
+        success: true,
+        error_message: String::new(),
+    })
 }
 
 /// Validates the syntax of a shortcut string.

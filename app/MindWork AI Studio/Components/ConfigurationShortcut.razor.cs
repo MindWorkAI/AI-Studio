@@ -1,4 +1,5 @@
 using AIStudio.Dialogs;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -12,6 +13,9 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private RustService RustService { get; init; } = null!;
 
     /// <summary>
     /// The current shortcut value.
@@ -59,7 +63,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
         if (string.IsNullOrWhiteSpace(shortcut))
             return string.Empty;
 
-        // Convert internal format to display format
+        // Convert internal format to display format:
         return shortcut
             .Replace("CmdOrControl", OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl")
             .Replace("CommandOrControl", OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl");
@@ -67,27 +71,38 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
 
     private async Task OpenDialog()
     {
-        var currentShortcut = this.Shortcut();
-        var dialogParameters = new DialogParameters<ShortcutDialog>
+        // Suspend shortcut processing while the dialog is open, so the user can
+        // press the current shortcut to re-enter it without triggering the action:
+        await this.RustService.SuspendShortcutProcessing();
+        
+        try
         {
-            { x => x.InitialShortcut, currentShortcut },
-            { x => x.ShortcutName, this.ShortcutName },
-        };
+            var dialogParameters = new DialogParameters<ShortcutDialog>
+            {
+                { x => x.InitialShortcut, this.Shortcut() },
+                { x => x.ShortcutName, this.ShortcutName },
+            };
 
-        var dialogReference = await this.DialogService.ShowAsync<ShortcutDialog>(
-             this.T("Configure Keyboard Shortcut"),
-            dialogParameters,
-            DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ShortcutDialog>(
+                this.T("Configure Keyboard Shortcut"),
+                dialogParameters,
+                DialogOptions.FULLSCREEN);
 
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
 
-        if (dialogResult.Data is string newShortcut)
+            if (dialogResult.Data is string newShortcut)
+            {
+                await this.ShortcutUpdate(newShortcut);
+                await this.SettingsManager.StoreSettings();
+                await this.InformAboutChange();
+            }
+        }
+        finally
         {
-            await this.ShortcutUpdate(newShortcut);
-            await this.SettingsManager.StoreSettings();
-            await this.InformAboutChange();
+            // Resume the shortcut processing when the dialog is closed:
+            await this.RustService.ResumeShortcutProcessing();
         }
     }
 }

@@ -70,6 +70,72 @@ public sealed partial class RustService
         }
     }
 
+    /// <summary>
+    /// Suspends shortcut processing. The shortcuts remain registered, but events are not sent.
+    /// This is useful when opening a dialog to configure shortcuts, so the user can
+    /// press the current shortcut to re-enter it without triggering the action.
+    /// </summary>
+    /// <returns>True if successful, false otherwise.</returns>
+    public async Task<bool> SuspendShortcutProcessing()
+    {
+        try
+        {
+            var response = await this.http.PostAsync("/shortcuts/suspend", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger?.LogError("Failed to suspend the shortcut processing due to network error: {StatusCode}.", response.StatusCode);
+                return false;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(this.jsonRustSerializerOptions);
+            if (result is null || !result.Success)
+            {
+                this.logger?.LogError("Failed to suspend shortcut processing: {Error}", result?.ErrorMessage ?? "Unknown error");
+                return false;
+            }
+
+            this.logger?.LogDebug("Shortcut processing suspended.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Exception while suspending shortcut processing.");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Resumes the shortcut processing after it was suspended.
+    /// </summary>
+    /// <returns>True if successful, false otherwise.</returns>
+    public async Task<bool> ResumeShortcutProcessing()
+    {
+        try
+        {
+            var response = await this.http.PostAsync("/shortcuts/resume", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger?.LogError("Failed to resume shortcut processing due to network error: {StatusCode}.", response.StatusCode);
+                return false;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(this.jsonRustSerializerOptions);
+            if (result is null || !result.Success)
+            {
+                this.logger?.LogError("Failed to resume shortcut processing: {Error}", result?.ErrorMessage ?? "Unknown error");
+                return false;
+            }
+
+            this.logger?.LogDebug("Shortcut processing resumed.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Exception while resuming shortcut processing.");
+            return false;
+        }
+    }
+
     private sealed record RegisterShortcutRequest(string Name, string Shortcut);
 
     private sealed record ShortcutResponse(bool Success, string ErrorMessage);
