@@ -137,14 +137,6 @@ public sealed partial class RustService
             return false;
         }
     }
-
-    private sealed record RegisterShortcutRequest(Shortcut ShortcutId, string Shortcut);
-
-    private sealed record ShortcutResponse(bool Success, string ErrorMessage);
-
-    private sealed record ValidateShortcutRequest(string Shortcut);
-
-    private sealed record ShortcutValidationResponse(bool IsValid, string ErrorMessage, bool HasConflict, string ConflictDescription);
 }
 
 /// <summary>
