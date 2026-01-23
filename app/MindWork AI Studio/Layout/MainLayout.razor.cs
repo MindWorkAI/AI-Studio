@@ -117,31 +117,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await base.OnInitializedAsync();
     }
 
-    /// <summary>
-    /// Registers global shortcuts based on the current configuration.
-    /// </summary>
-    private async Task RegisterGlobalShortcuts()
-    {
-        // Only register the voice recording shortcut if the preview feature is enabled:
-        if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
-        {
-            var shortcut = this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording;
-            if (!string.IsNullOrWhiteSpace(shortcut))
-            {
-                var success = await this.RustService.UpdateGlobalShortcut("voice_recording_toggle", shortcut);
-                if (success)
-                    this.Logger.LogInformation("Global voice recording shortcut '{Shortcut}' registered successfully.", shortcut);
-                else
-                    this.Logger.LogWarning("Failed to register global voice recording shortcut '{Shortcut}'.", shortcut);
-            }
-        }
-    }
-
-    private void LoadNavItems()
-    {
-        this.navItems = new List<NavBarItem>(this.GetNavItems());
-    }
-
     #endregion
 
     #region Implementation of ILang
@@ -272,6 +247,31 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     #endregion
 
+    /// <summary>
+    /// Registers global shortcuts based on the current configuration.
+    /// </summary>
+    private async Task RegisterGlobalShortcuts()
+    {
+        // Only register the voice recording shortcut if the preview feature is enabled:
+        if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
+        {
+            var shortcut = this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording;
+            if (!string.IsNullOrWhiteSpace(shortcut))
+            {
+                var success = await this.RustService.UpdateGlobalShortcut("voice_recording_toggle", shortcut);
+                if (success)
+                    this.Logger.LogInformation("Global voice recording shortcut '{Shortcut}' registered successfully.", shortcut);
+                else
+                    this.Logger.LogWarning("Failed to register global voice recording shortcut '{Shortcut}'.", shortcut);
+            }
+        }
+    }
+
+    private void LoadNavItems()
+    {
+        this.navItems = new List<NavBarItem>(this.GetNavItems());
+    }
+    
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
