@@ -22,7 +22,10 @@ public sealed partial class RustService : BackgroundService
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new TolerantEnumConverter() },
+        Converters =
+        {
+            new TolerantEnumConverter(),
+        },
     };
     
     private ILogger<RustService>? logger;
