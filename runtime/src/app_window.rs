@@ -31,9 +31,6 @@ static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::ne
 /// Stores the currently registered global shortcuts (name -> shortcut string).
 static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<String, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
-/// Flag to temporarily suspend shortcut processing (shortcuts remain registered but events are not sent).
-static SHORTCUTS_SUSPENDED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
-
 /// Starts the Tauri app.
 pub fn start_tauri() {
     info!("Starting Tauri app...");
@@ -773,13 +770,6 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     // Register the new shortcut:
     let shortcut_name = name.clone();
     match shortcut_manager.register(new_shortcut.as_str(), move || {
-        // Check if shortcuts are suspended:
-        let is_suspended = *SHORTCUTS_SUSPENDED.lock().unwrap();
-        if is_suspended {
-            debug!(Source = "Tauri"; "Global shortcut '{shortcut_name}' triggered but processing is suspended.");
-            return;
-        }
-
         info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
         let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
         let sender = event_sender.clone();
@@ -881,26 +871,109 @@ pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest
     }
 }
 
-/// Suspends shortcut processing. Shortcuts remain registered, but events are not sent.
+/// Suspends shortcut processing by unregistering all shortcuts from the OS.
+/// The shortcuts remain in our internal map, so they can be re-registered on resume.
 /// This is useful when opening a dialog to configure shortcuts, so the user can
 /// press the current shortcut to re-enter it without triggering the action.
 #[post("/shortcuts/suspend")]
 pub fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
-    let mut suspended = SHORTCUTS_SUSPENDED.lock().unwrap();
-    *suspended = true;
-    info!(Source = "Tauri"; "Shortcut processing has been suspended.");
+    // Get the main window to access the global shortcut manager:
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot suspend shortcuts: main window not available.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let mut shortcut_manager = main_window.app_handle().global_shortcut_manager();
+    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+
+    // Unregister all shortcuts from the OS (but keep them in our map):
+    for (name, shortcut) in registered_shortcuts.iter() {
+        if !shortcut.is_empty() {
+            match shortcut_manager.unregister(shortcut.as_str()) {
+                Ok(_) => info!(Source = "Tauri"; "Temporarily unregistered shortcut '{shortcut}' for '{name}'."),
+                Err(error) => warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{name}': {error}"),
+            }
+        }
+    }
+
+    info!(Source = "Tauri"; "Shortcut processing has been suspended ({} shortcuts unregistered).", registered_shortcuts.len());
     Json(ShortcutResponse {
         success: true,
         error_message: String::new(),
     })
 }
 
-/// Resumes shortcut processing after it was suspended.
+/// Resumes shortcut processing by re-registering all shortcuts with the OS.
 #[post("/shortcuts/resume")]
 pub fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
-    let mut suspended = SHORTCUTS_SUSPENDED.lock().unwrap();
-    *suspended = false;
-    info!(Source = "Tauri"; "Shortcut processing has been resumed.");
+    // Get the main window to access the global shortcut manager:
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot resume shortcuts: main window not available.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let mut shortcut_manager = main_window.app_handle().global_shortcut_manager();
+    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+
+    // Get the event broadcast sender for the shortcut callbacks:
+    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
+    let event_sender = match event_broadcast_lock.as_ref() {
+        Some(sender) => sender.clone(),
+        None => {
+            error!(Source = "Tauri"; "Cannot resume shortcuts: event broadcast not initialized.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Event broadcast not initialized".to_string(),
+            });
+        }
+    };
+
+    drop(event_broadcast_lock);
+
+    // Re-register all shortcuts with the OS:
+    let mut success_count = 0;
+    for (name, shortcut) in registered_shortcuts.iter() {
+        if shortcut.is_empty() {
+            continue;
+        }
+
+        let shortcut_name = name.clone();
+        let sender = event_sender.clone();
+        match shortcut_manager.register(shortcut.as_str(), move || {
+            info!(Source = "Tauri"; "Global shortcut triggered for '{shortcut_name}'.");
+            let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_name.clone()]);
+            let sender = sender.clone();
+            tauri::async_runtime::spawn(async move {
+                match sender.send(event) {
+                    Ok(_) => {},
+                    Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
+                }
+            });
+        }) {
+            Ok(_) => {
+                info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{name}'.");
+                success_count += 1;
+            },
+
+            Err(error) => warn!(Source = "Tauri"; "Failed to re-register shortcut '{shortcut}' for '{name}': {error}"),
+        }
+    }
+
+    info!(Source = "Tauri"; "Shortcut processing has been resumed ({success_count} shortcuts re-registered).");
     Json(ShortcutResponse {
         success: true,
         error_message: String::new(),
