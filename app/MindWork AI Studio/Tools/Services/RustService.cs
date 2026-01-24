@@ -69,6 +69,8 @@ public sealed partial class RustService : BackgroundService
         this.encryptor = encryptionService;
     }
 
+    private Task ReportRustServiceUnavailable(string reason) => MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, reason);
+
     #region Overrides of BackgroundService
 
     /// <summary>
