@@ -48,7 +48,7 @@
                 OnAdornmentClick="() => this.SendMessage()"
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
-                OnKeyUp="this.InputKeyEvent"
+                OnKeyUp="@this.InputKeyEvent"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
                 Class="@this.UserInputClass"
                 Style="@this.UserInputStyle"/>

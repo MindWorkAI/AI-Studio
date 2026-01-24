@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 
-using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 
 using Version = System.Version;
@@ -22,7 +21,10 @@ public sealed partial class RustService : BackgroundService
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new TolerantEnumConverter() },
+        Converters =
+        {
+            new RustEnumConverter(),
+        },
     };
     
     private ILogger<RustService>? logger;

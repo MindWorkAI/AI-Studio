@@ -87,6 +87,10 @@ pub fn start_runtime_api() {
                 crate::file_data::extract_data,
                 crate::log::get_log_paths,
                 crate::log::log_event,
+                crate::app_window::register_shortcut,
+                crate::app_window::validate_shortcut,
+                crate::app_window::suspend_shortcuts,
+                crate::app_window::resume_shortcuts,
             ])
             .ignite().await.unwrap()
             .launch().await.unwrap();

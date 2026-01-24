@@ -1675,6 +1675,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T20906218
 -- Use app default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T3672477670"] = "Use app default"
 
+-- No shortcut configured
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T3099115336"] = "No shortcut configured"
+
+-- Change shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "Change shortcut"
+
+-- Configure Keyboard Shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Configure Keyboard Shortcut"
+
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Yes, let the AI decide which data sources are needed."
 
@@ -2017,6 +2026,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"]
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Do you want to show preview features in the app?"
 
+-- Voice recording shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1278320412"] = "Voice recording shortcut"
+
 -- How often should we check for app updates?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1364944735"] = "How often should we check for app updates?"
 
@@ -2046,6 +2058,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"]
 
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Select the language for the app."
+
+-- The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2143741496"] = "The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused."
 
 -- Disable dictation and transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T215381891"] = "Disable dictation and transcription"
@@ -4612,6 +4627,42 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832
 -- Preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T4004501229"] = "Preselect one of your profiles?"
 
+-- Save
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1294818664"] = "Save"
+
+-- Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1464973299"] = "Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused."
+
+-- Press a key combination...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1468443151"] = "Press a key combination..."
+
+-- Clear Shortcut
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1807313248"] = "Clear Shortcut"
+
+-- Invalid shortcut: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T189893682"] = "Invalid shortcut: {0}"
+
+-- This shortcut conflicts with: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T2633102934"] = "This shortcut conflicts with: {0}"
+
+-- Please include at least one modifier key (Ctrl, Shift, Alt, or Cmd).
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3060573513"] = "Please include at least one modifier key (Ctrl, Shift, Alt, or Cmd)."
+
+-- Shortcut is valid and available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3159532525"] = "Shortcut is valid and available."
+
+-- Define a shortcut
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3734850493"] = "Define a shortcut"
+
+-- This is the shortcut you previously used.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T4167229652"] = "This is the shortcut you previously used."
+
+-- Supported modifiers: Ctrl/Cmd, Shift, Alt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T889258890"] = "Supported modifiers: Ctrl/Cmd, Shift, Alt."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T900713019"] = "Cancel"
+
 -- Please enter a value.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T3576780391"] = "Please enter a value."
 
@@ -5049,6 +5100,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Used Open Source
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build time"
+
+-- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems."
 
 -- To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2644379659"] = "To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system."

@@ -9,7 +9,7 @@ authors = ["Thorsten Sommer"]
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.8", features = [ "http-all", "updater", "shell-sidecar", "shell-open", "dialog"] }
+tauri = { version = "1.8", features = [ "http-all", "updater", "shell-sidecar", "shell-open", "dialog", "global-shortcut"] }
 tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -39,6 +39,7 @@ pdfium-render = "0.8.34"
 sys-locale = "0.3.2"
 cfg-if = "1.0.1"
 pptx-to-md = "0.4.0"
+strum_macros = "0.27"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 url = "2.5.7"

@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Tools.MIME;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -24,6 +25,9 @@ public partial class VoiceRecorder : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        // Register for global shortcut events:
+        this.ApplyFilters([], [Event.TAURI_EVENT_RECEIVED]);
+
         await base.OnInitializedAsync();
 
         try
@@ -35,6 +39,38 @@ public partial class VoiceRecorder : MSGComponentBase
         {
             this.Logger.LogError(ex, "Failed to initialize sound effects.");
         }
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.GLOBAL_SHORTCUT_PRESSED } tauriEvent:
+                // Check if this is the voice recording toggle shortcut:
+                if (tauriEvent.TryGetShortcut(out var shortcutId) && shortcutId == Shortcut.VOICE_RECORDING_TOGGLE)
+                {
+                    this.Logger.LogInformation("Global shortcut triggered for voice recording toggle.");
+                    await this.ToggleRecordingFromShortcut();
+                }
+                
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Toggles the recording state when triggered by a global shortcut.
+    /// </summary>
+    private async Task ToggleRecordingFromShortcut()
+    {
+        // Don't allow toggle if transcription is in progress or preparing:
+        if (this.isTranscribing || this.isPreparing)
+        {
+            this.Logger.LogDebug("Ignoring shortcut: transcription or preparation is in progress.");
+            return;
+        }
+
+        // Toggle the recording state:
+        await this.OnRecordingToggled(!this.isRecording);
     }
 
     #endregion
@@ -108,6 +144,10 @@ public partial class VoiceRecorder : MSGComponentBase
 
                 // Clean up the recording stream if starting failed:
                 await this.FinalizeRecordingStream();
+            }
+            finally
+            {
+                this.StateHasChanged();
             }
         }
         else

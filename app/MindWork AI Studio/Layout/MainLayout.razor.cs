@@ -97,6 +97,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
+        GlobalShortcutService.Initialize();
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
@@ -114,11 +115,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.LoadNavItems();
 
         await base.OnInitializedAsync();
-    }
-
-    private void LoadNavItems()
-    {
-        this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
 
     #endregion
@@ -251,6 +247,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     #endregion
 
+    private void LoadNavItems()
+    {
+        this.navItems = new List<NavBarItem>(this.GetNavItems());
+    }
+    
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);

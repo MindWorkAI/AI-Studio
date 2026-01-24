@@ -83,6 +83,13 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string UseTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UseTranscriptionProvider, string.Empty);
 
     /// <summary>
+    /// The global keyboard shortcut for toggling voice recording.
+    /// Uses Tauri's shortcut format, e.g., "CmdOrControl+1" (Cmd+1 on macOS, Ctrl+1 on Windows/Linux).
+    /// Set to empty string to disable the global shortcut.
+    /// </summary>
+    public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
+
+    /// <summary>
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
