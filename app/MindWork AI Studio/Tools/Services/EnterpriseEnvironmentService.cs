@@ -34,16 +34,46 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         {
             logger.LogInformation("Start updating of the enterprise environment.");
         
-            var enterpriseRemoveConfigId = await rustService.EnterpriseEnvRemoveConfigId();
+            Guid enterpriseRemoveConfigId;
+            try
+            {
+                enterpriseRemoveConfigId = await rustService.EnterpriseEnvRemoveConfigId();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise remove configuration ID from the Rust service.");
+                return;
+            }
+            
             var isPlugin2RemoveInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == enterpriseRemoveConfigId);
             if (enterpriseRemoveConfigId != Guid.Empty && isPlugin2RemoveInUse)
             {
                 logger.LogWarning($"The enterprise environment configuration ID '{enterpriseRemoveConfigId}' must be removed.");
                 PluginFactory.RemovePluginAsync(enterpriseRemoveConfigId);
             }
-        
-            var enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
-            var enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
+
+            string? enterpriseConfigServerUrl;
+            try
+            {
+                enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise configuration server URL from the Rust service.");
+                return;
+            }
+
+            Guid enterpriseConfigId;
+            try
+            {
+                enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise configuration ID from the Rust service.");
+                return;
+            }
+            
             var etag = await PluginFactory.DetermineConfigPluginETagAsync(enterpriseConfigId, enterpriseConfigServerUrl);
             var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag);
             if (CURRENT_ENVIRONMENT != nextEnterpriseEnvironment)
