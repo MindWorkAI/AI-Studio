@@ -42,6 +42,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to fetch the enterprise remove configuration ID from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvRemoveConfigId failed");
                 return;
             }
             
@@ -60,6 +61,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to fetch the enterprise configuration server URL from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigServerUrl failed");
                 return;
             }
 
@@ -71,6 +73,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to fetch the enterprise configuration ID from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigId failed");
                 return;
             }
             

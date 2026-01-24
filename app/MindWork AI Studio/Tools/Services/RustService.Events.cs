@@ -62,6 +62,7 @@ public partial class RustService
                 catch (Exception e)
                 {
                     this.logger!.LogError("Error while streaming Tauri events: {Message}", e.Message);
+                    await this.ReportRustServiceUnavailable("Tauri event stream error");
                     await Task.Delay(TimeSpan.FromSeconds(3), stopToken);
                 }
             }

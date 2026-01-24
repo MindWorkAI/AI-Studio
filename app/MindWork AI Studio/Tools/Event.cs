@@ -15,6 +15,7 @@ public enum Event
     SHOW_WARNING,
     SHOW_SUCCESS,
     TAURI_EVENT_RECEIVED,
+    RUST_SERVICE_UNAVAILABLE,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,

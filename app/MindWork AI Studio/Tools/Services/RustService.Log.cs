@@ -32,6 +32,12 @@ public sealed partial class RustService
         }
         catch
         {
+            //
+            // We don't expect this to ever happen because the HTTP client cannot raise exceptions in fire-and-forget mode.
+            // This is because we don't await the task, so any exceptions thrown during the HTTP request are not propagated
+            // back to the caller.
+            //
+            
             Console.WriteLine("Failed to send log event to Rust service.");
             // Ignore errors to avoid log loops
         }
