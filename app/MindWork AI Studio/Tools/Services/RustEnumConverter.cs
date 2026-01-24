@@ -55,7 +55,7 @@ public sealed class RustEnumConverter : JsonConverter<object>
 
     public override void WriteAsPropertyName(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
     {
-        writer.WritePropertyName(ConvertToPascalCase(value.ToString())!);
+        writer.WritePropertyName(ConvertToPascalCase(value.ToString()));
     }
 
     /// <summary>
