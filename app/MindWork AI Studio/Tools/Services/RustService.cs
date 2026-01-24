@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 
-using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 
 using Version = System.Version;
@@ -24,7 +23,7 @@ public sealed partial class RustService : BackgroundService
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters =
         {
-            new TolerantEnumConverter(),
+            new RustEnumConverter(),
         },
     };
     
