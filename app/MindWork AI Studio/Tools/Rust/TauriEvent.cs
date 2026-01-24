@@ -15,6 +15,9 @@ public readonly record struct TauriEvent(TauriEventType EventType, List<string> 
     public bool TryGetShortcut(out Shortcut shortcut)
     {
         shortcut = default;
+        if(this.EventType != TauriEventType.GLOBAL_SHORTCUT_PRESSED)
+            return false;
+        
         if (this.Payload.Count == 0)
             return false;
 
