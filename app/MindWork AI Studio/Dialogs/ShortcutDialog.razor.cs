@@ -33,6 +33,7 @@ public partial class ShortcutDialog : MSGComponentBase
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
     private string currentShortcut = string.Empty;
+    private string originalShortcut = string.Empty;
     private string validationMessage = string.Empty;
     private Severity validationSeverity = Severity.Info;
     private bool hasValidationError;
@@ -57,6 +58,7 @@ public partial class ShortcutDialog : MSGComponentBase
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         
         this.currentShortcut = this.InitialShortcut;
+        this.originalShortcut = this.InitialShortcut;
         this.ParseExistingShortcut();
     }
 
@@ -179,6 +181,16 @@ public partial class ShortcutDialog : MSGComponentBase
         var result = await this.RustService.ValidateShortcut(this.currentShortcut);
         if (result.IsValid)
         {
+            if (!string.IsNullOrWhiteSpace(this.originalShortcut)
+                && this.currentShortcut.Equals(this.originalShortcut, StringComparison.OrdinalIgnoreCase))
+            {
+                this.validationMessage = T("This is the shortcut you previously used.");
+                this.validationSeverity = Severity.Info;
+                this.hasValidationError = false;
+                this.StateHasChanged();
+                return;
+            }
+            
             if (result.HasConflict)
             {
                 this.validationMessage = string.Format(T("This shortcut conflicts with: {0}"), result.ConflictDescription);
