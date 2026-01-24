@@ -745,6 +745,14 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
     let id = payload.id;
     let new_shortcut = payload.shortcut.clone();
 
+    if id == Shortcut::None {
+        error!(Source = "Tauri"; "Cannot register NONE shortcut.");
+        return Json(ShortcutResponse {
+            success: false,
+            error_message: "Cannot register NONE shortcut".to_string(),
+        });
+    }
+    
     info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
 
     // Get the main window to access the global shortcut manager:
