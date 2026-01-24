@@ -48,7 +48,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             var isPlugin2RemoveInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == enterpriseRemoveConfigId);
             if (enterpriseRemoveConfigId != Guid.Empty && isPlugin2RemoveInUse)
             {
-                logger.LogWarning($"The enterprise environment configuration ID '{enterpriseRemoveConfigId}' must be removed.");
+                logger.LogWarning("The enterprise environment configuration ID '{EnterpriseRemoveConfigId}' must be removed.", enterpriseRemoveConfigId);
                 PluginFactory.RemovePluginAsync(enterpriseRemoveConfigId);
             }
 
@@ -89,15 +89,15 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                         break;
 
                     case null:
-                        logger.LogWarning($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}'), but the configuration server URL is not set.");
+                        logger.LogWarning("AI Studio runs with an enterprise configuration id ('{EnterpriseConfigId}'), but the configuration server URL is not set.", enterpriseConfigId);
                         break;
 
                     case not null when !string.IsNullOrWhiteSpace(enterpriseConfigServerUrl) && enterpriseConfigId == Guid.Empty:
-                        logger.LogWarning($"AI Studio runs with an enterprise configuration server URL ('{enterpriseConfigServerUrl}'), but the configuration ID is not set.");
+                        logger.LogWarning("AI Studio runs with an enterprise configuration server URL ('{EnterpriseConfigServerUrl}'), but the configuration ID is not set.", enterpriseConfigServerUrl);
                         break;
 
                     default:
-                        logger.LogInformation($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}') and configuration server URL ('{enterpriseConfigServerUrl}').");
+                        logger.LogInformation("AI Studio runs with an enterprise configuration id ('{EnterpriseConfigId}') and configuration server URL ('{EnterpriseConfigServerUrl}').", enterpriseConfigId, enterpriseConfigServerUrl);
                         
                         if(isFirstRun)
                             MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag));
