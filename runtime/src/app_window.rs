@@ -714,7 +714,7 @@ pub struct ShortcutResponse {
 /// This is used by both `register_shortcut` and `resume_shortcuts` to
 /// avoid code duplication.
 fn register_shortcut_with_callback(
-    shortcut_manager: &mut impl tauri::GlobalShortcutManager,
+    shortcut_manager: &mut impl GlobalShortcutManager,
     shortcut: &str,
     shortcut_id: Shortcut,
     event_sender: broadcast::Sender<Event>,
