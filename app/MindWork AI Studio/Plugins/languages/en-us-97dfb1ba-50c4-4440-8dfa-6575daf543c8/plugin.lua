@@ -6214,22 +6214,22 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T18544701
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Pandoc may be required for importing files."
 
 -- Failed to delete the API key due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::APIKEYS::T3658273365"] = "Failed to delete the API key due to an API issue."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Failed to delete the API key due to an API issue."
 
 -- Failed to get the API key due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::APIKEYS::T3875720022"] = "Failed to get the API key due to an API issue."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Failed to get the API key due to an API issue."
 
 -- Successfully copied the text to your clipboard
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::CLIPBOARD::T3351807428"] = "Successfully copied the text to your clipboard"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Successfully copied the text to your clipboard"
 
 -- Failed to copy the text to your clipboard.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::CLIPBOARD::T3724548108"] = "Failed to copy the text to your clipboard."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Failed to copy the text to your clipboard."
 
 -- Failed to delete the secret data due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::SECRETS::T2303057928"] = "Failed to delete the secret data due to an API issue."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Failed to delete the secret data due to an API issue."
 
 -- Failed to get the secret data due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::SECRETS::T4007657575"] = "Failed to get the secret data due to an API issue."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Failed to get the secret data due to an API issue."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "No update found."
