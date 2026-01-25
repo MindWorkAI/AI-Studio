@@ -203,6 +203,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             await this.AddPolicy();
             this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.First();
         }
+
+        this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         
         var receivedDeferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT).FirstOrDefault();
         if (receivedDeferredContent is not null)
@@ -237,6 +239,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
     private bool policyIsProtected;
+    private bool policyDefinitionExpanded;
     private string policyName = string.Empty;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
@@ -253,6 +256,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     {
         this.selectedPolicy = policy;
         this.ResetForm();
+        this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+    }
+
+    private Task PolicyDefinitionExpandedChanged(bool isExpanded)
+    {
+        this.policyDefinitionExpanded = isExpanded;
+        return Task.CompletedTask;
     }
     
     private async Task AddPolicy()
@@ -316,6 +326,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         
         this.policyIsProtected = state;
         this.selectedPolicy.IsProtected = state;
+        this.policyDefinitionExpanded = !state;
         await this.AutoSave(true);
     }
     
