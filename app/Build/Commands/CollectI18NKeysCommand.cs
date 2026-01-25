@@ -69,7 +69,10 @@ public sealed partial class CollectI18NKeysCommand
             
             var ns = this.DetermineNamespace(filePath);
             var fileInfo = new FileInfo(filePath);
-            var name = fileInfo.Name.Replace(fileInfo.Extension, string.Empty).Replace(".razor", string.Empty);
+            
+            var name = this.DetermineTypeName(filePath)
+                       ?? fileInfo.Name.Replace(fileInfo.Extension, string.Empty).Replace(".razor", string.Empty);
+            
             var langNamespace = $"{ns}.{name}".ToUpperInvariant();
             foreach (var match in matches)
             {
@@ -236,6 +239,14 @@ public sealed partial class CollectI18NKeysCommand
         Console.WriteLine($"- Error: The file '{filePath}' is neither a C# nor a Razor file. We can't determine the namespace.");
         return null;
     }
+
+    private string? DetermineTypeName(string filePath)
+    {
+        if (!filePath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return this.ReadPartialTypeNameFromCSharp(filePath);
+    }
     
     private string? ReadNamespaceFromCSharp(string filePath)
     {
@@ -251,6 +262,24 @@ public sealed partial class CollectI18NKeysCommand
             return null;
         }
         
+        var match = matches[0];
+        return match.Groups[1].Value;
+    }
+
+    private string? ReadPartialTypeNameFromCSharp(string filePath)
+    {
+        var content = File.ReadAllText(filePath, Encoding.UTF8);
+        var matches = CSharpPartialTypeRegex().Matches(content);
+
+        if (matches.Count == 0)
+            return null;
+
+        if (matches.Count > 1)
+        {
+            Console.WriteLine($"The file '{filePath}' contains multiple partial type declarations. This scenario is not supported.");
+            return null;
+        }
+
         var match = matches[0];
         return match.Groups[1].Value;
     }
@@ -278,4 +307,7 @@ public sealed partial class CollectI18NKeysCommand
     
     [GeneratedRegex("""namespace\s+([a-zA-Z0-9_.]+)""")]
     private static partial Regex CSharpNamespaceRegex();
+
+    [GeneratedRegex("""\bpartial\s+(?:class|struct|interface|record(?:\s+(?:class|struct))?)\s+([A-Za-z_][A-Za-z0-9_]*)""")]
+    private static partial Regex CSharpPartialTypeRegex();
 }
