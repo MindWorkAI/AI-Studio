@@ -156,7 +156,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             var errorBody = await nextResponse.Content.ReadAsStringAsync(token);
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
@@ -164,7 +164,18 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
+                // Check if the error body contains "context" and "token" (case-insensitive),
+                // which indicates that the context window is likely exceeded:
+                if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
+                   errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                }
+                else
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                }
+
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
@@ -172,7 +183,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.NotFound)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
@@ -180,7 +191,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.Unauthorized)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
@@ -188,7 +199,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.InternalServerError)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
@@ -196,7 +207,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.ServiceUnavailable)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'"), this.InstanceName, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 break;
@@ -213,7 +224,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         
         if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
         {
-            await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'."), this.InstanceName, MAX_RETRIES, errorMessage)));
+            await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
 
@@ -554,10 +565,22 @@ public abstract class BaseProvider : IProvider, ISecretId
         
             await using var fileStream = File.OpenRead(audioFilePath);
             using var fileContent = new StreamContent(fileStream);
+            
+            // Set the content type based on the file extension:
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
-
+            
+            // Add the file content to the form data:
             form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
-            form.Add(new StringContent(transcriptionModel.Id), "model");
+
+            //
+            // Add the model name to the form data. Ensure that a model name is always provided.
+            // Otherwise, the StringContent constructor will throw an exception.
+            //
+            var modelName = transcriptionModel.Id;
+            if (string.IsNullOrWhiteSpace(modelName))
+                modelName = "placeholder";
+            
+            form.Add(new StringContent(modelName), "model");
 
             using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
             request.Content = form;

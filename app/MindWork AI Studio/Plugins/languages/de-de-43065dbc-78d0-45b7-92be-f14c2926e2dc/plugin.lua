@@ -384,6 +384,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T
 -- None
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T810547195"] = "Keine"
 
+-- {0} - Document Analysis Session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T108097007"] = "{0} – Sitzung zur Dokumentenanalyse"
+
 -- Use the analysis and output rules to define how the AI evaluates your documents and formats the results.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1155482668"] = "Verwenden Sie die Analyse- und Ausgaberegeln, um festzulegen, wie die KI Ihre Dokumente bewertet und die Ergebnisse formatiert."
 
@@ -438,8 +441,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Export policy as configuration section
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2556564432"] = "Exportieren Sie das Regelwerk als Konfigurationsabschnitt"
 
+-- The result of your previous document analysis session.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2570551055"] = "Das Ergebnis Ihrer vorherigen Dokumentenanalyse-Sitzung."
+
 -- Are you sure you want to delete the document analysis policy '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2582525917"] = "Möchten Sie das Regelwerk '{0}' wirklich löschen?"
+
+-- Expand this section to view and edit the policy definition.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T277813037"] = "Erweitern Sie diesen Abschnitt, um das Regelwerk anzuzeigen und zu bearbeiten."
 
 -- Policy name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2879019438"] = "Name des Regelwerks"
@@ -470,6 +479,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Document Analysis Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T348883878"] = "Assistent für die Dokumentenanalyse"
+
+-- Empty
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3512147854"] = "Leer"
 
 -- Analysis and output rules
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3555314296"] = "Analyse- und Ausgaberegeln"
@@ -1668,6 +1680,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T20906218
 -- Use app default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T3672477670"] = "App-Standard verwenden"
 
+-- No shortcut configured
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T3099115336"] = "Keinen Tastaturkurzbefehl konfiguriert"
+
+-- Change shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "Tastaturkurzbefehl ändern"
+
+-- Configure Keyboard Shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Tastaturkurzbefehl konfigurieren"
+
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Ja, die KI soll entscheiden, welche Datenquellen benötigt werden."
 
@@ -2010,6 +2031,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"]
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Möchten Sie Vorschaufunktionen in der App anzeigen lassen?"
 
+-- Voice recording shortcut
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1278320412"] = "Tastaturkurzbefehl für Sprachaufnahme"
+
 -- How often should we check for app updates?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1364944735"] = "Wie oft sollen wir nach App-Updates suchen?"
 
@@ -2039,6 +2063,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"]
 
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Wählen Sie die Sprache für die App aus."
+
+-- The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2143741496"] = "Der globale Tastaturkurzbefehl zum Ein- und Ausschalten der Sprachaufnahme. Dieser Kurzbefehl funktioniert systemweit, auch wenn die App nicht im Vordergrund ist."
 
 -- Disable dictation and transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T215381891"] = "Diktieren und Transkribieren deaktivieren"
@@ -2103,6 +2130,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T14695
 -- Add Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Einbettung hinzufügen"
 
+-- Uses the provider-configured model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1760715963"] = "Verwendet das vom Anbieter konfigurierte Modell"
+
 -- Are you sure you want to delete the embedding provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1825371968"] = "Sind Sie sicher, dass Sie den Einbettungsanbieter '{0}' löschen möchten?"
 
@@ -2166,11 +2196,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T162847
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1725856265"] = "Beschreibung"
 
+-- Uses the provider-configured model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1760715963"] = "Verwendet das vom Anbieter konfigurierte Modell"
+
 -- Add Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1806589097"] = "Anbieter hinzufügen"
 
 -- Configure LLM Providers
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1810190350"] = "Anbieter für LLM konfigurieren"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1810190350"] = "Anbieter für LLMs konfigurieren"
 
 -- Edit LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1868766523"] = "LLM-Anbieter bearbeiten"
@@ -2206,10 +2239,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T284206
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2911731076"] = "Noch keine Anbieter konfiguriert."
 
 -- Configured LLM Providers
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3019870540"] = "Konfigurierte Anbieter für LLM"
-
--- as selected by provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3082210376"] = "wie vom Anbieter ausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3019870540"] = "Konfigurierte Anbieter für LLMs"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3267849393"] = "Bearbeiten"
@@ -2268,6 +2298,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T14
 -- Add transcription provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1645238629"] = "Anbieter für Transkriptionen hinzufügen"
 
+-- Uses the provider-configured model
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1760715963"] = "Verwendet das vom Anbieter konfigurierte Modell"
+
 -- Add Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T2066315685"] = "Anbieter für Transkriptionen hinzufügen"
 
@@ -2292,6 +2325,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T40
 -- Configured Transcription Providers
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T4210863523"] = "Konfigurierte Anbieter für Transkriptionen"
 
+-- With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the 'Configure LLM providers' section.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T584860404"] = "Mit Unterstützung von Modellen für Transkriptionen kann MindWork AI Studio menschliche Sprache in Text umwandeln. Das ist zum Beispiel hilfreich, wenn Sie Texte diktieren möchten. Sie können aus speziellen Modellen für Transkriptionen wählen, jedoch nicht aus multimodalen LLMs (Large Language Models), die sowohl Sprache als auch Text verarbeiten können. Die Einrichtung multimodaler Modelle erfolgt im Abschnitt „Anbieter für LLMs konfigurieren“."
+
 -- This transcription provider is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T756131076"] = "Dieser Anbieter für Transkriptionen wird von Ihrer Organisation verwaltet."
 
@@ -2300,9 +2336,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Möchten Sie den Anbieter für Transkriptionen „{0}“ wirklich löschen?"
-
--- With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the \"Configure providers\" section.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T584860404"] = "Mit Unterstützung von Modellen für Transkriptionen kann MindWork AI Studio menschliche Sprache in Text umwandeln. Das ist zum Beispiel hilfreich, wenn Sie Texte diktieren möchten. Sie können aus speziellen Modellen für Transkriptionen wählen, jedoch nicht aus multimodalen LLMs (Large Language Models), die sowohl Sprache als auch Text verarbeiten können. Die Einrichtung multimodaler Modelle erfolgt im Abschnitt „Anbieter für LLM konfigurieren“."
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T900237532"] = "Anbieter"
@@ -2391,6 +2424,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T586430036"] = "Nützliche Assist
 -- Failed to create the transcription provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1689988905"] = "Der Anbieter für die Transkription konnte nicht erstellt werden."
 
+-- Failed to start audio recording.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2144994226"] = "Audioaufnahme konnte nicht gestartet werden."
+
 -- Stop recording and start transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T224155287"] = "Aufnahme beenden und Transkription starten"
 
@@ -2402,6 +2438,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2851219233"] = "Transkrip
 
 -- The configured transcription provider was not found.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T331613105"] = "Der konfigurierte Anbieter für die Transkription wurde nicht gefunden."
+
+-- Failed to stop audio recording.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3462568264"] = "Audioaufnahme konnte nicht beendet werden."
 
 -- The configured transcription provider does not meet the minimum confidence level.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3834149033"] = "Der konfigurierte Anbieter für die Transkription erfüllt nicht das erforderliche Mindestmaß an Vertrauenswürdigkeit."
@@ -3207,6 +3246,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T290547799"] = "Der
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T416738168"] = "Modellauswahl"
 
+-- We are currently unable to communicate with the provider to load models. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T504465522"] = "Wir können derzeit nicht mit dem Anbieter kommunizieren, um Modelle zu laden. Bitte versuchen Sie es später erneut."
+
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T808120719"] = "Host"
 
@@ -3414,11 +3456,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3361153305"] = "Experten-Ei
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Verfügbare Modelle anzeigen"
 
+-- This host uses the model configured at the provider level. No model selection is available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3783329915"] = "Dieser Host verwendet das auf Anbieterebene konfigurierte Modell. Es ist keine Modellauswahl verfügbar."
+
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Derzeit können wir die Modelle für den ausgewählten Anbieter und/oder Host nicht abfragen. Bitte geben Sie daher den Modellnamen manuell ein."
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T416738168"] = "Modellauswahl"
+
+-- We are currently unable to communicate with the provider to load models. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "Wir können derzeit nicht mit dem Anbieter kommunizieren, um Modelle zu laden. Bitte versuchen Sie es später erneut."
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
@@ -4584,6 +4632,42 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832
 -- Preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T4004501229"] = "Eines ihrer Profile vorauswählen?"
 
+-- Save
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1294818664"] = "Speichern"
+
+-- Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1464973299"] = "Drücken Sie die gewünschte Tastenkombination, um den Kurzbefehl festzulegen. Der Tastaturkurzbefehl wird global registriert und funktioniert auch, wenn die App nicht im Vordergrund ist."
+
+-- Press a key combination...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1468443151"] = "Drücken Sie eine Tastenkombination …"
+
+-- Clear Shortcut
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1807313248"] = "Tastaturkurzbefehl löschen"
+
+-- Invalid shortcut: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T189893682"] = "Ungültige Tastenkombination: {0}"
+
+-- This shortcut conflicts with: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T2633102934"] = "Dieser Tastaturkurzbefehl steht in Konflikt mit: {0}"
+
+-- Please include at least one modifier key (Ctrl, Shift, Alt, or Cmd).
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3060573513"] = "Bitte fügen Sie mindestens einen Modifikatortaste hinzu (Strg, Umschalt, Alt oder Cmd)."
+
+-- Shortcut is valid and available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3159532525"] = "Der Tastaturkurzbefehl ist gültig und verfügbar."
+
+-- Define a shortcut
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T3734850493"] = "Tastaturkurzbefehl festlegen"
+
+-- This is the shortcut you previously used.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T4167229652"] = "Dies ist der Tastaturkurzbefehl, den Sie zuvor verwendet haben."
+
+-- Supported modifiers: Ctrl/Cmd, Shift, Alt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T889258890"] = "Unterstützte Modifikatortasten: Strg/Cmd, Umschalt, Alt."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T900713019"] = "Abbrechen"
+
 -- Please enter a value.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T3576780391"] = "Bitte geben Sie einen Wert ein."
 
@@ -4635,8 +4719,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2842060373"] =
 -- Please enter a transcription model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3703662664"] = "Bitte geben Sie den Namen eines Transkriptionsmodells ein."
 
+-- This host uses the model configured at the provider level. No model selection is available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3783329915"] = "Dieser Host verwendet das auf Anbieterebene konfigurierte Modell. Eine Modellauswahl ist nicht verfügbar."
+
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T416738168"] = "Modellauswahl"
+
+-- We are currently unable to communicate with the provider to load models. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T504465522"] = "Wir können derzeit nicht mit dem Anbieter kommunizieren, um Modelle zu laden. Bitte versuchen Sie es später erneut."
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T808120719"] = "Host"
@@ -5016,6 +5106,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
 
+-- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "Dieses Crate stellt Derive-Makros für Rust-Enums bereit, die wir verwenden, um Boilerplate zu reduzieren, wenn wir String-Konvertierungen und Metadaten für Laufzeittypen implementieren. Das ist hilfreich für die Kommunikation zwischen unseren Rust- und .NET-Systemen."
+
 -- To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2644379659"] = "Um die Antworten des LLM in anderen Apps nutzen zu können, verwenden wir häufig die Zwischenablage des jeweiligen Betriebssystems. Leider gibt es in .NET keine Lösung, die auf allen Betriebssystemen funktioniert. Deshalb habe ich mich für diese Bibliothek in Rust entschieden. So funktioniert die Datenübertragung zu anderen Apps auf jedem System."
 
@@ -5262,35 +5355,38 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T3948127789"] = "Vorschlag"
 -- Your stage directions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Ihre Regieanweisungen"
 
--- Tried to communicate with the LLM provider '{0}'. The API key might be invalid. The provider message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1073493061"] = "Es wurde versucht mit dem LLM-Anbieter '{0}' zu kommunizieren. Der API-Schlüssel könnte ungültig sein. Die Anbietermeldung lautet: '{1}'"
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1000247110"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Der Server ist möglicherweise nicht erreichbar oder hat Probleme. Die Nachricht des Anbieters lautet: „{2}“"
 
 -- Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1487597412"] = "Beim Versuch, die Antwort des LLM-Anbieters '{0}' zu streamen, sind Probleme aufgetreten. Die Meldung lautet: '{1}'"
 
--- Tried to communicate with the LLM provider '{0}'. The required message format might be changed. The provider message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1674355816"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Das erforderliche Nachrichtenformat könnte sich geändert haben. Die Mitteilung des Anbieters lautet: '{1}'"
-
 -- Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1856278860"] = "Der Versuch, die Antwort des LLM-Anbieters '{0}' zu streamen, ist fehlgeschlagen. Der Stream konnte nicht gelesen werden. Die Meldung lautet: '{1}'"
 
--- Tried to communicate with the LLM provider '{0}'. Even after {1} retries, there were some problems with the request. The provider message is: '{2}'.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2181034173"] = "Versuchte, mit dem LLM-Anbieter '{0}' zu kommunizieren. Auch nach {1} Wiederholungsversuchen gab es Probleme mit der Anfrage. Die Meldung des Anbieters lautet: '{2}'."
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1924863735"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Der API-Schlüssel ist möglicherweise ungültig. Die Nachricht des Anbieters lautet: „{2}“."
 
--- Tried to communicate with the LLM provider '{0}'. Something was not found. The provider message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2780552614"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Etwas wurde nicht gefunden. Die Meldung des Anbieters lautet: '{1}'"
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1999987800"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Der Anbieter ist überlastet. Die Meldung lautet: „{2}“."
+
+-- We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2107463087"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Möglicherweise können Sie diesen Anbieter von Ihrem Standort aus nicht nutzen. Die Nachricht des Anbieters lautet: „{2}“."
+
+-- We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3014737766"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Etwas wurde nicht gefunden. Die Nachricht des Anbieters lautet: „{2}“"
+
+-- We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3049689432"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Selbst nach {2} erneuten Versuchen gab es weiterhin Probleme mit der Anfrage. Die Meldung des Anbieters lautet: „{3}“."
 
 -- Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3573577433"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Dabei sind Probleme bei der Anfrage aufgetreten. Die Meldung des Anbieters lautet: '{1}'"
 
--- Tried to communicate with the LLM provider '{0}'. The server might be down or having issues. The provider message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3806716694"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Der Server ist möglicherweise nicht erreichbar oder hat Probleme. Die Anbietermeldung lautet: '{1}'"
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3759732886"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Das erforderliche Nachrichtenformat hat sich möglicherweise geändert. Die Nachricht des Anbieters lautet: „{2}“"
 
--- Tried to communicate with the LLM provider '{0}'. The provider is overloaded. The message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4179546180"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Der Anbieter ist überlastet. Die Meldung lautet: '{1}'"
-
--- Tried to communicate with the LLM provider '{0}'. You might not be able to use this provider from your location. The provider message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T862369179"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Möglicherweise können Sie diesen Anbieter von ihrem Standort aus nicht nutzen. Die Mitteilung des Anbieters lautet: '{1}'"
+-- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Die Daten des Chats, einschließlich aller Dateianhänge, sind vermutlich zu groß für das ausgewählte Modell und den Anbieter. Die Nachricht des Anbieters lautet: „{2}“"
 
 -- The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob ihre Daten sicher sind."
@@ -6120,23 +6216,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T18544701
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Zum Importieren von Dateien kann Pandoc erforderlich sein."
 
--- Failed to delete the API key due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::APIKEYS::T3658273365"] = "Das API-Schlüssel konnte aufgrund eines API-Problems nicht gelöscht werden."
-
--- Failed to get the API key due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::APIKEYS::T3875720022"] = "Der API-Schlüssel konnte aufgrund eines API-Problems nicht abgerufen werden."
+-- Failed to delete the secret data due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Das Löschen der geheimen Daten ist aufgrund eines API-Problems fehlgeschlagen."
 
 -- Successfully copied the text to your clipboard
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::CLIPBOARD::T3351807428"] = "Der Text wurde erfolgreich in die Zwischenablage kopiert."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Der Text wurde erfolgreich in die Zwischenablage kopiert."
+
+-- Failed to delete the API key due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Das API-Schlüssel konnte aufgrund eines API-Problems nicht gelöscht werden."
 
 -- Failed to copy the text to your clipboard.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::CLIPBOARD::T3724548108"] = "Der Text konnte nicht in die Zwischenablage kopiert werden."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Der Text konnte nicht in die Zwischenablage kopiert werden."
 
--- Failed to delete the secret data due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::SECRETS::T2303057928"] = "Das Löschen der geheimen Daten ist aufgrund eines API-Problems fehlgeschlagen."
+-- Failed to get the API key due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Der API-Schlüssel konnte aufgrund eines API-Problems nicht abgerufen werden."
 
 -- Failed to get the secret data due to an API issue.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::SECRETS::T4007657575"] = "Abrufen der geheimen Daten aufgrund eines API-Problems fehlgeschlagen."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Abrufen der geheimen Daten aufgrund eines API-Problems fehlgeschlagen."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "Kein Update gefunden."

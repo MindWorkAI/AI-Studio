@@ -15,8 +15,12 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
     [Parameter]
     public EventCallback<List<ConfigurationSelectData<string>>> AvailableEmbeddingProvidersChanged { get; set; }
     
-    private static string GetEmbeddingProviderModelName(EmbeddingProvider provider)
+    private string GetEmbeddingProviderModelName(EmbeddingProvider provider)
     {
+        // For system models, return localized text:
+        if (provider.Model.IsSystemModel)
+            return T("Uses the provider-configured model");
+
         const int MAX_LENGTH = 36;
         var modelName = provider.Model.ToString();
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;

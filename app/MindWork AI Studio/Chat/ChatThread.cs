@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -38,6 +40,12 @@ public sealed record ChatThread
     public string SelectedChatTemplate { get; set; } = string.Empty;
 
     /// <summary>
+    /// Indicates whether to include the current date and time in the system prompt.
+    /// False by default for backward compatibility.
+    /// </summary>
+    public bool IncludeDateTime { get; set; } = false;
+
+    /// <summary>
     /// The data source options for this chat thread.
     /// </summary>
     public DataSourceOptions DataSourceOptions { get; set; } = new();
@@ -65,7 +73,7 @@ public sealed record ChatThread
     /// <summary>
     /// The current system prompt for the chat thread.
     /// </summary>
-    public string SystemPrompt { get; init; } = string.Empty;
+    public string SystemPrompt { get; set; } = string.Empty;
 
     /// <summary>
     /// The content blocks of the chat thread.
@@ -83,33 +91,32 @@ public sealed record ChatThread
     /// is extended with the profile chosen.
     /// </remarks>
     /// <param name="settingsManager">The settings manager instance to use.</param>
-    /// <param name="chatThread">The chat thread to prepare the system prompt for.</param>
     /// <returns>The prepared system prompt.</returns>
-    public string PrepareSystemPrompt(SettingsManager settingsManager, ChatThread chatThread)
+    public string PrepareSystemPrompt(SettingsManager settingsManager)
     {
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
         string systemPromptTextWithChatTemplate;
-        var logMessage = $"Using no chat template for chat thread '{chatThread.Name}'.";
-        if (string.IsNullOrWhiteSpace(chatThread.SelectedChatTemplate))
-            systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+        var logMessage = $"Using no chat template for chat thread '{this.Name}'.";
+        if (string.IsNullOrWhiteSpace(this.SelectedChatTemplate))
+            systemPromptTextWithChatTemplate = this.SystemPrompt;
         else
         {
-            if(!Guid.TryParse(chatThread.SelectedChatTemplate, out var chatTemplateId))
-                systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+            if(!Guid.TryParse(this.SelectedChatTemplate, out var chatTemplateId))
+                systemPromptTextWithChatTemplate = this.SystemPrompt;
             else
             {
-                if(chatThread.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
-                    systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+                if(this.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
+                    systemPromptTextWithChatTemplate = this.SystemPrompt;
                 else
                 {
-                    var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatThread.SelectedChatTemplate);
+                    var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.SelectedChatTemplate);
                     if(chatTemplate == null)
-                        systemPromptTextWithChatTemplate = chatThread.SystemPrompt;
+                        systemPromptTextWithChatTemplate = this.SystemPrompt;
                     else
                     {
-                        logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{chatThread.Name}'.";
+                        logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{this.Name}'.";
                         this.allowProfile = chatTemplate.AllowProfileUsage;
                         systemPromptTextWithChatTemplate = chatTemplate.ToSystemPrompt();
                     }
@@ -120,20 +127,19 @@ public sealed record ChatThread
         // We need a way to save the changed system prompt in our chat thread.
         // Otherwise, the chat thread will always tell us that it is using the
         // default system prompt:
-        chatThread = chatThread with { SystemPrompt = systemPromptTextWithChatTemplate };
-        
+        this.SystemPrompt = systemPromptTextWithChatTemplate;
         LOGGER.LogInformation(logMessage);
-        
+
         //
         // Add augmented data, if available:
         //
-        var isAugmentedDataAvailable = !string.IsNullOrWhiteSpace(chatThread.AugmentedData);
+        var isAugmentedDataAvailable = !string.IsNullOrWhiteSpace(this.AugmentedData);
         var systemPromptWithAugmentedData = isAugmentedDataAvailable switch
         {
             true => $"""
                      {systemPromptTextWithChatTemplate}
                      
-                     {chatThread.AugmentedData}
+                     {this.AugmentedData}
                      """,
 
             false => systemPromptTextWithChatTemplate,
@@ -149,25 +155,25 @@ public sealed record ChatThread
         // Add information from the profile if available and allowed:
         //
         string systemPromptText;
-        logMessage = $"Using no profile for chat thread '{chatThread.Name}'.";
-        if (string.IsNullOrWhiteSpace(chatThread.SelectedProfile) || this.allowProfile is false)
+        logMessage = $"Using no profile for chat thread '{this.Name}'.";
+        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !this.allowProfile)
             systemPromptText = systemPromptWithAugmentedData;
         else
         {
-            if(!Guid.TryParse(chatThread.SelectedProfile, out var profileId))
+            if(!Guid.TryParse(this.SelectedProfile, out var profileId))
                 systemPromptText = systemPromptWithAugmentedData;
             else
             {
-                if(chatThread.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
+                if(this.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
                     systemPromptText = systemPromptWithAugmentedData;
                 else
                 {
-                    var profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatThread.SelectedProfile);
-                    if(profile == default)
+                    var profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.SelectedProfile);
+                    if(profile is null)
                         systemPromptText = systemPromptWithAugmentedData;
                     else
                     {
-                        logMessage = $"Using profile '{profile.Name}' for chat thread '{chatThread.Name}'.";
+                        logMessage = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
                         systemPromptText = $"""
                                             {systemPromptWithAugmentedData}
 
@@ -179,7 +185,24 @@ public sealed record ChatThread
         }
         
         LOGGER.LogInformation(logMessage);
-        return systemPromptText;
+        if(!this.IncludeDateTime)
+            return systemPromptText;
+        
+        //
+        // Prepend the current date and time to the system prompt:
+        //
+        var nowUtc = DateTime.UtcNow;
+        var nowLocal = DateTime.Now;
+        var currentDateTime = string.Create(
+            new CultureInfo("en-US"),
+            $"Today is {nowUtc:dddd, MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:dddd, MMMM d, yyyy h:mm tt} (local time)."
+        );
+
+        return $"""
+                {currentDateTime}
+
+                {systemPromptText}
+                """;
     }
 
     /// <summary>

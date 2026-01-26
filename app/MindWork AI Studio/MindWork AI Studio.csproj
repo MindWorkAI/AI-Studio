@@ -49,12 +49,12 @@
     <ItemGroup>
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.11" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.12" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="Qdrant.Client" Version="1.16.1" />
-      <PackageReference Include="ReverseMarkdown" Version="4.7.1" />
-      <PackageReference Include="LuaCSharp" Version="0.4.2" />
+      <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
+      <PackageReference Include="LuaCSharp" Version="0.5.3" />
     </ItemGroup>
 
     <ItemGroup>

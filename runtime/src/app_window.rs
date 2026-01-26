@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
 use log::{debug, error, info, trace, warn};
@@ -7,8 +8,9 @@ use rocket::response::stream::TextStream;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::Deserialize;
+use strum_macros::Display;
 use tauri::updater::UpdateResponse;
-use tauri::{FileDropEvent, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent, generate_context};
+use tauri::{FileDropEvent, GlobalShortcutManager, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent, generate_context};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::sync::broadcast;
 use tokio::time;
@@ -27,6 +29,17 @@ static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<UpdateResponse<tauri::Wry>>>> = 
 
 /// The event broadcast sender for Tauri events.
 static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::new(|| Mutex::new(None));
+
+/// Stores the currently registered global shortcuts (name -> shortcut string).
+static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<Shortcut, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Enum identifying global keyboard shortcuts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum Shortcut {
+    None = 0,
+    VoiceRecordingToggle,
+}
 
 /// Starts the Tauri app.
 pub fn start_tauri() {
@@ -333,6 +346,8 @@ pub enum TauriEventType {
     FileDropHovered,
     FileDropDropped,
     FileDropCanceled,
+
+    GlobalShortcutPressed,
 }
 
 /// Changes the location of the main window to the given URL.
@@ -533,13 +548,7 @@ pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<F
     let file_dialog = file_dialog.set_title(&payload.title);
 
     // Set the file type filter if provided:
-    let file_dialog = match &payload.filter {
-        Some(filter) => {
-            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        },
-
-        None => file_dialog,
-    };
+    let file_dialog = apply_filter(file_dialog, &payload.filter);
 
     // Set the previous file path if provided:
     let file_dialog = match &payload.previous_file {
@@ -583,13 +592,7 @@ pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<
     let file_dialog = file_dialog.set_title(&payload.title);
 
     // Set the file type filter if provided:
-    let file_dialog = match &payload.filter {
-        Some(filter) => {
-            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        },
-
-        None => file_dialog,
-    };
+    let file_dialog = apply_filter(file_dialog, &payload.filter);
 
     // Set the previous file path if provided:
     let file_dialog = match &payload.previous_file {
@@ -632,13 +635,7 @@ pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileS
     let file_dialog = file_dialog.set_title(&payload.title);
 
     // Set the file type filter if provided:
-    let file_dialog = match &payload.filter {
-        Some(filter) => {
-            file_dialog.add_filter(&filter.filter_name, &filter.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        },
-
-        None => file_dialog,
-    };
+    let file_dialog = apply_filter(file_dialog, &payload.filter);
 
     // Set the previous file path if provided:
     let file_dialog = match &payload.name_file {
@@ -676,6 +673,18 @@ pub struct PreviousFile {
     file_path: String,
 }
 
+/// Applies an optional file type filter to a FileDialogBuilder.
+fn apply_filter(file_dialog: FileDialogBuilder, filter: &Option<FileTypeFilter>) -> FileDialogBuilder {
+    match filter {
+        Some(f) => file_dialog.add_filter(
+            &f.filter_name,
+            &f.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>(),
+        ),
+
+        None => file_dialog,
+    }
+}
+
 #[derive(Serialize)]
 pub struct FileSelectionResponse {
     user_cancelled: bool,
@@ -692,6 +701,353 @@ pub struct FilesSelectionResponse {
 pub struct FileSaveResponse {
     user_cancelled: bool,
     save_file_path: String,
+}
+
+/// Request payload for registering a global shortcut.
+#[derive(Clone, Deserialize)]
+pub struct RegisterShortcutRequest {
+    /// The shortcut ID to use.
+    id: Shortcut,
+
+    /// The shortcut string in Tauri format (e.g., "CmdOrControl+1").
+    /// Use empty string to unregister the shortcut.
+    shortcut: String,
+}
+
+/// Response for shortcut registration.
+#[derive(Serialize)]
+pub struct ShortcutResponse {
+    success: bool,
+    error_message: String,
+}
+
+/// Internal helper function to register a shortcut with its callback.
+/// This is used by both `register_shortcut` and `resume_shortcuts` to
+/// avoid code duplication.
+fn register_shortcut_with_callback(
+    shortcut_manager: &mut impl GlobalShortcutManager,
+    shortcut: &str,
+    shortcut_id: Shortcut,
+    event_sender: broadcast::Sender<Event>,
+) -> Result<(), tauri::Error> {
+    //
+    // Match the shortcut registration to transform the Tauri result into the Rust result:
+    //
+    match shortcut_manager.register(shortcut, move || {
+        info!(Source = "Tauri"; "Global shortcut triggered for '{}'.", shortcut_id);
+        let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_id.to_string()]);
+        let sender = event_sender.clone();
+        tauri::async_runtime::spawn(async move {
+            match sender.send(event) {
+                Ok(_) => {}
+                Err(error) => error!(Source = "Tauri"; "Failed to send global shortcut event: {error}"),
+            }
+        });
+    }) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.into()),
+    }
+}
+
+/// Registers or updates a global shortcut. If the shortcut string is empty,
+/// the existing shortcut for that name will be unregistered.
+#[post("/shortcuts/register", data = "<payload>")]
+pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
+    let id = payload.id;
+    let new_shortcut = payload.shortcut.clone();
+
+    if id == Shortcut::None {
+        error!(Source = "Tauri"; "Cannot register NONE shortcut.");
+        return Json(ShortcutResponse {
+            success: false,
+            error_message: "Cannot register NONE shortcut".to_string(),
+        });
+    }
+    
+    info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
+
+    // Get the main window to access the global shortcut manager:
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot register shortcut: main window not available.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let mut shortcut_manager = main_window.app_handle().global_shortcut_manager();
+    let mut registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+
+    // Unregister the old shortcut if one exists for this name:
+    if let Some(old_shortcut) = registered_shortcuts.get(&id) {
+        if !old_shortcut.is_empty() {
+            match shortcut_manager.unregister(old_shortcut.as_str()) {
+                Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id),
+                Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
+            }
+        }
+    }
+
+    // When the new shortcut is empty, we're done (just unregistering):
+    if new_shortcut.is_empty() {
+        registered_shortcuts.remove(&id);
+        info!(Source = "Tauri"; "Shortcut '{}' has been disabled.", id);
+        return Json(ShortcutResponse {
+            success: true,
+            error_message: String::new(),
+        });
+    }
+
+    // Get the event broadcast sender for the shortcut callback:
+    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
+    let event_sender = match event_broadcast_lock.as_ref() {
+        Some(sender) => sender.clone(),
+        None => {
+            error!(Source = "Tauri"; "Cannot register shortcut: event broadcast not initialized.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Event broadcast not initialized".to_string(),
+            });
+        }
+    };
+
+    drop(event_broadcast_lock);
+
+    // Register the new shortcut:
+    match register_shortcut_with_callback(&mut shortcut_manager, &new_shortcut, id, event_sender) {
+        Ok(_) => {
+            info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{}'.", id);
+            registered_shortcuts.insert(id, new_shortcut);
+            Json(ShortcutResponse {
+                success: true,
+                error_message: String::new(),
+            })
+        },
+
+        Err(error) => {
+            let error_msg = format!("Failed to register shortcut: {error}");
+            error!(Source = "Tauri"; "{error_msg}");
+            Json(ShortcutResponse {
+                success: false,
+                error_message: error_msg,
+            })
+        }
+    }
+}
+
+/// Request payload for validating a shortcut.
+#[derive(Clone, Deserialize)]
+pub struct ValidateShortcutRequest {
+    /// The shortcut string to validate (e.g., "CmdOrControl+1").
+    shortcut: String,
+}
+
+/// Response for shortcut validation.
+#[derive(Serialize)]
+pub struct ShortcutValidationResponse {
+    is_valid: bool,
+    error_message: String,
+    has_conflict: bool,
+    conflict_description: String,
+}
+
+/// Validates a shortcut string without registering it.
+/// Checks if the shortcut syntax is valid and if it
+/// conflicts with existing shortcuts.
+#[post("/shortcuts/validate", data = "<payload>")]
+pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest>) -> Json<ShortcutValidationResponse> {
+    let shortcut = payload.shortcut.clone();
+
+    // Empty shortcuts are always valid (means "disabled"):
+    if shortcut.is_empty() {
+        return Json(ShortcutValidationResponse {
+            is_valid: true,
+            error_message: String::new(),
+            has_conflict: false,
+            conflict_description: String::new(),
+        });
+    }
+
+    // Check if the shortcut is already registered:
+    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+    for (name, registered_shortcut) in registered_shortcuts.iter() {
+        if registered_shortcut.eq_ignore_ascii_case(&shortcut) {
+            return Json(ShortcutValidationResponse {
+                is_valid: true,
+                error_message: String::new(),
+                has_conflict: true,
+                conflict_description: format!("Already used by: {}", name),
+            });
+        }
+    }
+
+    drop(registered_shortcuts);
+
+    // Try to parse the shortcut to validate syntax.
+    // We can't easily validate without registering in Tauri 1.x,
+    // so we do basic syntax validation here:
+    let is_valid = validate_shortcut_syntax(&shortcut);
+
+    if is_valid {
+        Json(ShortcutValidationResponse {
+            is_valid: true,
+            error_message: String::new(),
+            has_conflict: false,
+            conflict_description: String::new(),
+        })
+    } else {
+        Json(ShortcutValidationResponse {
+            is_valid: false,
+            error_message: format!("Invalid shortcut syntax: {}", shortcut),
+            has_conflict: false,
+            conflict_description: String::new(),
+        })
+    }
+}
+
+/// Suspends shortcut processing by unregistering all shortcuts from the OS.
+/// The shortcuts remain in our internal map, so they can be re-registered on resume.
+/// This is useful when opening a dialog to configure shortcuts, so the user can
+/// press the current shortcut to re-enter it without triggering the action.
+#[post("/shortcuts/suspend")]
+pub fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+    // Get the main window to access the global shortcut manager:
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot suspend shortcuts: main window not available.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let mut shortcut_manager = main_window.app_handle().global_shortcut_manager();
+    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+
+    // Unregister all shortcuts from the OS (but keep them in our map):
+    for (name, shortcut) in registered_shortcuts.iter() {
+        if !shortcut.is_empty() {
+            match shortcut_manager.unregister(shortcut.as_str()) {
+                Ok(_) => info!(Source = "Tauri"; "Temporarily unregistered shortcut '{shortcut}' for '{}'.", name),
+                Err(error) => warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{}': {error}", name),
+            }
+        }
+    }
+
+    info!(Source = "Tauri"; "Shortcut processing has been suspended ({} shortcuts unregistered).", registered_shortcuts.len());
+    Json(ShortcutResponse {
+        success: true,
+        error_message: String::new(),
+    })
+}
+
+/// Resumes shortcut processing by re-registering all shortcuts with the OS.
+#[post("/shortcuts/resume")]
+pub fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+    // Get the main window to access the global shortcut manager:
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot resume shortcuts: main window not available.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let mut shortcut_manager = main_window.app_handle().global_shortcut_manager();
+    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
+
+    // Get the event broadcast sender for the shortcut callbacks:
+    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
+    let event_sender = match event_broadcast_lock.as_ref() {
+        Some(sender) => sender.clone(),
+        None => {
+            error!(Source = "Tauri"; "Cannot resume shortcuts: event broadcast not initialized.");
+            return Json(ShortcutResponse {
+                success: false,
+                error_message: "Event broadcast not initialized".to_string(),
+            });
+        }
+    };
+
+    drop(event_broadcast_lock);
+
+    // Re-register all shortcuts with the OS:
+    let mut success_count = 0;
+    for (shortcut_id, shortcut) in registered_shortcuts.iter() {
+        if shortcut.is_empty() {
+            continue;
+        }
+
+        match register_shortcut_with_callback(&mut shortcut_manager, shortcut, *shortcut_id, event_sender.clone()) {
+            Ok(_) => {
+                info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{}'.", shortcut_id);
+                success_count += 1;
+            },
+
+            Err(error) => warn!(Source = "Tauri"; "Failed to re-register shortcut '{shortcut}' for '{}': {error}", shortcut_id),
+        }
+    }
+
+    info!(Source = "Tauri"; "Shortcut processing has been resumed ({success_count} shortcuts re-registered).");
+    Json(ShortcutResponse {
+        success: true,
+        error_message: String::new(),
+    })
+}
+
+/// Validates the syntax of a shortcut string.
+fn validate_shortcut_syntax(shortcut: &str) -> bool {
+    let parts: Vec<&str> = shortcut.split('+').collect();
+    if parts.is_empty() {
+        return false;
+    }
+
+    let mut has_key = false;
+    for part in parts {
+        let part_lower = part.to_lowercase();
+        match part_lower.as_str() {
+            // Modifiers
+            "cmdorcontrol" | "commandorcontrol" | "ctrl" | "control" | "cmd" | "command" |
+            "shift" | "alt" | "meta" | "super" | "option" => continue,
+
+            // Keys - letters
+            "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" |
+            "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" => has_key = true,
+
+            // Keys - numbers
+            "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => has_key = true,
+
+            // Keys - function keys
+            _ if part_lower.starts_with('f') && part_lower[1..].parse::<u32>().is_ok() => has_key = true,
+
+            // Keys - special
+            "space" | "enter" | "tab" | "escape" | "backspace" | "delete" | "insert" |
+            "home" | "end" | "pageup" | "pagedown" |
+            "up" | "down" | "left" | "right" |
+            "arrowup" | "arrowdown" | "arrowleft" | "arrowright" |
+            "minus" | "equal" | "bracketleft" | "bracketright" | "backslash" |
+            "semicolon" | "quote" | "backquote" | "comma" | "period" | "slash" => has_key = true,
+
+            // Keys - numpad
+            _ if part_lower.starts_with("num") => has_key = true,
+
+            // Unknown
+            _ => return false,
+        }
+    }
+
+    has_key
 }
 
 fn set_pdfium_path(path_resolver: PathResolver) {

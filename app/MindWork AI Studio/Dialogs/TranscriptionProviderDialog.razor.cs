@@ -71,7 +71,10 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
+
+    [Inject]
+    private ILogger<TranscriptionProviderDialog> Logger { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -85,7 +88,8 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
-    
+    private string dataLoadingModelsIssue = string.Empty;
+
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
     
@@ -102,31 +106,39 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
+            IsModelProvidedManually = () => this.DataLLMProvider.IsTranscriptionModelProvidedManually(this.DataHost),
         };
     }
     
     private TranscriptionProvider CreateTranscriptionProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
-        Model model = default;
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
+
+        // Determine the model based on the provider and host configuration:
+        Model model;
+        if (this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
+        {
+            // Use system model placeholder for hosts that don't support model selection (e.g., whisper.cpp):
+            model = Model.SYSTEM_MODEL;
+        }
+        else if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
         {
             switch (this.DataHost)
             {
                 case Host.OLLAMA:
                     model = new Model(this.dataManuallyModel, null);
                     break;
-                
+
                 case Host.VLLM:
                 case Host.LM_STUDIO:
-                case Host.WHISPER_CPP:
+                default:
                     model = this.DataModel;
                     break;
             }
         }
         else
             model = this.DataModel;
-        
+
         return new()
         {
             Num = this.DataNum,
@@ -216,7 +228,16 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     {
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.providerValidation.ValidatingModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
@@ -243,7 +264,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     {
         if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
             return T("Please enter a transcription model name.");
-        
+
         return null;
     }
 
@@ -258,21 +279,40 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             await this.form.Validate();
         }
     }
-    
+
+    private void OnHostChanged(Host selectedHost)
+    {
+        // When the host changes, reset the model selection state:
+        this.DataHost = selectedHost;
+        this.DataModel = default;
+        this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
     private async Task ReloadModels()
     {
+        this.dataLoadingModelsIssue = string.Empty;
         var currentTranscriptionProviderSettings = this.CreateTranscriptionProviderSettings();
         var provider = currentTranscriptionProviderSettings.CreateProvider();
-        if(provider is NoProvider)
+        if (provider is NoProvider)
             return;
-        
-        var models = await provider.GetTranscriptionModels(this.dataAPIKey);
-        
-        // Order descending by ID means that the newest models probably come first:
-        var orderedModels = models.OrderByDescending(n => n.Id);
-        
-        this.availableModels.Clear();
-        this.availableModels.AddRange(orderedModels);
+
+        try
+        {
+            var models = await provider.GetTranscriptionModels(this.dataAPIKey);
+
+            // Order descending by ID means that the newest models probably come first:
+            var orderedModels = models.OrderByDescending(n => n.Id);
+
+            this.availableModels.Clear();
+            this.availableModels.AddRange(orderedModels);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");;
+            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+        }
     }
     
     private string APIKeyText => this.DataLLMProvider switch

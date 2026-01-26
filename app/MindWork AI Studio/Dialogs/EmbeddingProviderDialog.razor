@@ -44,7 +44,7 @@
 
             @if (this.DataLLMProvider.IsHostNeeded())
             {
-                <MudSelect @bind-Value="@this.DataHost" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
+                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
                     @foreach (Host host in Enum.GetValues(typeof(Host)))
                     {
                         if (host.IsEmbeddingSupported())
@@ -101,6 +101,12 @@
                         }
                     }
                 </MudStack>
+                @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-3">
+                        @this.dataLoadingModelsIssue
+                    </MudAlert>
+                }
             </MudField>
 
             @* ReSharper disable once CSharpWarnings::CS8974 *@

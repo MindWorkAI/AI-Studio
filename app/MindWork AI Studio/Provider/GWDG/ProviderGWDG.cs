@@ -33,7 +33,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
         var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
         
         // Parse the API parameters:

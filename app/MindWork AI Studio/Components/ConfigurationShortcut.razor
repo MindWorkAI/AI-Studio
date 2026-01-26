@@ -1,0 +1,26 @@
+@inherits ConfigurationBaseCore
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+    <MudIcon Icon="@this.Icon" Color="@this.IconColor"/>
+    <MudText Typo="Typo.body1" Class="flex-grow-1">
+        @if (string.IsNullOrWhiteSpace(this.Shortcut()))
+        {
+            @T("No shortcut configured")
+        }
+        else
+        {
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">
+                @this.GetDisplayShortcut()
+            </MudChip>
+        }
+    </MudText>
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Primary"
+               Size="Size.Small"
+               StartIcon="@Icons.Material.Filled.Edit"
+               OnClick="@this.OpenDialog"
+               Disabled="@this.IsDisabled"
+               Class="mb-1">
+        @T("Change shortcut")
+    </MudButton>
+</MudStack>

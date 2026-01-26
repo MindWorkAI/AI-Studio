@@ -34,16 +34,49 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         {
             logger.LogInformation("Start updating of the enterprise environment.");
         
-            var enterpriseRemoveConfigId = await rustService.EnterpriseEnvRemoveConfigId();
+            Guid enterpriseRemoveConfigId;
+            try
+            {
+                enterpriseRemoveConfigId = await rustService.EnterpriseEnvRemoveConfigId();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise remove configuration ID from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvRemoveConfigId failed");
+                return;
+            }
+            
             var isPlugin2RemoveInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == enterpriseRemoveConfigId);
             if (enterpriseRemoveConfigId != Guid.Empty && isPlugin2RemoveInUse)
             {
-                logger.LogWarning($"The enterprise environment configuration ID '{enterpriseRemoveConfigId}' must be removed.");
+                logger.LogWarning("The enterprise environment configuration ID '{EnterpriseRemoveConfigId}' must be removed.", enterpriseRemoveConfigId);
                 PluginFactory.RemovePluginAsync(enterpriseRemoveConfigId);
             }
-        
-            var enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
-            var enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
+
+            string? enterpriseConfigServerUrl;
+            try
+            {
+                enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise configuration server URL from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigServerUrl failed");
+                return;
+            }
+
+            Guid enterpriseConfigId;
+            try
+            {
+                enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise configuration ID from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigId failed");
+                return;
+            }
+            
             var etag = await PluginFactory.DetermineConfigPluginETagAsync(enterpriseConfigId, enterpriseConfigServerUrl);
             var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag);
             if (CURRENT_ENVIRONMENT != nextEnterpriseEnvironment)
@@ -59,15 +92,15 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                         break;
 
                     case null:
-                        logger.LogWarning($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}'), but the configuration server URL is not set.");
+                        logger.LogWarning("AI Studio runs with an enterprise configuration id ('{EnterpriseConfigId}'), but the configuration server URL is not set.", enterpriseConfigId);
                         break;
 
                     case not null when !string.IsNullOrWhiteSpace(enterpriseConfigServerUrl) && enterpriseConfigId == Guid.Empty:
-                        logger.LogWarning($"AI Studio runs with an enterprise configuration server URL ('{enterpriseConfigServerUrl}'), but the configuration ID is not set.");
+                        logger.LogWarning("AI Studio runs with an enterprise configuration server URL ('{EnterpriseConfigServerUrl}'), but the configuration ID is not set.", enterpriseConfigServerUrl);
                         break;
 
                     default:
-                        logger.LogInformation($"AI Studio runs with an enterprise configuration id ('{enterpriseConfigId}') and configuration server URL ('{enterpriseConfigServerUrl}').");
+                        logger.LogInformation("AI Studio runs with an enterprise configuration id ('{EnterpriseConfigId}') and configuration server URL ('{EnterpriseConfigServerUrl}').", enterpriseConfigId, enterpriseConfigServerUrl);
                         
                         if(isFirstRun)
                             MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag));

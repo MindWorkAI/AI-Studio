@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Tools.MIME;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -20,8 +21,63 @@ public partial class VoiceRecorder : MSGComponentBase
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
 
+    #region Overrides of MSGComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Register for global shortcut events:
+        this.ApplyFilters([], [Event.TAURI_EVENT_RECEIVED]);
+
+        await base.OnInitializedAsync();
+
+        try
+        {
+            // Initialize sound effects. This "warms up" the AudioContext and preloads all sounds for reliable playback:
+            await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Failed to initialize sound effects.");
+        }
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.GLOBAL_SHORTCUT_PRESSED } tauriEvent:
+                // Check if this is the voice recording toggle shortcut:
+                if (tauriEvent.TryGetShortcut(out var shortcutId) && shortcutId == Shortcut.VOICE_RECORDING_TOGGLE)
+                {
+                    this.Logger.LogInformation("Global shortcut triggered for voice recording toggle.");
+                    await this.ToggleRecordingFromShortcut();
+                }
+                
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Toggles the recording state when triggered by a global shortcut.
+    /// </summary>
+    private async Task ToggleRecordingFromShortcut()
+    {
+        // Don't allow toggle if transcription is in progress or preparing:
+        if (this.isTranscribing || this.isPreparing)
+        {
+            this.Logger.LogDebug("Ignoring shortcut: transcription or preparation is in progress.");
+            return;
+        }
+
+        // Toggle the recording state:
+        await this.OnRecordingToggled(!this.isRecording);
+    }
+
+    #endregion
+
     private uint numReceivedChunks;
     private bool isRecording;
+    private bool isPreparing;
     private bool isTranscribing;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
@@ -39,6 +95,19 @@ public partial class VoiceRecorder : MSGComponentBase
     {
         if (toggled)
         {
+            this.isPreparing = true;
+            this.StateHasChanged();
+            
+            try
+            {
+                // Warm up sound effects:
+                await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to initialize sound effects.");
+            }
+
             var mimeTypes = GetPreferredMimeTypes(
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
@@ -56,20 +125,44 @@ public partial class VoiceRecorder : MSGComponentBase
             // Initialize the file stream for writing chunks:
             await this.InitializeRecordingStream();
 
-            var mimeTypeStrings = mimeTypes.ToStringArray();
-            var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
+            try
+            {
+                var mimeTypeStrings = mimeTypes.ToStringArray();
+                var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
 
-            // Store the MIME type for later use:
-            this.currentRecordingMimeType = actualMimeType;
+                // Store the MIME type for later use:
+                this.currentRecordingMimeType = actualMimeType;
 
-            this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
-            this.isRecording = true;
+                this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
+                this.isPreparing = false;
+                this.isRecording = true;
+            }
+            catch (Exception e)
+            {
+                this.Logger.LogError(e, "Failed to start audio recording.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to start audio recording.")));
+
+                // Clean up the recording stream if starting failed:
+                await this.FinalizeRecordingStream();
+            }
+            finally
+            {
+                this.StateHasChanged();
+            }
         }
         else
         {
-            var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
-            if (result.ChangedMimeType)
-                this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+            try
+            {
+                var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
+                if (result.ChangedMimeType)
+                    this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+            }
+            catch (Exception e)
+            {
+                this.Logger.LogError(e, "Failed to stop audio recording.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to stop audio recording.")));
+            }
 
             // Close and finalize the recording stream:
             await this.FinalizeRecordingStream();
@@ -189,7 +282,11 @@ public partial class VoiceRecorder : MSGComponentBase
     private async Task TranscribeRecordingAsync()
     {
         if (this.finalRecordingPath is null)
+        {
+            // No recording to transcribe, but still release the microphone:
+            await this.ReleaseMicrophoneAsync();
             return;
+        }
 
         this.isTranscribing = true;
         this.StateHasChanged();
@@ -223,7 +320,7 @@ public partial class VoiceRecorder : MSGComponentBase
             {
                 this.Logger.LogWarning(
                     "The configured transcription provider '{ProviderName}' has a confidence level of '{ProviderLevel}', which is below the minimum required level of '{MinimumLevel}'.",
-                    transcriptionProviderSettings.Name,
+                    transcriptionProviderSettings.UsedLLMProvider,
                     providerConfidence.Level,
                     minimumLevel);
                 await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider does not meet the minimum confidence level.")));
@@ -240,7 +337,7 @@ public partial class VoiceRecorder : MSGComponentBase
             }
 
             // Call the transcription API:
-            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.Name, transcriptionProviderSettings.Model.DisplayName);
+            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.UsedLLMProvider, transcriptionProviderSettings.Model.ToString());
             var transcribedText = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
 
             if (string.IsNullOrWhiteSpace(transcribedText))
@@ -261,8 +358,15 @@ public partial class VoiceRecorder : MSGComponentBase
 
             this.Logger.LogInformation("Transcription completed successfully. Result length: {Length} characters.", transcribedText.Length);
 
-            // Play the transcription done sound effect:
-            await this.JsRuntime.InvokeVoidAsync("playSound", "/sounds/transcription_done.ogg");
+            try
+            {
+                // Play the transcription done sound effect:
+                await this.JsRuntime.InvokeVoidAsync("playSound", "/sounds/transcription_done.ogg");
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to play transcription done sound effect.");
+            }
 
             // Copy the transcribed text to the clipboard:
             await this.RustService.CopyText2Clipboard(this.Snackbar, transcribedText);
@@ -288,9 +392,27 @@ public partial class VoiceRecorder : MSGComponentBase
         }
         finally
         {
+            await this.ReleaseMicrophoneAsync();
+
             this.finalRecordingPath = null;
             this.isTranscribing = false;
             this.StateHasChanged();
+        }
+    }
+
+    private async Task ReleaseMicrophoneAsync()
+    {
+        // Wait a moment for any queued sounds to finish playing, then release the microphone.
+        // This allows Bluetooth headsets to switch back to A2DP profile without interrupting audio:
+        await Task.Delay(1_800);
+
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("audioRecorder.releaseMicrophone");
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "Failed to release the microphone.");
         }
     }
 

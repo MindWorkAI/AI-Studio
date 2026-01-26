@@ -97,7 +97,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             // Use chat thread sent by the user:
             this.ChatThread = deferredContent;
-            this.Logger.LogInformation($"The chat '{this.ChatThread.Name}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
+            this.ChatThread.IncludeDateTime = true;
+            
+            this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
             // We know already that the chat thread is not null,
@@ -202,7 +204,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
-
         await base.OnInitializedAsync();
     }
 
@@ -436,6 +437,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.ChatThread = new()
             {
+                IncludeDateTime = true,
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
@@ -676,6 +678,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             //
             this.ChatThread = new()
             {
+                IncludeDateTime = true,
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
