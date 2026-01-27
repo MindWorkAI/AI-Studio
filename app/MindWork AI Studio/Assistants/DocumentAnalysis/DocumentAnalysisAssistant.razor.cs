@@ -173,6 +173,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.policyAnalysisRules = string.Empty;
             this.policyOutputRules = string.Empty;
             this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+            this.policyPreselectedProviderId = string.Empty;
             this.policyPreselectedProfileId = Profile.NO_PROFILE.Id;
         }
     }
@@ -187,6 +188,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.policyAnalysisRules = this.selectedPolicy.AnalysisRules;
             this.policyOutputRules = this.selectedPolicy.OutputRules;
             this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
+            this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfileId = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? Profile.NO_PROFILE.Id : this.selectedPolicy.PreselectedProfile;
             
             return true;
@@ -213,6 +215,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         await base.OnInitializedAsync();
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        this.UpdateProviders();
         this.ApplyPolicyPreselection();
     }
 
@@ -229,7 +233,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
         if (canEditProtectedFields)
         {
-            this.selectedPolicy.PreselectedProvider = this.providerSettings.Id;
+            this.selectedPolicy.PreselectedProvider = this.policyPreselectedProviderId;
             this.selectedPolicy.PolicyName = this.policyName;
             this.selectedPolicy.PolicyDescription = this.policyDescription;
             this.selectedPolicy.IsProtected = this.policyIsProtected;
@@ -249,8 +253,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
     private ConfidenceLevel policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+    private string policyPreselectedProviderId = string.Empty;
     private string policyPreselectedProfileId = Profile.NO_PROFILE.Id;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
+    private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     
@@ -278,6 +284,14 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         });
         
         await this.SettingsManager.StoreSettings();
+    }
+
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    private void UpdateProviders()
+    {
+        this.availableLLMProviders.Clear();
+        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+            this.availableLLMProviders.Add(new ConfigurationSelectData<string>(provider.InstanceName, provider.Id));
     }
 
     private async Task RemovePolicy()
@@ -341,6 +355,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         if (this.selectedPolicy is null)
             return;
 
+        this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
         var minimumLevel = this.GetPolicyMinimumConfidenceLevel();
 
         // Keep the current provider if it still satisfies the minimum confidence:
@@ -398,6 +413,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.ApplyPolicyPreselection();
     }
 
+    private void PolicyPreselectedProviderWasChanged(string providerId)
+    {
+        if (this.selectedPolicy is null)
+            return;
+
+        this.policyPreselectedProviderId = providerId;
+        this.selectedPolicy.PreselectedProvider = providerId;
+        this.providerSettings = Settings.Provider.NONE;
+        this.ApplyPolicyPreselection();
+    }
+
     private async Task PolicyPreselectedProfileWasChangedAsync(string profileId)
     {
         this.policyPreselectedProfileId = profileId;
@@ -418,6 +444,23 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         
         return null;
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+                this.UpdateProviders();
+                this.StateHasChanged();
+                break;
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    #endregion
     
     private string? ValidatePolicyDescription(string description)
     {
