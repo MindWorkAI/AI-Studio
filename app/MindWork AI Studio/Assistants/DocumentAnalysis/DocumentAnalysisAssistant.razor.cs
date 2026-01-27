@@ -1,8 +1,11 @@
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
@@ -169,6 +172,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.policyIsProtected = false;
             this.policyAnalysisRules = string.Empty;
             this.policyOutputRules = string.Empty;
+            this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+            this.policyPreselectedProfileId = Profile.NO_PROFILE.Id;
         }
     }
     
@@ -181,6 +186,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.policyIsProtected = this.selectedPolicy.IsProtected;
             this.policyAnalysisRules = this.selectedPolicy.AnalysisRules;
             this.policyOutputRules = this.selectedPolicy.OutputRules;
+            this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
+            this.policyPreselectedProfileId = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? Profile.NO_PROFILE.Id : this.selectedPolicy.PreselectedProfile;
             
             return true;
         }
@@ -206,6 +213,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
 
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         await base.OnInitializedAsync();
+        this.ApplyPolicyPreselection();
     }
 
     #endregion
@@ -214,21 +222,22 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     {
         if(this.selectedPolicy is null)
             return;
-        
-        if(!force && this.selectedPolicy.IsProtected)
-            return;
-        
-        if(!force && this.policyIsProtected)
-            return;
 
-        this.selectedPolicy.PreselectedProvider = this.providerSettings.Id;
-        
-        this.selectedPolicy.PolicyName = this.policyName;
-        this.selectedPolicy.PolicyDescription = this.policyDescription;
-        this.selectedPolicy.IsProtected = this.policyIsProtected;
-        this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
-        this.selectedPolicy.OutputRules = this.policyOutputRules;
-        
+        // The preselected profile is always user-adjustable, even for protected policies.
+        this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfileId;
+
+        var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
+        if (canEditProtectedFields)
+        {
+            this.selectedPolicy.PreselectedProvider = this.providerSettings.Id;
+            this.selectedPolicy.PolicyName = this.policyName;
+            this.selectedPolicy.PolicyDescription = this.policyDescription;
+            this.selectedPolicy.IsProtected = this.policyIsProtected;
+            this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
+            this.selectedPolicy.OutputRules = this.policyOutputRules;
+            this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
+        }
+
         await this.SettingsManager.StoreSettings();
     }
 
@@ -239,6 +248,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
+    private ConfidenceLevel policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+    private string policyPreselectedProfileId = Profile.NO_PROFILE.Id;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
@@ -250,6 +261,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.selectedPolicy = policy;
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.ApplyPolicyPreselection();
     }
 
     private Task PolicyDefinitionExpandedChanged(bool isExpanded)
@@ -321,6 +333,76 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
         await this.AutoSave(true);
+    }
+
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Policy-specific preselection needs to probe providers by id before falling back to SettingsManager APIs.")]
+    private void ApplyPolicyPreselection()
+    {
+        if (this.selectedPolicy is null)
+            return;
+
+        var minimumLevel = this.GetPolicyMinimumConfidenceLevel();
+
+        // Keep the current provider if it still satisfies the minimum confidence:
+        if (this.providerSettings != Settings.Provider.NONE &&
+            this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+        {
+            this.currentProfile = this.ResolveProfileSelection();
+            return;
+        }
+
+        // Try to apply the policy preselection:
+        var policyProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProvider);
+        if (policyProvider is not null && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+        {
+            this.providerSettings = policyProvider;
+            this.currentProfile = this.ResolveProfileSelection();
+            return;
+        }
+
+        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component, this.providerSettings.Id);
+        this.currentProfile = this.ResolveProfileSelection();
+    }
+
+    private ConfidenceLevel GetPolicyMinimumConfidenceLevel()
+    {
+        var minimumLevel = ConfidenceLevel.NONE;
+        var llmSettings = this.SettingsManager.ConfigurationData.LLMProviders;
+        var enforceGlobalMinimumConfidence = llmSettings is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
+        if (enforceGlobalMinimumConfidence)
+            minimumLevel = llmSettings.GlobalMinimumConfidence;
+
+        if (this.selectedPolicy is not null && this.selectedPolicy.MinimumProviderConfidence > minimumLevel)
+            minimumLevel = this.selectedPolicy.MinimumProviderConfidence;
+
+        return minimumLevel;
+    }
+
+    private Profile ResolveProfileSelection()
+    {
+        if (this.selectedPolicy is not null && !string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile))
+        {
+            var policyProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProfile);
+            if (policyProfile is not null)
+                return policyProfile;
+        }
+
+        return this.SettingsManager.GetPreselectedProfile(this.Component);
+    }
+
+    private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)
+    {
+        this.policyMinimumProviderConfidence = level;
+        await this.AutoSave();
+        
+        this.ApplyPolicyPreselection();
+    }
+
+    private async Task PolicyPreselectedProfileWasChangedAsync(string profileId)
+    {
+        this.policyPreselectedProfileId = profileId;
+        this.currentProfile = this.ResolveProfileSelection();
+        await this.AutoSave();
     }
     
     private string? ValidatePolicyName(string name)

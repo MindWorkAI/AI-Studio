@@ -1,6 +1,7 @@
 @attribute [Route(Routes.ASSISTANT_DOCUMENT_ANALYSIS)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDocumentAnalysis>
 
+@using AIStudio.Settings
 @using AIStudio.Settings.DataModel
 
 <PreviewPrototype ApplyInnerScrollingFix="true"/>
@@ -60,6 +61,10 @@ else
             <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyDescription" Validation="@this.ValidatePolicyDescription" Immediate="@true" Label="@T("Policy description")" HelperText="@T("Please provide a brief description of your policy. Describe or explain what your policy does. This description will be shown to users in AI Studio.")" Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
             
             <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsManaged ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
+
+            <ConfigurationMinConfidenceSelection Disabled="@(() => this.IsNoPolicySelectedOrProtected)" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.policyMinimumProviderConfidence)" SelectionUpdateAsync="@(async level => await this.PolicyMinimumConfidenceWasChangedAsync(level))" />
+
+            <ConfigurationSelect OptionDescription="@T("Preselect one of your profiles?")" Disabled="@(() => this.IsNoPolicySelected)" SelectedValue="@(() => this.policyPreselectedProfileId)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@(async profileId => await this.PolicyPreselectedProfileWasChangedAsync(profileId))" OptionHelp="@T("Select a default profile for this policy. You can still change it later when running the assistant.")" />
 
             <MudText Typo="Typo.h5" Class="mt-6 mb-1">
                 @T("Analysis and output rules")

@@ -88,8 +88,9 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
         
-        #warning Add minimum confidence for DOCUMENT_ANALYSIS_ASSISTANT:
-        //Components.DOCUMENT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.DocumentAnalysis.PreselectOptions ? settingsManager.ConfigurationData.DocumentAnalysis.MinimumProviderConfidence : default,
+        // The minimum confidence for the Document Analysis Assistant is set per policy.
+        // We do this inside the Document Analysis Assistant component:
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfidenceLevel.NONE,
 
         _ => default,
     };
@@ -115,8 +116,9 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
             Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
             
-            #warning Add preselected provider for DOCUMENT_ANALYSIS_ASSISTANT:
-            //Components.DOCUMENT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.DocumentAnalysis.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.DocumentAnalysis.PreselectedProvider) : null,
+            // The Document Analysis Assistant does not have a preselected provider at the component level.
+            // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
+            Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
 
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : null,
 
@@ -132,8 +134,6 @@ public static class ComponentsExtensions
 
     public static Profile PreselectedProfile(this Components component, SettingsManager settingsManager) => component switch
     {
-        #warning Add preselected profile for DOCUMENT_ANALYSIS_ASSISTANT:
-        // Components.DOCUMENT_ANALYSIS_ASSISTANT => settingsManager.ConfigurationData.DocumentAnalysis.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.DocumentAnalysis.PreselectedProfile) : default,
         Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Agenda.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
         Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Coding.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
         Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.EMail.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
@@ -142,6 +142,10 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
 
+        // The Document Analysis Assistant does not have a preselected profile at the component level.
+        // The profile is selected per policy instead. We do this inside the Document Analysis Assistant component:
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => Profile.NO_PROFILE,
+        
         Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProfile) ?? Profile.NO_PROFILE : Profile.NO_PROFILE,
         
         _ => Profile.NO_PROFILE,
