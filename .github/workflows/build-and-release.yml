@@ -2,7 +2,7 @@ name: Build and Release
 on:
   push:
     branches:
-      - main
+      - "**"
     tags:
       - "v*.*.*"
 
@@ -247,7 +247,7 @@ jobs:
           $pdfium_version = $pdfium_version.Split('.')[2]
           
           # Next line is the necessary Qdrant version:
-          $qdrant_version = "v$metadata[12]"
+          $qdrant_version = "v$($metadata[11])"
           
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
@@ -407,33 +407,34 @@ jobs:
         env:
           QDRANT_VERSION: ${{ env.QDRANT_VERSION }}
           DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+          RUST_TARGET: ${{ matrix.rust_target }}
         run: |
           set -e
 
           # Target directory:
-          TDB_DIR="runtime/resources/databases/qdrant"
+          TDB_DIR="runtime/target/databases/qdrant"
           mkdir -p "$TDB_DIR"
 
           case "${DOTNET_RUNTIME}" in
             linux-x64)
               QDRANT_FILE="x86_64-unknown-linux-gnu.tar.gz"
               DB_SOURCE="qdrant"
-              DB_TARGET="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
               ;;
             linux-arm64)
               QDRANT_FILE="aarch64-unknown-linux-musl.tar.gz"
               DB_SOURCE="qdrant"
-              DB_TARGET="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
               ;;
             osx-x64)
               QDRANT_FILE="x86_64-apple-darwin.tar.gz"
               DB_SOURCE="qdrant"
-              DB_TARGET="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
               ;;
             osx-arm64)
               QDRANT_FILE="aarch64-apple-darwin.tar.gz"
               DB_SOURCE="qdrant"
-              DB_TARGET="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
               ;;
             *)
               echo "Unknown platform: ${DOTNET_RUNTIME}"
@@ -441,7 +442,7 @@ jobs:
               ;;
           esac
 
-          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/v${QDRANT_VERSION}/qdrant-{QDRANT_FILE}"
+          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/${QDRANT_VERSION}/qdrant-${QDRANT_FILE}"
 
           echo "Download Qdrant $QDRANT_URL ..."
           TMP=$(mktemp -d)
@@ -469,20 +470,21 @@ jobs:
         env:
           QDRANT_VERSION: ${{ env.QDRANT_VERSION }}
           DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+          RUST_TARGET: ${{ matrix.rust_target }}
         run: |
-          $TDB_DIR = "runtime\resources\databases\qdrant"
+          $TDB_DIR = "runtime\target\databases\qdrant"
           New-Item -ItemType Directory -Force -Path $TDB_DIR | Out-Null
           
           switch ($env:DOTNET_RUNTIME) {
             "win-x64" {
               $QDRANT_FILE = "x86_64-pc-windows-msvc.zip"
               $DB_SOURCE = "qdrant.exe"
-              $DB_TARGET = "qdrant.exe"
+              $DB_TARGET = "qdrant-$($env:RUST_TARGET).exe"
             }
             "win-arm64" {
               $QDRANT_FILE = "x86_64-pc-windows-msvc.zip"
               $DB_SOURCE = "qdrant.exe"
-              $DB_TARGET = "qdrant.exe""
+              $DB_TARGET = "qdrant-$($env:RUST_TARGET).exe"
             }
             default {
               Write-Error "Unknown platform: $($env:DOTNET_RUNTIME)"
@@ -490,7 +492,7 @@ jobs:
             }
           }
           
-          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/v${QDRANT_VERSION}/qdrant-{QDRANT_FILE}"
+          $QDRANT_URL = "https://github.com/qdrant/qdrant/releases/download/$($env:QDRANT_VERSION)/qdrant-$QDRANT_FILE"
           Write-Host "Download $QDRANT_URL ..."
 
           # Create a unique temporary directory (not just a file)
@@ -629,7 +631,7 @@ jobs:
           cd runtime
           export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
           export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles none
           
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
@@ -640,7 +642,7 @@ jobs:
           cd runtime
           $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
           $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles none
 
       - name: Upload artifact (macOS)
         if: startsWith(matrix.platform, 'macos') && startsWith(github.ref, 'refs/tags/v')
