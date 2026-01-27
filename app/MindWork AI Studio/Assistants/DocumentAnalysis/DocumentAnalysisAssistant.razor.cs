@@ -223,7 +223,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         if(this.selectedPolicy is null)
             return;
 
-        // The preselected profile is always user-adjustable, even for protected policies.
+        // The preselected profile is always user-adjustable, even for protected policies:
         this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfileId;
 
         var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
