@@ -205,11 +205,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         }
 
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
-        
-        var receivedDeferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT).FirstOrDefault();
-        if (receivedDeferredContent is not null)
-            this.deferredContent = receivedDeferredContent;
-
         await base.OnInitializedAsync();
     }
 
@@ -244,8 +239,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
-#warning Use deferred content for document analysis
-    private string deferredContent = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;

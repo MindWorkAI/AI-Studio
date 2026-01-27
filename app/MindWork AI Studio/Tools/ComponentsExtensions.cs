@@ -16,6 +16,7 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => false,
         Components.BIAS_DAY_ASSISTANT => false,
         Components.I18N_ASSISTANT => false,
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
         
