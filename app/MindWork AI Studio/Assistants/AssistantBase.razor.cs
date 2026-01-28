@@ -188,6 +188,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.inputIsValid = false;
         this.StateHasChanged();
     }
+    
+    /// <summary>
+    /// Clear all input issues.
+    /// </summary>
+    protected void ClearInputIssues()
+    {
+        this.inputIssues = [];
+        this.inputIsValid = true;
+        this.StateHasChanged();
+    }
 
     protected void CreateChatThread()
     {
