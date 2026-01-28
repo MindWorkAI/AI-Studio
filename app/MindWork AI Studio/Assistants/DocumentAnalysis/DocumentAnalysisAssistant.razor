@@ -64,7 +64,7 @@ else
             
             <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@(providerId => this.PolicyPreselectedProviderWasChanged(providerId))"/>
             
-            <ConfigurationSelect OptionDescription="@T("Preselect one of your profiles?")" Disabled="@(() => this.IsNoPolicySelected)" SelectedValue="@(() => this.policyPreselectedProfileId)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@(async profileId => await this.PolicyPreselectedProfileWasChangedAsync(profileId))" OptionHelp="@T("Select a default profile for this policy. You can still change it later when running the assistant.")" />
+            <ProfileFormSelection Disabled="@this.IsNoPolicySelected" Profile="@this.currentProfile" ProfileChanged="@this.PolicyPreselectedProfileWasChangedAsync" />
             
             <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsManaged ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
             

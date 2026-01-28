@@ -427,9 +427,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ApplyPolicyPreselection();
     }
 
-    private async Task PolicyPreselectedProfileWasChangedAsync(string profileId)
+    private async Task PolicyPreselectedProfileWasChangedAsync(Profile profile)
     {
-        this.policyPreselectedProfileId = profileId;
+        this.policyPreselectedProfileId = profile.Id;
+        if (this.selectedPolicy is not null)
+            this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfileId;
+
         this.currentProfile = this.ResolveProfileSelection();
         await this.AutoSave();
     }
