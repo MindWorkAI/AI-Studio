@@ -217,7 +217,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         this.UpdateProviders();
-        this.ApplyPolicyPreselection();
+        this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
 
     #endregion
@@ -267,7 +267,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.selectedPolicy = policy;
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
-        this.ApplyPolicyPreselection();
+        this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
 
     private Task PolicyDefinitionExpandedChanged(bool isExpanded)
@@ -350,7 +350,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     }
 
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Policy-specific preselection needs to probe providers by id before falling back to SettingsManager APIs.")]
-    private void ApplyPolicyPreselection()
+    private void ApplyPolicyPreselection(bool preferPolicyPreselection = false)
     {
         if (this.selectedPolicy is null)
             return;
@@ -358,12 +358,15 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
         var minimumLevel = this.GetPolicyMinimumConfidenceLevel();
 
-        // Keep the current provider if it still satisfies the minimum confidence:
-        if (this.providerSettings != Settings.Provider.NONE &&
-            this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+        if (!preferPolicyPreselection)
         {
-            this.currentProfile = this.ResolveProfileSelection();
-            return;
+            // Keep the current provider if it still satisfies the minimum confidence:
+            if (this.providerSettings != Settings.Provider.NONE &&
+                this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            {
+                this.currentProfile = this.ResolveProfileSelection();
+                return;
+            }
         }
 
         // Try to apply the policy preselection:
