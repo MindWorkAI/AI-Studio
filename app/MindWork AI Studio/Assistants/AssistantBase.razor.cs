@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -81,6 +82,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
+
+    protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
     protected AIStudio.Settings.Provider providerSettings = Settings.Provider.NONE;
     protected MudForm? form;
@@ -310,6 +313,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task OpenSettingsDialog()
     {
+        if (!this.HasSettingsPanel)
+            return;
+
         var dialogParameters = new DialogParameters();
         await this.DialogService.ShowAsync<TSettings>(null, dialogParameters, DialogOptions.FULLSCREEN);
     }
