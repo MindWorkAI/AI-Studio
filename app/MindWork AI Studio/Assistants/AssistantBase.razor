@@ -9,7 +9,10 @@
             @this.Title
         </MudText>
         
-        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettingsDialog())"/>
+        @if (this.HasSettingsPanel)
+        {
+            <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettingsDialog())"/>
+        }
     </MudStack>
 
     <InnerScrolling>
