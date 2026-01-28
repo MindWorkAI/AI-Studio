@@ -14,7 +14,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.DocumentAnalysis;
 
-public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialogDocumentAnalysis>
+public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPanel>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
