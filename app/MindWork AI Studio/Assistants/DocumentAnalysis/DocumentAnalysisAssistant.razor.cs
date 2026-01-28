@@ -268,6 +268,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
+        
+        this.form?.ResetValidation();
+        this.ClearInputIssues();
     }
 
     private Task PolicyDefinitionExpandedChanged(bool isExpanded)
