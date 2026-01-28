@@ -76,7 +76,7 @@ pub fn start_qdrant_server(){
     let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
     let init_path = path.join(".qdrant-initalized").to_str().unwrap().to_string();
     
-    let qdrant_server_environment = HashMap::from_iter([
+    let mut qdrant_server_environment = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
         (String::from("QDRANT__SERVICE__GRPC_PORT"), QDRANT_SERVER_PORT_GRPC.to_string()),
         (String::from("QDRANT_INIT_FILE_PATH"), init_path),
@@ -90,6 +90,13 @@ pub fn start_qdrant_server(){
     
     let server_spawn_clone = QDRANT_SERVER.clone();
     tauri::async_runtime::spawn(async move {
+        #[cfg(target_os = "macos")]
+        {
+            qdrant_server_environment.insert(
+                "MALLOC_CONF".to_string(),
+                "background_thread:false".to_string(),
+            );
+        }
         let (mut rx, child) = Command::new_sidecar("qdrant")
             .expect("Failed to create sidecar for Qdrant")
             .args(["--config-path", "resources/databases/qdrant/config.yaml"])
