@@ -1,0 +1,8 @@
+﻿@attribute [Route(Routes.ASSISTANT_SYNONYMS)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogPowerPoint>
+
+<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.Spellcheck" Adornment="Adornment.Start" Label="@T("Your word or phrase")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Lines="2" AutoGrow="@false" Label="@T("(Optional) The context for the given word or phrase")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
