@@ -60,7 +60,7 @@ else
             
             <ConfigurationMinConfidenceSelection Disabled="@(() => this.IsNoPolicySelectedOrProtected)" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.policyMinimumProviderConfidence)" SelectionUpdateAsync="@(async level => await this.PolicyMinimumConfidenceWasChangedAsync(level))" />
             
-            <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@(providerId => this.PolicyPreselectedProviderWasChanged(providerId))"/>
+            <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@(providerId => this.PolicyPreselectedProviderWasChanged(providerId))" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>
             
             <ProfileFormSelection Disabled="@this.IsNoPolicySelected" Profile="@this.currentProfile" ProfileChanged="@this.PolicyPreselectedProfileWasChangedAsync" />
             
