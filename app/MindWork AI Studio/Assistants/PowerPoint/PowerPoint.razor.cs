@@ -6,11 +6,11 @@ namespace AIStudio.Assistants.PowerPoint;
 
 public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
 {
-    public override Tools.Components Component => Tools.Components.SYNONYMS_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.POWER_POINT_ASSISTANT;
     
-    protected override string Title => T("Synonyms");
+    protected override string Title => T("Power Point");
     
-    protected override string Description => T("Find synonyms for words or phrases.");
+    protected override string Description => T("Create and refine PowerPoint slide text from a topic or outline.");
     
     protected override string SystemPrompt => 
         $"""
@@ -50,7 +50,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => T("Find synonyms");
+    protected override string SubmitText => T("Create Power Point");
 
     protected override Func<Task> SubmitAction => this.FindSynonyms;
 
