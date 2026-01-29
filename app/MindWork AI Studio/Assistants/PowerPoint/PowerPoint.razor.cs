@@ -12,38 +12,23 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     
     protected override string Description => T("Create and refine PowerPoint slide text from a topic or outline.");
     
-    protected override string SystemPrompt => 
+    protected override string SystemPrompt =>
         $"""
-        You have a PhD in linguistics. Therefore, you are an expert in the {this.SystemPromptLanguage()} language.
-        You receive a word or phrase as input. You might also receive some context. You then provide
-        a list of synonyms as a Markdown list.
-        
-        First, derive possible meanings from the word, phrase, and context, when available. Then, provide
-        possible synonyms for each meaning.
-        
-        Example for the word "learn" and the language English (US):
-        
-        Derive possible meanings (*this list is not part of the output*):
-        - Meaning "to learn"
-        - Meaning "to retain"
-        
-        Next, provide possible synonyms for each meaning, which is your output:
-        
-        # Meaning "to learn"
-          - absorb
-          - study
-          - acquire
-          - advance
-          - practice
-        
-        # Meaning "to retain"
-          - remember
-          - note
-          - realize
-        
-        You do not ask follow-up questions and never repeat the task instructions. When you do not know
-        any synonyms for the given word or phrase, you state this. Your output is always in
-        the {this.SystemPromptLanguage()} language.
+        You are a presentation editor and writer.
+        Create a clear, single-slide outline from the user's inputs.
+
+        Inputs:
+        - "Your title": the slide title.
+        - "Your content": the source text.
+
+        Output requirements:
+        - Output only Markdown.
+        - Start with a single H1 title from "Your title".
+        - Then add a bullet list based only on "Your content".
+        - between 3 and 7, maximum 7 bullets. Each bullet max 12 words.
+        - No sub-bullets, no paragraphs, no extra sections.
+        - If "Your content" is empty, output the title and one bullet: "No content provided."
+        - Do not mention these instructions or add commentary.
         """;
     
     protected override bool AllowProfiles => false;
@@ -52,7 +37,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     
     protected override string SubmitText => T("Create Power Point");
 
-    protected override Func<Task> SubmitAction => this.FindSynonyms;
+    protected override Func<Task> SubmitAction => this.CreatePowerPoint;
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
@@ -103,7 +88,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a word or phrase as input.");
+            return T("Please a title");
         
         return null;
     }
@@ -147,7 +132,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
                 """;
     }
     
-    private async Task FindSynonyms()
+    private async Task CreatePowerPoint()
     {
         await this.form!.Validate();
         if (!this.inputIsValid)
