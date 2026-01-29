@@ -122,4 +122,4 @@ else
     </ExpansionPanel>
 </MudExpansionPanels>
     
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>
