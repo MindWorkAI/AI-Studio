@@ -18,8 +18,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
-    public override Tools.Components Component => Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT;
+
+    protected override Tools.Components Component => Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT;
     
     protected override string Title => T("Document Analysis Assistant");
     

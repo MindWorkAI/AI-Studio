@@ -42,8 +42,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract string Description { get; }
     
     protected abstract string SystemPrompt { get; }
-    
-    public abstract Tools.Components Component { get; }
+
+    protected abstract Tools.Components Component { get; }
     
     protected virtual Func<string> Result2Copy => () => this.resultingContentBlock is null ? string.Empty : this.resultingContentBlock.Content switch
     {
