@@ -20,6 +20,9 @@ public partial class ProviderSelection : MSGComponentBase
     
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
+
+    [Parameter]
+    public ConfidenceLevel ExplicitMinimumConfidence { get; set; } = ConfidenceLevel.UNKNOWN;
     
     [Inject]
     private ILogger<ProviderSelection> Logger { get; init; } = null!;
@@ -44,7 +47,15 @@ public partial class ProviderSelection : MSGComponentBase
                 yield break;
             
             case { } component:
+                
+                // Get the minimum confidence level for this component, and/or the global minimum if enforced:
                 var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(component);
+                
+                // Override with the explicit minimum level if set and higher:
+                if (this.ExplicitMinimumConfidence is not ConfidenceLevel.UNKNOWN && this.ExplicitMinimumConfidence > minimumLevel)
+                    minimumLevel = this.ExplicitMinimumConfidence;
+                
+                // Filter providers based on the minimum confidence level:
                 foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
                     if (provider.UsedLLMProvider != LLMProviders.NONE)
                         if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
