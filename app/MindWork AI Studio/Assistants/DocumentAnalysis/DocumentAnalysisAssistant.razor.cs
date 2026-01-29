@@ -381,7 +381,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
         }
 
-        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component, this.providerSettings.Id);
+        var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.providerSettings.Id);
+        if (fallbackProvider != Settings.Provider.NONE &&
+            fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level < minimumLevel)
+            fallbackProvider = Settings.Provider.NONE;
+
+        this.providerSettings = fallbackProvider;
         this.currentProfile = this.ResolveProfileSelection();
     }
 
