@@ -7,7 +7,6 @@ authors = ["Thorsten Sommer"]
 
 [build-dependencies]
 tauri-build = { version = "1.5", features = [] }
-dirs = "6.0.0"
 
 [dependencies]
 tauri = { version = "1.8", features = [ "http-all", "updater", "shell-sidecar", "shell-open", "dialog", "global-shortcut"] }
@@ -42,6 +41,7 @@ cfg-if = "1.0.4"
 pptx-to-md = "0.4.0"
 tempfile = "3.8"
 strum_macros = "0.27"
+sysinfo = "0.38.0"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 url = "2.5.8"
@@ -49,6 +49,7 @@ ring = "0.17.14"
 crossbeam-channel = "0.5.15"
 tracing-subscriber = "0.3.20"
 dirs = "6.0.0"
+
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # See issue https://github.com/tauri-apps/tauri/issues/4470

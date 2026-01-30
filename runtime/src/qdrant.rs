@@ -16,7 +16,7 @@ use crate::environment::DATA_DIRECTORY;
 use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
 use tempfile::{TempDir, Builder};
-use crate::zombie_process_remover::{kill_zombie_process, log_potential_zombie_process};
+use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
 
 // Qdrant server process started in a separate process and can communicate
 // via HTTP or gRPC with the .NET server and the runtime process
@@ -106,7 +106,7 @@ pub fn start_qdrant_server(){
 
         let server_pid = child.pid();
         info!(Source = "Bootloader Qdrant"; "Qdrant server process started with PID={server_pid}.");
-        log_potential_zombie_process(path.join(PID_FILE_NAME), server_pid.to_string().as_str());
+        log_potential_stale_process(path.join(PID_FILE_NAME), server_pid);
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
@@ -150,9 +150,7 @@ pub fn stop_qdrant_server() {
     }
 
     drop_tmpdir();
-    if let Err(e) = cleanup_qdrant(){
-        warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
-    }
+    cleanup_qdrant();
 }
 
 /// Create temporary directory with TLS relevant files
@@ -193,11 +191,15 @@ pub fn drop_tmpdir() {
 }
 
 /// Remove old Pid files and kill the corresponding processes
-pub fn cleanup_qdrant() -> Result<(), Box<dyn Error>> {
+pub fn cleanup_qdrant() {
     let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").join(PID_FILE_NAME);
-    kill_zombie_process(pid_path, "qdrant.exe")?;
-    delete_old_certificates()?;
-    Ok(())
+    if let Err(e) = kill_stale_process(pid_path) {
+        warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
+    }
+    if let Err(e) = delete_old_certificates() {
+        warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
+    }
+    
 }
 
 pub fn delete_old_certificates() -> Result<(), Box<dyn Error>> {

@@ -16,7 +16,7 @@ use crate::encryption::ENCRYPTION;
 use crate::environment::{is_dev, DATA_DIRECTORY};
 use crate::network::get_available_port;
 use crate::runtime_api::API_SERVER_PORT;
-use crate::zombie_process_remover::{kill_zombie_process, log_potential_zombie_process};
+use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
 
 // The .NET server is started in a separate process and communicates with this
 // runtime process via IPC. However, we do net start the .NET server in
@@ -100,7 +100,7 @@ pub fn start_dotnet_server() {
                 .expect("Failed to spawn .NET server process.");
         let server_pid = child.pid();
         info!(Source = "Bootloader .NET"; "The .NET server process started with PID={server_pid}.");
-        log_potential_zombie_process(Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME), server_pid.to_string().as_str());
+        log_potential_stale_process(Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME), server_pid);
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
@@ -158,13 +158,14 @@ pub fn stop_dotnet_server() {
     } else {
         warn!("The .NET server process was not started or is already stopped.");
     }
+    info!("Start dotnet server cleanup");
     cleanup_dotnet_server();
 }
 
 /// Remove old Pid files and kill the corresponding processes
 pub fn cleanup_dotnet_server() {
     let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME);
-    if let Err(e) = kill_zombie_process(pid_path, "mindworkAIStudioServer.exe"){
+    if let Err(e) = kill_stale_process(pid_path) {
         warn!(Source = ".NET"; "Error during the cleanup of .NET: {}", e);
     }
 }

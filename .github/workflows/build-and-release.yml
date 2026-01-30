@@ -2,7 +2,7 @@ name: Build and Release
 on:
   push:
     branches:
-      - "**"
+      - main
     tags:
       - "v*.*.*"
 
@@ -631,7 +631,7 @@ jobs:
           cd runtime
           export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
           export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles none
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
           
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
@@ -642,7 +642,7 @@ jobs:
           cd runtime
           $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
           $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles none
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
 
       - name: Upload artifact (macOS)
         if: startsWith(matrix.platform, 'macos') && startsWith(github.ref, 'refs/tags/v')
