@@ -22,7 +22,9 @@
                 @if (this.Body is not null)
                 {
                     <CascadingValue Value="@this">
-                        @this.Body
+                        <CascadingValue Value="@this.Component">
+                            @this.Body
+                        </CascadingValue>
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
