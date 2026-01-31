@@ -241,7 +241,14 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: preselect a provider or profile by ID.
 --     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
 --     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",
---     ["PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+--     ["PreselectedProfile"] = "00000000-0000-0000-0000-000000000000",
+--
+--     -- Optional: hide the policy definition section in the UI.
+--     -- When set to true, users will only see the document selection interface
+--     -- and cannot view or modify the policy settings.
+--     -- This is useful for enterprise configurations where policy details should remain hidden.
+--     -- Allowed values are: true, false (default: false)
+--     ["HidePolicyDefinition"] = false
 -- }
 
 -- Profiles for this configuration:

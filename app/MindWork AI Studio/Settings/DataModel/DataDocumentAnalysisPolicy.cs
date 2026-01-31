@@ -67,7 +67,14 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     /// Preselect a profile?
     /// </summary>
     public string PreselectedProfile { get; set; } = string.Empty;
-    
+
+    /// <summary>
+    /// Hide the policy definition section in the UI?
+    /// If true, the policy definition panel will be hidden and only the document selection will be shown.
+    /// This is useful for enterprise configurations where users should not see or modify the policy details.
+    /// </summary>
+    public bool HidePolicyDefinition { get; set; }
+
     public static bool TryProcessConfiguration(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject policy)
     {
         policy = new DataDocumentAnalysisPolicy();
@@ -118,7 +125,11 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
         var preselectedProfile = string.Empty;
         if (table.TryGetValue("PreselectedProfile", out var profileValue) && profileValue.TryRead<string>(out var profileId))
             preselectedProfile = profileId;
-        
+
+        var hidePolicyDefinition = false;
+        if (table.TryGetValue("HidePolicyDefinition", out var hideValue) && hideValue.TryRead<bool>(out var hide))
+            hidePolicyDefinition = hide;
+
         policy = new DataDocumentAnalysisPolicy
         {
             Id = id.ToString(),
@@ -130,6 +141,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
             MinimumProviderConfidence = minimumConfidence,
             PreselectedProvider = preselectedProvider,
             PreselectedProfile = preselectedProfile,
+            HidePolicyDefinition = hidePolicyDefinition,
             IsProtected = true,
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
