@@ -24,9 +24,20 @@ else
     <MudList Color="Color.Primary" T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
         @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
         {
-            <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
-                @policy.PolicyName
-            </MudListItem>
+            @if (policy.IsEnterpriseConfiguration)
+            {
+                <MudTooltip Text="@T("This policy is managed by your organization.")" Placement="Placement.Right">
+                    <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Business" Value="@policy">
+                        @policy.PolicyName
+                    </MudListItem>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
+                    @policy.PolicyName
+                </MudListItem>
+            }
         }
     </MudList>
 }
