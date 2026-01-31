@@ -46,7 +46,7 @@ else
     <MudButton OnClick="@this.AddPolicy" Variant="Variant.Filled" Color="Color.Primary">
         @T("Add policy")
     </MudButton>
-    <MudButton OnClick="@this.RemovePolicy" Disabled="@(this.selectedPolicy?.IsProtected ?? true)" Variant="Variant.Filled" Color="Color.Error">
+    <MudButton OnClick="@this.RemovePolicy" Disabled="@((this.selectedPolicy?.IsProtected ?? true) || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Variant="Variant.Filled" Color="Color.Error">
         @T("Delete this policy")
     </MudButton>
 </MudStack>

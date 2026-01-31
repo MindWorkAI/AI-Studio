@@ -227,9 +227,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if(this.selectedPolicy is null)
             return;
 
-        // The preselected profile is always user-adjustable, even for protected policies:
+        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
         this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfileId;
 
+        // Enterprise configurations cannot be modified at all:
+        if(this.selectedPolicy.IsEnterpriseConfiguration)
+            return;
+        
         var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
         if (canEditProtectedFields)
         {
@@ -307,6 +311,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if(this.selectedPolicy.IsProtected)
             return;
         
+        if(this.selectedPolicy.IsEnterpriseConfiguration)
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the document analysis policy '{0}'?"), this.selectedPolicy.PolicyName) },
@@ -340,6 +347,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if(this.selectedPolicy.IsProtected)
             return;
         
+        if(this.selectedPolicy.IsEnterpriseConfiguration)
+            return;
+
         this.selectedPolicy.PolicyName = this.policyName;
     }
     
@@ -348,6 +358,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if(this.selectedPolicy is null)
             return;
         
+        if(this.selectedPolicy.IsEnterpriseConfiguration)
+            return;
+
         this.policyIsProtected = state;
         this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
