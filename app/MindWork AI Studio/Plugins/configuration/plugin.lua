@@ -213,6 +213,35 @@ CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
         }
     }
 }
+-- Document analysis policies for this configuration:
+CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
+
+-- An example document analysis policy:
+-- CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["PolicyName"] = "Compliance Summary Policy",
+--     ["PolicyDescription"] = "Summarizes compliance-relevant clauses, obligations, and deadlines found in provided documents.",
+--     
+--     ["AnalysisRules"] = [===[
+--                             Focus on compliance obligations, deadlines, and required actions.
+--                             Ignore marketing content and high-level summaries.
+--                             Flag any ambiguous or missing information.
+--                             ]===],
+--     
+--     ["OutputRules"] = [===[
+--                         Provide a Markdown report with headings for Obligations, Deadlines,
+--                         and Open Questions.
+--                         ]===],
+-- 
+--     -- Optional: minimum provider confidence required for this policy.
+--     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+--     ["MinimumProviderConfidence"] = "MEDIUM",
+-- 
+--     -- Optional: preselect a provider or profile by ID.
+--     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+--     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",
+--     ["PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+-- }
 
 -- Profiles for this configuration:
 CONFIG["PROFILES"] = {}

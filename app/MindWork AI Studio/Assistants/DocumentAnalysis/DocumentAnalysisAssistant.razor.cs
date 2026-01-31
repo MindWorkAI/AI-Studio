@@ -283,6 +283,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     {
         this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Add(new ()
         {
+            Id = Guid.NewGuid().ToString(),
+            Num = this.SettingsManager.ConfigurationData.NextDocumentAnalysisPolicyNum++,
             PolicyName = string.Format(T("Policy {0}"), DateTimeOffset.UtcNow),
         });
         

@@ -64,7 +64,7 @@ else
             
             <ProfileFormSelection Disabled="@this.IsNoPolicySelected" Profile="@this.currentProfile" ProfileChanged="@this.PolicyPreselectedProfileWasChangedAsync" />
             
-            <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsManaged ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
+            <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
             
             <MudText Typo="Typo.h5" Class="mt-6 mb-1">
                 @T("Analysis and output rules")
