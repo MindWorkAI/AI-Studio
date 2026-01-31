@@ -215,7 +215,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         await base.OnInitializedAsync();
-        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         this.UpdateProviders();
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
@@ -484,12 +484,60 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 this.UpdateProviders();
                 this.StateHasChanged();
                 break;
+
+            case Event.PLUGINS_RELOADED:
+                this.HandlePluginsReloaded();
+                this.StateHasChanged();
+                break;
         }
-        
+
         return Task.CompletedTask;
     }
 
     #endregion
+
+    private void HandlePluginsReloaded()
+    {
+        // Check if the currently selected policy still exists after plugin reload:
+        if (this.selectedPolicy is not null)
+        {
+            var stillExists = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies
+                .Any(p => p.Id == this.selectedPolicy.Id);
+
+            if (!stillExists)
+            {
+                // Policy was removed, select a new one:
+                this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.FirstOrDefault();
+            }
+            else
+            {
+                // Policy still exists, update the reference to the potentially updated version:
+                this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies
+                    .First(p => p.Id == this.selectedPolicy.Id);
+            }
+        }
+        else
+        {
+            // No policy was selected, select the first one if available:
+            this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.FirstOrDefault();
+        }
+
+        // Update form values to reflect the current policy:
+        this.ResetForm();
+
+        // Update the expansion state based on the policy protection:
+        this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+
+        // Update available providers:
+        this.UpdateProviders();
+
+        // Apply policy preselection:
+        this.ApplyPolicyPreselection(preferPolicyPreselection: true);
+
+        // Reset validation state:
+        this.form?.ResetValidation();
+        this.ClearInputIssues();
+    }
     
     private string? ValidatePolicyDescription(string description)
     {
