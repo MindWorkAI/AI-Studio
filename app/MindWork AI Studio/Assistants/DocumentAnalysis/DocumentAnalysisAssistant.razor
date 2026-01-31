@@ -26,11 +26,12 @@ else
         {
             @if (policy.IsEnterpriseConfiguration)
             {
-                <MudTooltip Text="@T("This policy is managed by your organization.")" Placement="Placement.Right">
-                    <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Business" Value="@policy">
-                        @policy.PolicyName
-                    </MudListItem>
-                </MudTooltip>
+                <MudListItem T="DataDocumentAnalysisPolicy" Icon="@Icons.Material.Filled.Policy" Value="@policy">
+                    @policy.PolicyName
+                    <MudTooltip Text="@T("This policy is managed by your organization.")" Placement="Placement.Right">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Class="ml-2" Style="vertical-align: middle;" />
+                    </MudTooltip>
+                </MudListItem>
             }
             else
             {
