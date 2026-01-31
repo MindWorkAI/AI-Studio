@@ -53,9 +53,9 @@ else
 
 <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
 
-@if (this.selectedPolicy?.HidePolicyDefinition ?? false)
+@if ((this.selectedPolicy?.HidePolicyDefinition ?? false) && (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))
 {
-    @* When HidePolicyDefinition is true, show only the document selection section without expansion panels *@
+    @* When HidePolicyDefinition is true AND the policy is an enterprise configuration, show only the document selection section without expansion panels *@
     <div class="mb-3 mt-3">
         <MudText Typo="Typo.h5" Class="mb-3">
             @T("Document selection - Policy"): @this.selectedPolicy?.PolicyName
@@ -96,6 +96,12 @@ else
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyName" Validation="@this.ValidatePolicyName" Immediate="@true" Label="@T("Policy name")" HelperText="@T("Please give your policy a name that provides information about the intended purpose. The name will be displayed to users in AI Studio.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3" OnKeyUp="@(() => this.PolicyNameWasChanged())"/>
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyDescription" Validation="@this.ValidatePolicyDescription" Immediate="@true" Label="@T("Policy description")" HelperText="@T("Please provide a brief description of your policy. Describe or explain what your policy does. This description will be shown to users in AI Studio.")" Counter="512" MaxLength="512" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" AutoGrow="@true" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+                
+                <MudTextSwitch Disabled="@this.IsNoPolicySelectedOrProtected" Label="@T("Hide the policy definition when distributed via configuration plugin?")" Value="@this.policyHidePolicyDefinition" ValueChanged="async state => await this.PolicyHidePolicyDefinitionWasChanged(state)" LabelOn="@T("Yes, hide the policy definition")" LabelOff="@T("No, show the policy definition")" />
+
+                <MudJustifiedText Typo="Typo.body2" Class="mt-2 mb-3">
+                    @T("Note: This setting only takes effect when this policy is exported and distributed via a configuration plugin to other users. When enabled, users will only see the document selection interface and cannot view or modify the policy details. This setting does NOT affect your local view - you will always see the full policy definition for policies you create.")
+                </MudJustifiedText>
 
                 <ConfigurationMinConfidenceSelection Disabled="@(() => this.IsNoPolicySelectedOrProtected)" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.policyMinimumProviderConfidence)" SelectionUpdateAsync="@(async level => await this.PolicyMinimumConfidenceWasChangedAsync(level))" />
 

@@ -170,6 +170,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyName = string.Empty;
             this.policyDescription = string.Empty;
             this.policyIsProtected = false;
+            this.policyHidePolicyDefinition = false;
             this.policyAnalysisRules = string.Empty;
             this.policyOutputRules = string.Empty;
             this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
@@ -185,15 +186,16 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyName = this.selectedPolicy.PolicyName;
             this.policyDescription = this.selectedPolicy.PolicyDescription;
             this.policyIsProtected = this.selectedPolicy.IsProtected;
+            this.policyHidePolicyDefinition = this.selectedPolicy.HidePolicyDefinition;
             this.policyAnalysisRules = this.selectedPolicy.AnalysisRules;
             this.policyOutputRules = this.selectedPolicy.OutputRules;
             this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfileId = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? Profile.NO_PROFILE.Id : this.selectedPolicy.PreselectedProfile;
-            
+
             return true;
         }
-        
+
         return false;
     }
     
@@ -241,6 +243,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.selectedPolicy.PolicyName = this.policyName;
             this.selectedPolicy.PolicyDescription = this.policyDescription;
             this.selectedPolicy.IsProtected = this.policyIsProtected;
+            this.selectedPolicy.HidePolicyDefinition = this.policyHidePolicyDefinition;
             this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
             this.selectedPolicy.OutputRules = this.policyOutputRules;
             this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
@@ -251,6 +254,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
     private bool policyIsProtected;
+    private bool policyHidePolicyDefinition;
     private bool policyDefinitionExpanded;
     private string policyName = string.Empty;
     private string policyDescription = string.Empty;
@@ -357,13 +361,26 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     {
         if(this.selectedPolicy is null)
             return;
-        
+
         if(this.selectedPolicy.IsEnterpriseConfiguration)
             return;
 
         this.policyIsProtected = state;
         this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
+        await this.AutoSave(true);
+    }
+
+    private async Task PolicyHidePolicyDefinitionWasChanged(bool state)
+    {
+        if(this.selectedPolicy is null)
+            return;
+
+        if(this.selectedPolicy.IsEnterpriseConfiguration)
+            return;
+
+        this.policyHidePolicyDefinition = state;
+        this.selectedPolicy.HidePolicyDefinition = state;
         await this.AutoSave(true);
     }
 
