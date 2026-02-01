@@ -179,6 +179,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyPreselectedProfileId = Profile.NO_PROFILE.Id;
         }
     }
+
+    protected override void ResetProviderAndProfileSelection()
+    {
+        if (this.selectedPolicy is null)
+        {
+            base.ResetProviderAndProfileSelection();
+            return;
+        }
+
+        this.ApplyPolicyPreselection(preferPolicyPreselection: true);
+    }
     
     protected override bool MightPreselectValues()
     {
