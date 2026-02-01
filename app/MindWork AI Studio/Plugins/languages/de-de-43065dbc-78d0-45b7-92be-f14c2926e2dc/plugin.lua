@@ -399,9 +399,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Bitte geben Sie eine Beschreibung Ihrer Analyseregeln an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
 
--- Not implemented yet.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1568777658"] = "Noch nicht implementiert."
-
 -- Yes, protect this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1762380857"] = "Ja, dieses Regelwerk schützen"
 
@@ -462,6 +459,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Policy name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2879019438"] = "Name des Regelwerks"
 
+-- No policy is selected. Please select a policy to export.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2929693091"] = "Es ist kein Regelwerk ausgewählt. Bitte wählen Sie ein Regelwerk zum Exportieren aus."
+
 -- Policy Description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3023558273"] = "Beschreibung des Regelwerks"
 
@@ -521,6 +521,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T726434276"] = "Nachdem die KI alle Dokumente verarbeitet hat, benötigt sie Ihre Anweisungen, wie das Ergebnis formatiert werden soll. Möchten Sie eine strukturierte Liste mit Schlüsselwörtern oder einen fließenden Text? Soll die Ausgabe Emojis enthalten oder in formeller Geschäftssprache verfasst sein? Alle diese Präferenzen können Sie in den Ausgaberegeln festlegen. Dort können Sie auch eine gewünschte Struktur vordefinieren – zum Beispiel durch Verwendung von Markdown-Formatierung, um Überschriften, Absätze oder Aufzählungspunkte zu definieren."
+
+-- The selected policy contains invalid data. Please fix the issues before exporting the policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T736334861"] = "Das ausgewählte Regelwerk enthält ungültige Daten. Bitte beheben Sie die Probleme, bevor Sie das Regelwerk exportieren."
 
 -- Policy description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T748735777"] = "Beschreibung des Regelwerks"

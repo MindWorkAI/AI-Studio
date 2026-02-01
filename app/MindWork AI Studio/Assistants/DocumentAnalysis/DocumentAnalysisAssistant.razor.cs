@@ -699,12 +699,18 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private async Task ExportPolicyAsConfiguration()
     {
         if (this.IsNoPolicySelected)
+        {
+            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("No policy is selected. Please select a policy to export.")));
             return;
+        }
 
         await this.AutoSave();
         await this.form!.Validate();
         if (!this.inputIsValid)
+        {
+            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")));
             return;
+        }
 
         var luaCode = this.GenerateLuaPolicyExport();
         await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
