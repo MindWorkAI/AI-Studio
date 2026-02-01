@@ -126,7 +126,7 @@ else
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyAnalysisRules" Validation="@this.ValidateAnalysisRules" Immediate="@true" Label="@T("Analysis rules")" HelperText="@T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
-                <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules"/>
+                <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
                 <MudJustifiedText Typo="Typo.body1" Class="mt-3">
                     @T("After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.")
@@ -134,7 +134,7 @@ else
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
-                <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules"/>
+                <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
                 <MudText Typo="Typo.h5" Class="mt-6 mb-1">
                     @T("Preparation for enterprise distribution")
