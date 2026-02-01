@@ -231,6 +231,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         return chatId;
     }
+
+    protected virtual void ResetProviderAndProfileSelection()
+    {
+        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+    }
     
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
     {
@@ -372,9 +379,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
         this.ResetForm();
-        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
-        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.ResetProviderAndProfileSelection();
         
         this.inputIsValid = false;
         this.inputIssues = [];
