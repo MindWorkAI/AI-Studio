@@ -119,7 +119,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     protected override Func<Task> SubmitAction => this.Analyze;
 
-    protected override bool SubmitDisabled => (this.IsNoPolicySelected || this.loadedDocumentPaths.Count==0);
+    protected override bool SubmitDisabled => this.IsNoPolicySelected || this.loadedDocumentPaths.Count == 0;
 
     protected override ChatThread ConvertToChatThread
     {
@@ -165,6 +165,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     protected override void ResetForm()
     {
+        this.loadedDocumentPaths.Clear();
         if (!this.MightPreselectValues())
         {
             this.policyName = string.Empty;
