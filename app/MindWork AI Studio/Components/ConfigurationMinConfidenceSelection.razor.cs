@@ -17,6 +17,12 @@ public partial class ConfigurationMinConfidenceSelection : MSGComponentBase
     /// </summary>
     [Parameter]
     public Action<ConfidenceLevel> SelectionUpdate { get; set; } = _ => { };
+    
+    /// <summary>
+    /// An asynchronous action that is called when the selection changes.
+    /// </summary>
+    [Parameter]
+    public Func<ConfidenceLevel, Task> SelectionUpdateAsync { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
     /// Boolean value indicating whether the selection is restricted to a global minimum confidence level.

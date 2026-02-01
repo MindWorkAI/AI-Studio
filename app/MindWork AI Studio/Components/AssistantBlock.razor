@@ -26,7 +26,10 @@
                 <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link">
                     @this.ButtonText
                 </MudButton>
-                <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
+                @if (this.HasSettingsPanel)
+                {
+                    <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
+                }
             </MudButtonGroup>
         </MudCardActions>
     </MudCard>

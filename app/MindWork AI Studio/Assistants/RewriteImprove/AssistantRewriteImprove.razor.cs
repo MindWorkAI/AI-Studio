@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.RewriteImprove;
 
 public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogRewrite>
 {
-    public override Tools.Components Component => Tools.Components.REWRITE_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.REWRITE_ASSISTANT;
     
     protected override string Title => T("Rewrite & Improve Text");
     

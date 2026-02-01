@@ -98,7 +98,7 @@ public sealed record TranscriptionProvider(
 
         provider = new TranscriptionProvider
         {
-            Num = 0,
+            Num = 0, // will be set later by the PluginConfigurationObject
             Id = id.ToString(),
             Name = name,
             UsedLLMProvider = usedLLMProvider,

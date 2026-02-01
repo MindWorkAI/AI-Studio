@@ -2,7 +2,7 @@
 @inherits MSGComponentBase
 
 <MudStack Row="true" AlignItems="AlignItems.Baseline" StretchItems="StretchItems.Start" Class="mb-3" Wrap="Wrap.NoWrap">
-    <MudSelect T="Profile" Strict="@true" Value="@this.Profile" ValueChanged="@this.SelectionChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person4" Margin="Margin.Dense" Label="@T("Select one of your profiles")" Variant="Variant.Outlined" Class="mb-3" Validation="@this.Validation">
+    <MudSelect T="Profile" Strict="@true" Disabled="@this.Disabled" Value="@this.Profile" ValueChanged="@this.SelectionChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person4" Margin="Margin.Dense" Label="@T("Select one of your profiles")" Variant="Variant.Outlined" Class="mb-3" Validation="@this.Validation">
         @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
         {
             <MudSelectItem Value="profile">
@@ -11,5 +11,5 @@
         }
     </MudSelect>
     
-    <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
+    <MudIconButton Disabled="@this.Disabled" Icon="@Icons.Material.Filled.Settings" OnClick="() => this.OpenSettingsDialog()"/>
 </MudStack>

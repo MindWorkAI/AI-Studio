@@ -8,7 +8,7 @@ namespace AIStudio.Assistants.BiasDay;
 
 public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAssistantBias>
 {
-    public override Tools.Components Component => Tools.Components.BIAS_DAY_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.BIAS_DAY_ASSISTANT;
     
     protected override string Title => T("Bias of the Day");
     

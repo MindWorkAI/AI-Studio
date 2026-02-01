@@ -25,6 +25,9 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
+
+    [Parameter]
+    public ConfidenceLevel ExplicitMinimumConfidence { get; set; } = ConfidenceLevel.UNKNOWN;
     
     [Parameter]
     public Func<bool> Disabled { get; set; } = () => false;
@@ -38,7 +41,14 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
             yield return new(T("Use app default"), string.Empty);
         
+        // Get the minimum confidence level for this component, and/or the enforced global minimum confidence level:
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
+        
+        // Apply the explicit minimum confidence level if set and higher than the current minimum level:
+        if (this.ExplicitMinimumConfidence is not ConfidenceLevel.UNKNOWN && this.ExplicitMinimumConfidence > minimumLevel)
+            minimumLevel = this.ExplicitMinimumConfidence;
+        
+        // Filter the providers based on the minimum confidence level:
         foreach (var providerId in this.Data)
         {
             var provider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId.Value);

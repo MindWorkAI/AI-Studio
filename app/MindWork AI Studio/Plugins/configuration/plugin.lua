@@ -49,26 +49,26 @@ CONFIG = {}
 CONFIG["LLM_PROVIDERS"] = {}
 
 -- An example of a configuration for a self-hosted server:
-CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
-    ["Id"] = "00000000-0000-0000-0000-000000000000",
-    ["InstanceName"] = "<user-friendly name for the combination of server and model>",
-    ["UsedLLMProvider"] = "SELF_HOSTED",
-
-    -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
-    ["Host"] = "OLLAMA",
-    ["Hostname"] = "<https address of the server>",
-
-    -- Optional: Additional parameters for the API.
-    -- Please refer to the documentation of the selected host for details.
-    -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
-    -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
-    -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
-    ["AdditionalJsonApiParameters"] = "",
-    ["Model"] = {
-        ["Id"] = "<the model ID>",
-        ["DisplayName"] = "<user-friendly name of the model>",
-    }
-}
+-- CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
+--     ["UsedLLMProvider"] = "SELF_HOSTED",
+-- 
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     ["Host"] = "OLLAMA",
+--     ["Hostname"] = "<https address of the server>",
+-- 
+--     -- Optional: Additional parameters for the API.
+--     -- Please refer to the documentation of the selected host for details.
+--     -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
+--     -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+--     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
+--     ["AdditionalJsonApiParameters"] = "",
+--     ["Model"] = {
+--         ["Id"] = "<the model ID>",
+--         ["DisplayName"] = "<user-friendly name of the model>",
+--     }
+-- }
 
 -- Transcription providers for voice-to-text functionality:
 CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
@@ -167,60 +167,97 @@ CONFIG["SETTINGS"] = {}
 CONFIG["CHAT_TEMPLATES"] = {}
 
 -- A simple example chat template:
-CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
-    ["Id"] = "00000000-0000-0000-0000-000000000000",
-    ["Name"] = "<user-friendly name of the chat template>",
-    ["SystemPrompt"] = "You are <Company Name>'s helpful AI assistant for <Department Name>. Your task is ...",
-    ["PredefinedUserPrompt"] = "Please help me with ...",
-    ["AllowProfileUsage"] = true,
-    ["ExampleConversation"] = {
-        {
-            -- Allowed values are: USER, AI, SYSTEM
-            ["Role"] = "USER",
-            ["Content"] = "Hello! Can you help me with a quick task?"
-        },
-        {
-            -- Allowed values are: USER, AI, SYSTEM
-            ["Role"] = "AI",
-            ["Content"] = "Of course. What do you need?"
-        }
-    }
-}
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the chat template>",
+--     ["SystemPrompt"] = "You are <Company Name>'s helpful AI assistant for <Department Name>. Your task is ...",
+--     ["PredefinedUserPrompt"] = "Please help me with ...",
+--     ["AllowProfileUsage"] = true,
+--     ["ExampleConversation"] = {
+--         {
+--             -- Allowed values are: USER, AI, SYSTEM
+--             ["Role"] = "USER",
+--             ["Content"] = "Hello! Can you help me with a quick task?"
+--         },
+--         {
+--             -- Allowed values are: USER, AI, SYSTEM
+--             ["Role"] = "AI",
+--             ["Content"] = "Of course. What do you need?"
+--         }
+--     }
+-- }
 
 -- An example chat template with file attachments:
 -- This template automatically attaches specified files when the user selects it.
-CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
-    ["Id"] = "00000000-0000-0000-0000-000000000001",
-    ["Name"] = "Document Analysis Template",
-    ["SystemPrompt"] = "You are an expert document analyst. Please analyze the attached documents and provide insights.",
-    ["PredefinedUserPrompt"] = "Please analyze the attached company guidelines and summarize the key points.",
-    ["AllowProfileUsage"] = true,
-    -- Optional: Pre-attach files that will be automatically included when using this template.
-    -- These files will be loaded when the user selects this chat template.
-    -- Note: File paths must be absolute paths and accessible to all users.
-    ["FileAttachments"] = {
-        "G:\\Company\\Documents\\Guidelines.pdf",
-        "G:\\Company\\Documents\\CompanyPolicies.docx"
-    },
-    ["ExampleConversation"] = {
-        {
-            ["Role"] = "USER",
-            ["Content"] = "I have attached the company documents for analysis."
-        },
-        {
-            ["Role"] = "AI",
-            ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
-        }
-    }
-}
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000001",
+--     ["Name"] = "Document Analysis Template",
+--     ["SystemPrompt"] = "You are an expert document analyst. Please analyze the attached documents and provide insights.",
+--     ["PredefinedUserPrompt"] = "Please analyze the attached company guidelines and summarize the key points.",
+--     ["AllowProfileUsage"] = true,
+--     -- Optional: Pre-attach files that will be automatically included when using this template.
+--     -- These files will be loaded when the user selects this chat template.
+--     -- Note: File paths must be absolute paths and accessible to all users.
+--     ["FileAttachments"] = {
+--         "G:\\Company\\Documents\\Guidelines.pdf",
+--         "G:\\Company\\Documents\\CompanyPolicies.docx"
+--     },
+--     ["ExampleConversation"] = {
+--         {
+--             ["Role"] = "USER",
+--             ["Content"] = "I have attached the company documents for analysis."
+--         },
+--         {
+--             ["Role"] = "AI",
+--             ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
+--         }
+--     }
+-- }
+
+-- Document analysis policies for this configuration:
+CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
+
+-- An example document analysis policy:
+-- CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["PolicyName"] = "Compliance Summary Policy",
+--     ["PolicyDescription"] = "Summarizes compliance-relevant clauses, obligations, and deadlines found in provided documents.",
+--     
+--     ["AnalysisRules"] = [===[
+--                             Focus on compliance obligations, deadlines, and required actions.
+--                             Ignore marketing content and high-level summaries.
+--                             Flag any ambiguous or missing information.
+--                             ]===],
+--     
+--     ["OutputRules"] = [===[
+--                         Provide a Markdown report with headings for Obligations, Deadlines,
+--                         and Open Questions.
+--                         ]===],
+-- 
+--     -- Optional: minimum provider confidence required for this policy.
+--     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+--     ["MinimumProviderConfidence"] = "MEDIUM",
+-- 
+--     -- Optional: preselect a provider or profile by ID.
+--     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+--     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",
+--     ["PreselectedProfile"] = "00000000-0000-0000-0000-000000000000",
+--
+--     -- Optional: hide the policy definition section in the UI.
+--     -- When set to true, users will only see the document selection interface
+--     -- and cannot view or modify the policy settings.
+--     -- This is useful for enterprise configurations where policy details should remain hidden.
+--     -- Allowed values are: true, false (default: false)
+--     ["HidePolicyDefinition"] = false
+-- }
 
 -- Profiles for this configuration:
 CONFIG["PROFILES"] = {}
 
 -- A simple profile template:
-CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = {
-    ["Id"] = "00000000-0000-0000-0000-000000000000",
-    ["Name"] = "<user-friendly name of the profile>",
-    ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
-    ["Actions"] = "Please always ensure the portion size is ..."
-}
+-- CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the profile>",
+--     ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
+--     ["Actions"] = "Please always ensure the portion size is ..."
+-- }

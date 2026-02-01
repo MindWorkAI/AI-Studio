@@ -6,7 +6,7 @@ namespace AIStudio.Assistants.MyTasks;
 
 public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
 {
-    public override Tools.Components Component => Tools.Components.MY_TASKS_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.MY_TASKS_ASSISTANT;
     
     protected override string Title => T("My Tasks");
     
