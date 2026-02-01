@@ -94,7 +94,6 @@ public record Profile(
     
     public static bool TryParseProfileTable(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject template)
     {
-        LOGGER.LogInformation($"\n Profile table parsing {idx}.\n");
         template = NO_PROFILE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
         {
