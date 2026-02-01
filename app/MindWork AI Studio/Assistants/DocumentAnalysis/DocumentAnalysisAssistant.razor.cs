@@ -722,15 +722,15 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         return $$"""
                  CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
                      ["Id"] = "{{id}}",
-                     ["PolicyName"] = "{{this.selectedPolicy.PolicyName}}",
-                     ["PolicyDescription"] = "{{this.selectedPolicy.PolicyDescription}}",
+                     ["PolicyName"] = "{{this.selectedPolicy.PolicyName.Trim()}}",
+                     ["PolicyDescription"] = "{{this.selectedPolicy.PolicyDescription.Trim()}}",
                  
                      ["AnalysisRules"] = [===[
-                                            {{this.selectedPolicy.AnalysisRules}}
+                 {{this.selectedPolicy.AnalysisRules.Trim()}}
                                          ]===],
                  
                      ["OutputRules"] =  [===[
-                                            {{this.selectedPolicy.OutputRules}}
+                 {{this.selectedPolicy.OutputRules.Trim()}}
                                         ]===],
                  
                      -- Optional: minimum provider confidence required for this policy.
