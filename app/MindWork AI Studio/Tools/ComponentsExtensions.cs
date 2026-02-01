@@ -19,6 +19,7 @@ public static class ComponentsExtensions
         Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
+        Components.WRITER => false,
         
         Components.AGENT_TEXT_CONTENT_CLEANER => false,
         Components.AGENT_DATA_SOURCE_SELECTION => false,
