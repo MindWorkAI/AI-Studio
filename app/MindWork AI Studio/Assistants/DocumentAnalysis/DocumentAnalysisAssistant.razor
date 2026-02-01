@@ -140,11 +140,9 @@ else
                     @T("Preparation for enterprise distribution")
                 </MudText>
 
-                <MudTooltip Text="@T("Not implemented yet.")">
-                    <MudButton StartIcon="@Icons.Material.Filled.FileDownload" Disabled="true" Variant="Variant.Filled" Color="Color.Primary" OnClick="@this.ExportPolicyAsConfiguration">
-                        @T("Export policy as configuration section")
-                    </MudButton>
-                </MudTooltip>
+                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@this.IsNoPolicySelected" Variant="Variant.Filled" Color="Color.Primary" OnClick="@this.ExportPolicyAsConfiguration">
+                    @T("Export policy as configuration section")
+                </MudButton>
             }
         </ExpansionPanel>
 

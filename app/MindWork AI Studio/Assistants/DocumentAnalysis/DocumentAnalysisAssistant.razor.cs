@@ -479,6 +479,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     
     private string? ValidatePolicyName(string name)
     {
+        if(this.selectedPolicy?.IsEnterpriseConfiguration == true)
+            return null;
+        
         if(string.IsNullOrWhiteSpace(name))
             return T("Please provide a name for your policy. This name will be used to identify the policy in AI Studio.");
         
@@ -558,6 +561,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     
     private string? ValidatePolicyDescription(string description)
     {
+        if(this.selectedPolicy?.IsEnterpriseConfiguration == true)
+            return null;
+        
         if(string.IsNullOrWhiteSpace(description))
             return T("Please provide a description for your policy. This description will be used to inform users about the purpose of your document analysis policy.");
         
@@ -692,15 +698,57 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private async Task ExportPolicyAsConfiguration()
     {
-        return;
-        
-# warning Implement the export function
-        // do not allow the export of a protected policy
-        if (this.IsNoPolicySelectedOrProtected)
+        if (this.IsNoPolicySelected)
             return;
-        
+
         await this.AutoSave();
         await this.form!.Validate();
+        if (!this.inputIsValid)
+            return;
+
+        var luaCode = this.GenerateLuaPolicyExport();
+        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+    }
+
+    private string GenerateLuaPolicyExport()
+    {
+        if(this.selectedPolicy is null)
+            return string.Empty;
         
+        var preselectedProvider = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProvider) ? string.Empty : this.selectedPolicy.PreselectedProvider;
+        var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? Profile.NO_PROFILE.Id : this.selectedPolicy.PreselectedProfile;
+        var id = string.IsNullOrWhiteSpace(this.selectedPolicy.Id) ? Guid.NewGuid().ToString() : this.selectedPolicy.Id;
+        
+        return $$"""
+                 CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
+                     ["Id"] = "{{id}}",
+                     ["PolicyName"] = "{{this.selectedPolicy.PolicyName}}",
+                     ["PolicyDescription"] = "{{this.selectedPolicy.PolicyDescription}}",
+                 
+                     ["AnalysisRules"] = [===[
+                                            {{this.selectedPolicy.AnalysisRules}}
+                                         ]===],
+                 
+                     ["OutputRules"] =  [===[
+                                            {{this.selectedPolicy.OutputRules}}
+                                        ]===],
+                 
+                     -- Optional: minimum provider confidence required for this policy.
+                     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+                     ["MinimumProviderConfidence"] = "{{this.selectedPolicy.MinimumProviderConfidence}}",
+                 
+                     -- Optional: preselect a provider or profile by ID.
+                     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+                     ["PreselectedProvider"] = "{{preselectedProvider}}",
+                     ["PreselectedProfile"] = "{{preselectedProfile}}",
+                 
+                     -- Optional: hide the policy definition section in the UI.
+                     -- When set to true, users will only see the document selection interface
+                     -- and cannot view or modify the policy settings.
+                     -- This is useful for enterprise configurations where policy details should remain hidden.
+                     -- Allowed values are: true, false (default: false)
+                     ["HidePolicyDefinition"] = {{this.selectedPolicy.HidePolicyDefinition.ToString().ToLowerInvariant()}},
+                 }
+                 """;
     }
 }
