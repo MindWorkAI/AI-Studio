@@ -476,23 +476,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.currentProfile = this.ResolveProfileSelection();
         await this.AutoSave();
     }
-    
-    private string? ValidatePolicyName(string name)
-    {
-        if(this.selectedPolicy?.IsEnterpriseConfiguration == true)
-            return null;
-        
-        if(string.IsNullOrWhiteSpace(name))
-            return T("Please provide a name for your policy. This name will be used to identify the policy in AI Studio.");
-        
-        if(name.Length is > 60 or < 6)
-            return T("The name of your policy must be between 6 and 60 characters long.");
-        
-        if(this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Where(n => n != this.selectedPolicy).Any(n => n.PolicyName == name))
-            return T("A policy with this name already exists. Please choose a different name.");
-        
-        return null;
-    }
 
     #region Overrides of MSGComponentBase
 
@@ -557,6 +540,23 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         // Reset validation state:
         this.form?.ResetValidation();
         this.ClearInputIssues();
+    }
+    
+    private string? ValidatePolicyName(string name)
+    {
+        if(this.selectedPolicy?.IsEnterpriseConfiguration == true)
+            return null;
+        
+        if(string.IsNullOrWhiteSpace(name))
+            return T("Please provide a name for your policy. This name will be used to identify the policy in AI Studio.");
+        
+        if(name.Length is > 60 or < 6)
+            return T("The name of your policy must be between 6 and 60 characters long.");
+        
+        if(this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Where(n => n != this.selectedPolicy).Any(n => n.PolicyName == name))
+            return T("A policy with this name already exists. Please choose a different name.");
+        
+        return null;
     }
     
     private string? ValidatePolicyDescription(string description)
