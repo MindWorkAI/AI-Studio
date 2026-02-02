@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.Eventing.Reader;
-using System.Formats.Tar;
+﻿using System.Formats.Tar;
 using System.IO.Compression;
 
 using SharedTools;

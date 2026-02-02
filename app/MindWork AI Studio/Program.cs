@@ -3,7 +3,6 @@ using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
-using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
