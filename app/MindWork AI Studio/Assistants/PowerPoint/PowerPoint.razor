@@ -5,4 +5,5 @@
 <MudTextField T="string" @bind-Text="@this.inputContext" Adornment="Adornment.Start" Lines="2" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+<EnumSelection T="TargetGroup" NameFunc="@(group => group.Name())" @bind-Value="@this.selectedTargetGroup" Icon="@Icons.Material.Filled.Groups" Label="@T("Target group")" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>

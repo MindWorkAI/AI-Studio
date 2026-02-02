@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using AIStudio.Chat;
+﻿using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.PowerPoint;
@@ -20,6 +19,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         Inputs:
         - "Your title": the slide title.
         - "Your content": the source text.
+        {this.selectedTargetGroup.Prompt()}
 
         Output requirements:
         - Output only Markdown.
@@ -48,6 +48,9 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     {
         this.inputText = string.Empty;
         this.inputContext = string.Empty;
+        this.expertInField = string.Empty;
+        this.selectedTargetGroup = TargetGroup.NO_CHANGE;
+        this.customTargetGroup = string.Empty;
         if (!this.MightPreselectValues())
         {
             this.selectedLanguage = CommonLanguages.AS_IS;
@@ -71,6 +74,9 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     private string inputContext = string.Empty;
     private CommonLanguages selectedLanguage;
     private string customTargetLanguage = string.Empty;
+    private string expertInField = string.Empty;
+    private TargetGroup selectedTargetGroup;
+    private string customTargetGroup = string.Empty;
     
     #region Overrides of ComponentBase
 
@@ -97,6 +103,14 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     {
         if(this.selectedLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
             return T("Please provide a custom language.");
+        
+        return null;
+    }
+    
+    private string? ValidateTargetGroup(string group)
+    {
+        if(this.selectedTargetGroup == TargetGroup.NO_CHANGE && string.IsNullOrWhiteSpace(group))
+            return T("Please provide a target group.");
         
         return null;
     }

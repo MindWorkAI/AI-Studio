@@ -1264,6 +1264,57 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T534887559"] =
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T656744944"] = "Please provide a custom language."
 
+-- Please provide a target group.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T1252056165"] = "Please provide a target group."
+
+-- Your title
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T1790167032"] = "Your title"
+
+-- Power Point
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T2194178916"] = "Power Point"
+
+-- Create and refine PowerPoint slide text from a topic or outline.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T2255686621"] = "Create and refine PowerPoint slide text from a topic or outline."
+
+-- Language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T2591284123"] = "Language"
+
+-- Target group
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T2709966651"] = "Target group"
+
+-- Create Power Point
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T3145212510"] = "Create Power Point"
+
+-- Please a title
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T3359269886"] = "Please a title"
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T3848935911"] = "Custom target language"
+
+-- Your content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T526734495"] = "Your content"
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::POWERPOINT::T656744944"] = "Please provide a custom language."
+
+-- Children
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::TARGETGROUPEXTENSIONS::T188567026"] = "Children"
+
+-- Students
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::TARGETGROUPEXTENSIONS::T2905889225"] = "Students"
+
+-- Scientists
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::TARGETGROUPEXTENSIONS::T332785734"] = "Scientists"
+
+-- No target group
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::TARGETGROUPEXTENSIONS::T3644477204"] = "No target group"
+
+-- Office workers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::TARGETGROUPEXTENSIONS::T3873911022"] = "Office workers"
+
+-- Executive committee
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::POWERPOINT::TARGETGROUPEXTENSIONS::T537362216"] = "Executive committee"
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
 
@@ -4297,6 +4348,33 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T42672465"]
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
 
+-- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T183953912"] = "When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model."
+
+-- No Power Point options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T2203742337"] = "No Power Point options are preselected"
+
+-- Preselect Power Point options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T2253853076"] = "Preselect Power Point options?"
+
+-- Which language should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T2345162613"] = "Which language should be preselected?"
+
+-- Preselect another language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T2382415529"] = "Preselect another language"
+
+-- Preselect the language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T2571465005"] = "Preselect the language"
+
+-- Power Point options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T3094929560"] = "Power Point options are preselected"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T3448155331"] = "Close"
+
+-- Assistant: Power Point Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPOWERPOINT::T426362386"] = "Assistant: Power Point Options"
+
 -- Edit Profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1143111468"] = "Edit Profile"
 
@@ -4824,6 +4902,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1934717573"] = "Check grammar and
 
 -- Translate text into another language.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T209791153"] = "Translate text into another language."
+
+-- Power Point
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2194178916"] = "Power Point"
+
+-- Create and refine PowerPoint slide text from a topic or outline.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2255686621"] = "Create and refine PowerPoint slide text from a topic or outline."
 
 -- Generate an e-mail for a given context.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2383649630"] = "Generate an e-mail for a given context."
@@ -5721,6 +5805,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammar 
 
 -- Legal Check Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Legal Check Assistant"
+
+-- Power Point
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2194178916"] = "Power Point"
 
 -- Job Posting Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2212811874"] = "Job Posting Assistant"
