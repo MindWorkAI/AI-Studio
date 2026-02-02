@@ -67,7 +67,7 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
-    private bool showDatabaseDetails = false;
+    private bool showDatabaseDetails;
 
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
     
