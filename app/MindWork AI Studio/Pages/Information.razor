@@ -25,12 +25,12 @@
                         </MudText>
                         <MudCollapse Expanded="@showDatabaseDetails">
                             <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                @foreach (var (label, value) in DatabaseDisplayInfo)
+                                @foreach (var item in this.databaseDisplayInfo)
                                 {
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                        <span>@label: @value</span>
-                                        <MudCopyClipboardButton TooltipMessage="@(T("Copies the following to the clipboard")+": "+value)" StringContent=@value/>
+                                        <span>@item.Label: @item.Value</span>
+                                        <MudCopyClipboardButton TooltipMessage="@(T("Copies the following to the clipboard")+": "+item.Value)" StringContent=@item.Value/>
                                     </div>
                                 }
                             </MudText>
