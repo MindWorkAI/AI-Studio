@@ -4,6 +4,7 @@ use std::io::{Error, ErrorKind, Write};
 use std::path::{PathBuf};
 use log::{info, warn};
 use sysinfo::{Pid, ProcessesToUpdate, Signal, System};
+use crate::sidecar_types::SidecarType;
 
 fn parse_pid_file(content: &str) -> Result<(u32, String), Error> {
     let mut lines = content
@@ -23,7 +24,7 @@ fn parse_pid_file(content: &str) -> Result<(u32, String), Error> {
     Ok((pid, name))
 }
 
-pub fn kill_stale_process(pid_file_path: PathBuf) -> Result<(), Error> {
+pub fn kill_stale_process(pid_file_path: PathBuf, sidecar_type: SidecarType) -> Result<(), Error> {
     if !pid_file_path.exists() {
         return Ok(());
     }
@@ -51,30 +52,24 @@ pub fn kill_stale_process(pid_file_path: PathBuf) -> Result<(), Error> {
         if !killed {
             return Err(Error::new(ErrorKind::Other, "Failed to kill process"));
         }
-
-        system.refresh_processes(ProcessesToUpdate::Some(&[pid]), true);
-        if !system.process(pid).is_none() {
-            return Err(Error::new(ErrorKind::Other, "Process still running after kill attempt"))
-        }
-        info!("Killed process: {}", pid_file_path.display());
+        info!(Source="Stale Process Cleanup";"{}: Killed process: \"{}\"", sidecar_type,pid_file_path.display());
     } else {
-        info!("Pid file {} was found, but process was not.", pid);
+        info!(Source="Stale Process Cleanup";"{}: Pid file with process number '{}' was found, but process was not.", sidecar_type, pid);
     };
 
     fs::remove_file(&pid_file_path)?;
-    info!("Deleted redundant Pid file: {}", pid_file_path.display());
+    info!(Source="Stale Process Cleanup";"{}: Deleted redundant Pid file: \"{}\"", sidecar_type,pid_file_path.display());
     Ok(())
 }
 
-pub fn log_potential_stale_process(pid_file_path: PathBuf, pid: u32) {
+pub fn log_potential_stale_process(pid_file_path: PathBuf, pid: u32, sidecar_type: SidecarType) {
     let mut system = System::new_all();
-    let pid_u32 = pid;
-    let pid = Pid::from_u32(pid_u32);
+    let pid = Pid::from_u32(pid);
     system.refresh_processes(ProcessesToUpdate::Some(&[pid]), true);
     let Some(process) = system.process(pid) else {
-        warn!(
-            "Pid file {} was not created because the process was not found.",
-            pid_u32
+        warn!(Source="Stale Process Cleanup";
+            "{}: Pid file with process number '{}' was not created because the process was not found.",
+            sidecar_type, pid
         );
         return;
     };
@@ -82,13 +77,13 @@ pub fn log_potential_stale_process(pid_file_path: PathBuf, pid: u32) {
     match File::create(&pid_file_path) {
         Ok(mut file) => {
             let name = process.name().to_string_lossy();
-            let content = format!("{pid_u32}\n{name}\n");
+            let content = format!("{pid}\n{name}\n");
             if let Err(e) = file.write_all(content.as_bytes()) {
-                warn!("Failed to write to {}: {}", pid_file_path.display(), e);
+                warn!(Source="Stale Process Cleanup";"{}: Failed to write to \"{}\": {}", sidecar_type,pid_file_path.display(), e);
             }
         }
         Err(e) => {
-            warn!("Failed to create {}: {}", pid_file_path.display(), e);
+            warn!(Source="Stale Process Cleanup";"{}: Failed to create \"{}\": {}", sidecar_type, pid_file_path.display(), e);
         }
     }
 }

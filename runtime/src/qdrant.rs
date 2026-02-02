@@ -17,6 +17,7 @@ use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
 use tempfile::{TempDir, Builder};
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
+use crate::sidecar_types::SidecarType;
 
 // Qdrant server process started in a separate process and can communicate
 // via HTTP or gRPC with the .NET server and the runtime process
@@ -39,6 +40,7 @@ static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
 static TMPDIR: Lazy<Mutex<Option<TempDir>>> = Lazy::new(|| Mutex::new(None));
 
 const PID_FILE_NAME: &str = "qdrant.pid";
+const SIDECAR_TYPE:SidecarType = SidecarType::Qdrant;
 
 #[derive(Serialize)]
 pub struct ProvideQdrantInfo {
@@ -76,7 +78,7 @@ pub fn start_qdrant_server(){
     let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
     let init_path = path.join(".qdrant-initalized").to_str().unwrap().to_string();
     
-    let mut qdrant_server_environment = HashMap::from_iter([
+    let qdrant_server_environment = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
         (String::from("QDRANT__SERVICE__GRPC_PORT"), QDRANT_SERVER_PORT_GRPC.to_string()),
         (String::from("QDRANT_INIT_FILE_PATH"), init_path),
@@ -90,13 +92,6 @@ pub fn start_qdrant_server(){
     
     let server_spawn_clone = QDRANT_SERVER.clone();
     tauri::async_runtime::spawn(async move {
-        #[cfg(target_os = "macos")]
-        {
-            qdrant_server_environment.insert(
-                "MALLOC_CONF".to_string(),
-                "background_thread:false".to_string(),
-            );
-        }
         let (mut rx, child) = Command::new_sidecar("qdrant")
             .expect("Failed to create sidecar for Qdrant")
             .args(["--config-path", "resources/databases/qdrant/config.yaml"])
@@ -106,7 +101,7 @@ pub fn start_qdrant_server(){
 
         let server_pid = child.pid();
         info!(Source = "Bootloader Qdrant"; "Qdrant server process started with PID={server_pid}.");
-        log_potential_stale_process(path.join(PID_FILE_NAME), server_pid);
+        log_potential_stale_process(path.join(PID_FILE_NAME), server_pid, SIDECAR_TYPE);
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
@@ -193,7 +188,7 @@ pub fn drop_tmpdir() {
 /// Remove old Pid files and kill the corresponding processes
 pub fn cleanup_qdrant() {
     let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").join(PID_FILE_NAME);
-    if let Err(e) = kill_stale_process(pid_path) {
+    if let Err(e) = kill_stale_process(pid_path, SIDECAR_TYPE) {
         warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
     }
     if let Err(e) = delete_old_certificates() {
