@@ -15,9 +15,11 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         $"""
         You are a presentation editor and writer.
         Create a clear, single-slide outline from the user's inputs.
+        {this.selectedTargetLanguage.PromptTranslation(this.customTargetLanguage)}
 
         Inputs:
-        - "Your title": the slide title.
+        - "Your title": the slide title. 
+        {this.inputText}
         - "Your content": the source text.
         {this.selectedTargetGroup.Prompt()}
 
@@ -77,6 +79,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     private string expertInField = string.Empty;
     private TargetGroup selectedTargetGroup;
     private string customTargetGroup = string.Empty;
+    private CommonLanguages selectedTargetLanguage;
     
     #region Overrides of ComponentBase
 
@@ -105,30 +108,6 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
             return T("Please provide a custom language.");
         
         return null;
-    }
-    
-    private string? ValidateTargetGroup(string group)
-    {
-        if(this.selectedTargetGroup == TargetGroup.NO_CHANGE && string.IsNullOrWhiteSpace(group))
-            return T("Please provide a target group.");
-        
-        return null;
-    }
-    
-    private string SystemPromptLanguage()
-    {
-        var lang = this.selectedLanguage switch
-        {
-            CommonLanguages.AS_IS => "source",
-            CommonLanguages.OTHER => this.customTargetLanguage,
-            
-            _ => $"{this.selectedLanguage.Name()}",
-        };
-
-        if (string.IsNullOrWhiteSpace(lang))
-            return "source";
-
-        return lang;
     }
 
     private string UserPromptContext()

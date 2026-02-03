@@ -2,8 +2,10 @@
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogPowerPoint>
 
 <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" Adornment="Adornment.Start" Label="@T("Your title")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-<MudTextField T="string" @bind-Text="@this.inputContext" Adornment="Adornment.Start" Lines="2" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+<MudTextField T="string" @bind-Text="@this.inputContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<ReadFileContent @bind-FileContent="@this.inputContext"/>
+
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
 <EnumSelection T="TargetGroup" NameFunc="@(group => group.Name())" @bind-Value="@this.selectedTargetGroup" Icon="@Icons.Material.Filled.Groups" Label="@T("Target group")" />
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
