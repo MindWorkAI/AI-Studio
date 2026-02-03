@@ -2,6 +2,7 @@ using System.Reflection;
 
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -25,12 +26,16 @@ public partial class Information : MSGComponentBase
 
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
-
+    
+    [Inject]
+    private DatabaseClient DatabaseClient { get; init; } = null!;
+    
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
-
+    private static readonly MetaDataDatabasesAttribute META_DATA_DATABASES = ASSEMBLY.GetCustomAttribute<MetaDataDatabasesAttribute>()!;
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Information).Namespace, nameof(Information));
 
     private string osLanguage = string.Empty;
@@ -53,6 +58,8 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
+    private string VersionDatabase => $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}";
+    
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
 
@@ -60,7 +67,13 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
+    private bool showDatabaseDetails;
+
     private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+    
+    private sealed record DatabaseDisplayInfo(string Label, string Value);
+
+    private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
 
     /// <summary>
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
@@ -95,6 +108,11 @@ public partial class Information : MSGComponentBase
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
+        
+        await foreach (var (label, value) in this.DatabaseClient.GetDisplayInfo())
+        {
+            this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
+        }
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -169,6 +187,11 @@ public partial class Information : MSGComponentBase
     private void ToggleEnterpriseConfigDetails()
     {
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
+    }
+    
+    private void ToggleDatabaseDetails()
+    {
+        this.showDatabaseDetails = !this.showDatabaseDetails;
     }
 
     private async Task CopyStartupLogPath()

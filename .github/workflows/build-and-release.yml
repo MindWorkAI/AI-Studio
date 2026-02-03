@@ -173,6 +173,9 @@ jobs:
           pdfium_version=$(sed -n '11p' metadata.txt)
           pdfium_version=$(echo $pdfium_version | cut -d'.' -f3)
           
+          # Next line is the Qdrant version:
+          qdrant_version="v$(sed -n '12p' metadata.txt)"
+          
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
           echo "FORMATTED_APP_VERSION=${formatted_app_version}" >> $GITHUB_ENV
@@ -185,6 +188,7 @@ jobs:
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
           echo "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $GITHUB_ENV
           echo "PDFIUM_VERSION=${pdfium_version}" >> $GITHUB_ENV
+          echo "QDRANT_VERSION=${qdrant_version}" >> $GITHUB_ENV
 
           # Log the metadata:
           echo "App version: '${formatted_app_version}'"
@@ -197,6 +201,7 @@ jobs:
           echo "Tauri version: '${tauri_version}'"
           echo "Architecture: '${{ matrix.dotnet_runtime }}'"
           echo "PDFium version: '${pdfium_version}'"
+          echo "Qdrant version: '${qdrant_version}'"
           
       - name: Read and format metadata (Windows)
         if: matrix.platform == 'windows-latest'
@@ -241,6 +246,9 @@ jobs:
           $pdfium_version = $metadata[10]
           $pdfium_version = $pdfium_version.Split('.')[2]
           
+          # Next line is the necessary Qdrant version:
+          $qdrant_version = "v$($metadata[11])"
+          
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
           Write-Output "FORMATTED_APP_VERSION=${formatted_app_version}" >> $env:GITHUB_ENV
@@ -252,6 +260,7 @@ jobs:
           Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
           Write-Output "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $env:GITHUB_ENV
           Write-Output "PDFIUM_VERSION=${pdfium_version}" >> $env:GITHUB_ENV
+          Write-Output "QDRANT_VERSION=${qdrant_version}" >> $env:GITHUB_ENV
           
           # Log the metadata:
           Write-Output "App version: '${formatted_app_version}'"
@@ -264,6 +273,7 @@ jobs:
           Write-Output "Tauri version: '${tauri_version}'"
           Write-Output "Architecture: '${{ matrix.dotnet_runtime }}'"
           Write-Output "PDFium version: '${pdfium_version}'"
+          Write-Output "Qdrant version: '${qdrant_version}'"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -334,7 +344,7 @@ jobs:
           echo "Cleaning up ..."
           rm -fr "$TMP"
           
-      - name: Install PDFium (Windows)
+      - name: Deploy PDFium (Windows)
         if: matrix.platform == 'windows-latest'
         env:
           PDFIUM_VERSION: ${{ env.PDFIUM_VERSION }}
@@ -382,6 +392,128 @@ jobs:
           $DEST = Join-Path $TLIB_DIR $LIB_TARGET
           Copy-Item -Path $SRC -Destination $DEST -Force
       
+          Write-Host "Cleaning up ..."
+          Remove-Item $ARCHIVE -Force -ErrorAction SilentlyContinue
+
+          # Try to remove the temporary directory, but ignore errors if files are still in use
+          try {
+            Remove-Item $TMP -Recurse -Force -ErrorAction Stop
+            Write-Host "Successfully cleaned up temporary directory: $TMP"
+          } catch {
+            Write-Warning "Could not fully clean up temporary directory: $TMP. This is usually harmless as Windows will clean it up later. Error: $($_.Exception.Message)"
+          }
+      - name: Deploy Qdrant (Unix)
+        if: matrix.platform != 'windows-latest'
+        env:
+          QDRANT_VERSION: ${{ env.QDRANT_VERSION }}
+          DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+          RUST_TARGET: ${{ matrix.rust_target }}
+        run: |
+          set -e
+
+          # Target directory:
+          TDB_DIR="runtime/target/databases/qdrant"
+          mkdir -p "$TDB_DIR"
+
+          case "${DOTNET_RUNTIME}" in
+            linux-x64)
+              QDRANT_FILE="x86_64-unknown-linux-gnu.tar.gz"
+              DB_SOURCE="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
+              ;;
+            linux-arm64)
+              QDRANT_FILE="aarch64-unknown-linux-musl.tar.gz"
+              DB_SOURCE="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
+              ;;
+            osx-x64)
+              QDRANT_FILE="x86_64-apple-darwin.tar.gz"
+              DB_SOURCE="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
+              ;;
+            osx-arm64)
+              QDRANT_FILE="aarch64-apple-darwin.tar.gz"
+              DB_SOURCE="qdrant"
+              DB_TARGET="qdrant-${RUST_TARGET}"
+              ;;
+            *)
+              echo "Unknown platform: ${DOTNET_RUNTIME}"
+              exit 1
+              ;;
+          esac
+
+          QDRANT_URL="https://github.com/qdrant/qdrant/releases/download/${QDRANT_VERSION}/qdrant-${QDRANT_FILE}"
+
+          echo "Download Qdrant $QDRANT_URL ..."
+          TMP=$(mktemp -d)
+          ARCHIVE="${TMP}/qdrant.tgz"
+
+          curl -fsSL -o "$ARCHIVE" "$QDRANT_URL"
+
+          echo "Extracting Qdrant ..."
+          tar xzf "$ARCHIVE" -C "$TMP"
+          SRC="${TMP}/${DB_SOURCE}"
+
+          if [ ! -f "$SRC" ]; then
+            echo "Was not able to find Qdrant source: $SRC"
+            exit 1
+          fi
+
+          echo "Copy Qdrant from ${DB_TARGET} to ${TDB_DIR}/"
+          cp -f "$SRC" "$TDB_DIR/$DB_TARGET"
+
+          echo "Cleaning up ..."
+          rm -fr "$TMP"
+
+      - name: Deploy Qdrant (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          QDRANT_VERSION: ${{ env.QDRANT_VERSION }}
+          DOTNET_RUNTIME: ${{ matrix.dotnet_runtime }}
+          RUST_TARGET: ${{ matrix.rust_target }}
+        run: |
+          $TDB_DIR = "runtime\target\databases\qdrant"
+          New-Item -ItemType Directory -Force -Path $TDB_DIR | Out-Null
+          
+          switch ($env:DOTNET_RUNTIME) {
+            "win-x64" {
+              $QDRANT_FILE = "x86_64-pc-windows-msvc.zip"
+              $DB_SOURCE = "qdrant.exe"
+              $DB_TARGET = "qdrant-$($env:RUST_TARGET).exe"
+            }
+            "win-arm64" {
+              $QDRANT_FILE = "x86_64-pc-windows-msvc.zip"
+              $DB_SOURCE = "qdrant.exe"
+              $DB_TARGET = "qdrant-$($env:RUST_TARGET).exe"
+            }
+            default {
+              Write-Error "Unknown platform: $($env:DOTNET_RUNTIME)"
+              exit 1
+            }
+          }
+          
+          $QDRANT_URL = "https://github.com/qdrant/qdrant/releases/download/$($env:QDRANT_VERSION)/qdrant-$QDRANT_FILE"
+          Write-Host "Download $QDRANT_URL ..."
+
+          # Create a unique temporary directory (not just a file)
+          $TMP = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+          New-Item -ItemType Directory -Path $TMP -Force | Out-Null
+          $ARCHIVE = Join-Path $TMP "qdrant.tgz"
+          
+          Invoke-WebRequest -Uri $QDRANT_URL -OutFile $ARCHIVE
+          
+          Write-Host "Extracting Qdrant ..."
+          tar -xzf $ARCHIVE -C $TMP
+          
+          $SRC = Join-Path $TMP $DB_SOURCE
+          if (!(Test-Path $SRC)) {
+            Write-Error "Cannot find Qdrant source: $SRC"
+            exit 1
+          }
+          
+          $DEST = Join-Path $TDB_DIR $DB_TARGET
+          Copy-Item -Path $SRC -Destination $DEST -Force
+          
           Write-Host "Cleaning up ..."
           Remove-Item $ARCHIVE -Force -ErrorAction SilentlyContinue
 

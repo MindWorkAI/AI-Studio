@@ -45,7 +45,17 @@ Do you want to test your changes before creating a PR? Follow these steps:
 9. Execute the command `dotnet run`.
 10. After compiling the .NET code, the app will finally start inside the Tauri runtime window.
 
-You can now test your changes.
+You can now test your changes. To stop the application:  
+- Close the Tauri window (GUI).  
+- Press ``Ctrl+C`` in the terminal where the app is running.  
+- Stop the process via your IDE’s run/debug controls.
+
+> ⚠️ Important: Stopping the app via ``Ctrl+C`` or the IDE may not terminate the Qdrant sidecar process, especially on Windows. This can lead to startup failures when restarting the app.
+
+If you encounter issues with restarting Tauri, then manually kill the Qdrant process:  
+- **Linux/macOS:** Run pkill -f qdrant in your terminal.  
+- **Windows:** Open Task Manager → Find qdrant.exe → Right-click → “End task”.
+- Restart your Tauri app.
 
 ## Create a release
 In order to create a release:

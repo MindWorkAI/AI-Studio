@@ -6,6 +6,13 @@ libpdfium.dylib
 libpdfium.so
 libpdfium.dll
 
+# Ignore qdrant database:
+qdrant-aarch64-apple-darwin
+qdrant-x86_64-apple-darwin
+qdrant-aarch64-unknown-linux-gnu
+qdrant-x86_64-unknown-linux-gnu
+qdrant-x86_64-pc-windows-msvc.exe
+
 # User-specific files
 *.rsuser
 *.suo

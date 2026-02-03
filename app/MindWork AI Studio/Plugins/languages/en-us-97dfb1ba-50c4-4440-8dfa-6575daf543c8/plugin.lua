@@ -5013,8 +5013,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1282228996"] = "AI Studio runs w
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
 
+-- Database version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Database version"
+
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
+
+-- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG -— retrieval-augmented generation -— within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant."
 
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library."
@@ -5051,6 +5057,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "This library is 
 
 -- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."
+
+-- Copies the following to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Copies the following to the clipboard"
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Copies the server URL to the clipboard"
@@ -5096,6 +5105,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Used Open Source
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build time"
+
+-- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant."
 
 -- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems."
@@ -5213,6 +5225,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Used .NET SDK"
+
+-- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated."
 
 -- Did you find a bug or are you experiencing issues? Report your concern here.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Did you find a bug or are you experiencing issues? Report your concern here."

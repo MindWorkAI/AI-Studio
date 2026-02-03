@@ -5013,8 +5013,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1282228996"] = "AI Studio läuft
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
+-- Database version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Datenbankversion"
+
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
+
+-- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant ist eine Vektordatenbank und Suchmaschine für Vektoren. Wir nutzen Qdrant, um lokales RAG (Retrieval-Augmented Generation) innerhalb von AI Studio zu realisieren. Vielen Dank für den Einsatz und die großartige Arbeit, die in Qdrant gesteckt wurde und weiterhin gesteckt wird."
 
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "Wir verwenden Lua als Sprache für Plugins. Lua-CSharp ermöglicht die Kommunikation zwischen Lua-Skripten und AI Studio in beide Richtungen. Vielen Dank an Yusuke Nakada für diese großartige Bibliothek."
@@ -5051,6 +5057,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "Diese Bibliothek
 
 -- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "Wir verwenden Rocket zur Implementierung der Runtime-API. Dies ist notwendig, da die Runtime mit der Benutzeroberfläche (IPC) kommunizieren muss. Rocket ist ein ausgezeichnetes Framework zur Umsetzung von Web-APIs in Rust."
+
+-- Copies the following to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgendes in die Zwischenablage"
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
@@ -5096,6 +5105,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
+
+-- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "Diese Bibliothek wird verwendet, um temporäre Ordner zu erstellen, in denen das Zertifikat und der private Schlüssel für die Kommunikation mit Qdrant gespeichert werden."
 
 -- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "Dieses Crate stellt Derive-Makros für Rust-Enums bereit, die wir verwenden, um Boilerplate zu reduzieren, wenn wir String-Konvertierungen und Metadaten für Laufzeittypen implementieren. Das ist hilfreich für die Kommunikation zwischen unseren Rust- und .NET-Systemen."
@@ -5213,6 +5225,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bib
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Verwendetes .NET SDK"
+
+-- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "Diese Bibliothek wird verwendet, um Sidecar-Prozesse zu verwalten und sicherzustellen, dass veraltete oder Zombie-Sidecars erkannt und beendet werden."
 
 -- Did you find a bug or are you experiencing issues? Report your concern here.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Haben Sie einen Fehler gefunden oder Probleme festgestellt? Melden Sie Ihr Anliegen hier."
