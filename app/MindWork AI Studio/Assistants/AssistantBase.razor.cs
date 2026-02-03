@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -41,8 +42,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract string Description { get; }
     
     protected abstract string SystemPrompt { get; }
-    
-    public abstract Tools.Components Component { get; }
+
+    protected abstract Tools.Components Component { get; }
     
     protected virtual Func<string> Result2Copy => () => this.resultingContentBlock is null ? string.Empty : this.resultingContentBlock.Content switch
     {
@@ -81,6 +82,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
+
+    protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
     protected AIStudio.Settings.Provider providerSettings = Settings.Provider.NONE;
     protected MudForm? form;
@@ -185,6 +188,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.inputIsValid = false;
         this.StateHasChanged();
     }
+    
+    /// <summary>
+    /// Clear all input issues.
+    /// </summary>
+    protected void ClearInputIssues()
+    {
+        this.inputIssues = [];
+        this.inputIsValid = true;
+        this.StateHasChanged();
+    }
 
     protected void CreateChatThread()
     {
@@ -217,6 +230,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
         
         return chatId;
+    }
+
+    protected virtual void ResetProviderAndProfileSelection()
+    {
+        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
     }
     
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
@@ -310,6 +330,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task OpenSettingsDialog()
     {
+        if (!this.HasSettingsPanel)
+            return;
+
         var dialogParameters = new DialogParameters();
         await this.DialogService.ShowAsync<TSettings>(null, dialogParameters, DialogOptions.FULLSCREEN);
     }
@@ -356,9 +379,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
         this.ResetForm();
-        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
-        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.ResetProviderAndProfileSelection();
         
         this.inputIsValid = false;
         this.inputIssues = [];

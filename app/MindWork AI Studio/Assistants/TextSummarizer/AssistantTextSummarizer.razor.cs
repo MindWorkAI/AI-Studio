@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.TextSummarizer;
 
 public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogTextSummarizer>
 {
-    public override Tools.Components Component => Tools.Components.TEXT_SUMMARIZER_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.TEXT_SUMMARIZER_ASSISTANT;
     
     protected override string Title => T("Text Summarizer");
     

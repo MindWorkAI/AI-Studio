@@ -1,4 +1,5 @@
 using AIStudio.Settings.DataModel;
+using AIStudio.Dialogs.Settings;
 
 using Microsoft.AspNetCore.Components;
 
@@ -37,6 +38,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     
     private async Task OpenSettingsDialog()
     {
+        if (!this.HasSettingsPanel)
+            return;
+
         var dialogParameters = new DialogParameters();
 
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -51,4 +55,6 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     private string BlockStyle => $"border-width: 2px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
 
     private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
+
+    private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
 }

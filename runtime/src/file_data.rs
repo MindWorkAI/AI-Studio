@@ -246,7 +246,13 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     let (tx, rx) = mpsc::channel(10);
 
     tokio::task::spawn_blocking(move || {
-        let pdfium = Pdfium::ai_studio_init();
+        let pdfium = match Pdfium::ai_studio_init() {
+            Ok(pdfium) => pdfium,
+            Err(e) => {
+                let _ = tx.blocking_send(Err(e));
+                return;
+            }
+        };
         let doc = match pdfium.load_pdf_from_file(&path, None) {
             Ok(document) => document,
             Err(e) => {

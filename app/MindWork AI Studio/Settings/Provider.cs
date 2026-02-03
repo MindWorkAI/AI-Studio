@@ -143,7 +143,7 @@ public sealed record Provider(
 
         provider = new Provider
         {
-            Num = 0,
+            Num = 0, // will be set later by the PluginConfigurationObject
             Id = id.ToString(),
             InstanceName = instanceName,
             UsedLLMProvider = usedLLMProvider,

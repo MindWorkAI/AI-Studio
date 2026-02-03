@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.LegalCheck;
 
 public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegalCheck>
 {
-    public override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.LEGAL_CHECK_ASSISTANT;
     
     protected override string Title => T("Legal Check");
     

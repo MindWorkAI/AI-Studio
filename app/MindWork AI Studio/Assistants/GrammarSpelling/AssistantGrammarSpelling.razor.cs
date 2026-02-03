@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.GrammarSpelling;
 
 public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialogGrammarSpelling>
 {
-    public override Tools.Components Component => Tools.Components.GRAMMAR_SPELLING_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.GRAMMAR_SPELLING_ASSISTANT;
     
     protected override string Title => T("Grammar & Spelling Checker");
     

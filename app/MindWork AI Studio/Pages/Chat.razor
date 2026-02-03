@@ -29,7 +29,9 @@
         </MudToolBar>
     </MudStack>
 
-    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    <CascadingValue Value="Components.CHAT">
+        <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    </CascadingValue>
     @if (this.AreWorkspacesVisible)
     {
         <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">

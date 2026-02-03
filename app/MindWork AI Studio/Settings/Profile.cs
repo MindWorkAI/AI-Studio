@@ -121,7 +121,7 @@ public record Profile(
         
         template = new Profile
         {
-            Num = 0,
+            Num = 0, // will be set later by the PluginConfigurationObject
             Id = id.ToString(),
             Name = name,
             NeedToKnow = needToKnow,
