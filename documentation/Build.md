@@ -52,12 +52,10 @@ You can now test your changes. To stop the application:
 
 > ⚠️ Important: Stopping the app via ``Ctrl+C`` or the IDE may not terminate the Qdrant sidecar process, especially on Windows. This can lead to startup failures when restarting the app.
 
-If you encounter issues restarting Tauri:  
-Manually kill the Qdrant process:  
-**Linux/macOS:** Run pkill -f qdrant in your terminal.  
-**Windows:** Open Task Manager → Find qdrant.exe → Right-click → “End task”.
-
-Restart your Tauri app.
+If you encounter issues with restarting Tauri, then manually kill the Qdrant process:  
+- **Linux/macOS:** Run pkill -f qdrant in your terminal.  
+- **Windows:** Open Task Manager → Find qdrant.exe → Right-click → “End task”.
+- Restart your Tauri app.
 
 ## Create a release
 In order to create a release:
