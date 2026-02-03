@@ -5026,6 +5026,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Database version
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
 
+-- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant."
+
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library."
 
@@ -5061,9 +5064,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "This library is 
 
 -- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."
-
--- This library is used to manage processes across different operating systems, ensuring proper handling of stale or zombie processes.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1990446887"] = "This library is used to manage processes across different operating systems, ensuring proper handling of stale or zombie processes."
 
 -- Copies the following to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Copies the following to the clipboard"
@@ -5112,6 +5112,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Used Open Source
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build time"
+
+-- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant."
 
 -- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems."
@@ -5197,9 +5200,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3741877842"] = "AI Studio runs w
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "this version does not met the requirements"
 
--- This library is used to create temporary folders for saving the certificate and private key data for communication with Qdrant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3860988493"] = "This library is used to create temporary folders for saving the certificate and private key data for communication with Qdrant."
-
 -- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration."
 
@@ -5233,6 +5233,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Used .NET SDK"
 
+-- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated."
+
 -- Did you find a bug or are you experiencing issues? Report your concern here.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Did you find a bug or are you experiencing issues? Report your concern here."
 
@@ -5250,9 +5253,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "We use this libra
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."
-
--- Qdrant is a vector similarity search engine and vector database. It provides a production-ready service with a convenient API to store, search, and manage points—vectors with an additional payload Qdrant is tailored to extended filtering support.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T95576615"] = "Qdrant is a vector similarity search engine and vector database. It provides a production-ready service with a convenient API to store, search, and manage points—vectors with an additional payload Qdrant is tailored to extended filtering support."
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Install Pandoc"

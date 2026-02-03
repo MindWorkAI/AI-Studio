@@ -5028,6 +5028,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Datenbankversion
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
 
+-- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant ist eine Vektordatenbank und Suchmaschine für Vektoren. Wir nutzen Qdrant, um lokales RAG (Retrieval-Augmented Generation) innerhalb von AI Studio zu realisieren. Vielen Dank für den Einsatz und die großartige Arbeit, die in Qdrant gesteckt wurde und weiterhin gesteckt wird."
+
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "Wir verwenden Lua als Sprache für Plugins. Lua-CSharp ermöglicht die Kommunikation zwischen Lua-Skripten und AI Studio in beide Richtungen. Vielen Dank an Yusuke Nakada für diese großartige Bibliothek."
 
@@ -5063,9 +5066,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "Diese Bibliothek
 
 -- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "Wir verwenden Rocket zur Implementierung der Runtime-API. Dies ist notwendig, da die Runtime mit der Benutzeroberfläche (IPC) kommunizieren muss. Rocket ist ein ausgezeichnetes Framework zur Umsetzung von Web-APIs in Rust."
-
--- This library is used to manage processes across different operating systems, ensuring proper handling of stale or zombie processes.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1990446887"] = "Diese Bibliothek wird verwendet, um Prozesse über verschiedene Betriebssysteme hinweg zu verwalten und sicherzustellen, dass verwaiste oder Zombie-Prozesse ordnungsgemäß behandelt werden."
 
 -- Copies the following to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgendes in die Zwischenablage"
@@ -5114,6 +5114,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
+
+-- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "Diese Bibliothek wird verwendet, um temporäre Ordner zu erstellen, in denen das Zertifikat und der private Schlüssel für die Kommunikation mit Qdrant gespeichert werden."
 
 -- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "Dieses Crate stellt Derive-Makros für Rust-Enums bereit, die wir verwenden, um Boilerplate zu reduzieren, wenn wir String-Konvertierungen und Metadaten für Laufzeittypen implementieren. Das ist hilfreich für die Kommunikation zwischen unseren Rust- und .NET-Systemen."
@@ -5199,9 +5202,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3741877842"] = "AI Studio läuft
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
 
--- This library is used to create temporary folders for saving the certificate and private key data for communication with Qdrant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3860988493"] = "Diese Bibliothek wird verwendet, um temporäre Ordner zum Speichern des Zertifikats und dessen privaten Schlüssels für die Kommunikation mit Qdrant zu erstellen."
-
 -- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "Diese Bibliothek wird verwendet, um auf die Windows-Registry zuzugreifen. Wir nutzen sie in Windows-Unternehmensumgebungen, um die gewünschte Konfiguration auszulesen."
 
@@ -5235,6 +5235,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bib
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Verwendetes .NET SDK"
 
+-- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "Diese Bibliothek wird verwendet, um Sidecar-Prozesse zu verwalten und sicherzustellen, dass veraltete oder Zombie-Sidecars erkannt und beendet werden."
+
 -- Did you find a bug or are you experiencing issues? Report your concern here.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Haben Sie einen Fehler gefunden oder Probleme festgestellt? Melden Sie Ihr Anliegen hier."
 
@@ -5252,9 +5255,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "Wir verwenden die
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "Für einige Datenübertragungen müssen wir die Daten in Base64 kodieren. Diese Rust-Bibliothek eignet sich dafür hervorragend."
-
--- Qdrant is a vector similarity search engine and vector database. It provides a production-ready service with a convenient API to store, search, and manage points—vectors with an additional payload Qdrant is tailored to extended filtering support.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T95576615"] = "Qdrant ist eine Vektordatenbank mit Vektorsuche. Sie ist produktionsreif mit einer benutzerfreundlichen API, um Punkte – Vektoren mit zusätzlichem Payload – zu speichern, zu durchsuchen und zu verwalten. Qdrant ist speziell auf erweiterte Filterfunktionen ausgelegt."
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Pandoc installieren"
