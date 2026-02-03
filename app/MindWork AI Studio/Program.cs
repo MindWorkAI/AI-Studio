@@ -91,6 +91,7 @@ internal sealed class Program
             Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
             return;
         }
+        
         if (qdrantInfo.PortHttp == 0)
         {
             Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
