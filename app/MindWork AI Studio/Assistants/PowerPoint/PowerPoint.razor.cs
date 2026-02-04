@@ -22,13 +22,17 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         {this.inputText}
         - "Your content": the source text.
         {this.selectedTargetGroup.Prompt()}
+        
+        - You are a Markdown formatter. 
+        - Your task is to identify headings in the input text that are marked with either # (for h1–h6) or **bold text** (used as pseudo-headings). 
+        - Convert all such headings into proper Markdown subheadings using ## for subheadings (level 2), preserving the original text. 
+        - Do not change any other content.
+        - between 3 and 7, maximum 7 bullets per heading. Each bullet max 12 words.
 
         Output requirements:
         - Output only Markdown.
         - Start with a single H1 title from "Your title".
         - Then add a bullet list based only on "Your content".
-        - between 3 and 7, maximum 7 bullets. Each bullet max 12 words.
-        - No sub-bullets, no paragraphs, no extra sections.
         - If "Your content" is empty, output the title and one bullet: "No content provided."
         - Do not mention these instructions or add commentary.
         """;
