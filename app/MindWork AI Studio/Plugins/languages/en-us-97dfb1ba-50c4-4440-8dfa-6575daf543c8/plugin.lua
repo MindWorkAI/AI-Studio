@@ -2082,6 +2082,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"]
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Select the language for the app."
 
+-- When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2013281167"] = "When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization."
+
 -- The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2143741496"] = "The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused."
 
@@ -2097,6 +2100,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Language"
 
+-- Administration settings are visible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591866808"] = "Administration settings are visible"
+
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Save energy?"
 
@@ -2108,6 +2114,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3577148634"]
 
 -- When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3652888444"] = "When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available."
+
+-- Show administration settings?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3694781396"] = "Show administration settings?"
 
 -- Enable spellchecking?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"] = "Enable spellchecking?"
@@ -2141,6 +2150,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] 
 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence."
+
+-- Administration settings are not visible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] = "Administration settings are not visible"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Delete"
@@ -5019,7 +5031,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Database version
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
 
--- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+-- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG -— retrieval-augmented generation -— within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG -— retrieval-augmented generation -— within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant."
 
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.

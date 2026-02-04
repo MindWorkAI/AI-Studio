@@ -168,6 +168,10 @@ public static partial class PluginFactory
         // Check for users allowed to added providers:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for admin settings visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowAdminSettings, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for preview visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreviewVisibility, AVAILABLE_PLUGINS))

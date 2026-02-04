@@ -120,6 +120,10 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
+-- Configure whether administration settings are visible in the UI:
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
+
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL
 -- Please note:

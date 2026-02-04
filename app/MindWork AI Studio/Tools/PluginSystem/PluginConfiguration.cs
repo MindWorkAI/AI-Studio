@@ -60,6 +60,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: allow the user to add providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
+
+        // Config: show administration settings?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
         
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
