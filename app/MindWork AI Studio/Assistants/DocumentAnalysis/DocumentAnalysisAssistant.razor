@@ -136,13 +136,16 @@ else
 
                 <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
-                <MudText Typo="Typo.h5" Class="mt-6 mb-1">
-                    @T("Preparation for enterprise distribution")
-                </MudText>
+                @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+                {
+                    <MudText Typo="Typo.h5" Class="mt-6 mb-1">
+                        @T("Preparation for enterprise distribution")
+                    </MudText>
 
-                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))" Variant="Variant.Filled" Color="Color.Default" OnClick="@this.ExportPolicyAsConfiguration">
-                    @T("Export policy as configuration section")
-                </MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))" Variant="Variant.Filled" Color="Color.Default" OnClick="@this.ExportPolicyAsConfiguration">
+                        @T("Export policy as configuration section")
+                    </MudButton>
+                }
             }
         </ExpansionPanel>
 
