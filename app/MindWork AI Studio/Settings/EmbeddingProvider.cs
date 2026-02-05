@@ -136,18 +136,18 @@ public sealed record EmbeddingProvider(
     {
         return $$"""
                  CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
-                     ["Id"] = "{{EscapeLuaString(NormalizeId(this.Id))}}",
-                     ["Name"] = "{{EscapeLuaString(this.Name)}}",
-                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                    ["Id"] = "{{LuaTools.EscapeLuaString(NormalizeId(this.Id))}}",
+                    ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
+                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
                  
-                     ["Host"] = "{{this.Host}}",
-                     ["Hostname"] = "{{EscapeLuaString(this.Hostname)}}",
-                     ["Model"] = {
-                         ["Id"] = "{{EscapeLuaString(this.Model.Id)}}",
-                         ["DisplayName"] = "{{EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
-                     },
-                 }
-                 """;
+                    ["Host"] = "{{this.Host}}",
+                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    ["Model"] = {
+                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
+                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
+                    },
+                }
+                """;
     }
 
     private static string NormalizeId(string? id)
@@ -158,15 +158,4 @@ public sealed record EmbeddingProvider(
         return Guid.NewGuid().ToString();
     }
 
-    private static string EscapeLuaString(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return string.Empty;
-
-        return value
-            .Replace("\\", "\\\\")
-            .Replace("\"", "\\\"")
-            .Replace("\r", "\\r")
-            .Replace("\n", "\\n");
-    }
 }
