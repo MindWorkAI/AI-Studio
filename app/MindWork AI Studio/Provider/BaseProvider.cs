@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -97,6 +98,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
+    
+    /// <inheritdoc />
+    public abstract Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts);
     
     /// <inheritdoc />
     public abstract Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
@@ -637,6 +641,82 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
             return string.Empty;
+        }
+    }
+    
+    protected async Task<IReadOnlyList<IReadOnlyList<float>>> PerformStandardTextEmbeddingRequest(RequestedSecret requestedSecret, Model embeddingModel, Host host = Host.NONE, CancellationToken token = default, params List<string> texts)
+    {
+        try
+        {
+            //
+            // Add the model name to the form data. Ensure that a model name is always provided.
+            // Otherwise, the StringContent constructor will throw an exception.
+            //
+            var modelName = embeddingModel.Id;
+            if (string.IsNullOrWhiteSpace(modelName))
+                modelName = "placeholder";
+            
+            // Prepare the HTTP embedding request:
+            var payload = new
+            {
+                model = modelName,
+                input = texts,
+                encoding_format = "float"
+            };
+            var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, host.EmbeddingURL());
+
+            // Handle the authorization header based on the provider:
+            switch (this.Provider)
+            {
+                case LLMProviders.SELF_HOSTED:
+                    if(requestedSecret.Success)
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    
+                    break;
+                
+                default:
+                    if(!requestedSecret.Success)
+                    {
+                        this.logger.LogError("No valid API key available for embedding request.");
+                        return Array.Empty<IReadOnlyList<float>>();
+                    }
+                    
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    break;
+            }
+            
+            // Set the content:
+            request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");
+            
+            using var response = await this.httpClient.SendAsync(request, token);
+            var responseBody = response.Content.ReadAsStringAsync(token).Result;
+        
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+                return Array.Empty<IReadOnlyList<float>>();
+            }
+
+            var embeddingResponse = JsonSerializer.Deserialize<EmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
+            if (embeddingResponse is { Data: not null })
+            {
+                return embeddingResponse.Data
+                    .Select(d => d.Embedding?.ToArray() ?? Array.Empty<float>())
+                    .Cast<IReadOnlyList<float>>()
+                    .ToArray();
+            }
+            else
+            {
+                this.logger.LogError("Was not able to deserialize the embedding response.");
+                return Array.Empty<IReadOnlyList<float>>();
+            }
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
+            return Array.Empty<IReadOnlyList<float>>();
         }
     }
     

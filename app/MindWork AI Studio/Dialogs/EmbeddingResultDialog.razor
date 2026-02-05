@@ -1,0 +1,22 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField
+            T="string"
+            Text="@this.ResultText"
+            Variant="Variant.Outlined"
+            Lines="10"
+            AutoGrow="@true"
+            MaxLines="25"
+            ReadOnly="true"
+            Label="@this.ResultLabelText"
+            AdornmentIcon="@Icons.Material.Filled.DataObject"
+            Adornment="Adornment.Start"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

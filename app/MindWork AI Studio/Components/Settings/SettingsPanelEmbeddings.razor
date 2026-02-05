@@ -56,6 +56,9 @@
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEmbeddingProvider(context))"/>
                             </MudTooltip>
+                            <MudTooltip Text="@T("Test")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Api" OnClick="@(() => this.TestEmbeddingProvider(context))"/>
+                            </MudTooltip>
                         }
                     </MudStack>
                 </MudTd>

@@ -40,6 +40,8 @@ public class NoProvider : IProvider
 
     public Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default) => Task.FromResult(string.Empty);
     
+    public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts) => Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>(Array.Empty<IReadOnlyList<float>>());
+
     public IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => [ Capability.NONE ];
 
     #endregion
