@@ -27,6 +27,8 @@ The following keys and values (registry) and variables are checked and read:
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_server_url` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL`: An HTTP or HTTPS address using an IP address or DNS name. This is the web server from which AI Studio attempts to load the specified configuration as a ZIP file.
 
+- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_encryption_secret` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`: A base64-encoded 32-byte encryption key for decrypting API keys in configuration plugins. This is optional and only needed if you want to include encrypted API keys in your configuration.
+
 Let's assume as example that `https://intranet.my-company.com:30100/ai-studio/configuration` is the server address and `9072b77d-ca81-40da-be6a-861da525ef7b` is the configuration ID. AI Studio will derive the following address from this information: `https://intranet.my-company.com:30100/ai-studio/configuration/9072b77d-ca81-40da-be6a-861da525ef7b.zip`. Important: The configuration ID will always be written in lowercase, even if it is configured in uppercase. If `9072B77D-CA81-40DA-BE6A-861DA525EF7B` is configured, the same address will be derived. Your web server must be configured accordingly.
 
 Finally, AI Studio will send a GET request and download the ZIP file. The ZIP file only contains the files necessary for the configuration. It's normal to include a file for an icon along with the actual configuration plugin.
@@ -82,14 +84,68 @@ The latest example of an AI Studio configuration via configuration plugin can al
 Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear.
 
 Currently, you can configure the following things:
-- Any number of self-hosted LLM providers (a combination of server and model), but currently only without API keys
+- Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
+- Any number of transcription providers for voice-to-text functionality
+- Any number of embedding providers for RAG
 - The update behavior of AI Studio
+- Various UI and feature settings (see the example configuration for details)
 
 All other settings can be made by the user themselves. If you need additional settings, feel free to create an issue in our planning repository: https://github.com/MindWorkAI/Planning/issues
 
-In the coming months, we will allow more settings, such as:
-- Using API keys for providers
-- Configuration of embedding providers for RAG
-- Configuration of data sources for RAG
-- Configuration of chat templates
-- Configuration of assistant plugins (for example, your own assistants for your company or specific departments)
+## Encrypted API Keys
+
+You can include encrypted API keys in your configuration plugins for cloud providers (like OpenAI, Anthropic) or secured on-premise models. This feature provides obfuscation to prevent casual exposure of API keys in configuration files.
+
+**Important Security Note:** This is obfuscation, not absolute security. Users with administrative access to their machines can potentially extract the decrypted API keys with sufficient effort. This feature is designed to:
+- Prevent API keys from being visible in plaintext in configuration files
+- Protect against accidental exposure when sharing or reviewing configurations
+- Add a barrier against casual snooping
+
+### Setting Up Encrypted API Keys
+
+1. **Generate an encryption secret:**
+   You need a 32-byte (256-bit) secret key encoded in base64. You can generate one using:
+   ```powershell
+   # PowerShell (Windows)
+   $bytes = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
+   [Convert]::ToBase64String($bytes)
+   ```
+   ```bash
+   # Linux/macOS
+   openssl rand -base64 32
+   ```
+
+2. **Deploy the encryption secret:**
+   Distribute the secret via Group Policy (Windows Registry) or environment variables:
+   - Registry: `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret`
+   - Environment: `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`
+
+3. **Export encrypted API keys from AI Studio:**
+   The easiest way to get encrypted API keys is to use the export function:
+   - Configure a provider with an API key in AI Studio's settings
+   - Click the export button for that provider
+   - If an API key is configured, you'll be asked if you want to include it
+   - The exported Lua code will contain the encrypted API key in the format `ENC:v1:<base64-encoded data>`
+
+4. **Add encrypted keys to your configuration:**
+   Copy the exported configuration (including the encrypted API key) into your configuration plugin.
+
+### Example Configuration with Encrypted API Key
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["APIKey"] = "ENC:v1:MTIzNDU2Nzg5MDEyMzQ1NkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFla...",
+    ["AdditionalJsonApiParameters"] = "",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).

@@ -110,6 +110,34 @@ public sealed record EmbeddingProvider(
             Host = host,
         };
 
+        // Handle encrypted API key if present:
+        if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
+        {
+            if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
+                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported.");
+            else
+            {
+                var encryption = PluginFactory.EnterpriseEncryption;
+                if (encryption?.IsAvailable == true)
+                {
+                    if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
+                    {
+                        // Queue the API key for storage in the OS keyring:
+                        PendingEnterpriseApiKeys.Add(new(
+                            id.ToString(),
+                            name,
+                            decryptedApiKey,
+                            SecretStoreType.EMBEDDING_PROVIDER));
+                        LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring.");
+                    }
+                    else
+                        LOGGER.LogWarning($"Failed to decrypt API key for embedding provider {idx}. The encryption secret may be incorrect.");
+                }
+                else
+                    LOGGER.LogWarning($"The configured embedding provider {idx} contains an encrypted API key, but no encryption secret is configured.");
+            }
+        }
+
         return true;
     }
 
@@ -132,8 +160,21 @@ public sealed record EmbeddingProvider(
         return true;
     }
 
-    public string ExportAsConfigurationSection()
+    /// <summary>
+    /// Exports the embedding provider configuration as a Lua configuration section.
+    /// </summary>
+    /// <param name="encryptedApiKey">Optional encrypted API key to include in the export.</param>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
+        var apiKeyLine = string.Empty;
+        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+        {
+            apiKeyLine = $"""
+                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
+                          """;
+        }
+
         return $$"""
                  CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
                     ["Id"] = "{{LuaTools.EscapeLuaString(NormalizeId(this.Id))}}",
@@ -142,6 +183,7 @@ public sealed record EmbeddingProvider(
                  
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    {{apiKeyLine}}
                     ["Model"] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
                         ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",

@@ -1,5 +1,6 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -120,7 +121,39 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
         if (provider == EmbeddingProvider.NONE)
             return;
 
-        var luaCode = provider.ExportAsConfigurationSection();
+        string? encryptedApiKey = null;
+
+        // Check if the provider has an API key stored:
+        var apiKeyResponse = await this.RustService.GetAPIKey(provider, SecretStoreType.EMBEDDING_PROVIDER, isTrying: true);
+        if (apiKeyResponse.Success)
+        {
+            // Ask the user if they want to export the API key:
+            var dialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, T("This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.") },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export API Key?"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is { Canceled: false })
+            {
+                // User wants to export the API key - encrypt it:
+                var encryption = PluginFactory.EnterpriseEncryption;
+                if (encryption?.IsAvailable == true)
+                {
+                    var decryptedApiKey = await apiKeyResponse.Secret.Decrypt(Program.ENCRYPTION);
+                    if (encryption.TryEncrypt(decryptedApiKey, out var encrypted))
+                        encryptedApiKey = encrypted;
+                }
+                else
+                {
+                    // No encryption secret available - inform the user:
+                    this.Snackbar.Add(T("Cannot export encrypted API key: No enterprise encryption secret is configured."), Severity.Warning);
+                }
+            }
+        }
+
+        var luaCode = provider.ExportAsConfigurationSection(encryptedApiKey);
         if (string.IsNullOrWhiteSpace(luaCode))
             return;
 

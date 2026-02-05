@@ -19,6 +19,29 @@ public static partial class PluginFactory
     public static ILanguagePlugin BaseLanguage => BASE_LANGUAGE_PLUGIN;
 
     /// <summary>
+    /// Gets the enterprise encryption instance for decrypting API keys in configuration plugins.
+    /// </summary>
+    public static EnterpriseEncryption? EnterpriseEncryption { get; private set; }
+
+    /// <summary>
+    /// Initializes the enterprise encryption service by reading the encryption secret
+    /// from the Windows Registry or environment variables.
+    /// </summary>
+    /// <param name="rustService">The Rust service to use for reading the encryption secret.</param>
+    public static async Task InitializeEnterpriseEncryption(Services.RustService rustService)
+    {
+        LOG.LogInformation("Initializing enterprise encryption service...");
+        var encryptionSecret = await rustService.EnterpriseEnvConfigEncryptionSecret();
+        var enterpriseEncryptionLogger = Program.LOGGER_FACTORY.CreateLogger<EnterpriseEncryption>();
+        EnterpriseEncryption = new EnterpriseEncryption(enterpriseEncryptionLogger, encryptionSecret);
+
+        if (EnterpriseEncryption.IsAvailable)
+            LOG.LogInformation("Enterprise encryption service is available.");
+        else
+            LOG.LogWarning("Enterprise encryption service is not available (no secret configured).");
+    }
+
+    /// <summary>
     /// Set up the plugin factory. We will read the data directory from the settings manager.
     /// Afterward, we will create the plugins directory and the internal plugin directory.
     /// </summary>
