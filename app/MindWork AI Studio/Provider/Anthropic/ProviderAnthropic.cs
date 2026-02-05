@@ -113,6 +113,12 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
     {
         return Task.FromResult(string.Empty);
     }
+    
+    /// <inhertidoc />
+    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Provider.Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>(Array.Empty<IReadOnlyList<float>>());
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)

@@ -87,6 +87,78 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
     {
         return Task.FromResult(string.Empty);
     }
+    
+    /// <inhertidoc />
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Provider.Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        try
+        {
+            var modelName = embeddingModel.Id;
+            if (string.IsNullOrWhiteSpace(modelName))
+            {
+                LOGGER.LogError("No model name provided for embedding request.");
+                return Array.Empty<IReadOnlyList<float>>();
+            }
+
+            if (modelName.StartsWith("models/", StringComparison.OrdinalIgnoreCase))
+                modelName = modelName.Substring("models/".Length);
+
+            if (!requestedSecret.Success)
+            {
+                LOGGER.LogError("No valid API key available for embedding request.");
+                return Array.Empty<IReadOnlyList<float>>();
+            }
+            
+            // Prepare the Google Gemini embedding request:
+            var payload = new
+            {
+                content = new
+                {
+                    parts = texts.Select(text => new { text }).ToArray()
+                },
+                taskType = "SEMANTIC_SIMILARITY"
+            };
+            var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
+
+            var embedUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:embedContent";
+            using var request = new HttpRequestMessage(HttpMethod.Post, embedUrl);
+            request.Headers.Add("x-goog-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            
+            // Set the content:
+            request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");
+            
+            using var response = await this.httpClient.SendAsync(request, token);
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+        
+            if (!response.IsSuccessStatusCode)
+            {
+                LOGGER.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+                return Array.Empty<IReadOnlyList<float>>();
+            }
+
+            var embeddingResponse = JsonSerializer.Deserialize<GoogleEmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
+            
+            if (embeddingResponse is { Embedding: not null })
+            {
+                return embeddingResponse.Embedding
+                    .Select(d => d.Values?.ToArray() ?? Array.Empty<float>())
+                    .Cast<IReadOnlyList<float>>()
+                    .ToArray();
+            }
+            else
+            {
+                LOGGER.LogError("Was not able to deserialize the embedding response.");
+                return Array.Empty<IReadOnlyList<float>>();
+            }
+            
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
+            return Array.Empty<IReadOnlyList<float>>();
+        }
+    }
 
     /// <inheritdoc />
     public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
@@ -149,5 +221,15 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
 
         var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
         return modelResponse;
+    }
+
+    private sealed record GoogleEmbeddingResponse
+    {
+        public List<GoogleEmbedding>? Embedding { get; set; }
+    }
+
+    private sealed record GoogleEmbedding
+    {
+        public List<float>? Values { get; set; }
     }
 }
