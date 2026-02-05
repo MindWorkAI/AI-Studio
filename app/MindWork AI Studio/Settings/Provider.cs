@@ -121,6 +121,16 @@ public sealed record Provider(
             LOGGER.LogWarning($"The configured provider {idx} does not contain a valid hostname.");
             return false;
         }
+
+        var hfInferenceProvider = HFInferenceProvider.NONE;
+        if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
+        {
+            if (!Enum.TryParse<HFInferenceProvider>(hfInferenceProviderText, true, out hfInferenceProvider))
+            {
+                LOGGER.LogWarning($"The configured provider {idx} does not contain a valid Hugging Face inference provider enum value.");
+                hfInferenceProvider = HFInferenceProvider.NONE;
+            }
+        }
         
         if (!table.TryGetValue("Model", out var modelValue) || !modelValue.TryRead<LuaTable>(out var modelTable))
         {
@@ -153,6 +163,7 @@ public sealed record Provider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
+            HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
         };
         
