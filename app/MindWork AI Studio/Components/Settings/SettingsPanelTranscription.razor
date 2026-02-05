@@ -50,6 +50,9 @@
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditTranscriptionProvider(context))"/>
                             </MudTooltip>
+                            <MudTooltip Text="@T("Export configuration")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportTranscriptionProvider(context))"/>
+                            </MudTooltip>
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteTranscriptionProvider(context))"/>
                             </MudTooltip>

@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -132,6 +133,18 @@ public partial class SettingsPanelProviders : SettingsPanelBase
 
         await this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ExportLLMProvider(AIStudio.Settings.Provider provider)
+    {
+        if (provider == AIStudio.Settings.Provider.NONE)
+            return;
+
+        var luaCode = ConfigurationExport.ExportProvider(provider);
+        if (string.IsNullOrWhiteSpace(luaCode))
+            return;
+
+        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
     }
 
     private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)

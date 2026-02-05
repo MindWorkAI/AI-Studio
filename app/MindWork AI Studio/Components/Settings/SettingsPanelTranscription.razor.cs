@@ -1,5 +1,6 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -113,6 +114,18 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
 
         await this.UpdateTranscriptionProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ExportTranscriptionProvider(TranscriptionProvider provider)
+    {
+        if (provider == TranscriptionProvider.NONE)
+            return;
+
+        var luaCode = ConfigurationExport.ExportTranscriptionProvider(provider);
+        if (string.IsNullOrWhiteSpace(luaCode))
+            return;
+
+        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
     }
     
     private async Task UpdateTranscriptionProviders()
