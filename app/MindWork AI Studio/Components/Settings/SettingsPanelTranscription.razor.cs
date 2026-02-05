@@ -1,6 +1,5 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
-using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -121,7 +120,7 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
         if (provider == TranscriptionProvider.NONE)
             return;
 
-        var luaCode = ConfigurationExport.ExportTranscriptionProvider(provider);
+        var luaCode = provider.ExportAsConfigurationSection();
         if (string.IsNullOrWhiteSpace(luaCode))
             return;
 

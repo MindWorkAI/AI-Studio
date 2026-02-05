@@ -188,4 +188,52 @@ public sealed record Provider(
         model = new(id, displayName);
         return true;
     }
+
+    public string ExportAsConfigurationSection()
+    {
+        var hfInferenceProviderLine = string.Empty;
+        if (this.HFInferenceProvider is not HFInferenceProvider.NONE)
+        {
+            hfInferenceProviderLine = $"""
+                                       ["HFInferenceProvider"] = "{this.HFInferenceProvider}",
+                                       """;
+        }
+            
+        return $$"""
+                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+                     ["Id"] = "{{EscapeLuaString(NormalizeId(this.Id))}}",
+                     ["InstanceName"] = "{{EscapeLuaString(this.InstanceName)}}",
+                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                 
+                     ["Host"] = "{{this.Host}}",
+                     ["Hostname"] = "{{EscapeLuaString(this.Hostname)}}",
+                     {{hfInferenceProviderLine}}
+                     ["AdditionalJsonApiParameters"] = "{{EscapeLuaString(this.AdditionalJsonApiParameters)}}",
+                     ["Model"] = {
+                         ["Id"] = "{{EscapeLuaString(this.Model.Id)}}",
+                         ["DisplayName"] = "{{EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
+                     },
+                 }
+                 """;
+    }
+
+    private static string NormalizeId(string? id)
+    {
+        if (!string.IsNullOrWhiteSpace(id))
+            return id;
+
+        return Guid.NewGuid().ToString();
+    }
+
+    private static string EscapeLuaString(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\r", "\\r")
+            .Replace("\n", "\\n");
+    }
 }

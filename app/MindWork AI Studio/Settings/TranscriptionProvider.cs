@@ -131,4 +131,42 @@ public sealed record TranscriptionProvider(
         model = new(id, displayName);
         return true;
     }
+
+    public string ExportAsConfigurationSection()
+    {
+        return $$"""
+                 CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
+                     ["Id"] = "{{EscapeLuaString(NormalizeId(this.Id))}}",
+                     ["Name"] = "{{EscapeLuaString(this.Name)}}",
+                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                 
+                     ["Host"] = "{{this.Host}}",
+                     ["Hostname"] = "{{EscapeLuaString(this.Hostname)}}",
+                     ["Model"] = {
+                         ["Id"] = "{{EscapeLuaString(this.Model.Id)}}",
+                         ["DisplayName"] = "{{EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
+                     },
+                 }
+                 """;
+    }
+
+    private static string NormalizeId(string? id)
+    {
+        if (!string.IsNullOrWhiteSpace(id))
+            return id;
+
+        return Guid.NewGuid().ToString();
+    }
+
+    private static string EscapeLuaString(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\r", "\\r")
+            .Replace("\n", "\\n");
+    }
 }

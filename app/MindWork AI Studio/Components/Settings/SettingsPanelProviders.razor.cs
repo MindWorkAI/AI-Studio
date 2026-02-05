@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -140,7 +139,7 @@ public partial class SettingsPanelProviders : SettingsPanelBase
         if (provider == AIStudio.Settings.Provider.NONE)
             return;
 
-        var luaCode = ConfigurationExport.ExportProvider(provider);
+        var luaCode = provider.ExportAsConfigurationSection();
         if (string.IsNullOrWhiteSpace(luaCode))
             return;
 
