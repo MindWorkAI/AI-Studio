@@ -19,6 +19,7 @@ public enum Components
     BIAS_DAY_ASSISTANT,
     ERI_ASSISTANT,
     DOCUMENT_ANALYSIS_ASSISTANT,
+    POWER_POINT_ASSISTANT,
     
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,
