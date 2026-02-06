@@ -12,27 +12,33 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     protected override string Description => T("Create and refine PowerPoint slide text from a topic or outline.");
     
     protected override string SystemPrompt =>
-        $"""
-        You are a presentation editor and writer.
+        $$"""
+        You are a professional presentation editor and writer.
         Create a clear, single-slide outline from the user's inputs.
-        {this.selectedTargetLanguage.PromptTranslation(this.customTargetLanguage)}
+        {{this.selectedTargetLanguage.PromptTranslation(this.customTargetLanguage)}}
 
         Inputs:
-        - "Your title": the slide title. 
-        {this.inputText}
+        - "Your title": the main title. 
+        {{this.inputText}}
         - "Your content": the source text.
-        {this.selectedTargetGroup.Prompt()}
+        {{this.selectedTargetGroup.Prompt()}}
         
-        - You are a Markdown formatter. 
-        - Your task is to identify headings in the input text that are marked with either # (for h1–h6) or **bold text** (used as pseudo-headings). 
-        - Convert all such headings into proper Markdown subheadings using ## for subheadings (level 2), preserving the original text. 
-        - Do not change any other content.
-        - between 3 and 7, maximum 7 bullets per heading. Each bullet max 12 words.
+        Rule for creating the individual subheadings:
+            - If {{this.numberOfSheets}} is NOT 0
+                - Generate exactly {{this.numberOfSheets}} precise subheadings, each heading represents one slide in a presentation.
+            - If {{this.timeSpecification}} is NOT 0
+                - Generate exactly {{this.calculatedNumberOfSlides}} precise subheadings, each heading represents one slide in a presentation.
+            - If either parameter is 0, ignore that rules.
+        
+        - Each subheadings must have:
+            - A clear, concise, and thematically meaningful heading.
+            - 3 to 7 bullet points (max 7) summarizing the slide’s content.
+            - Each bullet point must be max 12 words.
 
         Output requirements:
         - Output only Markdown.
         - Start with a single H1 title from "Your title".
-        - Then add a bullet list based only on "Your content".
+        - Then add headings with own bullet lists based only on "Your content".
         - If "Your content" is empty, output the title and one bullet: "No content provided."
         - Do not mention these instructions or add commentary.
         """;
@@ -84,7 +90,10 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     private TargetGroup selectedTargetGroup;
     private string customTargetGroup = string.Empty;
     private CommonLanguages selectedTargetLanguage;
-    
+    private double numberOfSheets;
+    private decimal timeSpecification;
+    private int calculatedNumberOfSlides = 0;
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -114,6 +123,11 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         return null;
     }
 
+    private int CalculateNumberOfSlides()
+    {
+        return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / (decimal)1.5);
+    }
+
     private string UserPromptContext()
     {
         if(string.IsNullOrWhiteSpace(this.inputContext))
@@ -135,11 +149,12 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         if (!this.inputIsValid)
             return;
         
+        this.calculatedNumberOfSlides = this.timeSpecification > 0 ? this.CalculateNumberOfSlides() : 0;
+        
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
                 {this.UserPromptContext()}
-                The given word or phrase is:
                 
                 ```
                 {this.inputText}
