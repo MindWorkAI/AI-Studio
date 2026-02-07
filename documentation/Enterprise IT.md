@@ -104,27 +104,20 @@ You can include encrypted API keys in your configuration plugins for cloud provi
 ### Setting Up Encrypted API Keys
 
 1. **Generate an encryption secret:**
-   You need a 32-byte (256-bit) secret key encoded in base64. You can generate one using:
-   ```powershell
-   # PowerShell (Windows)
-   $bytes = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
-   [Convert]::ToBase64String($bytes)
-   ```
-   ```bash
-   # Linux/macOS
-   openssl rand -base64 32
-   ```
+   In AI Studio, enable the "Show administration settings" toggle in the app settings. Then click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
 
 2. **Deploy the encryption secret:**
-   Distribute the secret via Group Policy (Windows Registry) or environment variables:
+   Distribute the secret to all client machines via Group Policy (Windows Registry) or environment variables:
    - Registry: `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret`
    - Environment: `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`
 
+   You must also deploy the same secret on the machine where you will export the encrypted API keys (step 3).
+
 3. **Export encrypted API keys from AI Studio:**
-   The easiest way to get encrypted API keys is to use the export function:
+   Once the encryption secret is deployed on your machine:
    - Configure a provider with an API key in AI Studio's settings
    - Click the export button for that provider
-   - If an API key is configured, you'll be asked if you want to include it
+   - If an API key is configured, you will be asked if you want to include the encrypted API key in the export
    - The exported Lua code will contain the encrypted API key in the format `ENC:v1:<base64-encoded data>`
 
 4. **Add encrypted keys to your configuration:**

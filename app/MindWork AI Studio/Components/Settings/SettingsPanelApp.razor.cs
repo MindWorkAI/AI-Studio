@@ -6,6 +6,12 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelApp : SettingsPanelBase
 {
+    private async Task GenerateEncryptionSecret()
+    {
+        var secret = EnterpriseEncryption.GenerateSecret();
+        await this.RustService.CopyText2Clipboard(this.Snackbar, secret);
+    }
+
     private IEnumerable<ConfigurationSelectData<string>> GetFilteredTranscriptionProviders()
     {
         yield return new(T("Disable dictation and transcription"), string.Empty);
