@@ -71,7 +71,7 @@ public sealed record Provider(
     
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.Id;
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToName()}" : this.UsedLLMProvider.ToName();
     
     /// <inheritdoc />
     [JsonIgnore]
@@ -181,7 +181,7 @@ public sealed record Provider(
                     {
                         // Queue the API key for storage in the OS keyring:
                         PendingEnterpriseApiKeys.Add(new(
-                            id.ToString(),
+                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToName()}",
                             instanceName,
                             decryptedApiKey,
                             SecretStoreType.LLM_PROVIDER));
