@@ -2091,6 +2091,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2143741496"]
 -- Disable dictation and transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T215381891"] = "Diktieren und Transkribieren deaktivieren"
 
+-- Enterprise Administration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2277116008"] = "Unternehmensverwaltung"
+
 -- Language behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"] = "Sprachverhalten"
 
@@ -2111,6 +2114,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"]
 
 -- App Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3577148634"] = "App-Einstellungen"
+
+-- Generate a 256-bit encryption secret for encrypting API keys in configuration plugins. Deploy this secret to client machines via Group Policy (Windows Registry) or environment variables. Providers can then be exported with encrypted API keys using the export buttons in the provider settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T362833"] = "Generieren Sie ein 256‑Bit‑Geheimnis für die Verschlüsselung, um API‑Schlüssel in Konfigurations-Plugins zu verschlüsseln. Stellen Sie dieses Geheimnis über Gruppenrichtlinien (Windows-Registrierung) oder über Umgebungsvariablen auf Client-Geräten bereit. Anschließend können Anbieter über die Export-Schaltflächen in den Anbieter-Einstellungen mit verschlüsselten API‑Schlüsseln exportiert werden."
 
 -- When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3652888444"] = "Wenn aktiviert, wird gestreamter Inhalt von der KI alle drei Sekunden aktualisiert. Wenn deaktiviert, wird gestreamter Inhalt sofort aktualisiert, sobald er verfügbar ist."
@@ -2151,6 +2157,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Möchten Sie einen Anbieter als Standard für die gesamte App festlegen? Wenn Sie einen anderen Anbieter für einen Assistenten konfigurieren, hat dieser immer Vorrang."
 
+-- Generate an encryption secret and copy it to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T922066419"] = "Geheimnis für die Verschlüsselung generieren und in die Zwischenablage kopieren"
+
 -- Administration settings are not visible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] = "Die Optionen für die Administration sind nicht sichtbar."
 
@@ -2165,6 +2174,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T17607
 
 -- Are you sure you want to delete the embedding provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1825371968"] = "Sind Sie sicher, dass Sie den Einbettungsanbieter '{0}' löschen möchten?"
+
+-- Cannot export the encrypted API key: No enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1832230847"] = "Der verschlüsselte API-Schlüssel kann nicht exportiert werden: Es ist kein Geheimnis für die Verschlüsselung konfiguriert."
 
 -- Add Embedding Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Einbettungsanbieter hinzufügen"
@@ -2187,8 +2199,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T32512
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3267849393"] = "Bearbeiten"
 
+-- This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3368145670"] = "Für diesen Anbieter ist ein API-Schlüssel konfiguriert. Möchten Sie den verschlüsselten API-Schlüssel in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um den API-Schlüssel verwenden zu können."
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Aktionen"
+
+-- Export API Key?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T4010580285"] = "API-Schlüssel exportieren?"
 
 -- This embedding provider is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T4062656589"] = "Dieser Einbettungsanbieter wird von Ihrer Organisation verwaltet."
@@ -2238,6 +2256,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T180658
 -- Configure LLM Providers
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1810190350"] = "Anbieter für LLMs konfigurieren"
 
+-- Cannot export the encrypted API key: No enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1832230847"] = "Der verschlüsselte API-Schlüssel kann nicht exportiert werden: Es ist kein Geheimnis für die Verschlüsselung konfiguriert."
+
 -- Edit LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1868766523"] = "LLM-Anbieter bearbeiten"
 
@@ -2283,6 +2304,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T331371
 -- Add LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3346433704"] = "LLM-Anbieter hinzufügen"
 
+-- This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3368145670"] = "Dieser Anbieter hat einen API-Schlüssel konfiguriert. Möchten Sie den verschlüsselten API-Schlüssel in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um den API-Schlüssel verwenden zu können."
+
 -- This provider is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3415927576"] = "Dieser Anbieter wird von ihrer Organisation verwaltet."
 
@@ -2294,6 +2318,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T364210
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3865031940"] = "Aktionen"
+
+-- Export API Key?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4010580285"] = "API-Schlüssel exportieren?"
 
 -- Select a confidence scheme
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4144206465"] = "Wählen Sie ein Vertrauensschema aus"
@@ -2337,6 +2364,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T16
 -- Uses the provider-configured model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1760715963"] = "Verwendet das vom Anbieter konfigurierte Modell"
 
+-- Cannot export the encrypted API key: No enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1832230847"] = "Der verschlüsselte API-Schlüssel kann nicht exportiert werden: Es ist kein Geheimnis für die Verschlüsselung konfiguriert."
+
 -- Add Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T2066315685"] = "Anbieter für Transkriptionen hinzufügen"
 
@@ -2349,11 +2379,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T26
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T3267849393"] = "Bearbeiten"
 
+-- This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T3368145670"] = "Für diesen Anbieter ist ein API-Schlüssel konfiguriert. Möchten Sie den verschlüsselten API-Schlüssel in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um den API-Schlüssel verwenden zu können."
+
 -- Delete Transcription Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T370103955"] = "Anbieter für Transkriptionen löschen"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T3865031940"] = "Aktionen"
+
+-- Export API Key?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T4010580285"] = "API-Schlüssel exportieren?"
 
 -- Configure Transcription Providers
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T4073110625"] = "Anbieter für Transkriptionen konfigurieren"
