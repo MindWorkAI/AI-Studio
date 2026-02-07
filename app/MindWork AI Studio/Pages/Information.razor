@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ABOUT)]
+@using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
@@ -68,9 +69,24 @@
                                             <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
                                         </div>
                                     </MudText>
+                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            @if (PluginFactory.EnterpriseEncryption?.IsAvailable is true)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
+                                                <span>@T("Encryption secret: is configured")</span>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
+                                                <span>@T("Encryption secret: is not configured")</span>
+                                            }
+                                        </div>
+                                    </MudText>
                                 </MudCollapse>
                                 break;
-                                
+
                             case true when this.configPlug is null:
                                 <MudText Typo="Typo.body1">
                                     @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")
@@ -91,9 +107,24 @@
                                             <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
                                         </div>
                                     </MudText>
+                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            @if (PluginFactory.EnterpriseEncryption?.IsAvailable is true)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
+                                                <span>@T("Encryption secret: is configured")</span>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
+                                                <span>@T("Encryption secret: is not configured")</span>
+                                            }
+                                        </div>
+                                    </MudText>
                                 </MudCollapse>
                                 break;
-                                
+
                             case true:
                                 <MudText Typo="Typo.body1">
                                     @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")
@@ -120,6 +151,21 @@
                                             <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                             <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
                                             <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
+                                        </div>
+                                    </MudText>
+                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                            @if (PluginFactory.EnterpriseEncryption?.IsAvailable is true)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
+                                                <span>@T("Encryption secret: is configured")</span>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
+                                                <span>@T("Encryption secret: is not configured")</span>
+                                            }
                                         </div>
                                     </MudText>
                                 </MudCollapse>
