@@ -65,4 +65,24 @@ public sealed partial class RustService
         var serverUrl = await result.Content.ReadAsStringAsync();
         return string.IsNullOrWhiteSpace(serverUrl) ? string.Empty : serverUrl;
     }
+
+    /// <summary>
+    /// Tries to read the enterprise environment for the configuration encryption secret.
+    /// </summary>
+    /// <returns>
+    /// Returns an empty string when the environment is not set or the request fails.
+    /// Otherwise, the base64-encoded encryption secret.
+    /// </returns>
+    public async Task<string> EnterpriseEnvConfigEncryptionSecret()
+    {
+        var result = await this.http.GetAsync("/system/enterprise/config/encryption_secret");
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to query the enterprise configuration encryption secret: '{result.StatusCode}'");
+            return string.Empty;
+        }
+
+        var encryptionSecret = await result.Content.ReadAsStringAsync();
+        return string.IsNullOrWhiteSpace(encryptionSecret) ? string.Empty : encryptionSecret;
+    }
 }

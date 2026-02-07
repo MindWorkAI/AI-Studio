@@ -215,6 +215,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             if (enterpriseEnvironment != default)
                                 await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseEnvironment.ConfigurationId, enterpriseEnvironment.ConfigurationServerUrl);
 
+                            // Initialize the enterprise encryption service for decrypting API keys:
+                            await PluginFactory.InitializeEnterpriseEncryption(this.RustService);
+
                             // Load (but not start) all plugins without waiting for them:
                             #if DEBUG
                             var pluginLoadingTimeout = new CancellationTokenSource();

@@ -17,6 +17,7 @@
     <ConfigurationSelect OptionDescription="@T("Check for updates")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.UpdateInterval)" Data="@ConfigurationSelectDataFactory.GetUpdateIntervalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.UpdateInterval = selectedValue)" OptionHelp="@T("How often should we check for app updates?")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var meta) && meta.IsLocked"/>
     <ConfigurationSelect OptionDescription="@T("Update installation method")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.UpdateInstallation)" Data="@ConfigurationSelectDataFactory.GetUpdateBehaviourData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.UpdateInstallation = selectedValue)" OptionHelp="@T("Should updates be installed automatically or manually?")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInstallation, out var meta) && meta.IsLocked"/>
     <ConfigurationSelect OptionDescription="@T("Navigation bar behavior")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.NavigationBehavior)" Data="@ConfigurationSelectDataFactory.GetNavBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.NavigationBehavior = selectedValue)" OptionHelp="@T("Select the desired behavior for the navigation bar.")"/>
+    <ConfigurationOption OptionDescription="@T("Show administration settings?")" LabelOn="@T("Administration settings are visible")" LabelOff="@T("Administration settings are not visible")" State="@(() => this.SettingsManager.ConfigurationData.App.ShowAdminSettings)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.App.ShowAdminSettings = updatedState)" OptionHelp="@T("When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.ShowAdminSettings, out var meta) && meta.IsLocked"/>
     <ConfigurationSelect OptionDescription="@T("Preview feature visibility")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreviewVisibility)" Data="@ConfigurationSelectDataFactory.GetPreviewVisibility()" SelectionUpdate="@this.UpdatePreviewFeatures" OptionHelp="@T("Do you want to show preview features in the app?")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.PreviewVisibility, out var meta) && meta.IsLocked"/>
 
     @if (this.SettingsManager.ConfigurationData.App.PreviewVisibility > PreviewVisibility.NONE)
@@ -35,5 +36,26 @@
     {
         <ConfigurationSelect OptionDescription="@T("Select a transcription provider")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider)" Data="@this.GetFilteredTranscriptionProviders()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider = selectedValue)" OptionHelp="@T("Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.UseTranscriptionProvider, out var meta) && meta.IsLocked"/>
         <ConfigurationShortcut ShortcutId="Shortcut.VOICE_RECORDING_TOGGLE" OptionDescription="@T("Voice recording shortcut")" Shortcut="@(() => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording)" ShortcutUpdate="@(shortcut => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording = shortcut)" OptionHelp="@T("The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.ShortcutVoiceRecording, out var meta) && meta.IsLocked"/>
+    }
+
+    @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+    {
+        <MudText Typo="Typo.h5" Class="mt-6 mb-3">
+            @T("Enterprise Administration")
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mb-3">
+            @T("Generate a 256-bit encryption secret for encrypting API keys in configuration plugins. Deploy this secret to client machines via Group Policy (Windows Registry) or environment variables. Providers can then be exported with encrypted API keys using the export buttons in the provider settings.")
+            <MudLink Href="https://github.com/MindWorkAI/AI-Studio/blob/main/documentation/Enterprise%20IT.md" Target="_blank">
+                @T("Read the Enterprise IT documentation for details.")
+            </MudLink>
+        </MudText>
+
+        <MudButton StartIcon="@Icons.Material.Filled.Key"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="@this.GenerateEncryptionSecret">
+            @T("Generate an encryption secret and copy it to the clipboard")
+        </MudButton>
     }
 </ExpansionPanel>

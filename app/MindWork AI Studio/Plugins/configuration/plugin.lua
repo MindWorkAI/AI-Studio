@@ -64,6 +64,20 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
+--
+--     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
+--     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
+--     -- ["HFInferenceProvider"] = "NOVITA",
+--
+--     -- Optional: Encrypted API key for cloud providers or secured on-premise models.
+--     -- The API key must be encrypted using the enterprise encryption secret.
+--     -- Format: "ENC:v1:<base64-encoded encrypted data>"
+--     -- The encryption secret must be configured via:
+--     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
+--     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
+--     -- You can export an encrypted API key from an existing provider using the export button in the settings.
+--     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -82,6 +96,10 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and WHISPER_CPP
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
+--
+--     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
+--     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -100,6 +118,10 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
+--
+--     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
+--     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -119,6 +141,10 @@ CONFIG["SETTINGS"] = {}
 -- Configure the user permission to add providers:
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
+
+-- Configure whether administration settings are visible in the UI:
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL

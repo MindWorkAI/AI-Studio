@@ -1,6 +1,6 @@
 @using AIStudio.Provider
 @using AIStudio.Settings.DataModel
-@inherits SettingsPanelBase
+@inherits SettingsPanelProviderBase
 
 @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
 {
@@ -22,7 +22,7 @@
                 <col style="width: 12em;"/>
                 <col style="width: 12em;"/>
                 <col/>
-                <col style="width: 16em;"/>
+                <col style="width: 22em;"/>
             </ColGroup>
             <HeaderContent>
                 <MudTh>#</MudTh>
@@ -52,6 +52,9 @@
                             </MudTooltip>
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Export configuration")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportEmbeddingProvider(context))"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEmbeddingProvider(context))"/>

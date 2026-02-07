@@ -7,7 +7,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
-public partial class SettingsPanelEmbeddings : SettingsPanelBase
+public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableEmbeddingProviders { get; set; } = new();
@@ -113,6 +113,14 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
 
         await this.UpdateEmbeddingProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ExportEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (provider == EmbeddingProvider.NONE)
+            return;
+
+        await this.ExportProvider(provider, SecretStoreType.EMBEDDING_PROVIDER, provider.ExportAsConfigurationSection);
     }
     
     private async Task UpdateEmbeddingProviders()

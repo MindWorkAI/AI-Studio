@@ -7,7 +7,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
-public partial class SettingsPanelTranscription : SettingsPanelBase
+public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 {
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableTranscriptionProviders { get; set; } = new();
@@ -113,6 +113,14 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
 
         await this.UpdateTranscriptionProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ExportTranscriptionProvider(TranscriptionProvider provider)
+    {
+        if (provider == TranscriptionProvider.NONE)
+            return;
+
+        await this.ExportProvider(provider, SecretStoreType.TRANSCRIPTION_PROVIDER, provider.ExportAsConfigurationSection);
     }
     
     private async Task UpdateTranscriptionProviders()

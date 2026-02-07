@@ -119,6 +119,30 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     )
 }
 
+#[get("/system/enterprise/config/encryption_secret")]
+pub fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
+    //
+    // When we are on a Windows machine, we try to read the enterprise config from
+    // the Windows registry. In case we can't find the registry key, or we are on a
+    // macOS or Linux machine, we try to read the enterprise config from the
+    // environment variables.
+    //
+    // The registry key is:
+    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
+    //
+    // In this registry key, we expect the following values:
+    // - config_encryption_secret
+    //
+    // The environment variable is:
+    // MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
+    //
+    debug!("Trying to read the enterprise environment for the config encryption secret.");
+    get_enterprise_configuration(
+        "config_encryption_secret",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET",
+    )
+}
+
 fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "windows")] {

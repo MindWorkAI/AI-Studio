@@ -10,7 +10,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
-public partial class SettingsPanelProviders : SettingsPanelBase
+public partial class SettingsPanelProviders : SettingsPanelProviderBase
 {
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
@@ -132,6 +132,14 @@ public partial class SettingsPanelProviders : SettingsPanelBase
 
         await this.UpdateProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ExportLLMProvider(AIStudio.Settings.Provider provider)
+    {
+        if (provider == AIStudio.Settings.Provider.NONE)
+            return;
+
+        await this.ExportProvider(provider, SecretStoreType.LLM_PROVIDER, provider.ExportAsConfigurationSection);
     }
 
     private string GetLLMProviderModelName(AIStudio.Settings.Provider provider)

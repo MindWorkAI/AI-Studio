@@ -1,6 +1,6 @@
 @using AIStudio.Provider
 @using AIStudio.Settings
-@inherits SettingsPanelBase
+@inherits SettingsPanelProviderBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Layers" HeaderText="@T("Configure LLM Providers")">
     <MudText Typo="Typo.h4" Class="mb-3">
@@ -15,7 +15,7 @@
             <col style="width: 12em;"/>
             <col style="width: 12em;"/>
             <col/>
-            <col style="width: 16em;"/>
+            <col style="width: 22em;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>#</MudTh>
@@ -44,6 +44,9 @@
                         </MudTooltip>
                         <MudTooltip Text="@T("Edit")">
                             <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditLLMProvider(context))"/>
+                        </MudTooltip>
+                        <MudTooltip Text="@T("Export configuration")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportLLMProvider(context))"/>
                         </MudTooltip>
                         <MudTooltip Text="@T("Delete")">
                             <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteLLMProvider(context))"/>
