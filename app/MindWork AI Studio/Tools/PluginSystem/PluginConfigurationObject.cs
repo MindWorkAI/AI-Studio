@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 
 using Lua;
 
@@ -13,6 +14,7 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 public sealed record PluginConfigurationObject
 {
+    private static readonly RustService RUST_SERVICE = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<PluginConfigurationObject>();
     
@@ -159,7 +161,7 @@ public sealed record PluginConfigurationObject
         
         return true;
     }
-    
+
     /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
@@ -168,12 +170,14 @@ public sealed record PluginConfigurationObject
     /// <param name="configObjectSelection">A selection expression to retrieve the configuration objects from the main configuration.</param>
     /// <param name="availablePlugins">A list of currently available plugins.</param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
+    /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
     /// <returns>Returns true if the configuration was altered during cleanup; otherwise, false.</returns>
-    public static bool CleanLeftOverConfigurationObjects<TClass>(
+    public static async Task<bool> CleanLeftOverConfigurationObjects<TClass>(
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
-        IList<PluginConfigurationObject> configObjectList) where TClass : IConfigurationObject
+        IList<PluginConfigurationObject> configObjectList,
+        SecretStoreType? secretStoreType = null) where TClass : IConfigurationObject
     {
         var configuredObjects = configObjectSelection.Compile()(SETTINGS_MANAGER.ConfigurationData);
         var leftOverObjects = new List<TClass>();
@@ -206,8 +210,20 @@ public sealed record PluginConfigurationObject
         // Remove collected items after enumeration to avoid modifying the collection during iteration:
         var wasConfigurationChanged = leftOverObjects.Count > 0;
         foreach (var item in leftOverObjects.Distinct())
+        {
             configuredObjects.Remove(item);
         
+            // Delete the API key from the OS keyring if the removed object has one:
+            if(secretStoreType is not null && item is ISecretId secretId)
+            {
+                var deleteResult = await RUST_SERVICE.DeleteAPIKey(secretId, secretStoreType.Value);
+                if (deleteResult.Success)
+                    LOG.LogInformation($"Successfully deleted API key for removed enterprise provider '{item.Name}' from the OS keyring.");
+                else
+                    LOG.LogWarning($"Failed to delete API key for removed enterprise provider '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+        }
+
         return wasConfigurationChanged;
     }
 }
