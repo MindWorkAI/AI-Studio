@@ -242,7 +242,7 @@ public sealed record Provider(
 
         return $$"""
                  CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
-                    ["Id"] = "{{LuaTools.EscapeLuaString(NormalizeId(this.Id))}}",
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
 
@@ -258,13 +258,4 @@ public sealed record Provider(
                 }
                 """;
     }
-
-    private static string NormalizeId(string? id)
-    {
-        if (!string.IsNullOrWhiteSpace(id))
-            return id;
-
-        return Guid.NewGuid().ToString();
-    }
-
 }

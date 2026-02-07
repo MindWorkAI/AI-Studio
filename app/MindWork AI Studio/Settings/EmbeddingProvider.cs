@@ -177,7 +177,7 @@ public sealed record EmbeddingProvider(
 
         return $$"""
                  CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
-                    ["Id"] = "{{LuaTools.EscapeLuaString(NormalizeId(this.Id))}}",
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
                  
@@ -191,13 +191,4 @@ public sealed record EmbeddingProvider(
                 }
                 """;
     }
-
-    private static string NormalizeId(string? id)
-    {
-        if (!string.IsNullOrWhiteSpace(id))
-            return id;
-
-        return Guid.NewGuid().ToString();
-    }
-
 }
