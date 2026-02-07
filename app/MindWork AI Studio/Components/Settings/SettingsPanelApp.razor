@@ -46,6 +46,9 @@
 
         <MudText Typo="Typo.body2" Class="mb-3">
             @T("Generate a 256-bit encryption secret for encrypting API keys in configuration plugins. Deploy this secret to client machines via Group Policy (Windows Registry) or environment variables. Providers can then be exported with encrypted API keys using the export buttons in the provider settings.")
+            <MudLink Href="https://github.com/MindWorkAI/AI-Studio/blob/main/documentation/Enterprise%20IT.md" Target="_blank">
+                @T("Read the Enterprise IT documentation for details.")
+            </MudLink>
         </MudText>
 
         <MudButton StartIcon="@Icons.Material.Filled.Key"
