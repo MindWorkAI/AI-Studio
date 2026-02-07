@@ -148,7 +148,7 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
                 else
                 {
                     // No encryption secret available - inform the user:
-                    this.Snackbar.Add(T("Cannot export encrypted API key: No enterprise encryption secret is configured."), Severity.Warning);
+                    this.Snackbar.Add(T("Cannot export the encrypted API key: No enterprise encryption secret is configured."), Severity.Warning);
                 }
             }
         }
