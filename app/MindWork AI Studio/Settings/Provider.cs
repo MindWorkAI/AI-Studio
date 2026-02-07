@@ -125,7 +125,7 @@ public sealed record Provider(
         var hfInferenceProvider = HFInferenceProvider.NONE;
         if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
         {
-            if (!Enum.TryParse<HFInferenceProvider>(hfInferenceProviderText, true, out hfInferenceProvider))
+            if (!Enum.TryParse(hfInferenceProviderText, true, out hfInferenceProvider))
             {
                 LOGGER.LogWarning($"The configured provider {idx} does not contain a valid Hugging Face inference provider enum value.");
                 hfInferenceProvider = HFInferenceProvider.NONE;
