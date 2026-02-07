@@ -112,9 +112,14 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     #endregion
     
+    /// <summary>
+    /// Whether this provider was imported from an enterprise configuration plugin.
+    /// </summary>
+    public bool IsEnterpriseConfiguration { get; init; }
+
     #region Implementation of ISecretId
 
-    public string SecretId => this.Id;
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.Id}" : this.Id;
 
     public string SecretName => this.InstanceName;
 
