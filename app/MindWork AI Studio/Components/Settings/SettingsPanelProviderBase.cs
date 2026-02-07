@@ -7,6 +7,8 @@ namespace AIStudio.Components.Settings;
 
 public abstract class SettingsPanelProviderBase : SettingsPanelBase
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SettingsPanelProviderBase).Namespace, nameof(SettingsPanelProviderBase));
+
     /// <summary>
     /// Exports the provider configuration as Lua code, optionally including the encrypted API key if the provider has one
     /// configured and the user agrees to include it. The exportFunc should generate the Lua code based on the provided
@@ -27,10 +29,10 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
             // Ask the user if they want to export the API key:
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.") },
+                { x => x.Message, TB("This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.") },
             };
 
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export API Key?"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(TB("Export API Key?"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is { Canceled: false })
             {
@@ -45,7 +47,7 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
                 else
                 {
                     // No encryption secret available - inform the user:
-                    this.Snackbar.Add(T("Cannot export the encrypted API key: No enterprise encryption secret is configured."), Severity.Warning);
+                    this.Snackbar.Add(TB("Cannot export the encrypted API key: No enterprise encryption secret is configured."), Severity.Warning);
                 }
             }
         }
