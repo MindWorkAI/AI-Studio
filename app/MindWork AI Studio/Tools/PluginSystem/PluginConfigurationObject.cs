@@ -183,26 +183,32 @@ public sealed record PluginConfigurationObject
         var leftOverObjects = new List<TClass>();
         foreach (var configuredObject in configuredObjects)
         {
+            // Only process objects that are based on enterprise configuration plugins (aka configuration plugins),
+            // as only those can be left over after a plugin was removed:
             if(!configuredObject.IsEnterpriseConfiguration)
                 continue;
 
+            // From what plugin is this configuration object coming from?
             var configObjectSourcePluginId = configuredObject.EnterpriseConfigurationPluginId;
             if(configObjectSourcePluginId == Guid.Empty)
                 continue;
             
+            // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left
+            // over and should be removed:
             var templateSourcePlugin = availablePlugins.FirstOrDefault(plugin => plugin.Id == configObjectSourcePluginId);
             if(templateSourcePlugin is null)
             {
-                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is based on a plugin that is not available anymore. Removing the chat template from the settings.");
+                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is based on a plugin that is not available anymore. Removing this object from the settings.");
                 leftOverObjects.Add(configuredObject);
             }
             
+            // Is the configuration object still present in the configuration plugin? If not, it is also left over and should be removed:
             if(!configObjectList.Any(configObject =>
                    configObject.Type == configObjectType &&
                    configObject.ConfigPluginId == configObjectSourcePluginId &&
                    configObject.Id.ToString() == configuredObject.Id))
             {
-                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is not present in the configuration plugin anymore. Removing the chat template from the settings.");
+                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is not present in the configuration plugin anymore. Removing the object from the settings.");
                 leftOverObjects.Add(configuredObject);
             }
         }
