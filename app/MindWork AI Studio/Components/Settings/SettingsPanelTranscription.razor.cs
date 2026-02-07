@@ -1,6 +1,5 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
-using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -8,7 +7,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
-public partial class SettingsPanelTranscription : SettingsPanelBase
+public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 {
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableTranscriptionProviders { get; set; } = new();
@@ -121,43 +120,7 @@ public partial class SettingsPanelTranscription : SettingsPanelBase
         if (provider == TranscriptionProvider.NONE)
             return;
 
-        string? encryptedApiKey = null;
-
-        // Check if the provider has an API key stored:
-        var apiKeyResponse = await this.RustService.GetAPIKey(provider, SecretStoreType.TRANSCRIPTION_PROVIDER, isTrying: true);
-        if (apiKeyResponse.Success)
-        {
-            // Ask the user if they want to export the API key:
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                { x => x.Message, T("This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.") },
-            };
-
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export API Key?"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is { Canceled: false })
-            {
-                // User wants to export the API key - encrypt it:
-                var encryption = PluginFactory.EnterpriseEncryption;
-                if (encryption?.IsAvailable == true)
-                {
-                    var decryptedApiKey = await apiKeyResponse.Secret.Decrypt(Program.ENCRYPTION);
-                    if (encryption.TryEncrypt(decryptedApiKey, out var encrypted))
-                        encryptedApiKey = encrypted;
-                }
-                else
-                {
-                    // No encryption secret available - inform the user:
-                    this.Snackbar.Add(T("Cannot export the encrypted API key: No enterprise encryption secret is configured."), Severity.Warning);
-                }
-            }
-        }
-
-        var luaCode = provider.ExportAsConfigurationSection(encryptedApiKey);
-        if (string.IsNullOrWhiteSpace(luaCode))
-            return;
-
-        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+        await this.ExportProvider(provider, SecretStoreType.TRANSCRIPTION_PROVIDER, provider.ExportAsConfigurationSection);
     }
     
     private async Task UpdateTranscriptionProviders()
