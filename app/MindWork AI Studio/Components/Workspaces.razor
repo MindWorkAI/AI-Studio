@@ -36,7 +36,7 @@
                                     </MudTooltip>
 
                                     <MudTooltip Text="@T("Delete")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.DeleteChat(treeItem.Path))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => this.DeleteChat(treeItem.Path))"/>
                                     </MudTooltip>
                                 </div>
                             </div>
@@ -57,7 +57,7 @@
                                     </MudTooltip>
 
                                     <MudTooltip Text="@T("Delete")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.DeleteWorkspace(treeItem.Path))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => this.DeleteWorkspace(treeItem.Path))"/>
                                     </MudTooltip>
                                 </div>
                             </div>
