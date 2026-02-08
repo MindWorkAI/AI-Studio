@@ -25,8 +25,8 @@ public class QdrantClientImplementation : DatabaseClient
     }
     
     private const string IP_ADDRESS = "localhost";
-    
-    public QdrantClient CreateQdrantClient()
+
+    private QdrantClient CreateQdrantClient()
     {
         var address = "https://" + IP_ADDRESS + ":" + this.GrpcPort;
         var channel = QdrantChannel.ForAddress(address, new ClientConfiguration
@@ -38,13 +38,13 @@ public class QdrantClientImplementation : DatabaseClient
         return new QdrantClient(grpcClient);
     }
 
-    public async Task<string> GetVersion()
+    private async Task<string> GetVersion()
     {
         var operation =  await this.GrpcClient.HealthAsync();
         return "v"+operation.Version;
     }
 
-    public async Task<string> GetCollectionsAmount()
+    private async Task<string> GetCollectionsAmount()
     {
         var operation = await this.GrpcClient.ListCollectionsAsync();
         return operation.Count.ToString();
@@ -59,8 +59,5 @@ public class QdrantClientImplementation : DatabaseClient
         yield return ("Amount of collections", await this.GetCollectionsAmount());
     }
 
-    public override void Dispose()
-    {
-        this.GrpcClient.Dispose();
-    }
+    public override void Dispose() => this.GrpcClient.Dispose();
 }

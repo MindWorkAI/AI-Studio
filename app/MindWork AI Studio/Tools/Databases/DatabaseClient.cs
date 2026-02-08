@@ -5,12 +5,12 @@ public abstract class DatabaseClient(string name, string path)
     public string Name => name;
     
     private string Path => path;
-    
-    protected ILogger<DatabaseClient>? logger;
+
+    private ILogger<DatabaseClient>? logger;
     
     public abstract IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo();
 
-    public string GetStorageSize()
+    protected string GetStorageSize()
     {
         if (string.IsNullOrWhiteSpace(this.Path))
         {
@@ -28,8 +28,8 @@ public abstract class DatabaseClient(string name, string path)
         var size = files.Sum(file => new FileInfo(file).Length);
         return FormatBytes(size);
     }
-    
-    public static string FormatBytes(long size)
+
+    private static string FormatBytes(long size)
     {
         string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
         int suffixIndex = 0;
