@@ -1,10 +1,13 @@
 ﻿using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Databases.Qdrant;
 
 public class QdrantClientImplementation : DatabaseClient
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(QdrantClientImplementation).Namespace, nameof(QdrantClientImplementation));
+
     private int HttpPort { get; }
     
     private int GrpcPort { get; }
@@ -52,11 +55,11 @@ public class QdrantClientImplementation : DatabaseClient
     
     public override async IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo()
     {
-        yield return ("HTTP port", this.HttpPort.ToString());
-        yield return ("gRPC port", this.GrpcPort.ToString());
-        yield return ("Extracted version", await this.GetVersion());
-        yield return ("Storage size", $"{base.GetStorageSize()}");
-        yield return ("Amount of collections", await this.GetCollectionsAmount());
+        yield return (TB("HTTP port"), this.HttpPort.ToString());
+        yield return (TB("gRPC port"), this.GrpcPort.ToString());
+        yield return (TB("Reported version"), await this.GetVersion());
+        yield return (TB("Storage size"), $"{this.GetStorageSize()}");
+        yield return (TB("Number of collections"), await this.GetCollectionsAmount());
     }
 
     public override void Dispose() => this.GrpcClient.Dispose();
