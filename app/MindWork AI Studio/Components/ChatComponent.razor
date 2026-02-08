@@ -66,7 +66,7 @@
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
             {
                 <MudTooltip Text="@T("Save chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@(() => this.SaveThread())" Disabled="@(!this.CanThreadBeSaved)"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@(() => this.SaveThread())" Disabled="@(!this.CanThreadBeSaved || this.isStreaming)"/>
                 </MudTooltip>
             }
 

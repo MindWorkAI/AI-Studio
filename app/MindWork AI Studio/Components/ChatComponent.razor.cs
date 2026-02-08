@@ -912,6 +912,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
             
             case Event.CHAT_STREAMING_DONE:
+                // Streaming mutates the last AI block over time.
+                // In manual storage mode, a save during streaming must not
+                // mark the final streamed state as already persisted.
+                this.hasUnsavedChanges = true;
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
                 break;
