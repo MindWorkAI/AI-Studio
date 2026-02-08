@@ -49,6 +49,23 @@ public partial class Plugins : MSGComponentBase
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+    
+    private bool TryGetSourceWebsite(IPluginMetadata pluginMeta, out string sourceUrl)
+    {
+        sourceUrl = string.Empty;
+        if (string.IsNullOrWhiteSpace(pluginMeta.SourceURL))
+            return false;
+
+        var normalizedSourceUrl = pluginMeta.SourceURL.Trim();
+        if (!Uri.TryCreate(normalizedSourceUrl, UriKind.Absolute, out var sourceUri))
+            return false;
+
+        if (sourceUri.Scheme is not ("http" or "https"))
+            return false;
+
+        sourceUrl = sourceUri.ToString();
+        return true;
+    }
 
     #region Overrides of MSGComponentBase
 
