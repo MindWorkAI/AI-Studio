@@ -32,8 +32,9 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         
         - Each subheadings must have:
             - A clear, concise, and thematically meaningful heading.
-            - 3 to 7 bullet points (max 7) summarizing the slide’s content.
+            - 1 to 7 bullet points (maximum 7) summarizing the slide’s content — use as many as needed, but never more than 7.
             - Each bullet point must be max 12 words.
+            - Place *** on its own line immediately before each heading.
 
         Output requirements:
         - Output only Markdown.
@@ -91,7 +92,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     private string customTargetGroup = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private double numberOfSheets;
-    private decimal timeSpecification;
+    private double timeSpecification;
     private int calculatedNumberOfSlides = 0;
 
     #region Overrides of ComponentBase
@@ -125,7 +126,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
 
     private int CalculateNumberOfSlides()
     {
-        return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / (decimal)1.5);
+        return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / 1.5);
     }
 
     private string UserPromptContext()
