@@ -30,7 +30,12 @@ AUTHORS = {"<Company Name>"}
 -- The support contact for the plugin:
 SUPPORT_CONTACT = "<IT Department of Company Name>"
 
--- The source URL for the plugin:
+-- The source URL for the plugin. Can be a HTTP(S) URL or an mailto link.
+-- You may link to an internal documentation page, a Git repository, or
+-- to a support or wiki page.
+--
+-- A mailto link could look like:
+-- SOURCE_URL = "mailto:helpdesk@company.org?subject=Help"
 SOURCE_URL = "<Any internal Git repository>"
 
 -- The categories for the plugin:

@@ -72,11 +72,22 @@
                             </MudTooltip>
                         }
                         
-                        @if (context is { IsInternal: false } && this.TryGetSourceWebsite(context, out var sourceUrl))
+                        @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
                         {
-                            <MudTooltip Text="@T("Open website")">
-                                <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
-                            </MudTooltip>
+                            var sourceUrl = context.SourceURL;
+                            var isSendingMail = IsSendingMail(sourceUrl);
+                            if(isSendingMail)
+                            {
+                                <MudTooltip Text="@T("Send a mail")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="@T("Open website")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
+                                </MudTooltip>
+                            }
                         }
                     </MudStack>
                 </MudTd>
