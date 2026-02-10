@@ -8,4 +8,6 @@ public enum AssistantUiCompontentType
     DROPDOWN,
     PROVIDER_SELECTION,
     SWITCH,
+    HEADING,
+    TEXT,
 }

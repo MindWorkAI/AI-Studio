@@ -36,5 +36,33 @@
                 <MudTextSwitch Label="@assistantSwitch.Label" @bind-Value="@this.switchFields[assistantSwitch.Name]" LabelOn="@assistantSwitch.LabelOn" LabelOff="@assistantSwitch.LabelOff" />
             }
             break;
+        case AssistantUiCompontentType.HEADING:
+            if (component is AssistantHeading assistantHeading)
+            {
+                var heading = assistantHeading;
+                @switch (assistantHeading.Level)
+                {
+                    case 1:
+                        <MudText Typo="Typo.h4">@heading.Text</MudText>
+                        break;
+                    case 2:
+                        <MudText Typo="Typo.h5">@heading.Text</MudText>
+                        break;
+                    case 3:
+                        <MudText Typo="Typo.h6">@heading.Text</MudText>
+                        break;
+                    default:
+                        <MudText Typo="Typo.h4">@heading.Text</MudText>
+                        break;
+                }
+            }
+            break;
+        case AssistantUiCompontentType.TEXT:
+            if (component is AssistantText assistantText)
+            {
+                var text = assistantText;
+                <MudText Typo="Typo.body1" Class="mb-3">@text.Content</MudText>
+            }
+            break;
     }
 }

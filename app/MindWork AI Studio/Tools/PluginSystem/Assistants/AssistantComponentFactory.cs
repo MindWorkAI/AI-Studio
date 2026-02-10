@@ -25,6 +25,10 @@ public class AssistantComponentFactory
                 return new AssistantProviderSelection { Props = props, Children = children };
             case AssistantUiCompontentType.SWITCH:
                 return new AssistantSwitch { Props = props, Children = children };
+            case AssistantUiCompontentType.HEADING:
+                return new AssistantHeading { Props = props, Children = children };
+            case AssistantUiCompontentType.TEXT:
+                return new AssistantText { Props = props, Children = children };
             default:
                 LOGGER.LogError($"Unknown assistant component type!\n{type} is not a supported assistant component type");
                 throw new Exception($"Unknown assistant component type: {type}");

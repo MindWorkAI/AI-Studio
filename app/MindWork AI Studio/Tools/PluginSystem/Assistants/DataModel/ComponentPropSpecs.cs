@@ -29,5 +29,13 @@ public static class ComponentPropSpecs
                 required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
                 optional: ["UserPrompt"]
             ),
+            [AssistantUiCompontentType.HEADING] = new(
+                required: ["Text", "Level"],
+                optional: []
+            ),
+            [AssistantUiCompontentType.TEXT] = new(
+                required: ["Content"],
+                optional: []
+            ),
         };
 }

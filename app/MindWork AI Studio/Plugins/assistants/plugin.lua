@@ -106,6 +106,19 @@ ASSISTANT = {
                     ["Label"] = "LLM auswählen"
                 }
             },
+            {
+                ["Type"] = "HEADING", -- descriptive component for headings 
+                ["Props"] = {
+                    ["Text"] = "This is a Section Heading", -- The heading text
+                    ["Level"] = 2 -- Heading level, 1 - 3
+                }
+            },
+            {
+                ["Type"] = "TEXT", -- descriptive component for normal text
+                ["Props"] = {
+                    ["Content"] = "This is a paragraph of descriptive text that explains something about the assistant or provides additional information."
+                }
+            },
         }
     },
 }
