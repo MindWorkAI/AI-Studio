@@ -64,5 +64,24 @@
                 <MudText Typo="Typo.body1" Class="mb-3">@text.Content</MudText>
             }
             break;
+        case AssistantUiCompontentType.LIST:
+            if (component is AssistantList assistantList)
+            {
+                var list = assistantList;
+                <MudList T="string" Class="mb-6">
+                    @foreach (var item in list.Items)
+                    {
+                        @if (item.Type == "LINK")
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="@item.Href">@item.Text</MudListItem>
+                        }
+                        else
+                        {
+                            <MudListItem T="string">@item.Text</MudListItem>
+                        }
+                    }
+                </MudList>
+            }
+            break;
     }
 }

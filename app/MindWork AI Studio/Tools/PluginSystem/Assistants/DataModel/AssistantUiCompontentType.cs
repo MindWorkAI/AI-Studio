@@ -10,4 +10,5 @@ public enum AssistantUiCompontentType
     SWITCH,
     HEADING,
     TEXT,
+    LIST,
 }

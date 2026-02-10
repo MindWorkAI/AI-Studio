@@ -273,6 +273,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             result = itemList;
             return true;
         }
+
+        if (val.TryRead<LuaTable>(out var listItemListTable) && this.TryParseListItemList(listItemListTable, out var listItemList))
+        {
+            result = listItemList;
+            return true;
+        }
         
         result = null!;
         return false;
@@ -304,6 +310,50 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             var value = table[i];
 
             if (value.TryRead<LuaTable>(out var subTable) && this.TryParseDropdownItem(subTable, out var item))
+            {
+                items.Add(item);
+            }
+            else
+            {
+                items = null!;
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool TryParseListItem(LuaTable table, out AssistantListItem item)
+    {
+        item = new AssistantListItem();
+
+        if (!table.TryGetValue("Text", out var textVal) || !textVal.TryRead<string>(out var text))
+            return false;
+        
+        if (!table.TryGetValue("Type", out var typeVal) || !typeVal.TryRead<string>(out var type))
+            return false;
+
+        item.Text = text;
+        item.Type = type;
+
+        if (table.TryGetValue("Href", out var hrefVal) && hrefVal.TryRead<string>(out var href))
+        {
+            item.Href = href;
+        }
+
+        return true;
+    }
+    
+    private bool TryParseListItemList(LuaTable table, out List<AssistantListItem> items)
+    {
+        items = new List<AssistantListItem>();
+
+        var length = table.ArrayLength;
+        for (var i = 1; i <= length; i++)
+        {
+            var value = table[i];
+
+            if (value.TryRead<LuaTable>(out var subTable) && this.TryParseListItem(subTable, out var item))
             {
                 items.Add(item);
             }

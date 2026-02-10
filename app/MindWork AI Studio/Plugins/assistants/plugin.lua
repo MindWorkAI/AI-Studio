@@ -109,14 +109,30 @@ ASSISTANT = {
             {
                 ["Type"] = "HEADING", -- descriptive component for headings 
                 ["Props"] = {
-                    ["Text"] = "This is a Section Heading", -- The heading text
+                    ["Text"] = "<heading content>", -- required
                     ["Level"] = 2 -- Heading level, 1 - 3
                 }
             },
             {
                 ["Type"] = "TEXT", -- descriptive component for normal text
                 ["Props"] = {
-                    ["Content"] = "This is a paragraph of descriptive text that explains something about the assistant or provides additional information."
+                    ["Content"] = "<text content>"
+                }
+            },
+            {
+                ["Type"] = "LIST", -- descriptive list component
+                ["Props"] = {
+                    ["Items"] = {
+                        { 
+                            ["Type"] = "LINK", -- required 
+                            ["Text"] = "<user readable link text>", 
+                            ["Href"] = "<link>" -- required 
+                        },
+                        { 
+                            ["Type"] = "TEXT", -- required 
+                            ["Text"] = "<user readable text>"
+                        }
+                    }
                 }
             },
         }

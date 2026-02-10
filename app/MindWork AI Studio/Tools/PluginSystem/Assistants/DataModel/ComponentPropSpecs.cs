@@ -37,5 +37,9 @@ public static class ComponentPropSpecs
                 required: ["Content"],
                 optional: []
             ),
+            [AssistantUiCompontentType.LIST] = new(
+                required: ["Items"],
+                optional: []
+            ),
         };
 }
