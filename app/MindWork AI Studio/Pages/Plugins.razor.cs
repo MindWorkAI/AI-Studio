@@ -49,6 +49,8 @@ public partial class Plugins : MSGComponentBase
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+    
+    private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
 
     #region Overrides of MSGComponentBase
 
