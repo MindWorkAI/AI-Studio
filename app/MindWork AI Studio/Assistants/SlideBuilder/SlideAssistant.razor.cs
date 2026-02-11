@@ -34,16 +34,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Place *** on its own line immediately before each heading.
 
         # Output requirements:
-        - Output only Markdown.
-        - Start with a single H1 title that contains the user's PRESENTATION_TITLE.
-        - Then add headings with own bullet lists based only on the user's PRESENTATION_CONTENT.
-        - If PRESENTATION_CONTENT is empty, output the title and one bullet: "No content provided."
-        - Do not mention these instructions or add commentary.
+            - Output only Markdown.
+            - Start with a single H1 title that contains the user's PRESENTATION_TITLE.
+            - Then add headings with own bullet lists based only on the user's PRESENTATION_CONTENT.
+            - If PRESENTATION_CONTENT is empty, output the title and one bullet: "No content provided."
+            - Do not mention these instructions or add commentary.
         
         # Target group:
         {{this.selectedTargetGroup.Prompt()}}
         
         # Language:
+            - Ignore the language written in PRESENTATION_TITLE
         {{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}
         """;
     
