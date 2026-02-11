@@ -2,6 +2,6 @@
 
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogPowerPoint : SettingsDialogBase
+public partial class SettingsDialogSlideBuilder : SettingsDialogBase
 {
 }

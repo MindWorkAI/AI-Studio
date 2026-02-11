@@ -1,7 +1,7 @@
-@attribute [Route(Routes.ASSISTANT_POWERPOINT)]
-@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogPowerPoint>
+@attribute [Route(Routes.ASSISTANT_SLIDE_BUILDER)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSlideBuilder>
 
-<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" Adornment="Adornment.Start" Label="@T("Your title")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Text="@this.inputTitle" Validation="@this.ValidatingText" Adornment="Adornment.Start" Label="@T("Your title")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudTextField T="string" @bind-Text="@this.inputContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <ReadFileContent @bind-FileContent="@this.inputContext"/>
@@ -11,6 +11,7 @@
         <MudNumericField @bind-Value="numberOfSheets"
                          Label="Number of sheets"
                          Variant="Variant.Text"
+                         Class="mb-3"
                          Min="0.0" />
     </MudItem>
 
@@ -18,6 +19,7 @@
         <MudNumericField @bind-Value="timeSpecification"
                          Label="Time specification"
                          Variant="Variant.Text"
+                         Class="mb-3"
                          Min="0.0" />
     </MudItem>
 </MudGrid>

@@ -43,7 +43,7 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => TB("ERI Server"),
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
-        Components.POWER_POINT_ASSISTANT => TB("Power Point"),
+        Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Assistant"),
         
         Components.CHAT => TB("New Chat"),
         

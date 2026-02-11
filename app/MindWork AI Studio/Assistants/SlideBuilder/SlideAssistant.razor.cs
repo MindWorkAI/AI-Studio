@@ -1,29 +1,26 @@
 ﻿using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
-namespace AIStudio.Assistants.PowerPoint;
+namespace AIStudio.Assistants.SlideBuilder;
 
-public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
+public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuilder>
 {
-    public override Tools.Components Component => Tools.Components.POWER_POINT_ASSISTANT;
+    public override Tools.Components Component => Tools.Components.SLIDE_BUILDER_ASSISTANT;
     
-    protected override string Title => T("Power Point");
+    protected override string Title => T("Slide Assistant");
     
-    protected override string Description => T("Create and refine PowerPoint slide text from a topic or outline.");
+    protected override string Description => T("Develop slide content based on a given topic and content.");
     
     protected override string SystemPrompt =>
         $$"""
         You are a professional presentation editor and writer.
         Create a clear, single-slide outline from the user's inputs.
-        {{this.selectedTargetLanguage.PromptTranslation(this.customTargetLanguage)}}
-
-        Inputs:
-        - "Your title": the main title. 
-        {{this.inputText}}
-        - "Your content": the source text.
-        {{this.selectedTargetGroup.Prompt()}}
         
-        Rule for creating the individual subheadings:
+        # Content
+        You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
+        
+        # Subheadings
+        - Rule for creating the individual subheadings:
             - If {{this.numberOfSheets}} is NOT 0
                 - Generate exactly {{this.numberOfSheets}} precise subheadings, each heading represents one slide in a presentation.
             - If {{this.timeSpecification}} is NOT 0
@@ -36,21 +33,27 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
             - Each bullet point must be max 12 words.
             - Place *** on its own line immediately before each heading.
 
-        Output requirements:
+        # Output requirements:
         - Output only Markdown.
-        - Start with a single H1 title from "Your title".
-        - Then add headings with own bullet lists based only on "Your content".
-        - If "Your content" is empty, output the title and one bullet: "No content provided."
+        - Start with a single H1 title that contains the user's PRESENTATION_TITLE.
+        - Then add headings with own bullet lists based only on the user's PRESENTATION_CONTENT.
+        - If PRESENTATION_CONTENT is empty, output the title and one bullet: "No content provided."
         - Do not mention these instructions or add commentary.
+        
+        # Target group:
+        {{this.selectedTargetGroup.Prompt()}}
+        
+        # Language:
+        {{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}
         """;
     
     protected override bool AllowProfiles => false;
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => T("Create Power Point");
+    protected override string SubmitText => T("Create Slides");
 
-    protected override Func<Task> SubmitAction => this.CreatePowerPoint;
+    protected override Func<Task> SubmitAction => this.CreateSlideBuilder;
 
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
@@ -59,7 +62,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
 
     protected override void ResetForm()
     {
-        this.inputText = string.Empty;
+        this.inputTitle = string.Empty;
         this.inputContext = string.Empty;
         this.expertInField = string.Empty;
         this.selectedTargetGroup = TargetGroup.NO_CHANGE;
@@ -83,7 +86,7 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         return false;
     }
     
-    private string inputText = string.Empty;
+    private string inputTitle = string.Empty;
     private string inputContext = string.Empty;
     private CommonLanguages selectedLanguage;
     private string customTargetLanguage = string.Empty;
@@ -128,23 +131,8 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
     {
         return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / 1.5);
     }
-
-    private string UserPromptContext()
-    {
-        if(string.IsNullOrWhiteSpace(this.inputContext))
-            return string.Empty;
-        
-        return $"""
-                The given context is:
-                
-                ```
-                {this.inputContext}
-                ```
-                
-                """;
-    }
     
-    private async Task CreatePowerPoint()
+    private async Task CreateSlideBuilder()
     {
         await this.form!.Validate();
         if (!this.inputIsValid)
@@ -155,11 +143,15 @@ public partial class PowerPoint : AssistantBaseCore<SettingsDialogPowerPoint>
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {this.UserPromptContext()}
+                # PRESENTATION_TITLE
+                ```
+                {this.inputTitle}
+                ```
                 
-                ```
-                {this.inputText}
-                ```
+                # PRESENTATION_CONTENT
+                 ```
+                 {this.inputContext}
+                 ```
              """);
 
         await this.AddAIResponseAsync(time);

@@ -38,7 +38,7 @@
             (Components.JOB_POSTING_ASSISTANT, PreviewFeatures.NONE),
             (Components.LEGAL_CHECK_ASSISTANT, PreviewFeatures.NONE),
             (Components.ICON_FINDER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.POWER_POINT_ASSISTANT, PreviewFeatures.NONE)
+            (Components.SLIDE_BUILDER_ASSISTANT, PreviewFeatures.NONE)
             ))
         {
             <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
@@ -52,7 +52,7 @@
                 <AssistantBlock TSettings="SettingsDialogJobPostings" Component="Components.JOB_POSTING_ASSISTANT" Name="@T("Job Posting")" Description="@T("Generate a job posting for a given job description.")" Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
                 <AssistantBlock TSettings="SettingsDialogLegalCheck" Component="Components.LEGAL_CHECK_ASSISTANT" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
                 <AssistantBlock TSettings="SettingsDialogIconFinder" Component="Components.ICON_FINDER_ASSISTANT" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
-                <AssistantBlock TSettings="SettingsDialogPowerPoint" Component="Components.POWER_POINT_ASSISTANT" Name="@T("Power Point")" Description="@T("Create and refine PowerPoint slide text from a topic or outline.")" Icon="@Icons.Material.Filled.Slideshow" Link="@Routes.ASSISTANT_POWERPOINT"/>
+                <AssistantBlock TSettings="SettingsDialogSlideBuilder" Component="Components.SLIDE_BUILDER_ASSISTANT" Name="@T("Slide Assistant")" Description="@T("Develop slide content based on a given topic and content.")" Icon="@Icons.Material.Filled.Slideshow" Link="@Routes.ASSISTANT_SLIDE_BUILDER"/>
             </MudStack>
         }
 

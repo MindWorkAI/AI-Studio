@@ -58,6 +58,14 @@ public static class CommonLanguageExtensions
 
         _ => $"Translate the given text in {language.Name()} ({language}).",
     };
+    
+    public static string PromptGeneralPurpose(this CommonLanguages language, string customLanguage) => language switch
+    {
+        CommonLanguages.AS_IS => "Use the language the user input is written in for the output.",
+        CommonLanguages.OTHER => $"use the language {customLanguage} for your output.",
+
+        _ => $"Use the language {language.Name()} ({language}) for your output.",
+    };
 
     public static string NameSelecting(this CommonLanguages language)
     {
