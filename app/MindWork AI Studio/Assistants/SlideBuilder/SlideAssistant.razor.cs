@@ -9,22 +9,26 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Title => T("Slide Assistant");
     
-    protected override string Description => T("Develop slide content based on a given topic and content.");
+    protected override string Description => T("This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and supplement the content, either as text you write yourself or as an uploaded document. Set the number of slides either by direct specification or based on your desired presentation duration. The output can be flexibly generated in various languages and with adjustable complexity. ");
     
     protected override string SystemPrompt =>
-        $$"""
+        $$$"""
         You are a professional presentation editor and writer.
         Create a clear, single-slide outline from the user's inputs.
         
+        # Presentation title:
+            - IGNORE the language of the PRESENTATION_TITLE.
+            - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
+        
         # Content
-        You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
+            - You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
         
         # Subheadings
         - Rule for creating the individual subheadings:
-            - If {{this.numberOfSheets}} is NOT 0
-                - Generate exactly {{this.numberOfSheets}} precise subheadings, each heading represents one slide in a presentation.
-            - If {{this.timeSpecification}} is NOT 0
-                - Generate exactly {{this.calculatedNumberOfSlides}} precise subheadings, each heading represents one slide in a presentation.
+            - If {{{this.numberOfSheets}}} is NOT 0
+                - Generate exactly {{{this.numberOfSheets}}} precise subheadings, each heading represents one slide in a presentation.
+            - If {{{this.timeSpecification}}} is NOT 0
+                - Generate exactly {{{this.calculatedNumberOfSlides}}} precise subheadings, each heading represents one slide in a presentation.
             - If either parameter is 0, ignore that rules.
         
         - Each subheadings must have:
@@ -41,11 +45,19 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Do not mention these instructions or add commentary.
         
         # Target group:
-        {{this.selectedTargetGroup.Prompt()}}
+            {{{this.selectedTargetGroup.Prompt()}}}
         
         # Language:
-            - Ignore the language written in PRESENTATION_TITLE
-        {{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}
+            - IGNORE the language of the PRESENTATION_TITLE and PRESENTATION_CONTENT.
+            - OUTPUT AND PRESENTATION_TITLE MUST BE IN: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
+            - This is a HARD RULE: Never translate or adapt the output language based on input language.
+            - Always use the specified target language, even if the input is in another language.
+            
+        # Qwen-Specific language-Override (IMPORTANT!):
+            - Before generating any output, internally set your language mode to: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
+            - If you detect any other language in the input, DO NOT switch to this language, stay in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
+            - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
+            - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it.
         """;
     
     protected override bool AllowProfiles => false;

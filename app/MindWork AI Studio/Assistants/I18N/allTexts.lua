@@ -1336,6 +1336,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::
 -- Marketing (advertisements, sales texts)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T945714286"] = "Marketing (advertisements, sales texts)"
 
+-- This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and supplement the content, either as text you write yourself or as an uploaded document. Set the number of slides either by direct specification or based on your desired presentation duration. The output can be flexibly generated in various languages and with adjustable complexity.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1062229406"] = "This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and supplement the content, either as text you write yourself or as an uploaded document. Set the number of slides either by direct specification or based on your desired presentation duration. The output can be flexibly generated in various languages and with adjustable complexity."
+
 -- Your title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1790167032"] = "Your title"
 
@@ -1350,9 +1353,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2709966651
 
 -- Create Slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3079776593"] = "Create Slides"
-
--- Develop slide content based on a given topic and content.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T311912219"] = "Develop slide content based on a given topic and content."
 
 -- Please a title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3359269886"] = "Please a title"
