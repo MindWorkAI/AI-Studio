@@ -22,6 +22,7 @@ public sealed partial class Routes
     public const string ASSISTANT_EMAIL = "/assistant/email";
     public const string ASSISTANT_LEGAL_CHECK = "/assistant/legal-check";
     public const string ASSISTANT_SYNONYMS = "/assistant/synonyms";
+    public const string ASSISTANT_SLIDE_BUILDER = "/assistant/slide-builder";
     public const string ASSISTANT_MY_TASKS = "/assistant/my-tasks";
     public const string ASSISTANT_JOB_POSTING = "/assistant/job-posting";
     public const string ASSISTANT_BIAS = "/assistant/bias-of-the-day";
