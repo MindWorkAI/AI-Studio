@@ -12,7 +12,7 @@ public record ResponsesDeltaStreamLine(
     #region Implementation of IResponseStreamLine
 
     /// <inheritdoc />
-    public bool ContainsContent() => !string.IsNullOrWhiteSpace(this.Delta);
+    public bool ContainsContent() => this.Delta is not null;
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Delta, this.GetSources());
