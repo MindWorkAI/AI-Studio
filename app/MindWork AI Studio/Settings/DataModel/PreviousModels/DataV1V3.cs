@@ -1,5 +1,6 @@
 using AIStudio.Assistants.Coding;
 using AIStudio.Assistants.IconFinder;
+using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Assistants.TextSummarizer;
 
 namespace AIStudio.Settings.DataModel.PreviousModels;
@@ -228,6 +229,40 @@ public sealed class DataV1V3
     /// </summary>
     public string PreselectedTextSummarizerProvider { get; set; } = string.Empty;
 
+    #endregion
+    
+    #region Assiatant: Slide Builder Settings
+    
+    /// <summary>
+    /// Preselect any slide builder options?
+    /// </summary>
+    public bool PreselectSlideBuilderOptions { get; set; }
+    
+    /// <summary>
+    /// Preselect any slide builder profile?
+    /// </summary>
+    public string PreselectedSlideBuilderProfile { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Preselect a text summarizer provider?
+    /// </summary>
+    public string PreselectedSlideBuilderProvider { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Preselect the target group?
+    /// </summary>
+    public TargetGroup PreselectedSlideBuilderTargetGroup { get; set; }
+    
+    /// <summary>
+    /// Preselect the target language?
+    /// </summary>
+    public CommonLanguages PreselectedSlideBuilderTargetLanguage { get; set; }
+    
+    /// <summary>
+    /// Preselect any other language?
+    /// </summary>
+    public string PreselectedSlideBuilderOtherLanguage { get; set; } = string.Empty;
+    
     #endregion
 
     #region Agent: Text Content Cleaner Settings

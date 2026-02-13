@@ -113,6 +113,8 @@ public sealed class Data
 
     public DataEMail EMail { get; init; } = new();
     
+    public DataSlideBuilder SlideBuilder { get; init; } = new();
+    
     public DataLegalCheck LegalCheck { get; init; } = new();
     
     public DataSynonyms Synonyms { get; init; } = new();

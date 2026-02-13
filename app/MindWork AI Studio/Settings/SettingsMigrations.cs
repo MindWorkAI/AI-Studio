@@ -200,6 +200,16 @@ public static class SettingsMigrations
                 PreselectWebContentReader = previousConfig.PreselectWebContentReaderForTextSummarizer,
             },
             
+            SlideBuilder = new()
+            {
+                PreselectOptions = previousConfig.PreselectSlideBuilderOptions,
+                PreselectedProfile = previousConfig.PreselectedSlideBuilderProfile,
+                PreselectedProvider = previousConfig.PreselectedSlideBuilderProvider,
+                PreselectedTargetGroup = previousConfig.PreselectedSlideBuilderTargetGroup,
+                PreselectedTargetLanguage = previousConfig.PreselectedSlideBuilderTargetLanguage,
+                PreselectedOtherLanguage = previousConfig.PreselectedSlideBuilderOtherLanguage,
+            },
+            
             TextContentCleaner = new()
             {
                 PreselectAgentOptions = previousConfig.PreselectAgentTextContentCleanerOptions,
@@ -236,6 +246,7 @@ public static class SettingsMigrations
             GrammarSpelling = previousConfig.GrammarSpelling,
             RewriteImprove = previousConfig.RewriteImprove,
             EMail = previousConfig.EMail,
+            SlideBuilder =  previousConfig.SlideBuilder,
             LegalCheck = previousConfig.LegalCheck,
             Synonyms = previousConfig.Synonyms,
             MyTasks = previousConfig.MyTasks,

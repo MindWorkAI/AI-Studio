@@ -60,7 +60,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it.
         """;
     
-    protected override bool AllowProfiles => false;
+    protected override bool AllowProfiles => true;
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
@@ -77,22 +77,21 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         this.inputTitle = string.Empty;
         this.inputContext = string.Empty;
-        this.expertInField = string.Empty;
         this.selectedTargetGroup = TargetGroup.NO_CHANGE;
-        this.customTargetGroup = string.Empty;
         if (!this.MightPreselectValues())
         {
-            this.selectedLanguage = CommonLanguages.AS_IS;
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
         }
     }
     
     protected override bool MightPreselectValues()
     {
-        if (this.SettingsManager.ConfigurationData.Synonyms.PreselectOptions)
+        if (this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)
         {
-            this.selectedLanguage = this.SettingsManager.ConfigurationData.Synonyms.PreselectedLanguage;
-            this.customTargetLanguage = this.SettingsManager.ConfigurationData.Synonyms.PreselectedOtherLanguage;
+            this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
+            this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
+            this.selectedTargetGroup = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetGroup;
             return true;
         }
         
@@ -101,11 +100,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     private string inputTitle = string.Empty;
     private string inputContext = string.Empty;
-    private CommonLanguages selectedLanguage;
     private string customTargetLanguage = string.Empty;
-    private string expertInField = string.Empty;
     private TargetGroup selectedTargetGroup;
-    private string customTargetGroup = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private double numberOfSheets;
     private double timeSpecification;
@@ -115,7 +111,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SYNONYMS_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
             this.inputContext = deferredContent;
         
@@ -134,7 +130,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     private string? ValidateCustomLanguage(string language)
     {
-        if(this.selectedLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
+        if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
             return T("Please provide a custom language.");
         
         return null;
@@ -165,7 +161,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                  ```
                  {this.inputContext}
                  ```
-             """);
+             """,
+            hideContentFromUser: true);
 
         await this.AddAIResponseAsync(time);
     }

@@ -2,6 +2,4 @@
 
 namespace AIStudio.Dialogs.Settings;
 
-public partial class SettingsDialogSlideBuilder : SettingsDialogBase
-{
-}
+public partial class SettingsDialogSlideBuilder : SettingsDialogBase;
