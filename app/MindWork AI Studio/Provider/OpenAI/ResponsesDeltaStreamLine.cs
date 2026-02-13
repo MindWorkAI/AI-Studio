@@ -7,7 +7,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Delta">The delta content of the response.</param>
 public record ResponsesDeltaStreamLine(
     string Type,
-    string Delta) : IResponseStreamLine
+    string? Delta) : IResponseStreamLine
 {
     #region Implementation of IResponseStreamLine
 
@@ -15,7 +15,7 @@ public record ResponsesDeltaStreamLine(
     public bool ContainsContent() => this.Delta is not null;
 
     /// <inheritdoc />
-    public ContentStreamChunk GetContent() => new(this.Delta, this.GetSources());
+    public ContentStreamChunk GetContent() => new(this.Delta ?? string.Empty, this.GetSources());
 
     //
     // Please note that there are multiple options where LLM providers might stream sources:
