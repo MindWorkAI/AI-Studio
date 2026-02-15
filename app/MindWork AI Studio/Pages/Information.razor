@@ -104,7 +104,7 @@
                                         <MudPaper Outlined="true" Class="pa-3 mt-2 mb-2">
                                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Size="Size.Small"/>
-                                                <MudText Typo="Typo.subtitle2">@T("Pending configuration")</MudText>
+                                                <MudText Typo="Typo.subtitle2">@T("Waiting for the configuration plugin...")</MudText>
                                             </div>
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
@@ -153,8 +153,8 @@
                                                 }
                                                 else
                                                 {
-                                                    <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Size="Size.Small"/>
-                                                    <MudText Typo="Typo.subtitle2">@T("Pending configuration")</MudText>
+                                                    <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Color="Color.Warning"/>
+                                                    <MudText Typo="Typo.subtitle2">@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")</MudText>
                                                 }
                                             </div>
                                             <div style="display: flex; align-items: center; gap: 8px;">
