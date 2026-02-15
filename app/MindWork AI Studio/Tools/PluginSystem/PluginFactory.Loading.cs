@@ -103,6 +103,16 @@ public static partial class PluginFactory
                     }
             
                     LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
+
+                    // For configuration plugins, validate that the plugin ID matches the enterprise config ID
+                    // (the directory name under which the plugin was downloaded):
+                    if (plugin.Type is PluginType.CONFIGURATION && pluginPath.StartsWith(CONFIGURATION_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var directoryName = Path.GetFileName(pluginPath);
+                        if (Guid.TryParse(directoryName, out var enterpriseConfigId) && enterpriseConfigId != plugin.Id)
+                            LOG.LogWarning($"The configuration plugin's ID ('{plugin.Id}') does not match the enterprise configuration ID ('{enterpriseConfigId}'). These IDs should be identical. Please update the plugin's ID field to match the enterprise configuration ID.");
+                    }
+
                     AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
                 }
                 catch (Exception e)

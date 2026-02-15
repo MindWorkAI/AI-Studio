@@ -97,6 +97,16 @@ intranet.my-company.com:30100 {
 }
 ```
 
+## Important: Plugin ID must match the enterprise configuration ID
+
+The `ID` field inside your configuration plugin (the Lua file) **must** be identical to the enterprise configuration ID used in the registry or environment variable. AI Studio uses this ID to match downloaded configurations to their plugins. If the IDs do not match, AI Studio will log a warning and the configuration may not be displayed correctly on the Information page.
+
+For example, if your enterprise configuration ID is `9072b77d-ca81-40da-be6a-861da525ef7b`, then your plugin must declare:
+
+```lua
+ID = "9072b77d-ca81-40da-be6a-861da525ef7b"
+```
+
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:
 
