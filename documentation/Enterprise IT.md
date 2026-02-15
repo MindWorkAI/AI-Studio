@@ -13,13 +13,33 @@ Do you want to manage MindWork AI Studio in a corporate environment or within an
 AI Studio checks about every 16 minutes to see if the configuration ID, the server for the configuration, or the configuration itself has changed. If it finds any changes, it loads the updated configuration from the server and applies it right away.
 
 ## Configure the devices
-So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees’ devices. Currently, the following options are available:
+So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:
 
 - **Registry** (only available for Microsoft Windows): On Windows devices, AI Studio first tries to read the information from the registry. The registry information can be managed and distributed centrally as a so-called Group Policy Object (GPO).
 
 - **Environment variables**: On all operating systems (on Windows as a fallback after the registry), AI Studio tries to read the configuration metadata from environment variables.
 
-The following keys and values (registry) and variables are checked and read:
+### Multiple configurations (recommended)
+
+AI Studio supports loading multiple enterprise configurations simultaneously. This enables hierarchical configuration schemes, e.g., organization-wide settings combined with department-specific settings. The following keys and variables are used:
+
+- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `configs` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS`: A combined format containing one or more configuration entries. Each entry consists of a configuration ID and a server URL separated by `@`. Multiple entries are separated by `;`. The format is: `id1@url1;id2@url2;id3@url3`. The configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier).
+
+- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `delete_config_ids` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_IDS`: One or more configuration IDs that should be removed, separated by `;`. The format is: `id1;id2;id3`. This is helpful if an employee moves to a different department or leaves the organization.
+
+- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_encryption_secret` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`: A base64-encoded 32-byte encryption key for decrypting API keys in configuration plugins. This is optional and only needed if you want to include encrypted API keys in your configuration. All configurations share the same encryption secret.
+
+**Example:** To configure two enterprise configurations (one for the organization and one for a department):
+
+```
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS=9072b77d-ca81-40da-be6a-861da525ef7b@https://intranet.my-company.com:30100/ai-studio/configuration;a1b2c3d4-e5f6-7890-abcd-ef1234567890@https://intranet.my-company.com:30100/ai-studio/department-config
+```
+
+**Priority:** When multiple configurations define the same setting (e.g., a provider with the same ID), the first definition wins. The order of entries in the variable determines priority. Place the organization-wide configuration first, followed by department-specific configurations if the organization should have higher priority.
+
+### Single configuration (legacy)
+
+The following single-configuration keys and variables are still supported for backwards compatibility. If the multi-config variables above are not set, AI Studio falls back to these:
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_id` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID`: This must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). It uniquely identifies the configuration. You can use an ID per department, institute, or even per person.
 
@@ -29,11 +49,13 @@ The following keys and values (registry) and variables are checked and read:
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_encryption_secret` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`: A base64-encoded 32-byte encryption key for decrypting API keys in configuration plugins. This is optional and only needed if you want to include encrypted API keys in your configuration.
 
+### How configurations are downloaded
+
 Let's assume as example that `https://intranet.my-company.com:30100/ai-studio/configuration` is the server address and `9072b77d-ca81-40da-be6a-861da525ef7b` is the configuration ID. AI Studio will derive the following address from this information: `https://intranet.my-company.com:30100/ai-studio/configuration/9072b77d-ca81-40da-be6a-861da525ef7b.zip`. Important: The configuration ID will always be written in lowercase, even if it is configured in uppercase. If `9072B77D-CA81-40DA-BE6A-861DA525EF7B` is configured, the same address will be derived. Your web server must be configured accordingly.
 
 Finally, AI Studio will send a GET request and download the ZIP file. The ZIP file only contains the files necessary for the configuration. It's normal to include a file for an icon along with the actual configuration plugin.
 
-Approximately every 16 minutes, AI Studio checks the metadata of the ZIP file by reading the [ETag](https://en.wikipedia.org/wiki/HTTP_ETag). When the ETag was not changed, no download will be performed. Make sure that your web server supports this.
+Approximately every 16 minutes, AI Studio checks the metadata of the ZIP file by reading the [ETag](https://en.wikipedia.org/wiki/HTTP_ETag). When the ETag was not changed, no download will be performed. Make sure that your web server supports this. When using multiple configurations, each configuration is checked independently.
 
 ## Configure the configuration web server
 
