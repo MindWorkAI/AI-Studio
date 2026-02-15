@@ -208,10 +208,10 @@
                     </MudListItem>
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
                         @T("Check for updates")
                     </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="async () => await this.ShowPandocDialog()">
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
                         @this.PandocButtonText
                     </MudButton>
                 </MudStack>
@@ -260,14 +260,14 @@
                     @T("Startup log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="() => this.CopyStartupLogPath()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="@(() => this.CopyStartupLogPath())"/>
                 </MudList>
                 
                 <MudText Typo="Typo.h4">
                     @T("Usage log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="() => this.CopyAppLogPath()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="@(() => this.CopyAppLogPath())"/>
                 </MudList>
             </ExpansionPanel>
 
