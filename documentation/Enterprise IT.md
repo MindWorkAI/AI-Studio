@@ -39,7 +39,7 @@ MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS=9072b77d-ca81-40da-be6a-861da525ef7b@https
 
 ### Single configuration (legacy)
 
-The following single-configuration keys and variables are still supported for backwards compatibility. If the multi-config variables above are not set, AI Studio falls back to these:
+The following single-configuration keys and variables are still supported for backwards compatibility. AI Studio always reads both the multi-config and legacy variables and merges all found configurations into one list. If a configuration ID appears in both, the entry from the multi-config format takes priority (first occurrence wins). This means you can migrate to the new format incrementally without losing existing configurations:
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_id` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID`: This must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). It uniquely identifies the configuration. You can use an ID per department, institute, or even per person.
 

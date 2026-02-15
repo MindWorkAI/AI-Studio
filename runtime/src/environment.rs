@@ -152,45 +152,43 @@ pub struct EnterpriseConfig {
     pub server_url: String,
 }
 
-/// Returns all enterprise configurations. Supports the new multi-config format
-/// (`id1@url1;id2@url2`) as well as the legacy single-config environment variables.
+/// Returns all enterprise configurations. Collects configurations from both the
+/// new multi-config format (`id1@url1;id2@url2`) and the legacy single-config
+/// environment variables, merging them into one list. Duplicates (by ID) are
+/// skipped — the first occurrence wins.
 #[get("/system/enterprise/configs")]
 pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
     info!("Trying to read the enterprise environment for all configurations.");
 
-    // Try the new combined format first:
+    let mut configs: Vec<EnterpriseConfig> = Vec::new();
+    let mut seen_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    // Read the new combined format:
     let combined = get_enterprise_configuration(
         "configs",
         "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS",
     );
 
     if !combined.is_empty() {
-        // Parse the new format: id1@url1;id2@url2; ...
-        let configs: Vec<EnterpriseConfig> = combined
-            .split(';')
-            .filter_map(|entry| {
-                let entry = entry.trim();
-                if entry.is_empty() {
-                    return None;
+        // Parse the new format: id1@url1;id2@url2;...
+        for entry in combined.split(';') {
+            let entry = entry.trim();
+            if entry.is_empty() {
+                continue;
+            }
+
+            // Split at the first '@' (GUIDs never contain '@'):
+            if let Some((id, url)) = entry.split_once('@') {
+                let id = id.trim().to_lowercase();
+                let url = url.trim().to_string();
+                if !id.is_empty() && !url.is_empty() && seen_ids.insert(id.clone()) {
+                    configs.push(EnterpriseConfig { id, server_url: url });
                 }
-
-                // Split at the first '@' (GUIDs never contain '@'):
-                entry.split_once('@').and_then(|(id, url)| {
-                    let id = id.trim().to_string();
-                    let url = url.trim().to_string();
-                    if id.is_empty() || url.is_empty() {
-                        None
-                    } else {
-                        Some(EnterpriseConfig { id, server_url: url })
-                    }
-                })
-            })
-            .collect();
-
-        return Json(configs);
+            }
+        }
     }
 
-    // Fallback: read the legacy single-config variables:
+    // Also read the legacy single-config variables:
     let config_id = get_enterprise_configuration(
         "config_id",
         "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID",
@@ -202,13 +200,13 @@ pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> 
     );
 
     if !config_id.is_empty() && !config_server_url.is_empty() {
-        return Json(vec![EnterpriseConfig {
-            id: config_id,
-            server_url: config_server_url,
-        }]);
+        let id = config_id.trim().to_lowercase();
+        if seen_ids.insert(id.clone()) {
+            configs.push(EnterpriseConfig { id, server_url: config_server_url });
+        }
     }
 
-    Json(vec![])
+    Json(configs)
 }
 
 /// Returns all enterprise configuration IDs that should be deleted. Supports the new
@@ -217,33 +215,38 @@ pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> 
 pub fn read_enterprise_delete_config_ids(_token: APIToken) -> Json<Vec<String>> {
     info!("Trying to read the enterprise environment for configuration IDs to delete.");
 
-    // Try the new combined format first:
+    let mut ids: Vec<String> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    // Read the new combined format:
     let combined = get_enterprise_configuration(
         "delete_config_ids",
         "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_IDS",
     );
 
     if !combined.is_empty() {
-        let ids: Vec<String> = combined
-            .split(';')
-            .map(|id| id.trim().to_string())
-            .filter(|id| !id.is_empty())
-            .collect();
-
-        return Json(ids);
+        for id in combined.split(';') {
+            let id = id.trim().to_lowercase();
+            if !id.is_empty() && seen.insert(id.clone()) {
+                ids.push(id);
+            }
+        }
     }
 
-    // Fallback: read the legacy single-delete variable:
+    // Also read the legacy single-delete variable:
     let delete_id = get_enterprise_configuration(
         "delete_config_id",
         "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
     );
 
     if !delete_id.is_empty() {
-        return Json(vec![delete_id]);
+        let id = delete_id.trim().to_lowercase();
+        if seen.insert(id.clone()) {
+            ids.push(id);
+        }
     }
 
-    Json(vec![])
+    Json(ids)
 }
 
 fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
