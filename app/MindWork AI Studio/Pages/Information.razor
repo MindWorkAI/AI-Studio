@@ -64,13 +64,17 @@
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
                                     @foreach (var plug in this.configPlugins)
                                     {
-                                        <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                        <MudPaper Outlined="true" Class="pa-3 mt-2 mb-2">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small"/>
+                                                <MudText Typo="Typo.subtitle2">@plug.Name</MudText>
+                                            </div>
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                                 <span>@T("Configuration plugin ID:") @plug.Id</span>
                                                 <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@plug.Id.ToString()/>
                                             </div>
-                                        </MudText>
+                                        </MudPaper>
                                     }
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2">
                                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -97,20 +101,22 @@
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
                                     @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
                                     {
-                                        <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                        <MudPaper Outlined="true" Class="pa-3 mt-2 mb-2">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Size="Size.Small"/>
+                                                <MudText Typo="Typo.subtitle2">@T("Pending configuration")</MudText>
+                                            </div>
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                                 <span>@T("Enterprise configuration ID:") @env.ConfigurationId</span>
                                                 <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@env.ConfigurationId.ToString()/>
                                             </div>
-                                        </MudText>
-                                        <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                                 <span>@T("Configuration server:") @env.ConfigurationServerUrl</span>
                                                 <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@env.ConfigurationServerUrl/>
                                             </div>
-                                        </MudText>
+                                        </MudPaper>
                                     }
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2">
                                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -137,30 +143,39 @@
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
                                     @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
                                     {
-                                        <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                        var matchingPlugin = this.configPlugins.FirstOrDefault(p => p.Id == env.ConfigurationId);
+                                        <MudPaper Outlined="true" Class="pa-3 mt-2 mb-2">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                @if (matchingPlugin is not null)
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small"/>
+                                                    <MudText Typo="Typo.subtitle2">@matchingPlugin.Name</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Size="Size.Small"/>
+                                                    <MudText Typo="Typo.subtitle2">@T("Pending configuration")</MudText>
+                                                }
+                                            </div>
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                                 <span>@T("Enterprise configuration ID:") @env.ConfigurationId</span>
                                                 <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@env.ConfigurationId.ToString()/>
                                             </div>
-                                        </MudText>
-                                        <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
                                                 <span>@T("Configuration server:") @env.ConfigurationServerUrl</span>
                                                 <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@env.ConfigurationServerUrl/>
                                             </div>
-                                        </MudText>
-                                    }
-                                    @foreach (var plug in this.configPlugins)
-                                    {
-                                        <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                            <div style="display: flex; align-items: center; gap: 8px;">
-                                                <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                                <span>@T("Configuration plugin ID:") @plug.Id</span>
-                                                <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@plug.Id.ToString()/>
-                                            </div>
-                                        </MudText>
+                                            @if (matchingPlugin is not null)
+                                            {
+                                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                                    <span>@T("Configuration plugin ID:") @matchingPlugin.Id</span>
+                                                    <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@matchingPlugin.Id.ToString()/>
+                                                </div>
+                                            }
+                                        </MudPaper>
                                     }
                                     <MudText Typo="Typo.body1" Class="mt-2 mb-2">
                                         <div style="display: flex; align-items: center; gap: 8px;">
