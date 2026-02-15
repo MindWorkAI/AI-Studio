@@ -1,7 +1,9 @@
 use std::env;
 use std::sync::OnceLock;
-use log::{debug, warn};
+use log::{debug, info, warn};
 use rocket::{delete, get};
+use rocket::serde::json::Json;
+use serde::Serialize;
 use sys_locale::get_locale;
 use crate::api_token::APIToken;
 
@@ -143,23 +145,124 @@ pub fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String 
     )
 }
 
+/// Represents a single enterprise configuration entry with an ID and server URL.
+#[derive(Serialize)]
+pub struct EnterpriseConfig {
+    pub id: String,
+    pub server_url: String,
+}
+
+/// Returns all enterprise configurations. Supports the new multi-config format
+/// (`id1@url1;id2@url2`) as well as the legacy single-config environment variables.
+#[get("/system/enterprise/configs")]
+pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
+    info!("Trying to read the enterprise environment for all configurations.");
+
+    // Try the new combined format first:
+    let combined = get_enterprise_configuration(
+        "configs",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS",
+    );
+
+    if !combined.is_empty() {
+        // Parse the new format: id1@url1;id2@url2; ...
+        let configs: Vec<EnterpriseConfig> = combined
+            .split(';')
+            .filter_map(|entry| {
+                let entry = entry.trim();
+                if entry.is_empty() {
+                    return None;
+                }
+
+                // Split at the first '@' (GUIDs never contain '@'):
+                entry.split_once('@').and_then(|(id, url)| {
+                    let id = id.trim().to_string();
+                    let url = url.trim().to_string();
+                    if id.is_empty() || url.is_empty() {
+                        None
+                    } else {
+                        Some(EnterpriseConfig { id, server_url: url })
+                    }
+                })
+            })
+            .collect();
+
+        return Json(configs);
+    }
+
+    // Fallback: read the legacy single-config variables:
+    let config_id = get_enterprise_configuration(
+        "config_id",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID",
+    );
+
+    let config_server_url = get_enterprise_configuration(
+        "config_server_url",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL",
+    );
+
+    if !config_id.is_empty() && !config_server_url.is_empty() {
+        return Json(vec![EnterpriseConfig {
+            id: config_id,
+            server_url: config_server_url,
+        }]);
+    }
+
+    Json(vec![])
+}
+
+/// Returns all enterprise configuration IDs that should be deleted. Supports the new
+/// multi-delete format (`id1;id2;id3`) as well as the legacy single-delete variable.
+#[get("/system/enterprise/delete-configs")]
+pub fn read_enterprise_delete_config_ids(_token: APIToken) -> Json<Vec<String>> {
+    info!("Trying to read the enterprise environment for configuration IDs to delete.");
+
+    // Try the new combined format first:
+    let combined = get_enterprise_configuration(
+        "delete_config_ids",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_IDS",
+    );
+
+    if !combined.is_empty() {
+        let ids: Vec<String> = combined
+            .split(';')
+            .map(|id| id.trim().to_string())
+            .filter(|id| !id.is_empty())
+            .collect();
+
+        return Json(ids);
+    }
+
+    // Fallback: read the legacy single-delete variable:
+    let delete_id = get_enterprise_configuration(
+        "delete_config_id",
+        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
+    );
+
+    if !delete_id.is_empty() {
+        return Json(vec![delete_id]);
+    }
+
+    Json(vec![])
+}
+
 fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "windows")] {
-            debug!(r"Detected a Windows machine, trying to read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT' or environment variables.");
+            info!(r"Detected a Windows machine, trying to read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\{}' or the environment variable '{}'.", _reg_value, env_name);
             use windows_registry::*;
             let key_path = r"Software\github\MindWork AI Studio\Enterprise IT";
             let key = match CURRENT_USER.open(key_path) {
                 Ok(key) => key,
                 Err(_) => {
-                    debug!(r"Could not read the registry key HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT. Falling back to environment variables.");
+                    info!(r"Could not read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\{}'. Falling back to the environment variable '{}'.", _reg_value, env_name);
                     return match env::var(env_name) {
                         Ok(val) => {
-                            debug!("Falling back to the environment variable '{}' was successful.", env_name);
+                            info!("Falling back to the environment variable '{}' was successful.", env_name);
                             val
                         },
                         Err(_) => {
-                            debug!("Falling back to the environment variable '{}' was not successful.", env_name);
+                            info!("Falling back to the environment variable '{}' was not successful. It seems that there is no enterprise environment available.", env_name);
                             "".to_string()
                         },
                     }
@@ -169,14 +272,14 @@ fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
             match key.get_string(_reg_value) {
                 Ok(val) => val,
                 Err(_) => {
-                    debug!(r"We could read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT', but the value '{}' could not be read. Falling back to environment variables.", _reg_value);
+                    info!(r"We could read the registry key 'HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT', but the value '{}' could not be read. Falling back to the environment variable '{}'.", _reg_value, env_name);
                     match env::var(env_name) {
                         Ok(val) => {
-                            debug!("Falling back to the environment variable '{}' was successful.", env_name);
+                            info!("Falling back to the environment variable '{}' was successful.", env_name);
                             val
                         },
                         Err(_) => {
-                            debug!("Falling back to the environment variable '{}' was not successful.", env_name);
+                            info!("Falling back to the environment variable '{}' was not successful. It seems that there is no enterprise environment available.", env_name);
                             "".to_string()
                         }
                     }
@@ -184,11 +287,11 @@ fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
             }
         } else {
             // In the case of macOS or Linux, we just read the environment variable:
-            debug!(r"Detected a Unix machine, trying to read the environment variable '{}'.", env_name);
+            info!(r"Detected a Unix machine, trying to read the environment variable '{}'.", env_name);
             match env::var(env_name) {
                 Ok(val) => val,
                 Err(_) => {
-                    debug!("The environment variable '{}' was not found.", env_name);
+                    info!("The environment variable '{}' was not found. It seems that there is no enterprise environment available.", env_name);
                     "".to_string()
                 }
             }

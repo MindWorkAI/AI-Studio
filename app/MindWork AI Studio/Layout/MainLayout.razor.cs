@@ -211,9 +211,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             //
                             // Check if there is an enterprise configuration plugin to download:
                             //
-                            var enterpriseEnvironment = this.MessageBus.CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT).FirstOrDefault();
-                            if (enterpriseEnvironment != default)
-                                await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseEnvironment.ConfigurationId, enterpriseEnvironment.ConfigurationServerUrl);
+                            var enterpriseEnvironments = this.MessageBus
+                                .CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
+                                .Where(env => env != default)
+                                .ToList();
+                            foreach (var env in enterpriseEnvironments)
+                                await PluginFactory.TryDownloadingConfigPluginAsync(env.ConfigurationId, env.ConfigurationServerUrl);
 
                             // Initialize the enterprise encryption service for decrypting API keys:
                             await PluginFactory.InitializeEnterpriseEncryption(this.RustService);

@@ -4,7 +4,7 @@ namespace AIStudio.Tools.Services;
 
 public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentService> logger, RustService rustService) : BackgroundService
 {
-    public static EnterpriseEnvironment CURRENT_ENVIRONMENT;
+    public static List<EnterpriseEnvironment> CURRENT_ENVIRONMENTS = [];
 
 #if DEBUG
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(6);
@@ -33,84 +33,125 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         try
         {
             logger.LogInformation("Start updating of the enterprise environment.");
-        
-            Guid enterpriseRemoveConfigId;
-            try
-            {
-                enterpriseRemoveConfigId = await rustService.EnterpriseEnvRemoveConfigId();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to fetch the enterprise remove configuration ID from the Rust service.");
-                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvRemoveConfigId failed");
-                return;
-            }
-            
-            var isPlugin2RemoveInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == enterpriseRemoveConfigId);
-            if (enterpriseRemoveConfigId != Guid.Empty && isPlugin2RemoveInUse)
-            {
-                logger.LogWarning("The enterprise environment configuration ID '{EnterpriseRemoveConfigId}' must be removed.", enterpriseRemoveConfigId);
-                PluginFactory.RemovePluginAsync(enterpriseRemoveConfigId);
-            }
 
-            string? enterpriseConfigServerUrl;
+            //
+            // Step 1: Handle deletions first.
+            //
+            List<Guid> deleteConfigIds;
             try
             {
-                enterpriseConfigServerUrl = await rustService.EnterpriseEnvConfigServerUrl();
+                deleteConfigIds = await rustService.EnterpriseEnvDeleteConfigIds();
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failed to fetch the enterprise configuration server URL from the Rust service.");
-                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigServerUrl failed");
+                logger.LogError(e, "Failed to fetch the enterprise delete configuration IDs from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvDeleteConfigIds failed");
                 return;
             }
 
-            Guid enterpriseConfigId;
-            try
+            foreach (var deleteId in deleteConfigIds)
             {
-                enterpriseConfigId = await rustService.EnterpriseEnvConfigId();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to fetch the enterprise configuration ID from the Rust service.");
-                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigId failed");
-                return;
-            }
-            
-            var etag = await PluginFactory.DetermineConfigPluginETagAsync(enterpriseConfigId, enterpriseConfigServerUrl);
-            var nextEnterpriseEnvironment = new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag);
-            if (CURRENT_ENVIRONMENT != nextEnterpriseEnvironment)
-            {
-                logger.LogInformation("The enterprise environment has changed. Updating the current environment.");
-                CURRENT_ENVIRONMENT = nextEnterpriseEnvironment;
-            
-                switch (enterpriseConfigServerUrl)
+                var isPluginInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == deleteId);
+                if (isPluginInUse)
                 {
-                    case null when enterpriseConfigId == Guid.Empty:
-                    case not null when string.IsNullOrWhiteSpace(enterpriseConfigServerUrl) && enterpriseConfigId == Guid.Empty:
-                        logger.LogInformation("AI Studio runs without an enterprise configuration.");
-                        break;
-
-                    case null:
-                        logger.LogWarning("AI Studio runs with an enterprise configuration id ('{EnterpriseConfigId}'), but the configuration server URL is not set.", enterpriseConfigId);
-                        break;
-
-                    case not null when !string.IsNullOrWhiteSpace(enterpriseConfigServerUrl) && enterpriseConfigId == Guid.Empty:
-                        logger.LogWarning("AI Studio runs with an enterprise configuration server URL ('{EnterpriseConfigServerUrl}'), but the configuration ID is not set.", enterpriseConfigServerUrl);
-                        break;
-
-                    default:
-                        logger.LogInformation("AI Studio runs with an enterprise configuration id ('{EnterpriseConfigId}') and configuration server URL ('{EnterpriseConfigServerUrl}').", enterpriseConfigId, enterpriseConfigServerUrl);
-                        
-                        if(isFirstRun)
-                            MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, new EnterpriseEnvironment(enterpriseConfigServerUrl, enterpriseConfigId, etag));
-                        else
-                            await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseConfigId, enterpriseConfigServerUrl);
-                        break;
+                    logger.LogWarning("The enterprise environment configuration ID '{DeleteConfigId}' must be removed.", deleteId);
+                    PluginFactory.RemovePluginAsync(deleteId);
                 }
             }
-            else
-                logger.LogInformation("The enterprise environment has not changed. No update required.");
+
+            //
+            // Step 2: Fetch all active configurations.
+            //
+            List<EnterpriseEnvironment> fetchedConfigs;
+            try
+            {
+                fetchedConfigs = await rustService.EnterpriseEnvConfigs();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise configurations from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigs failed");
+                return;
+            }
+
+            //
+            // Step 3: Determine ETags and build the next environment list.
+            //
+            var nextEnvironments = new List<EnterpriseEnvironment>();
+            foreach (var config in fetchedConfigs)
+            {
+                if (!config.IsActive)
+                {
+                    logger.LogWarning("Skipping inactive enterprise configuration with ID '{ConfigId}'. There is either no valid server URL or config ID set.", config.ConfigurationId);
+                    continue;
+                }
+
+                var etag = await PluginFactory.DetermineConfigPluginETagAsync(config.ConfigurationId, config.ConfigurationServerUrl);
+                nextEnvironments.Add(config with { ETag = etag });
+            }
+
+            if (nextEnvironments.Count == 0)
+            {
+                if (CURRENT_ENVIRONMENTS.Count > 0)
+                {
+                    logger.LogWarning("AI Studio no longer has any enterprise configurations. Removing previously active configs.");
+
+                    // Remove plugins for configs that were previously active:
+                    foreach (var oldEnv in CURRENT_ENVIRONMENTS)
+                    {
+                        var isPluginInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == oldEnv.ConfigurationId);
+                        if (isPluginInUse)
+                            PluginFactory.RemovePluginAsync(oldEnv.ConfigurationId);
+                    }
+                }
+                else
+                    logger.LogInformation("AI Studio runs without any enterprise configurations.");
+
+                CURRENT_ENVIRONMENTS = [];
+                return;
+            }
+
+            //
+            // Step 4: Compare with current environments and process changes.
+            //
+            var currentIds = CURRENT_ENVIRONMENTS.Select(e => e.ConfigurationId).ToHashSet();
+            var nextIds = nextEnvironments.Select(e => e.ConfigurationId).ToHashSet();
+
+            // Remove plugins for configs that are no longer present:
+            foreach (var oldEnv in CURRENT_ENVIRONMENTS)
+            {
+                if (!nextIds.Contains(oldEnv.ConfigurationId))
+                {
+                    logger.LogInformation("Enterprise configuration '{ConfigId}' was removed.", oldEnv.ConfigurationId);
+                    var isPluginInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == oldEnv.ConfigurationId);
+                    if (isPluginInUse)
+                        PluginFactory.RemovePluginAsync(oldEnv.ConfigurationId);
+                }
+            }
+
+            // Process new or changed configs:
+            foreach (var nextEnv in nextEnvironments)
+            {
+                var currentEnv = CURRENT_ENVIRONMENTS.FirstOrDefault(e => e.ConfigurationId == nextEnv.ConfigurationId);
+                if (currentEnv == nextEnv) // Hint: This relies on the record equality to check if anything relevant has changed (e.g. server URL or ETag).
+                {
+                    logger.LogInformation("Enterprise configuration '{ConfigId}' has not changed. No update required.", nextEnv.ConfigurationId);
+                    continue;
+                }
+
+                var isNew = !currentIds.Contains(nextEnv.ConfigurationId);
+                if(isNew)
+                    logger.LogInformation("Detected new enterprise configuration with ID '{ConfigId}' and server URL '{ServerUrl}'.", nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
+                else
+                    logger.LogInformation("Detected change in enterprise configuration with ID '{ConfigId}'. Server URL or ETag has changed.", nextEnv.ConfigurationId);
+
+                if (isFirstRun)
+                    MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, nextEnv);
+                else
+                    await PluginFactory.TryDownloadingConfigPluginAsync(nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
+            }
+
+            CURRENT_ENVIRONMENTS = nextEnvironments;
         }
         catch (Exception e)
         {
