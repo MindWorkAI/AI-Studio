@@ -34,7 +34,7 @@ public static partial class PluginFactory
         
                 if (startedBasePlugin is PluginLanguage languagePlugin)
                 {
-                    BASE_LANGUAGE_PLUGIN = languagePlugin;
+                    BaseLanguage = languagePlugin;
                     RUNNING_PLUGINS.Add(languagePlugin);
                     LOG.LogInformation($"Successfully started the base language plugin: Id='{languagePlugin.Id}', Type='{languagePlugin.Type}', Name='{languagePlugin.Name}', Version='{languagePlugin.Version}'");
                 }
@@ -44,7 +44,7 @@ public static partial class PluginFactory
             catch (Exception e)
             {
                 LOG.LogError(e, $"An error occurred while starting the base language plugin: Id='{baseLanguagePluginId}'.");
-                BASE_LANGUAGE_PLUGIN = NoPluginLanguage.INSTANCE;
+                BaseLanguage = NoPluginLanguage.INSTANCE;
             }
         }
         
@@ -106,8 +106,8 @@ public static partial class PluginFactory
             //
             // When this is a language plugin, we need to set the base language plugin.
             //
-            if (plugin is PluginLanguage languagePlugin && BASE_LANGUAGE_PLUGIN != NoPluginLanguage.INSTANCE)
-                languagePlugin.SetBaseLanguage(BASE_LANGUAGE_PLUGIN);
+            if (plugin is PluginLanguage languagePlugin && BaseLanguage != NoPluginLanguage.INSTANCE)
+                languagePlugin.SetBaseLanguage(BaseLanguage);
             
             if(plugin is PluginConfiguration configPlugin)
                 await configPlugin.InitializeAsync(false);

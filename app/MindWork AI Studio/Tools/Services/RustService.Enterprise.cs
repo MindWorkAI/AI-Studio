@@ -36,13 +36,12 @@ public sealed partial class RustService
         var result = await this.http.GetAsync("/system/enterprise/configs");
         if (!result.IsSuccessStatusCode)
         {
-            this.logger!.LogError($"Failed to query the enterprise configurations: '{result.StatusCode}'");
-            return [];
+            throw new HttpRequestException($"Failed to query the enterprise configurations: '{result.StatusCode}'");
         }
 
         var configs = await result.Content.ReadFromJsonAsync<List<EnterpriseConfig>>(this.jsonRustSerializerOptions);
         if (configs is null)
-            return [];
+            throw new InvalidOperationException("Failed to parse the enterprise configurations from Rust.");
 
         var environments = new List<EnterpriseEnvironment>();
         foreach (var config in configs)
@@ -54,36 +53,5 @@ public sealed partial class RustService
         }
 
         return environments;
-    }
-
-    /// <summary>
-    /// Reads all enterprise configuration IDs that should be deleted.
-    /// </summary>
-    /// <returns>
-    /// Returns a list of GUIDs representing configuration IDs to remove.
-    /// </returns>
-    public async Task<List<Guid>> EnterpriseEnvDeleteConfigIds()
-    {
-        var result = await this.http.GetAsync("/system/enterprise/delete-configs");
-        if (!result.IsSuccessStatusCode)
-        {
-            this.logger!.LogError($"Failed to query the enterprise delete configuration IDs: '{result.StatusCode}'");
-            return [];
-        }
-
-        var ids = await result.Content.ReadFromJsonAsync<List<string>>(this.jsonRustSerializerOptions);
-        if (ids is null)
-            return [];
-
-        var guids = new List<Guid>();
-        foreach (var idStr in ids)
-        {
-            if (Guid.TryParse(idStr, out var id))
-                guids.Add(id);
-            else
-                this.logger!.LogWarning($"Skipping invalid GUID in enterprise delete config IDs: '{idStr}'.");
-        }
-
-        return guids;
     }
 }

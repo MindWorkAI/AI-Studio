@@ -25,8 +25,6 @@ AI Studio supports loading multiple enterprise configurations simultaneously. Th
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `configs` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS`: A combined format containing one or more configuration entries. Each entry consists of a configuration ID and a server URL separated by `@`. Multiple entries are separated by `;`. The format is: `id1@url1;id2@url2;id3@url3`. The configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier).
 
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `delete_config_ids` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_IDS`: One or more configuration IDs that should be removed, separated by `;`. The format is: `id1;id2;id3`. This is helpful if an employee moves to a different department or leaves the organization.
-
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_encryption_secret` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`: A base64-encoded 32-byte encryption key for decrypting API keys in configuration plugins. This is optional and only needed if you want to include encrypted API keys in your configuration. All configurations share the same encryption secret.
 
 **Example:** To configure two enterprise configurations (one for the organization and one for a department):
@@ -42,8 +40,6 @@ MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS=9072b77d-ca81-40da-be6a-861da525ef7b@https
 The following single-configuration keys and variables are still supported for backwards compatibility. AI Studio always reads both the multi-config and legacy variables and merges all found configurations into one list. If a configuration ID appears in both, the entry from the multi-config format takes priority (first occurrence wins). This means you can migrate to the new format incrementally without losing existing configurations:
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_id` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID`: This must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). It uniquely identifies the configuration. You can use an ID per department, institute, or even per person.
-
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `delete_config_id` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID`: This is a configuration ID that should be removed. This is helpful if an employee moves to a different department or leaves the organization.
 
 - Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_server_url` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL`: An HTTP or HTTPS address using an IP address or DNS name. This is the web server from which AI Studio attempts to load the specified configuration as a ZIP file.
 
@@ -106,6 +102,16 @@ For example, if your enterprise configuration ID is `9072b77d-ca81-40da-be6a-861
 ```lua
 ID = "9072b77d-ca81-40da-be6a-861da525ef7b"
 ```
+
+## Important: Mark enterprise-managed plugins explicitly
+
+Configuration plugins deployed by your configuration server should define:
+
+```lua
+DEPLOYED_USING_CONFIG_SERVER = true
+```
+
+Local, manually managed configuration plugins should set this to `false`. If the field is missing, AI Studio falls back to the plugin path (`.config`) to determine whether the plugin is managed and logs a warning.
 
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:

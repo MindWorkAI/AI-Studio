@@ -6,17 +6,17 @@ public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginFactory));
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
-    
-    private static bool IS_INITIALIZED;
+
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
     private static string INTERNAL_PLUGINS_ROOT = string.Empty;
     private static string CONFIGURATION_PLUGINS_ROOT = string.Empty;
     private static string HOT_RELOAD_LOCK_FILE = string.Empty;
     private static FileSystemWatcher HOT_RELOAD_WATCHER = null!;
-    private static ILanguagePlugin BASE_LANGUAGE_PLUGIN = NoPluginLanguage.INSTANCE;
 
-    public static ILanguagePlugin BaseLanguage => BASE_LANGUAGE_PLUGIN;
+    public static ILanguagePlugin BaseLanguage { get; private set; } = NoPluginLanguage.INSTANCE;
+
+    public static bool IsInitialized { get; private set; }
 
     /// <summary>
     /// Gets the enterprise encryption instance for decrypting API keys in configuration plugins.
@@ -47,7 +47,7 @@ public static partial class PluginFactory
     /// </summary>
     public static bool Setup()
     {
-        if(IS_INITIALIZED)
+        if(IsInitialized)
             return false;
         
         LOG.LogInformation("Initializing plugin factory...");
@@ -61,14 +61,14 @@ public static partial class PluginFactory
             Directory.CreateDirectory(PLUGINS_ROOT);
         
         HOT_RELOAD_WATCHER = new(PLUGINS_ROOT);
-        IS_INITIALIZED = true;
+        IsInitialized = true;
         LOG.LogInformation("Plugin factory initialized successfully.");
         return true;
     }
 
     private static async Task LockHotReloadAsync()
     {
-        if (!IS_INITIALIZED)
+        if (!IsInitialized)
         {
             LOG.LogError("PluginFactory is not initialized.");
             return;
@@ -92,7 +92,7 @@ public static partial class PluginFactory
 
     private static void UnlockHotReload()
     {
-        if (!IS_INITIALIZED)
+        if (!IsInitialized)
         {
             LOG.LogError("PluginFactory is not initialized.");
             return;
@@ -113,7 +113,7 @@ public static partial class PluginFactory
     
     public static void Dispose()
     {
-        if(!IS_INITIALIZED)
+        if(!IsInitialized)
             return;
         
         HOT_RELOAD_WATCHER.Dispose();

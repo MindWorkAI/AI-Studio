@@ -215,8 +215,30 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                                 .CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
                                 .Where(env => env != default)
                                 .ToList();
+                            var wereDeferredDownloadsSuccessful = true;
                             foreach (var env in enterpriseEnvironments)
-                                await PluginFactory.TryDownloadingConfigPluginAsync(env.ConfigurationId, env.ConfigurationServerUrl);
+                            {
+                                var wasDownloadSuccessful = await PluginFactory.TryDownloadingConfigPluginAsync(env.ConfigurationId, env.ConfigurationServerUrl);
+                                if (!wasDownloadSuccessful)
+                                {
+                                    wereDeferredDownloadsSuccessful = false;
+                                    this.Logger.LogWarning("Failed to download deferred enterprise configuration '{ConfigId}' during startup. Keeping managed plugins unchanged.", env.ConfigurationId);
+                                    break;
+                                }
+                            }
+
+                            if (EnterpriseEnvironmentService.HasValidEnterpriseSnapshot && wereDeferredDownloadsSuccessful)
+                            {
+                                var activeConfigIds = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS
+                                    .Select(env => env.ConfigurationId)
+                                    .ToHashSet();
+                                PluginFactory.RemoveUnreferencedManagedConfigurationPlugins(activeConfigIds);
+                            }
+                            else if (!wereDeferredDownloadsSuccessful)
+                            {
+                                // Force a retry on the next enterprise sync cycle.
+                                EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS = [];
+                            }
 
                             // Initialize the enterprise encryption service for decrypting API keys:
                             await PluginFactory.InitializeEnterpriseEncryption(this.RustService);

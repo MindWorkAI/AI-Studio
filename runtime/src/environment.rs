@@ -1,7 +1,7 @@
 use std::env;
 use std::sync::OnceLock;
 use log::{debug, info, warn};
-use rocket::{delete, get};
+use rocket::get;
 use rocket::serde::json::Json;
 use serde::Serialize;
 use sys_locale::get_locale;
@@ -178,30 +178,6 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
     )
 }
 
-#[delete("/system/enterprise/config/id")]
-pub fn delete_enterprise_env_config_id(_token: APIToken) -> String {
-    //
-    // When we are on a Windows machine, we try to read the enterprise config from
-    // the Windows registry. In case we can't find the registry key, or we are on a
-    // macOS or Linux machine, we try to read the enterprise config from the
-    // environment variables.
-    //
-    // The registry key is:
-    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
-    //
-    // In this registry key, we expect the following values:
-    // - delete_config_id
-    //
-    // The environment variable is:
-    // MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID
-    //
-    debug!("Trying to read the enterprise environment for some config ID, which should be deleted.");
-    get_enterprise_configuration(
-        "delete_config_id",
-        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
-    )
-}
-
 #[get("/system/enterprise/config/server")]
 pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     //
@@ -312,46 +288,6 @@ pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> 
     }
 
     Json(configs)
-}
-
-/// Returns all enterprise configuration IDs that should be deleted. Supports the new
-/// multi-delete format (`id1;id2;id3`) as well as the legacy single-delete variable.
-#[get("/system/enterprise/delete-configs")]
-pub fn read_enterprise_delete_config_ids(_token: APIToken) -> Json<Vec<String>> {
-    info!("Trying to read the enterprise environment for configuration IDs to delete.");
-
-    let mut ids: Vec<String> = Vec::new();
-    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-
-    // Read the new combined format:
-    let combined = get_enterprise_configuration(
-        "delete_config_ids",
-        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_IDS",
-    );
-
-    if !combined.is_empty() {
-        for id in combined.split(';') {
-            let id = id.trim().to_lowercase();
-            if !id.is_empty() && seen.insert(id.clone()) {
-                ids.push(id);
-            }
-        }
-    }
-
-    // Also read the legacy single-delete variable:
-    let delete_id = get_enterprise_configuration(
-        "delete_config_id",
-        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
-    );
-
-    if !delete_id.is_empty() {
-        let id = delete_id.trim().to_lowercase();
-        if seen.insert(id.clone()) {
-            ids.push(id);
-        }
-    }
-
-    Json(ids)
 }
 
 fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {
