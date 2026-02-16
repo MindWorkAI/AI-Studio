@@ -53,11 +53,20 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             }
 
             //
-            // Step 2: Determine ETags and build the next environment list.
-            // IMPORTANT: if we cannot read the ETag for any active configuration,
-            // do not mutate the plugin state and keep everything as-is.
+            // Step 2: Determine ETags and build the list of reachable configurations.
+            // IMPORTANT: when one config server fails, we continue with the others.
             //
-            var nextEnvironments = new List<EnterpriseEnvironment>();
+            var reachableEnvironments = new List<EnterpriseEnvironment>();
+            var failedConfigIds = new HashSet<Guid>();
+            var currentEnvironmentsById = CURRENT_ENVIRONMENTS
+                .GroupBy(env => env.ConfigurationId)
+                .ToDictionary(group => group.Key, group => group.Last());
+            
+            var activeFetchedEnvironmentsById = fetchedConfigs
+                .Where(config => config.IsActive)
+                .GroupBy(config => config.ConfigurationId)
+                .ToDictionary(group => group.Key, group => group.Last());
+            
             foreach (var config in fetchedConfigs)
             {
                 if (!config.IsActive)
@@ -69,59 +78,94 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                 var etagResponse = await PluginFactory.DetermineConfigPluginETagAsync(config.ConfigurationId, config.ConfigurationServerUrl);
                 if (!etagResponse.Success)
                 {
-                    logger.LogWarning("Failed to read enterprise config metadata for '{ConfigId}'. Keeping current plugins unchanged.", config.ConfigurationId);
-                    return;
+                    failedConfigIds.Add(config.ConfigurationId);
+                    logger.LogWarning("Failed to read enterprise config metadata for '{ConfigId}'. Keeping the current plugin state for this configuration.", config.ConfigurationId);
+                    continue;
                 }
 
-                nextEnvironments.Add(config with { ETag = etagResponse.ETag });
+                reachableEnvironments.Add(config with { ETag = etagResponse.ETag });
             }
 
             //
             // Step 3: Compare with current environments and process changes.
-            // Download first. We only clean up obsolete plugins after all required
-            // downloads have been completed successfully.
+            // Download per configuration. A single failure must not block others.
             //
-            var currentIds = CURRENT_ENVIRONMENTS.Select(e => e.ConfigurationId).ToHashSet();
-            var nextIds = nextEnvironments.Select(e => e.ConfigurationId).ToHashSet();
             var shouldDeferStartupDownloads = isFirstRun && !PluginFactory.IsInitialized;
+            var effectiveEnvironmentsById = new Dictionary<Guid, EnterpriseEnvironment>();
 
             // Process new or changed configs:
-            foreach (var nextEnv in nextEnvironments)
+            foreach (var nextEnv in reachableEnvironments)
             {
-                var currentEnv = CURRENT_ENVIRONMENTS.FirstOrDefault(e => e.ConfigurationId == nextEnv.ConfigurationId);
-                if (currentEnv == nextEnv) // Hint: This relies on the record equality to check if anything relevant has changed (e.g. server URL or ETag).
+                var hasCurrentEnvironment = currentEnvironmentsById.TryGetValue(nextEnv.ConfigurationId, out var currentEnv);
+                if (hasCurrentEnvironment && currentEnv == nextEnv) // Hint: This relies on the record equality to check if anything relevant has changed (e.g. server URL or ETag).
                 {
                     logger.LogInformation("Enterprise configuration '{ConfigId}' has not changed. No update required.", nextEnv.ConfigurationId);
+                    effectiveEnvironmentsById[nextEnv.ConfigurationId] = nextEnv;
                     continue;
                 }
 
-                var isNew = !currentIds.Contains(nextEnv.ConfigurationId);
-                if(isNew)
+                if(!hasCurrentEnvironment)
                     logger.LogInformation("Detected new enterprise configuration with ID '{ConfigId}' and server URL '{ServerUrl}'.", nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
                 else
                     logger.LogInformation("Detected change in enterprise configuration with ID '{ConfigId}'. Server URL or ETag has changed.", nextEnv.ConfigurationId);
 
                 if (shouldDeferStartupDownloads)
+                {
                     MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, nextEnv);
+                    effectiveEnvironmentsById[nextEnv.ConfigurationId] = nextEnv;
+                }
                 else
                 {
                     var wasDownloadSuccessful = await PluginFactory.TryDownloadingConfigPluginAsync(nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
                     if (!wasDownloadSuccessful)
                     {
-                        logger.LogWarning("Failed to update enterprise configuration '{ConfigId}'. Keeping current plugins unchanged.", nextEnv.ConfigurationId);
-                        return;
+                        failedConfigIds.Add(nextEnv.ConfigurationId);
+                        if (hasCurrentEnvironment)
+                        {
+                            logger.LogWarning("Failed to update enterprise configuration '{ConfigId}'. Keeping the previously active version.", nextEnv.ConfigurationId);
+                            effectiveEnvironmentsById[nextEnv.ConfigurationId] = currentEnv;
+                        }
+                        else
+                            logger.LogWarning("Failed to download the new enterprise configuration '{ConfigId}'. Skipping activation for now.", nextEnv.ConfigurationId);
+
+                        continue;
                     }
+
+                    effectiveEnvironmentsById[nextEnv.ConfigurationId] = nextEnv;
                 }
             }
 
+            // Retain configurations for all failed IDs. On cold start there might be no
+            // previous in-memory snapshot yet, so we also keep the current fetched entry
+            // to protect it from cleanup while the server is unreachable.
+            foreach (var failedConfigId in failedConfigIds)
+            {
+                if (effectiveEnvironmentsById.ContainsKey(failedConfigId))
+                    continue;
+
+                if (!currentEnvironmentsById.TryGetValue(failedConfigId, out var retainedEnvironment))
+                {
+                    if (!activeFetchedEnvironmentsById.TryGetValue(failedConfigId, out retainedEnvironment))
+                        continue;
+
+                    logger.LogWarning("Could not refresh enterprise configuration '{ConfigId}'. Protecting it from cleanup until connectivity is restored.", failedConfigId);
+                }
+                else
+                    logger.LogWarning("Could not refresh enterprise configuration '{ConfigId}'. Keeping the previously active version.", failedConfigId);
+
+                effectiveEnvironmentsById[failedConfigId] = retainedEnvironment;
+            }
+
+            var effectiveEnvironments = effectiveEnvironmentsById.Values.ToList();
+
             // Cleanup is only allowed after a successful sync cycle:
             if (PluginFactory.IsInitialized && !shouldDeferStartupDownloads)
-                PluginFactory.RemoveUnreferencedManagedConfigurationPlugins(nextIds);
+                PluginFactory.RemoveUnreferencedManagedConfigurationPlugins(effectiveEnvironmentsById.Keys.ToHashSet());
 
-            if (nextEnvironments.Count == 0)
+            if (effectiveEnvironments.Count == 0)
                 logger.LogInformation("AI Studio runs without any enterprise configurations.");
 
-            CURRENT_ENVIRONMENTS = nextEnvironments;
+            CURRENT_ENVIRONMENTS = effectiveEnvironments;
             HasValidEnterpriseSnapshot = true;
         }
         catch (Exception e)
