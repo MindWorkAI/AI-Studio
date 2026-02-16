@@ -172,32 +172,31 @@ public sealed class SettingsManager
         {
             case LangBehavior.AUTO:
                 var languageCode = await this.rustService.ReadUserLanguage();
-                var normalizedLanguageCode = NormalizeLocaleTag(languageCode);
                 var languagePlugins = PluginFactory.RunningPlugins.OfType<ILanguagePlugin>().ToList();
 
-                if (!string.IsNullOrWhiteSpace(normalizedLanguageCode))
+                if (!string.IsNullOrWhiteSpace(languageCode))
                 {
-                    var exactMatch = languagePlugins.FirstOrDefault(x => string.Equals(NormalizeLocaleTag(x.IETFTag), normalizedLanguageCode, StringComparison.OrdinalIgnoreCase));
+                    var exactMatch = languagePlugins.FirstOrDefault(x => string.Equals(x.IETFTag, languageCode, StringComparison.OrdinalIgnoreCase));
                     if (exactMatch is not null)
                         return exactMatch;
 
-                    var primaryLanguage = GetPrimaryLanguage(normalizedLanguageCode);
+                    var primaryLanguage = GetPrimaryLanguage(languageCode);
                     if (!string.IsNullOrWhiteSpace(primaryLanguage))
                     {
                         var primaryLanguageMatch = languagePlugins
-                            .Where(x => string.Equals(GetPrimaryLanguage(NormalizeLocaleTag(x.IETFTag)), primaryLanguage, StringComparison.OrdinalIgnoreCase))
+                            .Where(x => string.Equals(GetPrimaryLanguage(x.IETFTag), primaryLanguage, StringComparison.OrdinalIgnoreCase))
                             .OrderBy(x => x.IETFTag, StringComparer.OrdinalIgnoreCase)
                             .FirstOrDefault();
                         
                         if (primaryLanguageMatch is not null)
                         {
-                            this.logger.LogWarning($"No exact language plugin found for '{normalizedLanguageCode}'. Use language fallback '{primaryLanguageMatch.IETFTag}'.");
+                            this.logger.LogWarning($"No exact language plugin found for '{languageCode}'. Use language fallback '{primaryLanguageMatch.IETFTag}'.");
                             return primaryLanguageMatch;
                         }
                     }
                 }
 
-                this.logger.LogWarning($"The language plugin for the language '{languageCode}' (normalized='{normalizedLanguageCode}') is not available.");
+                this.logger.LogWarning($"The language plugin for the language '{languageCode}' (normalized='{languageCode}') is not available.");
                 return PluginFactory.BaseLanguage;
             
             case LangBehavior.MANUAL:
@@ -218,47 +217,6 @@ public sealed class SettingsManager
         
         this.logger.LogError("The language behavior is unknown.");
         return PluginFactory.BaseLanguage;
-    }
-
-    private static string NormalizeLocaleTag(string? localeTag)
-    {
-        if (string.IsNullOrWhiteSpace(localeTag))
-            return string.Empty;
-
-        var trimmed = localeTag.Trim();
-
-        var encodingIndex = trimmed.IndexOf('.');
-        if (encodingIndex >= 0)
-            trimmed = trimmed[..encodingIndex];
-
-        var modifierIndex = trimmed.IndexOf('@');
-        if (modifierIndex >= 0)
-            trimmed = trimmed[..modifierIndex];
-
-        trimmed = trimmed.Replace('_', '-');
-        if (string.IsNullOrWhiteSpace(trimmed))
-            return string.Empty;
-
-        var segments = trimmed.Split('-', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length == 0)
-            return string.Empty;
-
-        var language = segments[0].Trim();
-        if (language.Equals("c", StringComparison.OrdinalIgnoreCase) || language.Equals("posix", StringComparison.OrdinalIgnoreCase))
-            return string.Empty;
-
-        if (language.Length < 2 || !language.All(char.IsLetter))
-            return string.Empty;
-
-        language = language.ToLowerInvariant();
-        if (segments.Length > 1)
-        {
-            var region = segments[1].Trim();
-            if (region.Length == 2 && region.All(char.IsLetter))
-                return $"{language}-{region.ToUpperInvariant()}";
-        }
-
-        return language;
     }
 
     private static string GetPrimaryLanguage(string localeTag)
