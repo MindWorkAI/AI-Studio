@@ -7,6 +7,8 @@ use serde::Serialize;
 use sys_locale::get_locale;
 use crate::api_token::APIToken;
 
+const DEFAULT_LANGUAGE: &str = "en-US";
+
 /// The data directory where the application stores its data.
 pub static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
 
@@ -41,12 +43,115 @@ pub fn is_prod() -> bool {
     !is_dev()
 }
 
+fn normalize_locale_tag(locale: &str) -> Option<String> {
+    let trimmed = locale.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    let without_encoding = trimmed
+        .split('.')
+        .next()
+        .unwrap_or(trimmed)
+        .split('@')
+        .next()
+        .unwrap_or(trimmed)
+        .trim();
+
+    if without_encoding.is_empty() {
+        return None;
+    }
+
+    let normalized_delimiters = without_encoding.replace('_', "-");
+    let mut segments = normalized_delimiters
+        .split('-')
+        .filter(|segment| !segment.is_empty());
+
+    let language = segments.next()?;
+    if language.eq_ignore_ascii_case("c") || language.eq_ignore_ascii_case("posix") {
+        return None;
+    }
+
+    let language = language.to_ascii_lowercase();
+    if language.len() < 2 || !language.chars().all(|c| c.is_ascii_alphabetic()) {
+        return None;
+    }
+
+    if let Some(region) = segments.next() {
+        if region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()) {
+            return Some(format!("{}-{}", language, region.to_ascii_uppercase()));
+        }
+    }
+
+    Some(language)
+}
+
+#[cfg(target_os = "linux")]
+fn read_locale_from_environment() -> Option<String> {
+    if let Ok(language) = env::var("LANGUAGE") {
+        for candidate in language.split(':') {
+            if let Some(locale) = normalize_locale_tag(candidate) {
+                info!("Detected user language from Linux environment variable 'LANGUAGE': '{}'.", locale);
+                return Some(locale);
+            }
+        }
+    }
+
+    for key in ["LC_ALL", "LC_MESSAGES", "LANG"] {
+        if let Ok(value) = env::var(key) {
+            if let Some(locale) = normalize_locale_tag(&value) {
+                info!("Detected user language from Linux environment variable '{}': '{}'.", key, locale);
+                return Some(locale);
+            }
+        }
+    }
+
+    None
+}
+
+#[cfg(not(target_os = "linux"))]
+fn read_locale_from_environment() -> Option<String> {
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_locale_tag;
+
+    #[test]
+    fn normalize_locale_tag_supports_common_linux_formats() {
+        assert_eq!(normalize_locale_tag("de_DE.UTF-8"), Some(String::from("de-DE")));
+        assert_eq!(normalize_locale_tag("de_DE@euro"), Some(String::from("de-DE")));
+        assert_eq!(normalize_locale_tag("de"), Some(String::from("de")));
+        assert_eq!(normalize_locale_tag("en-US"), Some(String::from("en-US")));
+    }
+
+    #[test]
+    fn normalize_locale_tag_rejects_non_language_locales() {
+        assert_eq!(normalize_locale_tag("C"), None);
+        assert_eq!(normalize_locale_tag("C.UTF-8"), None);
+        assert_eq!(normalize_locale_tag("POSIX"), None);
+        assert_eq!(normalize_locale_tag(""), None);
+    }
+}
+
 #[get("/system/language")]
 pub fn read_user_language(_token: APIToken) -> String {
-    get_locale().unwrap_or_else(|| {
-        warn!("Could not determine the system language. Use default 'en-US'.");
-        String::from("en-US")
-    })
+    if let Some(locale) = get_locale() {
+        if let Some(normalized_locale) = normalize_locale_tag(&locale) {
+            info!("Detected user language from sys-locale: '{}'.", normalized_locale);
+            return normalized_locale;
+        }
+
+        warn!("sys-locale returned an unusable locale value: '{}'.", locale);
+    }
+
+    if let Some(locale) = read_locale_from_environment() {
+        return locale;
+    }
+
+    warn!("Could not determine the system language. Use default '{}'.", DEFAULT_LANGUAGE);
+    String::from(DEFAULT_LANGUAGE)
 }
 
 #[get("/system/enterprise/config/id")]
