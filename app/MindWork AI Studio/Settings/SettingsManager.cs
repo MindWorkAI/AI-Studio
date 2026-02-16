@@ -172,17 +172,32 @@ public sealed class SettingsManager
         {
             case LangBehavior.AUTO:
                 var languageCode = await this.rustService.ReadUserLanguage();
-                var languagePlugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x is ILanguagePlugin langPlug && langPlug.IETFTag == languageCode);
-                if (languagePlugin is null)
+                var normalizedLanguageCode = NormalizeLocaleTag(languageCode);
+                var languagePlugins = PluginFactory.RunningPlugins.OfType<ILanguagePlugin>().ToList();
+
+                if (!string.IsNullOrWhiteSpace(normalizedLanguageCode))
                 {
-                    this.logger.LogWarning($"The language plugin for the language '{languageCode}' is not available.");
-                    return PluginFactory.BaseLanguage;
+                    var exactMatch = languagePlugins.FirstOrDefault(x => string.Equals(NormalizeLocaleTag(x.IETFTag), normalizedLanguageCode, StringComparison.OrdinalIgnoreCase));
+                    if (exactMatch is not null)
+                        return exactMatch;
+
+                    var primaryLanguage = GetPrimaryLanguage(normalizedLanguageCode);
+                    if (!string.IsNullOrWhiteSpace(primaryLanguage))
+                    {
+                        var primaryLanguageMatch = languagePlugins
+                            .Where(x => string.Equals(GetPrimaryLanguage(NormalizeLocaleTag(x.IETFTag)), primaryLanguage, StringComparison.OrdinalIgnoreCase))
+                            .OrderBy(x => x.IETFTag, StringComparer.OrdinalIgnoreCase)
+                            .FirstOrDefault();
+                        
+                        if (primaryLanguageMatch is not null)
+                        {
+                            this.logger.LogWarning($"No exact language plugin found for '{normalizedLanguageCode}'. Use language fallback '{primaryLanguageMatch.IETFTag}'.");
+                            return primaryLanguageMatch;
+                        }
+                    }
                 }
 
-                if (languagePlugin is ILanguagePlugin langPlugin)
-                    return langPlugin;
-
-                this.logger.LogError("The language plugin is not a language plugin.");
+                this.logger.LogWarning($"The language plugin for the language '{languageCode}' (normalized='{normalizedLanguageCode}') is not available.");
                 return PluginFactory.BaseLanguage;
             
             case LangBehavior.MANUAL:
@@ -203,6 +218,59 @@ public sealed class SettingsManager
         
         this.logger.LogError("The language behavior is unknown.");
         return PluginFactory.BaseLanguage;
+    }
+
+    private static string NormalizeLocaleTag(string? localeTag)
+    {
+        if (string.IsNullOrWhiteSpace(localeTag))
+            return string.Empty;
+
+        var trimmed = localeTag.Trim();
+
+        var encodingIndex = trimmed.IndexOf('.');
+        if (encodingIndex >= 0)
+            trimmed = trimmed[..encodingIndex];
+
+        var modifierIndex = trimmed.IndexOf('@');
+        if (modifierIndex >= 0)
+            trimmed = trimmed[..modifierIndex];
+
+        trimmed = trimmed.Replace('_', '-');
+        if (string.IsNullOrWhiteSpace(trimmed))
+            return string.Empty;
+
+        var segments = trimmed.Split('-', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0)
+            return string.Empty;
+
+        var language = segments[0].Trim();
+        if (language.Equals("c", StringComparison.OrdinalIgnoreCase) || language.Equals("posix", StringComparison.OrdinalIgnoreCase))
+            return string.Empty;
+
+        if (language.Length < 2 || !language.All(char.IsLetter))
+            return string.Empty;
+
+        language = language.ToLowerInvariant();
+        if (segments.Length > 1)
+        {
+            var region = segments[1].Trim();
+            if (region.Length == 2 && region.All(char.IsLetter))
+                return $"{language}-{region.ToUpperInvariant()}";
+        }
+
+        return language;
+    }
+
+    private static string GetPrimaryLanguage(string localeTag)
+    {
+        if (string.IsNullOrWhiteSpace(localeTag))
+            return string.Empty;
+
+        var separatorIndex = localeTag.IndexOf('-');
+        if (separatorIndex < 0)
+            return localeTag;
+
+        return localeTag[..separatorIndex];
     }
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
