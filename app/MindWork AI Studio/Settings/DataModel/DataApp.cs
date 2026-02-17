@@ -65,7 +65,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Should we preselect a provider for the entire app?
     /// </summary>
-    public string PreselectedProvider { get; set; } = string.Empty;
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
     
     /// <summary>
     /// Should we preselect a profile for the entire app?
