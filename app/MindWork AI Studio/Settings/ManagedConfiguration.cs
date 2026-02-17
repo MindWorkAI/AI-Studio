@@ -9,7 +9,6 @@ namespace AIStudio.Settings;
 public static partial class ManagedConfiguration
 {
     private static readonly ConcurrentDictionary<string, IConfig> METADATA = new();
-    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
 
     /// <summary>
     /// Attempts to retrieve the configuration metadata for a given configuration selection and
@@ -348,31 +347,6 @@ public static partial class ManagedConfiguration
         if (plugin is null)
         {
             configMeta.ResetManagedState();
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Checks if a managed value is left over from a configuration plugin that is no longer available.
-    /// If so, it clears the managed value and returns true.
-    /// </summary>
-    public static bool IsManagedValueLeftOver<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (!configMeta.HasManagedValue || configMeta.ManagedValueByConfigPluginId == Guid.Empty)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.ManagedValueByConfigPluginId);
-        if (plugin is null)
-        {
-            configMeta.ClearManagedValue();
             return true;
         }
 
