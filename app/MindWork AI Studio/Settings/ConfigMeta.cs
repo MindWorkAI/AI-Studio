@@ -43,6 +43,21 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     public required TValue Default { get; init; }
 
     /// <summary>
+    /// Indicates whether a managed value is available.
+    /// </summary>
+    public bool HasManagedValue { get; private set; }
+
+    /// <summary>
+    /// The managed value provided by a configuration plugin.
+    /// </summary>
+    public TValue ManagedValue { get; private set; } = default!;
+
+    /// <summary>
+    /// The ID of the plugin that provided the managed value.
+    /// </summary>
+    public Guid ManagedValueByConfigPluginId { get; private set; }
+
+    /// <summary>
     /// Locks the configuration state, indicating that it is managed by a specific plugin.
     /// </summary>
     /// <param name="pluginId">The ID of the plugin that is managing this configuration.</param>
@@ -61,6 +76,35 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
         this.IsLocked = false;
         this.MangedByConfigPluginId = Guid.Empty;
         this.Reset();
+    }
+
+    /// <summary>
+    /// Unlocks the configuration state without changing the current value.
+    /// </summary>
+    public void UnlockManagedState()
+    {
+        this.IsLocked = false;
+        this.MangedByConfigPluginId = Guid.Empty;
+    }
+
+    /// <summary>
+    /// Stores a managed value provided by a configuration plugin.
+    /// </summary>
+    public void SetManagedValue(TValue value, Guid pluginId)
+    {
+        this.ManagedValue = value;
+        this.ManagedValueByConfigPluginId = pluginId;
+        this.HasManagedValue = true;
+    }
+
+    /// <summary>
+    /// Clears the managed value without changing the current value.
+    /// </summary>
+    public void ClearManagedValue()
+    {
+        this.ManagedValue = default!;
+        this.ManagedValueByConfigPluginId = Guid.Empty;
+        this.HasManagedValue = false;
     }
     
     /// <summary>
