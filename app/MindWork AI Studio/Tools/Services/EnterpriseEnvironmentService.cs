@@ -79,7 +79,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                 if (!etagResponse.Success)
                 {
                     failedConfigIds.Add(config.ConfigurationId);
-                    logger.LogWarning("Failed to read enterprise config metadata for '{ConfigId}'. Keeping the current plugin state for this configuration.", config.ConfigurationId);
+                    logger.LogWarning("Failed to read enterprise config metadata for '{ConfigId}' from '{ServerUrl}': {Issue}. Keeping the current plugin state for this configuration.", config.ConfigurationId, config.ConfigurationServerUrl, etagResponse.Issue ?? "Unknown issue");
                     continue;
                 }
 

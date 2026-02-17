@@ -4,6 +4,8 @@ namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
+    private const string REASON_NO_LONGER_REFERENCED = "no longer referenced by active enterprise environments";
+
     public static void RemoveUnreferencedManagedConfigurationPlugins(ISet<Guid> activeConfigurationIds)
     {
         if (!IsInitialized)
@@ -42,15 +44,15 @@ public static partial class PluginFactory
         }
 
         foreach (var pluginId in pluginIdsToRemove)
-            RemovePluginAsync(pluginId);
+            RemovePluginAsync(pluginId, REASON_NO_LONGER_REFERENCED);
     }
 
-    private static void RemovePluginAsync(Guid pluginId)
+    private static void RemovePluginAsync(Guid pluginId, string reason)
     {
         if (!IsInitialized)
             return;
 
-        LOG.LogWarning("Try to remove plugin with ID: '{PluginId}'.", pluginId);
+        LOG.LogWarning("Removing plugin with ID '{PluginId}'. Reason: {Reason}.", pluginId, reason);
 
         //
         // Remove the plugin from the available plugins list:
@@ -59,14 +61,14 @@ public static partial class PluginFactory
         if (availablePluginToRemove != null)
             AVAILABLE_PLUGINS.Remove(availablePluginToRemove);
         else
-            LOG.LogWarning("No available plugin found with ID: '{PluginId}'.", pluginId);
+            LOG.LogWarning("No available plugin found with ID '{PluginId}' while removing plugin. Reason: {Reason}.", pluginId, reason);
         
         //
         // Remove the plugin from the running plugins list:
         //
         var runningPluginToRemove = RUNNING_PLUGINS.FirstOrDefault(p => p.Id == pluginId);
         if (runningPluginToRemove == null)
-            LOG.LogWarning("No running plugin found with ID: '{PluginId}'.", pluginId);
+            LOG.LogWarning("No running plugin found with ID '{PluginId}' while removing plugin. Reason: {Reason}.", pluginId, reason);
         else
             RUNNING_PLUGINS.Remove(runningPluginToRemove);
 
@@ -75,7 +77,7 @@ public static partial class PluginFactory
         //
         DeleteConfigurationPluginDirectory(pluginId);
 
-        LOG.LogInformation("Plugin with ID='{PluginId}' removed successfully.", pluginId);
+        LOG.LogInformation("Plugin with ID '{PluginId}' removed successfully. Reason: {Reason}.", pluginId, reason);
     }
 
     private static bool? ReadDeployFlagFromPluginFile(string pluginDirectory)

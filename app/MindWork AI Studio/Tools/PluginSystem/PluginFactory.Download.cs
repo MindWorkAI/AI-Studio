@@ -5,10 +5,10 @@ namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
-    public static async Task<(bool Success, EntityTagHeaderValue? ETag)> DetermineConfigPluginETagAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
+    public static async Task<(bool Success, EntityTagHeaderValue? ETag, string? Issue)> DetermineConfigPluginETagAsync(Guid configPlugId, string configServerUrl, CancellationToken cancellationToken = default)
     {
         if(configPlugId == Guid.Empty || string.IsNullOrWhiteSpace(configServerUrl))
-            return (false, null);
+            return (false, null, "Configuration ID or server URL is missing.");
         
         try
         {
@@ -21,15 +21,15 @@ public static partial class PluginFactory
             if (!response.IsSuccessStatusCode)
             {
                 LOG.LogError($"Failed to determine the ETag for configuration plugin '{configPlugId}'. HTTP Status: {response.StatusCode}");
-                return (false, null);
+                return (false, null, $"HTTP status: {response.StatusCode}");
             }
 
-            return (true, response.Headers.ETag);
+            return (true, response.Headers.ETag, null);
         }
         catch (Exception e)
         {
             LOG.LogError(e, "An error occurred while determining the ETag for the configuration plugin.");
-            return (false, null);
+            return (false, null, e.Message);
         }
     }
     
