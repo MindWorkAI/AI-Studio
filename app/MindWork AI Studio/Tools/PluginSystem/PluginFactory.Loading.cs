@@ -109,6 +109,7 @@ public static partial class PluginFactory
                         pluginPath.StartsWith(CONFIGURATION_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
 
                     var isManagedByConfigServer = false;
+                    Guid? managedConfigurationId = null;
                     if (plugin is PluginConfiguration configPlugin)
                     {
                         if (configPlugin.DeployedUsingConfigServer.HasValue)
@@ -123,14 +124,20 @@ public static partial class PluginFactory
 
                     // For configuration plugins, validate that the plugin ID matches the enterprise config ID
                     // (the directory name under which the plugin was downloaded):
-                    if (isConfigurationPluginInConfigDirectory)
+                    if (isConfigurationPluginInConfigDirectory && isManagedByConfigServer)
                     {
                         var directoryName = Path.GetFileName(pluginPath);
-                        if (Guid.TryParse(directoryName, out var enterpriseConfigId) && enterpriseConfigId != plugin.Id)
-                            LOG.LogWarning($"The configuration plugin's ID ('{plugin.Id}') does not match the enterprise configuration ID ('{enterpriseConfigId}'). These IDs should be identical. Please update the plugin's ID field to match the enterprise configuration ID.");
+                        if (Guid.TryParse(directoryName, out var enterpriseConfigId))
+                        {
+                            managedConfigurationId = enterpriseConfigId;
+                            if (enterpriseConfigId != plugin.Id)
+                                LOG.LogWarning($"The configuration plugin's ID ('{plugin.Id}') does not match the enterprise configuration ID ('{enterpriseConfigId}'). These IDs should be identical. Please update the plugin's ID field to match the enterprise configuration ID.");
+                        }
+                        else
+                            LOG.LogWarning($"Could not determine the managed configuration ID for configuration plugin '{plugin.Id}'. The plugin directory '{pluginPath}' does not end with a valid GUID.");
                     }
 
-                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer));
+                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId));
                 }
                 catch (Exception e)
                 {

@@ -137,25 +137,46 @@
                                 break;
 
                             case true:
-                                <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.")
-                                </MudText>
+                                @if (this.HasAnyLoadedEnterpriseConfigurationPlugin)
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.")
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.")
+                                    </MudText>
+                                }
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
                                     @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
                                     {
-                                        var matchingPlugin = this.configPlugins.FirstOrDefault(p => p.Id == env.ConfigurationId);
+                                        var matchingPlugin = this.FindManagedConfigurationPlugin(env.ConfigurationId);
+                                        if (matchingPlugin is null)
+                                        {
+                                            <MudPaper Outlined="true" Class="pa-3 mt-2 mb-2">
+                                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Size="Size.Small"/>
+                                                    <MudText Typo="Typo.subtitle2">@T("Waiting for the configuration plugin...")</MudText>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                                    <span>@T("Enterprise configuration ID:") @env.ConfigurationId</span>
+                                                    <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@env.ConfigurationId.ToString()/>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                                    <span>@T("Configuration server:") @env.ConfigurationServerUrl</span>
+                                                    <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@env.ConfigurationServerUrl/>
+                                                </div>
+                                            </MudPaper>
+                                            continue;
+                                        }
                                         <MudPaper Outlined="true" Class="pa-3 mt-2 mb-2">
                                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                                @if (matchingPlugin is not null)
-                                                {
-                                                    <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small"/>
-                                                    <MudText Typo="Typo.subtitle2">@matchingPlugin.Name</MudText>
-                                                }
-                                                else
-                                                {
-                                                    <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Color="Color.Warning"/>
-                                                    <MudText Typo="Typo.subtitle2">@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")</MudText>
-                                                }
+                                                <MudIcon Icon="@Icons.Material.Filled.Extension" Size="Size.Small"/>
+                                                <MudText Typo="Typo.subtitle2">@matchingPlugin.Name</MudText>
                                             </div>
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
@@ -167,12 +188,16 @@
                                                 <span>@T("Configuration server:") @env.ConfigurationServerUrl</span>
                                                 <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@env.ConfigurationServerUrl/>
                                             </div>
-                                            @if (matchingPlugin is not null)
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                                <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                                <span>@T("Configuration plugin ID:") @matchingPlugin.Id</span>
+                                                <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@matchingPlugin.Id.ToString()/>
+                                            </div>
+                                            @if (this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId))
                                             {
                                                 <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                                    <span>@T("Configuration plugin ID:") @matchingPlugin.Id</span>
-                                                    <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@matchingPlugin.Id.ToString()/>
+                                                    <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Color="Color.Warning"/>
+                                                    <MudText Typo="Typo.subtitle2">@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")</MudText>
                                                 </div>
                                             }
                                         </MudPaper>
