@@ -22,11 +22,3 @@ public partial class ConfigPluginInfoCard : ComponentBase
     [Parameter]
     public string Class { get; set; } = "pa-3 mt-2 mb-2";
 }
-
-public sealed record ConfigInfoRowItem(
-    string Icon,
-    string Text,
-    string CopyValue = "",
-    string CopyTooltip = "",
-    string Style = ""
-);

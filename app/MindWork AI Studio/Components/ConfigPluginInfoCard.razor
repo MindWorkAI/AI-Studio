@@ -8,11 +8,7 @@
 
     @foreach (var item in this.Items)
     {
-        <ConfigInfoRow Icon="@item.Icon"
-                       Text="@item.Text"
-                       CopyValue="@item.CopyValue"
-                       CopyTooltip="@item.CopyTooltip"
-                       Style="@(item.Style)"/>
+        <ConfigInfoRow Item="@item"/>
     }
 
     @if (this.ShowWarning)
