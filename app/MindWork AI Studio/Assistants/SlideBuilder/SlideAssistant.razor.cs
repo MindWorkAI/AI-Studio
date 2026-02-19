@@ -30,12 +30,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - If {{{this.timeSpecification}}} is NOT 0
                 - Generate exactly {{{this.calculatedNumberOfSlides}}} precise subheadings, each heading represents one slide in a presentation.
             - If either parameter is 0, ignore that rules.
-        
-        - Each subheadings must have:
-            - A clear, concise, and thematically meaningful heading.
-            - 1 to 7 bullet points (maximum 7) summarizing the slide’s content — use as many as needed, but never more than 7.
-            - Each bullet point must be max 12 words.
-            - Place *** on its own line immediately before each heading.
+            - Each subheadings must have:
+                - A clear, concise, and thematically meaningful heading.
+                - Place *** on its own line immediately before each heading.
+            
+        # BulletPoints (Per Subheading)
+            - You MUST generate exactly this {{{this.numberOfBulletPoints}}} many bullet points per subheading:
+                - Set as many bullet points as specified by variable {{{this.numberOfBulletPoints}}}. 
+                - If {{{this.numberOfBulletPoints}}} == 0 → choose a number between 1 and 7 (your choice, but max 7).
+            - Each bullet point must have:
+                - Each bullet point must be max 12 words.
+                - Clear and directly related to the subheading and summarizing the slide’s content.
 
         # Output requirements:
             - Output only Markdown.
@@ -104,6 +109,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private TargetGroup selectedTargetGroup;
     private CommonLanguages selectedTargetLanguage;
     private double numberOfSheets;
+    private double numberOfBulletPoints;
     private double timeSpecification;
     private int calculatedNumberOfSlides = 0;
 

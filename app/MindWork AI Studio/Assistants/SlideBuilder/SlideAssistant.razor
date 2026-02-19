@@ -7,15 +7,24 @@
 <ReadFileContent @bind-FileContent="@this.inputContext"/>
 
 <MudGrid>
-    <MudItem xs="6">
+    <MudItem xs="4">
         <MudNumericField @bind-Value="numberOfSheets"
                          Label="Number of slides"
                          Variant="Variant.Outlined"
                          Class="mb-3"
                          Min="0.0" />
     </MudItem>
+    
+    <MudItem xs="4">
+        <MudNumericField @bind-Value="numberOfBulletPoints"
+                         Label="Number of bullet points"
+                         Variant="Variant.Outlined"
+                         Min="0"
+                         Max="7"
+                         Class="mb-3" />
+    </MudItem>
 
-    <MudItem xs="6">
+    <MudItem xs="4">
         <MudNumericField @bind-Value="timeSpecification"
                          Label="Time specification (minutes)"
                          Variant="Variant.Outlined"
