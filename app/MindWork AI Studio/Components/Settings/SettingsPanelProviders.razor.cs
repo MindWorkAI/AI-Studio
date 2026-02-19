@@ -136,6 +136,9 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
 
     private async Task ExportLLMProvider(AIStudio.Settings.Provider provider)
     {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
         if (provider == AIStudio.Settings.Provider.NONE)
             return;
 
