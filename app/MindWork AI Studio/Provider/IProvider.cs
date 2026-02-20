@@ -59,6 +59,16 @@ public interface IProvider
     /// <param name="token">The cancellation token.</param>
     /// <returns>>The transcription result.</returns>
     public Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
+        
+    /// <summary>
+    /// Embed a text file.
+    /// </summary>
+    /// <param name="embeddingModel">The model to use for embedding.</param>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// /// <param name="texts">A single string or a list of strings to embed.</param>
+    /// <returns>>The embedded text as a single vector or as a list of vectors.</returns>
+    public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts);
     
     /// <summary>
     /// Load all possible text models that can be used with this provider.

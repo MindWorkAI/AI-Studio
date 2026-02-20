@@ -1812,7 +1812,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1986314327"] = "Demokratisie
 -- While exploring available solutions, I found a desktop application called Anything LLM. Unfortunately, it fell short of meeting my specific requirements and lacked the user interface design I envisioned. For macOS, there were several apps similar to what I had in mind, but they were all commercial solutions shrouded in uncertainty. The developers' identities and the origins of these apps were unclear, raising significant security concerns. Reports from users about stolen API keys and unwanted charges only amplified my reservations.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T3552777197"] = "Während ich nach passenden Lösungen suchte, stieß ich auf eine Desktop-Anwendung namens Anything LLM. Leider konnte sie meine spezifischen Anforderungen nicht erfüllen und entsprach auch nicht dem Benutzeroberflächendesign, das ich mir vorgestellt hatte. Für macOS gab es zwar mehrere Apps, die meiner Vorstellung ähnelten, aber sie waren allesamt kostenpflichtige Lösungen mit unklarer Herkunft. Die Identität der Entwickler und die Ursprünge dieser Apps waren nicht ersichtlich, was erhebliche Sicherheitsbedenken hervorrief. Berichte von Nutzern über gestohlene API-Schlüssel und unerwünschte Abbuchungen verstärkten meine Bedenken zusätzlich."
 
--- We also want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 EUR such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs for your first steps or use affordable cloud models. MindWork AI Studio itself is available free of charge.
+-- We also want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs for your first steps or use affordable cloud models. MindWork AI Studio itself is available free of charge.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T3672974243"] = "Wir möchten auch zur Demokratisierung von KI beitragen. MindWork AI Studio läuft selbst auf kostengünstiger Hardware, einschließlich Computern für rund 100 € wie dem Raspberry Pi. Dadurch sind die App und ihr voller Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Für Ihre ersten Schritte können Sie mit lokalen LLMs beginnen oder günstige Cloud-Modelle nutzen. MindWork AI Studio selbst ist kostenlos erhältlich."
 
 -- Relying on web services like ChatGPT was not a sustainable solution for me. I needed an AI that could also access files directly on my device, a functionality web services inherently lack due to security and privacy constraints. Although I could have scripted something in Python to meet my needs, this approach was too cumbersome for daily use. More importantly, I wanted to develop a solution that anyone could use without needing any programming knowledge.
@@ -2172,8 +2172,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T922066419"] 
 -- Administration settings are not visible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] = "Die Optionen für die Administration sind nicht sichtbar."
 
+-- Embedding Result
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1387042335"] = "Einbettungsergebnis"
+
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Löschen"
+
+-- Embed text
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1644934561"] = "Text einbetten"
+
+-- Test Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1655784761"] = "Anbieter für Einbettung testen"
 
 -- Add Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Einbettung hinzufügen"
@@ -2187,6 +2196,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T18253
 -- Add Embedding Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Einbettungsanbieter hinzufügen"
 
+-- Add text that should be embedded:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1992646324"] = "Text zum Einbetten eingeben:"
+
+-- Embedding Vector (one dimension per line)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2174876961"] = "Einbettungsvektor (eine Dimension pro Zeile)"
+
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2189814010"] = "Modell"
 
@@ -2196,6 +2211,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T24199
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T266367750"] = "Name"
 
+-- No embedding was returned.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T291969"] = "Es wurde keine Einbettung zurückgegeben."
+
 -- Configured Embedding Providers
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T305753126"] = "Konfigurierte Anbieter für Einbettungen"
 
@@ -2204,6 +2222,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T32512
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3267849393"] = "Bearbeiten"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3448155331"] = "Schließen"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Aktionen"
@@ -2225,6 +2246,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T51130
 
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T78223861"] = "Dashboard öffnen"
+
+-- Test
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T805092869"] = "Testen"
+
+-- Example text to embed
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Beispieltext zum Einbetten"
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T900237532"] = "Anbieter"
@@ -2448,7 +2475,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1986314327"] = "Demokratisierung
 -- Whatever your job or task is, MindWork AI Studio aims to meet your needs: whether you're a project manager, scientist, artist, author, software developer, or game developer.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2144737937"] = "Was auch immer ihr Beruf oder ihre Aufgabe ist, MindWork AI Studio möchte ihre Bedürfnisse erfüllen: Egal, ob Sie Projektmanager, Wissenschaftler, Künstler, Autor, Softwareentwickler oder Spieleentwickler sind."
 
--- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 EUR such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models. MindWork AI Studio itself is available free of charge.
+-- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models. MindWork AI Studio itself is available free of charge.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2201645589"] = "Wir möchten zur Demokratisierung von KI beitragen. MindWork AI Studio läuft sogar auf kostengünstiger Hardware, einschließlich Computern für etwa 100 € wie dem Raspberry Pi. Dadurch werden die App und ihr voller Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Sie können mit lokalen LLMs starten oder günstige Cloud-Modelle nutzen. MindWork AI Studio selbst ist kostenlos erhältlich."
 
 -- You can connect your email inboxes with AI Studio. The AI will read your emails and notify you of important events. You'll also be able to access knowledge from your emails in your chats.
@@ -3329,6 +3356,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Anb
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Abbrechen"
+
+-- Embedding Vector
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Einbettungsvektor"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Schließen"
 
 -- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Leider ist die GPL-Lizenz von Pandoc nicht mit der Lizenz von AI Studio kompatibel. Software unter der GPL-Lizenz ist jedoch kostenlos und frei nutzbar. Sie müssen die GPL-Lizenz akzeptieren, bevor wir Pandoc automatisch für Sie herunterladen und installieren können (empfohlen). Alternativ können Sie Pandoc auch selbst herunterladen – entweder mit den untenstehenden Anweisungen oder auf anderem Weg, zum Beispiel über den Paketmanager Ihres Betriebssystems."
@@ -4995,7 +5028,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T149711988"] = "Sie zahlen nur für das,
 -- Assistants
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1614176092"] = "Assistenten"
 
--- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 EUR such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
+-- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1628689293"] = "Wir möchten zur Demokratisierung von KI beitragen. MindWork AI Studio läuft sogar auf kostengünstiger Hardware, einschließlich Computern für etwa 100 € wie dem Raspberry Pi. Dadurch werden die App und ihr vollständiger Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Sie können mit lokalen LLMs starten oder günstige Cloud-Modelle nutzen."
 
 -- Unrestricted usage
