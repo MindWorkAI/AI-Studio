@@ -15,7 +15,7 @@
         @foreach (var data in this.Data)
         {
             var isLockedValue = this.IsLockedValue(data.Value);
-            <MudSelectItemExtended Value="@data.Value" Disabled="@isLockedValue">
+            <MudSelectItemExtended Value="@data.Value" Disabled="@isLockedValue" Style="@(isLockedValue ? "pointer-events:auto !important;" : null)">
                 @if (isLockedValue)
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexStart" Wrap="Wrap.NoWrap">
