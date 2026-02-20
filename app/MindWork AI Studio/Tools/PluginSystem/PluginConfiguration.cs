@@ -17,6 +17,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// The list of configuration objects. Configuration objects are, e.g., providers or chat templates. 
     /// </summary>
     public IEnumerable<PluginConfigurationObject> ConfigObjects => this.configObjects;
+
+    /// <summary>
+    /// True/false when explicitly configured in the plugin, otherwise null.
+    /// </summary>
+    public bool? DeployedUsingConfigServer { get; } = ReadDeployedUsingConfigServer(state);
     
     public async Task InitializeAsync(bool dryRun)
     {
@@ -68,6 +73,14 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// Temporary implementation of ISecretId for storing enterprise API keys.
     /// </summary>
     private sealed record TemporarySecretId(string SecretId, string SecretName) : ISecretId;
+
+    private static bool? ReadDeployedUsingConfigServer(LuaState state)
+    {
+        if (state.Environment["DEPLOYED_USING_CONFIG_SERVER"].TryRead<bool>(out var deployedUsingConfigServer))
+            return deployedUsingConfigServer;
+
+        return null;
+    }
 
     /// <summary>
     /// Tries to initialize the UI text content of the plugin.

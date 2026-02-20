@@ -79,13 +79,13 @@ public sealed record PluginConfigurationObject
 
         if (luaTableName is null)
         {
-            LOG.LogError($"The configuration object type '{configObjectType}' is not supported yet.");
+            LOG.LogError("The configuration object type '{ConfigObjectType}' is not supported yet (config plugin id: {ConfigPluginId}).", configObjectType, configPluginId);
             return false;
         }
 
         if (!mainTable.TryGetValue(luaTableName, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
         {
-            LOG.LogWarning($"The {luaTableName} table does not exist or is not a valid table.");
+            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, configPluginId);
             return false;
         }
 
@@ -97,7 +97,7 @@ public sealed record PluginConfigurationObject
             var luaObjectTableValue = luaTable[i];
             if (!luaObjectTableValue.TryRead<LuaTable>(out var luaObjectTable))
             {
-                LOG.LogWarning($"The {luaObjectTable} table at index {i} is not a valid table.");
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, i, configPluginId);
                 continue;
             }
 
@@ -151,12 +151,12 @@ public sealed record PluginConfigurationObject
                         random ??= new ThreadSafeRandom();
                         configObject = configObject with { Num = (uint)random.Next(500_000, 1_000_000) };
                         storedObjects.Add((TClass)configObject);
-                        LOG.LogWarning($"The next number for the configuration object '{configObject.Name}' (id={configObject.Id}) could not be incremented. Using a random number instead.");
+                        LOG.LogWarning("The next number for the configuration object '{ConfigObjectName}' (id={ConfigObjectId}) could not be incremented. Using a random number instead (config plugin id: {ConfigPluginId}).", configObject.Name, configObject.Id, configPluginId);
                     }
                 }
             }
             else
-                LOG.LogWarning($"The {luaObjectTable} table at index {i} does not contain a valid chat template configuration.");
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid configuration object (type={ConfigObjectType}, config plugin id: {ConfigPluginId}).", luaTableName, i, configObjectType, configPluginId);
         }
         
         return true;

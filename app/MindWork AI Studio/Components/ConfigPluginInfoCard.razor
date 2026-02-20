@@ -1,0 +1,21 @@
+<MudPaper Outlined="true" Class="@this.Class">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <MudIcon Icon="@this.HeaderIcon" Size="Size.Small"/>
+        <MudText Typo="Typo.subtitle2">
+            @this.HeaderText
+        </MudText>
+    </div>
+
+    @foreach (var item in this.Items)
+    {
+        <ConfigInfoRow Item="@item"/>
+    }
+
+    @if (this.ShowWarning)
+    {
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Color="Color.Warning"/>
+            <MudText Typo="Typo.subtitle2">@this.WarningText</MudText>
+        </div>
+    }
+</MudPaper>

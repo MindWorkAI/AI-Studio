@@ -117,6 +117,9 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 
     private async Task ExportTranscriptionProvider(TranscriptionProvider provider)
     {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
         if (provider == TranscriptionProvider.NONE)
             return;
 

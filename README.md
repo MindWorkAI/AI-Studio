@@ -105,6 +105,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
+- **Democratization of AI**: We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
 - **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
   - [OpenAI](https://openai.com/) (GPT5, GPT4.1, o1, o3, o4, etc.)
   - [Perplexity](https://www.perplexity.ai/)

@@ -1,0 +1,10 @@
+<div style="display: flex; align-items: center; gap: 8px; @this.Item.Style">
+    <MudIcon Icon="@this.Item.Icon"/>
+    <span>
+        @this.Item.Text
+    </span>
+    @if (!string.IsNullOrWhiteSpace(this.Item.CopyValue))
+    {
+        <MudCopyClipboardButton TooltipMessage="@this.Item.CopyTooltip" StringContent="@this.Item.CopyValue"/>
+    }
+</div>
