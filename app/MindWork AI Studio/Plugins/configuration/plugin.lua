@@ -24,6 +24,9 @@ VERSION = "1.0.0"
 -- The type of the plugin:
 TYPE = "CONFIGURATION"
 
+-- True when this plugin is deployed by an enterprise configuration server:
+DEPLOYED_USING_CONFIG_SERVER = false
+
 -- The authors of the plugin:
 AUTHORS = {"<Company Name>"}
 

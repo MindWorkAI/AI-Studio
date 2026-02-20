@@ -6,7 +6,7 @@ public static partial class PluginFactory
     
     public static void SetUpHotReloading()
     {
-        if (!IS_INITIALIZED)
+        if (!IsInitialized)
         {
             LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
             return;

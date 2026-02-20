@@ -69,11 +69,20 @@ public partial class Information : MSGComponentBase
 
     private bool showDatabaseDetails;
 
-    private IPluginMetadata? configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+    private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
+        .Where(x => x.Type is PluginType.CONFIGURATION)
+        .OfType<IAvailablePlugin>()
+        .ToList();
     
     private sealed record DatabaseDisplayInfo(string Label, string Value);
 
     private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
+
+    private static bool HasAnyActiveEnvironment => EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Any(e => e.IsActive);
+    
+    private bool HasAnyLoadedEnterpriseConfigurationPlugin => EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS
+        .Where(e => e.IsActive)
+        .Any(env => this.FindManagedConfigurationPlugin(env.ConfigurationId) is not null);
 
     /// <summary>
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
@@ -83,16 +92,16 @@ public partial class Information : MSGComponentBase
     {
         get
         {
-            return EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.IsActive switch
+            return HasAnyActiveEnvironment switch
             {
                 // Case 1: No enterprise config and no plugin - no details available
-                false when this.configPlug is null => false,
+                false when this.configPlugins.Count == 0 => false,
 
                 // Case 2: Enterprise config with plugin but no central management - has details
                 false => true,
 
                 // Case 3: Enterprise config active but no plugin - has details
-                true when this.configPlug is null => true,
+                true when this.configPlugins.Count == 0 => true,
 
                 // Case 4: Enterprise config active with plugin - has details
                 true => true
@@ -128,7 +137,10 @@ public partial class Information : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.PLUGINS_RELOADED:
-                this.configPlug = PluginFactory.AvailablePlugins.FirstOrDefault(x => x.Type is PluginType.CONFIGURATION);
+                this.configPlugins = PluginFactory.AvailablePlugins
+                    .Where(x => x.Type is PluginType.CONFIGURATION)
+                    .OfType<IAvailablePlugin>()
+                    .ToList();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
@@ -192,6 +204,18 @@ public partial class Information : MSGComponentBase
     private void ToggleDatabaseDetails()
     {
         this.showDatabaseDetails = !this.showDatabaseDetails;
+    }
+
+    private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
+    {
+        return this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId == configurationId)
+               // Backward compatibility for already downloaded plugins without ManagedConfigurationId.
+               ?? this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId is null && plugin.Id == configurationId);
+    }
+
+    private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
+    {
+        return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
     }
 
     private async Task CopyStartupLogPath()

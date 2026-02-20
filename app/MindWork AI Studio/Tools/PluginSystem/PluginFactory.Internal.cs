@@ -10,7 +10,7 @@ public static partial class PluginFactory
 {
     public static async Task EnsureInternalPlugins()
     {
-        if (!IS_INITIALIZED)
+        if (!IsInitialized)
         {
             LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
             return;

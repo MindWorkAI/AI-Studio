@@ -1,11 +1,21 @@
 @inherits MSGComponentBase
-<MudDialog>
+<MudDialog DefaultFocus="DefaultFocus.FirstChild">
     <DialogContent>
         <MudText Typo="Typo.body1">
             @this.Message
         </MudText>
         <MudForm @ref="this.form" Class="mt-4">
-            <MudTextField T="string" @bind-Text="@this.UserInput" Variant="Variant.Outlined" AutoGrow="@false" Lines="1" Label="@this.GetInputHeaderText" AutoFocus="@true" UserAttributes="@USER_INPUT_ATTRIBUTES" Validation="@this.ValidateUserInput" />
+            <MudTextField T="string"
+                          @bind-Text="@this.UserInput"
+                          Variant="Variant.Outlined"
+                          AutoGrow="@false"
+                          Lines="1"
+                          Label="@this.GetInputHeaderText"
+                          AutoFocus="@true"
+                          Immediate="@true"
+                          OnKeyDown="@this.HandleUserInputKeyDown"
+                          UserAttributes="@USER_INPUT_ATTRIBUTES"
+                          Validation="@this.ValidateUserInput" />
         </MudForm>
     </DialogContent>
     <DialogActions>

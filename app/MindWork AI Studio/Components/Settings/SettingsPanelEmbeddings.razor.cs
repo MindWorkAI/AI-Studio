@@ -117,6 +117,9 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task ExportEmbeddingProvider(EmbeddingProvider provider)
     {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
         if (provider == EmbeddingProvider.NONE)
             return;
 

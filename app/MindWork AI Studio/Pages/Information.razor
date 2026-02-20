@@ -49,125 +49,129 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
-                        @switch (EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.IsActive)
+                        @switch (HasAnyActiveEnvironment)
                         {
-                            case false when this.configPlug is null:
+                            case false when this.configPlugins.Count == 0:
                                 <MudText Typo="Typo.body1">
                                     @T("This is a private AI Studio installation. It runs without an enterprise configuration.")
                                 </MudText>
                                 break;
-                                
+
                             case false:
                                 <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management.")
+                                    @T("AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management.")
                                 </MudText>
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
-                                        </div>
-                                    </MudText>
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            @if (PluginFactory.EnterpriseEncryption?.IsAvailable is true)
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
-                                                <span>@T("Encryption secret: is configured")</span>
-                                            }
-                                            else
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
-                                                <span>@T("Encryption secret: is not configured")</span>
-                                            }
-                                        </div>
-                                    </MudText>
+                                    @foreach (var plug in this.configPlugins)
+                                    {
+                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
+                                                              HeaderText="@plug.Name"
+                                                              Items="@([
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration plugin ID:")} {plug.Id}",
+                                                                             plug.Id.ToString(),
+                                                                             T("Copies the configuration plugin ID to the clipboard"))
+                                                                     ])"/>
+                                    }
+                                    
+                                    <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
+                                                          ConfiguredText="@T("Encryption secret: is configured")"
+                                                          NotConfiguredText="@T("Encryption secret: is not configured")"/>
                                 </MudCollapse>
                                 break;
 
-                            case true when this.configPlug is null:
+                            case true when this.configPlugins.Count == 0:
                                 <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")
+                                    @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.")
                                 </MudText>
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Enterprise configuration ID:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId.ToString()/>
-                                        </div>
-                                    </MudText>
-
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration server:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
-                                        </div>
-                                    </MudText>
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            @if (PluginFactory.EnterpriseEncryption?.IsAvailable is true)
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
-                                                <span>@T("Encryption secret: is configured")</span>
-                                            }
-                                            else
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
-                                                <span>@T("Encryption secret: is not configured")</span>
-                                            }
-                                        </div>
-                                    </MudText>
+                                    @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
+                                    {
+                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
+                                                              HeaderText="@T("Waiting for the configuration plugin...")"
+                                                              Items="@([
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
+                                                                             env.ConfigurationId.ToString(),
+                                                                             T("Copies the config ID to the clipboard")),
+                                                                         
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
+                                                                             env.ConfigurationServerUrl,
+                                                                             T("Copies the server URL to the clipboard"),
+                                                                             "margin-top: 4px;")
+                                                                     ])"/>
+                                    }
+                                    
+                                    <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
+                                                          ConfiguredText="@T("Encryption secret: is configured")"
+                                                          NotConfiguredText="@T("Encryption secret: is not configured")"/>
                                 </MudCollapse>
                                 break;
 
                             case true:
-                                <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")
-                                </MudText>
+                                @if (this.HasAnyLoadedEnterpriseConfigurationPlugin)
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.")
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.")
+                                    </MudText>
+                                }
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Enterprise configuration ID:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId.ToString()/>
-                                        </div>
-                                    </MudText>
-
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration server:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
-                                        </div>
-                                    </MudText>
+                                    @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
+                                    {
+                                        var matchingPlugin = this.FindManagedConfigurationPlugin(env.ConfigurationId);
+                                        if (matchingPlugin is null)
+                                        {
+                                            <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
+                                                                  HeaderText="@T("Waiting for the configuration plugin...")"
+                                                                  Items="@([
+                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                                 $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
+                                                                                 env.ConfigurationId.ToString(),
+                                                                                 T("Copies the config ID to the clipboard")),
+                                                                             
+                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                                 $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
+                                                                                 env.ConfigurationServerUrl,
+                                                                                 T("Copies the server URL to the clipboard"),
+                                                                                 "margin-top: 4px;")
+                                                                         ])"/>
+                                            continue;
+                                        }
+                                        
+                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
+                                                              HeaderText="@matchingPlugin.Name"
+                                                              Items="@([
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
+                                                                             env.ConfigurationId.ToString(),
+                                                                             T("Copies the config ID to the clipboard")),
+                                                                         
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
+                                                                             env.ConfigurationServerUrl,
+                                                                             T("Copies the server URL to the clipboard"),
+                                                                             "margin-top: 4px;"),
+                                                                         
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration plugin ID:")} {matchingPlugin.Id}",
+                                                                             matchingPlugin.Id.ToString(),
+                                                                             T("Copies the configuration plugin ID to the clipboard"),
+                                                                             "margin-top: 4px;")
+                                                                     ])"
+                                                              ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
+                                                              WarningText="@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")"/>
+                                    }
                                     
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
-                                        </div>
-                                    </MudText>
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            @if (PluginFactory.EnterpriseEncryption?.IsAvailable is true)
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
-                                                <span>@T("Encryption secret: is configured")</span>
-                                            }
-                                            else
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
-                                                <span>@T("Encryption secret: is not configured")</span>
-                                            }
-                                        </div>
-                                    </MudText>
+                                    <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
+                                                          ConfiguredText="@T("Encryption secret: is configured")"
+                                                          NotConfiguredText="@T("Encryption secret: is not configured")"/>
                                 </MudCollapse>
                                 break;
                         }
@@ -184,10 +188,10 @@
                     </MudListItem>
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
                         @T("Check for updates")
                     </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="async () => await this.ShowPandocDialog()">
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
                         @this.PandocButtonText
                     </MudButton>
                 </MudStack>
@@ -195,7 +199,7 @@
 
             <ExpansionPanel HeaderIcon="@Icons.Custom.Brands.GitHub" HeaderText="@T("Community & Code")">
                 <MudList T="string" Class="mb-1">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="http://mindworkai.org/">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="https://mindworkai.org/">
                         @T("Discover MindWork AI's mission and vision on our official homepage.")
                     </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Custom.Brands.GitHub" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio">
@@ -236,14 +240,14 @@
                     @T("Startup log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="() => this.CopyStartupLogPath()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="@(() => this.CopyStartupLogPath())"/>
                 </MudList>
                 
                 <MudText Typo="Typo.h4">
                     @T("Usage log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="() => this.CopyAppLogPath()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="@(() => this.CopyAppLogPath())"/>
                 </MudList>
             </ExpansionPanel>
 
