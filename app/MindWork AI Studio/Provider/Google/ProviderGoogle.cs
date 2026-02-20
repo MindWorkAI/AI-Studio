@@ -22,7 +22,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
     public override string InstanceName { get; set; } = "Google Gemini";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
@@ -76,57 +76,50 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<string> TranscribeAudioAsync(Provider.Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
         return Task.FromResult(string.Empty);
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        if(modelResponse == default)
-            return [];
-        
-        return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/gemini-", StringComparison.OrdinalIgnoreCase) && !model.Name.Contains("embed"))
-            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
+        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return models.Where(model =>
+                model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
+                !this.IsEmbeddingModel(model.Id))
+            .Select(this.WithDisplayNameFallback);
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
 
-    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        if(modelResponse == default)
-            return [];
-        
-        return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/text-embedding-", StringComparison.OrdinalIgnoreCase) ||
-                model.Name.StartsWith("models/gemini-embed", StringComparison.OrdinalIgnoreCase))
-            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
+        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return models.Where(model => this.IsEmbeddingModel(model.Id))
+            .Select(this.WithDisplayNameFallback);
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
     
     #endregion
 
-    private async Task<ModelsResponse> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IReadOnlyList<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
@@ -138,16 +131,57 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
             }
         };
 
-        if (secretKey is null)
-            return default;
+        if (string.IsNullOrWhiteSpace(secretKey))
+            return [];
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"models?key={secretKey}");
-        using var response = await this.httpClient.SendAsync(request, token);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
         
+        using var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
-            return default;
+        {
+            LOGGER.LogError("Failed to load models with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, await response.Content.ReadAsStringAsync(token));
+            return [];
+        }
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse;
+        try
+        {
+            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            if (modelResponse == default || modelResponse.Data.Count is 0)
+            {
+                LOGGER.LogError("Google model list response did not contain a valid data array.");
+                return [];
+            }
+
+            return modelResponse.Data
+                .Where(model => !string.IsNullOrWhiteSpace(model.Id))
+                .Select(model => new Model(this.NormalizeModelId(model.Id), model.DisplayName))
+                .ToArray();
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError("Failed to parse Google model list response: '{Message}'.", e.Message);
+            return [];
+        }
+    }
+
+    private bool IsEmbeddingModel(string modelId)
+    {
+        return modelId.Contains("embedding", StringComparison.OrdinalIgnoreCase) ||
+               modelId.Contains("embed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Model WithDisplayNameFallback(Model model)
+    {
+        return string.IsNullOrWhiteSpace(model.DisplayName)
+            ? new Model(model.Id, model.Id)
+            : model;
+    }
+
+    private string NormalizeModelId(string modelId)
+    {
+        return modelId.StartsWith("models/", StringComparison.OrdinalIgnoreCase)
+            ? modelId["models/".Length..]
+            : modelId;
     }
 }
