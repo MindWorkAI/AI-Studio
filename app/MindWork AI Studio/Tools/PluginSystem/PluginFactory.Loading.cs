@@ -187,6 +187,10 @@ public static partial class PluginFactory
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
         
+        // Check for a preselected provider:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for a preselected profile:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

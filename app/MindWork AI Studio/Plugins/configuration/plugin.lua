@@ -166,6 +166,11 @@ CONFIG["SETTINGS"] = {}
 -- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_DOCUMENT_ANALYSIS_2025.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_DOCUMENT_ANALYSIS_2025" }
 
+-- Configure the preselected provider.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.
+-- CONFIG["SETTINGS"]["DataApp.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+
 -- Configure the preselected profile.
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].
 -- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
