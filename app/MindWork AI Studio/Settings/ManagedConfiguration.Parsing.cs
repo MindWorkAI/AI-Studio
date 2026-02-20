@@ -584,7 +584,7 @@ public static partial class ManagedConfiguration
 
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for enum set types.
-    /// The configured values are merged into the existing set and the setting is left unlocked
+    /// The configured values are merged into the existing set, and the setting is left unlocked
     /// so users can add additional values.
     /// </summary>
     /// <param name="configPluginId">The ID of the related configuration plugin.</param>
