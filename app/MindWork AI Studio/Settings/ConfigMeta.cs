@@ -28,14 +28,14 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     private Expression<Func<TClass, TValue>> PropertyExpression { get; }
 	
     /// <summary>
-    /// Indicates whether the configuration is managed by a plugin and is therefore locked.
+    /// Indicates whether the configuration is locked by a configuration plugin.
     /// </summary>
     public bool IsLocked { get; private set; }
 
     /// <summary>
-    /// The ID of the plugin that manages this configuration. This is set when the configuration is locked.
+    /// The ID of the plugin that locked this configuration.
     /// </summary>
-    public Guid MangedByConfigPluginId { get; private set; }
+    public Guid LockedByConfigPluginId { get; private set; }
     
     /// <summary>
     /// The default value for the configuration property. This is used when resetting the property to its default state.
@@ -43,68 +43,68 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     public required TValue Default { get; init; }
 
     /// <summary>
-    /// Indicates whether a managed value is available.
+    /// Indicates whether a plugin contribution is available.
     /// </summary>
-    public bool HasManagedValue { get; private set; }
+    public bool HasPluginContribution { get; private set; }
 
     /// <summary>
-    /// The managed value provided by a configuration plugin.
+    /// The additive value contribution provided by a configuration plugin.
     /// </summary>
-    public TValue ManagedValue { get; private set; } = default!;
+    public TValue PluginContribution { get; private set; } = default!;
 
     /// <summary>
-    /// The ID of the plugin that provided the managed value.
+    /// The ID of the plugin that provided the additive value contribution.
     /// </summary>
-    public Guid ManagedValueByConfigPluginId { get; private set; }
+    public Guid PluginContributionByConfigPluginId { get; private set; }
 
     /// <summary>
-    /// Locks the configuration state, indicating that it is managed by a specific plugin.
+    /// Locks the configuration state, indicating that it is controlled by a specific plugin.
     /// </summary>
-    /// <param name="pluginId">The ID of the plugin that is managing this configuration.</param>
-    public void LockManagedState(Guid pluginId)
+    /// <param name="pluginId">The ID of the plugin that is locking this configuration.</param>
+    public void LockConfiguration(Guid pluginId)
     {
         this.IsLocked = true;
-        this.MangedByConfigPluginId = pluginId;
+        this.LockedByConfigPluginId = pluginId;
     }
     
     /// <summary>
-    /// Resets the managed state of the configuration, allowing it to be modified again.
+    /// Resets the locked state of the configuration, allowing it to be modified again.
     /// This will also reset the property to its default value.
     /// </summary>
-    public void ResetManagedState()
+    public void ResetLockedConfiguration()
     {
         this.IsLocked = false;
-        this.MangedByConfigPluginId = Guid.Empty;
+        this.LockedByConfigPluginId = Guid.Empty;
         this.Reset();
     }
 
     /// <summary>
     /// Unlocks the configuration state without changing the current value.
     /// </summary>
-    public void UnlockManagedState()
+    public void UnlockConfiguration()
     {
         this.IsLocked = false;
-        this.MangedByConfigPluginId = Guid.Empty;
+        this.LockedByConfigPluginId = Guid.Empty;
     }
 
     /// <summary>
-    /// Stores a managed value provided by a configuration plugin.
+    /// Stores an additive plugin contribution.
     /// </summary>
-    public void SetManagedValue(TValue value, Guid pluginId)
+    public void SetPluginContribution(TValue value, Guid pluginId)
     {
-        this.ManagedValue = value;
-        this.ManagedValueByConfigPluginId = pluginId;
-        this.HasManagedValue = true;
+        this.PluginContribution = value;
+        this.PluginContributionByConfigPluginId = pluginId;
+        this.HasPluginContribution = true;
     }
 
     /// <summary>
-    /// Clears the managed value without changing the current value.
+    /// Clears the additive plugin contribution without changing the current value.
     /// </summary>
-    public void ClearManagedValue()
+    public void ClearPluginContribution()
     {
-        this.ManagedValue = default!;
-        this.ManagedValueByConfigPluginId = Guid.Empty;
-        this.HasManagedValue = false;
+        this.PluginContribution = default!;
+        this.PluginContributionByConfigPluginId = Guid.Empty;
+        this.HasPluginContribution = false;
     }
     
     /// <summary>

@@ -28,14 +28,14 @@ public partial class SettingsPanelApp : SettingsPanelBase
     {
         this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;
         var filtered = previewVisibility.FilterPreviewFeatures(this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures);
-        filtered.UnionWith(this.GetManagedPreviewFeatures());
+        filtered.UnionWith(this.GetPluginContributedPreviewFeatures());
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = filtered;
     }
 
-    private HashSet<PreviewFeatures> GetManagedPreviewFeatures()
+    private HashSet<PreviewFeatures> GetPluginContributedPreviewFeatures()
     {
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.HasManagedValue)
-            return meta.ManagedValue.Where(x => !x.IsReleased()).ToHashSet();
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.HasPluginContribution)
+            return meta.PluginContribution.Where(x => !x.IsReleased()).ToHashSet();
 
         return [];
     }
@@ -43,13 +43,13 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private HashSet<PreviewFeatures> GetSelectedPreviewFeatures()
     {
         var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased()).ToHashSet();
-        enabled.UnionWith(this.GetManagedPreviewFeatures());
+        enabled.UnionWith(this.GetPluginContributedPreviewFeatures());
         return enabled;
     }
 
     private void UpdateEnabledPreviewFeatures(HashSet<PreviewFeatures> selectedFeatures)
     {
-        selectedFeatures.UnionWith(this.GetManagedPreviewFeatures());
+        selectedFeatures.UnionWith(this.GetPluginContributedPreviewFeatures());
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedFeatures;
     }
 

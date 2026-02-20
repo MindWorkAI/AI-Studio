@@ -252,13 +252,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.MangedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.MangedByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ResetManagedState();
+            configMeta.ResetLockedConfiguration();
             return true;
         }
 
@@ -273,13 +273,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.MangedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.MangedByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ResetManagedState();
+            configMeta.ResetLockedConfiguration();
             return true;
         }
 
@@ -297,13 +297,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.MangedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.MangedByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ResetManagedState();
+            configMeta.ResetLockedConfiguration();
             return true;
         }
 
@@ -320,13 +320,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.MangedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.MangedByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ResetManagedState();
+            configMeta.ResetLockedConfiguration();
             return true;
         }
 
@@ -341,13 +341,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.MangedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.MangedByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ResetManagedState();
+            configMeta.ResetLockedConfiguration();
             return true;
         }
 
@@ -355,10 +355,10 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
-    /// Checks if a managed value is left over from a configuration plugin that is no longer available.
-    /// If so, it clears the managed value and returns true.
+    /// Checks if a plugin contribution is left over from a configuration plugin that is no longer available.
+    /// If so, it clears the contribution and returns true.
     /// </summary>
-    public static bool IsManagedValueLeftOver<TClass, TValue>(
+    public static bool IsPluginContributionLeftOver<TClass, TValue>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, ISet<TValue>>> propertyExpression,
         IEnumerable<IAvailablePlugin> availablePlugins)
@@ -366,13 +366,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (!configMeta.HasManagedValue || configMeta.ManagedValueByConfigPluginId == Guid.Empty)
+        if (!configMeta.HasPluginContribution || configMeta.PluginContributionByConfigPluginId == Guid.Empty)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.ManagedValueByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.PluginContributionByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ClearManagedValue();
+            configMeta.ClearPluginContribution();
             return true;
         }
 
@@ -387,13 +387,13 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.MangedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.MangedByConfigPluginId);
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
         {
-            configMeta.ResetManagedState();
+            configMeta.ResetLockedConfiguration();
             return true;
         }
 

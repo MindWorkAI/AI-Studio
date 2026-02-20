@@ -121,8 +121,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
         
-        // Config: enabled preview features (additive; users can enable additional features)
-        ManagedConfiguration.TryProcessConfigurationAdditive(x => x.App, x => x.EnabledPreviewFeatures, this.Id, settingsTable, dryRun);
+        // Config: enabled preview features (plugin contribution; users can enable additional features)
+        ManagedConfiguration.TryProcessConfigurationWithPluginContribution(x => x.App, x => x.EnabledPreviewFeatures, this.Id, settingsTable, dryRun);
         
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);

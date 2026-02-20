@@ -218,7 +218,8 @@ public static partial class PluginFactory
         // Check for enabled preview features:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
-        if(ManagedConfiguration.IsManagedValueLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
+        
+        if(ManagedConfiguration.IsPluginContributionLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         // Check for the transcription provider:

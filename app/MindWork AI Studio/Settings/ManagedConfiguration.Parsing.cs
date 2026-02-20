@@ -583,8 +583,8 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
-    /// Attempts to process the configuration settings from a Lua table for enum set types.
-    /// The configured values are merged into the existing set, and the setting is left unlocked
+    /// Attempts to process additive plugin contributions for enum set settings from a Lua table.
+    /// The contributed values are merged into the existing set, and the setting remains unlocked
     /// so users can add additional values.
     /// </summary>
     /// <param name="configPluginId">The ID of the related configuration plugin.</param>
@@ -596,7 +596,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TValue">The type of the property within the configuration class. It is also the type of the set
     /// elements, which must be an enum.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
-    public static bool TryProcessConfigurationAdditive<TClass, TValue>(
+    public static bool TryProcessConfigurationWithPluginContribution<TClass, TValue>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, ISet<TValue>>> propertyExpression,
         Guid configPluginId,
@@ -653,15 +653,15 @@ public static partial class ManagedConfiguration
             var merged = new HashSet<TValue>(currentValue);
             merged.UnionWith(configuredValue);
             configMeta.SetValue(merged);
-            configMeta.SetManagedValue(new HashSet<TValue>(configuredValue), configPluginId);
+            configMeta.SetPluginContribution(new HashSet<TValue>(configuredValue), configPluginId);
         }
-        else if (configMeta.HasManagedValue && configMeta.ManagedValueByConfigPluginId == configPluginId)
+        else if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId == configPluginId)
         {
-            configMeta.ClearManagedValue();
+            configMeta.ClearPluginContribution();
         }
 
-        if (configMeta.IsLocked && configMeta.MangedByConfigPluginId == configPluginId)
-            configMeta.UnlockManagedState();
+        if (configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId)
+            configMeta.UnlockConfiguration();
 
         return successful;
     }
@@ -828,12 +828,12 @@ public static partial class ManagedConfiguration
                 // Case: the setting was configured, and we could read the value successfully.
                 //
                 
-                // Set the configured value and lock the managed state:
+                // Set the configured value and lock the configuration:
                 configMeta.SetValue(configuredValue);
-                configMeta.LockManagedState(configPluginId);
+                configMeta.LockConfiguration(configPluginId);
                 break;
 
-            case false when configMeta.IsLocked && configMeta.MangedByConfigPluginId == configPluginId:
+            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId:
                 //
                 // Case: the setting was configured previously, but we could not read the value successfully.
                 // This happens when the setting was removed from the configuration plugin. We handle that
@@ -841,10 +841,10 @@ public static partial class ManagedConfiguration
                 //
                 // The other case, when the setting was locked and managed by a different configuration plugin,
                 // is handled by the IsConfigurationLeftOver method, which checks if the configuration plugin
-                // is still available. If it is not available, it resets the managed state of the
+                // is still available. If it is not available, it resets the locked state of the
                 // configuration setting, allowing it to be reconfigured by a different plugin or left unchanged.
                 //
-                configMeta.ResetManagedState();
+                configMeta.ResetLockedConfiguration();
                 break;
             
             case false:
