@@ -40,6 +40,17 @@ public partial class SettingsPanelApp : SettingsPanelBase
         return [];
     }
 
+    private bool IsPluginContributedPreviewFeature(PreviewFeatures feature)
+    {
+        if (feature.IsReleased())
+            return false;
+
+        if (!ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) || !meta.HasPluginContribution)
+            return false;
+
+        return meta.PluginContribution.Contains(feature);
+    }
+
     private HashSet<PreviewFeatures> GetSelectedPreviewFeatures()
     {
         var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased()).ToHashSet();

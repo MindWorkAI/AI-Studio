@@ -27,6 +27,12 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public Action<HashSet<TData>> SelectionUpdate { get; set; } = _ => { };
+
+    /// <summary>
+    /// Determines whether a specific item is locked by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public Func<TData, bool> IsItemLocked { get; set; } = _ => false;
     
     #region Overrides of ConfigurationBase
 
@@ -62,4 +68,12 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
         
         return string.Format(T("You have selected {0} preview features."), selectedValues.Count);
     }
+
+    private bool IsLockedValue(TData value) => this.IsItemLocked(value);
+
+    private string LockedTooltip() =>
+        this.T(
+            "This feature is managed by your organization and has therefore been disabled.",
+            typeof(ConfigurationBase).Namespace,
+            nameof(ConfigurationBase));
 }
