@@ -110,7 +110,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// <summary>
     /// Resets the configuration property to its default value.
     /// </summary>
-    public void Reset()
+    private void Reset()
     {
         var configInstance = this.ConfigSelection.Compile().Invoke(SETTINGS_MANAGER.ConfigurationData);
         var memberExpression = this.PropertyExpression.GetMemberExpression();
