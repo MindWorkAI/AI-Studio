@@ -49,5 +49,9 @@ public static class ComponentPropSpecs
                 required: ["Name"],
                 optional: ["UserPrompt", "Preselect", "PreselectContentCleanerAgent"]
             ),
+            [AssistantUiCompontentType.FILE_CONTENT_READER] = new(
+                required: ["Name"],
+                optional: ["UserPrompt"]
+            ),
         };
 }

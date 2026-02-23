@@ -25,6 +25,12 @@
                                 @bind-PreselectContentCleanerAgent="@webState.PreselectContentCleanerAgent" />
             }
             break;
+        case AssistantUiCompontentType.FILE_CONTENT_READER:
+            if (component is AssistantFileContentReader fileContent && this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
+            {
+                <ReadFileContent @bind-FileContent="@fileState.Content" />
+            }
+            break;
             
         case AssistantUiCompontentType.DROPDOWN:
             if (component is AssistantDropdown assistantDropdown)

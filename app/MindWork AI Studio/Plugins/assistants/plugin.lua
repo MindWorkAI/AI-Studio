@@ -151,6 +151,13 @@ ASSISTANT = {
                     ["PreselectContentCleanerAgent"] = true -- run the content cleaner by default
                 }
             },
+            {
+                ["Type"] = "FILE_CONTENT_READER", -- allows the user to load local files
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["UserPrompt"] = "<help text reminding the user what kind of file they should load>"
+                }
+            },
         }
     },
 }

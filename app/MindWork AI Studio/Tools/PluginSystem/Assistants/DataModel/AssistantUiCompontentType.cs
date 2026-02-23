@@ -13,4 +13,5 @@ public enum AssistantUiCompontentType
     TEXT,
     LIST,
     WEB_CONTENT_READER,
+    FILE_CONTENT_READER,
 }

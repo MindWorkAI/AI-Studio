@@ -35,6 +35,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private Dictionary<string, string> dropdownFields = new();
     private Dictionary<string, bool> switchFields = new();
     private Dictionary<string, WebContentState> webContentFields = new();
+    private Dictionary<string, FileContentState> fileContentFields = new();
     
     protected override void OnInitialized()
     {
@@ -83,6 +84,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         });
                     }
                     break;
+                case AssistantUiCompontentType.FILE_CONTENT_READER:
+                    if (component is AssistantFileContentReader fileContent)
+                    {
+                        this.fileContentFields.Add(fileContent.Name, new FileContentState());
+                    }
+                    break;
             }
         }
         base.OnInitialized();
@@ -98,6 +105,10 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         {
             entry.Value.Content = string.Empty;
             entry.Value.AgentIsRunning = false;
+        }
+        foreach (var entry in this.fileContentFields)
+        {
+            entry.Value.Content = string.Empty;
         }
     }
 
@@ -164,6 +175,21 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
+                case AssistantUiCompontentType.FILE_CONTENT_READER:
+                    if (component is AssistantFileContentReader fileContent &&
+                        this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
+                    {
+                        if (!string.IsNullOrWhiteSpace(fileContent.UserPrompt))
+                        {
+                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{fileContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(fileState.Content))
+                        {
+                            prompt += $"user prompt:{Environment.NewLine}{fileState.Content}";
+                        }
+                    }
+                    break;
                 default:
                     prompt += $"{userInput}{Environment.NewLine}";
                     break;
@@ -192,4 +218,5 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         var time = this.AddUserRequest(this.CollectUserPrompt());
         await this.AddAIResponseAsync(time);
     }
+
 }
