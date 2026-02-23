@@ -22,6 +22,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         
         # Content
             - You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
+            
+        # Important aspects
+            - Emphasize the following aspects in your presentation {{{this.PromptImportantAspects()}}} 
         
         # Subheadings
         - Rule for creating the individual subheadings:
@@ -97,6 +100,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
             this.selectedTargetGroup = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetGroup;
+            this.importantAspects = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects;
             return true;
         }
         
@@ -112,6 +116,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private double numberOfBulletPoints;
     private double timeSpecification;
     private int calculatedNumberOfSlides = 0;
+    private string importantAspects = string.Empty;
 
     #region Overrides of ComponentBase
 
@@ -145,6 +150,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int CalculateNumberOfSlides()
     {
         return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / 1.5);
+    }
+    
+    private string PromptImportantAspects()
+    {
+        if (string.IsNullOrWhiteSpace(this.importantAspects))
+            return string.Empty;
+
+        return $"""
+                Emphasize the following aspects in your slides:
+                {this.importantAspects}
+                """;
     }
     
     private async Task CreateSlideBuilder()

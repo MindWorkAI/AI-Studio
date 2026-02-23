@@ -36,6 +36,11 @@ public class DataSlideBuilder
     public TargetGroup PreselectedTargetGroup { get; set; }
     
     /// <summary>
+    /// Preselect any important aspects that the Slide Builder should take into account?
+    /// </summary>
+    public string PreselectedImportantAspects { get; set; } = string.Empty;
+    
+    /// <summary>
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
