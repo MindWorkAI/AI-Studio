@@ -1,9 +1,11 @@
 ﻿require("icon")
 
--- ------
--- This is an example of an assistant plugin that will build an assistant for you.
--- Please replace the placeholders and assign a valid ID.
--- ------
+--[[
+  This sample assistant shows how plugin authors map Lua tables into UI components.
+  Each component declares a `UserPrompt` which is prepended as a `context` block, followed
+  by the actual component value in `user prompt`. See
+  `app/MindWork AI Studio/Plugins/assistants/README.md` for the full data-model reference.
+]]
 
 -- The ID for this plugin:
 ID = "00000000-0000-0000-0000-000000000000"
