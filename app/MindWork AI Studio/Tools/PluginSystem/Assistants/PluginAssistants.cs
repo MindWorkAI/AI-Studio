@@ -16,6 +16,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public string SystemPrompt { get; set; } = string.Empty;
     public string SubmitText { get; set; } = string.Empty;
     public bool AllowProfiles { get; set; } = true;
+    public bool HasEmbeddedProfileSelection { get; private set; }
 
     public void TryLoad()
     {
@@ -36,6 +37,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private bool TryProcessAssistant(out string message)
     {
         message = string.Empty;
+        this.HasEmbeddedProfileSelection = false;
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.state.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
@@ -171,6 +173,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             LOGGER.LogWarning($"Component #{idx} missing valid Type.");
             return false;
         }
+        
+        if (type == AssistantUiCompontentType.PROFILE_SELECTION)
+            this.HasEmbeddedProfileSelection = true;
 
         Dictionary<string, object> props = new();
         if (componentTable.TryGetValue("Props", out var propsVal)

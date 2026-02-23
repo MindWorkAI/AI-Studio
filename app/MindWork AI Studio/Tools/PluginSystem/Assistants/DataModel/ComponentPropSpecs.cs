@@ -25,6 +25,10 @@ public static class ComponentPropSpecs
                 required: ["Name", "Label"],
                 optional: []
             ),
+            [AssistantUiCompontentType.PROFILE_SELECTION] = new(
+                required: [],
+                optional: ["ValidationMessage"]
+            ),
             [AssistantUiCompontentType.SWITCH] = new(
                 required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
                 optional: ["UserPrompt"]

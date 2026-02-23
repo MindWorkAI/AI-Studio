@@ -56,8 +56,8 @@ ASSISTANT = {
 -- usage example with the full feature set:
 ASSISTANT = {
     ["Title"] = "<main title of assistant>", -- required
-    ["Description"] = "<assitant description>", -- required
-    ["SystemPrompt"] = "<prompt that fudamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
+    ["Description"] = "<assistant description>", -- required
+    ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
     ["UI"] = {
@@ -93,7 +93,7 @@ ASSISTANT = {
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["Label"] = "<heading of your component>", -- required
-                    ["Value"] = true, -- intial switch state
+                    ["Value"] = true, -- initial switch state
                     ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
                     ["LabelOn"] = "<text if state is true>", -- required
                     ["LabelOff"] = "<text if state is false>" -- required
@@ -102,8 +102,15 @@ ASSISTANT = {
             {
                 ["Type"] = "PROVIDER_SELECTION", -- required
                 ["Props"] = {
-                    ["Name"] = "Anbieter",
-                    ["Label"] = "LLM auswählen"
+                    ["Name"] = "Provider",
+                    ["Label"] = "Choose LLM"
+                }
+            },
+            -- If you add a PROFILE_SELECTION component, AI Studio will hide the footer selection and use this block instead:
+            {
+                ["Type"] = "PROFILE_SELECTION",
+                ["Props"] = {
+                    ["ValidationMessage"] = "<warning message that is shown when the user has not picked a profile>"
                 }
             },
             {

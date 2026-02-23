@@ -1,4 +1,6 @@
 ﻿@attribute [Route(Routes.ASSISTANT_DYNAMIC)]
+@using AIStudio.Components
+@using AIStudio.Settings
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDynamic>
 
@@ -28,6 +30,13 @@
             if (component is AssistantProviderSelection providerSelection)
             {
                 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+            }
+            break;
+        case AssistantUiCompontentType.PROFILE_SELECTION:
+            if (component is AssistantProfileSelection profileSelection)
+            {
+                var selection = profileSelection;
+                <ProfileFormSelection Validation="@((Profile profile) => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.currentProfile"/>
             }
             break;
         case AssistantUiCompontentType.SWITCH:

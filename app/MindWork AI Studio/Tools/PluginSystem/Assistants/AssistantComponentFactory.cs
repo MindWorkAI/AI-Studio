@@ -23,6 +23,8 @@ public class AssistantComponentFactory
                 return new AssistantDropdown { Props = props, Children = children };
             case AssistantUiCompontentType.PROVIDER_SELECTION:
                 return new AssistantProviderSelection { Props = props, Children = children };
+            case AssistantUiCompontentType.PROFILE_SELECTION:
+                return new AssistantProfileSelection { Props = props, Children = children };
             case AssistantUiCompontentType.SWITCH:
                 return new AssistantSwitch { Props = props, Children = children };
             case AssistantUiCompontentType.HEADING:

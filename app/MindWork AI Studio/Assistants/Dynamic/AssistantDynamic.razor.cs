@@ -1,5 +1,6 @@
 ﻿using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Microsoft.AspNetCore.Components;
@@ -15,6 +16,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     protected override string Description => this.description;
     protected override string SystemPrompt => this.systemPrompt;
     protected override bool AllowProfiles => this.allowProfiles;
+    protected override bool ShowProfileSelection => this.showFooterProfileSelection;
     protected override string SubmitText => this.submitText;
     protected override Func<Task> SubmitAction => this.Submit;
     public override Tools.Components Component { get; }
@@ -27,6 +29,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private string submitText = string.Empty;
     private string selectedTargetLanguage = string.Empty;
     private string customTargetLanguage = string.Empty;
+    private bool showFooterProfileSelection = true;
     
     private Dictionary<string, string> inputFields = new();
     private Dictionary<string, string> dropdownFields = new();
@@ -44,6 +47,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             this.systemPrompt = assistantPlugin.SystemPrompt;
             this.submitText = assistantPlugin.SubmitText;
             this.allowProfiles = assistantPlugin.AllowProfiles;
+            this.showFooterProfileSelection = !assistantPlugin.HasEmbeddedProfileSelection;
         }
 
         foreach (var component in this.RootComponent!.Children)
@@ -136,6 +140,19 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
 
         return prompt;
+    }
+    
+    private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile profile)
+    {
+        if (profile == default || profile == Profile.NO_PROFILE)
+        {
+            if (!string.IsNullOrWhiteSpace(profileSelection.ValidationMessage))
+                return profileSelection.ValidationMessage;
+
+            return this.T("Please select one of your profiles.");
+        }
+
+        return null;
     }
     
     private async Task Submit()

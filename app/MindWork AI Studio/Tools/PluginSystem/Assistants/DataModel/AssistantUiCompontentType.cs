@@ -7,6 +7,7 @@ public enum AssistantUiCompontentType
     BUTTON,
     DROPDOWN,
     PROVIDER_SELECTION,
+    PROFILE_SELECTION,
     SWITCH,
     HEADING,
     TEXT,
