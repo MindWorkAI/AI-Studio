@@ -12,4 +12,5 @@ public enum AssistantUiCompontentType
     HEADING,
     TEXT,
     LIST,
+    WEB_CONTENT_READER,
 }

@@ -142,6 +142,15 @@ ASSISTANT = {
                     }
                 }
             },
+            {
+                ["Type"] = "WEB_CONTENT_READER", -- allows the user to fetch a URL and clean it
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["UserPrompt"] = "<help text that explains the purpose of this reader>",
+                    ["Preselect"] = false, -- automatically show the reader when the assistant opens
+                    ["PreselectContentCleanerAgent"] = true -- run the content cleaner by default
+                }
+            },
         }
     },
 }

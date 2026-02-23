@@ -45,5 +45,9 @@ public static class ComponentPropSpecs
                 required: ["Items"],
                 optional: []
             ),
+            [AssistantUiCompontentType.WEB_CONTENT_READER] = new(
+                required: ["Name"],
+                optional: ["UserPrompt", "Preselect", "PreselectContentCleanerAgent"]
+            ),
         };
 }

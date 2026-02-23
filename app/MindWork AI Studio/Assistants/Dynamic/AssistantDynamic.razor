@@ -15,6 +15,16 @@
                 <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" ReadOnly="@textArea.ReadOnly" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="@lines" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
             }
             break;
+        case AssistantUiCompontentType.WEB_CONTENT_READER:
+            if (component is AssistantWebContentReader webContent && this.webContentFields.TryGetValue(webContent.Name, out var webState))
+            {
+                <ReadWebContent @bind-Content="@webState.Content"
+                                ProviderSettings="@this.providerSettings"
+                                @bind-AgentIsRunning="@webState.AgentIsRunning"
+                                @bind-Preselect="@webState.Preselect"
+                                @bind-PreselectContentCleanerAgent="@webState.PreselectContentCleanerAgent" />
+            }
+            break;
             
         case AssistantUiCompontentType.DROPDOWN:
             if (component is AssistantDropdown assistantDropdown)

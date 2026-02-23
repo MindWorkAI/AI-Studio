@@ -34,6 +34,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private Dictionary<string, string> inputFields = new();
     private Dictionary<string, string> dropdownFields = new();
     private Dictionary<string, bool> switchFields = new();
+    private Dictionary<string, WebContentState> webContentFields = new();
     
     protected override void OnInitialized()
     {
@@ -72,6 +73,16 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         this.switchFields.Add(switchComponent.Name, switchComponent.Value);
                     }
                     break;
+                case AssistantUiCompontentType.WEB_CONTENT_READER:
+                    if (component is AssistantWebContentReader webContent)
+                    {
+                        this.webContentFields.Add(webContent.Name, new WebContentState
+                        {
+                            Preselect = webContent.Preselect,
+                            PreselectContentCleanerAgent = webContent.PreselectContentCleanerAgent,
+                        });
+                    }
+                    break;
             }
         }
         base.OnInitialized();
@@ -82,6 +93,11 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         foreach (var entry in this.inputFields)
         {
             this.inputFields[entry.Key] = string.Empty;
+        }
+        foreach (var entry in this.webContentFields)
+        {
+            entry.Value.Content = string.Empty;
+            entry.Value.AgentIsRunning = false;
         }
     }
 
@@ -130,6 +146,21 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         if (this.switchFields.TryGetValue(switchComponent.Name, out userDecision))
                         {
                             prompt += $"user decision:{Environment.NewLine}{userDecision}";
+                        }
+                    }
+                    break;
+                case AssistantUiCompontentType.WEB_CONTENT_READER:
+                    if (component is AssistantWebContentReader webContent &&
+                        this.webContentFields.TryGetValue(webContent.Name, out var webState))
+                    {
+                        if (!string.IsNullOrWhiteSpace(webContent.UserPrompt))
+                        {
+                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{webContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(webState.Content))
+                        {
+                            prompt += $"user prompt:{Environment.NewLine}{webState.Content}";
                         }
                     }
                     break;
