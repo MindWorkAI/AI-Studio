@@ -56,6 +56,11 @@ public abstract partial class PluginBase : IPluginMetadata
     
     /// <inheritdoc />
     public bool IsInternal { get; }
+
+    /// <summary>
+    /// The absolute path to the plugin directory (where `plugin.lua` lives).
+    /// </summary>
+    public string PluginPath { get; internal set; } = string.Empty;
     
     /// <summary>
     /// The issues that occurred during the initialization of this plugin.
