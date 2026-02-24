@@ -5361,26 +5361,29 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "Es scheint, dass Pando
 -- The latest Pandoc version was not found, installing version {0} instead.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "Die neueste Pandoc-Version wurde nicht gefunden, stattdessen wird Version {0} installiert."
 
--- The ASSISTANT table does not contain a valid description.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2080819991"] = "Die ASSISTANT Lua-Tabelle enthält keine gültige Beschreibung."
+-- Failed to parse the UI render tree from the ASSISTANT lua table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Die Benutzeroberfläche konnte nicht aus der ASSISTANT-Lua-Tabelle geladen werden."
 
--- The ASSISTANT table does not contain a the boolean flag to control the allowance of profiles.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T221472268"] = "Die ASSISTANT Lua-Tabelle enthält kein boolean, das die Erlaubnis von Profilen steuert."
+-- The provided ASSISTANT lua table does not contain a valid UI table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1841068402"] = "Die bereitgestellte ASSISTENT-Lua-Tabelle enthält keine gültige UI-Tabelle."
 
--- Failed to parse the UI render tree.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2583341941"] = "Der UI-Render-Tree konnte nicht erfolgreich geparsed werden."
+-- The provided ASSISTANT lua table does not contain a valid description.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2514141654"] = "Die bereitgestellte ASSISTENT-Lua-Tabelle enthält keine gültige Beschreibung."
 
--- The ASSISTANT table does not contain a valid UI section.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3126717084"] = "Die ASSISTANT Lua-Tabelle enthält keine gültige UI Lua-Tabelle."
+-- The provided ASSISTANT lua table does not contain a valid title.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2814605990"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keinen gültigen Titel."
 
--- The ASSISTANT table does not contain a valid system prompt.
+-- The ASSISTANT lua table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "Die ASSISTANT-Lua-Tabelle existiert nicht oder ist keine gültige Tabelle."
+
+-- The provided ASSISTANT lua table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige System-Aufforderung."
+
+-- The provided ASSISTANT lua table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "Die ASSISTANT Lua-Tabelle enthält keinen gültigen System-Prompt."
 
--- The ASSISTANT table does not exist or is not a valid table.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T6004146"] = "Die ASSISTANT Lua-Tabelle existiert nicht oder ist ungültig."
-
--- The ASSISTANT table does not contain a valid title.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T998753547"] = "Die ASSISTENT Lua-Tabelle enthält keinen gültigen Titel."
+-- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält nicht das boolesche Flag zur Steuerung der Profilzulassung."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
