@@ -9,7 +9,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Title => T("Slide Assistant");
     
-    protected override string Description => T("This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and supplement the content, either as text you write yourself or as an uploaded document. Set the number of slides either by direct specification or based on your desired presentation duration. The output can be flexibly generated in various languages and with adjustable complexity. ");
+    protected override string Description => T("This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and provide the content either as self-written text or as an uploaded document. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and with adjustable complexity. ");
     
     protected override string SystemPrompt =>
         $$$"""
@@ -22,9 +22,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         
         # Content
             - You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
-            
-        # Important aspects
-            - Emphasize the following aspects in your presentation {{{this.PromptImportantAspects()}}} 
+            - {{{this.PromptImportantAspects()}}} 
         
         # Subheadings
         - Rule for creating the individual subheadings:
@@ -112,9 +110,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private string customTargetLanguage = string.Empty;
     private TargetGroup selectedTargetGroup;
     private CommonLanguages selectedTargetLanguage;
-    private double numberOfSheets;
-    private double numberOfBulletPoints;
-    private double timeSpecification;
+    private int numberOfSheets;
+    private int numberOfBulletPoints;
+    private int timeSpecification;
     private int calculatedNumberOfSlides = 0;
     private string importantAspects = string.Empty;
 
@@ -131,10 +129,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     #endregion
     
-    private string? ValidatingText(string text)
+    private string? ValidatingTitle(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please a title");
+            return T("Please provide a title");
+        
+        return null;
+    }
+    private string? ValidatingContext(string text)
+    {
+        if(string.IsNullOrWhiteSpace(text))
+            return T("Please provide context");
         
         return null;
     }
@@ -158,8 +163,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             return string.Empty;
 
         return $"""
-                Emphasize the following aspects in your slides:
-                {this.importantAspects}
+                # Important aspects
+                    - Emphasize the following aspects in your presentation {this.importantAspects}
                 """;
     }
     
@@ -173,18 +178,19 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         
         this.CreateChatThread();
         var time = this.AddUserRequest(
-            $"""
-                # PRESENTATION_TITLE
-                ```
-                {this.inputTitle}
-                ```
-                
-                # PRESENTATION_CONTENT
-                 ```
-                 {this.inputContext}
-                 ```
-             """,
-            hideContentFromUser: true);
+        $"""
+            # PRESENTATION_TITLE
+            ```
+            {this.inputTitle}
+            ```
+            
+            # PRESENTATION_CONTENT
+             
+             ```
+             {this.inputContext}
+             ```
+         """,
+        hideContentFromUser: true);
 
         await this.AddAIResponseAsync(time);
     }

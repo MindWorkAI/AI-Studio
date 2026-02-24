@@ -1,5 +1,5 @@
-﻿@using AIStudio.Settings
-@using AIStudio.Assistants.SlideBuilder
+﻿﻿@using AIStudio.Settings
+@using AIStudio.Settings
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -12,6 +12,7 @@
     <DialogContent>
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
             <ConfigurationOption OptionDescription="@T("Preselect Slide Assistant options?")" LabelOn="@T("Slide Assistant options are preselected")" LabelOff="@T("No Slide Assistant options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect slide builder options. This is might be useful when you prefer a specific language or LLM model.")"/>
+            <ConfigurationText OptionDescription="@T("Preselect important aspects")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects = updatedText)" NumLines="2" OptionHelp="@T("Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.")" Icon="@Icons.Material.Filled.List"/>
             <ConfigurationSelect OptionDescription="@T("Preselect the language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which language should be preselected?")"/>
             @if (this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage is CommonLanguages.OTHER)
             {
