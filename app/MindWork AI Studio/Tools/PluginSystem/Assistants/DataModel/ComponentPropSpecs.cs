@@ -31,7 +31,7 @@ public static class ComponentPropSpecs
             ),
             [AssistantComponentType.SWITCH] = new(
                 required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
-                optional: ["UserPrompt", "Class", "Style"]
+                optional: ["UserPrompt"]
             ),
             [AssistantComponentType.HEADING] = new(
                 required: ["Text", "Level"],

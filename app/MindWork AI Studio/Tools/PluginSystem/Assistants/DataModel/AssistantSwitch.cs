@@ -44,15 +44,4 @@ internal sealed class AssistantSwitch : AssistantComponentBase
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.LabelOff), value);
     }
 
-    public string Class
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
-    }
-
-    public string Style
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
-    }
 }
