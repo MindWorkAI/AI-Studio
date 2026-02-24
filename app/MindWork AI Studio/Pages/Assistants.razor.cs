@@ -8,5 +8,8 @@ namespace AIStudio.Pages;
 
 public partial class Assistants : MSGComponentBase
 {
-    private IReadOnlyCollection<PluginAssistants> AssistantPlugins => PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
+    private IReadOnlyCollection<PluginAssistants> AssistantPlugins =>
+        PluginFactory.RunningPlugins.OfType<PluginAssistants>()
+            .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
+            .ToList();
 }
