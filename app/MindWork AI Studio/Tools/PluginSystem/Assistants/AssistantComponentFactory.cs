@@ -7,37 +7,37 @@ public class AssistantComponentFactory
     private static readonly ILogger<AssistantComponentFactory> LOGGER = Program.LOGGER_FACTORY.CreateLogger<AssistantComponentFactory>();
     
     public static IAssistantComponent CreateComponent(
-        AssistantUiCompontentType type,
+        AssistantComponentType type,
         Dictionary<string, object> props,
         List<IAssistantComponent> children)
     {
         switch (type)
         {
-            case AssistantUiCompontentType.FORM:
+            case AssistantComponentType.FORM:
                 return new AssistantForm { Props = props, Children = children };
-            case AssistantUiCompontentType.TEXT_AREA:
+            case AssistantComponentType.TEXT_AREA:
                 return new AssistantTextArea { Props = props, Children = children };
-            case AssistantUiCompontentType.BUTTON:
+            case AssistantComponentType.BUTTON:
                 return new AssistantButton { Props = props, Children = children};
-            case AssistantUiCompontentType.DROPDOWN:
+            case AssistantComponentType.DROPDOWN:
                 return new AssistantDropdown { Props = props, Children = children };
-            case AssistantUiCompontentType.PROVIDER_SELECTION:
+            case AssistantComponentType.PROVIDER_SELECTION:
                 return new AssistantProviderSelection { Props = props, Children = children };
-            case AssistantUiCompontentType.PROFILE_SELECTION:
+            case AssistantComponentType.PROFILE_SELECTION:
                 return new AssistantProfileSelection { Props = props, Children = children };
-            case AssistantUiCompontentType.SWITCH:
+            case AssistantComponentType.SWITCH:
                 return new AssistantSwitch { Props = props, Children = children };
-            case AssistantUiCompontentType.HEADING:
+            case AssistantComponentType.HEADING:
                 return new AssistantHeading { Props = props, Children = children };
-            case AssistantUiCompontentType.TEXT:
+            case AssistantComponentType.TEXT:
                 return new AssistantText { Props = props, Children = children };
-            case AssistantUiCompontentType.LIST:
+            case AssistantComponentType.LIST:
                 return new AssistantList { Props = props, Children = children };
-            case AssistantUiCompontentType.WEB_CONTENT_READER:
+            case AssistantComponentType.WEB_CONTENT_READER:
                 return new AssistantWebContentReader { Props = props, Children = children };
-            case AssistantUiCompontentType.FILE_CONTENT_READER:
+            case AssistantComponentType.FILE_CONTENT_READER:
                 return new AssistantFileContentReader { Props = props, Children = children };
-            case AssistantUiCompontentType.IMAGE:
+            case AssistantComponentType.IMAGE:
                 return new AssistantImage { Props = props, Children = children };
             default:
                 LOGGER.LogError($"Unknown assistant component type!\n{type} is not a supported assistant component type");

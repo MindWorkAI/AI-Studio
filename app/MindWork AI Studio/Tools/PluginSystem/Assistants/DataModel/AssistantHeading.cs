@@ -2,7 +2,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public class AssistantHeading : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.HEADING;
+    public override AssistantComponentType Type => AssistantComponentType.HEADING;
 
     public Dictionary<string, object> Props { get; set; } = new();
     

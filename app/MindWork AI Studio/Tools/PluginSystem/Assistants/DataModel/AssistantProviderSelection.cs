@@ -2,7 +2,7 @@
 
 public class AssistantProviderSelection : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.PROVIDER_SELECTION;
+    public override AssistantComponentType Type => AssistantComponentType.PROVIDER_SELECTION;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
 

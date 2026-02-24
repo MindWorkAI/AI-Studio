@@ -2,7 +2,7 @@
 
 public class AssistantButton : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.BUTTON;
+    public override AssistantComponentType Type => AssistantComponentType.BUTTON;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
 

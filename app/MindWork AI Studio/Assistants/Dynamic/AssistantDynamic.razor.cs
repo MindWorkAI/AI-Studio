@@ -63,25 +63,25 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         {
             switch (component.Type)
             {
-                case AssistantUiCompontentType.TEXT_AREA:
+                case AssistantComponentType.TEXT_AREA:
                     if (component is AssistantTextArea textArea)
                     {
                         this.inputFields.Add(textArea.Name, textArea.PrefillText);
                     }
                     break;
-                case AssistantUiCompontentType.DROPDOWN:
+                case AssistantComponentType.DROPDOWN:
                     if (component is AssistantDropdown dropdown)
                     {
                         this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
                     }
                     break;
-                case AssistantUiCompontentType.SWITCH:
+                case AssistantComponentType.SWITCH:
                     if (component is AssistantSwitch switchComponent)
                     {
                         this.switchFields.Add(switchComponent.Name, switchComponent.Value);
                     }
                     break;
-                case AssistantUiCompontentType.WEB_CONTENT_READER:
+                case AssistantComponentType.WEB_CONTENT_READER:
                     if (component is AssistantWebContentReader webContent)
                     {
                         this.webContentFields.Add(webContent.Name, new WebContentState
@@ -91,7 +91,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         });
                     }
                     break;
-                case AssistantUiCompontentType.FILE_CONTENT_READER:
+                case AssistantComponentType.FILE_CONTENT_READER:
                     if (component is AssistantFileContentReader fileContent)
                     {
                         this.fileContentFields.Add(fileContent.Name, new FileContentState());
@@ -192,7 +192,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             var userDecision = false;
             switch (component.Type)
             {
-                case AssistantUiCompontentType.TEXT_AREA:
+                case AssistantComponentType.TEXT_AREA:
                     if (component is AssistantTextArea textArea)
                     {
                         prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
@@ -202,7 +202,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
-                case AssistantUiCompontentType.DROPDOWN:
+                case AssistantComponentType.DROPDOWN:
                     if (component is AssistantDropdown dropdown)
                     {
                         prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
@@ -212,7 +212,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
-                case AssistantUiCompontentType.SWITCH:
+                case AssistantComponentType.SWITCH:
                     if (component is AssistantSwitch switchComponent)
                     {
                         prompt += $"{Environment.NewLine}context:{Environment.NewLine}{switchComponent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
@@ -222,7 +222,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
-                case AssistantUiCompontentType.WEB_CONTENT_READER:
+                case AssistantComponentType.WEB_CONTENT_READER:
                     if (component is AssistantWebContentReader webContent &&
                         this.webContentFields.TryGetValue(webContent.Name, out var webState))
                     {
@@ -237,7 +237,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
-                case AssistantUiCompontentType.FILE_CONTENT_READER:
+                case AssistantComponentType.FILE_CONTENT_READER:
                     if (component is AssistantFileContentReader fileContent &&
                         this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
                     {

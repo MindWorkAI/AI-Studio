@@ -2,7 +2,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public class AssistantFileContentReader : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.FILE_CONTENT_READER;
+    public override AssistantComponentType Type => AssistantComponentType.FILE_CONTENT_READER;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
 

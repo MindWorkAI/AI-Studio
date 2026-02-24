@@ -2,7 +2,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public class AssistantList : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.LIST;
+    public override AssistantComponentType Type => AssistantComponentType.LIST;
 
     public Dictionary<string, object> Props { get; set; } = new();
     

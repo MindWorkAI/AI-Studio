@@ -2,7 +2,7 @@
 
 public abstract class AssistantComponentBase : IAssistantComponent
 {
-    public abstract AssistantUiCompontentType Type { get; }
+    public abstract AssistantComponentType Type { get; }
     public Dictionary<string, object> Props { get; }
     public List<IAssistantComponent> Children { get; }
 }

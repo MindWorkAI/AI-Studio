@@ -8,14 +8,14 @@
 {
     @switch (component.Type)
     {
-        case AssistantUiCompontentType.TEXT_AREA:
+        case AssistantComponentType.TEXT_AREA:
             if (component is AssistantTextArea textArea)
             {
                 var lines = textArea.IsSingleLine ? 1 : 6;
                 <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" ReadOnly="@textArea.ReadOnly" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="@lines" AutoGrow="@true" MaxLines="12" Class="mb-3"/>
             }
             break;
-        case AssistantUiCompontentType.IMAGE:
+        case AssistantComponentType.IMAGE:
             if (component is AssistantImage assistantImage)
             {
                 var resolvedSource = this.ResolveImageSource(assistantImage);
@@ -32,7 +32,7 @@
                 }
             }
             break;
-        case AssistantUiCompontentType.WEB_CONTENT_READER:
+        case AssistantComponentType.WEB_CONTENT_READER:
             if (component is AssistantWebContentReader webContent && this.webContentFields.TryGetValue(webContent.Name, out var webState))
             {
                 <ReadWebContent @bind-Content="@webState.Content"
@@ -42,14 +42,14 @@
                                 @bind-PreselectContentCleanerAgent="@webState.PreselectContentCleanerAgent" />
             }
             break;
-        case AssistantUiCompontentType.FILE_CONTENT_READER:
+        case AssistantComponentType.FILE_CONTENT_READER:
             if (component is AssistantFileContentReader fileContent && this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
             {
                 <ReadFileContent @bind-FileContent="@fileState.Content" />
             }
             break;
             
-        case AssistantUiCompontentType.DROPDOWN:
+        case AssistantComponentType.DROPDOWN:
             if (component is AssistantDropdown assistantDropdown)
             {
                 <DynamicAssistantDropdown Items="@assistantDropdown.Items"
@@ -59,26 +59,26 @@
                                           Icon="@Icons.Material.Filled.Translate"/>
             }
             break;
-        case AssistantUiCompontentType.PROVIDER_SELECTION:
+        case AssistantComponentType.PROVIDER_SELECTION:
             if (component is AssistantProviderSelection providerSelection)
             {
                 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
             }
             break;
-        case AssistantUiCompontentType.PROFILE_SELECTION:
+        case AssistantComponentType.PROFILE_SELECTION:
             if (component is AssistantProfileSelection profileSelection)
             {
                 var selection = profileSelection;
                 <ProfileFormSelection Validation="@((Profile profile) => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.currentProfile"/>
             }
             break;
-        case AssistantUiCompontentType.SWITCH:
+        case AssistantComponentType.SWITCH:
             if (component is AssistantSwitch assistantSwitch)
             {
                 <MudTextSwitch Label="@assistantSwitch.Label" @bind-Value="@this.switchFields[assistantSwitch.Name]" LabelOn="@assistantSwitch.LabelOn" LabelOff="@assistantSwitch.LabelOff" />
             }
             break;
-        case AssistantUiCompontentType.HEADING:
+        case AssistantComponentType.HEADING:
             if (component is AssistantHeading assistantHeading)
             {
                 var heading = assistantHeading;
@@ -99,14 +99,14 @@
                 }
             }
             break;
-        case AssistantUiCompontentType.TEXT:
+        case AssistantComponentType.TEXT:
             if (component is AssistantText assistantText)
             {
                 var text = assistantText;
                 <MudText Typo="Typo.body1" Class="mb-3">@text.Content</MudText>
             }
             break;
-        case AssistantUiCompontentType.LIST:
+        case AssistantComponentType.LIST:
             if (component is AssistantList assistantList)
             {
                 var list = assistantList;

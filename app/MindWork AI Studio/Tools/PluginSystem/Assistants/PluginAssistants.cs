@@ -116,8 +116,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         if (!uiTable.TryGetValue("Type", out var typeVal)
             || !typeVal.TryRead<string>(out var typeText)
-            || !Enum.TryParse<AssistantUiCompontentType>(typeText, true, out var type)
-            || type != AssistantUiCompontentType.FORM)
+            || !Enum.TryParse<AssistantComponentType>(typeText, true, out var type)
+            || type != AssistantComponentType.FORM)
         {
             LOGGER.LogWarning("UI table of the ASSISTANT table has no valid Form type.");
             return false;
@@ -150,7 +150,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             children.Add(comp);
         }
 
-        root = AssistantComponentFactory.CreateComponent(AssistantUiCompontentType.FORM, new Dictionary<string, object>(), children);
+        root = AssistantComponentFactory.CreateComponent(AssistantComponentType.FORM, new Dictionary<string, object>(), children);
         return true;
     }
 
@@ -168,13 +168,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         if (!componentTable.TryGetValue("Type", out var typeVal)
             || !typeVal.TryRead<string>(out var typeText)
-            || !Enum.TryParse<AssistantUiCompontentType>(typeText, true, out var type))
+            || !Enum.TryParse<AssistantComponentType>(typeText, true, out var type))
         {
             LOGGER.LogWarning($"Component #{idx} missing valid Type.");
             return false;
         }
         
-        if (type == AssistantUiCompontentType.PROFILE_SELECTION)
+        if (type == AssistantComponentType.PROFILE_SELECTION)
             this.HasEmbeddedProfileSelection = true;
 
         Dictionary<string, object> props = new();
@@ -206,7 +206,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     }
 
     private bool TryReadComponentProps(
-        AssistantUiCompontentType type,
+        AssistantComponentType type,
         LuaTable propsTable,
         out Dictionary<string, object> props)
     {

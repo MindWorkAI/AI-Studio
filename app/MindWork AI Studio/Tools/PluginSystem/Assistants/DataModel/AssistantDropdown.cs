@@ -2,7 +2,7 @@
 
 public class AssistantDropdown : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.DROPDOWN;
+    public override AssistantComponentType Type => AssistantComponentType.DROPDOWN;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
     

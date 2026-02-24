@@ -2,58 +2,58 @@
 
 public static class ComponentPropSpecs
 {
-    public static readonly IReadOnlyDictionary<AssistantUiCompontentType, PropSpec> SPECS =
-        new Dictionary<AssistantUiCompontentType, PropSpec>
+    public static readonly IReadOnlyDictionary<AssistantComponentType, PropSpec> SPECS =
+        new Dictionary<AssistantComponentType, PropSpec>
         {
-            [AssistantUiCompontentType.FORM] = new(
+            [AssistantComponentType.FORM] = new(
                 required: ["Children"],
                 optional: []
             ),
-            [AssistantUiCompontentType.TEXT_AREA] = new(
+            [AssistantComponentType.TEXT_AREA] = new(
                 required: ["Name", "Label"],
                 optional: ["UserPrompt", "PrefillText", "ReadOnly", "IsSingleLine"]
             ),
-            [AssistantUiCompontentType.BUTTON] = new(
+            [AssistantComponentType.BUTTON] = new(
                 required: ["Name", "Text", "Action"],
                 optional: []
             ),
-            [AssistantUiCompontentType.DROPDOWN] = new(
+            [AssistantComponentType.DROPDOWN] = new(
                 required: ["Name", "Label", "Default", "Items"],
                 optional: ["UserPrompt"]
             ),
-            [AssistantUiCompontentType.PROVIDER_SELECTION] = new(
+            [AssistantComponentType.PROVIDER_SELECTION] = new(
                 required: ["Name", "Label"],
                 optional: []
             ),
-            [AssistantUiCompontentType.PROFILE_SELECTION] = new(
+            [AssistantComponentType.PROFILE_SELECTION] = new(
                 required: [],
                 optional: ["ValidationMessage"]
             ),
-            [AssistantUiCompontentType.SWITCH] = new(
+            [AssistantComponentType.SWITCH] = new(
                 required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
                 optional: ["UserPrompt"]
             ),
-            [AssistantUiCompontentType.HEADING] = new(
+            [AssistantComponentType.HEADING] = new(
                 required: ["Text", "Level"],
                 optional: []
             ),
-            [AssistantUiCompontentType.TEXT] = new(
+            [AssistantComponentType.TEXT] = new(
                 required: ["Content"],
                 optional: []
             ),
-            [AssistantUiCompontentType.LIST] = new(
+            [AssistantComponentType.LIST] = new(
                 required: ["Items"],
                 optional: []
             ),
-            [AssistantUiCompontentType.WEB_CONTENT_READER] = new(
+            [AssistantComponentType.WEB_CONTENT_READER] = new(
                 required: ["Name"],
                 optional: ["UserPrompt", "Preselect", "PreselectContentCleanerAgent"]
             ),
-            [AssistantUiCompontentType.FILE_CONTENT_READER] = new(
+            [AssistantComponentType.FILE_CONTENT_READER] = new(
                 required: ["Name"],
                 optional: ["UserPrompt"]
             ),
-            [AssistantUiCompontentType.IMAGE] = new(
+            [AssistantComponentType.IMAGE] = new(
                 required: ["Src"],
                 optional: ["Alt", "Caption"]
             ),

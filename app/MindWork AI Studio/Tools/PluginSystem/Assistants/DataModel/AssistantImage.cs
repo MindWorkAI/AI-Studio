@@ -2,7 +2,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public class AssistantImage : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.IMAGE;
+    public override AssistantComponentType Type => AssistantComponentType.IMAGE;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
 

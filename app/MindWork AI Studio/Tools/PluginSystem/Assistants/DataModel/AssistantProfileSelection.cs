@@ -4,7 +4,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 public class AssistantProfileSelection : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.PROFILE_SELECTION;
+    public override AssistantComponentType Type => AssistantComponentType.PROFILE_SELECTION;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
 

@@ -2,7 +2,7 @@
 
 public class AssistantTextArea : AssistantComponentBase
 {
-    public override AssistantUiCompontentType Type => AssistantUiCompontentType.TEXT_AREA;
+    public override AssistantComponentType Type => AssistantComponentType.TEXT_AREA;
     public Dictionary<string, object> Props { get; set; } = new();
     public List<IAssistantComponent> Children { get; set; } = new();
     

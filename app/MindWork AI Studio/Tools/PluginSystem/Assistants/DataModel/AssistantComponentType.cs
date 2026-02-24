@@ -1,6 +1,6 @@
 ﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public enum AssistantUiCompontentType
+public enum AssistantComponentType
 {
     FORM,
     TEXT_AREA,
