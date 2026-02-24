@@ -1,6 +1,6 @@
 ﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public class AssistantButton : AssistantComponentBase
+internal sealed class AssistantButton : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.BUTTON;
     public Dictionary<string, object> Props { get; set; } = new();
@@ -8,23 +8,30 @@ public class AssistantButton : AssistantComponentBase
 
     public string Name
     {
-        get => this.Props.TryGetValue(nameof(this.Name), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Name)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
     }
     public string Text
     {
-        get => this.Props.TryGetValue(nameof(this.Text), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Text)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Text));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Text), value);
     }
+    
     public string Action
     {
-        get => this.Props.TryGetValue(nameof(this.Action), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Action)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Action));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Action), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

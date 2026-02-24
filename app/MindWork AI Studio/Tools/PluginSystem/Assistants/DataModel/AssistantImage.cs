@@ -1,6 +1,8 @@
+using System.Collections.Generic;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public class AssistantImage : AssistantComponentBase
+internal sealed class AssistantImage : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.IMAGE;
     public Dictionary<string, object> Props { get; set; } = new();
@@ -8,25 +10,31 @@ public class AssistantImage : AssistantComponentBase
 
     public string Src
     {
-        get => this.Props.TryGetValue(nameof(this.Src), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Src)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Src));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Src), value);
     }
 
     public string Alt
     {
-        get => this.Props.TryGetValue(nameof(this.Alt), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Alt)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Alt));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Alt), value);
     }
 
     public string Caption
     {
-        get => this.Props.TryGetValue(nameof(this.Caption), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Caption)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Caption));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Caption), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

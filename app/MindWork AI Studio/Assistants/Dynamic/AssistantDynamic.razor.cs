@@ -307,6 +307,21 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
         return prompt;
     }
+
+    private static string MergeClass(string customClass, string fallback)
+    {
+        var trimmedCustom = customClass?.Trim() ?? string.Empty;
+        var trimmedFallback = fallback?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(trimmedCustom))
+            return trimmedFallback;
+
+        if (string.IsNullOrEmpty(trimmedFallback))
+            return trimmedCustom;
+
+        return $"{trimmedCustom} {trimmedFallback}";
+    }
+
+    private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
     
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile profile)
     {

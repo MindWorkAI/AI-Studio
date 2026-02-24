@@ -1,6 +1,6 @@
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public class AssistantFileContentReader : AssistantComponentBase
+internal sealed class AssistantFileContentReader : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.FILE_CONTENT_READER;
     public Dictionary<string, object> Props { get; set; } = new();
@@ -8,17 +8,25 @@ public class AssistantFileContentReader : AssistantComponentBase
 
     public string Name
     {
-        get => this.Props.TryGetValue(nameof(this.Name), out var v)
-            ? v.ToString() ?? string.Empty
-            : string.Empty;
-        set => this.Props[nameof(this.Name)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
     }
 
     public string UserPrompt
     {
-        get => this.Props.TryGetValue(nameof(this.UserPrompt), out var v)
-            ? v.ToString() ?? string.Empty
-            : string.Empty;
-        set => this.Props[nameof(this.UserPrompt)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

@@ -7,55 +7,55 @@ public static class ComponentPropSpecs
         {
             [AssistantComponentType.FORM] = new(
                 required: ["Children"],
-                optional: []
+                optional: ["Class", "Style"]
             ),
             [AssistantComponentType.TEXT_AREA] = new(
                 required: ["Name", "Label"],
-                optional: ["UserPrompt", "PrefillText", "ReadOnly", "IsSingleLine"]
+                optional: ["UserPrompt", "PrefillText", "ReadOnly", "IsSingleLine", "Class", "Style"]
             ),
             [AssistantComponentType.BUTTON] = new(
                 required: ["Name", "Text", "Action"],
-                optional: []
+                optional: ["Class", "Style"]
             ),
             [AssistantComponentType.DROPDOWN] = new(
                 required: ["Name", "Label", "Default", "Items"],
-                optional: ["UserPrompt"]
+                optional: ["UserPrompt", "Class", "Style"]
             ),
             [AssistantComponentType.PROVIDER_SELECTION] = new(
                 required: ["Name", "Label"],
-                optional: []
+                optional: ["Class", "Style"]
             ),
             [AssistantComponentType.PROFILE_SELECTION] = new(
                 required: [],
-                optional: ["ValidationMessage"]
+                optional: ["ValidationMessage", "Class", "Style"]
             ),
             [AssistantComponentType.SWITCH] = new(
                 required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
-                optional: ["UserPrompt"]
+                optional: ["UserPrompt", "Class", "Style"]
             ),
             [AssistantComponentType.HEADING] = new(
                 required: ["Text", "Level"],
-                optional: []
+                optional: ["Class", "Style"]
             ),
             [AssistantComponentType.TEXT] = new(
                 required: ["Content"],
-                optional: []
+                optional: ["Class", "Style"]
             ),
             [AssistantComponentType.LIST] = new(
                 required: ["Items"],
-                optional: []
+                optional: ["Class", "Style"]
             ),
             [AssistantComponentType.WEB_CONTENT_READER] = new(
                 required: ["Name"],
-                optional: ["UserPrompt", "Preselect", "PreselectContentCleanerAgent"]
+                optional: ["UserPrompt", "Preselect", "PreselectContentCleanerAgent", "Class", "Style"]
             ),
             [AssistantComponentType.FILE_CONTENT_READER] = new(
                 required: ["Name"],
-                optional: ["UserPrompt"]
+                optional: ["UserPrompt", "Class", "Style"]
             ),
             [AssistantComponentType.IMAGE] = new(
                 required: ["Src"],
-                optional: ["Alt", "Caption"]
+                optional: ["Alt", "Caption", "Class", "Style"]
             ),
         };
 }

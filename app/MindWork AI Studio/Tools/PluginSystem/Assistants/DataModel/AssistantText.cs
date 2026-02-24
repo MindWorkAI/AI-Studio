@@ -1,6 +1,8 @@
+using System.Collections.Generic;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public class AssistantText : AssistantComponentBase
+internal sealed class AssistantText : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.TEXT;
     
@@ -10,9 +12,19 @@ public class AssistantText : AssistantComponentBase
 
     public string Content
     {
-        get => this.Props.TryGetValue(nameof(this.Content), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Content)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Content));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Content), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

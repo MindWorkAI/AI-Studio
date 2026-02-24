@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public class AssistantProfileSelection : AssistantComponentBase
+internal sealed class AssistantProfileSelection : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.PROFILE_SELECTION;
     public Dictionary<string, object> Props { get; set; } = new();
@@ -10,9 +10,19 @@ public class AssistantProfileSelection : AssistantComponentBase
 
     public string ValidationMessage
     {
-        get => this.Props.TryGetValue(nameof(this.ValidationMessage), out var v)
-            ? v.ToString() ?? string.Empty
-            : string.Empty;
-        set => this.Props[nameof(this.ValidationMessage)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.ValidationMessage));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.ValidationMessage), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

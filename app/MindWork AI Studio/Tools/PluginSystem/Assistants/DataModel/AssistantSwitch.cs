@@ -1,6 +1,8 @@
-﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using System.Collections.Generic;
 
-public class AssistantSwitch : AssistantComponentBase
+namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
+
+internal sealed class AssistantSwitch : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.SWITCH;
     public Dictionary<string, object> Props { get; set; } = new();
@@ -8,47 +10,49 @@ public class AssistantSwitch : AssistantComponentBase
 
     public string Name
     {
-        get => this.Props.TryGetValue(nameof(this.Name), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Name)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
     }
-    
+
     public string Label
     {
-        get => this.Props.TryGetValue(nameof(this.Label), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Label)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Label));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Label), value);
     }
-    
+
     public bool Value
     {
         get => this.Props.TryGetValue(nameof(this.Value), out var val) && val is true;
         set => this.Props[nameof(this.Value)] = value;
     }
-    
+
     public string UserPrompt
     {
-        get => this.Props.TryGetValue(nameof(this.UserPrompt), out var val) 
-            ? val.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.UserPrompt)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
     }
-    
+
     public string LabelOn
     {
-        get => this.Props.TryGetValue(nameof(this.LabelOn), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.LabelOn)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.LabelOn));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.LabelOn), value);
     }
-    
+
     public string LabelOff
     {
-        get => this.Props.TryGetValue(nameof(this.LabelOff), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.LabelOff)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.LabelOff));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.LabelOff), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

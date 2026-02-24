@@ -1,6 +1,8 @@
-﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using System.Collections.Generic;
 
-public class AssistantProviderSelection : AssistantComponentBase
+namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
+
+internal sealed class AssistantProviderSelection : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.PROVIDER_SELECTION;
     public Dictionary<string, object> Props { get; set; } = new();
@@ -8,16 +10,25 @@ public class AssistantProviderSelection : AssistantComponentBase
 
     public string Name
     {
-        get => this.Props.TryGetValue(nameof(this.Name), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Name)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
     }
+
     public string Label
     {
-        get => this.Props.TryGetValue(nameof(this.Label), out var v) 
-            ? v.ToString() ?? string.Empty 
-            : string.Empty;
-        set => this.Props[nameof(this.Label)] = value;
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Label));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Label), value);
+    }
+
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

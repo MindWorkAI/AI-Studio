@@ -9,27 +9,24 @@ namespace AIStudio.Components
 {
     public partial class DynamicAssistantDropdown : ComponentBase
     {
-        [Parameter]
-        public List<AssistantDropdownItem> Items { get; set; } = new();
-        
-        [Parameter]
-        public AssistantDropdownItem Default { get; set; } = new();
+        [Parameter] public List<AssistantDropdownItem> Items { get; set; } = new();
 
-        [Parameter]
-        public string Value { get; set; } = string.Empty;
+        [Parameter] public AssistantDropdownItem Default { get; set; } = new();
 
-        [Parameter]
-        public EventCallback<string> ValueChanged { get; set; }
+        [Parameter] public string Value { get; set; } = string.Empty;
 
-        [Parameter]
-        public string Label { get; set; } = string.Empty;
+        [Parameter] public EventCallback<string> ValueChanged { get; set; }
 
-        [Parameter]
-        public Func<string, string?> ValidateSelection { get; set; } = _ => null;
+        [Parameter] public string Label { get; set; } = string.Empty;
 
-        [Parameter]
-        public string Icon { get; set; } = Icons.Material.Filled.ArrowDropDown;
-        
+        [Parameter] public Func<string, string?> ValidateSelection { get; set; } = _ => null;
+
+        [Parameter] public string Icon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+
+        [Parameter] public string Class { get; set; } = string.Empty;
+
+        [Parameter] public string Style { get; set; } = string.Empty;
+
         private async Task OnValueChanged(string newValue)
         {
             if (this.Value != newValue)
@@ -37,6 +34,19 @@ namespace AIStudio.Components
                 this.Value = newValue;
                 await this.ValueChanged.InvokeAsync(newValue);
             }
+        }
+
+        internal string MergeClasses(string custom, string fallback)
+        {
+            var trimmedCustom = custom?.Trim() ?? string.Empty;
+            var trimmedFallback = fallback?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(trimmedCustom))
+                return trimmedFallback;
+
+            if (string.IsNullOrEmpty(trimmedFallback))
+                return trimmedCustom;
+
+            return $"{trimmedCustom} {trimmedFallback}";
         }
     }
 }
