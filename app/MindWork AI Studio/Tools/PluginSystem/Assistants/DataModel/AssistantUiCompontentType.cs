@@ -14,4 +14,5 @@ public enum AssistantUiCompontentType
     LIST,
     WEB_CONTENT_READER,
     FILE_CONTENT_READER,
+    IMAGE,
 }

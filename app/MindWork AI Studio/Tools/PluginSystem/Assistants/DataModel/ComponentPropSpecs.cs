@@ -53,5 +53,9 @@ public static class ComponentPropSpecs
                 required: ["Name"],
                 optional: ["UserPrompt"]
             ),
+            [AssistantUiCompontentType.IMAGE] = new(
+                required: ["Src"],
+                optional: ["Alt", "Caption"]
+            ),
         };
 }

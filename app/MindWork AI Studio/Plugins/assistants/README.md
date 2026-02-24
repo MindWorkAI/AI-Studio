@@ -15,7 +15,10 @@ Supported types (matching the Blazor UI components):
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
 - `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
 - `FILE_CONTENT_READER`: renders `ReadFileContent`; include `Name`, `UserPrompt`.
+- `IMAGE`: embeds a static illustration; `Props` must include `Src` plus optionally `Alt` and `Caption`. `Src` can be an HTTP/HTTPS URL, a `data:` URI, or a plugin-relative path (`plugin://assets/your-image.png`). The runtime will convert plugin-relative paths into `data:` URLs (base64).
 - `HEADING`, `TEXT`, `LIST`: descriptive helpers.
+
+Images referenced via the `plugin://` scheme must exist in the plugin directory (e.g., `assets/example.png`). Drop the file there and point `Src` at it. The component will read the file at runtime, encode it as Base64, and render it inside the assistant UI.
 
 ## Prompt Assembly
 Each component exposes a `UserPrompt` string. When the assistant runs, `AssistantDynamic` iterates over `RootComponent.Children` and, for each component that has a prompt, emits:
@@ -37,5 +40,3 @@ For switches the “value” is the boolean `true/false`; for readers it is the 
 3. When you expect default content (e.g., a textarea with instructions), keep `UserPrompt` but also set `PrefillText` so the user starts with a hint.
 4. If you need extra explanatory text (before or after the interactive controls), use `TEXT` or `HEADING` components.
 5. Keep `Preselect`/`PreselectContentCleanerAgent` flags in `WEB_CONTENT_READER` to simplify the initial UI for the user.
-
-The sample `plugin.lua` in this directory is the live reference. Adjust it, reload the assistant plugin via the desktop app, and verify that the prompt log contains the blocked `context`/`user prompt` pairs that you expect.

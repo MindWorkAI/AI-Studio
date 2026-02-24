@@ -145,6 +145,14 @@ ASSISTANT = {
                 }
             },
             {
+                ["Type"] = "IMAGE",
+                ["Props"] = {
+                    ["Src"] = "plugin://assets/example.png",
+                    ["Alt"] = "SVG-inspired placeholder",
+                    ["Caption"] = "Static illustration via the IMAGE component."
+                }
+            },
+            {
                 ["Type"] = "WEB_CONTENT_READER", -- allows the user to fetch a URL and clean it
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required

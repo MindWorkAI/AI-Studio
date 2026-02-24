@@ -1,4 +1,7 @@
-﻿using AIStudio.Dialogs.Settings;
+using System;
+using System.IO;
+
+using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -36,6 +39,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private Dictionary<string, bool> switchFields = new();
     private Dictionary<string, WebContentState> webContentFields = new();
     private Dictionary<string, FileContentState> fileContentFields = new();
+    private readonly Dictionary<string, string> imageCache = new();
+    private string pluginPath = string.Empty;
+    const string PLUGIN_SCHEME = "plugin://";
     
     protected override void OnInitialized()
     {
@@ -50,6 +56,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             this.submitText = assistantPlugin.SubmitText;
             this.allowProfiles = assistantPlugin.AllowProfiles;
             this.showFooterProfileSelection = !assistantPlugin.HasEmbeddedProfileSelection;
+            this.pluginPath = assistantPlugin.PluginPath;
         }
 
         foreach (var component in this.RootComponent!.Children)
@@ -116,6 +123,61 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     {
         Console.WriteLine("throw new NotImplementedException();");
         return false;
+    }
+
+    private string ResolveImageSource(AssistantImage image)
+    {
+        if (string.IsNullOrWhiteSpace(image.Src))
+            return string.Empty;
+
+        if (this.imageCache.TryGetValue(image.Src, out var cached) && !string.IsNullOrWhiteSpace(cached))
+            return cached;
+
+        var resolved = image.Src;
+
+        if (resolved.StartsWith(PLUGIN_SCHEME, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(this.pluginPath))
+        {
+            var relative = resolved[PLUGIN_SCHEME.Length..].TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+            var filePath = Path.Join(this.pluginPath, relative);
+            if (File.Exists(filePath))
+            {
+                var mime = GetImageMimeType(filePath);
+                var data = Convert.ToBase64String(File.ReadAllBytes(filePath));
+                resolved = $"data:{mime};base64,{data}";
+            }
+            else
+            {
+                resolved = string.Empty;
+            }
+        }
+        else if (Uri.TryCreate(resolved, UriKind.Absolute, out var uri))
+        {
+            if (uri.Scheme is not ("http" or "https" or "data"))
+                resolved = string.Empty;
+        }
+        else
+        {
+            resolved = string.Empty;
+        }
+
+        this.imageCache[image.Src] = resolved;
+        return resolved;
+    }
+
+    private static string GetImageMimeType(string path)
+    {
+        var extension = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
+        return extension switch
+        {
+            "svg" => "image/svg+xml",
+            "png" => "image/png",
+            "jpg" => "image/jpeg",
+            "jpeg" => "image/jpeg",
+            "gif" => "image/gif",
+            "webp" => "image/webp",
+            "bmp" => "image/bmp",
+            _ => "image/png",
+        };
     }
 
     private string? ValidateCustomLanguage(string value) => string.Empty;

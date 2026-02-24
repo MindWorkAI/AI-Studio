@@ -37,6 +37,8 @@ public class AssistantComponentFactory
                 return new AssistantWebContentReader { Props = props, Children = children };
             case AssistantUiCompontentType.FILE_CONTENT_READER:
                 return new AssistantFileContentReader { Props = props, Children = children };
+            case AssistantUiCompontentType.IMAGE:
+                return new AssistantImage { Props = props, Children = children };
             default:
                 LOGGER.LogError($"Unknown assistant component type!\n{type} is not a supported assistant component type");
                 throw new Exception($"Unknown assistant component type: {type}");
