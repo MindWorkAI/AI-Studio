@@ -42,28 +42,28 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.state.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
         {
-            message = TB("The ASSISTANT table does not exist or is not a valid table.");
+            message = TB("The ASSISTANT lua table does not exist or is not a valid table.");
             return false;
         }
         
         if (!assistantTable.TryGetValue("Title", out var assistantTitleValue) ||
             !assistantTitleValue.TryRead<string>(out var assistantTitle))
         {
-            message = TB("The ASSISTANT table does not contain a valid title.");
+            message = TB("The provided ASSISTANT lua table does not contain a valid title.");
             return false;
         }
 
         if (!assistantTable.TryGetValue("Description", out var assistantDescriptionValue) ||
             !assistantDescriptionValue.TryRead<string>(out var assistantDescription))
         {
-            message = TB("The ASSISTANT table does not contain a valid description.");
+            message = TB("The provided ASSISTANT lua table does not contain a valid description.");
             return false;
         }
         
         if (!assistantTable.TryGetValue("SystemPrompt", out var assistantSystemPromptValue) ||
             !assistantSystemPromptValue.TryRead<string>(out var assistantSystemPrompt))
         {
-            message = TB("The ASSISTANT table does not contain a valid system prompt.");
+            message = TB("The provided ASSISTANT lua table does not contain a valid system prompt.");
             return false;
         }
         
@@ -77,7 +77,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         if (!assistantTable.TryGetValue("AllowProfiles", out var assistantAllowProfilesValue) ||
             !assistantAllowProfilesValue.TryRead<bool>(out var assistantAllowProfiles))
         {
-            message = TB("The ASSISTANT table does not contain a the boolean flag to control the allowance of profiles.");
+            message = TB("The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.");
             return false;
         }
 
@@ -90,13 +90,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:
         if (!assistantTable.TryGetValue("UI", out var uiVal) || !uiVal.TryRead<LuaTable>(out var uiTable))
         {
-            message = TB("The ASSISTANT table does not contain a valid UI section.");
+            message = TB("The provided ASSISTANT lua table does not contain a valid UI table.");
             return false;
         }
         
         if (!this.TryReadRenderTree(uiTable, out var rootComponent))
         {
-            message = TB("Failed to parse the UI render tree.");
+            message = TB("Failed to parse the UI render tree from the ASSISTANT lua table.");
             return false;
         }
 
