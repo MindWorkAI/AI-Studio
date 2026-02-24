@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -7,6 +8,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace AIStudio.Assistants.Dynamic;
 
@@ -41,65 +43,108 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private Dictionary<string, FileContentState> fileContentFields = new();
     private readonly Dictionary<string, string> imageCache = new();
     private string pluginPath = string.Empty;
-    const string PLUGIN_SCHEME = "plugin://";
+    private const string PLUGIN_SCHEME = "plugin://";
+    private const string ASSISTANT_QUERY_KEY = "assistantId";
     
     protected override void OnInitialized()
     {
-        var guid = Guid.Parse("958312de-a9e7-4666-901f-4d5b61647efb");
-        var plugin = PluginFactory.RunningPlugins.FirstOrDefault(e => e.Id == guid);
-        if (plugin is PluginAssistants assistantPlugin)
+        var assistantPlugin = this.ResolveAssistantPlugin();
+        if (assistantPlugin is null)
         {
-            this.RootComponent = assistantPlugin.RootComponent;
-            this.title = assistantPlugin.AssistantTitle;
-            this.description = assistantPlugin.AssistantDescription;
-            this.systemPrompt = assistantPlugin.SystemPrompt;
-            this.submitText = assistantPlugin.SubmitText;
-            this.allowProfiles = assistantPlugin.AllowProfiles;
-            this.showFooterProfileSelection = !assistantPlugin.HasEmbeddedProfileSelection;
-            this.pluginPath = assistantPlugin.PluginPath;
+            this.Logger.LogWarning("AssistantDynamic could not resolve a registered assistant plugin.");
+            base.OnInitialized();
+            return;
         }
 
-        foreach (var component in this.RootComponent!.Children)
+        this.RootComponent = assistantPlugin.RootComponent;
+        this.title = assistantPlugin.AssistantTitle;
+        this.description = assistantPlugin.AssistantDescription;
+        this.systemPrompt = assistantPlugin.SystemPrompt;
+        this.submitText = assistantPlugin.SubmitText;
+        this.allowProfiles = assistantPlugin.AllowProfiles;
+        this.showFooterProfileSelection = !assistantPlugin.HasEmbeddedProfileSelection;
+        this.pluginPath = assistantPlugin.PluginPath;
+
+        var rootComponent = this.RootComponent;
+        if (rootComponent is not null)
         {
-            switch (component.Type)
+            foreach (var component in rootComponent.Children)
             {
-                case AssistantComponentType.TEXT_AREA:
-                    if (component is AssistantTextArea textArea)
-                    {
-                        this.inputFields.Add(textArea.Name, textArea.PrefillText);
-                    }
-                    break;
-                case AssistantComponentType.DROPDOWN:
-                    if (component is AssistantDropdown dropdown)
-                    {
-                        this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
-                    }
-                    break;
-                case AssistantComponentType.SWITCH:
-                    if (component is AssistantSwitch switchComponent)
-                    {
-                        this.switchFields.Add(switchComponent.Name, switchComponent.Value);
-                    }
-                    break;
-                case AssistantComponentType.WEB_CONTENT_READER:
-                    if (component is AssistantWebContentReader webContent)
-                    {
-                        this.webContentFields.Add(webContent.Name, new WebContentState
+                switch (component.Type)
+                {
+                    case AssistantComponentType.TEXT_AREA:
+                        if (component is AssistantTextArea textArea)
                         {
-                            Preselect = webContent.Preselect,
-                            PreselectContentCleanerAgent = webContent.PreselectContentCleanerAgent,
-                        });
-                    }
-                    break;
-                case AssistantComponentType.FILE_CONTENT_READER:
-                    if (component is AssistantFileContentReader fileContent)
-                    {
-                        this.fileContentFields.Add(fileContent.Name, new FileContentState());
-                    }
-                    break;
+                            this.inputFields.Add(textArea.Name, textArea.PrefillText);
+                        }
+                        break;
+                    case AssistantComponentType.DROPDOWN:
+                        if (component is AssistantDropdown dropdown)
+                        {
+                            this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
+                        }
+                        break;
+                    case AssistantComponentType.SWITCH:
+                        if (component is AssistantSwitch switchComponent)
+                        {
+                            this.switchFields.Add(switchComponent.Name, switchComponent.Value);
+                        }
+                        break;
+                    case AssistantComponentType.WEB_CONTENT_READER:
+                        if (component is AssistantWebContentReader webContent)
+                        {
+                            this.webContentFields.Add(webContent.Name, new WebContentState
+                            {
+                                Preselect = webContent.Preselect,
+                                PreselectContentCleanerAgent = webContent.PreselectContentCleanerAgent,
+                            });
+                        }
+                        break;
+                    case AssistantComponentType.FILE_CONTENT_READER:
+                        if (component is AssistantFileContentReader fileContent)
+                        {
+                            this.fileContentFields.Add(fileContent.Name, new FileContentState());
+                        }
+                        break;
+                }
             }
         }
+
         base.OnInitialized();
+    }
+
+    private PluginAssistants? ResolveAssistantPlugin()
+    {
+        var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
+        if (assistantPlugins.Count == 0)
+            return null;
+
+        var requestedPluginId = this.TryGetAssistantIdFromQuery();
+        if (requestedPluginId is not { } id) return assistantPlugins.First();
+        
+        var requestedPlugin = assistantPlugins.FirstOrDefault(p => p.Id == id);
+        return requestedPlugin ?? assistantPlugins.First();
+    }
+
+    private Guid? TryGetAssistantIdFromQuery()
+    {
+        var uri = this.NavigationManager.ToAbsoluteUri(this.NavigationManager.Uri);
+        if (string.IsNullOrWhiteSpace(uri.Query))
+            return null;
+
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (!query.TryGetValue(ASSISTANT_QUERY_KEY, out var values))
+            return null;
+
+        var value = values.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (Guid.TryParse(value, out var assistantId))
+            return assistantId;
+
+        this.Logger.LogWarning("AssistantDynamic query parameter '{Parameter}' is not a valid GUID.", value);
+        return null;
     }
 
     protected override void ResetForm()
@@ -119,6 +164,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
     }
 
+    // TODO
     protected override bool MightPreselectValues()
     {
         Console.WriteLine("throw new NotImplementedException();");
@@ -180,13 +226,14 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         };
     }
 
-    private string? ValidateCustomLanguage(string value) => string.Empty;
-
     private string CollectUserPrompt()
     {
         var prompt = string.Empty;
+        var rootComponent = this.RootComponent;
+        if (rootComponent is null)
+            return prompt;
 
-        foreach (var component in this.RootComponent!.Children)
+        foreach (var component in rootComponent.Children)
         {
             var userInput = string.Empty;
             var userDecision = false;
