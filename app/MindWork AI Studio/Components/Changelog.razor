@@ -6,4 +6,4 @@
     }
 </MudSelect>
 
-<MudMarkdown Value="@this.LogContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SecurePipeline"/>
+<MudMarkdown Value="@this.LogContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>

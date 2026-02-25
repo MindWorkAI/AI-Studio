@@ -4,12 +4,10 @@ namespace AIStudio.Tools;
 
 public static class Markdown
 {
-    private static readonly MarkdownPipeline SAFE_MARKDOWN_PIPELINE = new MarkdownPipelineBuilder()
+    public static readonly MarkdownPipeline SAFE_MARKDOWN_PIPELINE = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .DisableHtml()
         .Build();
-
-    public static MarkdownPipeline SecurePipeline => SAFE_MARKDOWN_PIPELINE;
 
     public static MudMarkdownProps DefaultConfig => new()
     {

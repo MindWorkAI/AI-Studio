@@ -104,7 +104,7 @@
                         @context.ToName()
                     </MudTd>
                     <MudTd>
-                        <MudMarkdown Value="@context.GetConfidence(this.SettingsManager).Description" MarkdownPipeline="Markdown.SecurePipeline"/>
+                        <MudMarkdown Value="@context.GetConfidence(this.SettingsManager).Description" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                     </MudTd>
                     <MudTd Style="vertical-align: top;">
                         <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)">

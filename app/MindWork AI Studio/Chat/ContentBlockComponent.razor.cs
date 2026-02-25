@@ -97,6 +97,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         return base.OnParametersSetAsync();
     }
 
+    /// <inheritdoc />
     protected override bool ShouldRender()
     {
         var currentRenderHash = this.CreateRenderHash();
@@ -167,7 +168,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         switch (this.Content)
         {
             case ContentText text:
-                var textValue = text.Text ?? string.Empty;
+                var textValue = text.Text;
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
@@ -193,7 +194,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         CodeBlock = { Theme = this.CodeColorPalette },
     };
 
-    private string NormalizeMarkdownForRendering(string text)
+    private static string NormalizeMarkdownForRendering(string text)
     {
         var cleaned = text.RemoveThinkTags().Trim();
         if (string.IsNullOrWhiteSpace(cleaned))
