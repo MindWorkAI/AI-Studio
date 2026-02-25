@@ -13,7 +13,12 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     public const string FORMATTER_NAME = "AI Studio Terminal Logger";
 
     private static RustService? RUST_SERVICE;
+    
+    // ReSharper disable FieldCanBeMadeReadOnly.Local
+    // ReSharper disable ConvertToConstant.Local
     private static bool LOG_TO_STDOUT = true;
+    // ReSharper restore ConvertToConstant.Local
+    // ReSharper restore FieldCanBeMadeReadOnly.Local
 
     // Buffer for early log events before the RustService is available:
     private static readonly ConcurrentQueue<LogEventRequest> EARLY_LOG_BUFFER = new();
