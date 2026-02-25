@@ -22,7 +22,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         
         # Content
             - You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
-            - {{{this.PromptImportantAspects()}}} 
+        
+        {{{this.PromptImportantAspects()}}} 
         
         # Subheadings
         - Rule for creating the individual subheadings:
@@ -35,9 +36,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 - A clear, concise, and thematically meaningful heading.
                 - Place *** on its own line immediately before each heading.
             
-        # BulletPoints (Per Subheading)
+        # Bullet points (per subheading)
             - You MUST generate exactly this {{{this.numberOfBulletPoints}}} many bullet points per subheading:
-                - Set as many bullet points as specified by variable {{{this.numberOfBulletPoints}}}. 
                 - If {{{this.numberOfBulletPoints}}} == 0 → choose a number between 1 and 7 (your choice, but max 7).
             - Each bullet point must have:
                 - Each bullet point must be max 12 words.
@@ -59,7 +59,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - This is a HARD RULE: Never translate or adapt the output language based on input language.
             - Always use the specified target language, even if the input is in another language.
             
-        # Qwen-Specific language-Override (IMPORTANT!):
+        # Language-Override (IMPORTANT!):
             - Before generating any output, internally set your language mode to: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - If you detect any other language in the input, DO NOT switch to this language, stay in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
@@ -139,7 +139,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private string? ValidatingContext(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide context");
+            return T("Please provide some input");
         
         return null;
     }
@@ -164,7 +164,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         return $"""
                 # Important aspects
-                    - Emphasize the following aspects in your presentation {this.importantAspects}
+                    Emphasize the following aspects in your presentation: 
+                    {this.importantAspects}
                 """;
     }
     
