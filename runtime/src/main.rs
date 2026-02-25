@@ -11,7 +11,8 @@ use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
-
+use mindwork_ai_studio::stale_process_cleanup::kill_stale_process;
+use mindwork_ai_studio::tokenizer::{init_tokenizer, get_token_count};
 
 #[tokio::main]
 async fn main() {
@@ -43,8 +44,17 @@ async fn main() {
         info!("Running in production mode.");
     }
 
+    if let Err(e) = init_tokenizer() {
+        warn!(Source = "Tokenizer"; "Error during the initialisation of the tokenizer: {}", e);
+    }
+
+    let token_count = get_token_count("");
+    info!(".. Tokenizer contains {token_count} tokens.");
+
     generate_runtime_certificate();
     start_runtime_api();
     
     start_tauri();
+
+    Ok(())
 }
