@@ -170,7 +170,6 @@ pub fn start_dotnet_server() {
             }
         }
     });
-
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.
