@@ -44,7 +44,7 @@ fn sanitize_stdout_line(line: &str) -> String {
                 // CSI sequence: ESC [ ... <final>
                 if next == '[' {
                     chars.next();
-                    while let Some(csi_char) = chars.next() {
+                    for csi_char in chars.by_ref() {
                         let code = csi_char as u32;
                         if (0x40..=0x7E).contains(&code) {
                             break;
