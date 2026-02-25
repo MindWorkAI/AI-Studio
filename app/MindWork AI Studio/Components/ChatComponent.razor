@@ -16,6 +16,7 @@
                 @if (!block.HideFromUser)
                 {
                     <ContentBlockComponent
+                        @key="@block"
                         Role="@block.Role"
                         Type="@block.ContentType"
                         Time="@block.Time"

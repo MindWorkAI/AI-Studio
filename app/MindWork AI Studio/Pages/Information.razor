@@ -297,7 +297,7 @@
                 </MudGrid>
             </ExpansionPanel>
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
-                <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig"/>
+                <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SecurePipeline"/>
             </ExpansionPanel>
         </MudExpansionPanels>
     </InnerScrolling>
