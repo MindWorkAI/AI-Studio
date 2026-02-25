@@ -17,6 +17,7 @@ public sealed partial class RustService : BackgroundService
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
     
     private readonly HttpClient http;
+    private readonly SemaphoreSlim userLanguageLock = new(1, 1);
 
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
@@ -29,6 +30,7 @@ public sealed partial class RustService : BackgroundService
     
     private ILogger<RustService>? logger;
     private Encryption? encryptor;
+    private string? cachedUserLanguage;
     
     private readonly string apiPort;
     private readonly string certificateFingerprint;
@@ -88,6 +90,7 @@ public sealed partial class RustService : BackgroundService
     public override void Dispose()
     {
         this.http.Dispose();
+        this.userLanguageLock.Dispose();
         base.Dispose();
     }
 

@@ -15,6 +15,9 @@ pub static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
 /// The config directory where the application stores its configuration.
 pub static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 
+/// The user language cached once per runtime process.
+static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
+
 /// Returns the config directory.
 #[get("/system/directories/config")]
 pub fn get_config_directory(_token: APIToken) -> String {
@@ -87,12 +90,11 @@ fn normalize_locale_tag(locale: &str) -> Option<String> {
 }
 
 #[cfg(target_os = "linux")]
-fn read_locale_from_environment() -> Option<String> {
+fn read_locale_from_environment() -> Option<(String, &'static str)> {
     if let Ok(language) = env::var("LANGUAGE") {
         for candidate in language.split(':') {
             if let Some(locale) = normalize_locale_tag(candidate) {
-                info!("Detected user language from Linux environment variable 'LANGUAGE': '{}'.", locale);
-                return Some(locale);
+                return Some((locale, "LANGUAGE"));
             }
         }
     }
@@ -100,8 +102,7 @@ fn read_locale_from_environment() -> Option<String> {
     for key in ["LC_ALL", "LC_MESSAGES", "LANG"] {
         if let Ok(value) = env::var(key) {
             if let Some(locale) = normalize_locale_tag(&value) {
-                info!("Detected user language from Linux environment variable '{}': '{}'.", key, locale);
-                return Some(locale);
+                return Some((locale, key));
             }
         }
     }
@@ -110,8 +111,33 @@ fn read_locale_from_environment() -> Option<String> {
 }
 
 #[cfg(not(target_os = "linux"))]
-fn read_locale_from_environment() -> Option<String> {
+fn read_locale_from_environment() -> Option<(String, &'static str)> {
     None
+}
+
+enum LanguageDetectionSource {
+    SysLocale,
+    LinuxEnvironmentVariable(&'static str),
+    DefaultLanguage,
+}
+
+fn detect_user_language() -> (String, LanguageDetectionSource) {
+    if let Some(locale) = get_locale() {
+        if let Some(normalized_locale) = normalize_locale_tag(&locale) {
+            return (normalized_locale, LanguageDetectionSource::SysLocale);
+        }
+
+        warn!("sys-locale returned an unusable locale value: '{}'.", locale);
+    }
+
+    if let Some((locale, key)) = read_locale_from_environment() {
+        return (locale, LanguageDetectionSource::LinuxEnvironmentVariable(key));
+    }
+
+    (
+        String::from(DEFAULT_LANGUAGE),
+        LanguageDetectionSource::DefaultLanguage,
+    )
 }
 
 #[cfg(test)]
@@ -137,21 +163,32 @@ mod tests {
 
 #[get("/system/language")]
 pub fn read_user_language(_token: APIToken) -> String {
-    if let Some(locale) = get_locale() {
-        if let Some(normalized_locale) = normalize_locale_tag(&locale) {
-            info!("Detected user language from sys-locale: '{}'.", normalized_locale);
-            return normalized_locale;
-        }
+    USER_LANGUAGE
+        .get_or_init(|| {
+            let (user_language, source) = detect_user_language();
+            match source {
+                LanguageDetectionSource::SysLocale => {
+                    info!("Detected user language from sys-locale: '{}'.", user_language);
+                },
 
-        warn!("sys-locale returned an unusable locale value: '{}'.", locale);
-    }
+                LanguageDetectionSource::LinuxEnvironmentVariable(key) => {
+                    info!(
+                        "Detected user language from Linux environment variable '{}': '{}'.",
+                        key, user_language
+                    );
+                },
 
-    if let Some(locale) = read_locale_from_environment() {
-        return locale;
-    }
+                LanguageDetectionSource::DefaultLanguage => {
+                    warn!(
+                        "Could not determine the system language. Use default '{}'.",
+                        DEFAULT_LANGUAGE
+                    );
+                },
+            }
 
-    warn!("Could not determine the system language. Use default '{}'.", DEFAULT_LANGUAGE);
-    String::from(DEFAULT_LANGUAGE)
+            user_language
+        })
+        .clone()
 }
 
 #[get("/system/enterprise/config/id")]
