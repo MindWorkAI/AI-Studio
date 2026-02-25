@@ -3,8 +3,9 @@
 
 <MudTextField T="string" @bind-Text="@this.inputTitle" Validation="@this.ValidatingTitle" Adornment="Adornment.Start" Label="@T("Your title")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-<MudTextField T="string" @bind-Text="@this.inputContext" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-<ReadFileContent @bind-FileContent="@this.inputContext"/>
+<MudTextField T="string" @bind-Text="@this.inputContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudText Typo="Typo.h5"  Class="mb-1 mt-6"> @T("Upload documents for input")</MudText>
+<AttachDocuments Name="Upload documents for input" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.providerSettings"/>
 <MudTextField T="string" AutoGrow="true" Lines="2" @bind-Text="@this.importantAspects" class="mb-3" Label="@T("(Optional) Important Aspects")" HelperText="@T("(Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")"  ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start"/>
 
 <MudGrid>

@@ -1,4 +1,5 @@
-﻿using AIStudio.Chat;
+﻿using System.Text;
+using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.SlideBuilder;
@@ -21,8 +22,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
         
         # Content
-            - You get the following inputs: PRESENTATION_TITLE and PRESENTATION_CONTENT.
-        
+            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, and any attached documents that may provide additional context or source material.
+            
         {{{this.PromptImportantAspects()}}} 
         
         # Subheadings
@@ -115,6 +116,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int timeSpecification;
     private int calculatedNumberOfSlides = 0;
     private string importantAspects = string.Empty;
+    private HashSet<FileAttachment> loadedDocumentPaths = [];
 
     #region Overrides of ComponentBase
 
@@ -168,7 +170,76 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                     {this.importantAspects}
                 """;
     }
-    
+
+    private async Task<string> PromptLoadDocumentsContent()
+    {
+        if (this.loadedDocumentPaths.Count == 0)
+            return string.Empty;
+
+        var documents = this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: false }).ToList();
+        var sb = new StringBuilder();
+
+        if (documents.Count > 0)
+        {
+            sb.AppendLine("""
+                          # DOCUMENTS:
+
+                          """);
+        }
+
+        var numDocuments = 1;
+        foreach (var document in documents)
+        {
+            if (document.IsForbidden)
+            {
+                this.Logger.LogWarning($"Skipping forbidden file: '{document.FilePath}'.");
+                continue;
+            }
+
+            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            sb.AppendLine($"""
+                           
+                           ## DOCUMENT {numDocuments}:
+                           File path: {document.FilePath}
+                           Content:
+                           ```
+                           {fileContent}
+                           ```
+
+                           ---
+                           
+                           """);
+            numDocuments++;
+        }
+
+        var numImages = this.loadedDocumentPaths.Count(x => x is { IsImage: true, Exists: true });
+        if (numImages > 0)
+        {
+            if (documents.Count == 0)
+            {
+                sb.AppendLine($"""
+
+                               There are {numImages} image file(s) attached as documents.
+                               Please consider them as documents as well and use them to
+                               answer accordingly.
+
+                               """);
+            }
+            else
+            {
+                sb.AppendLine($"""
+
+                               Additionally, there are {numImages} image file(s) attached.
+                               Please consider them as documents as well and use them to
+                               answer accordingly.
+
+                               """);
+            }
+        }
+
+        return sb.ToString();
+    }
+
     private async Task CreateSlideBuilder()
     {
         await this.form!.Validate();
@@ -178,6 +249,9 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.calculatedNumberOfSlides = this.timeSpecification > 0 ? this.CalculateNumberOfSlides() : 0;
         
         this.CreateChatThread();
+        var documentContent = await this.PromptLoadDocumentsContent();
+        var imageAttachments = this.loadedDocumentPaths.Where(n => n is { Exists: true, IsImage: true }).ToList();
+
         var time = this.AddUserRequest(
         $"""
             # PRESENTATION_TITLE
@@ -189,9 +263,11 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              
              ```
              {this.inputContext}
+             {documentContent}
              ```
          """,
-        hideContentFromUser: true);
+        hideContentFromUser: true,
+        imageAttachments);
 
         await this.AddAIResponseAsync(time);
     }
