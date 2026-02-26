@@ -67,7 +67,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
-    private MudTextField<string> inputField = null!;
+    private UserPromptComponent<string> inputField = null!;
 
     #region Overrides of ComponentBase
 
@@ -532,6 +532,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.userInput = string.Empty;
         this.chatDocumentPaths.Clear();
         await this.inputField.BlurAsync();
+        this.tokenCount = "0";
         
         // Enable the stream state for the chat component:
         this.isStreaming = true;
@@ -913,13 +914,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task CalculateTokenCount()
     {
         if (this.inputField.Value is null)
+        {
+            this.tokenCount = "0";
             return;
-        this.Logger.LogDebug($"Text to tokenize: '{this.inputField.Value}' ");
+        }
         var response = await this.RustService.GetTokenCount(this.inputField.Value);
         if (response is null)
             return;
         this.tokenCount = response.TokenCount.ToString();
-        this.Logger.LogDebug($"Token count: {this.tokenCount}");
+        this.StateHasChanged();
     }
     
     #region Overrides of MSGComponentBase
