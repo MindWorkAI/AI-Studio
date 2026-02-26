@@ -67,6 +67,7 @@ public sealed class TemporaryChatService(ILogger<TemporaryChatService> logger, S
             {
                 logger.LogInformation($"Deleting temporary chat storage directory '{tempChatDirPath}' due to maintenance policy.");
                 Directory.Delete(tempChatDirPath, true);
+                WorkspaceBehaviour.InvalidateWorkspaceTreeCache();
             }
         }
 

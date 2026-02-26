@@ -198,7 +198,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (this.ChatThread is not null)
         {
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
         }
         
@@ -214,12 +214,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.mustStoreChat = false;
             
             if(this.Workspaces is not null)
-                await this.Workspaces.StoreChat(this.ChatThread);
+                await this.Workspaces.StoreChatAsync(this.ChatThread);
             else
-                await WorkspaceBehaviour.StoreChat(this.ChatThread);
+                await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
             
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
         }
         
@@ -227,14 +227,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.Logger.LogInformation($"Try to load the chat '{this.loadChat.ChatId}' now.");
             this.mustLoadChat = false;
-            this.ChatThread = await WorkspaceBehaviour.LoadChat(this.loadChat);
+            this.ChatThread = await WorkspaceBehaviour.LoadChatAsync(this.loadChat);
             
             if(this.ChatThread is not null)
             {
                 await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
                 
-                this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+                this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
                 this.WorkspaceName(this.currentWorkspaceName);
                 await this.SelectProviderWhenLoadingChat();
             }
@@ -583,9 +583,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // the workspace gets updated automatically when the chat is saved.
         //
         if (this.Workspaces is not null)
-            await this.Workspaces.StoreChat(this.ChatThread);
+            await this.Workspaces.StoreChatAsync(this.ChatThread);
         else
-            await WorkspaceBehaviour.StoreChat(this.ChatThread);
+            await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
         
         this.hasUnsavedChanges = false;
     }
@@ -621,9 +621,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 chatPath = Path.Join(SettingsManager.DataDirectory, "workspaces", this.ChatThread.WorkspaceId.ToString(), this.ChatThread.ChatId.ToString());
 
             if(this.Workspaces is null)
-                await WorkspaceBehaviour.DeleteChat(this.DialogService, this.ChatThread.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
+                await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
             else
-                await this.Workspaces.DeleteChat(chatPath, askForConfirmation: false, unloadChat: true);
+                await this.Workspaces.DeleteChatAsync(chatPath, askForConfirmation: false, unloadChat: true);
         }
 
         //
@@ -739,13 +739,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
         
         // Delete the chat from the current workspace or the temporary storage:
-        await WorkspaceBehaviour.DeleteChat(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
+        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
         
         this.ChatThread!.WorkspaceId = workspaceId;
         await this.SaveThread();
         
         this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-        this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+        this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
         this.WorkspaceName(this.currentWorkspaceName);
     }
     
@@ -758,7 +758,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (this.ChatThread is not null)
         {
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceName(this.ChatThread.WorkspaceId);
+            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
         }
