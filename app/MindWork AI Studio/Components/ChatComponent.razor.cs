@@ -56,6 +56,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool autoSaveEnabled;
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
+    private Guid currentChatThreadId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
     private HashSet<FileAttachment> chatDocumentPaths = [];
 
@@ -197,6 +198,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         if (this.ChatThread is not null)
         {
+            this.currentChatThreadId = this.ChatThread.ChatId;
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
             this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
@@ -260,7 +262,39 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await base.OnParametersSetAsync();
+    }
+
     #endregion
+
+    private async Task SyncWorkspaceHeaderWithChatThreadAsync()
+    {
+        if (this.ChatThread is null)
+        {
+            if (this.currentChatThreadId != Guid.Empty || this.currentWorkspaceId != Guid.Empty || !string.IsNullOrWhiteSpace(this.currentWorkspaceName))
+            {
+                this.currentChatThreadId = Guid.Empty;
+                this.currentWorkspaceId = Guid.Empty;
+                this.currentWorkspaceName = string.Empty;
+                this.WorkspaceName(this.currentWorkspaceName);
+            }
+
+            return;
+        }
+
+        if (this.currentChatThreadId == this.ChatThread.ChatId
+            && this.currentWorkspaceId == this.ChatThread.WorkspaceId
+            && !string.IsNullOrWhiteSpace(this.currentWorkspaceName))
+            return;
+
+        this.currentChatThreadId = this.ChatThread.ChatId;
+        this.currentWorkspaceId = this.ChatThread.WorkspaceId;
+        this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
+        this.WorkspaceName(this.currentWorkspaceName);
+    }
     
     private bool IsProviderSelected => this.Provider.UsedLLMProvider != LLMProviders.NONE;
     
@@ -665,6 +699,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // to reset the chat thread:
             //
             this.ChatThread = null;
+            this.currentChatThreadId = Guid.Empty;
             this.currentWorkspaceId = Guid.Empty;
             this.currentWorkspaceName = string.Empty;
             this.WorkspaceName(this.currentWorkspaceName);
@@ -760,10 +795,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.currentWorkspaceId = this.ChatThread.WorkspaceId;
             this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
             this.WorkspaceName(this.currentWorkspaceName);
+            this.currentChatThreadId = this.ChatThread.ChatId;
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
         }
         else
         {
+            this.currentChatThreadId = Guid.Empty;
             this.currentWorkspaceId = Guid.Empty;
             this.currentWorkspaceName = string.Empty;
             this.WorkspaceName(this.currentWorkspaceName);
@@ -785,6 +822,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
+        this.currentChatThreadId = Guid.Empty;
         this.currentWorkspaceId = Guid.Empty;
         
         this.currentWorkspaceName = string.Empty;
