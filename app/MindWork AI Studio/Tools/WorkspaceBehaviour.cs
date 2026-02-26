@@ -10,12 +10,6 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
-public readonly record struct WorkspaceTreeChat(Guid WorkspaceId, Guid ChatId, string ChatPath, string Name, DateTimeOffset LastEditTime, bool IsTemporary);
-
-public readonly record struct WorkspaceTreeWorkspace(Guid WorkspaceId, string WorkspacePath, string Name, bool ChatsLoaded, IReadOnlyList<WorkspaceTreeChat> Chats);
-
-public readonly record struct WorkspaceTreeCacheSnapshot(IReadOnlyList<WorkspaceTreeWorkspace> Workspaces, IReadOnlyList<WorkspaceTreeChat> TemporaryChats);
-
 public static class WorkspaceBehaviour
 {
     private sealed class WorkspaceChatCacheEntry
