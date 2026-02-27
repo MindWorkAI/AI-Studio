@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Timer = System.Timers.Timer;
-using MudBlazor;
 
 namespace AIStudio.Components;
 
@@ -14,9 +13,6 @@ public class UserPromptComponent<T> : MudTextField<T>
     [Parameter]
     public TimeSpan DebounceTime { get; set; } = TimeSpan.FromMilliseconds(800);
 
-    // Use base Text / TextChanged from MudTextField; do not redeclare to avoid duplicate parameters.
-    // Text binding is handled through those base members; we only add debouncing behavior.
-
     [Parameter]
     public Func<string, Task> WhenTextChangedAsync { get; set; } = _ => Task.CompletedTask;
     
@@ -29,8 +25,8 @@ public class UserPromptComponent<T> : MudTextField<T>
     protected override async Task OnInitializedAsync()
     {
         this.text = this.Text ?? string.Empty;
-        this.lastParameterText = this.Text ?? string.Empty;
-        this.lastNotifiedText = this.Text ?? string.Empty;
+        this.lastParameterText = this.text;
+        this.lastNotifiedText = this.text;
         this.debounceTimer.AutoReset = false;
         this.debounceTimer.Interval = this.DebounceTime.TotalMilliseconds;
         this.debounceTimer.Elapsed += (_, _) =>
@@ -61,7 +57,7 @@ public class UserPromptComponent<T> : MudTextField<T>
         if (this.Text != this.lastParameterText)
         {
             this.text = this.Text ?? string.Empty;
-            this.lastParameterText = this.Text ?? string.Empty;
+            this.lastParameterText = this.text;
         }
         
         this.debounceTimer.Stop();
