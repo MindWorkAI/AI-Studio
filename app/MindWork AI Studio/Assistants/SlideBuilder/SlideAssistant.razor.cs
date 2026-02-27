@@ -22,9 +22,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
         
         # Content
-            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, and any attached documents that may provide additional context or source material.
+            - You get the following inputs: PRESENTATION_TITLE, PRESENTATION_CONTENT, and any attached documents that may provide additional context or source material (DOCUMENTS).
             
-        {{{this.PromptImportantAspects()}}} 
+        {{{this.GetDocumentTaskDescription()}}}
+        {{{this.PromptImportantAspects()}}}
         
         # Subheadings
         - Rule for creating the individual subheadings:
@@ -75,15 +76,76 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     protected override Func<Task> SubmitAction => this.CreateSlideBuilder;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    protected override ChatThread ConvertToChatThread
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+        get
+        {
+            if (this.chatThread is null || this.chatThread.Blocks.Count < 2)
+            {
+                return new ChatThread
+                {
+                    SystemPrompt = SystemPrompts.DEFAULT
+                };
+            }
+
+            var presentationTitle = string.IsNullOrWhiteSpace(this.inputTitle) ? this.T("Empty") : this.inputTitle;
+
+            return new ChatThread
+            {
+                ChatId = Guid.NewGuid(),
+                Name = string.Format(T("{0} - Slide Builder Session"), presentationTitle),
+                SystemPrompt = SystemPrompts.DEFAULT,
+                Blocks =
+                [
+                    // Visible user block:
+                    new ContentBlock
+                    {
+                        Time = this.chatThread.Blocks.First().Time,
+                        Role = ChatRole.USER,
+                        HideFromUser = false,
+                        ContentType = ContentType.TEXT,
+                        Content = new ContentText
+                        {
+                            Text = this.T("The result of your previous slide builder session."),
+                            FileAttachments = this.loadedDocumentPaths.ToList(),
+                        }
+                    },
+                    
+                    // Hidden user block with inputContent data:
+                    new ContentBlock
+                    {
+                        Time = this.chatThread.Blocks.First().Time,
+                        Role = ChatRole.USER,
+                        HideFromUser = true,
+                        ContentType = ContentType.TEXT,
+                        Content = new ContentText
+                        {
+                            Text = $"""
+                                   # PRESENTATION_TITLE
+                                   ```
+                                   {presentationTitle}
+                                   ```
+                                   
+                                   # PRESENTATION_CONTENT
+                                   ```
+                                   {this.inputContent}
+                                   ```
+                                   """,
+                        }
+                    },
+                    
+                    // Then, append the last block of the current chat thread
+                    // (which is expected to be the AI response):
+                    this.chatThread.Blocks.Last(),
+                ]
+            };
+        }
+    }
 
     protected override void ResetForm()
     {
         this.inputTitle = string.Empty;
-        this.inputContext = string.Empty;
+        this.inputContent = string.Empty;
         this.selectedTargetGroup = TargetGroup.NO_CHANGE;
         if (!this.MightPreselectValues())
         {
@@ -107,7 +169,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     }
     
     private string inputTitle = string.Empty;
-    private string inputContext = string.Empty;
+    private string inputContent = string.Empty;
     private string customTargetLanguage = string.Empty;
     private TargetGroup selectedTargetGroup;
     private CommonLanguages selectedTargetLanguage;
@@ -124,7 +186,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
-            this.inputContext = deferredContent;
+            this.inputContent = deferredContent;
         
         await base.OnInitializedAsync();
     }
@@ -165,10 +227,33 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             return string.Empty;
 
         return $"""
+                
                 # Important aspects
                     Emphasize the following aspects in your presentation: 
                     {this.importantAspects}
                 """;
+    }
+    
+    private string GetDocumentTaskDescription()
+    {
+        var numDocuments = this.loadedDocumentPaths.Count(x => x is { Exists: true, IsImage: false });
+        var numImages = this.loadedDocumentPaths.Count(x => x is { Exists: true, IsImage: true });
+        
+        return (numDocuments, numImages) switch
+        {
+            (0, 1) => "Your task is to analyze a single image file attached as a document.",
+            (0, > 1) => $"Your task is to analyze {numImages} image file(s) attached as documents.",
+            
+            (1, 0) => "Your task is to analyze a single DOCUMENT.",
+            (1, 1) => "Your task is to analyze a single DOCUMENT and 1 image file attached as a document.",
+            (1, > 1) => $"Your task is to analyze a single DOCUMENT and {numImages} image file(s) attached as documents.",
+            
+            (> 0, 0) => $"Your task is to analyze {numDocuments} DOCUMENTS. Different DOCUMENTS are divided by a horizontal rule in markdown formatting followed by the name of the document.",
+            (> 0, 1) => $"Your task is to analyze {numDocuments} DOCUMENTS and 1 image file attached as a document. Different DOCUMENTS are divided by a horizontal rule in Markdown formatting followed by the name of the document.",
+            (> 0, > 0) => $"Your task is to analyze {numDocuments} DOCUMENTS and {numImages} image file(s) attached as documents. Different DOCUMENTS are divided by a horizontal rule in Markdown formatting followed by the name of the document.",
+            
+            _ => "Your task is to analyze a single DOCUMENT."
+        };
     }
 
     private async Task<string> PromptLoadDocumentsContent()
@@ -262,9 +347,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             # PRESENTATION_CONTENT
              
              ```
-             {this.inputContext}
-             {documentContent}
+             {this.inputContent}
              ```
+             
+             {documentContent}
          """,
         hideContentFromUser: true,
         imageAttachments);
