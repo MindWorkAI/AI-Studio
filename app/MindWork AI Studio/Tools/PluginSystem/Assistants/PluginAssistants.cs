@@ -1,6 +1,7 @@
-﻿using System.Xml.XPath;
+using System.Xml.XPath;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Lua;
+using System.Globalization;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
@@ -30,9 +31,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     /// <summary>
     /// Tries to parse the assistant table into our internal assistant render tree data model. It follows this process:
     /// <list type="number">
-    /// <item><description>ASSISTANT → Title/Description → UI</description></item>
-    /// <item><description>UI: Root element → required Children → Components</description></item>
-    /// <item><description>Components: Type → Props → Children (recursively)</description></item>
+    /// <item><description>ASSISTANT ? Title/Description ? UI</description></item>
+    /// <item><description>UI: Root element ? required Children ? Components</description></item>
+    /// <item><description>Components: Type ? Props ? Children (recursively)</description></item>
     /// </list>
     /// </summary>
     /// <param name="message">The error message, when parameters from the table could not be read.</param>
@@ -42,6 +43,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
         this.buildPromptFunction = null;
+
+        this.RegisterLuaHelpers();
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.state.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
@@ -406,5 +409,75 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
 
         return true;
+    }
+
+    private void RegisterLuaHelpers()
+    {
+        
+        this.state.Environment["LogInfo"] = new LuaFunction((context, buffer, ct) =>
+        {
+            if (context.ArgumentCount == 0) return new(0);
+            
+            var message = context.GetArgument<string>(0);
+            LOGGER.LogInformation($"[Lua] [Assistants] [{this.Name}]: {message}");
+            return new (1);
+        });
+        
+        this.state.Environment["LogDebug"] = new LuaFunction((context, buffer, ct) =>
+        {
+            if (context.ArgumentCount == 0) return new(0);
+            
+            var message = context.GetArgument<string>(0);
+            LOGGER.LogDebug($"[Lua] [Assistants] [{this.Name}]: {message}");
+            return new (1);
+        });
+        
+        this.state.Environment["LogWarning"] = new LuaFunction((context, buffer, ct) =>
+        {
+            if (context.ArgumentCount == 0) return new(0);
+            
+            var message = context.GetArgument<string>(0);
+            LOGGER.LogWarning($"[Lua] [Assistants] [{this.Name}]: {message}");
+            return new (1);
+        });
+        
+        this.state.Environment["LogError"] = new LuaFunction((context, buffer, ct) =>
+        {
+            if (context.ArgumentCount == 0) return new(0);
+            
+            var message = context.GetArgument<string>(0);
+            LOGGER.LogError($"[Lua] [Assistants] [{this.Name}]: {message}");
+            return new (1);
+        });
+
+        this.state.Environment["DateTime"] = new LuaFunction((context, buffer, ct) =>
+        {
+            var format = context.ArgumentCount > 0 ? context.GetArgument<string>(0) : "yyyy-MM-dd HH:mm:ss";
+            var now = DateTime.Now;
+            var formattedDate = now.ToString(format);
+            
+            var table = new LuaTable
+            {
+                ["year"] = now.Year,
+                ["month"] = now.Month,
+                ["day"] = now.Day,
+                ["hour"] = now.Hour,
+                ["minute"] = now.Minute,
+                ["second"] = now.Second,
+                ["millisecond"] = now.Millisecond,
+                ["formatted"] = formattedDate,
+            };
+            buffer.Span[0] = table;
+
+            return new(1);
+        });
+        
+        this.state.Environment["Timestamp"] = new LuaFunction((context, buffer, ct) =>
+        {
+            var timestamp = DateTime.UtcNow.ToString("o");
+            buffer.Span[0] = timestamp;
+
+            return new(1);
+        });
     }
 }

@@ -70,7 +70,6 @@ input = {
     ...
   },
   profile = {
-    Id = "<string guid>",
     Name = "<string>",
     NeedToKnow = "<string>",
     Actions = "<string>",
@@ -127,6 +126,39 @@ ASSISTANT.BuildPrompt = function(input)
   table.insert(parts, input.fields.Main or "")
   return table.concat(parts, "\n")
 end
+```
+
+### Logging helpers (assistant plugins only)
+The assistant runtime exposes basic logging helpers to Lua. Use them to debug custom prompt building.
+
+- `LogDebug(message)`
+- `LogInfo(message)`
+- `LogWarn(message)`
+- `LogError(message)`
+
+Example:
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  LogInfo("BuildPrompt called")
+  return input.fields.Text or ""
+end
+```
+
+### Date/time helpers (assistant plugins only)
+Use these when you need timestamps inside Lua.
+
+- `DateTime(format)` returns a table with date/time parts plus a formatted string.
+  - `format` is optional; default is `yyyy-MM-dd HH:mm:ss` (ISO 8601-like).
+  - `formatted` contains the date in your desired format (e.g. `dd.MM.yyyy HH:mm`) or the default.
+  - Members: `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `formatted`.
+- `Timestamp()` returns a UTC timestamp in ISO-8601 format (`O` / round-trip), e.g. `2026-03-02T21:15:30.1234567Z`.
+
+Example:
+```lua
+local dt = DateTime("yyyy-MM-dd HH:mm:ss")
+LogInfo(dt.formatted)
+LogInfo(Timestamp())
+LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
 ```
 
 #### Example: simple custom prompt
