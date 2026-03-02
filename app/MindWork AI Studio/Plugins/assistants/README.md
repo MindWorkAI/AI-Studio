@@ -33,6 +33,138 @@ user prompt:
 
 For switches the “value” is the boolean `true/false`; for readers it is the fetched/selected content. Always provide a meaningful `UserPrompt` so the final concatenated prompt remains coherent from the LLM’s perspective.
 
+### Advanced: BuildPrompt (optional)
+If you want full control over prompt composition, define `ASSISTANT.BuildPrompt` as a Lua function. When present, AI Studio calls it and uses its return value as the final user prompt. The default prompt assembly is skipped.
+
+#### Contract
+- `ASSISTANT.BuildPrompt(input)` must return a **string**.
+- If the function is missing, returns `nil`, or returns a non-string, AI Studio falls back to the default prompt assembly.
+- Errors in the function are caught and logged, then fall back to the default prompt assembly.
+
+#### Input table shape
+The function receives a single `input` table with:
+- `input.fields`: values keyed by component `Name`
+  - Text area, dropdown, and readers are strings
+  - Switch is a boolean
+- `input.meta`: per-component metadata keyed by component `Name`
+  - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`)
+  - `Label` (string, when provided)
+  - `UserPrompt` (string, when provided)
+- `input.profile`: selected profile data
+  - `Id`, `Name`, `NeedToKnow`, `Actions`, `Num`
+  - When no profile is selected, values match the built-in "Use no profile" entry
+
+#### Table shapes (quick reference)
+```
+input = {
+  fields = {
+    ["<Name>"] = "<string|boolean>",
+    ...
+  },
+  meta = {
+    ["<Name>"] = {
+      Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER>",
+      Label = "<string?>",
+      UserPrompt = "<string?>"
+    },
+    ...
+  },
+  profile = {
+    Id = "<string guid>",
+    Name = "<string>",
+    NeedToKnow = "<string>",
+    Actions = "<string>",
+    Num = <number>
+  }
+}
+```
+
+#### Using `meta` inside BuildPrompt
+`input.meta` is useful when you want to dynamically build the prompt based on component type or reuse existing UI text (labels/user prompts).
+
+Example: iterate all fields with labels and include their values
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local parts = {}
+  for name, value in pairs(input.fields) do
+    local meta = input.meta[name]
+    if meta and meta.Label and value ~= "" then
+      table.insert(parts, meta.Label .. ": " .. tostring(value))
+    end
+  end
+  return table.concat(parts, "\n")
+end
+```
+
+Example: handle types differently
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local parts = {}
+  for name, meta in pairs(input.meta) do
+    local value = input.fields[name]
+    if meta.Type == "SWITCH" then
+      table.insert(parts, name .. ": " .. tostring(value))
+    elseif value and value ~= "" then
+      table.insert(parts, name .. ": " .. value)
+    end
+  end
+  return table.concat(parts, "\n")
+end
+```
+
+#### Using `profile` inside BuildPrompt
+Profiles are optional user context (e.g., "NeedToKnow" and "Actions"). You can inject this directly into the user prompt if you want the LLM to always see it.
+
+Example:
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local parts = {}
+  if input.profile and input.profile.NeedToKnow ~= "" then
+    table.insert(parts, "User context:")
+    table.insert(parts, input.profile.NeedToKnow)
+    table.insert(parts, "")
+  end
+  table.insert(parts, input.fields.Main or "")
+  return table.concat(parts, "\n")
+end
+```
+
+#### Example: simple custom prompt
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local f = input.fields
+  return "Topic: " .. (f.Topic or "") .. "\nDetails:\n" .. (f.Details or "")
+end
+```
+
+#### Example: structured prompt (similar to Coding assistant)
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local f = input.fields
+  local parts = {}
+
+  if (f.Code or "") ~= "" then
+    table.insert(parts, "I have the following code:")
+    table.insert(parts, "```")
+    table.insert(parts, f.Code)
+    table.insert(parts, "```")
+    table.insert(parts, "")
+  end
+
+  if (f.CompilerMessages or "") ~= "" then
+    table.insert(parts, "I have the following compiler messages:")
+    table.insert(parts, "```")
+    table.insert(parts, f.CompilerMessages)
+    table.insert(parts, "```")
+    table.insert(parts, "")
+  end
+
+  table.insert(parts, "My questions are:")
+  table.insert(parts, f.Questions or "")
+  return table.concat(parts, "\n")
+end
+```
+
 # Tips
 
 1. Give every component a unique `Name`— it’s used to track state.

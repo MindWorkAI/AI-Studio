@@ -17,6 +17,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public string SubmitText { get; set; } = string.Empty;
     public bool AllowProfiles { get; set; } = true;
     public bool HasEmbeddedProfileSelection { get; private set; }
+    public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
+
+    private LuaFunction? buildPromptFunction;
 
     public void TryLoad()
     {
@@ -38,6 +41,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     {
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
+        this.buildPromptFunction = null;
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.state.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
@@ -81,6 +85,14 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return false;
         }
 
+        if (assistantTable.TryGetValue("BuildPrompt", out var buildPromptValue))
+        {
+            if (buildPromptValue.TryRead<LuaFunction>(out var buildPrompt))
+                this.buildPromptFunction = buildPrompt;
+            else
+                message = TB("ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.");
+        }
+
         this.AssistantTitle = assistantTitle;
         this.AssistantDescription = assistantDescription;
         this.SystemPrompt = assistantSystemPrompt;
@@ -102,6 +114,30 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         this.RootComponent = (AssistantForm)rootComponent;
         return true;
+    }
+
+    public async Task<string?> TryBuildPromptAsync(LuaTable input, CancellationToken cancellationToken = default)
+    {
+        if (this.buildPromptFunction is null)
+            return null;
+
+        try
+        {
+            var results = await this.buildPromptFunction.InvokeAsync(this.state, [input], cancellationToken: cancellationToken);
+            if (results.Length == 0)
+                return string.Empty;
+
+            if (results[0].TryRead<string>(out var prompt))
+                return prompt;
+
+            LOGGER.LogWarning("ASSISTANT.BuildPrompt returned a non-string value.");
+            return string.Empty;
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError(e, "ASSISTANT.BuildPrompt failed to execute.");
+            return string.Empty;
+        }
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -35,6 +36,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private string selectedTargetLanguage = string.Empty;
     private string customTargetLanguage = string.Empty;
     private bool showFooterProfileSelection = true;
+    private PluginAssistants? assistantPlugin;
     
     private Dictionary<string, string> inputFields = new();
     private Dictionary<string, string> dropdownFields = new();
@@ -56,6 +58,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             return;
         }
 
+        this.assistantPlugin = assistantPlugin;
         this.RootComponent = assistantPlugin.RootComponent;
         this.title = assistantPlugin.AssistantTitle;
         this.description = assistantPlugin.AssistantDescription;
@@ -226,7 +229,93 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         };
     }
 
-    private string CollectUserPrompt()
+    private async Task<string> CollectUserPromptAsync()
+    {
+        if (this.assistantPlugin?.HasCustomPromptBuilder != true) return this.CollectUserPromptFallback();
+        
+        var input = this.BuildPromptInput();
+        var prompt = await this.assistantPlugin.TryBuildPromptAsync(input, this.cancellationTokenSource?.Token ?? CancellationToken.None);
+        return !string.IsNullOrWhiteSpace(prompt) ? prompt : this.CollectUserPromptFallback();
+    }
+
+    private LuaTable BuildPromptInput()
+    {
+        var input = new LuaTable();
+
+        var fields = new LuaTable();
+        foreach (var entry in this.inputFields)
+            fields[entry.Key] = entry.Value ?? string.Empty;
+        foreach (var entry in this.dropdownFields)
+            fields[entry.Key] = entry.Value ?? string.Empty;
+        foreach (var entry in this.switchFields)
+            fields[entry.Key] = entry.Value;
+        foreach (var entry in this.webContentFields)
+            fields[entry.Key] = entry.Value.Content ?? string.Empty;
+        foreach (var entry in this.fileContentFields)
+            fields[entry.Key] = entry.Value.Content ?? string.Empty;
+
+        input["fields"] = fields;
+
+        var meta = new LuaTable();
+        var rootComponent = this.RootComponent;
+        if (rootComponent is not null)
+        {
+            foreach (var component in rootComponent.Children)
+            {
+                switch (component)
+                {
+                    case AssistantTextArea textArea:
+                        this.AddMetaEntry(meta, textArea.Name, component.Type, textArea.Label, textArea.UserPrompt);
+                        break;
+                    case AssistantDropdown dropdown:
+                        this.AddMetaEntry(meta, dropdown.Name, component.Type, dropdown.Label, dropdown.UserPrompt);
+                        break;
+                    case AssistantSwitch switchComponent:
+                        this.AddMetaEntry(meta, switchComponent.Name, component.Type, switchComponent.Label, switchComponent.UserPrompt);
+                        break;
+                    case AssistantWebContentReader webContent:
+                        this.AddMetaEntry(meta, webContent.Name, component.Type, null, webContent.UserPrompt);
+                        break;
+                    case AssistantFileContentReader fileContent:
+                        this.AddMetaEntry(meta, fileContent.Name, component.Type, null, fileContent.UserPrompt);
+                        break;
+                }
+            }
+        }
+
+        input["meta"] = meta;
+
+        var profile = new LuaTable
+        {
+            ["Name"] = this.currentProfile.Name,
+            ["NeedToKnow"] = this.currentProfile.NeedToKnow,
+            ["Actions"] = this.currentProfile.Actions,
+            ["Num"] = this.currentProfile.Num,
+        };
+        input["profile"] = profile;
+
+        return input;
+    }
+
+    private void AddMetaEntry(LuaTable meta, string name, AssistantComponentType type, string? label, string? userPrompt)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        var entry = new LuaTable
+        {
+            ["Type"] = type.ToString(),
+        };
+
+        if (!string.IsNullOrWhiteSpace(label))
+            entry["Label"] = label!;
+        if (!string.IsNullOrWhiteSpace(userPrompt))
+            entry["UserPrompt"] = userPrompt!;
+
+        meta[name] = entry;
+    }
+
+    private string CollectUserPromptFallback()
     {
         var prompt = string.Empty;
         var rootComponent = this.RootComponent;
@@ -339,7 +428,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private async Task Submit()
     {
         this.CreateChatThread();
-        var time = this.AddUserRequest(this.CollectUserPrompt());
+        var time = this.AddUserRequest(await this.CollectUserPromptAsync());
         await this.AddAIResponseAsync(time);
     }
 
