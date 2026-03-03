@@ -128,6 +128,14 @@ ASSISTANT.BuildPrompt = function(input)
 end
 ```
 
+### Included lua libraries
+- [Basic Functions Library](https://www.lua.org/manual/5.2/manual.html#6.1)
+- [Coroutine Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.2)
+- [String Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.4)
+- [Table Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.5)
+- [Mathematical Functions Library](https://www.lua.org/manual/5.2/manual.html#6.6)
+- [Bitwise Operations Library](https://www.lua.org/manual/5.2/manual.html#6.7)
+
 ### Logging helpers (assistant plugins only)
 The assistant runtime exposes basic logging helpers to Lua. Use them to debug custom prompt building.
 
