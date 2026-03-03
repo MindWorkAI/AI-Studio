@@ -3,8 +3,8 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 internal sealed class AssistantImage : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.IMAGE;
-    public Dictionary<string, object> Props { get; set; } = new();
-    public List<IAssistantComponent> Children { get; set; } = new();
+    public override Dictionary<string, object> Props { get; set; } = new();
+    public override List<IAssistantComponent> Children { get; set; } = new();
 
     public string Src
     {

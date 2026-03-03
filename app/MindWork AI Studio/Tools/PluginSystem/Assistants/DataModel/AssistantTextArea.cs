@@ -3,8 +3,8 @@ namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 internal sealed class AssistantTextArea : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.TEXT_AREA;
-    public Dictionary<string, object> Props { get; set; } = new();
-    public List<IAssistantComponent> Children { get; set; } = new();
+    public override Dictionary<string, object> Props { get; set; } = new();
+    public override List<IAssistantComponent> Children { get; set; } = new();
 
     public string Name
     {

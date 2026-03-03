@@ -3,8 +3,8 @@
 internal sealed class AssistantButton : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.BUTTON;
-    public Dictionary<string, object> Props { get; set; } = new();
-    public List<IAssistantComponent> Children { get; set; } = new();
+    public override Dictionary<string, object> Props { get; set; } = new();
+    public override List<IAssistantComponent> Children { get; set; } = new();
 
     public string Name
     {

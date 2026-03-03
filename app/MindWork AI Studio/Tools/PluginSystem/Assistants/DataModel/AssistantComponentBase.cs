@@ -3,6 +3,6 @@
 public abstract class AssistantComponentBase : IAssistantComponent
 {
     public abstract AssistantComponentType Type { get; }
-    public Dictionary<string, object> Props { get; }
-    public List<IAssistantComponent> Children { get; }
+    public abstract Dictionary<string, object> Props { get; set; }
+    public abstract List<IAssistantComponent> Children { get; set; }
 }

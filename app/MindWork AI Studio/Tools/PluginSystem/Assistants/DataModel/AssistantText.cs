@@ -4,9 +4,9 @@ internal sealed class AssistantText : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.TEXT;
     
-    public Dictionary<string, object> Props { get; set; } = new();
+    public override Dictionary<string, object> Props { get; set; } = new();
     
-    public List<IAssistantComponent> Children { get; set; } = new();
+    public override List<IAssistantComponent> Children { get; set; } = new();
 
     public string Content
     {
