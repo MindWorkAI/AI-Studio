@@ -28,7 +28,7 @@
                 <MudText Typo="Typo.h6">
                     @T("Description")
                 </MudText>
-                <MudMarkdown Value="@this.currentConfidence.Description"/>
+                <MudMarkdown Value="@this.currentConfidence.Description" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
 
                 @if (this.currentConfidence.Sources.Count > 0)
                 {

@@ -5,6 +5,8 @@ namespace AIStudio.Tools.Services;
 public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentService> logger, RustService rustService) : BackgroundService
 {
     public static List<EnterpriseEnvironment> CURRENT_ENVIRONMENTS = [];
+    
+    public static bool HasValidEnterpriseSnapshot { get; private set; }
 
 #if DEBUG
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(6);
@@ -33,34 +35,10 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         try
         {
             logger.LogInformation("Start updating of the enterprise environment.");
+            HasValidEnterpriseSnapshot = false;
 
             //
-            // Step 1: Handle deletions first.
-            //
-            List<Guid> deleteConfigIds;
-            try
-            {
-                deleteConfigIds = await rustService.EnterpriseEnvDeleteConfigIds();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to fetch the enterprise delete configuration IDs from the Rust service.");
-                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvDeleteConfigIds failed");
-                return;
-            }
-
-            foreach (var deleteId in deleteConfigIds)
-            {
-                var isPluginInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == deleteId);
-                if (isPluginInUse)
-                {
-                    logger.LogWarning("The enterprise environment configuration ID '{DeleteConfigId}' must be removed.", deleteId);
-                    PluginFactory.RemovePluginAsync(deleteId);
-                }
-            }
-
-            //
-            // Step 2: Fetch all active configurations.
+            // Step 1: Fetch all active configurations.
             //
             List<EnterpriseEnvironment> fetchedConfigs;
             try
@@ -75,9 +53,20 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             }
 
             //
-            // Step 3: Determine ETags and build the next environment list.
+            // Step 2: Determine ETags and build the list of reachable configurations.
+            // IMPORTANT: when one config server fails, we continue with the others.
             //
-            var nextEnvironments = new List<EnterpriseEnvironment>();
+            var reachableEnvironments = new List<EnterpriseEnvironment>();
+            var failedConfigIds = new HashSet<Guid>();
+            var currentEnvironmentsById = CURRENT_ENVIRONMENTS
+                .GroupBy(env => env.ConfigurationId)
+                .ToDictionary(group => group.Key, group => group.Last());
+            
+            var activeFetchedEnvironmentsById = fetchedConfigs
+                .Where(config => config.IsActive)
+                .GroupBy(config => config.ConfigurationId)
+                .ToDictionary(group => group.Key, group => group.Last());
+            
             foreach (var config in fetchedConfigs)
             {
                 if (!config.IsActive)
@@ -86,72 +75,98 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                     continue;
                 }
 
-                var etag = await PluginFactory.DetermineConfigPluginETagAsync(config.ConfigurationId, config.ConfigurationServerUrl);
-                nextEnvironments.Add(config with { ETag = etag });
-            }
-
-            if (nextEnvironments.Count == 0)
-            {
-                if (CURRENT_ENVIRONMENTS.Count > 0)
+                var etagResponse = await PluginFactory.DetermineConfigPluginETagAsync(config.ConfigurationId, config.ConfigurationServerUrl);
+                if (!etagResponse.Success)
                 {
-                    logger.LogWarning("AI Studio no longer has any enterprise configurations. Removing previously active configs.");
-
-                    // Remove plugins for configs that were previously active:
-                    foreach (var oldEnv in CURRENT_ENVIRONMENTS)
-                    {
-                        var isPluginInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == oldEnv.ConfigurationId);
-                        if (isPluginInUse)
-                            PluginFactory.RemovePluginAsync(oldEnv.ConfigurationId);
-                    }
-                }
-                else
-                    logger.LogInformation("AI Studio runs without any enterprise configurations.");
-
-                CURRENT_ENVIRONMENTS = [];
-                return;
-            }
-
-            //
-            // Step 4: Compare with current environments and process changes.
-            //
-            var currentIds = CURRENT_ENVIRONMENTS.Select(e => e.ConfigurationId).ToHashSet();
-            var nextIds = nextEnvironments.Select(e => e.ConfigurationId).ToHashSet();
-
-            // Remove plugins for configs that are no longer present:
-            foreach (var oldEnv in CURRENT_ENVIRONMENTS)
-            {
-                if (!nextIds.Contains(oldEnv.ConfigurationId))
-                {
-                    logger.LogInformation("Enterprise configuration '{ConfigId}' was removed.", oldEnv.ConfigurationId);
-                    var isPluginInUse = PluginFactory.AvailablePlugins.Any(plugin => plugin.Id == oldEnv.ConfigurationId);
-                    if (isPluginInUse)
-                        PluginFactory.RemovePluginAsync(oldEnv.ConfigurationId);
-                }
-            }
-
-            // Process new or changed configs:
-            foreach (var nextEnv in nextEnvironments)
-            {
-                var currentEnv = CURRENT_ENVIRONMENTS.FirstOrDefault(e => e.ConfigurationId == nextEnv.ConfigurationId);
-                if (currentEnv == nextEnv) // Hint: This relies on the record equality to check if anything relevant has changed (e.g. server URL or ETag).
-                {
-                    logger.LogInformation("Enterprise configuration '{ConfigId}' has not changed. No update required.", nextEnv.ConfigurationId);
+                    failedConfigIds.Add(config.ConfigurationId);
+                    logger.LogWarning("Failed to read enterprise config metadata for '{ConfigId}' from '{ServerUrl}': {Issue}. Keeping the current plugin state for this configuration.", config.ConfigurationId, config.ConfigurationServerUrl, etagResponse.Issue ?? "Unknown issue");
                     continue;
                 }
 
-                var isNew = !currentIds.Contains(nextEnv.ConfigurationId);
-                if(isNew)
+                reachableEnvironments.Add(config with { ETag = etagResponse.ETag });
+            }
+
+            //
+            // Step 3: Compare with current environments and process changes.
+            // Download per configuration. A single failure must not block others.
+            //
+            var shouldDeferStartupDownloads = isFirstRun && !PluginFactory.IsInitialized;
+            var effectiveEnvironmentsById = new Dictionary<Guid, EnterpriseEnvironment>();
+
+            // Process new or changed configs:
+            foreach (var nextEnv in reachableEnvironments)
+            {
+                var hasCurrentEnvironment = currentEnvironmentsById.TryGetValue(nextEnv.ConfigurationId, out var currentEnv);
+                if (hasCurrentEnvironment && currentEnv == nextEnv) // Hint: This relies on the record equality to check if anything relevant has changed (e.g. server URL or ETag).
+                {
+                    logger.LogInformation("Enterprise configuration '{ConfigId}' has not changed. No update required.", nextEnv.ConfigurationId);
+                    effectiveEnvironmentsById[nextEnv.ConfigurationId] = nextEnv;
+                    continue;
+                }
+
+                if(!hasCurrentEnvironment)
                     logger.LogInformation("Detected new enterprise configuration with ID '{ConfigId}' and server URL '{ServerUrl}'.", nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
                 else
                     logger.LogInformation("Detected change in enterprise configuration with ID '{ConfigId}'. Server URL or ETag has changed.", nextEnv.ConfigurationId);
 
-                if (isFirstRun)
+                if (shouldDeferStartupDownloads)
+                {
                     MessageBus.INSTANCE.DeferMessage(null, Event.STARTUP_ENTERPRISE_ENVIRONMENT, nextEnv);
+                    effectiveEnvironmentsById[nextEnv.ConfigurationId] = nextEnv;
+                }
                 else
-                    await PluginFactory.TryDownloadingConfigPluginAsync(nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
+                {
+                    var wasDownloadSuccessful = await PluginFactory.TryDownloadingConfigPluginAsync(nextEnv.ConfigurationId, nextEnv.ConfigurationServerUrl);
+                    if (!wasDownloadSuccessful)
+                    {
+                        failedConfigIds.Add(nextEnv.ConfigurationId);
+                        if (hasCurrentEnvironment)
+                        {
+                            logger.LogWarning("Failed to update enterprise configuration '{ConfigId}'. Keeping the previously active version.", nextEnv.ConfigurationId);
+                            effectiveEnvironmentsById[nextEnv.ConfigurationId] = currentEnv;
+                        }
+                        else
+                            logger.LogWarning("Failed to download the new enterprise configuration '{ConfigId}'. Skipping activation for now.", nextEnv.ConfigurationId);
+
+                        continue;
+                    }
+
+                    effectiveEnvironmentsById[nextEnv.ConfigurationId] = nextEnv;
+                }
             }
 
-            CURRENT_ENVIRONMENTS = nextEnvironments;
+            // Retain configurations for all failed IDs. On cold start there might be no
+            // previous in-memory snapshot yet, so we also keep the current fetched entry
+            // to protect it from cleanup while the server is unreachable.
+            foreach (var failedConfigId in failedConfigIds)
+            {
+                if (effectiveEnvironmentsById.ContainsKey(failedConfigId))
+                    continue;
+
+                if (!currentEnvironmentsById.TryGetValue(failedConfigId, out var retainedEnvironment))
+                {
+                    if (!activeFetchedEnvironmentsById.TryGetValue(failedConfigId, out retainedEnvironment))
+                        continue;
+
+                    logger.LogWarning("Could not refresh enterprise configuration '{ConfigId}'. Protecting it from cleanup until connectivity is restored.", failedConfigId);
+                }
+                else
+                    logger.LogWarning("Could not refresh enterprise configuration '{ConfigId}'. Keeping the previously active version.", failedConfigId);
+
+                effectiveEnvironmentsById[failedConfigId] = retainedEnvironment;
+            }
+
+            var effectiveEnvironments = effectiveEnvironmentsById.Values.ToList();
+
+            // Cleanup is only allowed after a successful sync cycle:
+            if (PluginFactory.IsInitialized && !shouldDeferStartupDownloads)
+                PluginFactory.RemoveUnreferencedManagedConfigurationPlugins(effectiveEnvironmentsById.Keys.ToHashSet());
+
+            if (effectiveEnvironments.Count == 0)
+                logger.LogInformation("AI Studio runs without any enterprise configurations.");
+
+            CURRENT_ENVIRONMENTS = effectiveEnvironments;
+            HasValidEnterpriseSnapshot = true;
         }
         catch (Exception e)
         {

@@ -581,6 +581,90 @@ public static partial class ManagedConfiguration
         
         return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
     }
+
+    /// <summary>
+    /// Attempts to process additive plugin contributions for enum set settings from a Lua table.
+    /// The contributed values are merged into the existing set, and the setting remains unlocked
+    /// so users can add additional values.
+    /// </summary>
+    /// <param name="configPluginId">The ID of the related configuration plugin.</param>
+    /// <param name="settings">The Lua table containing the settings to process.</param>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TValue">The type of the property within the configuration class. It is also the type of the set
+    /// elements, which must be an enum.</typeparam>
+    /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
+    public static bool TryProcessConfigurationWithPluginContribution<TClass, TValue>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
+        Guid configPluginId,
+        LuaTable settings,
+        bool dryRun)
+        where TValue : Enum
+    {
+        //
+        // Handle configured enum sets (additive merge)
+        //
+
+        // Check if that configuration was registered:
+        if (!TryGet(configSelection, propertyExpression, out var configMeta))
+            return false;
+
+        var successful = false;
+        var configuredValue = new HashSet<TValue>();
+
+        // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
+        if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
+            configuredLuaList.Type is LuaValueType.Table &&
+            configuredLuaList.TryRead<LuaTable>(out var valueTable))
+        {
+            // Determine the length of the Lua table and prepare a set to hold the parsed values:
+            var len = valueTable.ArrayLength;
+            var set = new HashSet<TValue>(len);
+            
+            // Iterate over each entry in the Lua table:
+            for (var index = 1; index <= len; index++)
+            {
+                // Retrieve the Lua value at the current index:
+                var value = valueTable[index];
+                
+                // Step 2 -- try to read the Lua value as a string:
+                if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
+                {
+                    // Step 3 -- try to parse the string as the target type:
+                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                        set.Add((TValue)configuredEnum);
+                }
+            }
+
+            configuredValue = set;
+            successful = true;
+        }
+
+        if (dryRun)
+            return successful;
+
+        if (successful)
+        {
+            var configInstance = configSelection.Compile().Invoke(SETTINGS_MANAGER.ConfigurationData);
+            var currentValue = propertyExpression.Compile().Invoke(configInstance);
+            var merged = new HashSet<TValue>(currentValue);
+            merged.UnionWith(configuredValue);
+            configMeta.SetValue(merged);
+            configMeta.SetPluginContribution(new HashSet<TValue>(configuredValue), configPluginId);
+        }
+        else if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId == configPluginId)
+        {
+            configMeta.ClearPluginContribution();
+        }
+
+        if (configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId)
+            configMeta.UnlockConfiguration();
+
+        return successful;
+    }
     
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for string set types.
@@ -744,12 +828,12 @@ public static partial class ManagedConfiguration
                 // Case: the setting was configured, and we could read the value successfully.
                 //
                 
-                // Set the configured value and lock the managed state:
+                // Set the configured value and lock the configuration:
                 configMeta.SetValue(configuredValue);
-                configMeta.LockManagedState(configPluginId);
+                configMeta.LockConfiguration(configPluginId);
                 break;
 
-            case false when configMeta.IsLocked && configMeta.MangedByConfigPluginId == configPluginId:
+            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId:
                 //
                 // Case: the setting was configured previously, but we could not read the value successfully.
                 // This happens when the setting was removed from the configuration plugin. We handle that
@@ -757,10 +841,10 @@ public static partial class ManagedConfiguration
                 //
                 // The other case, when the setting was locked and managed by a different configuration plugin,
                 // is handled by the IsConfigurationLeftOver method, which checks if the configuration plugin
-                // is still available. If it is not available, it resets the managed state of the
+                // is still available. If it is not available, it resets the locked state of the
                 // configuration setting, allowing it to be reconfigured by a different plugin or left unchanged.
                 //
-                configMeta.ResetManagedState();
+                configMeta.ResetLockedConfiguration();
                 break;
             
             case false:

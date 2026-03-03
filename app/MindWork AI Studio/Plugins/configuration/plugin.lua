@@ -24,6 +24,9 @@ VERSION = "1.0.0"
 -- The type of the plugin:
 TYPE = "CONFIGURATION"
 
+-- True when this plugin is deployed by an enterprise configuration server:
+DEPLOYED_USING_CONFIG_SERVER = false
+
 -- The authors of the plugin:
 AUTHORS = {"<Company Name>"}
 
@@ -162,6 +165,11 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
 -- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_DOCUMENT_ANALYSIS_2025.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_DOCUMENT_ANALYSIS_2025" }
+
+-- Configure the preselected provider.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.
+-- CONFIG["SETTINGS"]["DataApp.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure the preselected profile.
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].

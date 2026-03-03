@@ -1,7 +1,7 @@
 use std::env;
 use std::sync::OnceLock;
 use log::{debug, info, warn};
-use rocket::{delete, get};
+use rocket::get;
 use rocket::serde::json::Json;
 use serde::Serialize;
 use sys_locale::get_locale;
@@ -14,6 +14,9 @@ pub static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
 
 /// The config directory where the application stores its configuration.
 pub static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
+
+/// The user language cached once per runtime process.
+static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
 
 /// Returns the config directory.
 #[get("/system/directories/config")]
@@ -87,12 +90,11 @@ fn normalize_locale_tag(locale: &str) -> Option<String> {
 }
 
 #[cfg(target_os = "linux")]
-fn read_locale_from_environment() -> Option<String> {
+fn read_locale_from_environment() -> Option<(String, &'static str)> {
     if let Ok(language) = env::var("LANGUAGE") {
         for candidate in language.split(':') {
             if let Some(locale) = normalize_locale_tag(candidate) {
-                info!("Detected user language from Linux environment variable 'LANGUAGE': '{}'.", locale);
-                return Some(locale);
+                return Some((locale, "LANGUAGE"));
             }
         }
     }
@@ -100,8 +102,7 @@ fn read_locale_from_environment() -> Option<String> {
     for key in ["LC_ALL", "LC_MESSAGES", "LANG"] {
         if let Ok(value) = env::var(key) {
             if let Some(locale) = normalize_locale_tag(&value) {
-                info!("Detected user language from Linux environment variable '{}': '{}'.", key, locale);
-                return Some(locale);
+                return Some((locale, key));
             }
         }
     }
@@ -110,8 +111,33 @@ fn read_locale_from_environment() -> Option<String> {
 }
 
 #[cfg(not(target_os = "linux"))]
-fn read_locale_from_environment() -> Option<String> {
+fn read_locale_from_environment() -> Option<(String, &'static str)> {
     None
+}
+
+enum LanguageDetectionSource {
+    SysLocale,
+    LinuxEnvironmentVariable(&'static str),
+    DefaultLanguage,
+}
+
+fn detect_user_language() -> (String, LanguageDetectionSource) {
+    if let Some(locale) = get_locale() {
+        if let Some(normalized_locale) = normalize_locale_tag(&locale) {
+            return (normalized_locale, LanguageDetectionSource::SysLocale);
+        }
+
+        warn!("sys-locale returned an unusable locale value: '{}'.", locale);
+    }
+
+    if let Some((locale, key)) = read_locale_from_environment() {
+        return (locale, LanguageDetectionSource::LinuxEnvironmentVariable(key));
+    }
+
+    (
+        String::from(DEFAULT_LANGUAGE),
+        LanguageDetectionSource::DefaultLanguage,
+    )
 }
 
 #[cfg(test)]
@@ -137,21 +163,32 @@ mod tests {
 
 #[get("/system/language")]
 pub fn read_user_language(_token: APIToken) -> String {
-    if let Some(locale) = get_locale() {
-        if let Some(normalized_locale) = normalize_locale_tag(&locale) {
-            info!("Detected user language from sys-locale: '{}'.", normalized_locale);
-            return normalized_locale;
-        }
+    USER_LANGUAGE
+        .get_or_init(|| {
+            let (user_language, source) = detect_user_language();
+            match source {
+                LanguageDetectionSource::SysLocale => {
+                    info!("Detected user language from sys-locale: '{}'.", user_language);
+                },
 
-        warn!("sys-locale returned an unusable locale value: '{}'.", locale);
-    }
+                LanguageDetectionSource::LinuxEnvironmentVariable(key) => {
+                    info!(
+                        "Detected user language from Linux environment variable '{}': '{}'.",
+                        key, user_language
+                    );
+                },
 
-    if let Some(locale) = read_locale_from_environment() {
-        return locale;
-    }
+                LanguageDetectionSource::DefaultLanguage => {
+                    warn!(
+                        "Could not determine the system language. Use default '{}'.",
+                        DEFAULT_LANGUAGE
+                    );
+                },
+            }
 
-    warn!("Could not determine the system language. Use default '{}'.", DEFAULT_LANGUAGE);
-    String::from(DEFAULT_LANGUAGE)
+            user_language
+        })
+        .clone()
 }
 
 #[get("/system/enterprise/config/id")]
@@ -175,30 +212,6 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
     get_enterprise_configuration(
         "config_id",
         "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID",
-    )
-}
-
-#[delete("/system/enterprise/config/id")]
-pub fn delete_enterprise_env_config_id(_token: APIToken) -> String {
-    //
-    // When we are on a Windows machine, we try to read the enterprise config from
-    // the Windows registry. In case we can't find the registry key, or we are on a
-    // macOS or Linux machine, we try to read the enterprise config from the
-    // environment variables.
-    //
-    // The registry key is:
-    // HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT
-    //
-    // In this registry key, we expect the following values:
-    // - delete_config_id
-    //
-    // The environment variable is:
-    // MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID
-    //
-    debug!("Trying to read the enterprise environment for some config ID, which should be deleted.");
-    get_enterprise_configuration(
-        "delete_config_id",
-        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
     )
 }
 
@@ -312,46 +325,6 @@ pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> 
     }
 
     Json(configs)
-}
-
-/// Returns all enterprise configuration IDs that should be deleted. Supports the new
-/// multi-delete format (`id1;id2;id3`) as well as the legacy single-delete variable.
-#[get("/system/enterprise/delete-configs")]
-pub fn read_enterprise_delete_config_ids(_token: APIToken) -> Json<Vec<String>> {
-    info!("Trying to read the enterprise environment for configuration IDs to delete.");
-
-    let mut ids: Vec<String> = Vec::new();
-    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-
-    // Read the new combined format:
-    let combined = get_enterprise_configuration(
-        "delete_config_ids",
-        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_IDS",
-    );
-
-    if !combined.is_empty() {
-        for id in combined.split(';') {
-            let id = id.trim().to_lowercase();
-            if !id.is_empty() && seen.insert(id.clone()) {
-                ids.push(id);
-            }
-        }
-    }
-
-    // Also read the legacy single-delete variable:
-    let delete_id = get_enterprise_configuration(
-        "delete_config_id",
-        "MINDWORK_AI_STUDIO_ENTERPRISE_DELETE_CONFIG_ID",
-    );
-
-    if !delete_id.is_empty() {
-        let id = delete_id.trim().to_lowercase();
-        if seen.insert(id.clone()) {
-            ids.push(id);
-        }
-    }
-
-    Json(ids)
 }
 
 fn get_enterprise_configuration(_reg_value: &str, env_name: &str) -> String {

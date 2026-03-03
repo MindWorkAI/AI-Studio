@@ -69,13 +69,20 @@ public partial class Information : MSGComponentBase
 
     private bool showDatabaseDetails;
 
-    private List<IPluginMetadata> configPlugins = PluginFactory.AvailablePlugins.Where(x => x.Type is PluginType.CONFIGURATION).ToList();
+    private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
+        .Where(x => x.Type is PluginType.CONFIGURATION)
+        .OfType<IAvailablePlugin>()
+        .ToList();
     
     private sealed record DatabaseDisplayInfo(string Label, string Value);
 
     private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
 
     private static bool HasAnyActiveEnvironment => EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Any(e => e.IsActive);
+    
+    private bool HasAnyLoadedEnterpriseConfigurationPlugin => EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS
+        .Where(e => e.IsActive)
+        .Any(env => this.FindManagedConfigurationPlugin(env.ConfigurationId) is not null);
 
     /// <summary>
     /// Determines whether the enterprise configuration has details that can be shown/hidden.
@@ -130,7 +137,10 @@ public partial class Information : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.PLUGINS_RELOADED:
-                this.configPlugins = PluginFactory.AvailablePlugins.Where(x => x.Type is PluginType.CONFIGURATION).ToList();
+                this.configPlugins = PluginFactory.AvailablePlugins
+                    .Where(x => x.Type is PluginType.CONFIGURATION)
+                    .OfType<IAvailablePlugin>()
+                    .ToList();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
@@ -194,6 +204,18 @@ public partial class Information : MSGComponentBase
     private void ToggleDatabaseDetails()
     {
         this.showDatabaseDetails = !this.showDatabaseDetails;
+    }
+
+    private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
+    {
+        return this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId == configurationId)
+               // Backward compatibility for already downloaded plugins without ManagedConfigurationId.
+               ?? this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId is null && plugin.Id == configurationId);
+    }
+
+    private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
+    {
+        return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
     }
 
     private async Task CopyStartupLogPath()

@@ -33,6 +33,59 @@ static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 pub const PID_FILE_NAME: &str = "mindwork_ai_studio.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Dotnet;
 
+/// Removes ANSI escape sequences and non-printable control chars from stdout lines.
+fn sanitize_stdout_line(line: &str) -> String {
+    let mut sanitized = String::with_capacity(line.len());
+    let mut chars = line.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch == '\u{1B}' {
+            if let Some(next) = chars.peek().copied() {
+                // CSI sequence: ESC [ ... <final>
+                if next == '[' {
+                    chars.next();
+                    for csi_char in chars.by_ref() {
+                        let code = csi_char as u32;
+                        if (0x40..=0x7E).contains(&code) {
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
+                // OSC sequence: ESC ] ... (BEL or ESC \)
+                if next == ']' {
+                    chars.next();
+                    let mut previous_was_escape = false;
+                    for osc_char in chars.by_ref() {
+                        if osc_char == '\u{07}' {
+                            break;
+                        }
+
+                        if previous_was_escape && osc_char == '\\' {
+                            break;
+                        }
+
+                        previous_was_escape = osc_char == '\u{1B}';
+                    }
+                    continue;
+                }
+            }
+
+            // Unknown escape sequence: ignore the escape char itself.
+            continue;
+        }
+
+        if ch.is_control() && ch != '\t' {
+            continue;
+        }
+
+        sanitized.push(ch);
+    }
+
+    sanitized
+}
+
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
 #[get("/system/dotnet/port")]
@@ -111,11 +164,12 @@ pub fn start_dotnet_server() {
         // NOTE: Log events are sent via structured HTTP API calls.
         // This loop serves for fundamental output (e.g., startup errors).
         while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
-            let line = line.trim_end();
-            info!(Source = ".NET Server (stdout)"; "{line}");
+            let line = sanitize_stdout_line(line.trim_end());
+            if !line.trim().is_empty() {
+                info!(Source = ".NET Server (stdout)"; "{line}");
+            }
         }
     });
-
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.

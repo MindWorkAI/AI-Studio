@@ -27,7 +27,41 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private void UpdatePreviewFeatures(PreviewVisibility previewVisibility)
     {
         this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;
-        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = previewVisibility.FilterPreviewFeatures(this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures);
+        var filtered = previewVisibility.FilterPreviewFeatures(this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures);
+        filtered.UnionWith(this.GetPluginContributedPreviewFeatures());
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = filtered;
+    }
+
+    private HashSet<PreviewFeatures> GetPluginContributedPreviewFeatures()
+    {
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.HasPluginContribution)
+            return meta.PluginContribution.Where(x => !x.IsReleased()).ToHashSet();
+
+        return [];
+    }
+
+    private bool IsPluginContributedPreviewFeature(PreviewFeatures feature)
+    {
+        if (feature.IsReleased())
+            return false;
+
+        if (!ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) || !meta.HasPluginContribution)
+            return false;
+
+        return meta.PluginContribution.Contains(feature);
+    }
+
+    private HashSet<PreviewFeatures> GetSelectedPreviewFeatures()
+    {
+        var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased()).ToHashSet();
+        enabled.UnionWith(this.GetPluginContributedPreviewFeatures());
+        return enabled;
+    }
+
+    private void UpdateEnabledPreviewFeatures(HashSet<PreviewFeatures> selectedFeatures)
+    {
+        selectedFeatures.UnionWith(this.GetPluginContributedPreviewFeatures());
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedFeatures;
     }
 
     private async Task UpdateLangBehaviour(LangBehavior behavior)

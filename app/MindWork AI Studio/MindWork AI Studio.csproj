@@ -52,7 +52,7 @@
       <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.12" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
-      <PackageReference Include="Qdrant.Client" Version="1.16.1" />
+      <PackageReference Include="Qdrant.Client" Version="1.17.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
       <PackageReference Include="LuaCSharp" Version="0.5.3" />
     </ItemGroup>

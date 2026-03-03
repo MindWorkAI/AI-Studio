@@ -100,7 +100,7 @@ public sealed class RustAvailabilityMonitorService : BackgroundService, IMessage
     {
         try
         { 
-            await this.rustService.ReadUserLanguage();
+            await this.rustService.ReadUserLanguage(forceRequest: true);
         }
         catch (Exception e)
         {
