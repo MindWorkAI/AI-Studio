@@ -44,7 +44,7 @@
             <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
                 @foreach (var assistantPlugin in this.AssistantPlugins)
                 {
-                    <AssistantBlock TSettings="SettingsDialogTranslation"
+                    <AssistantBlock TSettings="SettingsDialogDynamic"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"

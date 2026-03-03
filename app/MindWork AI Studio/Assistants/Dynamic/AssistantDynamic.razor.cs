@@ -167,10 +167,11 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
     }
 
-    // TODO
     protected override bool MightPreselectValues()
     {
-        Console.WriteLine("throw new NotImplementedException();");
+        // Dynamic assistants have arbitrary fields supplied via plugins, so there
+        // isn't a built-in settings section to prefill values. Always return
+        // false to keep the plugin-specified defaults.
         return false;
     }
 
