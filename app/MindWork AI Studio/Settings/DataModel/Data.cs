@@ -25,6 +25,11 @@ public sealed class Data
     /// A collection of embedding providers configured.
     /// </summary>
     public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
+    
+    /// <summary>
+    /// A collection of speech providers configured.
+    /// </summary>
+    public List<TranscriptionProvider> TranscriptionProviders { get; init; } = [];
 
     /// <summary>
     /// A collection of data sources configured.
@@ -52,9 +57,14 @@ public sealed class Data
     public uint NextProviderNum { get; set; } = 1;
 
     /// <summary>
-    /// The next embedding number to use.
+    /// The next embedding provider number to use.
     /// </summary>
     public uint NextEmbeddingNum { get; set; } = 1;
+    
+    /// <summary>
+    /// The next transcription provider number to use.
+    /// </summary>
+    public uint NextTranscriptionNum { get; set; } = 1;
 
     /// <summary>
     /// The next data source number to use.
@@ -70,6 +80,11 @@ public sealed class Data
     /// The next chat template number to use.
     /// </summary>
     public uint NextChatTemplateNum { get; set; } = 1;
+    
+    /// <summary>
+    /// The next document analysis policy number to use.
+    /// </summary>
+    public uint NextDocumentAnalysisPolicyNum { get; set; } = 1;
 
     public DataApp App { get; init; } = new(x => x.App);
 
@@ -84,6 +99,8 @@ public sealed class Data
     public DataCoding Coding { get; init; } = new();
     
     public DataERI ERI { get; init; } = new();
+    
+    public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 

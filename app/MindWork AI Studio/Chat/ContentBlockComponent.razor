@@ -1,8 +1,8 @@
 @using AIStudio.Tools
 @using MudBlazor
 @using AIStudio.Components
-@using AIStudio.Provider
 @inherits AIStudio.Components.MSGComponentBase
+
 <MudCard Class="@this.CardClasses" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -16,11 +16,20 @@
             </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
+            @if (this.Content.FileAttachments.Count > 0)
+            {
+                <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
+                    <MudBadge Content="@this.Content.FileAttachments.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
+                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile"
+                                       OnClick="@this.OpenAttachmentsDialog"/>
+                    </MudBadge>
+                </MudTooltip>
+            }
             @if (this.Content.Sources.Count > 0)
             {
                 <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
                     <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                        <MudIconButton Icon="@Icons.Material.Filled.Link" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Link"/>
                     </MudBadge>
                 </MudTooltip>
             }
@@ -46,6 +55,13 @@
             {
                 <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
+                </MudTooltip>
+            }
+
+            @if (this.Role is ChatRole.AI)
+            {
+                <MudTooltip Text="@T("Export Chat to Microsoft Word")" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@this.ExportToWord"/>
                 </MudTooltip>
             }
             <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
@@ -80,10 +96,10 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
+                                <MudMarkdown Value="@NormalizeMarkdownForRendering(textContent.Text)" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
                                 @if (textContent.Sources.Count > 0)
                                 {
-                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
+                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
                                 }
                             }
                         }
@@ -92,9 +108,21 @@
                     break;
 
                 case ContentType.IMAGE:
-                    if (this.Content is ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent)
+                    if (this.Content is ContentImage imageContent)
                     {
-                        <MudImage Src="@imageContent.Source"/>
+                        var imageSrc = imageContent.SourceType switch
+                        {
+                            ContentImageSource.BASE64 => ImageHelpers.ToDataUrl(imageContent.Source),
+                            ContentImageSource.URL => imageContent.Source,
+                            ContentImageSource.LOCAL_PATH => imageContent.Source,
+                            
+                            _ => string.Empty
+                        };
+
+                        if (!string.IsNullOrWhiteSpace(imageSrc))
+                        {
+                            <MudImage Src="@imageSrc" />
+                        }
                     }
 
                     break;

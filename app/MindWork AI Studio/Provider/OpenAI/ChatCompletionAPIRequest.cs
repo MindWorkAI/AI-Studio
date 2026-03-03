@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
@@ -8,11 +10,15 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Stream">Whether to stream the chat completion.</param>
 public record ChatCompletionAPIRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     bool Stream
 )
 {
     public ChatCompletionAPIRequest() : this(string.Empty, [], true)
     {
     }
+    
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
 }

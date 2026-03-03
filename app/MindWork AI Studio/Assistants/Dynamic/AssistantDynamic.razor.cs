@@ -25,7 +25,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     protected override bool ShowProfileSelection => this.showFooterProfileSelection;
     protected override string SubmitText => this.submitText;
     protected override Func<Task> SubmitAction => this.Submit;
-    public override Tools.Components Component { get; }
+    // Dynamic assistants do not have dedicated settings yet.
+    // Reuse chat-level provider filtering/preselection instead of NONE.
+    protected override Tools.Components Component => Tools.Components.CHAT;
 
     private string? inputText;
     private string title = string.Empty;

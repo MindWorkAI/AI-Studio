@@ -1,5 +1,7 @@
 using AIStudio.Agents;
 using AIStudio.Settings;
+using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -24,6 +26,7 @@ internal sealed class Program
     public static string API_TOKEN = null!;
     public static IServiceProvider SERVICE_PROVIDER = null!;
     public static ILoggerFactory LOGGER_FACTORY = null!;
+    public static DatabaseClient DATABASE_CLIENT = null!;
     
     public static async Task Main()
     {
@@ -82,8 +85,40 @@ internal sealed class Program
             return;
         }
         
-        var builder = WebApplication.CreateBuilder();
+        var qdrantInfo = await rust.GetQdrantInfo();
+        if (qdrantInfo.Path == string.Empty)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
+            return;
+        }
         
+        if (qdrantInfo.PortHttp == 0)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
+            return;
+        }
+
+        if (qdrantInfo.PortGrpc == 0)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
+            return;
+        }
+
+        if (qdrantInfo.Fingerprint == string.Empty)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
+            return;
+        }
+        
+        if (qdrantInfo.ApiToken == string.Empty)
+        {
+            Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
+            return;
+        }
+
+        var databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
+        
+        var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
             kestrelServerOptions.ConfigureEndpointDefaults(listenOptions =>
@@ -126,6 +161,7 @@ internal sealed class Program
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
@@ -133,6 +169,14 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
+        builder.Services.AddSingleton<DatabaseClient>(databaseClient);
+        builder.Services.AddHostedService<GlobalShortcutService>();
+        builder.Services.AddHostedService<RustAvailabilityMonitorService>();
+        
+        // ReSharper disable AccessToDisposedClosure
+        builder.Services.AddHostedService<RustService>(_ => rust);
+        // ReSharper restore AccessToDisposedClosure
+        
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddHubOptions(options =>
@@ -180,12 +224,18 @@ internal sealed class Program
         var rustLogger = app.Services.GetRequiredService<ILogger<RustService>>();
         rust.SetLogger(rustLogger);
         rust.SetEncryptor(encryption);
+        TerminalLogger.SetRustService(rust);
 
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
+        
+        var databaseLogger = app.Services.GetRequiredService<ILogger<DatabaseClient>>();
+        databaseClient.SetLogger(databaseLogger);
+        DATABASE_CLIENT = databaseClient;
 
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
+        app.Use(FileHandler.HandlerAsync);
 
 #if DEBUG
         app.UseStaticFiles();
@@ -219,6 +269,7 @@ internal sealed class Program
         await serverTask;
         
         RUST_SERVICE.Dispose();
+        DATABASE_CLIENT.Dispose();
         PluginFactory.Dispose();
         programLogger.LogInformation("The AI Studio server was stopped.");
     }

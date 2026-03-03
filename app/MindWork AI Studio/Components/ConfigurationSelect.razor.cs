@@ -27,6 +27,12 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public Action<TConfig> SelectionUpdate { get; set; } = _ => { };
+
+    /// <summary>
+    /// An asynchronous action that is called when the selection changes.
+    /// </summary>
+    [Parameter]
+    public Func<TConfig, Task> SelectionUpdateAsync { get; set; } = _ => Task.CompletedTask;
     
     #region Overrides of ConfigurationBase
 
@@ -36,6 +42,7 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     /// <inheritdoc />
     protected override string Label => this.OptionDescription;
 
+    /// <inheritdoc />
     protected override Variant Variant => Variant.Outlined;
 
     #endregion
@@ -43,6 +50,7 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     private async Task OptionChanged(TConfig updatedValue)
     {
         this.SelectionUpdate(updatedValue);
+        await this.SelectionUpdateAsync(updatedValue);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }

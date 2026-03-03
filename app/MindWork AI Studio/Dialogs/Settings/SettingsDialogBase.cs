@@ -23,7 +23,7 @@ public abstract class SettingsDialogBase : MSGComponentBase
     protected readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
     
     #region Overrides of ComponentBase
-
+    
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {

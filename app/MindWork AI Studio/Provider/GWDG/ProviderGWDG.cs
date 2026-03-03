@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.GWDG;
 
-public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud.de/v1/", LOGGER)
+public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://chat-ai.academiccloud.de/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
@@ -25,16 +25,22 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the GWDG HTTP chat request:
         var gwdgChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -44,25 +50,10 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
+                
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -89,11 +80,24 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override async Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
+    }
+    
+    /// <inhertidoc />
+    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+    }
 
     /// <inheritdoc />
     public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(token, apiKeyProvisional);
+        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
         return models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase));
     }
 
@@ -106,20 +110,29 @@ public sealed class ProviderGWDG() : BaseProvider("https://chat-ai.academiccloud
     /// <inheritdoc />
     public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(token, apiKeyProvisional);
+        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
         return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
+        return Task.FromResult<IEnumerable<Model>>(
+            new List<Model>
+            {
+                new("whisper-large-v2", "Whisper v2 Large"),
+            });
+    }
+    
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

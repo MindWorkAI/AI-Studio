@@ -13,7 +13,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
     public ChatThread? ExistingChatThread { get; set; }
     
     #region Overrides of ComponentBase
-
+    
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -65,6 +65,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
             { x => x.IsEditing, true },
             { x => x.ExampleConversation, chatTemplate.ExampleConversation },
+            { x => x.FileAttachments, chatTemplate.FileAttachments },
             { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
         };
         

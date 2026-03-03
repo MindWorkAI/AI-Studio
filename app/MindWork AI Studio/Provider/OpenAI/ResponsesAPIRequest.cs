@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
@@ -10,7 +12,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Tools">The tools to use for the request.</param>
 public record ResponsesAPIRequest(
     string Model,
-    IList<Message> Input,
+    IList<IMessageBase> Input,
     bool Stream,
     bool Store,
     IList<Tool> Tools)
@@ -18,4 +20,8 @@ public record ResponsesAPIRequest(
     public ResponsesAPIRequest() : this(string.Empty, [], true, false, [])
     {
     }
+    
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
 }

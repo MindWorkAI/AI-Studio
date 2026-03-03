@@ -7,7 +7,9 @@
     </MudText>
     <PreviewExperimental ApplyInnerScrollingFix="true"/>
 
-    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    <CascadingValue Value="Components.WRITER">
+        <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    </CascadingValue>
     <InnerScrolling>
         <ChildContent>
             <MudTextField

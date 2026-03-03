@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Google;
 
-public class ProviderGoogle() : BaseProvider("https://generativelanguage.googleapis.com/v1beta/", LOGGER)
+public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://generativelanguage.googleapis.com/v1beta/openai/", LOGGER)
 {
     private static readonly ILogger<ProviderGoogle> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGoogle>();
 
@@ -22,19 +22,25 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
     public override string InstanceName { get; set; } = "Google Gemini";
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Google HTTP chat request:
         var geminiChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -44,27 +50,11 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -86,155 +76,184 @@ public class ProviderGoogle() : BaseProvider("https://generativelanguage.googlea
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
-    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Provider.Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
     {
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModels(token, apiKeyProvisional);
-        if(modelResponse == default)
-            return [];
+        return Task.FromResult(string.Empty);
+    }
+    
+    /// <inhertidoc />
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        try
+        {
+            var modelName = embeddingModel.Id;
+            if (string.IsNullOrWhiteSpace(modelName))
+            {
+                LOGGER.LogError("No model name provided for embedding request.");
+                return [];
+            }
+
+            if (modelName.StartsWith("models/", StringComparison.OrdinalIgnoreCase))
+                modelName = modelName.Substring("models/".Length);
+
+            if (!requestedSecret.Success)
+            {
+                LOGGER.LogError("No valid API key available for embedding request.");
+                return [];
+            }
+            
+            // Prepare the Google Gemini embedding request:
+            var payload = new
+            {
+                content = new
+                {
+                    parts = texts.Select(text => new { text }).ToArray()
+                },
+                
+                taskType = "SEMANTIC_SIMILARITY"
+            };
+            
+            var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
+            var embedUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:embedContent";
+            using var request = new HttpRequestMessage(HttpMethod.Post, embedUrl);
+            request.Headers.Add("x-goog-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            
+            // Set the content:
+            request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");
+            
+            using var response = await this.httpClient.SendAsync(request, token);
+            var responseBody = await response.Content.ReadAsStringAsync(token);
         
-        return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/gemini-", StringComparison.OrdinalIgnoreCase) && !model.Name.Contains("embed"))
-            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
+            if (!response.IsSuccessStatusCode)
+            {
+                LOGGER.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+                return [];
+            }
+
+            var embeddingResponse = JsonSerializer.Deserialize<GoogleEmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
+            if (embeddingResponse is { Embedding: not null })
+            {
+                return embeddingResponse.Embedding
+                    .Select(d => d.Values?.ToArray() ?? [])
+                    .Cast<IReadOnlyList<float>>()
+                    .ToArray();
+            }
+            else
+            {
+                LOGGER.LogError("Was not able to deserialize the embedding response.");
+                return [];
+            }
+            
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
+            return [];
+        }
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return models.Where(model =>
+                model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
+                !this.IsEmbeddingModel(model.Id))
+            .Select(this.WithDisplayNameFallback);
     }
 
-    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModels(token, apiKeyProvisional);
-        if(modelResponse == default)
-            return [];
-        
-        return modelResponse.Models.Where(model =>
-                model.Name.StartsWith("models/text-embedding-", StringComparison.OrdinalIgnoreCase) ||
-                model.Name.StartsWith("models/gemini-embed", StringComparison.OrdinalIgnoreCase))
-            .Select(n => new Provider.Model(n.Name.Replace("models/", string.Empty), n.DisplayName));
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+
+    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return models.Where(model => this.IsEmbeddingModel(model.Id))
+            .Select(this.WithDisplayNameFallback);
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model)
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-
-        if (modelName.IndexOf("gemini-") is not -1)
-        {
-            // Reasoning models:
-            if (modelName.IndexOf("gemini-2.5") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
-                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
-                    
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-
-            // Image generation:
-            if(modelName.IndexOf("-2.0-flash-preview-image-") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
-                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
-                    
-                    Capability.TEXT_OUTPUT, Capability.IMAGE_OUTPUT,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            // Realtime model:
-            if(modelName.IndexOf("-2.0-flash-live-") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.AUDIO_INPUT, Capability.SPEECH_INPUT,
-                    Capability.VIDEO_INPUT,
-                    
-                    Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT,
-                    
-                    Capability.FUNCTION_CALLING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            // The 2.0 flash models cannot call functions:
-            if(modelName.IndexOf("-2.0-flash-") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
-                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
-                    
-                    Capability.TEXT_OUTPUT,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            // The old 1.0 pro vision model:
-            if(modelName.IndexOf("pro-vision") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                    
-                    Capability.TEXT_OUTPUT,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            // Default to all other Gemini models:
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
-                Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
-                
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        }
-        
-        // Default for all other models:
-        return
-        [
-            Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-            
-            Capability.TEXT_OUTPUT,
-            
-            Capability.FUNCTION_CALLING,
-            Capability.CHAT_COMPLETION_API,
-        ];
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
     
     #endregion
 
-    private async Task<ModelsResponse> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IReadOnlyList<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,
             }
         };
 
-        if (secretKey is null)
-            return default;
+        if (string.IsNullOrWhiteSpace(secretKey))
+            return [];
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"models?key={secretKey}");
-        using var response = await this.httpClient.SendAsync(request, token);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
         
+        using var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
-            return default;
+        {
+            LOGGER.LogError("Failed to load models with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, await response.Content.ReadAsStringAsync(token));
+            return [];
+        }
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse;
+        try
+        {
+            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            if (modelResponse == default || modelResponse.Data.Count is 0)
+            {
+                LOGGER.LogError("Google model list response did not contain a valid data array.");
+                return [];
+            }
+
+            return modelResponse.Data
+                .Where(model => !string.IsNullOrWhiteSpace(model.Id))
+                .Select(model => new Model(this.NormalizeModelId(model.Id), model.DisplayName))
+                .ToArray();
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError("Failed to parse Google model list response: '{Message}'.", e.Message);
+            return [];
+        }
+    }
+
+    private bool IsEmbeddingModel(string modelId)
+    {
+        return modelId.Contains("embedding", StringComparison.OrdinalIgnoreCase) ||
+               modelId.Contains("embed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Model WithDisplayNameFallback(Model model)
+    {
+        return string.IsNullOrWhiteSpace(model.DisplayName)
+            ? new Model(model.Id, model.Id)
+            : model;
+    }
+
+    private string NormalizeModelId(string modelId)
+    {
+        return modelId.StartsWith("models/", StringComparison.OrdinalIgnoreCase)
+            ? modelId["models/".Length..]
+            : modelId;
     }
 }

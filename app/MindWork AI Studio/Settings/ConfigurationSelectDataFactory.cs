@@ -201,13 +201,19 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)
     {
         foreach (var profile in profiles.GetAllProfiles())
-            yield return new(profile.Name, profile.Id);
+            yield return new(profile.GetSafeName(), profile.Id);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<string>> GetTranscriptionProvidersData(IEnumerable<TranscriptionProvider> transcriptionProviders)
+    {
+        foreach (var provider in transcriptionProviders)
+            yield return new(provider.Name, provider.Id);
     }
     
     public static IEnumerable<ConfigurationSelectData<string>> GetChatTemplatesData(IEnumerable<ChatTemplate> chatTemplates)
     {
         foreach (var chatTemplate in chatTemplates.GetAllChatTemplates())
-            yield return new(chatTemplate.Name, chatTemplate.Id);
+            yield return new(chatTemplate.GetSafeName(), chatTemplate.Id);
     }
     
     public static IEnumerable<ConfigurationSelectData<ConfidenceSchemes>> GetConfidenceSchemesData()

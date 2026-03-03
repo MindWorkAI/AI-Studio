@@ -10,6 +10,8 @@ namespace AIStudio.Tools.RAG.AugmentationProcesses;
 
 public sealed class AugmentationOne : IAugmentationProcess
 {
+    private static readonly ILogger<AugmentationOne> LOGGER = Program.LOGGER_FACTORY.CreateLogger<AugmentationOne>();
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AugmentationOne).Namespace, nameof(AugmentationOne));
     
     #region Implementation of IAugmentationProcess
@@ -24,14 +26,13 @@ public sealed class AugmentationOne : IAugmentationProcess
     public string Description => TB("This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.");
     
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
+    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
-        var logger = Program.SERVICE_PROVIDER.GetService<ILogger<AugmentationOne>>()!;
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         
         if(retrievalContexts.Count == 0)
         {
-            logger.LogWarning("No retrieval contexts were issued. Skipping the augmentation process.");
+            LOGGER.LogWarning("No retrieval contexts were issued. Skipping the augmentation process.");
             return chatThread;
         }
 
@@ -45,7 +46,7 @@ public sealed class AugmentationOne : IAugmentationProcess
             validationAgent.SetLLMProvider(provider);
             
             // Let's validate all retrieval contexts:
-            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastPrompt, chatThread, retrievalContexts, token);
+            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
          
             //
             // Now, filter the retrieval contexts to the most relevant ones:
@@ -57,7 +58,7 @@ public sealed class AugmentationOne : IAugmentationProcess
             retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
         }
         
-        logger.LogInformation($"Starting the augmentation process over {numTotalRetrievalContexts:###,###,###,###} retrieval contexts.");
+        LOGGER.LogInformation($"Starting the augmentation process over {numTotalRetrievalContexts:###,###,###,###} retrieval contexts.");
         
         //
         // We build a huge prompt from all retrieval contexts:

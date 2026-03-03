@@ -18,14 +18,14 @@ public partial class DataSourceLocalFileInfoDialog : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.embeddingProvider = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.DataSource.EmbeddingId);
+        this.embeddingProvider = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.DataSource.EmbeddingId) ?? EmbeddingProvider.NONE;
         this.fileInfo = new FileInfo(this.DataSource.FilePath);
         await base.OnInitializedAsync();
     }
 
     #endregion
 
-    private EmbeddingProvider embeddingProvider;
+    private EmbeddingProvider embeddingProvider = EmbeddingProvider.NONE;
     private FileInfo fileInfo = null!;
     
     private bool IsCloudEmbedding => !this.embeddingProvider.IsSelfHosted;

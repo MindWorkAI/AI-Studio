@@ -14,8 +14,22 @@
     SelectedValuesChanged="@this.OptionChanged">
         @foreach (var data in this.Data)
         {
-            <MudSelectItemExtended Value="@data.Value">
-                @data.Name
+            var isLockedValue = this.IsLockedValue(data.Value);
+            <MudSelectItemExtended Value="@data.Value" Disabled="@isLockedValue" Style="@(isLockedValue ? "pointer-events:auto !important;" : null)">
+                @if (isLockedValue)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexStart" Wrap="Wrap.NoWrap">
+                        @* MudTooltip.RootStyle is set as a workaround for issue -> https://github.com/MudBlazor/MudBlazor/issues/10882 *@
+                        <MudTooltip Text="@this.LockedTooltip()" Arrow="true" Placement="Placement.Right" RootStyle="display:inline-flex;">
+                            <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" Class="mr-1"/>
+                        </MudTooltip>
+                        @data.Name
+                    </MudStack>
+                }
+                else
+                {
+                    @data.Name
+                }
             </MudSelectItemExtended>
         }
 </MudSelectExtended>

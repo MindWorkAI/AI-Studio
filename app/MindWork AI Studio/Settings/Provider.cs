@@ -31,7 +31,8 @@ public sealed record Provider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    string AdditionalJsonApiParameters = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -70,7 +71,7 @@ public sealed record Provider(
     
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.Id;
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToName()}" : this.UsedLLMProvider.ToName();
     
     /// <inheritdoc />
     [JsonIgnore]
@@ -93,49 +94,66 @@ public sealed record Provider(
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid ID. The ID must be a valid GUID.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid ID. The ID must be a valid GUID. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("InstanceName", out var instanceNameValue) || !instanceNameValue.TryRead<string>(out var instanceName))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid instance name.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid instance name. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("UsedLLMProvider", out var usedLLMProviderValue) || !usedLLMProviderValue.TryRead<string>(out var usedLLMProviderText) || !Enum.TryParse<LLMProviders>(usedLLMProviderText, true, out var usedLLMProvider))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid LLM provider enum value.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid LLM provider enum value. (Plugin ID: {configPluginId})");
             return false;
         }
         
         if (!table.TryGetValue("Host", out var hostValue) || !hostValue.TryRead<string>(out var hostText) || !Enum.TryParse<Host>(hostText, true, out var host))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid host enum value.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid host enum value. (Plugin ID: {configPluginId})");
             return false;
         }
         
         if (!table.TryGetValue("Hostname", out var hostnameValue) || !hostnameValue.TryRead<string>(out var hostname))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid hostname.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid hostname. (Plugin ID: {configPluginId})");
             return false;
+        }
+
+        var hfInferenceProvider = HFInferenceProvider.NONE;
+        if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
+        {
+            if (!Enum.TryParse(hfInferenceProviderText, true, out hfInferenceProvider))
+            {
+                LOGGER.LogWarning($"The configured provider {idx} does not contain a valid Hugging Face inference provider enum value. (Plugin ID: {configPluginId})");
+                hfInferenceProvider = HFInferenceProvider.NONE;
+            }
         }
         
         if (!table.TryGetValue("Model", out var modelValue) || !modelValue.TryRead<LuaTable>(out var modelTable))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model table.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model table. (Plugin ID: {configPluginId})");
             return false;
         }
         
-        if (!TryReadModelTable(idx, modelTable, out var model))
+        if (!TryReadModelTable(idx, modelTable, configPluginId, out var model))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model configuration.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model configuration. (Plugin ID: {configPluginId})");
             return false;
+        }
+        
+        if (!table.TryGetValue("AdditionalJsonApiParameters", out var additionalJsonApiParametersValue) || !additionalJsonApiParametersValue.TryRead<string>(out var additionalJsonApiParameters))
+        {
+            // In this case, no reason exists to reject this provider, though.
+            LOGGER.LogWarning($"The configured provider {idx} does not contain valid additional JSON API parameters. (Plugin ID: {configPluginId})");
+            additionalJsonApiParameters = string.Empty;
         }
 
         provider = new Provider
         {
-            Num = 0,
+            Num = 0, // will be set later by the PluginConfigurationObject
             Id = id.ToString(),
             InstanceName = instanceName,
             UsedLLMProvider = usedLLMProvider,
@@ -144,28 +162,100 @@ public sealed record Provider(
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
-            Host = host
+            Host = host,
+            HFInferenceProvider = hfInferenceProvider,
+            AdditionalJsonApiParameters = additionalJsonApiParameters,
         };
-        
+
+        // Handle encrypted API key if present:
+        if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
+        {
+            if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
+                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+            else
+            {
+                var encryption = PluginFactory.EnterpriseEncryption;
+                if (encryption?.IsAvailable == true)
+                {
+                    if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
+                    {
+                        // Queue the API key for storage in the OS keyring:
+                        PendingEnterpriseApiKeys.Add(new(
+                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToName()}",
+                            instanceName,
+                            decryptedApiKey,
+                            SecretStoreType.LLM_PROVIDER));
+                        LOGGER.LogDebug($"Successfully decrypted API key for provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                    }
+                    else
+                        LOGGER.LogWarning($"Failed to decrypt API key for provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
+                }
+                else
+                    LOGGER.LogWarning($"The configured provider {idx} contains an encrypted API key, but no encryption secret is configured. (Plugin ID: {configPluginId})");
+            }
+        }
+
         return true;
     }
 
-    private static bool TryReadModelTable(int idx, LuaTable table, out Model model)
+    private static bool TryReadModelTable(int idx, LuaTable table, Guid configPluginId, out Model model)
     {
         model = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var id))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model ID.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model ID. (Plugin ID: {configPluginId})");
             return false;
         }
         
         if (!table.TryGetValue("DisplayName", out var displayNameValue) || !displayNameValue.TryRead<string>(out var displayName))
         {
-            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model display name.");
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid model display name. (Plugin ID: {configPluginId})");
             return false;
         }
         
         model = new(id, displayName);
         return true;
+    }
+
+    /// <summary>
+    /// Exports the provider configuration as a Lua configuration section.
+    /// </summary>
+    /// <param name="encryptedApiKey">Optional encrypted API key to include in the export.</param>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection(string? encryptedApiKey = null)
+    {
+        var hfInferenceProviderLine = string.Empty;
+        if (this.HFInferenceProvider is not HFInferenceProvider.NONE)
+        {
+            hfInferenceProviderLine = $"""
+                                       ["HFInferenceProvider"] = "{this.HFInferenceProvider}",
+                                       """;
+        }
+
+        var apiKeyLine = string.Empty;
+        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+        {
+            apiKeyLine = $"""
+                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
+                          """;
+        }
+
+        return $$"""
+                CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
+                    ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
+                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+
+                    ["Host"] = "{{this.Host}}",
+                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    {{hfInferenceProviderLine}}
+                    {{apiKeyLine}}
+                    ["AdditionalJsonApiParameters"] = "{{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}}",
+                    ["Model"] = {
+                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
+                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
+                    },
+                }
+                """;
     }
 }

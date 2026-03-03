@@ -33,10 +33,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     private ILogger<ChatComponent> Logger { get; set; } = null!;
-    
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -57,6 +57,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
+    private HashSet<FileAttachment> chatDocumentPaths = [];
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -78,7 +79,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments, if any:
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
@@ -92,7 +97,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             // Use chat thread sent by the user:
             this.ChatThread = deferredContent;
-            this.Logger.LogInformation($"The chat '{this.ChatThread.Name}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
+            this.ChatThread.IncludeDateTime = true;
+            
+            this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
             // We know already that the chat thread is not null,
@@ -326,7 +333,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = chatTemplate;
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
             this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments (replaces existing):
+        this.chatDocumentPaths.Clear();
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         if(this.ChatThread is null)
             return;
 
@@ -425,6 +437,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.ChatThread = new()
             {
+                IncludeDateTime = true,
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
@@ -462,6 +475,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
+                FileAttachments = [..this.chatDocumentPaths.Where(x => x.IsValid)],
             };
 
             //
@@ -507,6 +521,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Clear the input field:
         await this.inputField.FocusAsync();
         this.userInput = string.Empty;
+        this.chatDocumentPaths.Clear();
         await this.inputField.BlurAsync();
         
         // Enable the stream state for the chat component:
@@ -663,6 +678,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             //
             this.ChatThread = new()
             {
+                IncludeDateTime = true,
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
@@ -673,9 +689,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
         }
-        
+
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        
+
+        // Apply template's file attachments:
+        this.chatDocumentPaths.Clear();
+        foreach (var attachment in this.currentChatTemplate.FileAttachments)
+            this.chatDocumentPaths.Add(attachment);
+
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();
         
@@ -801,11 +822,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Try to select the profile:
         if (!string.IsNullOrWhiteSpace(chatProfile))
-        {
-            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile);
-            if(this.currentProfile == default)
-                this.currentProfile = Profile.NO_PROFILE;
-        }
+            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile) ?? Profile.NO_PROFILE;
         
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))
@@ -895,6 +912,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
             
             case Event.CHAT_STREAMING_DONE:
+                // Streaming mutates the last AI block over time.
+                // In manual storage mode, a save during streaming must not
+                // mark the final streamed state as already persisted.
+                this.hasUnsavedChanges = true;
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
                 break;
@@ -933,10 +954,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         if (this.cancellationTokenSource is not null)
         {
-            if(!this.cancellationTokenSource.IsCancellationRequested)
-                await this.cancellationTokenSource.CancelAsync();
+            try
+            {
+                if(!this.cancellationTokenSource.IsCancellationRequested)
+                    await this.cancellationTokenSource.CancelAsync();
             
-            this.cancellationTokenSource.Dispose();
+                this.cancellationTokenSource.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 

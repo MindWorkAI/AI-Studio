@@ -9,9 +9,9 @@ public interface IRetrievalContext
     /// The name of the data source.
     /// </summary>
     /// <remarks>
-    /// Depending on the configuration, the AI is selecting the appropriate data source.
-    /// In order to inform the user about where the information is coming from, the data
-    /// source name is necessary.
+    /// This is not the name the user chooses but the name of the source where
+    /// the match was found. This could be a document or database name, a website
+    /// or a directory on a remote server, etc.
     /// </remarks>
     public string DataSourceName { get; init; }
 

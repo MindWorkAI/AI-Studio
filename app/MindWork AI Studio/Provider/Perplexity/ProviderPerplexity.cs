@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Perplexity;
 
-public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.ai/", LOGGER)
+public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY, "https://api.perplexity.ai/", LOGGER)
 {
     private static readonly ILogger<ProviderPerplexity> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderPerplexity>();
 
@@ -34,16 +34,22 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Perplexity HTTP chat request:
         var perplexityChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -53,25 +59,9 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -98,6 +88,18 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
+    
+    /// <inhertidoc />
+    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
@@ -117,36 +119,10 @@ public sealed class ProviderPerplexity() : BaseProvider("https://api.perplexity.
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        if(modelName.IndexOf("reasoning") is not -1 ||
-           modelName.IndexOf("deep-research") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.MULTIPLE_IMAGE_INPUT,
-                
-                Capability.TEXT_OUTPUT,
-                Capability.IMAGE_OUTPUT,
-                
-                Capability.ALWAYS_REASONING,
-                Capability.WEB_SEARCH,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        return
-        [
-            Capability.TEXT_INPUT,
-            Capability.MULTIPLE_IMAGE_INPUT,
-            
-            Capability.TEXT_OUTPUT,
-            Capability.IMAGE_OUTPUT,
-            
-            Capability.WEB_SEARCH,
-            Capability.CHAT_COMPLETION_API,
-        ];
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
     
     #endregion

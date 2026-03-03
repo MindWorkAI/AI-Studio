@@ -60,17 +60,17 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// The enabled preview features.
     /// </summary>
-    public HashSet<PreviewFeatures> EnabledPreviewFeatures { get; set; } = new();
+    public HashSet<PreviewFeatures> EnabledPreviewFeatures { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnabledPreviewFeatures, []);
     
     /// <summary>
     /// Should we preselect a provider for the entire app?
     /// </summary>
-    public string PreselectedProvider { get; set; } = string.Empty;
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
     
     /// <summary>
     /// Should we preselect a profile for the entire app?
     /// </summary>
-    public string PreselectedProfile { get; set; } = string.Empty;
+    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProfile, string.Empty);
     
     /// <summary>
     /// Should we preselect a chat template for the entire app?
@@ -78,7 +78,29 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string PreselectedChatTemplate { get; set; } = string.Empty;
 
     /// <summary>
+    /// Which transcription provider should be used?
+    /// </summary>
+    public string UseTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UseTranscriptionProvider, string.Empty);
+
+    /// <summary>
+    /// The global keyboard shortcut for toggling voice recording.
+    /// Uses Tauri's shortcut format, e.g., "CmdOrControl+1" (Cmd+1 on macOS, Ctrl+1 on Windows/Linux).
+    /// Set to empty string to disable the global shortcut.
+    /// </summary>
+    public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
+
+    /// <summary>
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
+    
+    /// <summary>
+    /// Should administration settings be visible in the UI?
+    /// </summary>
+    public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
+
+    /// <summary>
+    /// List of assistants that should be hidden from the UI.
+    /// </summary>
+    public HashSet<ConfigurableAssistant> HiddenAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HiddenAssistants, []);
 }

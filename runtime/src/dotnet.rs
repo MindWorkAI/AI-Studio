@@ -1,19 +1,23 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
-use log::{debug, error, info, warn};
+use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use rocket::get;
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tauri::Url;
-use crate::api_token::{APIToken, API_TOKEN};
+use crate::api_token::APIToken;
+use crate::runtime_api_token::API_TOKEN;
 use crate::app_window::change_location_to;
-use crate::certificate::CERTIFICATE_FINGERPRINT;
+use crate::runtime_certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
-use crate::environment::is_dev;
+use crate::environment::{is_dev, DATA_DIRECTORY};
 use crate::network::get_available_port;
 use crate::runtime_api::API_SERVER_PORT;
+use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
+use crate::sidecar_types::SidecarType;
 
 // The .NET server is started in a separate process and communicates with this
 // runtime process via IPC. However, we do net start the .NET server in
@@ -25,6 +29,62 @@ static DOTNET_SERVER: Lazy<Arc<Mutex<Option<CommandChild>>>> = Lazy::new(|| Arc:
 static DOTNET_SERVER_PORT: Lazy<u16> = Lazy::new(|| get_available_port().unwrap());
 
 static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+
+pub const PID_FILE_NAME: &str = "mindwork_ai_studio.pid";
+const SIDECAR_TYPE:SidecarType = SidecarType::Dotnet;
+
+/// Removes ANSI escape sequences and non-printable control chars from stdout lines.
+fn sanitize_stdout_line(line: &str) -> String {
+    let mut sanitized = String::with_capacity(line.len());
+    let mut chars = line.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch == '\u{1B}' {
+            if let Some(next) = chars.peek().copied() {
+                // CSI sequence: ESC [ ... <final>
+                if next == '[' {
+                    chars.next();
+                    for csi_char in chars.by_ref() {
+                        let code = csi_char as u32;
+                        if (0x40..=0x7E).contains(&code) {
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
+                // OSC sequence: ESC ] ... (BEL or ESC \)
+                if next == ']' {
+                    chars.next();
+                    let mut previous_was_escape = false;
+                    for osc_char in chars.by_ref() {
+                        if osc_char == '\u{07}' {
+                            break;
+                        }
+
+                        if previous_was_escape && osc_char == '\\' {
+                            break;
+                        }
+
+                        previous_was_escape = osc_char == '\u{1B}';
+                    }
+                    continue;
+                }
+            }
+
+            // Unknown escape sequence: ignore the escape char itself.
+            continue;
+        }
+
+        if ch.is_control() && ch != '\t' {
+            continue;
+        }
+
+        sanitized.push(ch);
+    }
+
+    sanitized
+}
 
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
@@ -93,50 +153,20 @@ pub fn start_dotnet_server() {
                 .envs(dotnet_server_environment)
                 .spawn()
                 .expect("Failed to spawn .NET server process.");
-
         let server_pid = child.pid();
         info!(Source = "Bootloader .NET"; "The .NET server process started with PID={server_pid}.");
+        log_potential_stale_process(Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME), server_pid, SIDECAR_TYPE);
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
 
         // Log the output of the .NET server:
+        // NOTE: Log events are sent via structured HTTP API calls.
+        // This loop serves for fundamental output (e.g., startup errors).
         while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
-
-            // Remove newline characters from the end:
-            let line = line.trim_end();
-
-            // Starts the line with '=>'?
-            if line.starts_with("=>") {
-                // Yes. This means that the line is a log message from the .NET server.
-                // The format is: '<YYYY-MM-dd HH:mm:ss.fff> [<log level>] <source>: <message>'.
-                // We try to parse this line and log it with the correct log level:
-                let line = line.trim_start_matches("=>").trim();
-                let parts = line.split_once(": ").unwrap();
-                let left_part = parts.0.trim();
-                let message = parts.1.trim();
-                let parts = left_part.split_once("] ").unwrap();
-                let level = parts.0.split_once("[").unwrap().1.trim();
-                let source = parts.1.trim();
-                match level {
-                    "Trace" => debug!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Debug" => debug!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Information" => info!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Warning" => warn!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Error" => error!(Source = ".NET Server", Comp = source; "{message}"),
-                    "Critical" => error!(Source = ".NET Server", Comp = source; "{message}"),
-
-                    _ => error!(Source = ".NET Server", Comp = source; "{message} (unknown log level '{level}')"),
-                }
-            } else {
-                let lower_line = line.to_lowercase();
-                if lower_line.contains("error") {
-                    error!(Source = ".NET Server"; "{line}");
-                } else if lower_line.contains("warning") {
-                    warn!(Source = ".NET Server"; "{line}");
-                } else {
-                    info!(Source = ".NET Server"; "{line}");
-                }
+            let line = sanitize_stdout_line(line.trim_end());
+            if !line.trim().is_empty() {
+                info!(Source = ".NET Server (stdout)"; "{line}");
             }
         }
     });
@@ -183,5 +213,15 @@ pub fn stop_dotnet_server() {
         }
     } else {
         warn!("The .NET server process was not started or is already stopped.");
+    }
+    info!("Start dotnet server cleanup");
+    cleanup_dotnet_server();
+}
+
+/// Remove old Pid files and kill the corresponding processes
+pub fn cleanup_dotnet_server() {
+    let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME);
+    if let Err(e) = kill_stale_process(pid_path, SIDECAR_TYPE) {
+        warn!(Source = ".NET"; "Error during the cleanup of .NET: {}", e);
     }
 }

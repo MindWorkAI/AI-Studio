@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Anthropic;
 
-public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.com/v1/", LOGGER)
+public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "https://api.anthropic.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
 
@@ -23,39 +23,61 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters("system");
 
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesAsync(
+            this.Provider, chatModel,
+            
+            // Anthropic-specific role mapping:
+            role => role switch
+            {
+                ChatRole.USER => "user",
+                ChatRole.AI => "assistant",
+                ChatRole.AGENT => "assistant",
+
+                _ => "user",
+            },
+            
+            // Anthropic uses the standard text sub-content:
+            text => new SubContentText
+            {
+                Text = text,
+            },
+            
+            // Anthropic-specific image sub-content:
+            async attachment => new SubContentImage
+            {
+                Source = new SubContentBase64Image
+                {
+                    Data = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                        ? base64Content
+                        : string.Empty,
+                    
+                    MediaType = attachment.DetermineMimeType(),
+                }
+            }
+        );
+        
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
             
             // Build the messages:
-            Messages = [..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [..messages],
             
-            System = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
-            MaxTokens = 4_096,
+            System = chatThread.PrepareSystemPrompt(settingsManager),
+            MaxTokens = apiParameters.TryGetValue("max_tokens", out var value) && value is int intValue ? intValue : 4_096,
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -85,6 +107,18 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
+    
+    /// <inhertidoc />
+    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
@@ -99,7 +133,7 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
             new Model("claude-3-opus-latest", "Claude 3 Opus (Latest)"),
         };
         
-        return this.LoadModels(token, apiKeyProvisional).ContinueWith(t => t.Result.Concat(additionalModels).OrderBy(x => x.Id).AsEnumerable(), token);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional).ContinueWith(t => t.Result.Concat(additionalModels).OrderBy(x => x.Id).AsEnumerable(), token);
     }
 
     /// <inheritdoc />
@@ -113,58 +147,21 @@ public sealed class ProviderAnthropic() : BaseProvider("https://api.anthropic.co
     {
         return Task.FromResult(Enumerable.Empty<Model>());
     }
-
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        // Claude 4.x models:
-        if(modelName.StartsWith("claude-opus-4") || modelName.StartsWith("claude-sonnet-4"))
-            return [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Claude 3.7 is able to do reasoning:
-        if(modelName.StartsWith("claude-3-7"))
-            return [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // All other 3.x models are able to process text and images as input:
-        if(modelName.StartsWith("claude-3-"))
-            return [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Any other model is able to process text only:
-        return [
-            Capability.TEXT_INPUT,
-            Capability.TEXT_OUTPUT,
-            Capability.FUNCTION_CALLING,
-            Capability.CHAT_COMPLETION_API,
-        ];
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
     
     #endregion
     
-    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

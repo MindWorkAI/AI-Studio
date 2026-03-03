@@ -38,6 +38,14 @@ public partial class ProfileSelection : MSGComponentBase
     
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
     
+    private string ProfileIcon(Profile profile)
+    {
+        if (profile.IsEnterpriseConfiguration)
+            return Icons.Material.Filled.Business;
+        
+        return Icons.Material.Filled.Person4;
+    }
+    
     private async Task SelectionChanged(Profile profile)
     {
         this.CurrentProfile = profile;

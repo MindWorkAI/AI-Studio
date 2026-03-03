@@ -17,6 +17,9 @@ public partial class ProfileFormSelection : MSGComponentBase
     
     [Parameter]
     public Func<Profile, string?> Validation { get; set; } = _ => null;
+
+    [Parameter]
+    public bool Disabled { get; set; }
     
     [Inject]
     public IDialogService DialogService { get; init; } = null!;

@@ -20,7 +20,13 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     
     /// <inheritdoc />
     public string Name { get; init; } = string.Empty;
-    
+
+    /// <summary>
+    /// The description of the data source. What kind of data does it contain?
+    /// What is the data source used for?
+    /// </summary>
+    public string Description { get; init; } = string.Empty;
+
     /// <inheritdoc />
     public DataSourceType Type { get; init; } = DataSourceType.NONE;
     
@@ -34,7 +40,7 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     public ushort MaxMatches { get; init; } = 10;
     
     /// <inheritdoc />
-    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
+    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
     {
         IReadOnlyList<IRetrievalContext> retrievalContext = new List<IRetrievalContext>();
         return Task.FromResult(retrievalContext);

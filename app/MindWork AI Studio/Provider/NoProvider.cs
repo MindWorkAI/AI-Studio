@@ -9,15 +9,22 @@ public class NoProvider : IProvider
 {
     #region Implementation of IProvider
 
+    public LLMProviders Provider => LLMProviders.NONE;
+    
     public string Id => "none";
 
     public string InstanceName { get; set; } = "None";
+
+    /// <inheritdoc />
+    public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 
     public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
     
     public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    
+    public Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 
     public async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatChatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
@@ -30,6 +37,10 @@ public class NoProvider : IProvider
         await Task.FromResult(0);
         yield break;
     }
+
+    public Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default) => Task.FromResult(string.Empty);
+    
+    public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts) => Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
 
     public IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => [ Capability.NONE ];
 

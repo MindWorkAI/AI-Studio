@@ -1,4 +1,4 @@
-using AIStudio.Provider.OpenAI;
+using System.Text.Json.Serialization;
 
 namespace AIStudio.Provider.Anthropic;
 
@@ -12,8 +12,13 @@ namespace AIStudio.Provider.Anthropic;
 /// <param name="System">The system prompt for the chat completion.</param>
 public readonly record struct ChatRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     int MaxTokens,
     bool Stream,
     string System
-);
+)
+{
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
+}

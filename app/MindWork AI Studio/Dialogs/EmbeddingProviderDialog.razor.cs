@@ -71,7 +71,10 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
+
+    [Inject]
+    private ILogger<EmbeddingProviderDialog> Logger { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -85,7 +88,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
-    
+    private string dataLoadingModelsIssue = string.Empty;
+
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
     
@@ -102,6 +106,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
+            IsModelProvidedManually = () => this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is Host.OLLAMA,
         };
     }
     
@@ -129,6 +134,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
+            IsEnterpriseConfiguration = false,
+            EnterpriseConfigurationPluginId = Guid.Empty,
         };
     }
     
@@ -136,6 +143,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     protected override async Task OnInitializedAsync()
     {
+        // Call the base initialization first so that the I18N is ready:
+        await base.OnInitializedAsync();
+        
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
@@ -162,7 +172,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             }
             
             // Load the API key:
-            var requestedSecret = await this.RustService.GetAPIKey(this, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
+            var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
             else
@@ -177,8 +187,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
             await this.ReloadModels();
         }
-        
-        await base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -195,7 +203,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataId;
+    public string SecretId => this.DataLLMProvider.ToName();
     
     public string SecretName => this.DataName;
 
@@ -205,7 +213,16 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     {
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.providerValidation.ValidatingModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
@@ -216,7 +233,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKey))
         {
             // Store the API key in the OS secure storage:
-            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey);
+            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.EMBEDDING_PROVIDER);
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
@@ -237,21 +254,50 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     }
 
     private void Cancel() => this.MudDialog.Cancel();
-    
+
+    private async Task OnAPIKeyChanged(string apiKey)
+    {
+        this.dataAPIKey = apiKey;
+        if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
+        {
+            this.dataAPIKeyStorageIssue = string.Empty;
+            await this.form.Validate();
+        }
+    }
+
+    private void OnHostChanged(Host selectedHost)
+    {
+        // When the host changes, reset the model selection state:
+        this.DataHost = selectedHost;
+        this.DataModel = default;
+        this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
     private async Task ReloadModels()
     {
+        this.dataLoadingModelsIssue = string.Empty;
         var currentEmbeddingProviderSettings = this.CreateEmbeddingProviderSettings();
         var provider = currentEmbeddingProviderSettings.CreateProvider();
-        if(provider is NoProvider)
+        if (provider is NoProvider)
             return;
-        
-        var models = await provider.GetEmbeddingModels(this.dataAPIKey);
-        
-        // Order descending by ID means that the newest models probably come first:
-        var orderedModels = models.OrderByDescending(n => n.Id);
-        
-        this.availableModels.Clear();
-        this.availableModels.AddRange(orderedModels);
+
+        try
+        {
+            var models = await provider.GetEmbeddingModels(this.dataAPIKey);
+
+            // Order descending by ID means that the newest models probably come first:
+            var orderedModels = models.OrderByDescending(n => n.Id);
+
+            this.availableModels.Clear();
+            this.availableModels.AddRange(orderedModels);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
+            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+        }
     }
     
     private string APIKeyText => this.DataLLMProvider switch

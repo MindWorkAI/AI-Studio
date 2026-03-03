@@ -59,8 +59,7 @@ public static class DirectoryInfoExtensions
 
         reportCurrentTotalSize(totalSize);
         reportCurrentNumFiles(numFiles);
-        
-        if(done is not null)
-            done();
+
+        done?.Invoke();
     }
 }

@@ -1,0 +1,50 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused.")
+        </MudJustifiedText>
+        
+        <MudFocusTrap DefaultFocus="DefaultFocus.FirstChild">
+            <MudTextField
+                @ref="@this.inputField"
+                T="string"
+                Text="@this.ShowText"
+                Variant="Variant.Outlined"
+                Label="@T("Define a shortcut")"
+                Placeholder="@T("Press a key combination...")"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Keyboard"
+                Immediate="@true"
+                TextUpdateSuppression="false"
+                OnKeyDown="@this.HandleKeyDown"
+                OnBlur="@this.HandleBlur"
+                UserAttributes="@USER_INPUT_ATTRIBUTES"
+                AutoFocus="true"
+                KeyDownPreventDefault="true"
+                KeyUpPreventDefault="true"
+                HelperText="@T("Supported modifiers: Ctrl/Cmd, Shift, Alt.")"
+                Class="me-3"/>
+        </MudFocusTrap>
+        
+        @if (!string.IsNullOrWhiteSpace(this.validationMessage))
+        {
+            <MudAlert Severity="@this.validationSeverity" Variant="Variant.Filled" Class="mb-3">
+                @this.validationMessage
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.ClearShortcut" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Clear">
+            @T("Clear Shortcut")
+        </MudButton>
+        <MudSpacer/>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.hasValidationError">
+            @T("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

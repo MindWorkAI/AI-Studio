@@ -27,7 +27,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
 
     protected override async Task OnInitializedAsync()
     {
-        this.embeddingProvider = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.DataSource.EmbeddingId);
+        this.embeddingProvider = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.DataSource.EmbeddingId) ?? EmbeddingProvider.NONE;
         this.directoryInfo = new DirectoryInfo(this.DataSource.Path);
         
         if (this.directoryInfo.Exists)
@@ -46,11 +46,12 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
     
     private readonly CancellationTokenSource cts = new();
     
-    private EmbeddingProvider embeddingProvider;
+    private EmbeddingProvider embeddingProvider = EmbeddingProvider.NONE;
     private DirectoryInfo directoryInfo = null!;
     private long directorySizeBytes;
     private long directorySizeNumFiles;
     private readonly StringBuilder directoryFiles = new();
+    private string directoryFilesText = string.Empty;
     private Task directorySizeTask = Task.CompletedTask;
     
     private bool IsOperationInProgress { get; set; } = true;
@@ -63,6 +64,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
     {
         this.directoryFiles.Append("- ");
         this.directoryFiles.AppendLine(file);
+        this.directoryFilesText = this.directoryFiles.ToString();
     }
 
     private void UpdateDirectorySize(long size)

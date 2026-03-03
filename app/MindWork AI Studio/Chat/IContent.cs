@@ -41,13 +41,24 @@ public interface IContent
     /// <summary>
     /// The provided sources, if any.
     /// </summary>
+    /// <remarks>
+    /// We cannot use ISource here because System.Text.Json does not support
+    /// interface serialization. So we have to use a concrete class.
+    /// </remarks>
     [JsonIgnore]
     public List<Source> Sources { get; set; }
+
+    /// <summary>
+    /// Represents a collection of file attachments associated with the content.
+    /// This property contains a list of file attachments that are appended
+    /// to the content to provide additional context or resources.
+    /// </summary>
+    public List<FileAttachment> FileAttachments { get; set; }
     
     /// <summary>
     /// Uses the provider to create the content.
     /// </summary>
-    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatChatThread, CancellationToken token = default);
+    public Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatChatThread, CancellationToken token = default);
 
     /// <summary>
     /// Creates a deep copy

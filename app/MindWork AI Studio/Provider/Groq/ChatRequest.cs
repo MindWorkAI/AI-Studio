@@ -1,4 +1,4 @@
-using AIStudio.Provider.OpenAI;
+using System.Text.Json.Serialization;
 
 namespace AIStudio.Provider.Groq;
 
@@ -11,7 +11,12 @@ namespace AIStudio.Provider.Groq;
 /// <param name="Seed">The seed for the chat completion.</param>
 public readonly record struct ChatRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     bool Stream,
     int Seed
-);
+)
+{
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
+}

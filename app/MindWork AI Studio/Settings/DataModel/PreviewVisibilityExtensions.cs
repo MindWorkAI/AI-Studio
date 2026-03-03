@@ -11,6 +11,8 @@ public static class PreviewVisibilityExtensions
         
         if (visibility >= PreviewVisibility.BETA)
         {
+            features.Add(PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025);
+            features.Add(PreviewFeatures.PRE_SPEECH_TO_TEXT_2026);
         }
         
         if (visibility >= PreviewVisibility.ALPHA)

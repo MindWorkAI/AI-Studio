@@ -97,6 +97,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
+        GlobalShortcutService.Initialize();
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
@@ -114,11 +115,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.LoadNavItems();
 
         await base.OnInitializedAsync();
-    }
-
-    private void LoadNavItems()
-    {
-        this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
 
     #endregion
@@ -215,9 +211,35 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             //
                             // Check if there is an enterprise configuration plugin to download:
                             //
-                            var enterpriseEnvironment = this.MessageBus.CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT).FirstOrDefault();
-                            if (enterpriseEnvironment != default)
-                                await PluginFactory.TryDownloadingConfigPluginAsync(enterpriseEnvironment.ConfigurationId, enterpriseEnvironment.ConfigurationServerUrl);
+                            var enterpriseEnvironments = this.MessageBus
+                                .CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
+                                .Where(env => env != default)
+                                .ToList();
+                            
+                            var failedDeferredConfigIds = new HashSet<Guid>();
+                            foreach (var env in enterpriseEnvironments)
+                            {
+                                var wasDownloadSuccessful = await PluginFactory.TryDownloadingConfigPluginAsync(env.ConfigurationId, env.ConfigurationServerUrl);
+                                if (!wasDownloadSuccessful)
+                                {
+                                    failedDeferredConfigIds.Add(env.ConfigurationId);
+                                    this.Logger.LogWarning("Failed to download deferred enterprise configuration '{ConfigId}' during startup. Keeping managed plugins unchanged.", env.ConfigurationId);
+                                }
+                            }
+
+                            if (EnterpriseEnvironmentService.HasValidEnterpriseSnapshot)
+                            {
+                                var activeConfigIds = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS
+                                    .Select(env => env.ConfigurationId)
+                                    .ToHashSet();
+                                
+                                PluginFactory.RemoveUnreferencedManagedConfigurationPlugins(activeConfigIds);
+                                if (failedDeferredConfigIds.Count > 0)
+                                    this.Logger.LogWarning("Deferred startup updates failed for {FailedCount} enterprise configuration(s). Those configurations were kept unchanged.", failedDeferredConfigIds.Count);
+                            }
+
+                            // Initialize the enterprise encryption service for decrypting API keys:
+                            await PluginFactory.InitializeEnterpriseEncryption(this.RustService);
 
                             // Load (but not start) all plugins without waiting for them:
                             #if DEBUG
@@ -251,6 +273,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     #endregion
 
+    private void LoadNavItems()
+    {
+        this.navItems = new List<NavBarItem>(this.GetNavItems());
+    }
+    
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
@@ -264,7 +291,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
         yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
         yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
-        yield return new(T("About"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
+        yield return new(T("Information"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
         yield return new(T("Settings"), Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
     }
 
@@ -341,7 +368,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
     }
-
+    
     #region Implementation of IDisposable
 
     public void Dispose()

@@ -63,13 +63,33 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
-                    {
-                        var isEnabled = this.SettingsManager.IsPluginEnabled(context);
-                        <MudTooltip Text="@(isEnabled ? T("Disable plugin") : T("Enable plugin"))">
-                            <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
-                        </MudTooltip>
-                    }
+                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                        @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
+                        {
+                            var isEnabled = this.SettingsManager.IsPluginEnabled(context);
+                            <MudTooltip Text="@(isEnabled ? T("Disable plugin") : T("Enable plugin"))">
+                                <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
+                            </MudTooltip>
+                        }
+                        
+                        @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
+                        {
+                            var sourceUrl = context.SourceURL;
+                            var isSendingMail = IsSendingMail(sourceUrl);
+                            if(isSendingMail)
+                            {
+                                <MudTooltip Text="@T("Send a mail")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="@T("Open website")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
+                                </MudTooltip>
+                            }
+                        }
+                    </MudStack>
                 </MudTd>
             </RowTemplate>
         </MudTable>

@@ -1,7 +1,4 @@
-﻿using System.Reflection;
-
-using AIStudio.Components;
-using AIStudio.Tools.Metadata;
+﻿using AIStudio.Components;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -11,9 +8,8 @@ namespace AIStudio.Dialogs;
 
 public partial class PandocDialog : MSGComponentBase
 {
-    private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
-    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
-    private static readonly RID CPU_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
+    // Use runtime detection instead of metadata to ensure correct RID on dev machines:
+    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
     
     [Parameter]
     public bool ShowInstallationPage { get; set; }

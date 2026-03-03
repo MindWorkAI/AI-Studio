@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{PathBuf};
 
 fn main() {
     tauri_build::build();

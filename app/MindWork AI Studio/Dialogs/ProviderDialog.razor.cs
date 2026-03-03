@@ -78,8 +78,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public bool IsEditing { get; init; }
     
+    [Parameter]
+    public string AdditionalJsonApiParameters { get; set; } = string.Empty;
+    
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private ILogger<ProviderDialog> Logger { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -94,6 +100,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
+    private string dataLoadingModelsIssue = string.Empty;
+    private bool showExpertSettings;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -111,30 +119,42 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
+            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
         };
     }
 
     private AIStudio.Settings.Provider CreateProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
+
+        // Determine the model based on the provider and host configuration:
+        Model model;
+        if (this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+        {
+            // Use system model placeholder for hosts that don't support model selection (e.g., llama.cpp):
+            model = Model.SYSTEM_MODEL;
+        }
+        else if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
+        {
+            // These providers require manual model entry:
+            model = new Model(this.dataManuallyModel, null);
+        }
+        else
+            model = this.DataModel;
+
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
-            
-            Model = this.DataLLMProvider switch
-            {
-                LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE => new Model(this.dataManuallyModel, null),
-                _ => this.DataModel
-            },
-            
+            Model = model,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
+            AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
         };
     }
 
@@ -142,6 +162,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     protected override async Task OnInitializedAsync()
     {
+        // Call the base initialization first so that the I18N is ready:
+        await base.OnInitializedAsync();
+        
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
@@ -149,6 +172,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         #pragma warning disable MWAIS0001
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         #pragma warning restore MWAIS0001
+
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters);
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -170,7 +195,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             }
             
             // Load the API key:
-            var requestedSecret = await this.RustService.GetAPIKey(this, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
+            var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
             else
@@ -185,8 +210,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
             await this.ReloadModels();
         }
-        
-        await base.OnInitializedAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -214,7 +237,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         await this.form.Validate();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
-        
+
+        // Manually validate the model selection (needed when no models are loaded
+        // and the MudSelect is not rendered):
+        var modelValidationError = this.providerValidation.ValidatingModel(this.DataModel);
+        if (!string.IsNullOrWhiteSpace(modelValidationError))
+        {
+            this.dataIssues = [..this.dataIssues, modelValidationError];
+            this.dataIsValid = false;
+        }
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
@@ -225,7 +257,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKey))
         {
             // Store the API key in the OS secure storage:
-            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey);
+            var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.LLM_PROVIDER);
             if (!storeResponse.Success)
             {
                 this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
@@ -246,21 +278,50 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     }
 
     private void Cancel() => this.MudDialog.Cancel();
+
+    private async Task OnAPIKeyChanged(string apiKey)
+    {
+        this.dataAPIKey = apiKey;
+        if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
+        {
+            this.dataAPIKeyStorageIssue = string.Empty;
+            await this.form.Validate();
+        }
+    }
+
+    private void OnHostChanged(Host selectedHost)
+    {
+        // When the host changes, reset the model selection state:
+        this.DataHost = selectedHost;
+        this.DataModel = default;
+        this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
     
     private async Task ReloadModels()
     {
+        this.dataLoadingModelsIssue = string.Empty;
         var currentProviderSettings = this.CreateProviderSettings();
         var provider = currentProviderSettings.CreateProvider();
-        if(provider is NoProvider)
+        if (provider is NoProvider)
             return;
-        
-        var models = await provider.GetTextModels(this.dataAPIKey);
-        
-        // Order descending by ID means that the newest models probably come first:
-        var orderedModels = models.OrderByDescending(n => n.Id);
-        
-        this.availableModels.Clear();
-        this.availableModels.AddRange(orderedModels);
+
+        try
+        {
+            var models = await provider.GetTextModels(this.dataAPIKey);
+
+            // Order descending by ID means that the newest models probably come first:
+            var orderedModels = models.OrderByDescending(n => n.Id);
+
+            this.availableModels.Clear();
+            this.availableModels.AddRange(orderedModels);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
+            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+        }
     }
     
     private string APIKeyText => this.DataLLMProvider switch
@@ -268,4 +329,20 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         LLMProviders.SELF_HOSTED => T("(Optional) API Key"),
         _ => T("API Key"),
     };
+    
+    private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+
+    private void OnInputChangeExpertSettings()
+    {
+        this.AdditionalJsonApiParameters = this.AdditionalJsonApiParameters.Trim().TrimEnd(',', ' ');
+    }
+    
+    private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
+
+    private static string GetPlaceholderExpertSettings => 
+      """
+      "temperature": 0.5,
+      "top_p": 0.9,
+      "frequency_penalty": 0.0
+      """;
 }

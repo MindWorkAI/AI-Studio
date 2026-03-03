@@ -58,7 +58,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     public ushort MaxMatches { get; init; } = 10;
     
     /// <inheritdoc />
-    public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastPrompt, ChatThread thread, CancellationToken token = default)
+    public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
     {
         // Important: Do not dispose the RustService here, as it is a singleton.
         var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
@@ -70,11 +70,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         {
             var retrievalRequest = new RetrievalRequest
             {
-                LatestUserPromptType = lastPrompt.ToERIContentType,
-                LatestUserPrompt = lastPrompt switch
+                LatestUserPromptType = lastUserPrompt.ToERIContentType,
+                LatestUserPrompt = lastUserPrompt switch
                 {
                     ContentText text => text.Text,
-                    ContentImage image => await image.AsBase64(token),
+                    ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                        ? base64Image 
+                        : string.Empty,
                     _ => string.Empty
                 },
                 
@@ -103,7 +105,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Links = eriContext.Links,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 MatchedText = eriContext.MatchedContent,
-                                DataSourceName = this.Name,
+                                DataSourceName = eriContext.Name,
                                 SurroundingContent = eriContext.SurroundingContent,
                             });
                             break;
@@ -117,7 +119,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Source = eriContext.MatchedContent,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
                                 SourceType = ContentImageSource.BASE64,
-                                DataSourceName = this.Name,
+                                DataSourceName = eriContext.Name,
                             });
                             break;
                         

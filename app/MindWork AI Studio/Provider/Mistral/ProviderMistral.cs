@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Mistral;
 
-public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/", LOGGER)
+public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "https://api.mistral.ai/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderMistral> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderMistral>();
 
@@ -23,16 +23,22 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
 
         // Prepare the system prompt:
-        var systemPrompt = new RegularMessage
+        var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the Mistral HTTP chat request:
         var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest
@@ -42,30 +48,15 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new RegularMessage
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
             
             // Right now, we only support streaming completions:
             Stream = true,
-            SafePrompt = false,
+            SafePrompt = apiParameters.TryGetValue("safe_prompt", out var value) && value is true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
+        
         async Task<HttpRequestMessage> RequestBuilder()
         {
             // Build the HTTP post request:
@@ -90,11 +81,25 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override async Task<string> TranscribeAudioAsync(Provider.Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
+    }
+
+    /// <inhertidoc />
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Provider.Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
+    }
 
     /// <inheritdoc />
     public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModelList(apiKeyProvisional, token);
+        var modelResponse = await this.LoadModelList(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         if(modelResponse == default)
             return [];
         
@@ -108,7 +113,7 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
     /// <inheritdoc />
     public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelResponse = await this.LoadModelList(apiKeyProvisional, token);
+        var modelResponse = await this.LoadModelList(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
         if(modelResponse == default)
             return [];
         
@@ -122,64 +127,25 @@ public sealed class ProviderMistral() : BaseProvider("https://api.mistral.ai/v1/
         return Task.FromResult(Enumerable.Empty<Provider.Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Provider.Model model)
+    /// <inheritdoc />
+    public override Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        // Pixtral models are able to do process images:
-        if (modelName.IndexOf("pixtral") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Mistral medium:
-        if (modelName.IndexOf("mistral-medium-") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Mistral small:
-        if (modelName.IndexOf("mistral-small-") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.FUNCTION_CALLING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Mistral saba:
-        if (modelName.IndexOf("mistral-saba-") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        // Default:
-        return CapabilitiesOpenSource.GetCapabilities(model);
+        // Source: https://docs.mistral.ai/capabilities/audio_transcription
+        return Task.FromResult<IEnumerable<Provider.Model>>(
+            new List<Provider.Model>
+            {
+                new("voxtral-mini-latest", "Voxtral Mini Latest"),
+            });
     }
     
     #endregion
     
-    private async Task<ModelsResponse> LoadModelList(string? apiKeyProvisional, CancellationToken token)
+    private async Task<ModelsResponse> LoadModelList(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.DeepSeek;
 
-public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/", LOGGER)
+public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, "https://api.deepseek.com/", LOGGER)
 {
     private static readonly ILogger<ProviderDeepSeek> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderDeepSeek>();
 
@@ -25,16 +25,22 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the DeepSeek HTTP chat request:
         var deepSeekChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -44,25 +50,10 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
+                
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -89,11 +80,23 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    
+    /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
+    
+    /// <inhertidoc />
+    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+    }
 
     /// <inheritdoc />
     public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
@@ -108,37 +111,20 @@ public sealed class ProviderDeepSeek() : BaseProvider("https://api.deepseek.com/
         return Task.FromResult(Enumerable.Empty<Model>());
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model)
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
-        
-        if(modelName.IndexOf("reasoner") is not -1)
-            return
-            [
-                Capability.TEXT_INPUT,
-                Capability.TEXT_OUTPUT,
-                
-                Capability.ALWAYS_REASONING,
-                Capability.CHAT_COMPLETION_API,
-            ];
-        
-        return
-        [
-            Capability.TEXT_INPUT,
-            Capability.TEXT_OUTPUT,
-            Capability.CHAT_COMPLETION_API,
-        ];
+        return Task.FromResult(Enumerable.Empty<Model>());
     }
-
 
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

@@ -14,6 +14,8 @@ public enum Event
     SHOW_ERROR,
     SHOW_WARNING,
     SHOW_SUCCESS,
+    TAURI_EVENT_RECEIVED,
+    RUST_SERVICE_UNAVAILABLE,
     
     // Update events:
     USER_SEARCH_FOR_UPDATE,
@@ -33,6 +35,10 @@ public enum Event
     // RAG events:
     RAG_AUTO_DATA_SOURCES_SELECTED,
     
+    // File attachment events:
+    REGISTER_FILE_DROP_AREA,
+    UNREGISTER_FILE_DROP_AREA,
+    
     // Send events:
     SEND_TO_GRAMMAR_SPELLING_ASSISTANT,
     SEND_TO_ICON_FINDER_ASSISTANT,
@@ -47,4 +53,5 @@ public enum Event
     SEND_TO_SYNONYMS_ASSISTANT,
     SEND_TO_MY_TASKS_ASSISTANT,
     SEND_TO_JOB_POSTING_ASSISTANT,
+    SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT,
 }

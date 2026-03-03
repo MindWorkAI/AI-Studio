@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.Mistral;
 
 /// <summary>
@@ -10,8 +12,13 @@ namespace AIStudio.Provider.Mistral;
 /// <param name="SafePrompt">Whether to inject a safety prompt before all conversations.</param>
 public readonly record struct ChatRequest(
     string Model,
-    IList<RegularMessage> Messages,
+    IList<IMessageBase> Messages,
     bool Stream,
     int RandomSeed,
     bool SafePrompt = false
-);
+)
+{
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
+}

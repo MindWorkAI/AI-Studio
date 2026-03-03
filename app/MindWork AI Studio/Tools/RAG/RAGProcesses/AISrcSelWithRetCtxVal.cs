@@ -11,6 +11,8 @@ namespace AIStudio.Tools.RAG.RAGProcesses;
 
 public sealed class AISrcSelWithRetCtxVal : IRagProcess
 {
+    private static readonly ILogger<AISrcSelWithRetCtxVal> LOGGER = Program.LOGGER_FACTORY.CreateLogger<AISrcSelWithRetCtxVal>();
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AISrcSelWithRetCtxVal).Namespace, nameof(AISrcSelWithRetCtxVal));
     
     #region Implementation of IRagProcess
@@ -25,9 +27,8 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     public string Description => TB("This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.");
 
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastPrompt, ChatThread chatThread, CancellationToken token = default)
+    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, CancellationToken token = default)
     {
-        var logger = Program.SERVICE_PROVIDER.GetService<ILogger<AISrcSelWithRetCtxVal>>()!;
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
         
@@ -36,7 +37,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         //
         if (chatThread.DataSourceOptions.IsEnabled())
         {
-            logger.LogInformation("Data sources are enabled for this chat.");
+            LOGGER.LogInformation("Data sources are enabled for this chat.");
             
             // Across the different code-branches, we keep track of whether it
             // makes sense to proceed with the RAG process:
@@ -49,13 +50,13 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             if(chatThread.Blocks.Count == 0)
             {
-                logger.LogError("The chat thread is empty. Skipping the RAG process.");
+                LOGGER.LogError("The chat thread is empty. Skipping the RAG process.");
                 return chatThread;
             }
             
             if (chatThread.Blocks.Last().Role != ChatRole.AI)
             {
-                logger.LogError("The last block in the chat thread is not the AI block. There is something wrong with the chat thread. Skipping the RAG process.");
+                LOGGER.LogError("The last block in the chat thread is not the AI block. There is something wrong with the chat thread. Skipping the RAG process.");
                 return chatThread;
             }
             
@@ -82,7 +83,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             if (chatThread.DataSourceOptions.AutomaticDataSourceSelection)
             {
                 var dataSourceSelectionProcess = new AgenticSrcSelWithDynHeur();
-                var result = await dataSourceSelectionProcess.SelectDataSourcesAsync(provider, lastPrompt, chatThread, dataSources, token);
+                var result = await dataSourceSelectionProcess.SelectDataSourcesAsync(provider, lastUserPrompt, chatThread, dataSources, token);
                 proceedWithRAG = result.ProceedWithRAG;
                 selectedDataSources = result.SelectedDataSources;
             }
@@ -92,12 +93,12 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 // No, the user made the choice manually:
                 //
                 var selectedDataSourceInfo = selectedDataSources.Select(ds => ds.Name).Aggregate((a, b) => $"'{a}', '{b}'");
-                logger.LogInformation($"The user selected the data sources manually. {selectedDataSources.Count} data source(s) are selected: {selectedDataSourceInfo}.");
+                LOGGER.LogInformation($"The user selected the data sources manually. {selectedDataSources.Count} data source(s) are selected: {selectedDataSourceInfo}.");
             }
 
             if(selectedDataSources.Count == 0)
             {
-                logger.LogWarning("No data sources are selected. The RAG process is skipped.");
+                LOGGER.LogWarning("No data sources are selected. The RAG process is skipped.");
                 proceedWithRAG = false;
             }
             else
@@ -148,7 +149,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 };
                 
                 if (previousDataSecurity != chatThread.DataSecurity)
-                    logger.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
+                    LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
             }
             
             //
@@ -162,7 +163,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 //
                 var retrievalTasks = new List<Task<IReadOnlyList<IRetrievalContext>>>(selectedDataSources.Count);
                 foreach (var dataSource in selectedDataSources)
-                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastPrompt, chatThreadWithoutWaitingAIBlock, token));
+                    retrievalTasks.Add(dataSource.RetrieveDataAsync(lastUserPrompt, chatThreadWithoutWaitingAIBlock, token));
             
                 //
                 // Wait for all retrieval tasks to finish:
@@ -175,7 +176,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     }
                     catch (Exception e)
                     {
-                        logger.LogError(e, "An error occurred during the retrieval process.");
+                        LOGGER.LogError(e, "An error occurred during the retrieval process.");
                     }
                 }
             }
@@ -186,8 +187,38 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             if (proceedWithRAG)
             {
                 var augmentationProcess = new AugmentationOne();
-                chatThread = await augmentationProcess.ProcessAsync(provider, lastPrompt, chatThread, dataContexts, token);
+                chatThread = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
             }
+            
+            //
+            // Add sources from the selected data
+            //
+            
+            // We know that the last block is the AI answer block (cf. check above):
+            var aiAnswerBlock = chatThread.Blocks.Last();
+            var aiAnswerSources = aiAnswerBlock.Content?.Sources;
+            
+            // It should never happen that the AI answer block does not contain a content part.
+            // Just in case, we check this:
+            if(aiAnswerSources is null)
+                return chatThread;
+            
+            var ragSources = new List<ISource>();
+            foreach (var retrievalContext in dataContexts)
+            {
+                var title = retrievalContext.DataSourceName;
+                if(string.IsNullOrWhiteSpace(title))
+                    continue;
+                
+                var link = retrievalContext.Path;
+                if(!link.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                ragSources.Add(new Source(title, link, SourceOrigin.RAG));
+            }
+
+            // Merge the sources, avoiding duplicates:
+            aiAnswerSources.MergeSources(ragSources);
         }
         
         return chatThread;

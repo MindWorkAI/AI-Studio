@@ -30,7 +30,7 @@
                     }
                     else if (!string.IsNullOrWhiteSpace(this.licenseText))
                     {
-                        <MudMarkdown Value="@this.licenseText" Props="Markdown.DefaultConfig"/>
+                        <MudMarkdown Value="@this.licenseText" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                     }
                 </ExpansionPanel>
 

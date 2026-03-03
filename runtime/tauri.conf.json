@@ -6,7 +6,7 @@
   },
   "package": {
     "productName": "MindWork AI Studio",
-	"version": "0.9.51"
+	"version": "26.2.2"
   },
   "tauri": {
     "allowlist": {
@@ -18,6 +18,11 @@
         "scope": [
           {
             "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
+            "sidecar": true,
+            "args": true
+          },
+          {
+            "name": "target/databases/qdrant/qdrant",
             "sidecar": true,
             "args": true
           }
@@ -40,7 +45,8 @@
         "resizable": true,
         "title": "MindWork AI Studio",
         "width": 1920,
-        "height": 1080
+        "height": 1080,
+        "fileDropEnabled": true
       }
     ],
     "security": {
@@ -58,7 +64,8 @@
       "targets": "all",
       "identifier": "com.github.mindwork-ai.ai-studio",
       "externalBin": [
-        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
+        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
+        "target/databases/qdrant/qdrant"
       ],
       "resources": [
         "resources/*"

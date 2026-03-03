@@ -124,7 +124,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         try
         {
-            var results = await this.buildPromptFunction.InvokeAsync(this.state, [input], cancellationToken: cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            var results = await this.state.CallAsync(this.buildPromptFunction, [input]);
             if (results.Length == 0)
                 return string.Empty;
 
@@ -412,43 +413,43 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private void RegisterLuaHelpers()
     {
         
-        this.state.Environment["LogInfo"] = new LuaFunction((context, _, _) =>
+        this.state.Environment["LogInfo"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
             var message = context.GetArgument<string>(0);
             LOGGER.LogInformation($"[Lua] [Assistants] [{this.Name}]: {message}");
-            return new (1);
+            return new(0);
         });
         
-        this.state.Environment["LogDebug"] = new LuaFunction((context, _, _) =>
+        this.state.Environment["LogDebug"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
             var message = context.GetArgument<string>(0);
             LOGGER.LogDebug($"[Lua] [Assistants] [{this.Name}]: {message}");
-            return new (1);
+            return new(0);
         });
         
-        this.state.Environment["LogWarning"] = new LuaFunction((context, _, _) =>
+        this.state.Environment["LogWarning"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
             var message = context.GetArgument<string>(0);
             LOGGER.LogWarning($"[Lua] [Assistants] [{this.Name}]: {message}");
-            return new (1);
+            return new(0);
         });
         
-        this.state.Environment["LogError"] = new LuaFunction((context, _, _) =>
+        this.state.Environment["LogError"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
             var message = context.GetArgument<string>(0);
             LOGGER.LogError($"[Lua] [Assistants] [{this.Name}]: {message}");
-            return new (1);
+            return new(0);
         });
 
-        this.state.Environment["DateTime"] = new LuaFunction((context, buffer, _) =>
+        this.state.Environment["DateTime"] = new LuaFunction((context, _) =>
         {
             var format = context.ArgumentCount > 0 ? context.GetArgument<string>(0) : "yyyy-MM-dd HH:mm:ss";
             var now = DateTime.Now;
@@ -465,17 +466,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 ["millisecond"] = now.Millisecond,
                 ["formatted"] = formattedDate,
             };
-            buffer.Span[0] = table;
-
-            return new(1);
+            return new(context.Return(table));
         });
         
-        this.state.Environment["Timestamp"] = new LuaFunction((_, buffer, _) =>
+        this.state.Environment["Timestamp"] = new LuaFunction((context, _) =>
         {
             var timestamp = DateTime.UtcNow.ToString("o");
-            buffer.Span[0] = timestamp;
-
-            return new(1);
+            return new(context.Return(timestamp));
         });
     }
 }

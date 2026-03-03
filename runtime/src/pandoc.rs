@@ -1,8 +1,13 @@
 use std::path::{Path, PathBuf};
 use std::fs;
+use std::sync::OnceLock;
+use log::warn;
 use tokio::process::Command;
 use crate::environment::DATA_DIRECTORY;
 use crate::metadata::META_DATA;
+
+/// Tracks whether the RID mismatch warning has been logged.
+static HAS_LOGGED_RID_MISMATCH: OnceLock<()> = OnceLock::new();
 
 pub struct PandocExecutable {
     pub executable: String,
@@ -156,13 +161,51 @@ impl PandocProcessBuilder {
         Err("Executable not found".into())
     }
 
-    /// Reads the os platform to determine the used executable name.
+    /// Determines the executable name based on the current OS at runtime.
+    ///
+    /// This uses runtime detection instead of metadata to ensure correct behavior
+    /// on dev machines where the metadata may contain stale values.
     fn pandoc_executable_name() -> String {
-        let metadata = META_DATA.lock().unwrap();
-        let metadata = metadata.as_ref().unwrap();
+        // Log a warning (once) if the runtime OS differs from the metadata architecture.
+        // This can happen on dev machines where the metadata.txt contains stale values.
+        HAS_LOGGED_RID_MISMATCH.get_or_init(|| {
+            let runtime_os = std::env::consts::OS;
+            let runtime_arch = std::env::consts::ARCH;
 
-        match metadata.architecture.as_str() {
-            "win-arm64" | "win-x64" => "pandoc.exe".to_string(),
+            if let Ok(metadata) = META_DATA.lock() {
+                if let Some(metadata) = metadata.as_ref() {
+                    let metadata_arch = &metadata.architecture;
+
+                    // Determine expected OS from metadata:
+                    let metadata_is_windows = metadata_arch.starts_with("win-");
+                    let metadata_is_macos = metadata_arch.starts_with("osx-");
+                    let metadata_is_linux = metadata_arch.starts_with("linux-");
+
+                    // Compare with runtime OS:
+                    let runtime_is_windows = runtime_os == "windows";
+                    let runtime_is_macos = runtime_os == "macos";
+                    let runtime_is_linux = runtime_os == "linux";
+
+                    let os_mismatch = (metadata_is_windows != runtime_is_windows)
+                        || (metadata_is_macos != runtime_is_macos)
+                        || (metadata_is_linux != runtime_is_linux);
+
+                    if os_mismatch {
+                        warn!(
+                            Source = "Pandoc";
+                            "Runtime-detected OS '{}-{}' differs from metadata architecture '{}'. Using runtime-detected OS. This is expected on dev machines where metadata.txt may be outdated.",
+                            runtime_os,
+                            runtime_arch,
+                            metadata_arch
+                        );
+                    }
+                }
+            }
+        });
+
+        // Use std::env::consts::OS for runtime detection instead of metadata
+        match std::env::consts::OS {
+            "windows" => "pandoc.exe".to_string(),
             _ => "pandoc".to_string(),
         }
     }

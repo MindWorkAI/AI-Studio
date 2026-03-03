@@ -1,68 +1,57 @@
-﻿namespace AIStudio.Tools.Services;
+﻿using AIStudio.Tools.Rust;
+
+namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
     /// <summary>
-    /// Tries to read the enterprise environment for the current user's configuration ID.
+    /// Tries to read the enterprise environment for the configuration encryption secret.
     /// </summary>
     /// <returns>
-    /// Returns the empty Guid when the environment is not set or the request fails.
-    /// Otherwise, the configuration ID.
+    /// Returns an empty string when the environment is not set or the request fails.
+    /// Otherwise, the base64-encoded encryption secret.
     /// </returns>
-    public async Task<Guid> EnterpriseEnvConfigId()
+    public async Task<string> EnterpriseEnvConfigEncryptionSecret()
     {
-        var result = await this.http.GetAsync("/system/enterprise/config/id");
+        var result = await this.http.GetAsync("/system/enterprise/config/encryption_secret");
         if (!result.IsSuccessStatusCode)
         {
-            this.logger!.LogError($"Failed to query the enterprise configuration ID: '{result.StatusCode}'");
-            return Guid.Empty;
-        }
-
-        Guid.TryParse(await result.Content.ReadAsStringAsync(), out var configurationId);
-        return configurationId;
-    }
-    
-    /// <summary>
-    /// Tries to read the enterprise environment for a configuration ID, which must be removed.
-    /// </summary>
-    /// <remarks>
-    /// Removing a configuration ID is necessary when the user moved to another department or
-    /// left the company, or when the configuration ID is no longer valid.
-    /// </remarks>
-    /// <returns>
-    /// Returns the empty Guid when the environment is not set or the request fails.
-    /// Otherwise, the configuration ID.
-    /// </returns>
-    public async Task<Guid> EnterpriseEnvRemoveConfigId()
-    {
-        var result = await this.http.DeleteAsync("/system/enterprise/config/id");
-        if (!result.IsSuccessStatusCode)
-        {
-            this.logger!.LogError($"Failed to query the enterprise configuration ID for removal: '{result.StatusCode}'");
-            return Guid.Empty;
-        }
-
-        Guid.TryParse(await result.Content.ReadAsStringAsync(), out var configurationId);
-        return configurationId;
-    }
-
-    /// <summary>
-    /// Tries to read the enterprise environment for the current user's configuration server URL.
-    /// </summary>
-    /// <returns>
-    /// Returns null when the environment is not set or the request fails.
-    /// Otherwise, the configuration server URL.
-    /// </returns>
-    public async Task<string> EnterpriseEnvConfigServerUrl()
-    {
-        var result = await this.http.GetAsync("/system/enterprise/config/server");
-        if (!result.IsSuccessStatusCode)
-        {
-            this.logger!.LogError($"Failed to query the enterprise configuration server URL: '{result.StatusCode}'");
+            this.logger!.LogError($"Failed to query the enterprise configuration encryption secret: '{result.StatusCode}'");
             return string.Empty;
         }
-        
-        var serverUrl = await result.Content.ReadAsStringAsync();
-        return string.IsNullOrWhiteSpace(serverUrl) ? string.Empty : serverUrl;
+
+        var encryptionSecret = await result.Content.ReadAsStringAsync();
+        return string.IsNullOrWhiteSpace(encryptionSecret) ? string.Empty : encryptionSecret;
+    }
+
+    /// <summary>
+    /// Reads all enterprise configurations (multi-config support).
+    /// </summary>
+    /// <returns>
+    /// Returns a list of enterprise environments parsed from the Rust runtime.
+    /// The ETag is not yet determined; callers must resolve it separately.
+    /// </returns>
+    public async Task<List<EnterpriseEnvironment>> EnterpriseEnvConfigs()
+    {
+        var result = await this.http.GetAsync("/system/enterprise/configs");
+        if (!result.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Failed to query the enterprise configurations: '{result.StatusCode}'");
+        }
+
+        var configs = await result.Content.ReadFromJsonAsync<List<EnterpriseConfig>>(this.jsonRustSerializerOptions);
+        if (configs is null)
+            throw new InvalidOperationException("Failed to parse the enterprise configurations from Rust.");
+
+        var environments = new List<EnterpriseEnvironment>();
+        foreach (var config in configs)
+        {
+            if (Guid.TryParse(config.Id, out var id))
+                environments.Add(new EnterpriseEnvironment(config.ServerUrl, id, null));
+            else
+                this.logger!.LogWarning($"Skipping enterprise config with invalid ID: '{config.Id}'.");
+        }
+
+        return environments;
     }
 }

@@ -9,7 +9,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.X;
 
-public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
+public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderX> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderX>();
     
@@ -25,16 +25,22 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this);
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
         
         // Prepare the system prompt:
-        var systemPrompt = new Message
+        var systemPrompt = new TextMessage
         {
             Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager, chatThread),
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+        
+        // Build the list of messages:
+        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
         
         // Prepare the xAI HTTP chat request:
         var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
@@ -44,27 +50,11 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
             // Build the messages:
             // - First of all the system prompt
             // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..chatThread.Blocks.Where(n => n.ContentType is ContentType.TEXT && !string.IsNullOrWhiteSpace((n.Content as ContentText)?.Text)).Select(n => new Message
-            {
-                Role = n.Role switch
-                {
-                    ChatRole.USER => "user",
-                    ChatRole.AI => "assistant",
-                    ChatRole.AGENT => "assistant",
-                    ChatRole.SYSTEM => "system",
-
-                    _ => "user",
-                },
-
-                Content = n.Content switch
-                {
-                    ContentText text => text.Text,
-                    _ => string.Empty,
-                }
-            }).ToList()],
+            Messages = [systemPrompt, ..messages],
             
             // Right now, we only support streaming completions:
             Stream = true,
+            AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
@@ -91,11 +81,23 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
         yield break;
     }
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
+    
+    /// <inheritdoc />
+    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        return Task.FromResult(string.Empty);
+    }
+    
+    /// <inhertidoc />
+    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+    }
+    
     /// <inheritdoc />
     public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(["grok-"], token, apiKeyProvisional);
+        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["grok-"], token, apiKeyProvisional);
         return models.Where(n => !n.Id.Contains("-image", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -111,16 +113,20 @@ public sealed class ProviderX() : BaseProvider("https://api.x.ai/v1/", LOGGER)
         return Task.FromResult<IEnumerable<Model>>([]);
     }
     
-    public override IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => CapabilitiesOpenSource.GetCapabilities(model);
-
+    /// <inheritdoc />
+    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(Enumerable.Empty<Model>());
+    }
+    
     #endregion
     
-    private async Task<IEnumerable<Model>> LoadModels(string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = apiKeyProvisional switch
         {
             not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this) switch
+            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
             {
                 { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
                 _ => null,

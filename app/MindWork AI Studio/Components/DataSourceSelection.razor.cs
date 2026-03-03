@@ -65,7 +65,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
-        this.waitingForDataSources = this.areDataSourcesEnabled;
+        this.waitingForDataSources = this.areDataSourcesEnabled && this.SelectionMode is not DataSourceSelectionMode.CONFIGURATION_MODE;
 
         //
         // Preselect the data sources. Right now, we cannot filter
@@ -181,7 +181,10 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         if(this.DataSourceOptions.DisableDataSources)
             return;
-        
+
+        if(this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
+            return;
+
         this.waitingForDataSources = true;
         this.StateHasChanged();
             

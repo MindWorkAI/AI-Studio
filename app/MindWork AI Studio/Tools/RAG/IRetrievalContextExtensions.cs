@@ -81,7 +81,9 @@ public static class IRetrievalContextExtensions
                 sb.AppendLine();
                 sb.AppendLine("Matched image content as base64-encoded data:");
                 sb.AppendLine("````");
-                sb.AppendLine(await imageContext.AsBase64(token));
+                sb.AppendLine(await imageContext.TryAsBase64(token) is (success: true, { } base64Image)
+                        ? base64Image 
+                        : string.Empty);
                 sb.AppendLine("````");
                 break;
                 

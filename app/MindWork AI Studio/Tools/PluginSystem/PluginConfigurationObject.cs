@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 
 using Lua;
 
@@ -13,6 +14,7 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 public sealed record PluginConfigurationObject
 {
+    private static readonly RustService RUST_SERVICE = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<PluginConfigurationObject>();
     
@@ -68,20 +70,22 @@ public sealed record PluginConfigurationObject
             PluginConfigurationObjectType.CHAT_TEMPLATE => "CHAT_TEMPLATES",
             PluginConfigurationObjectType.DATA_SOURCE => "DATA_SOURCES",
             PluginConfigurationObjectType.EMBEDDING_PROVIDER => "EMBEDDING_PROVIDERS",
+            PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => "TRANSCRIPTION_PROVIDERS",
             PluginConfigurationObjectType.PROFILE => "PROFILES",
-            
+            PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => "DOCUMENT_ANALYSIS_POLICIES",
+
             _ => null,
         };
 
         if (luaTableName is null)
         {
-            LOG.LogError($"The configuration object type '{configObjectType}' is not supported yet.");
+            LOG.LogError("The configuration object type '{ConfigObjectType}' is not supported yet (config plugin id: {ConfigPluginId}).", configObjectType, configPluginId);
             return false;
         }
 
         if (!mainTable.TryGetValue(luaTableName, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
         {
-            LOG.LogWarning($"The {luaTableName} table does not exist or is not a valid table.");
+            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, configPluginId);
             return false;
         }
 
@@ -93,7 +97,7 @@ public sealed record PluginConfigurationObject
             var luaObjectTableValue = luaTable[i];
             if (!luaObjectTableValue.TryRead<LuaTable>(out var luaObjectTable))
             {
-                LOG.LogWarning($"The {luaObjectTable} table at index {i} is not a valid table.");
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, i, configPluginId);
                 continue;
             }
 
@@ -101,6 +105,10 @@ public sealed record PluginConfigurationObject
             {
                 PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
                 PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
+                PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
+                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)
             };
@@ -143,17 +151,17 @@ public sealed record PluginConfigurationObject
                         random ??= new ThreadSafeRandom();
                         configObject = configObject with { Num = (uint)random.Next(500_000, 1_000_000) };
                         storedObjects.Add((TClass)configObject);
-                        LOG.LogWarning($"The next number for the configuration object '{configObject.Name}' (id={configObject.Id}) could not be incremented. Using a random number instead.");
+                        LOG.LogWarning("The next number for the configuration object '{ConfigObjectName}' (id={ConfigObjectId}) could not be incremented. Using a random number instead (config plugin id: {ConfigPluginId}).", configObject.Name, configObject.Id, configPluginId);
                     }
                 }
             }
             else
-                LOG.LogWarning($"The {luaObjectTable} table at index {i} does not contain a valid chat template configuration.");
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid configuration object (type={ConfigObjectType}, config plugin id: {ConfigPluginId}).", luaTableName, i, configObjectType, configPluginId);
         }
         
         return true;
     }
-    
+
     /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
@@ -162,37 +170,45 @@ public sealed record PluginConfigurationObject
     /// <param name="configObjectSelection">A selection expression to retrieve the configuration objects from the main configuration.</param>
     /// <param name="availablePlugins">A list of currently available plugins.</param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
+    /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
     /// <returns>Returns true if the configuration was altered during cleanup; otherwise, false.</returns>
-    public static bool CleanLeftOverConfigurationObjects<TClass>(
+    public static async Task<bool> CleanLeftOverConfigurationObjects<TClass>(
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
-        IList<PluginConfigurationObject> configObjectList) where TClass : IConfigurationObject
+        IList<PluginConfigurationObject> configObjectList,
+        SecretStoreType? secretStoreType = null) where TClass : IConfigurationObject
     {
         var configuredObjects = configObjectSelection.Compile()(SETTINGS_MANAGER.ConfigurationData);
         var leftOverObjects = new List<TClass>();
         foreach (var configuredObject in configuredObjects)
         {
+            // Only process objects that are based on enterprise configuration plugins (aka configuration plugins),
+            // as only those can be left over after a plugin was removed:
             if(!configuredObject.IsEnterpriseConfiguration)
                 continue;
 
+            // From what plugin is this configuration object coming from?
             var configObjectSourcePluginId = configuredObject.EnterpriseConfigurationPluginId;
             if(configObjectSourcePluginId == Guid.Empty)
                 continue;
             
+            // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left
+            // over and should be removed:
             var templateSourcePlugin = availablePlugins.FirstOrDefault(plugin => plugin.Id == configObjectSourcePluginId);
             if(templateSourcePlugin is null)
             {
-                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is based on a plugin that is not available anymore. Removing the chat template from the settings.");
+                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is based on a plugin that is not available anymore. Removing this object from the settings.");
                 leftOverObjects.Add(configuredObject);
             }
             
+            // Is the configuration object still present in the configuration plugin? If not, it is also left over and should be removed:
             if(!configObjectList.Any(configObject =>
                    configObject.Type == configObjectType &&
                    configObject.ConfigPluginId == configObjectSourcePluginId &&
                    configObject.Id.ToString() == configuredObject.Id))
             {
-                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is not present in the configuration plugin anymore. Removing the chat template from the settings.");
+                LOG.LogWarning($"The configured object '{configuredObject.Name}' (id={configuredObject.Id}) is not present in the configuration plugin anymore. Removing the object from the settings.");
                 leftOverObjects.Add(configuredObject);
             }
         }
@@ -200,8 +216,20 @@ public sealed record PluginConfigurationObject
         // Remove collected items after enumeration to avoid modifying the collection during iteration:
         var wasConfigurationChanged = leftOverObjects.Count > 0;
         foreach (var item in leftOverObjects.Distinct())
+        {
             configuredObjects.Remove(item);
         
+            // Delete the API key from the OS keyring if the removed object has one:
+            if(secretStoreType is not null && item is ISecretId secretId)
+            {
+                var deleteResult = await RUST_SERVICE.DeleteAPIKey(secretId, secretStoreType.Value);
+                if (deleteResult.Success)
+                    LOG.LogInformation($"Successfully deleted API key for removed enterprise provider '{item.Name}' from the OS keyring.");
+                else
+                    LOG.LogWarning($"Failed to delete API key for removed enterprise provider '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+        }
+
         return wasConfigurationChanged;
     }
 }

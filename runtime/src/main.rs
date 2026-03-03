@@ -6,15 +6,12 @@ extern crate core;
 
 use log::{info, warn};
 use mindwork_ai_studio::app_window::start_tauri;
-use mindwork_ai_studio::certificate::{generate_certificate};
-use mindwork_ai_studio::dotnet::start_dotnet_server;
+use mindwork_ai_studio::runtime_certificate::{generate_runtime_certificate};
 use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
 
-#[cfg(debug_assertions)]
-use mindwork_ai_studio::dotnet::create_startup_env_file;
 
 #[tokio::main]
 async fn main() {
@@ -38,6 +35,7 @@ async fn main() {
     info!(".. MudBlazor: v{mud_blazor_version}", mud_blazor_version = metadata.mud_blazor_version);
     info!(".. Tauri: v{tauri_version}", tauri_version = metadata.tauri_version);
     info!(".. PDFium: v{pdfium_version}", pdfium_version = metadata.pdfium_version);
+    info!(".. Qdrant: v{qdrant_version}", qdrant_version = metadata.qdrant_version);
 
     if is_dev() {
         warn!("Running in development mode.");
@@ -45,15 +43,8 @@ async fn main() {
         info!("Running in production mode.");
     }
 
-    generate_certificate();
+    generate_runtime_certificate();
     start_runtime_api();
-    
-    if is_dev() {
-        #[cfg(debug_assertions)]
-        create_startup_env_file();
-    } else {
-        start_dotnet_server();
-    }
     
     start_tauri();
 }

@@ -1,4 +1,4 @@
-using AIStudio.Provider.OpenAI;
+using System.Text.Json.Serialization;
 
 namespace AIStudio.Provider.Google;
 
@@ -10,6 +10,11 @@ namespace AIStudio.Provider.Google;
 /// <param name="Stream">Whether to stream the chat completion.</param>
 public readonly record struct ChatRequest(
     string Model,
-    IList<Message> Messages,
+    IList<IMessageBase> Messages,
     bool Stream
-);
+)
+{
+    // Attention: The "required" modifier is not supported for [JsonExtensionData].
+    [JsonExtensionData]
+    public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
+}

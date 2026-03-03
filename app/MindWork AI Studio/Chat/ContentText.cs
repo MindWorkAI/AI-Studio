@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
@@ -11,6 +12,8 @@ namespace AIStudio.Chat;
 /// </summary>
 public sealed class ContentText : IContent
 {
+    private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
+    
     /// <summary>
     /// The minimum time between two streaming events, when the user
     /// enables the energy saving mode.
@@ -37,32 +40,33 @@ public sealed class ContentText : IContent
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
+    
+    /// <inheritdoc />
+    public List<FileAttachment> FileAttachments { get; set; } = [];
 
     /// <inheritdoc />
-    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastPrompt, ChatThread? chatThread, CancellationToken token = default)
+    public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
             return new();
         
         if(!chatThread.IsLLMProviderAllowed(provider))
         {
-            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
-            logger.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            LOGGER.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
             return chatThread;
         }
 
         // Call the RAG process. Right now, we only have one RAG process:
-        if (lastPrompt is not null)
+        if (lastUserPrompt is not null)
         {
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
             }
             catch (Exception e)
             {
-                var logger = Program.SERVICE_PROVIDER.GetService<ILogger<ContentText>>()!;
-                logger.LogError(e, "Skipping the RAG process due to an error.");
+                LOGGER.LogError(e, "Skipping the RAG process due to an error.");
             }
         }
 
@@ -139,9 +143,72 @@ public sealed class ContentText : IContent
         Text = this.Text,
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
+        Sources = [..this.Sources],
+        FileAttachments = [..this.FileAttachments],
     };
 
     #endregion
+
+    public async Task<string> PrepareTextContentForAI()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(this.Text);
+
+        if(this.FileAttachments.Count > 0)
+        {
+            // Get the list of existing documents:
+            var existingDocuments = this.FileAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
+
+            // Log warning for missing files:
+            var missingDocuments = this.FileAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
+            if (missingDocuments.Count > 0)
+                foreach (var missingDocument in missingDocuments)
+                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
+            
+            // Only proceed if there are existing, allowed documents:
+            if (existingDocuments.Count > 0)
+            {
+                // Check Pandoc availability once before processing file attachments
+                var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
+
+                if (!pandocState.IsAvailable)
+                    LOGGER.LogWarning("File attachments could not be processed because Pandoc is not available.");
+                else if (!pandocState.CheckWasSuccessful)
+                    LOGGER.LogWarning("File attachments could not be processed because the Pandoc version check failed.");
+                else
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("The following files are attached to this message:");
+                    foreach(var document in existingDocuments)
+                    {
+                        if (document.IsForbidden)
+                        {
+                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
+                            continue;
+                        }
+                        
+                        sb.AppendLine();
+                        sb.AppendLine("---------------------------------------");
+                        sb.AppendLine($"File path: {document.FilePath}");
+                        sb.AppendLine("File content:");
+                        sb.AppendLine("````");
+                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
+                        sb.AppendLine("````");
+                    }
+                    
+                    var numImages = this.FileAttachments.Count(x => x is { IsImage: true, Exists: true });
+                    if (numImages > 0)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                        sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
+                    }
+                }
+            }
+        }
+        
+        return sb.ToString();
+    }
     
     /// <summary>
     /// The text content.

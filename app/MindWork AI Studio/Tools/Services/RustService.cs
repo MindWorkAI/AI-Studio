@@ -1,6 +1,10 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 
+using AIStudio.Tools.PluginSystem;
+
+using Version = System.Version;
+
 // ReSharper disable NotAccessedPositionalProperty.Local
 
 namespace AIStudio.Tools.Services;
@@ -8,17 +12,25 @@ namespace AIStudio.Tools.Services;
 /// <summary>
 /// Calling Rust functions.
 /// </summary>
-public sealed partial class RustService : IDisposable
+public sealed partial class RustService : BackgroundService
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
+    
     private readonly HttpClient http;
+    private readonly SemaphoreSlim userLanguageLock = new(1, 1);
 
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters =
+        {
+            new RustEnumConverter(),
+        },
     };
     
     private ILogger<RustService>? logger;
     private Encryption? encryptor;
+    private string? cachedUserLanguage;
     
     private readonly string apiPort;
     private readonly string certificateFingerprint;
@@ -59,11 +71,27 @@ public sealed partial class RustService : IDisposable
         this.encryptor = encryptionService;
     }
 
-    #region IDisposable
+    private Task ReportRustServiceUnavailable(string reason) => MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, reason);
 
-    public void Dispose()
+    #region Overrides of BackgroundService
+
+    /// <summary>
+    /// The main execution loop of the Rust service as a background thread.
+    /// </summary>
+    /// <param name="stopToken">The cancellation token to stop the service.</param>
+    protected override async Task ExecuteAsync(CancellationToken stopToken)
+    {
+        this.logger?.LogInformation("The Rust service was initialized.");
+        
+        // Start consuming Tauri events:
+        await this.StartStreamTauriEvents(stopToken);
+    }
+    
+    public override void Dispose()
     {
         this.http.Dispose();
+        this.userLanguageLock.Dispose();
+        base.Dispose();
     }
 
     #endregion
