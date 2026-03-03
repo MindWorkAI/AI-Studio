@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal sealed class AssistantText : AssistantComponentBase

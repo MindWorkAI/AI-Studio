@@ -1,22 +1,20 @@
-using System.Xml.XPath;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Lua;
-using System.Globalization;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
 public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginAssistants).Namespace, nameof(PluginAssistants));
+    private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PluginAssistants).Namespace, nameof(PluginAssistants));
 
     private static readonly ILogger<PluginAssistants> LOGGER = Program.LOGGER_FACTORY.CreateLogger<PluginAssistants>();
 
-    public AssistantForm? RootComponent { get; set; }
-    public string AssistantTitle { get; set; } = string.Empty;
-    public string AssistantDescription { get; set; } = string.Empty;
-    public string SystemPrompt { get; set; } = string.Empty;
-    public string SubmitText { get; set; } = string.Empty;
-    public bool AllowProfiles { get; set; } = true;
+    public AssistantForm? RootComponent { get; private set; }
+    public string AssistantTitle { get; private set; } = string.Empty;
+    public string AssistantDescription { get; private set; } = string.Empty;
+    public string SystemPrompt { get; private set; } = string.Empty;
+    public string SubmitText { get; private set; } = string.Empty;
+    public bool AllowProfiles { get; private set; } = true;
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
 
@@ -152,7 +150,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private bool TryReadRenderTree(LuaTable uiTable, out IAssistantComponent root)
     {
         root = null!;
-
+        
         if (!uiTable.TryGetValue("Type", out var typeVal)
             || !typeVal.TryRead<string>(out var typeText)
             || !Enum.TryParse<AssistantComponentType>(typeText, true, out var type)
@@ -414,7 +412,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private void RegisterLuaHelpers()
     {
         
-        this.state.Environment["LogInfo"] = new LuaFunction((context, buffer, ct) =>
+        this.state.Environment["LogInfo"] = new LuaFunction((context, _, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -423,7 +421,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new (1);
         });
         
-        this.state.Environment["LogDebug"] = new LuaFunction((context, buffer, ct) =>
+        this.state.Environment["LogDebug"] = new LuaFunction((context, _, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -432,7 +430,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new (1);
         });
         
-        this.state.Environment["LogWarning"] = new LuaFunction((context, buffer, ct) =>
+        this.state.Environment["LogWarning"] = new LuaFunction((context, _, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -441,7 +439,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new (1);
         });
         
-        this.state.Environment["LogError"] = new LuaFunction((context, buffer, ct) =>
+        this.state.Environment["LogError"] = new LuaFunction((context, _, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -450,7 +448,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new (1);
         });
 
-        this.state.Environment["DateTime"] = new LuaFunction((context, buffer, ct) =>
+        this.state.Environment["DateTime"] = new LuaFunction((context, buffer, _) =>
         {
             var format = context.ArgumentCount > 0 ? context.GetArgument<string>(0) : "yyyy-MM-dd HH:mm:ss";
             var now = DateTime.Now;
@@ -472,7 +470,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(1);
         });
         
-        this.state.Environment["Timestamp"] = new LuaFunction((context, buffer, ct) =>
+        this.state.Environment["Timestamp"] = new LuaFunction((_, buffer, _) =>
         {
             var timestamp = DateTime.UtcNow.ToString("o");
             buffer.Span[0] = timestamp;
