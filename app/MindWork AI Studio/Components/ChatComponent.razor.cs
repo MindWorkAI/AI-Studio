@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -36,6 +37,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+    
+    [Inject] 
+    private RustService RustService { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -58,10 +62,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid currentWorkspaceId = Guid.Empty;
     private CancellationTokenSource? cancellationTokenSource;
     private HashSet<FileAttachment> chatDocumentPaths = [];
+    private string tokenCount = "0";
+    private string TokenCountMessage => $"{this.T("Estimated amount of tokens:")} {this.tokenCount}";
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
-    private MudTextField<string> inputField = null!;
+    private UserPromptComponent<string> inputField = null!;
 
     #region Overrides of ComponentBase
 
@@ -405,6 +411,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Was a modifier key pressed as well?
         var isModifier = keyEvent.AltKey || keyEvent.CtrlKey || keyEvent.MetaKey || keyEvent.ShiftKey;
         
+        if (isEnter)
+            await this.CalculateTokenCount();
+        
         // Depending on the user's settings, might react to shortcuts:
         switch (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)
         {
@@ -523,6 +532,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.userInput = string.Empty;
         this.chatDocumentPaths.Clear();
         await this.inputField.BlurAsync();
+        this.tokenCount = "0";
         
         // Enable the stream state for the chat component:
         this.isStreaming = true;
@@ -899,6 +909,20 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.StateHasChanged();
         
         return Task.CompletedTask;
+    }
+    
+    private async Task CalculateTokenCount()
+    {
+        if (this.inputField.Value is null)
+        {
+            this.tokenCount = "0";
+            return;
+        }
+        var response = await this.RustService.GetTokenCount(this.inputField.Value);
+        if (response is null)
+            return;
+        this.tokenCount = response.TokenCount.ToString();
+        this.StateHasChanged();
     }
     
     #region Overrides of MSGComponentBase
