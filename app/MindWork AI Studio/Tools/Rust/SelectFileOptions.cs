@@ -6,5 +6,5 @@ public sealed class SelectFileOptions
     
     public PreviousFile? PreviousFile { get; init; }
 
-    public FileTypeFilter? Filter { get; init; }
+    public FileType? Filter { get; init; }
 }

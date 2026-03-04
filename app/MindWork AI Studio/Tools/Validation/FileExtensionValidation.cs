@@ -44,7 +44,7 @@ public static class FileExtensionValidation
     public static async Task<bool> IsExtensionValidWithNotifyAsync(UseCase useCae, string filePath, bool validateMediaFileTypes = true, Settings.Provider? provider = null)
     {
         var ext = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
-        if(FileTypeFilter.Executables.FilterExtensions.Contains(ext))
+        if(FileTypes.EXECUTABLES.FlattenExtensions().Contains(ext))
         {
             await MessageBus.INSTANCE.SendError(new(
                 Icons.Material.Filled.AppBlocking,
@@ -53,7 +53,7 @@ public static class FileExtensionValidation
         }
 
         var capabilities = provider?.GetModelCapabilities() ?? new();
-        if (FileTypeFilter.AllImages.FilterExtensions.Contains(ext))
+        if (FileTypes.IMAGE.FlattenExtensions().Contains(ext))
         {
             switch (useCae)
             {
@@ -88,7 +88,7 @@ public static class FileExtensionValidation
             }
         }
 
-        if(FileTypeFilter.AllVideos.FilterExtensions.Contains(ext))
+        if(FileTypes.VIDEO.FlattenExtensions().Contains(ext))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.FeaturedVideo,
@@ -96,7 +96,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if(FileTypeFilter.AllAudio.FilterExtensions.Contains(ext))
+        if(FileTypes.AUDIO.FlattenExtensions().Contains(ext))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.AudioFile,
@@ -123,7 +123,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if (!Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        if (FileTypes.IMAGE.FlattenExtensions().Any(x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
         {
             await MessageBus.INSTANCE.SendError(new(
                 Icons.Material.Filled.ImageNotSupported,
