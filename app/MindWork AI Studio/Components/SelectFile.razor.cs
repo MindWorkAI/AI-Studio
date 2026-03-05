@@ -23,7 +23,7 @@ public partial class SelectFile : MSGComponentBase
     public string FileDialogTitle { get; set; } = "Select File";
     
     [Parameter]
-    public FileTypeFilter? Filter { get; set; }
+    public FileType[]? Filter { get; set; }
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;

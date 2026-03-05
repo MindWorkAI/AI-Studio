@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -96,7 +97,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
     private readonly ProviderValidation providerValidation;
-    
+    private HashSet<FileAttachment> chatDocumentPaths = [];
+
     public EmbeddingProviderDialog()
     {
         this.providerValidation = new()
