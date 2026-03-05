@@ -1,0 +1,139 @@
+﻿@attribute [Route(Routes.ASSISTANT_DYNAMIC)]
+@using AIStudio.Components
+@using AIStudio.Settings
+@using AIStudio.Tools.PluginSystem.Assistants.DataModel
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDynamic>
+
+@foreach (var component in this.RootComponent!.Children)
+{
+    @switch (component.Type)
+    {
+        case AssistantComponentType.TEXT_AREA:
+            if (component is AssistantTextArea textArea)
+            {
+                var lines = textArea.IsSingleLine ? 1 : 6;
+                <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" ReadOnly="@textArea.ReadOnly" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="@lines" AutoGrow="@true" MaxLines="12" Class='@MergeClass(textArea.Class, "mb-3")' Style="@this.GetOptionalStyle(textArea.Style)"/>
+            }
+            break;
+        case AssistantComponentType.IMAGE:
+            if (component is AssistantImage assistantImage)
+            {
+                var resolvedSource = this.ResolveImageSource(assistantImage);
+                if (!string.IsNullOrWhiteSpace(resolvedSource))
+                {
+                    var image = assistantImage;
+                    <div Class="mb-4">
+                        <MudImage Fluid="true" Src="@resolvedSource" Alt="@image.Alt" Class='@MergeClass(image.Class, "rounded-lg mb-2")' Style="@this.GetOptionalStyle(image.Style)" Elevation="20"/>
+                        @if (!string.IsNullOrWhiteSpace(image.Caption))
+                        {
+                            <MudText Typo="Typo.caption" Align="Align.Center">@image.Caption</MudText>
+                        }
+                    </div>
+                }
+            }
+            break;
+        case AssistantComponentType.WEB_CONTENT_READER:
+            if (component is AssistantWebContentReader webContent && this.webContentFields.TryGetValue(webContent.Name, out var webState))
+            {
+                <div class="@webContent.Class" style="@webContent.Style">
+                    <ReadWebContent @bind-Content="@webState.Content"
+                                    ProviderSettings="@this.providerSettings"
+                                    @bind-AgentIsRunning="@webState.AgentIsRunning"
+                                    @bind-Preselect="@webState.Preselect"
+                                    @bind-PreselectContentCleanerAgent="@webState.PreselectContentCleanerAgent"/>
+                    </div>
+            }
+            break;
+        case AssistantComponentType.FILE_CONTENT_READER:
+            if (component is AssistantFileContentReader fileContent && this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
+            {
+                <div class="@fileContent.Class" style="@fileContent.Style">
+                    <ReadFileContent @bind-FileContent="@fileState.Content" />
+                </div>
+            }
+            break;
+            
+        case AssistantComponentType.DROPDOWN:
+            if (component is AssistantDropdown assistantDropdown)
+            {
+                <DynamicAssistantDropdown Items="@assistantDropdown.Items"
+                                          @bind-Value="@this.dropdownFields[assistantDropdown.Name]"
+                                          Default="@assistantDropdown.Default"
+                                          Label="@assistantDropdown.Label"
+                                          Icon="@Icons.Material.Filled.Translate"
+                                          Class="@assistantDropdown.Class"
+                                          Style="@assistantDropdown.Style"/>
+            }
+            break;
+        case AssistantComponentType.PROVIDER_SELECTION:
+            if (component is AssistantProviderSelection providerSelection)
+            {
+                <div class="@providerSelection.Class" style="@providerSelection.Style">
+                    <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider" />
+                </div>
+            }
+            break;
+        case AssistantComponentType.PROFILE_SELECTION:
+            if (component is AssistantProfileSelection profileSelection)
+            {
+                var selection = profileSelection;
+                <div class="@selection.Class" style="@selection.Style">
+                    <ProfileFormSelection Validation="@((Profile profile) => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.currentProfile" />
+                </div>
+            }
+            break;
+        case AssistantComponentType.SWITCH:
+            if (component is AssistantSwitch assistantSwitch)
+            {
+                <MudTextSwitch Label="@assistantSwitch.Label" @bind-Value="@this.switchFields[assistantSwitch.Name]" LabelOn="@assistantSwitch.LabelOn" LabelOff="@assistantSwitch.LabelOff" />
+            }
+            break;
+        case AssistantComponentType.HEADING:
+            if (component is AssistantHeading assistantHeading)
+            {
+                var heading = assistantHeading;
+                @switch (assistantHeading.Level)
+                {
+                    case 1:
+                        <MudText Typo="Typo.h4" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
+                        break;
+                    case 2:
+                        <MudText Typo="Typo.h5" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
+                        break;
+                    case 3:
+                        <MudText Typo="Typo.h6" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
+                        break;
+                    default:
+                        <MudText Typo="Typo.h4" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
+                        break;
+                }
+            }
+            break;
+        case AssistantComponentType.TEXT:
+            if (component is AssistantText assistantText)
+            {
+                var text = assistantText;
+                <MudText Typo="Typo.body1" Class='@MergeClass(text.Class, "mb-3")' Style="@this.GetOptionalStyle(text.Style)">@text.Content</MudText>
+            }
+            break;
+        case AssistantComponentType.LIST:
+            if (component is AssistantList assistantList)
+            {
+                var list = assistantList;
+                <MudList T="string" Class='@MergeClass(list.Class, "mb-6")' Style="@this.GetOptionalStyle(list.Style)">
+                    @foreach (var item in list.Items)
+                    {
+                        @if (item.Type == "LINK")
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="@item.Href">@item.Text</MudListItem>
+                        }
+                        else
+                        {
+                            <MudListItem T="string">@item.Text</MudListItem>
+                        }
+                    }
+                </MudList>
+            }
+            break;
+    }
+}
