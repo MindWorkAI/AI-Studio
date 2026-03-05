@@ -530,41 +530,46 @@ public static class WorkspaceBehaviour
             await EnsureTreeShellLoadedCoreAsync();
             if (WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var cachedWorkspace) && !string.IsNullOrWhiteSpace(cachedWorkspace.WorkspaceName))
                 return cachedWorkspace.WorkspaceName;
+
+            // Not in cache — read from disk and update cache in the same semaphore scope
+            // to avoid a second semaphore acquisition via UpdateWorkspaceNameInCacheAsync:
+            var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+            var workspaceNamePath = Path.Join(workspacePath, "name");
+            string workspaceName;
+
+            try
+            {
+                if (!File.Exists(workspaceNamePath))
+                {
+                    workspaceName = TB("Unnamed workspace");
+                    Directory.CreateDirectory(workspacePath);
+                    await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+                }
+                else
+                {
+                    workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(workspaceName))
+                    {
+                        workspaceName = TB("Unnamed workspace");
+                        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+                    }
+                }
+            }
+            catch
+            {
+                workspaceName = TB("Unnamed workspace");
+            }
+
+            // Update the cache directly (we already hold the semaphore):
+            if (WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace))
+                workspace.WorkspaceName = workspaceName;
+
+            return workspaceName;
         }
         finally
         {
             WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
         }
-
-        var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
-        var workspaceNamePath = Path.Join(workspacePath, "name");
-        string workspaceName;
-        
-        try
-        {
-            if (!File.Exists(workspaceNamePath))
-            {
-                workspaceName = TB("Unnamed workspace");
-                Directory.CreateDirectory(workspacePath);
-                await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
-            }
-            else
-            {
-                workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
-                if (string.IsNullOrWhiteSpace(workspaceName))
-                {
-                    workspaceName = TB("Unnamed workspace");
-                    await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
-                }
-            }
-        }
-        catch
-        {
-            workspaceName = TB("Unnamed workspace");
-        }
-
-        await UpdateWorkspaceNameInCacheAsync(workspaceId, workspaceName);
-        return workspaceName;
     }
     
     public static async Task DeleteChatAsync(IDialogService dialogService, Guid workspaceId, Guid chatId, bool askForConfirmation = true)
