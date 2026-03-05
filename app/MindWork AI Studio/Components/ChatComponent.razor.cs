@@ -285,15 +285,25 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
         }
 
+        // Guard: If ChatThread ID and WorkspaceId haven't changed, skip entirely.
+        // Using ID-based comparison instead of name-based to correctly handle
+        // temporary chats where the workspace name is always empty.
         if (this.currentChatThreadId == this.ChatThread.ChatId
-            && this.currentWorkspaceId == this.ChatThread.WorkspaceId
-            && !string.IsNullOrWhiteSpace(this.currentWorkspaceName))
+            && this.currentWorkspaceId == this.ChatThread.WorkspaceId)
             return;
 
         this.currentChatThreadId = this.ChatThread.ChatId;
         this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-        this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-        this.WorkspaceName(this.currentWorkspaceName);
+        var loadedWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
+
+        // Only notify the parent when the name actually changed to prevent
+        // an infinite render loop: WorkspaceName → UpdateWorkspaceName →
+        // StateHasChanged → re-render → OnParametersSetAsync → WorkspaceName → ...
+        if (this.currentWorkspaceName != loadedWorkspaceName)
+        {
+            this.currentWorkspaceName = loadedWorkspaceName;
+            this.WorkspaceName(this.currentWorkspaceName);
+        }
     }
     
     private bool IsProviderSelected => this.Provider.UsedLLMProvider != LLMProviders.NONE;
@@ -462,8 +472,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
         
-        // We need to blur the focus away from the input field
-        // to be able to clear the field:
+        // Blur the focus away from the input field to be able to clear it:
         await this.inputField.BlurAsync();
         
         // Create a new chat thread if necessary:
@@ -554,8 +563,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Clear the input field:
         await this.inputField.FocusAsync();
+
         this.userInput = string.Empty;
         this.chatDocumentPaths.Clear();
+
         await this.inputField.BlurAsync();
         
         // Enable the stream state for the chat component:
