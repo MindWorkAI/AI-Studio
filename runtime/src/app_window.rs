@@ -10,15 +10,18 @@ use rocket::serde::Serialize;
 use serde::Deserialize;
 use strum_macros::Display;
 use tauri::updater::UpdateResponse;
-use tauri::{FileDropEvent, GlobalShortcutManager, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent};
+use tauri::{FileDropEvent, GlobalShortcutManager, UpdaterEvent, RunEvent, Manager, PathResolver, Window, WindowEvent, generate_context};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
-use crate::dotnet::stop_dotnet_server;
+use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
+use crate::qdrant::{cleanup_qdrant, start_qdrant_server, stop_qdrant_server};
+#[cfg(debug_assertions)]
+use crate::dotnet::create_startup_env_file;
 
 /// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
@@ -101,16 +104,28 @@ pub fn start_tauri() {
             let data_path = data_path.join("data");
 
             // Get and store the data and config directories:
-            DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not abe to set the data directory.")).unwrap();
+            DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the data directory.")).unwrap();
             CONFIG_DIRECTORY.set(app.path_resolver().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
+
+            cleanup_qdrant();
+            cleanup_dotnet_server();
+
+            if is_dev() {
+                #[cfg(debug_assertions)]
+                create_startup_env_file();
+            } else {
+                start_dotnet_server();
+            }
+            start_qdrant_server();
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
             set_pdfium_path(app.path_resolver());
+
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .build(tauri::generate_context!())
+        .build(generate_context!())
         .expect("Error while running Tauri application");
 
     // The app event handler:
@@ -155,6 +170,7 @@ pub fn start_tauri() {
 
                         if is_prod() {
                             stop_dotnet_server();
+                            stop_qdrant_server();
                         } else {
                             warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
                         }
@@ -183,6 +199,11 @@ pub fn start_tauri() {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
+                stop_qdrant_server();
+                if is_prod() {
+                    warn!("Try to stop the .NET server as well...");
+                    stop_dotnet_server();
+                }
             }
 
             RunEvent::Ready => {
@@ -194,10 +215,6 @@ pub fn start_tauri() {
     });
 
     warn!(Source = "Tauri"; "Tauri app was stopped.");
-    if is_prod() {
-        warn!("Try to stop the .NET server as well...");
-        stop_dotnet_server();
-    }
 }
 
 /// Our event API endpoint for Tauri events. We try to send an endless stream of events to the client.

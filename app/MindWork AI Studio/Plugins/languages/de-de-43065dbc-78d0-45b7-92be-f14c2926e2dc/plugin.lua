@@ -399,9 +399,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Bitte geben Sie eine Beschreibung Ihrer Analyseregeln an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
 
--- Not implemented yet.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1568777658"] = "Noch nicht implementiert."
-
 -- Yes, protect this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1762380857"] = "Ja, dieses Regelwerk schützen"
 
@@ -411,8 +408,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Please provide a description for your policy. This description will be used to inform users about the purpose of your document analysis policy.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1837166236"] = "Bitte geben Sie eine Beschreibung für Ihr Regelwerk an. Diese Beschreibung wird verwendet, um Benutzer über den Zweck Ihres Regelwerks zur Dokumentenanalyse zu informieren."
 
+-- Hide the policy definition when distributed via configuration plugin?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1875622568"] = "Die Definition des Regelwerks ausblenden, wenn diese über ein Konfigurations-Plugin verteilt wird?"
+
 -- Common settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1963959073"] = "Allgemeine Einstellungen"
+
+-- Note: This setting only takes effect when this policy is exported and distributed via a configuration plugin to other users. When enabled, users will only see the document selection interface and cannot view or modify the policy details. This setting does NOT affect your local view - you will always see the full policy definition for policies you create.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1984494439"] = "Hinweis: Diese Einstellung wird nur wirksam, wenn dieses Regelwerk exportiert und über ein Konfigurations-Plugin an andere Nutzer verteilt wird. Wenn sie aktiviert ist, sehen Nutzer nur die Oberfläche zur Dokumentauswahl und können die Details des Regelwerks weder anzeigen noch ändern. Diese Einstellung wirkt sich NICHT auf Ihre lokale Ansicht aus – Sie sehen bei von Ihnen erstellten Regelwerken immer die Definition."
+
+-- This policy is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2035084381"] = "Dieses Regelwerk wird von Ihrer Organisation verwaltet."
 
 -- The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T206207667"] = "Der Assistent für Dokumentenanalyse hilft Ihnen dabei, Informationen aus Dokumenten basierend auf vordefinierten Regelwerken zu analysieren und zu extrahieren. Sie können Regelwerke für die Dokumentenanalyse erstellen, bearbeiten und verwalten, die festlegen, wie Dokumente verarbeitet werden und welche Informationen extrahiert werden sollen. Einige Regelwerke könnten durch Ihre Organisation geschützt sein und können nicht geändert oder gelöscht werden."
@@ -453,6 +459,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Policy name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2879019438"] = "Name des Regelwerks"
 
+-- No policy is selected. Please select a policy to export.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2929693091"] = "Es ist kein Regelwerk ausgewählt. Bitte wählen Sie ein Regelwerk zum Exportieren aus."
+
 -- Policy Description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3023558273"] = "Beschreibung des Regelwerks"
 
@@ -467,6 +476,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Policy {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3157740273"] = "Regelwerk {0}"
+
+-- No, show the policy definition
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3166091879"] = "Nein, zeige die Definition des Regelwerks"
 
 -- The description of your policy must be between 32 and 512 characters long.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3285636934"] = "Die Beschreibung des Regelwerks muss zwischen 32 und 512 Zeichen lang sein."
@@ -510,6 +522,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T726434276"] = "Nachdem die KI alle Dokumente verarbeitet hat, benötigt sie Ihre Anweisungen, wie das Ergebnis formatiert werden soll. Möchten Sie eine strukturierte Liste mit Schlüsselwörtern oder einen fließenden Text? Soll die Ausgabe Emojis enthalten oder in formeller Geschäftssprache verfasst sein? Alle diese Präferenzen können Sie in den Ausgaberegeln festlegen. Dort können Sie auch eine gewünschte Struktur vordefinieren – zum Beispiel durch Verwendung von Markdown-Formatierung, um Überschriften, Absätze oder Aufzählungspunkte zu definieren."
 
+-- The selected policy contains invalid data. Please fix the issues before exporting the policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T736334861"] = "Das ausgewählte Regelwerk enthält ungültige Daten. Bitte beheben Sie die Probleme, bevor Sie das Regelwerk exportieren."
+
 -- Policy description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T748735777"] = "Beschreibung des Regelwerks"
 
@@ -518,6 +533,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Here you have the option to save different policies for various document analysis assistants and switch between them.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T848153710"] = "Hier haben Sie die Möglichkeit, verschiedene Regelwerke für unterschiedliche Dokumentenanalysen zu speichern und zwischen ihnen zu wechseln."
+
+-- Yes, hide the policy definition
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Ja, die Definition des Regelwerks ausblenden"
 
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage ihrer Angaben."
@@ -1780,7 +1798,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "�
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Pandoc installieren"
 
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Da mein Arbeitgeber sowohl Windows als auch Linux am Arbeitsplatz nutzt, wollte ich eine plattformübergreifende Lösung, die nahtlos auf allen wichtigen Betriebssystemen, einschließlich macOS, funktioniert. Außerdem wollte ich zeigen, dass es möglich ist, moderne, effiziente und plattformübergreifende Anwendungen zu erstellen, ohne auf Software-Ballast, wie z.B. das Electron-Framework, zurückzugreifen. Die Kombination aus .NET und Rust mit Tauri hat sich dabei als hervorragender Technologiestapel für den Bau solch robuster Anwendungen erwiesen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Da mein Arbeitgeber sowohl Windows als auch Linux am Arbeitsplatz nutzt, wollte ich eine plattformübergreifende Lösung, die nahtlos auf allen wichtigen Betriebssystemen, einschließlich macOS, funktioniert. Außerdem wollte ich zeigen, dass es möglich ist, moderne, effiziente und plattformübergreifende Anwendungen zu erstellen, ohne auf Software-Ballast, wie z.B. das Electron-Framework, zurückzugreifen. Die Kombination aus .NET und Rust mit Tauri hat sich dabei als hervorragender Technologie-Stack für den Bau solch robuster Anwendungen erwiesen."
 
 -- Limitations of Existing Solutions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1086130692"] = "Einschränkungen bestehender Lösungen"
@@ -1788,20 +1806,26 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1086130692"] = "Einschränku
 -- Personal Needs and Limitations of Web Services
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1839655973"] = "Persönliche Bedürfnisse und Einschränkungen von Webdiensten"
 
+-- Democratization of AI
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1986314327"] = "Demokratisierung von KI"
+
 -- While exploring available solutions, I found a desktop application called Anything LLM. Unfortunately, it fell short of meeting my specific requirements and lacked the user interface design I envisioned. For macOS, there were several apps similar to what I had in mind, but they were all commercial solutions shrouded in uncertainty. The developers' identities and the origins of these apps were unclear, raising significant security concerns. Reports from users about stolen API keys and unwanted charges only amplified my reservations.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T3552777197"] = "Während ich nach passenden Lösungen suchte, stieß ich auf eine Desktop-Anwendung namens Anything LLM. Leider konnte sie meine spezifischen Anforderungen nicht erfüllen und entsprach auch nicht dem Benutzeroberflächendesign, das ich mir vorgestellt hatte. Für macOS gab es zwar mehrere Apps, die meiner Vorstellung ähnelten, aber sie waren allesamt kostenpflichtige Lösungen mit unklarer Herkunft. Die Identität der Entwickler und die Ursprünge dieser Apps waren nicht ersichtlich, was erhebliche Sicherheitsbedenken hervorrief. Berichte von Nutzern über gestohlene API-Schlüssel und unerwünschte Abbuchungen verstärkten meine Bedenken zusätzlich."
 
--- Hello, my name is Thorsten Sommer, and I am the initial creator of MindWork AI Studio. The motivation behind developing this app stems from several crucial needs and observations I made over time.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T3569462457"] = "Hallo, mein Name ist Thorsten Sommer und ich bin der ursprüngliche Entwickler von MindWork AI Studio. Die Motivation zur Entwicklung dieser App entstand aus mehreren wichtigen Bedürfnissen und Beobachtungen, die ich im Laufe der Zeit gemacht habe."
-
--- Through MindWork AI Studio, I aim to provide a secure, flexible, and user-friendly tool that caters to a wider audience without compromising on functionality or design. This app is the culmination of my desire to meet personal requirements, address existing gaps in the market, and showcase innovative development practices.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T3622193740"] = "Mit MindWork AI Studio möchte ich ein sicheres, flexibles und benutzerfreundliches Werkzeug bereitstellen, das für ein breites Publikum geeignet ist, ohne Kompromisse bei Funktionalität oder Design einzugehen. Diese App ist das Ergebnis meines Wunsches, persönliche Anforderungen zu erfüllen, bestehende Lücken auf dem Markt zu schließen und innovative Entwicklungsmethoden zu präsentieren."
+-- We also want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs for your first steps or use affordable cloud models. MindWork AI Studio itself is available free of charge.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T3672974243"] = "Wir möchten auch zur Demokratisierung von KI beitragen. MindWork AI Studio läuft selbst auf kostengünstiger Hardware, einschließlich Computern für rund 100 € wie dem Raspberry Pi. Dadurch sind die App und ihr voller Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Für Ihre ersten Schritte können Sie mit lokalen LLMs beginnen oder günstige Cloud-Modelle nutzen. MindWork AI Studio selbst ist kostenlos erhältlich."
 
 -- Relying on web services like ChatGPT was not a sustainable solution for me. I needed an AI that could also access files directly on my device, a functionality web services inherently lack due to security and privacy constraints. Although I could have scripted something in Python to meet my needs, this approach was too cumbersome for daily use. More importantly, I wanted to develop a solution that anyone could use without needing any programming knowledge.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T372007989"] = "Sich auf Webdienste wie ChatGPT zu verlassen, war für mich keine nachhaltige Lösung. Ich brauchte eine KI, die auch direkt auf Dateien auf meinem Gerät zugreifen kann – eine Funktion, die Webdienste aus Sicherheits- und Datenschutzgründen grundsätzlich nicht bieten. Zwar hätte ich mir eine eigene Lösung in Python programmieren können, aber das wäre für den Alltag zu umständlich gewesen. Noch wichtiger war mir, eine Lösung zu entwickeln, die jeder nutzen kann, ganz ohne Programmierkenntnisse."
 
+-- Hello, my name is Thorsten Sommer, and I am the initial creator of MindWork AI Studio. I started this project based on several crucial needs and observations I made over time. Today, we have a core team of developers and support from the open-source community.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T483341611"] = "Hallo, mein Name ist Thorsten Sommer und ich bin der initiale Entwickler von MindWork AI Studio. Ich habe dieses Projekt auf Grundlage von Bedürfnissen und Beobachtungen gestartet, die ich im Laufe der Zeit gemacht habe. Heute haben wir ein Kernteam von Entwicklern und Unterstützung aus der Open-Source-Community."
+
 -- Cross-Platform and Modern Development
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T843057510"] = "Plattformübergreifende und moderne Entwicklung"
+
+-- Today, our team aims to provide a secure, flexible, and user-friendly tool that serves a broad audience without compromising on functionality or design.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T904941692"] = "Heute verfolgt unser Team das Ziel, ein sicheres, flexibles und benutzerfreundliches Tool bereitzustellen, das eine breite Zielgruppe anspricht, ohne dabei Kompromisse bei Funktionalität oder dem Design einzugehen."
 
 -- Copies the content to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Kopiert den Inhalt in die Zwischenablage"
@@ -2064,11 +2088,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"]
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Wählen Sie die Sprache für die App aus."
 
+-- When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2013281167"] = "Wenn diese Option aktiviert ist, werden zusätzliche Optionen für die Administration angezeigt. Diese Optionen sind für IT-Mitarbeitende vorgesehen, um organisationsweite Einstellungen zu verwalten, z. B. Anbieter für eine gesamte Organisation zu konfigurieren und zu exportieren."
+
 -- The global keyboard shortcut for toggling voice recording. This shortcut works system-wide, even when the app is not focused.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2143741496"] = "Der globale Tastaturkurzbefehl zum Ein- und Ausschalten der Sprachaufnahme. Dieser Kurzbefehl funktioniert systemweit, auch wenn die App nicht im Vordergrund ist."
 
 -- Disable dictation and transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T215381891"] = "Diktieren und Transkribieren deaktivieren"
+
+-- Enterprise Administration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2277116008"] = "Unternehmensverwaltung"
 
 -- Language behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"] = "Sprachverhalten"
@@ -2079,6 +2109,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Sprache"
 
+-- Administration settings are visible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591866808"] = "Die Optionen für die Administration sind sichtbar."
+
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Energie sparen?"
 
@@ -2088,8 +2121,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"]
 -- App Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3577148634"] = "App-Einstellungen"
 
+-- Generate a 256-bit encryption secret for encrypting API keys in configuration plugins. Deploy this secret to client machines via Group Policy (Windows Registry) or environment variables. Providers can then be exported with encrypted API keys using the export buttons in the provider settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T362833"] = "Generieren Sie ein 256‑Bit‑Geheimnis für die Verschlüsselung, um API‑Schlüssel in Konfigurations-Plugins zu verschlüsseln. Stellen Sie dieses Geheimnis über Gruppenrichtlinien (Windows-Registrierung) oder über Umgebungsvariablen auf Client-Geräten bereit. Anschließend können Anbieter über die Export-Schaltflächen in den Anbieter-Einstellungen mit verschlüsselten API‑Schlüsseln exportiert werden."
+
 -- When enabled, streamed content from the AI is updated once every third second. When disabled, streamed content will be updated as soon as it is available.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3652888444"] = "Wenn aktiviert, wird gestreamter Inhalt von der KI alle drei Sekunden aktualisiert. Wenn deaktiviert, wird gestreamter Inhalt sofort aktualisiert, sobald er verfügbar ist."
+
+-- Show administration settings?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3694781396"] = "Optionen für die Administration anzeigen?"
+
+-- Read the Enterprise IT documentation for details.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3705451321"] = "Lesen Sie die Enterprise-IT-Dokumentation für die Details."
 
 -- Enable spellchecking?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"] = "Rechtschreibprüfung aktivieren?"
@@ -2124,8 +2166,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] 
 -- Would you like to set one provider as the default for the entire app? When you configure a different provider for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T844514734"] = "Möchten Sie einen Anbieter als Standard für die gesamte App festlegen? Wenn Sie einen anderen Anbieter für einen Assistenten konfigurieren, hat dieser immer Vorrang."
 
+-- Generate an encryption secret and copy it to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T922066419"] = "Geheimnis für die Verschlüsselung generieren und in die Zwischenablage kopieren"
+
+-- Administration settings are not visible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] = "Die Optionen für die Administration sind nicht sichtbar."
+
+-- Embedding Result
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1387042335"] = "Einbettungsergebnis"
+
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1469573738"] = "Löschen"
+
+-- Embed text
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1644934561"] = "Text einbetten"
+
+-- Test Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1655784761"] = "Anbieter für Einbettung testen"
 
 -- Add Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Einbettung hinzufügen"
@@ -2139,6 +2196,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T18253
 -- Add Embedding Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Einbettungsanbieter hinzufügen"
 
+-- Add text that should be embedded:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1992646324"] = "Text zum Einbetten eingeben:"
+
+-- Embedding Vector (one dimension per line)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2174876961"] = "Einbettungsvektor (eine Dimension pro Zeile)"
+
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2189814010"] = "Modell"
 
@@ -2148,6 +2211,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T24199
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T266367750"] = "Name"
 
+-- No embedding was returned.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T291969"] = "Es wurde keine Einbettung zurückgegeben."
+
 -- Configured Embedding Providers
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T305753126"] = "Konfigurierte Anbieter für Einbettungen"
 
@@ -2156,6 +2222,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T32512
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3267849393"] = "Bearbeiten"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3448155331"] = "Schließen"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Aktionen"
@@ -2178,8 +2247,26 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T51130
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T78223861"] = "Dashboard öffnen"
 
+-- Test
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T805092869"] = "Testen"
+
+-- Example text to embed
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Beispieltext zum Einbetten"
+
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T900237532"] = "Anbieter"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T975426229"] = "Konfiguration exportieren"
+
+-- Cannot export the encrypted API key: No enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T1832230847"] = "Der verschlüsselte API-Schlüssel kann nicht exportiert werden: Es ist kein Geheimnis für die Verschlüsselung konfiguriert."
+
+-- This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T3368145670"] = "Für diesen Anbieter ist ein API-Schlüssel konfiguriert. Möchten Sie den verschlüsselten API-Schlüssel in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um den API-Schlüssel verwenden zu können."
+
+-- Export API Key?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T4010580285"] = "API-Schlüssel exportieren?"
 
 -- Show provider's confidence level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1052533048"] = "Anzeigen, wie sicher sich der Anbieter ist?"
@@ -2286,6 +2373,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T853225
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237532"] = "Anbieter"
 
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T975426229"] = "Konfiguration exportieren"
+
 -- No transcription provider configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1079350363"] = "Es ist bisher kein Anbieter für Transkriptionen konfiguriert."
 
@@ -2340,6 +2430,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T900237532"] = "Anbieter"
 
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T975426229"] = "Konfiguration exportieren"
+
 -- Copy {0} to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TEXTINFOLINE::T2206391442"] = "Kopiere {0} in die Zwischenablage"
 
@@ -2376,8 +2469,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1648606751"] = "Sie können ihre
 -- It will soon be possible to integrate data from the corporate network using a specified interface (External Retrieval Interface, ERI for short). This will likely require development work by the organization in question.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1926587044"] = "Bald wird es möglich sein, Daten aus dem Firmennetzwerk über eine festgelegte Schnittstelle (External Retrieval Interface, kurz ERI) zu integrieren. Dafür wird voraussichtlich Entwicklungsaufwand seitens der jeweiligen Organisation nötig sein."
 
+-- Democratization of AI
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1986314327"] = "Demokratisierung von KI"
+
 -- Whatever your job or task is, MindWork AI Studio aims to meet your needs: whether you're a project manager, scientist, artist, author, software developer, or game developer.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2144737937"] = "Was auch immer ihr Beruf oder ihre Aufgabe ist, MindWork AI Studio möchte ihre Bedürfnisse erfüllen: Egal, ob Sie Projektmanager, Wissenschaftler, Künstler, Autor, Softwareentwickler oder Spieleentwickler sind."
+
+-- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models. MindWork AI Studio itself is available free of charge.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2201645589"] = "Wir möchten zur Demokratisierung von KI beitragen. MindWork AI Studio läuft sogar auf kostengünstiger Hardware, einschließlich Computern für etwa 100 € wie dem Raspberry Pi. Dadurch werden die App und ihr voller Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Sie können mit lokalen LLMs starten oder günstige Cloud-Modelle nutzen. MindWork AI Studio selbst ist kostenlos erhältlich."
 
 -- You can connect your email inboxes with AI Studio. The AI will read your emails and notify you of important events. You'll also be able to access knowledge from your emails in your chats.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2289234741"] = "Sie können ihre E-Mail-Postfächer mit AI Studio verbinden. Die KI liest ihre E-Mails und benachrichtigt Sie über wichtige Ereignisse. Außerdem haben Sie in ihren Chats Zugriff auf das Wissen aus ihren E-Mails."
@@ -2460,8 +2559,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Möchten Sie
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1133040906"] = "Chat verschieben"
 
--- Unnamed workspace
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1307384014"] = "Unbenannter Arbeitsbereich"
+-- Loading chats...
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1364857726"] = "Chats werden geladen..."
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1469573738"] = "Löschen"
@@ -2516,9 +2615,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Bitte geben S
 
 -- Please enter a workspace name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Bitte geben Sie einen Namen für diesen Arbeitsbereich ein."
-
--- Unnamed chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3310482275"] = "Unbenannter Chat"
 
 -- Rename
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Umbenennen"
@@ -3257,6 +3353,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Anb
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900713019"] = "Abbrechen"
+
+-- Embedding Vector
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Einbettungsvektor"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Schließen"
 
 -- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Leider ist die GPL-Lizenz von Pandoc nicht mit der Lizenz von AI Studio kompatibel. Software unter der GPL-Lizenz ist jedoch kostenlos und frei nutzbar. Sie müssen die GPL-Lizenz akzeptieren, bevor wir Pandoc automatisch für Sie herunterladen und installieren können (empfohlen). Alternativ können Sie Pandoc auch selbst herunterladen – entweder mit den untenstehenden Anweisungen oder auf anderem Weg, zum Beispiel über den Paketmanager Ihres Betriebssystems."
@@ -4028,33 +4130,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473
 
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Lokaler Ordner"
-
--- Assistant: Document Analysis
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T1372406750"] = "Assistent: Dokumentenanalyse"
-
--- Most document analysis options can be customized and saved directly in the assistant. For this, the assistant has an auto-save function.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T1870328357"] = "Die meisten Optionen für die Analyse von Dokumenten können im Assistenten angepasst und direkt gespeichert werden. Dafür verfügt der Assistent über eine automatische Speicherfunktion."
-
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2221665527"] = "Möchten Sie eines Ihrer Profile vorab auswählen?"
-
--- Preselect document analysis options?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2230062650"] = "Dokumentenanalyse-Optionen vorab auswählen?"
-
--- When enabled, you can preselect some document analysis options.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T2301091111"] = "Wenn aktiviert, können Sie einige Dokumentanalyse-Optionen vorab auswählen."
-
--- No document analysis options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3317802895"] = "Keine Dokumentenanalyse-Optionen sind vorausgewählt."
-
--- Close
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3448155331"] = "Schließen"
-
--- Document analysis options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3945756386"] = "Dokumentenanalyse-Optionen sind vorausgewählt."
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T4004501229"] = "Eines Ihrer Profile vorauswählen?"
 
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "Wenn aktiviert, können Sie einige ERI-Serveroptionen vorauswählen."
@@ -4905,6 +4980,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Lerne jeden Tag ei
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
 
+-- Reload your workspaces
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703"] = "Arbeitsbereiche neu laden"
+
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Arbeitsbereiche ausblenden"
 
@@ -4950,6 +5028,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T149711988"] = "Sie zahlen nur für das,
 -- Assistants
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1614176092"] = "Assistenten"
 
+-- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1628689293"] = "Wir möchten zur Demokratisierung von KI beitragen. MindWork AI Studio läuft sogar auf kostengünstiger Hardware, einschließlich Computern für etwa 100 € wie dem Raspberry Pi. Dadurch werden die App und ihr vollständiger Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Sie können mit lokalen LLMs starten oder günstige Cloud-Modelle nutzen."
+
 -- Unrestricted usage
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1686815996"] = "Unbeschränkte Nutzung"
 
@@ -4958,6 +5039,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1702902297"] = "Einführung"
 
 -- Vision
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1892426825"] = "Vision"
+
+-- Democratization of AI
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1986314327"] = "Demokratisierung von KI"
 
 -- Let's get started
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2331588413"] = "Los geht's"
@@ -5013,17 +5097,32 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startprotokollda
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über ihre Beiträge."
 
+-- ID mismatch: the plugin ID differs from the enterprise configuration ID.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID-Konflikt: Die Plugin-ID stimmt nicht mit der ID der Unternehmenskonfiguration überein."
+
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine private AI Studio-Installation. Sie läuft ohne Unternehmenskonfiguration."
-
--- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1282228996"] = "AI Studio läuft mit einer Unternehmenskonfiguration und einem Konfigurationsserver. Das Konfigurations-Plugin ist noch nicht verfügbar."
 
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
+-- Database version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Datenbankversion"
+
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
+
+-- Waiting for the configuration plugin...
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1533382393"] = "Warten auf das Konfigurations-Plugin …"
+
+-- Encryption secret: is not configured
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1560776885"] = "Geheimnis für die Verschlüsselung: ist nicht konfiguriert"
+
+-- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1596483935"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind aktiv."
+
+-- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG -— retrieval-augmented generation -— within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant ist eine Vektordatenbank und Suchmaschine für Vektoren. Wir nutzen Qdrant, um lokales RAG (Retrieval-Augmented Generation) innerhalb von AI Studio zu realisieren. Vielen Dank für den Einsatz und die großartige Arbeit, die in Qdrant gesteckt wurde und weiterhin gesteckt wird."
 
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "Wir verwenden Lua als Sprache für Plugins. Lua-CSharp ermöglicht die Kommunikation zwischen Lua-Skripten und AI Studio in beide Richtungen. Vielen Dank an Yusuke Nakada für diese großartige Bibliothek."
@@ -5058,8 +5157,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1915240766"] = "Um ein beliebige
 -- This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "Diese Bibliothek wird verwendet, um HTML in Markdown umzuwandeln. Das ist zum Beispiel notwendig, wenn Sie eine URL als Eingabe für einen Assistenten angeben."
 
+-- Encryption secret: is configured
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1931141322"] = "Geheimnis für die Verschlüsselung: ist konfiguriert"
+
 -- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "Wir verwenden Rocket zur Implementierung der Runtime-API. Dies ist notwendig, da die Runtime mit der Benutzeroberfläche (IPC) kommunizieren muss. Rocket ist ein ausgezeichnetes Framework zur Umsetzung von Web-APIs in Rust."
+
+-- Copies the following to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgendes in die Zwischenablage"
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
@@ -5078,9 +5183,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2272122662"] = "Konfigurationsse
 
 -- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2273492381"] = "Wir müssen Zufallszahlen erzeugen, z. B. um die Kommunikation zwischen der Benutzeroberfläche und der Laufzeitumgebung abzusichern. Die rand-Bibliothek eignet sich dafür hervorragend."
-
--- AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2280402765"] = "AI Studio läuft mit einer Unternehmenskonfiguration über ein Konfigurations-Plugin, ohne zentrale Konfigurationsverwaltung."
 
 -- Configuration plugin ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Konfigurations-Plugin-ID:"
@@ -5105,6 +5207,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
+
+-- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "Diese Bibliothek wird verwendet, um temporäre Ordner zu erstellen, in denen das Zertifikat und der private Schlüssel für die Kommunikation mit Qdrant gespeichert werden."
 
 -- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "Dieses Crate stellt Derive-Makros für Rust-Enums bereit, die wir verwenden, um Boilerplate zu reduzieren, wenn wir String-Konvertierungen und Metadaten für Laufzeittypen implementieren. Das ist hilfreich für die Kommunikation zwischen unseren Rust- und .NET-Systemen."
@@ -5142,6 +5247,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840582448"] = "Erklärung"
 -- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend kann nicht als Desktop-App gestartet werden. Deshalb verwende ich ein zweites Backend in Rust, das ich „Runtime“ nenne. Mit Rust als Runtime kann Tauri genutzt werden, um eine typische Desktop-App zu realisieren. Dank Rust kann diese App für Windows-, macOS- und Linux-Desktops angeboten werden. Rust ist eine großartige Sprache für die Entwicklung sicherer und leistungsstarker Software."
 
+-- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind noch nicht verfügbar."
+
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotokoll"
 
@@ -5175,6 +5283,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3433065373"] = "Informationen ü
 -- Used Rust compiler
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3440211747"] = "Verwendeter Rust-Compiler"
 
+-- AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird mit Unternehmenskonfigurationen unter Verwendung von Konfigurations-Plugins betrieben. Eine zentrale Konfigurationsverwaltung wird nicht eingesetzt."
+
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri wird verwendet, um die Blazor-Benutzeroberfläche bereitzustellen. Es ist ein großartiges Projekt, das die Erstellung von Desktop-Anwendungen mit Webtechnologien ermöglicht. Ich liebe Tauri!"
 
@@ -5183,9 +5294,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3563271893"] = "Motivation"
 
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."
-
--- AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3741877842"] = "AI Studio läuft mit einer Unternehmenskonfiguration und einem Konfigurationsserver. Das Konfigurations-Plugin ist aktiv."
 
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
@@ -5223,6 +5331,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bib
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Verwendetes .NET SDK"
 
+-- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "Diese Bibliothek wird verwendet, um Sidecar-Prozesse zu verwalten und sicherzustellen, dass veraltete oder Zombie-Sidecars erkannt und beendet werden."
+
 -- Did you find a bug or are you experiencing issues? Report your concern here.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Haben Sie einen Fehler gefunden oder Probleme festgestellt? Melden Sie Ihr Anliegen hier."
 
@@ -5253,6 +5364,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Interne Plugins"
 -- Disabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1724138133"] = "Deaktivierte Plugins"
 
+-- Send a mail
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1999487139"] = "E-Mail senden"
+
 -- Enable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Plugin aktivieren"
 
@@ -5264,6 +5378,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Aktivierte Plugins"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Aktionen"
+
+-- Open website
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Website öffnen"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Einstellungen"
@@ -5781,6 +5898,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T3893997203"] = "
 -- Trust all LLM providers
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T4107860491"] = "Allen LLM-Anbietern vertrauen"
 
+-- Storage size
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T1230141403"] = "Speichergröße"
+
+-- HTTP port
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T1717573768"] = "HTTP-Port"
+
+-- Reported version
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T3556099842"] = "Gemeldete Version"
+
+-- gRPC port
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T757840040"] = "gRPC-Port"
+
+-- Number of collections
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T842647336"] = "Anzahl der Collections"
+
 -- The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T1555790630"] = "Die zugehörigen Daten dürfen an keinen LLM-Anbieter gesendet werden. Das bedeutet, dass diese Datenquelle momentan nicht verwendet werden kann."
 
@@ -5970,14 +6102,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2262604281"] = "Das
 -- The field DESCRIPTION does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T229488255"] = "Das Feld DESCRIPTION existiert nicht oder ist keine gültige Zeichenkette."
 
--- The field SOURCE_URL is not a valid URL. The URL must start with 'http://' or 'https://'.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2320984047"] = "Das Feld SOURCE_URL ist keine gültige URL. Die URL muss mit 'http://' oder 'https://' beginnen."
-
 -- The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2538827536"] = "Das Feld VERSION ist keine gültige Versionsnummer. Die Versionsnummer muss als Zeichenkette im Format major.minor.patch (X.X.X) angegeben werden."
 
+-- The field SOURCE_URL is not a valid URL. The URL must start with 'http://', 'https://', or 'mailto:'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2892057533"] = "Das Feld SOURCE_URL ist keine gültige URL. Die URL muss mit „http://“, „https://“ oder „mailto:“ beginnen."
+
 -- The table AUTHORS is empty. At least one author must be specified.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2981832540"] = "Die Tabelle AUTHORS ist leer. Es muss mindestens ein Autor angegeben werden."
+
+-- The field SOURCE_URL is not a valid URL. When the URL starts with 'mailto:', it must contain a valid email address as recipient.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3165663073"] = "Das Feld SOURCE_URL ist keine gültige URL. Wenn die URL mit „mailto:“ beginnt, muss sie eine gültige E-Mail-Adresse als Empfänger enthalten."
 
 -- The field SUPPORT_CONTACT is empty. The support contact must be a non-empty string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3524814526"] = "Das Feld SUPPORT_CONTACT ist leer. Der Support-Kontakt muss eine nicht-leere Zeichenkette sein."
@@ -6386,3 +6521,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannt
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
+
+-- Unnamed chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3310482275"] = "Unbenannter Chat"

@@ -13,6 +13,12 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     public const string FORMATTER_NAME = "AI Studio Terminal Logger";
 
     private static RustService? RUST_SERVICE;
+    
+    // ReSharper disable FieldCanBeMadeReadOnly.Local
+    // ReSharper disable ConvertToConstant.Local
+    private static bool LOG_TO_STDOUT = true;
+    // ReSharper restore ConvertToConstant.Local
+    // ReSharper restore FieldCanBeMadeReadOnly.Local
 
     // Buffer for early log events before the RustService is available:
     private static readonly ConcurrentQueue<LogEventRequest> EARLY_LOG_BUFFER = new();
@@ -44,6 +50,10 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
                 bufferedEvent.StackTrace
             );
         }
+
+        #if !DEBUG
+        LOG_TO_STDOUT = false;
+        #endif
     }
 
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
@@ -56,19 +66,22 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
         var stackTrace = logEntry.Exception?.StackTrace;
         var colorCode = GetColorForLogLevel(logEntry.LogLevel);
 
-        textWriter.Write($"[{colorCode}{timestamp}{ANSI_RESET}] {colorCode}{logLevel}{ANSI_RESET} [{category}] {colorCode}{message}{ANSI_RESET}");
-        if (logEntry.Exception is not null)
+        if (LOG_TO_STDOUT)
         {
-            textWriter.Write($"   {colorCode}Exception: {exceptionMessage}{ANSI_RESET}");
-            if (stackTrace is not null)
+            textWriter.Write($"[{colorCode}{timestamp}{ANSI_RESET}] {colorCode}{logLevel}{ANSI_RESET} [{category}] {colorCode}{message}{ANSI_RESET}");
+            if (logEntry.Exception is not null)
             {
-                textWriter.WriteLine();
-                foreach (var line in stackTrace.Split('\n'))
-                    textWriter.WriteLine($"      {colorCode}{line.TrimEnd()}{ANSI_RESET}");
+                textWriter.Write($"   {colorCode}Exception: {exceptionMessage}{ANSI_RESET}");
+                if (stackTrace is not null)
+                {
+                    textWriter.WriteLine();
+                    foreach (var line in stackTrace.Split('\n'))
+                        textWriter.WriteLine($"      {colorCode}{line.TrimEnd()}{ANSI_RESET}");
+                }
             }
+            else
+                textWriter.WriteLine();
         }
-        else
-            textWriter.WriteLine();
 
         // Send log event to Rust via API (fire-and-forget):
         if (RUST_SERVICE is not null)

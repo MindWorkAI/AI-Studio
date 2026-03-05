@@ -1,7 +1,14 @@
+using Markdig;
+
 namespace AIStudio.Tools;
 
 public static class Markdown
 {
+    public static readonly MarkdownPipeline SAFE_MARKDOWN_PIPELINE = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .DisableHtml()
+        .Build();
+
     public static MudMarkdownProps DefaultConfig => new()
     {
         Heading =

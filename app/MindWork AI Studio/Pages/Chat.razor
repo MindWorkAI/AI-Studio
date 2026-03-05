@@ -29,7 +29,9 @@
         </MudToolBar>
     </MudStack>
 
-    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    <CascadingValue Value="Components.CHAT">
+        <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+    </CascadingValue>
     @if (this.AreWorkspacesVisible)
     {
         <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
@@ -45,6 +47,9 @@
                                 </MudText>
                                 <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="@(async () => await this.OpenWorkspacesSettingsDialog())"/>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                                 </MudTooltip>
                                 <MudTooltip Text="@T("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Size="Size.Medium" Icon="@this.WorkspaceSidebarToggleIcon" Class="me-1" OnClick="@(() => this.ToggleWorkspaceSidebar())"/>
@@ -68,6 +73,9 @@
                                 <MudSpacer/>
                                 <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="@(async () => await this.OpenWorkspacesSettingsDialog())"/>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                                 </MudTooltip>
                             </MudStack>
                         </HeaderContent>
@@ -134,6 +142,9 @@
                     
                     <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="@(async () => await this.OpenWorkspacesSettingsDialog())"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                     </MudTooltip>
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Medium" OnClick="@(() => this.ToggleWorkspacesOverlay())"/>
                 </MudStack>

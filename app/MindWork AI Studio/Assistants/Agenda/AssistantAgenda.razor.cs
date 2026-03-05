@@ -7,7 +7,7 @@ namespace AIStudio.Assistants.Agenda;
 
 public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 {
-    public override Tools.Components Component => Tools.Components.AGENDA_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.AGENDA_ASSISTANT;
     
     protected override string Title => T("Agenda Planner");
     

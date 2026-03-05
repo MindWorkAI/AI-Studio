@@ -107,7 +107,7 @@ public record ChatTemplate(
 
         template = new ChatTemplate
         {
-            Num = 0,
+            Num = 0, // will be set later by the PluginConfigurationObject
             Id = id.ToString(),
             Name = name,
             SystemPrompt = systemPrompt,

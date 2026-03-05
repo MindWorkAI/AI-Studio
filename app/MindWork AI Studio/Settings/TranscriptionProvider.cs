@@ -43,7 +43,7 @@ public sealed record TranscriptionProvider(
 
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.Id;
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToName()}" : this.UsedLLMProvider.ToName();
 
     /// <inheritdoc />
     [JsonIgnore]
@@ -56,49 +56,49 @@ public sealed record TranscriptionProvider(
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid ID. The ID must be a valid GUID.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid ID. The ID must be a valid GUID. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid name.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid name. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("UsedLLMProvider", out var usedLLMProviderValue) || !usedLLMProviderValue.TryRead<string>(out var usedLLMProviderText) || !Enum.TryParse<LLMProviders>(usedLLMProviderText, true, out var usedLLMProvider))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid LLM provider enum value.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid LLM provider enum value. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("Host", out var hostValue) || !hostValue.TryRead<string>(out var hostText) || !Enum.TryParse<Host>(hostText, true, out var host))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid host enum value.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid host enum value. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("Hostname", out var hostnameValue) || !hostnameValue.TryRead<string>(out var hostname))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid hostname.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid hostname. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("Model", out var modelValue) || !modelValue.TryRead<LuaTable>(out var modelTable))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model table.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model table. (Plugin ID: {configPluginId})");
             return false;
         }
 
-        if (!TryReadModelTable(idx, modelTable, out var model))
+        if (!TryReadModelTable(idx, modelTable, configPluginId, out var model))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model configuration.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model configuration. (Plugin ID: {configPluginId})");
             return false;
         }
 
         provider = new TranscriptionProvider
         {
-            Num = 0,
+            Num = 0, // will be set later by the PluginConfigurationObject
             Id = id.ToString(),
             Name = name,
             UsedLLMProvider = usedLLMProvider,
@@ -110,25 +110,85 @@ public sealed record TranscriptionProvider(
             Host = host,
         };
 
+        // Handle encrypted API key if present:
+        if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
+        {
+            if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
+                LOGGER.LogWarning($"The configured transcription provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+            else
+            {
+                var encryption = PluginFactory.EnterpriseEncryption;
+                if (encryption?.IsAvailable == true)
+                {
+                    if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
+                    {
+                        // Queue the API key for storage in the OS keyring:
+                        PendingEnterpriseApiKeys.Add(new(
+                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToName()}",
+                            name,
+                            decryptedApiKey,
+                            SecretStoreType.TRANSCRIPTION_PROVIDER));
+                        LOGGER.LogDebug($"Successfully decrypted API key for transcription provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                    }
+                    else
+                        LOGGER.LogWarning($"Failed to decrypt API key for transcription provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
+                }
+                else
+                    LOGGER.LogWarning($"The configured transcription provider {idx} contains an encrypted API key, but no encryption secret is configured. (Plugin ID: {configPluginId})");
+            }
+        }
+
         return true;
     }
 
-    private static bool TryReadModelTable(int idx, LuaTable table, out Model model)
+    private static bool TryReadModelTable(int idx, LuaTable table, Guid configPluginId, out Model model)
     {
         model = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var id))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model ID.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model ID. (Plugin ID: {configPluginId})");
             return false;
         }
 
         if (!table.TryGetValue("DisplayName", out var displayNameValue) || !displayNameValue.TryRead<string>(out var displayName))
         {
-            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model display name.");
+            LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid model display name. (Plugin ID: {configPluginId})");
             return false;
         }
 
         model = new(id, displayName);
         return true;
+    }
+
+    /// <summary>
+    /// Exports the transcription provider configuration as a Lua configuration section.
+    /// </summary>
+    /// <param name="encryptedApiKey">Optional encrypted API key to include in the export.</param>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection(string? encryptedApiKey = null)
+    {
+        var apiKeyLine = string.Empty;
+        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+        {
+            apiKeyLine = $"""
+                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
+                          """;
+        }
+
+        return $$"""
+                CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
+                    ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
+                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+
+                    ["Host"] = "{{this.Host}}",
+                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    {{apiKeyLine}}
+                    ["Model"] = {
+                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
+                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
+                    },
+                }
+                """;
     }
 }

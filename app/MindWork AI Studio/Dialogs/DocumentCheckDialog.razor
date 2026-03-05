@@ -54,7 +54,7 @@
                             Class="ma-2 pe-4"
                             HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")">
                             <div style="max-height: 40vh; overflow-y: auto;">
-                                <MudMarkdown Value="@this.FileContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling"/>
+                                <MudMarkdown Value="@this.FileContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                             </div>
                         </MudField>
                     </MudTabPanel>

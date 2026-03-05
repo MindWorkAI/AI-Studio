@@ -19,8 +19,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
-    public override Tools.Components Component => Tools.Components.ERI_ASSISTANT;
+
+    protected override Tools.Components Component => Tools.Components.ERI_ASSISTANT;
     
     protected override string Title => T("ERI Server");
     

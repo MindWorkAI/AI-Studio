@@ -30,6 +30,11 @@ public static class HostExtensions
         _ => "audio/transcriptions",
     };
     
+    public static string EmbeddingURL(this Host host) => host switch
+    {
+        _ => "embeddings",
+    };
+    
     public static bool IsChatSupported(this Host host)
     {
         switch (host)

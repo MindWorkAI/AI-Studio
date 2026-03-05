@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Lua;
 
@@ -8,13 +9,19 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginConfiguration).Namespace, nameof(PluginConfiguration));
     private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
-    
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginConfiguration));
+
     private List<PluginConfigurationObject> configObjects = [];
     
     /// <summary>
     /// The list of configuration objects. Configuration objects are, e.g., providers or chat templates. 
     /// </summary>
     public IEnumerable<PluginConfigurationObject> ConfigObjects => this.configObjects;
+
+    /// <summary>
+    /// True/false when explicitly configured in the plugin, otherwise null.
+    /// </summary>
+    public bool? DeployedUsingConfigServer { get; } = ReadDeployedUsingConfigServer(state);
     
     public async Task InitializeAsync(bool dryRun)
     {
@@ -23,9 +30,56 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         if (!dryRun)
         {
+            // Store any decrypted API keys from enterprise configuration in the OS keyring:
+            await StoreEnterpriseApiKeysAsync();
+
             await SETTINGS_MANAGER.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
+    }
+
+    /// <summary>
+    /// Stores any pending enterprise API keys in the OS keyring.
+    /// </summary>
+    private static async Task StoreEnterpriseApiKeysAsync()
+    {
+        var pendingKeys = PendingEnterpriseApiKeys.GetAndClear();
+        if (pendingKeys.Count == 0)
+            return;
+
+        LOG.LogInformation($"Storing {pendingKeys.Count} enterprise API key(s) in the OS keyring.");
+        var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
+        foreach (var pendingKey in pendingKeys)
+        {
+            try
+            {
+                // Create a temporary secret ID object for storing the key:
+                var secretId = new TemporarySecretId(pendingKey.SecretId, pendingKey.SecretName);
+                var result = await rustService.SetAPIKey(secretId, pendingKey.ApiKey, pendingKey.StoreType);
+
+                if (result.Success)
+                    LOG.LogDebug($"Successfully stored enterprise API key for '{pendingKey.SecretName}' in the OS keyring.");
+                else
+                    LOG.LogWarning($"Failed to store enterprise API key for '{pendingKey.SecretName}': {result.Issue}");
+            }
+            catch (Exception ex)
+            {
+                LOG.LogError(ex, $"Exception while storing enterprise API key for '{pendingKey.SecretName}'.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Temporary implementation of ISecretId for storing enterprise API keys.
+    /// </summary>
+    private sealed record TemporarySecretId(string SecretId, string SecretName) : ISecretId;
+
+    private static bool? ReadDeployedUsingConfigServer(LuaState state)
+    {
+        if (state.Environment["DEPLOYED_USING_CONFIG_SERVER"].TryRead<bool>(out var deployedUsingConfigServer))
+            return deployedUsingConfigServer;
+
+        return null;
     }
 
     /// <summary>
@@ -60,12 +114,15 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: allow the user to add providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
+
+        // Config: show administration settings?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
         
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
         
-        // Config: enabled preview features
-        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.EnabledPreviewFeatures, this.Id, settingsTable, dryRun);
+        // Config: enabled preview features (plugin contribution; users can enable additional features)
+        ManagedConfiguration.TryProcessConfigurationWithPluginContribution(x => x.App, x => x.EnabledPreviewFeatures, this.Id, settingsTable, dryRun);
         
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
@@ -88,6 +145,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Handle configured profiles:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
         
+        // Handle configured document analysis policies:
+        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, mainTable, this.Id, ref this.configObjects, dryRun);
+        
+        // Config: preselected provider?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
         // Config: preselected profile?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
 

@@ -10,6 +10,18 @@ namespace AIStudio.Chat;
 /// </summary>
 public partial class ContentBlockComponent : MSGComponentBase
 {
+    private static readonly string[] HTML_TAG_MARKERS =
+    [
+        "<!doctype",
+        "<html",
+        "<head",
+        "<body",
+        "<style",
+        "<script",
+        "<iframe",
+        "<svg",
+    ];
+
     /// <summary>
     /// The role of the chat content block.
     /// </summary>
@@ -68,16 +80,35 @@ public partial class ContentBlockComponent : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     private bool HideContent { get; set; }
+    private bool hasRenderHash;
+    private int lastRenderHash;
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        // Register the streaming events:
-        this.Content.StreamingDone = this.AfterStreaming;
-        this.Content.StreamingEvent = () => this.InvokeAsync(this.StateHasChanged);
-        
+        this.RegisterStreamingEvents();
         await base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        this.RegisterStreamingEvents();
+        return base.OnParametersSetAsync();
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldRender()
+    {
+        var currentRenderHash = this.CreateRenderHash();
+        if (!this.hasRenderHash || currentRenderHash != this.lastRenderHash)
+        {
+            this.lastRenderHash = currentRenderHash;
+            this.hasRenderHash = true;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -111,6 +142,47 @@ public partial class ContentBlockComponent : MSGComponentBase
         });
     }
 
+    private void RegisterStreamingEvents()
+    {
+        this.Content.StreamingDone = this.AfterStreaming;
+        this.Content.StreamingEvent = () => this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private int CreateRenderHash()
+    {
+        var hash = new HashCode();
+        hash.Add(this.Role);
+        hash.Add(this.Type);
+        hash.Add(this.Time);
+        hash.Add(this.Class);
+        hash.Add(this.IsLastContentBlock);
+        hash.Add(this.IsSecondToLastBlock);
+        hash.Add(this.HideContent);
+        hash.Add(this.SettingsManager.IsDarkMode);
+        hash.Add(this.RegenerateEnabled());
+        hash.Add(this.Content.InitialRemoteWait);
+        hash.Add(this.Content.IsStreaming);
+        hash.Add(this.Content.FileAttachments.Count);
+        hash.Add(this.Content.Sources.Count);
+
+        switch (this.Content)
+        {
+            case ContentText text:
+                var textValue = text.Text;
+                hash.Add(textValue.Length);
+                hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
+                hash.Add(text.Sources.Count);
+                break;
+
+            case ContentImage image:
+                hash.Add(image.SourceType);
+                hash.Add(image.Source);
+                break;
+        }
+
+        return hash.ToHashCode();
+    }
+
     #endregion
     
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
@@ -121,6 +193,34 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         CodeBlock = { Theme = this.CodeColorPalette },
     };
+
+    private static string NormalizeMarkdownForRendering(string text)
+    {
+        var cleaned = text.RemoveThinkTags().Trim();
+        if (string.IsNullOrWhiteSpace(cleaned))
+            return string.Empty;
+
+        if (cleaned.Contains("```", StringComparison.Ordinal))
+            return cleaned;
+
+        if (LooksLikeRawHtml(cleaned))
+            return $"```html{Environment.NewLine}{cleaned}{Environment.NewLine}```";
+
+        return cleaned;
+    }
+
+    private static bool LooksLikeRawHtml(string text)
+    {
+        var content = text.TrimStart();
+        if (!content.StartsWith("<", StringComparison.Ordinal))
+            return false;
+
+        foreach (var marker in HTML_TAG_MARKERS)
+            if (content.Contains(marker, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+        return content.Contains("</", StringComparison.Ordinal) || content.Contains("/>", StringComparison.Ordinal);
+    }
     
     private async Task RemoveBlock()
     {

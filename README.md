@@ -32,7 +32,7 @@ Since November 2024: Work on RAG (integration of your data and files) has begun.
 - [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
 - [ ] App: Implement external embedding providers
 - [ ] App: Implement the process to vectorize one local file using embeddings
-- [ ] Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant)
+- [x] ~~Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant) ([PR #580](https://github.com/MindWorkAI/AI-Studio/pull/580))~~
 - [ ] App: Implement the continuous process of vectorizing data
 - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
 - [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
@@ -105,6 +105,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 
 **Key advantages:**
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
+- **Democratization of AI**: We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
 - **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
   - [OpenAI](https://openai.com/) (GPT5, GPT4.1, o1, o3, o4, etc.)
   - [Perplexity](https://www.perplexity.ai/)

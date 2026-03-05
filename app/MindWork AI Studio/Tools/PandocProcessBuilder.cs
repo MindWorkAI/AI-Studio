@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Services;
@@ -74,36 +73,49 @@ public sealed class PandocProcessBuilder
     
     public async Task<PandocPreparedProcess> BuildAsync(RustService rustService)
     {
-        var sbArguments = new StringBuilder();
-
-        if (this.useStandaloneMode)
-            sbArguments.Append(" --standalone ");
-        
-        if(!string.IsNullOrWhiteSpace(this.providedInputFile))
-            sbArguments.Append(this.providedInputFile);
-        
-        if(!string.IsNullOrWhiteSpace(this.providedInputFormat))
-            sbArguments.Append($" -f {this.providedInputFormat}");
-        
-        if(!string.IsNullOrWhiteSpace(this.providedOutputFormat))
-            sbArguments.Append($" -t {this.providedOutputFormat}");
-        
-        foreach (var additionalArgument in this.additionalArguments)
-            sbArguments.Append($" {additionalArgument}");
-        
-        if(!string.IsNullOrWhiteSpace(this.providedOutputFile))
-            sbArguments.Append($" -o {this.providedOutputFile}");
-        
         var pandocExecutable = await PandocExecutablePath(rustService);
-        return new (new ProcessStartInfo
+        var startInfo = new ProcessStartInfo
         {
             FileName = pandocExecutable.Executable,
-            Arguments = sbArguments.ToString(),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
-        }, pandocExecutable.IsLocalInstallation);
+        };
+
+        // Use argument tokens instead of a single command string so paths with spaces
+        // or Unicode characters are passed to Pandoc unchanged on all platforms.
+        if (this.useStandaloneMode)
+            startInfo.ArgumentList.Add("--standalone");
+
+        if (!string.IsNullOrWhiteSpace(this.providedInputFile))
+            startInfo.ArgumentList.Add(this.providedInputFile);
+
+        if (!string.IsNullOrWhiteSpace(this.providedInputFormat))
+        {
+            startInfo.ArgumentList.Add("-f");
+            startInfo.ArgumentList.Add(this.providedInputFormat);
+        }
+
+        if (!string.IsNullOrWhiteSpace(this.providedOutputFormat))
+        {
+            startInfo.ArgumentList.Add("-t");
+            startInfo.ArgumentList.Add(this.providedOutputFormat);
+        }
+
+        foreach (var additionalArgument in this.additionalArguments)
+        {
+            if (!string.IsNullOrWhiteSpace(additionalArgument))
+                startInfo.ArgumentList.Add(additionalArgument);
+        }
+
+        if (!string.IsNullOrWhiteSpace(this.providedOutputFile))
+        {
+            startInfo.ArgumentList.Add("-o");
+            startInfo.ArgumentList.Add(this.providedOutputFile);
+        }
+
+        return new(startInfo, pandocExecutable.IsLocalInstallation);
     }
     
     /// <summary>

@@ -1,4 +1,6 @@
+using System.Globalization;
 using AIStudio.Dialogs;
+using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -7,7 +9,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
-public partial class SettingsPanelEmbeddings : SettingsPanelBase
+public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableEmbeddingProviders { get; set; } = new();
@@ -114,6 +116,17 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
         await this.UpdateEmbeddingProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    private async Task ExportEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (provider == EmbeddingProvider.NONE)
+            return;
+
+        await this.ExportProvider(provider, SecretStoreType.EMBEDDING_PROVIDER, provider.ExportAsConfigurationSection);
+    }
     
     private async Task UpdateEmbeddingProviders()
     {
@@ -122,5 +135,49 @@ public partial class SettingsPanelEmbeddings : SettingsPanelBase
             this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
         
         await this.AvailableEmbeddingProvidersChanged.InvokeAsync(this.AvailableEmbeddingProviders);
+    }
+
+    private async Task TestEmbeddingProvider(EmbeddingProvider provider)
+    {
+        var dialogParameters = new DialogParameters<SingleInputDialog>
+        {
+            { x => x.ConfirmText, T("Embed text") },
+            { x => x.InputHeaderText, T("Add text that should be embedded:") },
+            { x => x.UserInput, T("Example text to embed") },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Test Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var inputText = dialogResult.Data as string;
+        if (string.IsNullOrWhiteSpace(inputText))
+            return;
+
+        var embeddingProvider = provider.CreateProvider();
+        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, default, new List<string> { inputText });
+
+        if (embeddings.Count == 0)
+        {
+            await this.DialogService.ShowMessageBox(T("Embedding Result"), T("No embedding was returned."), T("Close"));
+            return;
+        }
+
+        var vector = embeddings.FirstOrDefault();
+        if (vector is null || vector.Count == 0)
+        {
+            await this.DialogService.ShowMessageBox(T("Embedding Result"), T("No embedding was returned."), T("Close"));
+            return;
+        }
+
+        var resultText = string.Join(Environment.NewLine, vector.Select(value => value.ToString("G9", CultureInfo.InvariantCulture)));
+        var resultParameters = new DialogParameters<EmbeddingResultDialog>
+        {
+            { x => x.ResultText, resultText },
+            { x => x.ResultLabel, T("Embedding Vector (one dimension per line)") },
+        };
+
+        await this.DialogService.ShowAsync<EmbeddingResultDialog>(T("Embedding Result"), resultParameters, DialogOptions.FULLSCREEN);
     }
 }

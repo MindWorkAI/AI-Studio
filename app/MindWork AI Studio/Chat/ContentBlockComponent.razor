@@ -96,10 +96,10 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@textContent.Text.RemoveThinkTags().Trim()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
+                                <MudMarkdown Value="@NormalizeMarkdownForRendering(textContent.Text)" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
                                 @if (textContent.Sources.Count > 0)
                                 {
-                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" />
+                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
                                 }
                             }
                         }

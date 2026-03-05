@@ -172,17 +172,31 @@ public sealed class SettingsManager
         {
             case LangBehavior.AUTO:
                 var languageCode = await this.rustService.ReadUserLanguage();
-                var languagePlugin = PluginFactory.RunningPlugins.FirstOrDefault(x => x is ILanguagePlugin langPlug && langPlug.IETFTag == languageCode);
-                if (languagePlugin is null)
+                var languagePlugins = PluginFactory.RunningPlugins.OfType<ILanguagePlugin>().ToList();
+
+                if (!string.IsNullOrWhiteSpace(languageCode))
                 {
-                    this.logger.LogWarning($"The language plugin for the language '{languageCode}' is not available.");
-                    return PluginFactory.BaseLanguage;
+                    var exactMatch = languagePlugins.FirstOrDefault(x => string.Equals(x.IETFTag, languageCode, StringComparison.OrdinalIgnoreCase));
+                    if (exactMatch is not null)
+                        return exactMatch;
+
+                    var primaryLanguage = GetPrimaryLanguage(languageCode);
+                    if (!string.IsNullOrWhiteSpace(primaryLanguage))
+                    {
+                        var primaryLanguageMatch = languagePlugins
+                            .Where(x => string.Equals(GetPrimaryLanguage(x.IETFTag), primaryLanguage, StringComparison.OrdinalIgnoreCase))
+                            .OrderBy(x => x.IETFTag, StringComparer.OrdinalIgnoreCase)
+                            .FirstOrDefault();
+                        
+                        if (primaryLanguageMatch is not null)
+                        {
+                            this.logger.LogWarning($"No exact language plugin found for '{languageCode}'. Use language fallback '{primaryLanguageMatch.IETFTag}'.");
+                            return primaryLanguageMatch;
+                        }
+                    }
                 }
 
-                if (languagePlugin is ILanguagePlugin langPlugin)
-                    return langPlugin;
-
-                this.logger.LogError("The language plugin is not a language plugin.");
+                this.logger.LogWarning($"The language plugin for the language '{languageCode}' (normalized='{languageCode}') is not available.");
                 return PluginFactory.BaseLanguage;
             
             case LangBehavior.MANUAL:
@@ -203,6 +217,18 @@ public sealed class SettingsManager
         
         this.logger.LogError("The language behavior is unknown.");
         return PluginFactory.BaseLanguage;
+    }
+
+    private static string GetPrimaryLanguage(string localeTag)
+    {
+        if (string.IsNullOrWhiteSpace(localeTag))
+            return string.Empty;
+
+        var separatorIndex = localeTag.IndexOf('-');
+        if (separatorIndex < 0)
+            return localeTag;
+
+        return localeTag[..separatorIndex];
     }
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]

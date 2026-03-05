@@ -30,7 +30,7 @@ public static partial class PluginFactory
     /// </remarks>
     public static async Task LoadAll(CancellationToken cancellationToken = default)
     {
-        if (!IS_INITIALIZED)
+        if (!IsInitialized)
         {
             LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
             return;
@@ -103,7 +103,41 @@ public static partial class PluginFactory
                     }
             
                     LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
-                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath));
+
+                    var isConfigurationPluginInConfigDirectory =
+                        plugin.Type is PluginType.CONFIGURATION &&
+                        pluginPath.StartsWith(CONFIGURATION_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
+
+                    var isManagedByConfigServer = false;
+                    Guid? managedConfigurationId = null;
+                    if (plugin is PluginConfiguration configPlugin)
+                    {
+                        if (configPlugin.DeployedUsingConfigServer.HasValue)
+                            isManagedByConfigServer = configPlugin.DeployedUsingConfigServer.Value;
+                        
+                        else if (isConfigurationPluginInConfigDirectory)
+                        {
+                            isManagedByConfigServer = true;
+                            LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
+                        }
+                    }
+
+                    // For configuration plugins, validate that the plugin ID matches the enterprise config ID
+                    // (the directory name under which the plugin was downloaded):
+                    if (isConfigurationPluginInConfigDirectory && isManagedByConfigServer)
+                    {
+                        var directoryName = Path.GetFileName(pluginPath);
+                        if (Guid.TryParse(directoryName, out var enterpriseConfigId))
+                        {
+                            managedConfigurationId = enterpriseConfigId;
+                            if (enterpriseConfigId != plugin.Id)
+                                LOG.LogWarning($"The configuration plugin's ID ('{plugin.Id}') does not match the enterprise configuration ID ('{enterpriseConfigId}'). These IDs should be identical. Please update the plugin's ID field to match the enterprise configuration ID.");
+                        }
+                        else
+                            LOG.LogWarning($"Could not determine the managed configuration ID for configuration plugin '{plugin.Id}'. The plugin directory '{pluginPath}' does not end with a valid GUID.");
+                    }
+
+                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId));
                 }
                 catch (Exception e)
                 {
@@ -131,24 +165,32 @@ public static partial class PluginFactory
         //
         
         // Check LLM providers:
-        var wasConfigurationChanged = PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, configObjectList);
+        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.LLM_PROVIDER);
 
         // Check transcription providers:
-        if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check embedding providers:
-        if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check chat templates:
-        if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
-        
+
         // Check profiles:
-        if(PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, configObjectList))
+            wasConfigurationChanged = true;
+
+        // Check document analysis policies:
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
         
+        // Check for a preselected provider:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for a preselected profile:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
@@ -164,6 +206,10 @@ public static partial class PluginFactory
         // Check for users allowed to added providers:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for admin settings visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowAdminSettings, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for preview visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreviewVisibility, AVAILABLE_PLUGINS))
@@ -171,6 +217,9 @@ public static partial class PluginFactory
         
         // Check for enabled preview features:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        if(ManagedConfiguration.IsPluginContributionLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         // Check for the transcription provider:

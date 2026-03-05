@@ -15,6 +15,9 @@ public partial class ReadFileContent : MSGComponentBase
     
     [Parameter]
     public EventCallback<string> FileContentChanged { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -30,6 +33,9 @@ public partial class ReadFileContent : MSGComponentBase
     
     private async Task SelectFile()
     {
+        if (this.Disabled)
+            return;
+
         // Ensure that Pandoc is installed and ready:
         var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
             showSuccessMessage: false,

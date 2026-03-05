@@ -27,7 +27,11 @@ public sealed partial class RustService
         if (!secret.Success && !isTrying)
             this.logger!.LogError($"Failed to get the API key for '{prefix}::{secretId.SecretId}::{secretId.SecretName}::api_key': '{secret.Issue}'");
 
-        this.logger!.LogDebug($"Successfully retrieved the API key for '{prefix}::{secretId.SecretId}::{secretId.SecretName}::api_key'.");
+        if (secret.Success)
+            this.logger!.LogDebug($"Successfully retrieved the API key for '{prefix}::{secretId.SecretId}::{secretId.SecretName}::api_key'.");
+        else if (isTrying)
+            this.logger!.LogDebug($"No API key configured for '{prefix}::{secretId.SecretId}::{secretId.SecretName}::api_key' (try mode): '{secret.Issue}'");
+
         return secret;
     }
 

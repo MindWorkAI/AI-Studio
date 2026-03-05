@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.Translation;
 
 public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTranslation>
 {
-    public override Tools.Components Component => Tools.Components.TRANSLATION_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.TRANSLATION_ASSISTANT;
     
     protected override string Title => T("Translation");
     

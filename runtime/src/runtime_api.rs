@@ -3,7 +3,7 @@ use once_cell::sync::Lazy;
 use rocket::config::Shutdown;
 use rocket::figment::Figment;
 use rocket::routes;
-use crate::certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
+use crate::runtime_certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use crate::environment::is_dev;
 use crate::network::get_available_port;
 
@@ -67,6 +67,7 @@ pub fn start_runtime_api() {
             .mount("/", routes![
                 crate::dotnet::dotnet_port,
                 crate::dotnet::dotnet_ready,
+                crate::qdrant::qdrant_port,
                 crate::clipboard::set_clipboard,
                 crate::app_window::get_event_stream,
                 crate::app_window::check_for_update,
@@ -82,8 +83,9 @@ pub fn start_runtime_api() {
                 crate::environment::get_config_directory,
                 crate::environment::read_user_language,
                 crate::environment::read_enterprise_env_config_id,
-                crate::environment::delete_enterprise_env_config_id,
                 crate::environment::read_enterprise_env_config_server_url,
+                crate::environment::read_enterprise_env_config_encryption_secret,
+                crate::environment::read_enterprise_configs,
                 crate::file_data::extract_data,
                 crate::log::get_log_paths,
                 crate::log::log_event,

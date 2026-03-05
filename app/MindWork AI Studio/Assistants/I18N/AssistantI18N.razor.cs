@@ -16,7 +16,7 @@ namespace AIStudio.Assistants.I18N;
 
 public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 {
-    public override Tools.Components Component => Tools.Components.I18N_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.I18N_ASSISTANT;
     
     protected override string Title => T("Localization");
     

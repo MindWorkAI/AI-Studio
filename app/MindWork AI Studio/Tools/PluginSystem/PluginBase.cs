@@ -332,15 +332,54 @@ public abstract partial class PluginBase : IPluginMetadata
             return false;
         }
 
-        if (!url.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+        url = url.Trim();
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var sourceUri))
         {
             url = string.Empty;
-            message = TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://' or 'https://'.");
+            message = TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://', 'https://', or 'mailto:'.");
             return false;
         }
+
+        var isHttp = sourceUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+        var isHttps = sourceUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        var isMailTo = sourceUri.Scheme.Equals(Uri.UriSchemeMailto, StringComparison.OrdinalIgnoreCase);
+        if (!isHttp && !isHttps && !isMailTo)
+        {
+            url = string.Empty;
+            message = TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://', 'https://', or 'mailto:'.");
+            return false;
+        }
+
+        if (isMailTo)
+        {
+            var recipient = ExtractMailtoRecipient(url);
+            if (string.IsNullOrWhiteSpace(recipient))
+            {
+                url = string.Empty;
+                message = TB("The field SOURCE_URL is not a valid URL. When the URL starts with 'mailto:', it must contain a valid email address as recipient.");
+                return false;
+            }
+        }
+
+        url = sourceUri.ToString();
         
         message = string.Empty;
         return true;
+    }
+
+    private static string ExtractMailtoRecipient(string rawUrl)
+    {
+        var separatorIndex = rawUrl.IndexOf(':');
+        if (separatorIndex < 0 || separatorIndex + 1 >= rawUrl.Length)
+            return string.Empty;
+
+        var schemeSpecificPart = rawUrl[(separatorIndex + 1)..];
+        var queryStart = schemeSpecificPart.IndexOf('?');
+        var recipient = queryStart >= 0
+            ? schemeSpecificPart[..queryStart]
+            : schemeSpecificPart;
+        
+        return recipient.Trim();
     }
     
     /// <summary>

@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ABOUT)]
+@using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
@@ -19,86 +20,158 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionDotnetSdk"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@this.VersionDotnetRuntime"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionRust"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage">
+                        <MudText Typo="Typo.body1">
+                            @this.VersionDatabase
+                        </MudText>
+                        <MudCollapse Expanded="@this.showDatabaseDetails">
+                            <MudText Typo="Typo.body1" Class="mt-2 mb-2">
+                                @foreach (var item in this.databaseDisplayInfo)
+                                {
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
+                                        <span>@item.Label: @item.Value</span>
+                                        <MudCopyClipboardButton TooltipMessage="@(T("Copies the following to the clipboard")+": "+item.Value)" StringContent=@item.Value/>
+                                    </div>
+                                }
+                            </MudText>
+                        </MudCollapse>
+                        <MudButton StartIcon="@(this.showDatabaseDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                   Size="Size.Small"
+                                   Variant="Variant.Text"
+                                   OnClick="@this.ToggleDatabaseDetails">
+                            @(this.showDatabaseDetails ? T("Hide Details") : T("Show Details"))
+                        </MudButton>
+                    </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@this.VersionPdfium"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Article" Text="@this.versionPandoc"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
-                        @switch (EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.IsActive)
+                        @switch (HasAnyActiveEnvironment)
                         {
-                            case false when this.configPlug is null:
+                            case false when this.configPlugins.Count == 0:
                                 <MudText Typo="Typo.body1">
                                     @T("This is a private AI Studio installation. It runs without an enterprise configuration.")
                                 </MudText>
                                 break;
-                                
+
                             case false:
                                 <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration using a configuration plugin, without central configuration management.")
+                                    @T("AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management.")
                                 </MudText>
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
-                                        </div>
-                                    </MudText>
-                                </MudCollapse>
-                                break;
-                                
-                            case true when this.configPlug is null:
-                                <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is not yet available.")
-                                </MudText>
-                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Enterprise configuration ID:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId.ToString()/>
-                                        </div>
-                                    </MudText>
-
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration server:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
-                                        </div>
-                                    </MudText>
-                                </MudCollapse>
-                                break;
-                                
-                            case true:
-                                <MudText Typo="Typo.body1">
-                                    @T("AI Studio runs with an enterprise configuration and a configuration server. The configuration plugin is active.")
-                                </MudText>
-                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Enterprise configuration ID:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the config ID to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationId.ToString()/>
-                                        </div>
-                                    </MudText>
-
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration server:") @EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the server URL to the clipboard")" StringContent=@EnterpriseEnvironmentService.CURRENT_ENVIRONMENT.ConfigurationServerUrl/>
-                                        </div>
-                                    </MudText>
+                                    @foreach (var plug in this.configPlugins)
+                                    {
+                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
+                                                              HeaderText="@plug.Name"
+                                                              Items="@([
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration plugin ID:")} {plug.Id}",
+                                                                             plug.Id.ToString(),
+                                                                             T("Copies the configuration plugin ID to the clipboard"))
+                                                                     ])"/>
+                                    }
                                     
-                                    <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
-                                            <span>@T("Configuration plugin ID:") @this.configPlug!.Id</span>
-                                            <MudCopyClipboardButton TooltipMessage="@T("Copies the configuration plugin ID to the clipboard")" StringContent=@this.configPlug!.Id.ToString()/>
-                                        </div>
+                                    <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
+                                                          ConfiguredText="@T("Encryption secret: is configured")"
+                                                          NotConfiguredText="@T("Encryption secret: is not configured")"/>
+                                </MudCollapse>
+                                break;
+
+                            case true when this.configPlugins.Count == 0:
+                                <MudText Typo="Typo.body1">
+                                    @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.")
+                                </MudText>
+                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
+                                    @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
+                                    {
+                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
+                                                              HeaderText="@T("Waiting for the configuration plugin...")"
+                                                              Items="@([
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
+                                                                             env.ConfigurationId.ToString(),
+                                                                             T("Copies the config ID to the clipboard")),
+                                                                         
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
+                                                                             env.ConfigurationServerUrl,
+                                                                             T("Copies the server URL to the clipboard"),
+                                                                             "margin-top: 4px;")
+                                                                     ])"/>
+                                    }
+                                    
+                                    <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
+                                                          ConfiguredText="@T("Encryption secret: is configured")"
+                                                          NotConfiguredText="@T("Encryption secret: is not configured")"/>
+                                </MudCollapse>
+                                break;
+
+                            case true:
+                                @if (this.HasAnyLoadedEnterpriseConfigurationPlugin)
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.")
                                     </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body1">
+                                        @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.")
+                                    </MudText>
+                                }
+                                <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
+                                    @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
+                                    {
+                                        var matchingPlugin = this.FindManagedConfigurationPlugin(env.ConfigurationId);
+                                        if (matchingPlugin is null)
+                                        {
+                                            <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
+                                                                  HeaderText="@T("Waiting for the configuration plugin...")"
+                                                                  Items="@([
+                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                                 $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
+                                                                                 env.ConfigurationId.ToString(),
+                                                                                 T("Copies the config ID to the clipboard")),
+                                                                             
+                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                                 $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
+                                                                                 env.ConfigurationServerUrl,
+                                                                                 T("Copies the server URL to the clipboard"),
+                                                                                 "margin-top: 4px;")
+                                                                         ])"/>
+                                            continue;
+                                        }
+                                        
+                                        <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
+                                                              HeaderText="@matchingPlugin.Name"
+                                                              Items="@([
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
+                                                                             env.ConfigurationId.ToString(),
+                                                                             T("Copies the config ID to the clipboard")),
+                                                                         
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
+                                                                             env.ConfigurationServerUrl,
+                                                                             T("Copies the server URL to the clipboard"),
+                                                                             "margin-top: 4px;"),
+                                                                         
+                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                                                                             $"{T("Configuration plugin ID:")} {matchingPlugin.Id}",
+                                                                             matchingPlugin.Id.ToString(),
+                                                                             T("Copies the configuration plugin ID to the clipboard"),
+                                                                             "margin-top: 4px;")
+                                                                     ])"
+                                                              ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
+                                                              WarningText="@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")"/>
+                                    }
+                                    
+                                    <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
+                                                          ConfiguredText="@T("Encryption secret: is configured")"
+                                                          NotConfiguredText="@T("Encryption secret: is not configured")"/>
                                 </MudCollapse>
                                 break;
                         }
@@ -115,10 +188,10 @@
                     </MudListItem>
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="() => this.CheckForUpdate()">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
                         @T("Check for updates")
                     </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="async () => await this.ShowPandocDialog()">
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
                         @this.PandocButtonText
                     </MudButton>
                 </MudStack>
@@ -126,7 +199,7 @@
 
             <ExpansionPanel HeaderIcon="@Icons.Custom.Brands.GitHub" HeaderText="@T("Community & Code")">
                 <MudList T="string" Class="mb-1">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="http://mindworkai.org/">
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Home" Target="_blank" Href="https://mindworkai.org/">
                         @T("Discover MindWork AI's mission and vision on our official homepage.")
                     </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Custom.Brands.GitHub" Target="_blank" Href="https://github.com/MindWorkAI/AI-Studio">
@@ -167,14 +240,14 @@
                     @T("Startup log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="() => this.CopyStartupLogPath()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="@(() => this.CopyStartupLogPath())"/>
                 </MudList>
                 
                 <MudText Typo="Typo.h4">
                     @T("Usage log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="() => this.CopyAppLogPath()"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="@(() => this.CopyAppLogPath())"/>
                 </MudList>
             </ExpansionPanel>
 
@@ -194,6 +267,7 @@
                     <ThirdPartyComponent Name="CodeBeam.MudBlazor.Extensions" Developer="Mehmet Can Karagöz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions/blob/dev/LICENSE" RepositoryUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions" UseCase="@T("This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.")"/>
                     <ThirdPartyComponent Name="Rust" Developer="Graydon Hoare, Rust Foundation, Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/rust" UseCase="@T("The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.")"/>
                     <ThirdPartyComponent Name="Tauri" Developer="Daniel Thompson-Yvetot, Lucas Nogueira, Tensor, Boscop, Serge Zaitsev, George Burton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tauri-apps/tauri/blob/dev/LICENSE_MIT" RepositoryUrl="https://github.com/tauri-apps/tauri" UseCase="@T("Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!")"/>
+                    <ThirdPartyComponent Name="Qdrant" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
                     <ThirdPartyComponent Name="Rocket" Developer="Sergio Benitez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rwf2/Rocket/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rwf2/Rocket" UseCase="@T("We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.")"/>
                     <ThirdPartyComponent Name="serde" Developer="Erick Tryzelaar, David Tolnay & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/serde-rs/serde/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/serde-rs/serde" UseCase="@T("Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.")"/>
                     <ThirdPartyComponent Name="strum_macros" Developer="Peter Glotfelty & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Peternator7/strum/blob/master/LICENSE" RepositoryUrl="https://github.com/Peternator7/strum" UseCase="@T("This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.")"/>
@@ -214,6 +288,8 @@
                     <ThirdPartyComponent Name="PDFium" Developer="Lei Zhang, Tom Sepez, Dan Sinclair, and Foxit, Google, Chromium, Collabora, Ada, DocsCorp, Dropbox, Microsoft, and PSPDFKit Teams & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://pdfium.googlesource.com/pdfium/+/refs/heads/main/LICENSE" RepositoryUrl="https://pdfium.googlesource.com/pdfium" UseCase="@T("This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.")"/>
                     <ThirdPartyComponent Name="pdfium-render" Developer="Alastair Carey, Dorian Rudolph & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/ajrcarey/pdfium-render/blob/master/LICENSE.md" RepositoryUrl="https://github.com/ajrcarey/pdfium-render" UseCase="@T("This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.")"/>
                     <ThirdPartyComponent Name="sys-locale" Developer="1Password Team, ComplexSpaces & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/1Password/sys-locale/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/1Password/sys-locale" UseCase="@T("This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.")"/>
+                    <ThirdPartyComponent Name="sysinfo" Developer="Guillaume Gomez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/GuillaumeGomez/sysinfo/blob/main/LICENSE" RepositoryUrl="https://github.com/GuillaumeGomez/sysinfo" UseCase="@T("This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.")"/>
+                    <ThirdPartyComponent Name="tempfile" Developer="Steven Allen, Ashley Mannix & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Stebalien/tempfile/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/Stebalien/tempfile" UseCase="@T("This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.")"/>
                     <ThirdPartyComponent Name="Lua-CSharp" Developer="Yusuke Nakada & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/nuskey8/Lua-CSharp/blob/main/LICENSE" RepositoryUrl="https://github.com/nuskey8/Lua-CSharp" UseCase="@T("We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.")" />
                     <ThirdPartyComponent Name="HtmlAgilityPack" Developer="ZZZ Projects & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE" RepositoryUrl="https://github.com/zzzprojects/html-agility-pack" UseCase="@T("We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
                     <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="@T("This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
@@ -221,7 +297,7 @@
                 </MudGrid>
             </ExpansionPanel>
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
-                <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig"/>
+                <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
             </ExpansionPanel>
         </MudExpansionPanels>
     </InnerScrolling>

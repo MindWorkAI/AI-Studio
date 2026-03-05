@@ -1,11 +1,11 @@
 @using AIStudio.Provider
 @using AIStudio.Settings.DataModel
-@inherits SettingsPanelBase
+@inherits SettingsPanelProviderBase
 
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
 {
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.VoiceChat" HeaderText="@T("Configure Transcription Providers")">
-        <PreviewPrototype ApplyInnerScrollingFix="true"/>
+        <PreviewBeta ApplyInnerScrollingFix="true"/>
         <MudText Typo="Typo.h4" Class="mb-3">
             @T("Configured Transcription Providers")
         </MudText>
@@ -19,7 +19,7 @@
                 <col style="width: 12em;"/>
                 <col style="width: 12em;"/>
                 <col/>
-                <col style="width: 16em;"/>
+                <col style="width: 22em;"/>
             </ColGroup>
             <HeaderContent>
                 <MudTh>#</MudTh>
@@ -50,6 +50,12 @@
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditTranscriptionProvider(context))"/>
                             </MudTooltip>
+                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+                            {
+                                <MudTooltip Text="@T("Export configuration")">
+                                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportTranscriptionProvider(context))"/>
+                                </MudTooltip>
+                            }
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteTranscriptionProvider(context))"/>
                             </MudTooltip>

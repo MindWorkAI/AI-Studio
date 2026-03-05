@@ -26,6 +26,7 @@ public enum Components
     // ReSharper restore InconsistentNaming
     
     CHAT,
+    WRITER,
     APP_SETTINGS,
     
     AGENT_TEXT_CONTENT_CLEANER,

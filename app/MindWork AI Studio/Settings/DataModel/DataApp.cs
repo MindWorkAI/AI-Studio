@@ -65,7 +65,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Should we preselect a provider for the entire app?
     /// </summary>
-    public string PreselectedProvider { get; set; } = string.Empty;
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
     
     /// <summary>
     /// Should we preselect a profile for the entire app?
@@ -93,6 +93,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
+    
+    /// <summary>
+    /// Should administration settings be visible in the UI?
+    /// </summary>
+    public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

@@ -19,6 +19,7 @@ public partial class Vision : MSGComponentBase
         this.itemsVision =
         [
             new(T("Meet your needs"), T("Whatever your job or task is, MindWork AI Studio aims to meet your needs: whether you're a project manager, scientist, artist, author, software developer, or game developer.")),
+            new(T("Democratization of AI"), T("We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 EUR such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models. MindWork AI Studio itself is available free of charge.")),
             new(T("Integrating your data"), T("You'll be able to integrate your data into AI Studio, like your PDF or Office files, or your Markdown notes.")),
             new(T("Integration of enterprise data"), T("It will soon be possible to integrate data from the corporate network using a specified interface (External Retrieval Interface, ERI for short). This will likely require development work by the organization in question.")),
             new(T("Useful assistants"), T("We'll develop more assistants for everyday tasks.")),

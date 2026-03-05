@@ -80,6 +80,11 @@ public sealed class Data
     /// The next chat template number to use.
     /// </summary>
     public uint NextChatTemplateNum { get; set; } = 1;
+    
+    /// <summary>
+    /// The next document analysis policy number to use.
+    /// </summary>
+    public uint NextDocumentAnalysisPolicyNum { get; set; } = 1;
 
     public DataApp App { get; init; } = new(x => x.App);
 
