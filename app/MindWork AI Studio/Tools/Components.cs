@@ -19,6 +19,7 @@ public enum Components
     BIAS_DAY_ASSISTANT,
     ERI_ASSISTANT,
     DOCUMENT_ANALYSIS_ASSISTANT,
+    SLIDE_BUILDER_ASSISTANT,
     
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,

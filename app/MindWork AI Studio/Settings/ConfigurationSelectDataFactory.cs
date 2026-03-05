@@ -2,6 +2,7 @@ using AIStudio.Assistants.Agenda;
 using AIStudio.Assistants.Coding;
 using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.RewriteImprove;
+using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Provider;
@@ -196,6 +197,12 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var voice in Enum.GetValues<SentenceStructure>())
             yield return new(voice.Name(), voice);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<TargetGroup>> GetSlideBuilderTargetGroupData()
+    {
+        foreach (var group in Enum.GetValues<TargetGroup>())
+            yield return new(group.Name(), group);
     }
     
     public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)

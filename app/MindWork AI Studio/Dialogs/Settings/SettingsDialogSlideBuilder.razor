@@ -1,0 +1,32 @@
+﻿﻿@using AIStudio.Settings
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Spellcheck" Class="mr-2" />
+            @T("Assistant: Slide Assistant Options")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="@T("Preselect Slide Assistant options?")" LabelOn="@T("Slide Assistant options are preselected")" LabelOff="@T("No Slide Assistant options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect slide builder options. This is might be useful when you prefer a specific language or LLM model.")"/>
+            <ConfigurationText OptionDescription="@T("Preselect important aspects")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects = updatedText)" NumLines="2" OptionHelp="@T("Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.")" Icon="@Icons.Material.Filled.List"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which language should be preselected?")"/>
+            @if (this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="@T("Preselect another language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationSelect OptionDescription="@T("Preselect the target group")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetGroup)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderTargetGroupData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetGroup = selectedValue)" OptionHelp="@T("Which target group should be preselected?")"/>
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.SLIDE_BUILDER_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProvider = selectedValue)"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect one of your profiles?")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProfile = selectedValue)" OptionHelp="@T("Would you like to preselect one of your profiles?")"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
