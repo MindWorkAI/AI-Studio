@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
@@ -29,31 +29,64 @@ public partial class Workspaces : MSGComponentBase
     public bool ExpandRootNodes { get; set; } = true;
 
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
+    private readonly SemaphoreSlim treeLoadingSemaphore = new(1, 1);
+    private readonly List<TreeItemData<ITreeItem>> treeItems = [];
+    private readonly HashSet<Guid> loadingWorkspaceChatLists = [];
 
-    private readonly List<TreeItemData<ITreeItem>> treeItems = new();
+    private CancellationTokenSource? prefetchCancellationTokenSource;
+    private bool isInitialLoading = true;
+    private bool isDisposed;
     
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
-        //
-        // Notice: In order to get the server-based loading to work, we need to respect the following rules:
-        // - We must have initial tree items
-        // - Those initial tree items cannot have children
-        // - When assigning the tree items to the MudTreeViewItem component, we must set the Value property to the value of the item
-        //
-        // We won't await the loading of the tree items here,
-        // to avoid blocking the UI thread:
-        _ = this.LoadTreeItems();
+        _ = this.LoadTreeItemsAsync(startPrefetch: true);
     }
 
     #endregion
 
-    private async Task LoadTreeItems()
+    private async Task LoadTreeItemsAsync(bool startPrefetch = true, bool forceReload = false)
+    {
+        await this.treeLoadingSemaphore.WaitAsync();
+        try
+        {
+            if (this.isDisposed)
+                return;
+
+            if (forceReload)
+                await WorkspaceBehaviour.ForceReloadWorkspaceTreeAsync();
+
+            var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
+            this.BuildTreeItems(snapshot);
+            this.isInitialLoading = false;
+        }
+        finally
+        {
+            this.treeLoadingSemaphore.Release();
+        }
+
+        await this.SafeStateHasChanged();
+
+        if (startPrefetch)
+            await this.StartPrefetchAsync();
+    }
+
+    private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
         this.treeItems.Clear();
+
+        var workspaceChildren = new List<TreeItemData<ITreeItem>>();
+        foreach (var workspace in snapshot.Workspaces)
+            workspaceChildren.Add(this.CreateWorkspaceTreeItem(workspace));
+
+        workspaceChildren.Add(new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"), Icons.Material.Filled.LibraryAdd, this.AddWorkspaceAsync),
+        });
+
         this.treeItems.Add(new TreeItemData<ITreeItem>
         {
             Expanded = this.ExpandRootNodes,
@@ -66,7 +99,7 @@ public partial class Workspaces : MSGComponentBase
                 Icon = Icons.Material.Filled.Folder,
                 Expandable = true,
                 Path = "root",
-                Children = await this.LoadWorkspaces(),
+                Children = workspaceChildren,
             },
         });
         
@@ -76,7 +109,10 @@ public partial class Workspaces : MSGComponentBase
             Value = new TreeDivider(),
         });
         
-        await this.InvokeAsync(this.StateHasChanged);
+        var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
+        foreach (var temporaryChat in snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime))
+            temporaryChatsChildren.Add(CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+
         this.treeItems.Add(new TreeItemData<ITreeItem>
         {
             Expanded = this.ExpandRootNodes,
@@ -89,234 +125,219 @@ public partial class Workspaces : MSGComponentBase
                 Icon = Icons.Material.Filled.Timer,
                 Expandable = true,
                 Path = "temp",
-                Children = await this.LoadTemporaryChats(),
+                Children = temporaryChatsChildren,
             },
         });
-        
+    }
+
+    private TreeItemData<ITreeItem> CreateWorkspaceTreeItem(WorkspaceTreeWorkspace workspace)
+    {
+        var children = new List<TreeItemData<ITreeItem>>();
+        if (workspace.ChatsLoaded)
+        {
+            foreach (var workspaceChat in workspace.Chats.OrderByDescending(x => x.LastEditTime))
+                children.Add(CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+        }
+        else if (this.loadingWorkspaceChatLists.Contains(workspace.WorkspaceId))
+            children.AddRange(this.CreateLoadingRows(workspace.WorkspacePath));
+
+        children.Add(new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"), Icons.Material.Filled.AddComment, () => this.AddChatAsync(workspace.WorkspacePath)),
+        });
+
+        return new TreeItemData<ITreeItem>
+        {
+            Expandable = true,
+            Value = new TreeItemData
+            {
+                Type = TreeItemType.WORKSPACE,
+                Depth = 1,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = workspace.Name,
+                Icon = Icons.Material.Filled.Description,
+                Expandable = true,
+                Path = workspace.WorkspacePath,
+                Children = children,
+            },
+        };
+    }
+
+    private IReadOnlyCollection<TreeItemData<ITreeItem>> CreateLoadingRows(string workspacePath)
+    {
+        return
+        [
+            this.CreateLoadingTreeItem(workspacePath, "loading_1"),
+            this.CreateLoadingTreeItem(workspacePath, "loading_2"),
+            this.CreateLoadingTreeItem(workspacePath, "loading_3"),
+        ];
+    }
+
+    private TreeItemData<ITreeItem> CreateLoadingTreeItem(string workspacePath, string suffix)
+    {
+        return new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeItemData
+            {
+                Type = TreeItemType.LOADING,
+                Depth = 2,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = T("Loading chats..."),
+                Icon = Icons.Material.Filled.HourglassTop,
+                Expandable = false,
+                Path = Path.Join(workspacePath, suffix),
+            },
+        };
+    }
+
+    private static TreeItemData<ITreeItem> CreateChatTreeItem(WorkspaceTreeChat chat, WorkspaceBranch branch, int depth, string icon)
+    {
+        return new TreeItemData<ITreeItem>
+        {
+            Expandable = false,
+            Value = new TreeItemData
+            {
+                Type = TreeItemType.CHAT,
+                Depth = depth,
+                Branch = branch,
+                Text = chat.Name,
+                Icon = icon,
+                Expandable = false,
+                Path = chat.ChatPath,
+                LastEditTime = chat.LastEditTime,
+            },
+        };
+    }
+
+    private async Task SafeStateHasChanged()
+    {
+        if (this.isDisposed)
+            return;
+
         await this.InvokeAsync(this.StateHasChanged);
     }
 
-    private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadTemporaryChats()
+    private async Task StartPrefetchAsync()
     {
-        var tempChildren = new List<TreeItemData>();
-        
-        // Get the temp root directory: 
-        var temporaryDirectories = Path.Join(SettingsManager.DataDirectory, "tempChats");
-                        
-        // Ensure the directory exists:
-        Directory.CreateDirectory(temporaryDirectories);
-                        
-        // Enumerate the chat directories:
-        foreach (var tempChatDirPath in Directory.EnumerateDirectories(temporaryDirectories))
+        if (this.prefetchCancellationTokenSource is not null)
         {
-            // Read or create the `name` file (self-heal):
-            var chatNamePath = Path.Join(tempChatDirPath, "name");
-            string chatName;
-            try
+            await this.prefetchCancellationTokenSource.CancelAsync();
+            this.prefetchCancellationTokenSource.Dispose();
+        }
+
+        this.prefetchCancellationTokenSource = new CancellationTokenSource();
+        await this.PrefetchWorkspaceChatsAsync(this.prefetchCancellationTokenSource.Token);
+    }
+
+    private async Task PrefetchWorkspaceChatsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await WorkspaceBehaviour.TryPrefetchRemainingChatsAsync(async _ =>
             {
-                if (!File.Exists(chatNamePath))
-                {
-                    chatName = T("Unnamed chat");
-                    await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
-                }
-                else
-                {
-                    chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
-                    if (string.IsNullOrWhiteSpace(chatName))
-                    {
-                        chatName = T("Unnamed chat");
-                        await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
-                    }
-                }
-            }
-            catch
-            {
-                chatName = T("Unnamed chat");
-            }
-            
-            // Read the last change time of the chat:
-            var chatThreadPath = Path.Join(tempChatDirPath, "thread.json");
-            var lastEditTime = File.GetLastWriteTimeUtc(chatThreadPath);
-            
-            tempChildren.Add(new TreeItemData
-            {
-                Type = TreeItemType.CHAT,
-                Depth = 1,
-                Branch = WorkspaceBranch.TEMPORARY_CHATS,
-                Text = chatName,
-                Icon = Icons.Material.Filled.Timer,
-                Expandable = false,
-                Path = tempChatDirPath,
-                LastEditTime = lastEditTime,
-            });
+                if (this.isDisposed || cancellationToken.IsCancellationRequested)
+                    return;
+
+                await this.LoadTreeItemsAsync(startPrefetch: false);
+            }, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when the component is hidden or disposed.
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogWarning(ex, "Failed while prefetching workspace chats.");
+        }
+    }
+
+    private async Task OnWorkspaceClicked(TreeItemData treeItem)
+    {
+        if (treeItem.Type is not TreeItemType.WORKSPACE)
+            return;
+
+        if (!Guid.TryParse(Path.GetFileName(treeItem.Path), out var workspaceId))
+            return;
+
+        await this.EnsureWorkspaceChatsLoadedAsync(workspaceId);
+    }
+
+    private async Task EnsureWorkspaceChatsLoadedAsync(Guid workspaceId)
+    {
+        var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
+        var hasWorkspace = false;
+        var chatsLoaded = false;
+        
+        foreach (var workspace in snapshot.Workspaces)
+        {
+            if (workspace.WorkspaceId != workspaceId)
+                continue;
+
+            hasWorkspace = true;
+            chatsLoaded = workspace.ChatsLoaded;
+            break;
+        }
+
+        if (!hasWorkspace || chatsLoaded || !this.loadingWorkspaceChatLists.Add(workspaceId))
+            return;
+
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        try
+        {
+            await WorkspaceBehaviour.GetWorkspaceChatsAsync(workspaceId);
+        }
+        finally
+        {
+            this.loadingWorkspaceChatLists.Remove(workspaceId);
+        }
+
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    public async Task ForceRefreshFromDiskAsync()
+    {
+        if (this.prefetchCancellationTokenSource is not null)
+        {
+            await this.prefetchCancellationTokenSource.CancelAsync();
+            this.prefetchCancellationTokenSource.Dispose();
+            this.prefetchCancellationTokenSource = null;
         }
         
-        var result = new List<TreeItemData<ITreeItem>>(tempChildren.OrderByDescending(n => n.LastEditTime).Select(n => new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = n,
-        }));
-        return result;
-    }
-    
-    private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadWorkspaces()
-    {
-        var workspaces = new List<TreeItemData<ITreeItem>>();
+        this.loadingWorkspaceChatLists.Clear();
+        this.isInitialLoading = true;
         
-        //
-        // Search for workspace folders in the data directory:
-        //
-
-        // Get the workspace root directory: 
-        var workspaceDirectories = Path.Join(SettingsManager.DataDirectory, "workspaces");
-
-        // Ensure the directory exists:
-        Directory.CreateDirectory(workspaceDirectories);
-
-        // Enumerate the workspace directories:
-        foreach (var workspaceDirPath in Directory.EnumerateDirectories(workspaceDirectories))
-        {
-            // Read or create the `name` file (self-heal):
-            var workspaceNamePath = Path.Join(workspaceDirPath, "name");
-            string workspaceName;
-            try
-            {
-                if (!File.Exists(workspaceNamePath))
-                {
-                    workspaceName = T("Unnamed workspace");
-                    await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
-                }
-                else
-                {
-                    workspaceName = await File.ReadAllTextAsync(workspaceNamePath, Encoding.UTF8);
-                    if (string.IsNullOrWhiteSpace(workspaceName))
-                    {
-                        workspaceName = T("Unnamed workspace");
-                        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
-                    }
-                }
-            }
-            catch
-            {
-                workspaceName = T("Unnamed workspace");
-            }
-                                
-            workspaces.Add(new TreeItemData<ITreeItem>
-            {
-                Expandable = true,
-                Value = new TreeItemData
-                {
-                    Type = TreeItemType.WORKSPACE,
-                    Depth = 1,
-                    Branch = WorkspaceBranch.WORKSPACES,
-                    Text = workspaceName,
-                    Icon = Icons.Material.Filled.Description,
-                    Expandable = true,
-                    Path = workspaceDirPath,
-                    Children = await this.LoadWorkspaceChats(workspaceDirPath),
-                },
-            });
-        }
-                            
-        workspaces.Add(new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"),Icons.Material.Filled.LibraryAdd, this.AddWorkspace),
-        });
-        return workspaces;
+        await this.SafeStateHasChanged();
+        await this.LoadTreeItemsAsync(startPrefetch: true, forceReload: true);
     }
 
-    private async Task<IReadOnlyCollection<TreeItemData<ITreeItem>>> LoadWorkspaceChats(string workspacePath)
+    public async Task StoreChatAsync(ChatThread chat, bool reloadTreeItems = false)
     {
-        var workspaceChats = new List<TreeItemData>();
+        await WorkspaceBehaviour.StoreChatAsync(chat);
         
-        // Enumerate the workspace directory:
-        foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
-        {
-            // Read or create the `name` file (self-heal):
-            var chatNamePath = Path.Join(chatPath, "name");
-            string chatName;
-            try
-            {
-                if (!File.Exists(chatNamePath))
-                {
-                    chatName = T("Unnamed chat");
-                    await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
-                }
-                else
-                {
-                    chatName = await File.ReadAllTextAsync(chatNamePath, Encoding.UTF8);
-                    if (string.IsNullOrWhiteSpace(chatName))
-                    {
-                        chatName = T("Unnamed chat");
-                        await File.WriteAllTextAsync(chatNamePath, chatName, Encoding.UTF8);
-                    }
-                }
-            }
-            catch
-            {
-                chatName = T("Unnamed chat");
-            }
-            
-            // Read the last change time of the chat:
-            var chatThreadPath = Path.Join(chatPath, "thread.json");
-            var lastEditTime = File.GetLastWriteTimeUtc(chatThreadPath);
-                                
-            workspaceChats.Add(new TreeItemData
-            {
-                Type = TreeItemType.CHAT,
-                Depth = 2,
-                Branch = WorkspaceBranch.WORKSPACES,
-                Text = chatName,
-                Icon = Icons.Material.Filled.Chat,
-                Expandable = false,
-                Path = chatPath,
-                LastEditTime = lastEditTime,
-            });
-        }
+        if (reloadTreeItems)
+            this.loadingWorkspaceChatLists.Clear();
         
-        var result = new List<TreeItemData<ITreeItem>>(workspaceChats.OrderByDescending(n => n.LastEditTime).Select(n => new TreeItemData<ITreeItem>
-        {
-            Expandable = false,
-            Value = n,
-        }));
-        
-        result.Add(new()
-        {
-            Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"),Icons.Material.Filled.AddComment, () => this.AddChat(workspacePath)),
-        });
-        
-        return result;
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
-    public async Task StoreChat(ChatThread chat, bool reloadTreeItems = true)
+    private async Task<ChatThread?> LoadChatAsync(string? chatPath, bool switchToChat)
     {
-        await WorkspaceBehaviour.StoreChat(chat);
-        
-        // Reload the tree items:
-        if(reloadTreeItems)
-            await this.LoadTreeItems();
-        
-        this.StateHasChanged();
-    }
-
-    private async Task<ChatThread?> LoadChat(string? chatPath, bool switchToChat)
-    {
-        if(string.IsNullOrWhiteSpace(chatPath))
+        if (string.IsNullOrWhiteSpace(chatPath))
             return null;
 
-        if(!Directory.Exists(chatPath))
+        if (!Directory.Exists(chatPath))
             return null;
         
-        // Check if the chat has unsaved changes:
         if (switchToChat && await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
                 { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
             };
-        
+            
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
@@ -344,15 +365,15 @@ public partial class Workspaces : MSGComponentBase
         return null;
     }
 
-    public async Task DeleteChat(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
+    public async Task DeleteChatAsync(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
     {
-        var chat = await this.LoadChat(chatPath, false);
+        var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
             return;
 
         if (askForConfirmation)
         {
-            var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(chat.WorkspaceId);
+            var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(chat.WorkspaceId);
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
                 {
@@ -370,16 +391,10 @@ public partial class Workspaces : MSGComponentBase
                 return;
         }
 
-        string chatDirectory;
-        if (chat.WorkspaceId == Guid.Empty)
-            chatDirectory = Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString());
-        else
-            chatDirectory = Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
-
-        Directory.Delete(chatDirectory, true);
-        await this.LoadTreeItems();
+        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
         
-        if(unloadChat && this.CurrentChatThread?.ChatId == chat.ChatId)
+        if (unloadChat && this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
@@ -387,9 +402,9 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
-    private async Task RenameChat(string? chatPath)
+    private async Task RenameChatAsync(string? chatPath)
     {
-        var chat = await this.LoadChat(chatPath, false);
+        var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
             return;
         
@@ -410,24 +425,24 @@ public partial class Workspaces : MSGComponentBase
             return;
 
         chat.Name = (dialogResult.Data as string)!;
-        if(this.CurrentChatThread?.ChatId == chat.ChatId)
+        if (this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread.Name = chat.Name;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
             await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
-        await this.StoreChat(chat);
-        await this.LoadTreeItems();
+        await WorkspaceBehaviour.StoreChatAsync(chat);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
-    
-    private async Task RenameWorkspace(string? workspacePath)
+
+    private async Task RenameWorkspaceAsync(string? workspacePath)
     {
-        if(workspacePath is null)
+        if (workspacePath is null)
             return;
         
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
-        var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(workspaceId);
+        var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
             { x => x.Message, string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
@@ -447,10 +462,11 @@ public partial class Workspaces : MSGComponentBase
         var alteredWorkspaceName = (dialogResult.Data as string)!;
         var workspaceNamePath = Path.Join(workspacePath, "name");
         await File.WriteAllTextAsync(workspaceNamePath, alteredWorkspaceName, Encoding.UTF8);
-        await this.LoadTreeItems();
+        await WorkspaceBehaviour.UpdateWorkspaceNameInCacheAsync(workspaceId, alteredWorkspaceName);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
-    private async Task AddWorkspace()
+    private async Task AddWorkspaceAsync()
     {
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
@@ -472,23 +488,23 @@ public partial class Workspaces : MSGComponentBase
         var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
         Directory.CreateDirectory(workspacePath);
         
+        var workspaceName = (dialogResult.Data as string)!;
         var workspaceNamePath = Path.Join(workspacePath, "name");
-        await File.WriteAllTextAsync(workspaceNamePath, (dialogResult.Data as string)!, Encoding.UTF8);
+        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
+        await WorkspaceBehaviour.AddWorkspaceToCacheAsync(workspaceId, workspacePath, workspaceName);
         
-        await this.LoadTreeItems();
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
-    private async Task DeleteWorkspace(string? workspacePath)
+    private async Task DeleteWorkspaceAsync(string? workspacePath)
     {
-        if(workspacePath is null)
+        if (workspacePath is null)
             return;
         
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
-        var workspaceName = await WorkspaceBehaviour.LoadWorkspaceName(workspaceId);
+        var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
         
-        // Determine how many chats are in the workspace:
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
-        
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
@@ -500,12 +516,13 @@ public partial class Workspaces : MSGComponentBase
             return;
         
         Directory.Delete(workspacePath, true);
-        await this.LoadTreeItems();
+        await WorkspaceBehaviour.RemoveWorkspaceFromCacheAsync(workspaceId);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
-    private async Task MoveChat(string? chatPath)
+    private async Task MoveChatAsync(string? chatPath)
     {
-        var chat = await this.LoadChat(chatPath, false);
+        var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
             return;
         
@@ -525,22 +542,9 @@ public partial class Workspaces : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
-        // Delete the chat from the current workspace or the temporary storage:
-        if (chat.WorkspaceId == Guid.Empty)
-        {
-            // Case: The chat is stored in the temporary storage:
-            await this.DeleteChat(Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
-        }
-        else
-        {
-            // Case: The chat is stored in a workspace.
-            await this.DeleteChat(Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString()), askForConfirmation: false, unloadChat: false);
-        }
+        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
         
-        // Update the chat's workspace:
         chat.WorkspaceId = workspaceId;
-        
-        // Handle the case where the chat is the active chat:
         if (this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread = chat;
@@ -548,12 +552,12 @@ public partial class Workspaces : MSGComponentBase
             await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
-        await this.StoreChat(chat);
+        await WorkspaceBehaviour.StoreChatAsync(chat);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
-    private async Task AddChat(string workspacePath)
+    private async Task AddChatAsync(string workspacePath)
     {
-        // Check if the chat has unsaved changes:
         if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
@@ -579,9 +583,9 @@ public partial class Workspaces : MSGComponentBase
         
         var chatPath = Path.Join(workspacePath, chat.ChatId.ToString());
         
-        await this.StoreChat(chat);
-        await this.LoadChat(chatPath, switchToChat: true);
-        await this.LoadTreeItems();
+        await WorkspaceBehaviour.StoreChatAsync(chat);
+        await this.LoadChatAsync(chatPath, switchToChat: true);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
     #region Overrides of MSGComponentBase
@@ -591,10 +595,19 @@ public partial class Workspaces : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.PLUGINS_RELOADED:
-                await this.LoadTreeItems();
-                await this.InvokeAsync(this.StateHasChanged);
+                await this.ForceRefreshFromDiskAsync();
                 break;
         }
+    }
+
+    protected override void DisposeResources()
+    {
+        this.isDisposed = true;
+        this.prefetchCancellationTokenSource?.Cancel();
+        this.prefetchCancellationTokenSource?.Dispose();
+        this.prefetchCancellationTokenSource = null;
+
+        base.DisposeResources();
     }
 
     #endregion
