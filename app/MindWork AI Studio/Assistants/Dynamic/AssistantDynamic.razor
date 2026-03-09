@@ -135,5 +135,28 @@
                 </MudList>
             }
             break;
+        case AssistantComponentType.COLOR_PICKER:
+            if (component is AssistantColorPicker assistantColorPicker)
+            {
+                var colorPicker = assistantColorPicker;
+                var variant = this.GetPickerVariant(colorPicker.PickerVariant);
+                var elevation = variant == PickerVariant.Static ? 6 : 0;
+                var rounded = variant == PickerVariant.Static;
+                
+                <MudItem Class="d-flex">
+                    <MudColorPicker @bind-Text="@this.colorPickerFields[colorPicker.Name]"
+                                    Label="@colorPicker.Label"
+                                    Placeholder="@colorPicker.Placeholder"
+                                    ShowAlpha="@colorPicker.ShowAlpha"
+                                    ShowToolbar="@colorPicker.ShowToolbar"
+                                    ShowModeSwitch="@colorPicker.ShowModeSwitch"
+                                    PickerVariant="@variant"
+                                    Rounded="@rounded"
+                                    Elevation="@elevation"
+                                    Style="@($"color: {this.colorPickerFields[colorPicker.Name]};")"
+                                    Class="@MergeClass(colorPicker.Class, "mb-3")"/>
+                    </MudItem>
+            }
+            break;
     }
 }

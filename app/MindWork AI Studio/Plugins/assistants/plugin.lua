@@ -168,6 +168,19 @@ ASSISTANT = {
                     ["UserPrompt"] = "<help text reminding the user what kind of file they should load>"
                 }
             },
+            {
+                ["Type"] = "COLOR_PICKER",
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["Placeholder"] = "<use this as a default color property with HEX code (e.g '#FFFF12') or just show hints to the user>",
+                    ["ShowAlpha"] = true, -- weather alpha channels are shown
+                    ["ShowToolbar"] = true, -- weather the toolbar to toggle between picker, grid or palette is shown
+                    ["ShowModeSwitch"] = true, -- weather switch to toggle between RGB(A), HEX or HSL color mode is shown
+                    ["PickerVariant"] = "<DIALOG | INLINE | STATIC (default)>",
+                    ["UserPrompt"] = "<help text reminding the user what kind of file they should load>",
+                }
+            },
         }
     },
 }

@@ -12,6 +12,7 @@ Supported types (matching the Blazor UI components):
 - `TEXT_AREA`: any user input field with `Name`, `Label`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`.
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, `LabelOn`, `LabelOff`, and may include `UserPrompt`.
+- `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
 - `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
 - `FILE_CONTENT_READER`: renders `ReadFileContent`; include `Name`, `UserPrompt`.
@@ -31,7 +32,7 @@ user prompt:
 <value extracted from the component>
 ```
 
-For switches the “value” is the boolean `true/false`; for readers it is the fetched/selected content. Always provide a meaningful `UserPrompt` so the final concatenated prompt remains coherent from the LLM’s perspective.
+For switches the “value” is the boolean `true/false`; for readers it is the fetched/selected content; for color pickers it is the selected color text (for example `#FFAA00` or `rgba(...)`, depending on the picker mode). Always provide a meaningful `UserPrompt` so the final concatenated prompt remains coherent from the LLM’s perspective.
 
 ### Advanced: BuildPrompt (optional)
 If you want full control over prompt composition, define `ASSISTANT.BuildPrompt` as a Lua function. When present, AI Studio calls it and uses its return value as the final user prompt. The default prompt assembly is skipped.
@@ -46,8 +47,9 @@ The function receives a single `input` table with:
 - `input.fields`: values keyed by component `Name`
   - Text area, dropdown, and readers are strings
   - Switch is a boolean
+  - Color picker is the selected color as a string
 - `input.meta`: per-component metadata keyed by component `Name`
-  - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`)
+  - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`, `COLOR_PICKER`)
   - `Label` (string, when provided)
   - `UserPrompt` (string, when provided)
 - `input.profile`: selected profile data
@@ -63,7 +65,7 @@ input = {
   },
   meta = {
     ["<Name>"] = {
-      Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER>",
+      Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER|COLOR_PICKER>",
       Label = "<string?>",
       UserPrompt = "<string?>"
     },
@@ -103,12 +105,45 @@ ASSISTANT.BuildPrompt = function(input)
     local value = input.fields[name]
     if meta.Type == "SWITCH" then
       table.insert(parts, name .. ": " .. tostring(value))
+    elseif meta.Type == "COLOR_PICKER" and value and value ~= "" then
+      table.insert(parts, name .. ": " .. value)
     elseif value and value ~= "" then
       table.insert(parts, name .. ": " .. value)
     end
   end
   return table.concat(parts, "\n")
 end
+```
+
+### `COLOR_PICKER` reference
+- Use `Type = "COLOR_PICKER"` to render a MudBlazor color picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Placeholder`: default color hex string (e.g. `#FF10FF`) or initial hint text.
+  - `ShowAlpha`: defaults to `true`; enables alpha channel editing.
+  - `ShowToolbar`: defaults to `true`; shows picker/grid/palette toolbar.
+  - `ShowModeSwitch`: defaults to `true`; allows switching between HEX/RGB(A)/HSL modes.
+  - `PickerVariant`: one of `DIALOG`, `INLINE`, `STATIC`; invalid or omitted values fall back to `STATIC`.
+  - `UserPrompt`: prompt context text for the selected color.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+Example:
+```lua
+{
+  ["Type"] = "COLOR_PICKER",
+  ["Props"] = {
+    ["Name"] = "accentColor",
+    ["Label"] = "Accent color",
+    ["Placeholder"] = "#FFAA00",
+    ["ShowAlpha"] = false,
+    ["ShowToolbar"] = true,
+    ["ShowModeSwitch"] = true,
+    ["PickerVariant"] = "STATIC",
+    ["UserPrompt"] = "Use this as the accent color for the generated design."
+  }
+}
 ```
 
 #### Using `profile` inside BuildPrompt

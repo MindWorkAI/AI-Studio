@@ -45,6 +45,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private Dictionary<string, bool> switchFields = new();
     private Dictionary<string, WebContentState> webContentFields = new();
     private Dictionary<string, FileContentState> fileContentFields = new();
+    private Dictionary<string, string> colorPickerFields = new();
     private readonly Dictionary<string, string> imageCache = new();
     private string pluginPath = string.Empty;
     private const string PLUGIN_SCHEME = "plugin://";
@@ -111,6 +112,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                             this.fileContentFields.Add(fileContent.Name, new FileContentState());
                         }
                         break;
+                    case AssistantComponentType.COLOR_PICKER:
+                        if (component is AssistantColorPicker assistantColorPicker)
+                        {
+                            this.colorPickerFields.Add(assistantColorPicker.Name, assistantColorPicker.Placeholder);
+                        }
+                        break;
                 }
             }
         }
@@ -166,6 +173,11 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         foreach (var entry in this.fileContentFields)
         {
             entry.Value.Content = string.Empty;
+        }
+
+        foreach (var entry in this.colorPickerFields)
+        {
+            this.colorPickerFields[entry.Key] = string.Empty;
         }
     }
 
@@ -256,6 +268,8 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             fields[entry.Key] = entry.Value.Content ?? string.Empty;
         foreach (var entry in this.fileContentFields)
             fields[entry.Key] = entry.Value.Content ?? string.Empty;
+        foreach (var entry in this.colorPickerFields)
+            fields[entry.Key] = entry.Value ?? string.Empty;
 
         input["fields"] = fields;
 
@@ -281,6 +295,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         break;
                     case AssistantFileContentReader fileContent:
                         this.AddMetaEntry(meta, fileContent.Name, component.Type, null, fileContent.UserPrompt);
+                        break;
+                    case AssistantColorPicker colorPicker:
+                        this.AddMetaEntry(meta, colorPicker.Name, component.Type, colorPicker.Label, colorPicker.UserPrompt);
                         break;
                 }
             }
@@ -391,6 +408,16 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         }
                     }
                     break;
+                case AssistantComponentType.COLOR_PICKER:
+                    if (component is AssistantColorPicker colorPicker)
+                    {
+                        prompt += $"context:{Environment.NewLine}{colorPicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.inputFields.TryGetValue(colorPicker.Name, out userInput))
+                        {
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                        }
+                    }
+                    break;
                 default:
                     prompt += $"{userInput}{Environment.NewLine}";
                     break;
@@ -414,8 +441,16 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     }
 
     private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
-    
-    private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile profile)
+
+    private PickerVariant GetPickerVariant(string pickerVariant) => pickerVariant.ToLowerInvariant() switch
+    {
+        "dialog" => PickerVariant.Dialog,
+        "static" => PickerVariant.Static,
+        "inline" => PickerVariant.Inline,
+        _ => PickerVariant.Static
+    };
+
+    private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
         if (profile == default || profile == Profile.NO_PROFILE)
         {

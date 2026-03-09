@@ -15,4 +15,5 @@ public enum AssistantComponentType
     WEB_CONTENT_READER,
     FILE_CONTENT_READER,
     IMAGE,
+    COLOR_PICKER,
 }

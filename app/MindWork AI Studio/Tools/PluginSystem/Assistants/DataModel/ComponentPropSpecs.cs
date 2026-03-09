@@ -57,5 +57,9 @@ public static class ComponentPropSpecs
                 required: ["Src"],
                 optional: ["Alt", "Caption", "Class", "Style"]
             ),
+            [AssistantComponentType.COLOR_PICKER] = new(
+                required: ["Name", "Label"],
+                optional: ["Placeholder", "ShowAlpha", "ShowToolbar", "ShowModeSwitch", "PickerVariant", "UserPrompt", "Class", "Style"]
+            ),
         };
 }
