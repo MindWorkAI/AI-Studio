@@ -17,6 +17,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool AllowProfiles { get; private set; } = true;
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
+    public const int TEXT_AREA_MAX_VALUE = 524288;
 
     private LuaFunction? buildPromptFunction;
 
@@ -240,13 +241,29 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
 
         component = AssistantComponentFactory.CreateComponent(type, props, children);
+
+        if (component is AssistantTextArea textArea)
+        {
+            if (!string.IsNullOrWhiteSpace(textArea.AdornmentIcon) && !string.IsNullOrWhiteSpace(textArea.AdornmentText))
+                LOGGER.LogWarning($"Assistant plugin '{this.Name}' TEXT_AREA '{textArea.Name}' defines both '[\"AdornmentIcon\"]' and '[\"AdornmentText\"]', thus both will be ignored by the renderer. You`re only allowed to use either one of them.");
+
+            if (textArea.MaxLength == 0)
+            {
+                LOGGER.LogWarning($"Assistant plugin '{this.Name}' TEXT_AREA '{textArea.Name}' defines a MaxLength of `0`. This is not applicable, if you want a readonly Textfield, set the [\"ReadOnly\"] field to `true`. MAXLENGTH IS SET TO DEFAULT {TEXT_AREA_MAX_VALUE}.");
+                textArea.MaxLength = TEXT_AREA_MAX_VALUE;
+            }
+            
+            if (textArea.MaxLength != 0 && textArea.MaxLength != TEXT_AREA_MAX_VALUE)
+                textArea.Counter = textArea.MaxLength;
+            
+            if (textArea.Counter != null)
+                textArea.IsImmediate = true;
+        }
+
         return true;
     }
 
-    private bool TryReadComponentProps(
-        AssistantComponentType type,
-        LuaTable propsTable,
-        out Dictionary<string, object> props)
+    private bool TryReadComponentProps(AssistantComponentType type, LuaTable propsTable, out Dictionary<string, object> props)
     {
         props = new Dictionary<string, object>();
 

@@ -64,4 +64,6 @@ internal sealed class AssistantColorPicker : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
+
+    public PickerVariant GetPickerVariant() => Enum.TryParse<PickerVariant>(this.PickerVariant, out var variant) ? variant : MudBlazor.PickerVariant.Static;
 }

@@ -70,10 +70,21 @@ ASSISTANT = {
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["Label"] = "<heading of your component>", -- required
+                    ["Adornment"] = "<Start|End|None>", --  location of the `AdornmentIcon` OR `AdornmentText`; CASE SENSITIV
+                    ["AdornmentIcon"] = "Icons.Material.Filled.AppSettingsAlt", -- The Mudblazor icon displayed for the adornment
+                    ["AdornmentText"] = "", -- The text displayed for the adornment
+                    ["AdornmentColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- the color of AdornmentText or AdornmentIcon; CASE SENSITIVE
+                    ["Counter"] = 0, -- shows a character counter. When 0, the current character count is displayed. When 1 or greater, the character count and this count are displayed. Defaults to `null` 
+                    ["MaxLength"] = 100, -- max number of characters allowed, prevents more input characters; use together with the character counter. Defaults to 524,288
+                    ["HelperText"] = "<a helping text rendered under the text area to give hints to users>",
+                    ["IsImmediate"] = false, -- changes the value as soon as input is received. Defaults to false but will be true if counter or maxlength is set to reflect changes
+                    ["HelperTextOnFocus"] = true, -- if true, shows the helping text only when the user focuses on the text area
                     ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
                     ["PrefillText"] = "<text to show in the field initially>",
                     ["IsSingleLine"] = false, -- if true, shows a text field instead of an area
-                    ["ReadOnly"] = false -- if true, deactivates user input (make sure to provide a PrefillText)
+                    ["ReadOnly"] = false, -- if true, deactivates user input (make sure to provide a PrefillText)
+                    ["Class"] = "<MudBlazor or css classes>",
+                    ["Style"] = "<css styles>",
                 }
             },
             {
@@ -177,7 +188,7 @@ ASSISTANT = {
                     ["ShowAlpha"] = true, -- weather alpha channels are shown
                     ["ShowToolbar"] = true, -- weather the toolbar to toggle between picker, grid or palette is shown
                     ["ShowModeSwitch"] = true, -- weather switch to toggle between RGB(A), HEX or HSL color mode is shown
-                    ["PickerVariant"] = "<DIALOG | INLINE | STATIC (default)>",
+                    ["PickerVariant"] = "<Dialog|Inline|Static>", -- different rendering modes: `Dialog` opens the picker in a modal type screen, `Inline` shows the picker next to the input field and `Static` renders the picker widget directly (default); Case sensitiv
                     ["UserPrompt"] = "<help text reminding the user what kind of file they should load>",
                 }
             },

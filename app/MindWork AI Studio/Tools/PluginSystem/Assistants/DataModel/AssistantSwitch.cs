@@ -20,8 +20,8 @@ internal sealed class AssistantSwitch : AssistantComponentBase
 
     public bool Value
     {
-        get => this.Props.TryGetValue(nameof(this.Value), out var val) && val is true;
-        set => this.Props[nameof(this.Value)] = value;
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Value), false);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.Value), value);
     }
 
     public string UserPrompt

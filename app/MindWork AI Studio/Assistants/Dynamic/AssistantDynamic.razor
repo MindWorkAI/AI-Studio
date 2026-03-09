@@ -12,7 +12,27 @@
             if (component is AssistantTextArea textArea)
             {
                 var lines = textArea.IsSingleLine ? 1 : 6;
-                <MudTextField T="string" @bind-Text="@this.inputFields[textArea.Name]" Label="@textArea.Label" ReadOnly="@textArea.ReadOnly" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Variant="Variant.Outlined" Lines="@lines" AutoGrow="@true" MaxLines="12" Class='@MergeClass(textArea.Class, "mb-3")' Style="@this.GetOptionalStyle(textArea.Style)"/>
+                
+                <MudTextField T="string" 
+                              @bind-Text="@this.inputFields[textArea.Name]" 
+                              Label="@textArea.Label"
+                              HelperText="@textArea.HelperText"
+                              HelperTextOnFocus="@textArea.HelperTextOnFocus"
+                              ReadOnly="@textArea.ReadOnly"
+                              Counter="@textArea.Counter"
+                              MaxLength="@textArea.MaxLength"
+                              Immediate="@textArea.IsImmediate"
+                              Adornment="@textArea.GetAdornmentPos()"
+                              AdornmentIcon="@textArea.AdornmentIcon"
+                              AdornmentText="@textArea.AdornmentText"
+                              AdornmentColor="@textArea.GetAdornmentColor()"
+                              Variant="Variant.Outlined" 
+                              Lines="@lines"
+                              AutoGrow="@true"
+                              MaxLines="12" 
+                              Class='@MergeClass(textArea.Class, "mb-3")' 
+                              Style="@this.GetOptionalStyle(textArea.Style)"
+                />
             }
             break;
         case AssistantComponentType.IMAGE:
@@ -139,7 +159,7 @@
             if (component is AssistantColorPicker assistantColorPicker)
             {
                 var colorPicker = assistantColorPicker;
-                var variant = this.GetPickerVariant(colorPicker.PickerVariant);
+                var variant = colorPicker.GetPickerVariant();
                 var elevation = variant == PickerVariant.Static ? 6 : 0;
                 var rounded = variant == PickerVariant.Static;
                 

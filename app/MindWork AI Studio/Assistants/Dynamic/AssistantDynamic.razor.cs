@@ -441,14 +441,6 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
 
-    private PickerVariant GetPickerVariant(string pickerVariant) => pickerVariant.ToLowerInvariant() switch
-    {
-        "dialog" => PickerVariant.Dialog,
-        "static" => PickerVariant.Static,
-        "inline" => PickerVariant.Inline,
-        _ => PickerVariant.Static
-    };
-
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
         if (profile == default || profile == Profile.NO_PROFILE)

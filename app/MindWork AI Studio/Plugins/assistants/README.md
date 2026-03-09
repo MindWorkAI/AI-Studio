@@ -9,7 +9,7 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
 
 Supported types (matching the Blazor UI components):
 
-- `TEXT_AREA`: any user input field with `Name`, `Label`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`.
+- `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, `LabelOn`, `LabelOff`, and may include `UserPrompt`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
@@ -113,6 +113,48 @@ ASSISTANT.BuildPrompt = function(input)
   end
   return table.concat(parts, "\n")
 end
+```
+
+### `TEXT_AREA` reference
+- Use `Type = "TEXT_AREA"` to render a MudBlazor text input or textarea.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `HelperText`: helper text rendered below the input.
+  - `HelperTextOnFocus`: defaults to `false`; show helper text only while the field is focused.
+  - `Adornment`: one of `Start`, `End`, `None`; invalid or omitted values fall back to `Start`.
+  - `AdornmentIcon`: MudBlazor icon identifier string for the adornment.
+  - `AdornmentText`: plain adornment text. Do not set this together with `AdornmentIcon`.
+  - `AdornmentColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; invalid or omitted values fall back to `Default`.
+  - `Counter`: nullable integer. Omit it to hide the counter entirely. Set `0` to show only the current character count. Set `1` or higher to show `current/max`.
+  - `MaxLength`: maximum number of characters allowed; defaults to `524288`.
+  - `IsImmediate`: defaults to `false`; updates the bound value on each input event instead of on blur/change.
+  - `UserPrompt`: prompt context text for this field.
+  - `PrefillText`: initial input value.
+  - `IsSingleLine`: defaults to `false`; render as a one-line input instead of a textarea.
+  - `ReadOnly`: defaults to `false`; disables editing.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+Example:
+```lua
+{
+  ["Type"] = "TEXT_AREA",
+  ["Props"] = {
+    ["Name"] = "Budget",
+    ["Label"] = "Budget",
+    ["HelperText"] = "Enter the expected amount.",
+    ["Adornment"] = "Start",
+    ["AdornmentIcon"] = "Icons.Material.Filled.AttachMoney",
+    ["AdornmentColor"] = "Success",
+    ["Counter"] = 0,
+    ["MaxLength"] = 100,
+    ["IsImmediate"] = true,
+    ["UserPrompt"] = "Use this budget information in your answer.",
+    ["PrefillText"] = "",
+    ["IsSingleLine"] = true
+  }
+}
 ```
 
 ### `COLOR_PICKER` reference
