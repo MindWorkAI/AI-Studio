@@ -62,6 +62,19 @@
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
+    <PropertyGroup>
+        <SourceGeneratedMappingsProject>..\SourceGeneratedMappings\SourceGeneratedMappings.csproj</SourceGeneratedMappingsProject>
+        <SourceGeneratedMappingsAssembly>..\SourceGeneratedMappings\bin\$(Configuration)\net9.0\SourceGeneratedMappings.dll</SourceGeneratedMappingsAssembly>
+    </PropertyGroup>
+
+    <Target Name="BuildSourceGeneratedMappings" BeforeTargets="CoreCompile">
+        <MSBuild Projects="$(SourceGeneratedMappingsProject)" Targets="Restore;Build" Properties="Configuration=$(Configuration);RestoreIgnoreFailedSources=true" />
+
+        <ItemGroup>
+            <Analyzer Include="$(SourceGeneratedMappingsAssembly)" Condition="Exists('$(SourceGeneratedMappingsAssembly)')" />
+        </ItemGroup>
+    </Target>
+
     <ItemGroup>
       <Folder Include="Plugins\assistants\assets\" />
     </ItemGroup>

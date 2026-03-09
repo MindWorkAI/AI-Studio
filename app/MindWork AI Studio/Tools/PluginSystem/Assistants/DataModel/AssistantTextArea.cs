@@ -1,3 +1,5 @@
+using AIStudio.Tools.PluginSystem.Assistants.Icons;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal sealed class AssistantTextArea : AssistantComponentBase
@@ -111,4 +113,6 @@ internal sealed class AssistantTextArea : AssistantComponentBase
     public Adornment GetAdornmentPos() => Enum.TryParse<MudBlazor.Adornment>(this.Adornment, out var position) ? position : MudBlazor.Adornment.Start;
     
     public Color GetAdornmentColor() => Enum.TryParse<Color>(this.AdornmentColor, out var color) ? color : Color.Default;
+
+    public string GetIconSvg() => MudBlazorIconRegistry.TryGetSvg(this.AdornmentIcon, out var svg) ? svg : string.Empty;
 }
