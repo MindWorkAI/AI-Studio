@@ -40,12 +40,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private bool showFooterProfileSelection = true;
     private PluginAssistants? assistantPlugin;
     
-    private Dictionary<string, string> inputFields = new();
-    private Dictionary<string, string> dropdownFields = new();
-    private Dictionary<string, bool> switchFields = new();
-    private Dictionary<string, WebContentState> webContentFields = new();
-    private Dictionary<string, FileContentState> fileContentFields = new();
-    private Dictionary<string, string> colorPickerFields = new();
+    private readonly Dictionary<string, string> inputFields = new();
+    private readonly Dictionary<string, string> dropdownFields = new();
+    private readonly Dictionary<string, bool> switchFields = new();
+    private readonly Dictionary<string, WebContentState> webContentFields = new();
+    private readonly Dictionary<string, FileContentState> fileContentFields = new();
+    private readonly Dictionary<string, string> colorPickerFields = new();
     private readonly Dictionary<string, string> imageCache = new();
     private string pluginPath = string.Empty;
     private const string PLUGIN_SCHEME = "plugin://";
@@ -174,7 +174,6 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         {
             entry.Value.Content = string.Empty;
         }
-
         foreach (var entry in this.colorPickerFields)
         {
             this.colorPickerFields[entry.Key] = string.Empty;
