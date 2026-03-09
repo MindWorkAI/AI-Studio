@@ -14,11 +14,8 @@ internal sealed class AssistantHeading : AssistantComponentBase
 
     public int Level
     {
-        get => this.Props.TryGetValue(nameof(this.Level), out var v) 
-               && int.TryParse(v.ToString(), out var i) 
-            ? i 
-            : 2;
-        set => this.Props[nameof(this.Level)] = value;
+        get => AssistantComponentPropHelper.ReadInt(this.Props, nameof(this.Level), 2);
+        set => AssistantComponentPropHelper.WriteInt(this.Props, nameof(this.Level), value);
     }
 
     public string Class

@@ -25,20 +25,20 @@ internal sealed class AssistantColorPicker : AssistantComponentBase
     
     public bool ShowAlpha
     {
-        get => !this.Props.TryGetValue(nameof(this.ShowAlpha), out var val) || val is true;
-        set => this.Props[nameof(this.ShowAlpha)] = value;
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.ShowAlpha), true);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.ShowAlpha), value);
     }
     
     public bool ShowToolbar
     {
-        get => !this.Props.TryGetValue(nameof(this.ShowToolbar), out var val) || val is true;
-        set => this.Props[nameof(this.ShowToolbar)] = value;
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.ShowToolbar), true);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.ShowToolbar), value);
     }
     
     public bool ShowModeSwitch
     {
-        get => !this.Props.TryGetValue(nameof(this.ShowModeSwitch), out var val) || val is true;
-        set => this.Props[nameof(this.ShowModeSwitch)] = value;
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.ShowModeSwitch), true);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.ShowModeSwitch), value);
     }
     
     public string PickerVariant
