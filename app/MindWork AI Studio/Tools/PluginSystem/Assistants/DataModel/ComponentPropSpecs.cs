@@ -34,8 +34,8 @@ public static class ComponentPropSpecs
                 optional: ["ValidationMessage", "Class", "Style"]
             ),
             [AssistantComponentType.SWITCH] = new(
-                required: ["Name", "Label", "LabelOn", "LabelOff", "Value"],
-                optional: ["UserPrompt"]
+                required: ["Name", "Label", "Value"],
+                optional: [ "LabelOn", "LabelOff", "LabelPlacement", "Icon", "IconColor", "UserPrompt", "CheckedColor", "UncheckedColor", "Disabled"]
             ),
             [AssistantComponentType.HEADING] = new(
                 required: ["Text", "Level"],

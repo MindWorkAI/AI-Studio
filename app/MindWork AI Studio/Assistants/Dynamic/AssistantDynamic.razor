@@ -103,9 +103,23 @@
             }
             break;
         case AssistantComponentType.SWITCH:
-            if (component is AssistantSwitch assistantSwitch)
+            if (component is AssistantSwitch switchComponent)
             {
-                <MudTextSwitch Label="@assistantSwitch.Label" @bind-Value="@this.switchFields[assistantSwitch.Name]" LabelOn="@assistantSwitch.LabelOn" LabelOff="@assistantSwitch.LabelOff" />
+                var assistantSwitch = switchComponent;
+                var currentValue = this.switchFields[assistantSwitch.Name];
+                <MudField Label="@assistantSwitch.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@assistantSwitch.Disabled">
+                    <MudSwitch T="bool" 
+                               Value="@currentValue"
+                               ValueChanged="@((bool value) => this.switchFields[assistantSwitch.Name] = value)"
+                               LabelPlacement="@assistantSwitch.GetLabelPlacement()"
+                               Color="@assistantSwitch.GetColor(assistantSwitch.CheckedColor)"
+                               UncheckedColor="@assistantSwitch.GetColor(assistantSwitch.UncheckedColor)"
+                               ThumbIcon="@assistantSwitch.GetIconSvg()"
+                               ThumbIconColor="@assistantSwitch.GetColor(assistantSwitch.IconColor)"
+                               Disabled="@assistantSwitch.Disabled">
+                        @(currentValue ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)
+                    </MudSwitch>
+                </MudField>
             }
             break;
         case AssistantComponentType.HEADING:

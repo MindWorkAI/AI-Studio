@@ -107,9 +107,15 @@ ASSISTANT = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["Label"] = "<heading of your component>", -- required
                     ["Value"] = true, -- initial switch state
+                    ["Disabled"] = false, -- if true, disables user interaction but the value can still be used in the user prompt (use for presentation purposes)
                     ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
-                    ["LabelOn"] = "<text if state is true>", -- required
-                    ["LabelOff"] = "<text if state is false>" -- required
+                    ["LabelOn"] = "<text if state is true>",
+                    ["LabelOff"] = "<text if state is false>",
+                    ["LabelPlacement"] = "<Bottom|End|Left|Right|Start|Top>", -- Defaults to End (right of the switch)
+                    ["Icon"] = "Icons.Material.Filled.Bolt", -- places a thumb icon inside the switch
+                    ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the thumb icon. Defaults to `Inherit`
+                    ["CheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is true. Defaults to `Inherit`
+                    ["UncheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is false. Defaults to `Inherit`
                 }
             },
             {
