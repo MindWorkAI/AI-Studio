@@ -15,6 +15,7 @@ use crate::api_token::{APIToken};
 use crate::environment::DATA_DIRECTORY;
 use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
+use tauri::PathResolver;
 use tempfile::{TempDir, Builder};
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
 use crate::sidecar_types::SidecarType;
@@ -63,7 +64,7 @@ pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 }
 
 /// Starts the Qdrant server in a separate process.
-pub fn start_qdrant_server(){
+pub fn start_qdrant_server(path_resolver: PathResolver){
     
     let base_path = DATA_DIRECTORY.get().unwrap();
     let path = Path::new(base_path).join("databases").join("qdrant");
@@ -91,10 +92,12 @@ pub fn start_qdrant_server(){
     ]);
     
     let server_spawn_clone = QDRANT_SERVER.clone();
+    let qdrant_relative_source_path = String::from("resources/databases/qdrant/config.yaml");
+    let qdrant_source_path = path_resolver.resolve_resource(qdrant_relative_source_path);
     tauri::async_runtime::spawn(async move {
         let (mut rx, child) = Command::new_sidecar("qdrant")
             .expect("Failed to create sidecar for Qdrant")
-            .args(["--config-path", "resources/databases/qdrant/config.yaml"])
+            .args(["--config-path", qdrant_source_path.unwrap().to_str().unwrap()])
             .envs(qdrant_server_environment)
             .spawn()
             .expect("Failed to spawn Qdrant server process.");
