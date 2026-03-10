@@ -116,7 +116,9 @@
                                UncheckedColor="@assistantSwitch.GetColor(assistantSwitch.UncheckedColor)"
                                ThumbIcon="@assistantSwitch.GetIconSvg()"
                                ThumbIconColor="@assistantSwitch.GetColor(assistantSwitch.IconColor)"
-                               Disabled="@assistantSwitch.Disabled">
+                               Disabled="@assistantSwitch.Disabled"
+                               Class="@assistantSwitch.Class"
+                               Style="@this.GetOptionalStyle(assistantSwitch.Style)">
                         @(currentValue ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)
                     </MudSwitch>
                 </MudField>

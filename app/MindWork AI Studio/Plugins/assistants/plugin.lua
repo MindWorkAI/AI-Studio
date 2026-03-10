@@ -83,8 +83,8 @@ ASSISTANT = {
                     ["PrefillText"] = "<text to show in the field initially>",
                     ["IsSingleLine"] = false, -- if true, shows a text field instead of an area
                     ["ReadOnly"] = false, -- if true, deactivates user input (make sure to provide a PrefillText)
-                    ["Class"] = "<MudBlazor or css classes>",
-                    ["Style"] = "<css styles>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
                 }
             },
             {
@@ -116,6 +116,8 @@ ASSISTANT = {
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the thumb icon. Defaults to `Inherit`
                     ["CheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is true. Defaults to `Inherit`
                     ["UncheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is false. Defaults to `Inherit`
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
                 }
             },
             {

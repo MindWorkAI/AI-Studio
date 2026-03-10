@@ -79,6 +79,18 @@ internal sealed class AssistantSwitch : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.IconColor));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.IconColor), value);
     }
+    
+    public string Class
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
+    }
+    
+    public string Style
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
+    }
 
     public MudBlazor.Color GetColor(string colorString) => Enum.TryParse<Color>(colorString, out var color) ? color : MudBlazor.Color.Inherit;
     public Placement GetLabelPlacement() => Enum.TryParse<Placement>(this.LabelPlacement, out var placement) ? placement : Placement.Right;
