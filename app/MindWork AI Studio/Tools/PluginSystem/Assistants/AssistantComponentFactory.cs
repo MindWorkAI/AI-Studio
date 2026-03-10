@@ -1,4 +1,5 @@
 ﻿using AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
@@ -43,6 +44,14 @@ public class AssistantComponentFactory
                 return new AssistantImage { Props = props, Children = children };
             case AssistantComponentType.COLOR_PICKER:
                 return new AssistantColorPicker { Props = props, Children = children };
+            case AssistantComponentType.LAYOUT_ITEM:
+                return new AssistantItem { Props = props, Children = children };
+            case AssistantComponentType.LAYOUT_GRID:
+                return new AssistantGrid { Props = props, Children = children };
+            case AssistantComponentType.LAYOUT_PAPER:
+                return new AssistantPaper { Props = props, Children = children };
+            case AssistantComponentType.LAYOUT_STACK:
+                return new AssistantStack { Props = props, Children = children };
             default:
                 LOGGER.LogError($"Unknown assistant component type!\n{type} is not a supported assistant component type");
                 throw new Exception($"Unknown assistant component type: {type}");

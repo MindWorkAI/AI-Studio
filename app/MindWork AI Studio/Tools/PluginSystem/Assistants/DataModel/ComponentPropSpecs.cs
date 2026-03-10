@@ -73,7 +73,32 @@ public static class ComponentPropSpecs
             ),
             [AssistantComponentType.COLOR_PICKER] = new(
                 required: ["Name", "Label"],
-                optional: ["Placeholder", "ShowAlpha", "ShowToolbar", "ShowModeSwitch", "PickerVariant", "UserPrompt", "Class", "Style"]
+                optional: [
+                    "Placeholder", "ShowAlpha", "ShowToolbar", "ShowModeSwitch", 
+                    "PickerVariant", "UserPrompt", "Class", "Style"
+                ]
+            ),
+            [AssistantComponentType.LAYOUT_ITEM] = new(
+                required: ["Name"],
+                optional: ["Xs", "Sm", "Md", "Lg", "Xl", "Xxl", "Class", "Style"]
+            ),
+            [AssistantComponentType.LAYOUT_GRID] = new(
+                required: ["Name"],
+                optional: ["Justify", "Spacing", "Class", "Style"]
+            ),
+            [AssistantComponentType.LAYOUT_PAPER] = new(
+                required: ["Name"],
+                optional: [
+                    "Height", "MaxHeight", "MinHeight", "Width", "MaxWidth", "MinWidth", 
+                    "IsOutlined", "IsSquare", "Class", "Style"
+                ]
+            ),
+            [AssistantComponentType.LAYOUT_STACK] = new(
+                required: ["Name"],
+                optional: [
+                    "IsRow", "IsReverse", "Breakpoint", "Align", "Justify", "Stretch", 
+                    "Wrap", "Spacing", "Class", "Style",
+                ]
             ),
         };
 }

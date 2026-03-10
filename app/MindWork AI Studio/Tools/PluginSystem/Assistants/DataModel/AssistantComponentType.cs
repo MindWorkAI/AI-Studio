@@ -17,4 +17,8 @@ public enum AssistantComponentType
     FILE_CONTENT_READER,
     IMAGE,
     COLOR_PICKER,
+    LAYOUT_ITEM,
+    LAYOUT_GRID,
+    LAYOUT_PAPER,
+    LAYOUT_STACK,
 }
