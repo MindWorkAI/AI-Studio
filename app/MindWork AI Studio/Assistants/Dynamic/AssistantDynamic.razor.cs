@@ -571,5 +571,4 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         var time = this.AddUserRequest(await this.CollectUserPromptAsync());
         await this.AddAIResponseAsync(time);
     }
-
 }
