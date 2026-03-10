@@ -11,7 +11,7 @@ Supported types (matching the Blazor UI components):
 
 - `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
-- `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, `LabelOn`, `LabelOff`, and may include `UserPrompt`.
+- `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
 - `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
@@ -153,6 +153,44 @@ Example:
     ["UserPrompt"] = "Use this budget information in your answer.",
     ["PrefillText"] = "",
     ["IsSingleLine"] = true
+  }
+}
+```
+
+### `SWITCH` reference
+- Use `Type = "SWITCH"` to render a boolean toggle.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Label`: visible label for the switch field.
+  - `Value`: initial boolean state (`true` or `false`).
+- Optional props:
+  - `Disabled`: defaults to `false`; disables user interaction while still allowing the value to be included in prompt assembly.
+  - `UserPrompt`: prompt context text for this field.
+  - `LabelOn`: text shown when the switch value is `true`.
+  - `LabelOff`: text shown when the switch value is `false`.
+  - `LabelPlacement`: one of `Bottom`, `End`, `Left`, `Right`, `Start`, `Top`; omitted values follow the renderer default.
+  - `Icon`: MudBlazor icon identifier string displayed inside the switch thumb.
+  - `IconColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Inherit`.
+  - `CheckedColor`: color used when the switch state is `true`; omitted values default to `Inherit`.
+  - `UncheckedColor`: color used when the switch state is `false`; omitted values default to `Inherit`.
+
+Example:
+```lua
+{
+  ["Type"] = "SWITCH",
+  ["Props"] = {
+    ["Name"] = "IncludeSummary",
+    ["Label"] = "Include summary",
+    ["Value"] = true,
+    ["Disabled"] = false,
+    ["UserPrompt"] = "Decide whether the final answer should include a short summary.",
+    ["LabelOn"] = "Summary enabled",
+    ["LabelOff"] = "Summary disabled",
+    ["LabelPlacement"] = "End",
+    ["Icon"] = "Icons.Material.Filled.Summarize",
+    ["IconColor"] = "Primary",
+    ["CheckedColor"] = "Success",
+    ["UncheckedColor"] = "Default"
   }
 }
 ```
