@@ -103,7 +103,42 @@
                                Class='@MergeClass(button.Class, "mb-3")'
                                Style="@this.GetOptionalStyle(button.Style)">
                         @button.Text
-                    </MudButton></div>
+                     </MudButton></div>
+            }
+            break;
+        case AssistantComponentType.BUTTON_GROUP:
+            if (component is AssistantButtonGroup assistantButtonGroup)
+            {
+                var buttonGroup = assistantButtonGroup;
+                <MudButtonGroup Variant="@buttonGroup.GetVariant()"
+                                Color="@AssistantComponentPropHelper.GetColor(buttonGroup.Color, Color.Default)"
+                                Size="@AssistantComponentPropHelper.GetComponentSize(buttonGroup.Size, Size.Medium)"
+                                OverrideStyles="@buttonGroup.OverrideStyles"
+                                Vertical="@buttonGroup.Vertical"
+                                DropShadow="@buttonGroup.DropShadow"
+                                Class='@MergeClass(buttonGroup.Class, "mb-3")'
+                                Style="@this.GetOptionalStyle(buttonGroup.Style)">
+                    @foreach (var child in buttonGroup.Children)
+                    {
+                        if (child is AssistantButton childButton)
+                        {
+                            <MudButton Variant="@childButton.GetButtonVariant()"
+                                       Color="@AssistantComponentPropHelper.GetColor(childButton.Color, Color.Default)"
+                                       OnClick="@(() => this.ExecuteButtonActionAsync(childButton))"
+                                       Size="@AssistantComponentPropHelper.GetComponentSize(childButton.Size, Size.Medium)"
+                                       FullWidth="@childButton.IsFullWidth"
+                                       StartIcon="@AssistantComponentPropHelper.GetIconSvg(childButton.StartIcon)"
+                                       EndIcon="@AssistantComponentPropHelper.GetIconSvg(childButton.EndIcon)"
+                                       IconColor="@AssistantComponentPropHelper.GetColor(childButton.IconColor, Color.Inherit)"
+                                       IconSize="@AssistantComponentPropHelper.GetComponentSize(childButton.IconSize, Size.Medium)"
+                                       Disabled="@this.IsButtonActionRunning(childButton.Name)"
+                                       Class="@childButton.Class"
+                                       Style="@this.GetOptionalStyle(childButton.Style)">
+                                @childButton.Text
+                            </MudButton>
+                        }
+                    }
+                </MudButtonGroup>
             }
             break;
         case AssistantComponentType.PROVIDER_SELECTION:

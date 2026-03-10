@@ -153,6 +153,22 @@ ASSISTANT = {
                 }
             },
             {
+                ["Type"] = "BUTTON_GROUP",
+                ["Props"] = {
+                    ["Variant"] = "<Filled|Outlined|Text>", -- display variation of the group. Defaults to Filled
+                    ["Color"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the group. Defaults to Default
+                    ["Size"] = "<Small|Medium|Large>", -- size of the group. Defaults to Medium
+                    ["OverrideStyles"] = false, -- allows MudBlazor group style overrides. Defaults to false
+                    ["Vertical"] = false, -- renders buttons vertically instead of horizontally. Defaults to false
+                    ["DropShadow"] = true, -- applies a group shadow. Defaults to true
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                },
+                ["Children"] = {
+                    -- BUTTON_ELEMENTS
+                }
+            },
+            {
                 ["Type"] = "PROVIDER_SELECTION", -- required
                 ["Props"] = {
                     ["Name"] = "Provider",

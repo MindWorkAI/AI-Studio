@@ -12,6 +12,7 @@ Supported types (matching the Blazor UI components):
 - `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
 - `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`.
+- `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`; `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
@@ -217,6 +218,64 @@ Example:
     end,
     ["Class"] = "mb-3",
     ["Style"] = "min-width: 12rem;"
+  }
+}
+```
+
+### `BUTTON_GROUP` reference
+- Use `Type = "BUTTON_GROUP"` to render multiple `BUTTON` children as a single MudBlazor button group.
+- Required structure:
+  - `Children`: array of `BUTTON` component tables. Other child component types are ignored.
+- Optional props:
+  - `Variant`: one of the MudBlazor `Variant` enum names such as `Filled`, `Outlined`, `Text`; omitted values fall back to `Filled`.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Default`, `Primary`, `Secondary`, `Info`; omitted values fall back to `Default`.
+  - `Size`: one of the MudBlazor `Size` enum names such as `Small`, `Medium`, `Large`; omitted values fall back to `Medium`.
+  - `OverrideStyles`: defaults to `false`; enables MudBlazor button-group style overrides.
+  - `Vertical`: defaults to `false`; when `true`, buttons are rendered vertically instead of horizontally.
+  - `DropShadow`: defaults to `true`; controls the group shadow.
+  - `Class`, `Style`: forwarded to the rendered `MudButtonGroup` for layout/styling.
+- Child buttons use the existing `BUTTON` props and behavior, including Lua `Action(input)`.
+
+Example:
+```lua
+{
+  ["Type"] = "BUTTON_GROUP",
+  ["Props"] = {
+    ["Variant"] = "Filled",
+    ["Color"] = "Primary",
+    ["Size"] = "Medium",
+    ["OverrideStyles"] = false,
+    ["Vertical"] = false,
+    ["DropShadow"] = true
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "BUTTON",
+      ["Props"] = {
+        ["Name"] = "buildEmailOutput",
+        ["Text"] = "Build output",
+        ["Action"] = function(input)
+          return {
+            fields = {
+              outputBuffer = input.fields.emailContent or ""
+            }
+          }
+        end,
+        ["StartIcon"] = "Icons.Material.Filled.Build"
+      }
+    },
+    {
+      ["Type"] = "BUTTON",
+      ["Props"] = {
+        ["Name"] = "logColor",
+        ["Text"] = "Log color",
+        ["Action"] = function(input)
+          LogError("ColorPicker value: " .. tostring(input.fields.colorPicker or ""))
+          return nil
+        end,
+        ["EndIcon"] = "Icons.Material.Filled.BugReport"
+      }
+    }
   }
 }
 ```

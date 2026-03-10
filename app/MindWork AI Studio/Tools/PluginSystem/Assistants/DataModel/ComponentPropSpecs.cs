@@ -24,6 +24,10 @@ public static class ComponentPropSpecs
                     "StartIcon", "EndIcon", "IconColor", "IconSize",  "Class", "Style"
                 ]
             ),
+            [AssistantComponentType.BUTTON_GROUP] = new(
+                required: [],
+                optional: ["Variant", "Color", "Size", "OverrideStyles", "Vertical", "DropShadow", "Class", "Style"]
+            ),
             [AssistantComponentType.DROPDOWN] = new(
                 required: ["Name", "Label", "Default", "Items"],
                 optional: ["UserPrompt", "Class", "Style"]

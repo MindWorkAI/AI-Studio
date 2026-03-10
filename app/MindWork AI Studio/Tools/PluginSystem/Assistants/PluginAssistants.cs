@@ -288,6 +288,16 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 textArea.IsImmediate = true;
         }
 
+        if (component is AssistantButtonGroup buttonGroup)
+        {
+            var invalidChildren = buttonGroup.Children.Where(child => child.Type != AssistantComponentType.BUTTON).ToList();
+            if (invalidChildren.Count > 0)
+            {
+                LOGGER.LogWarning("Assistant plugin '{PluginName}' BUTTON_GROUP contains non-BUTTON children. Only BUTTON children are supported and invalid children are ignored.", this.Name);
+                buttonGroup.Children = buttonGroup.Children.Where(child => child.Type == AssistantComponentType.BUTTON).ToList();
+            }
+        }
+
         return true;
     }
 

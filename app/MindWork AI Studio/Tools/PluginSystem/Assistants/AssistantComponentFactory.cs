@@ -19,6 +19,8 @@ public class AssistantComponentFactory
                 return new AssistantTextArea { Props = props, Children = children };
             case AssistantComponentType.BUTTON:
                 return new AssistantButton { Props = props, Children = children};
+            case AssistantComponentType.BUTTON_GROUP:
+                return new AssistantButtonGroup { Props = props, Children = children };
             case AssistantComponentType.DROPDOWN:
                 return new AssistantDropdown { Props = props, Children = children };
             case AssistantComponentType.PROVIDER_SELECTION:
