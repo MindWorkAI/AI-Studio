@@ -68,7 +68,7 @@
         "target/databases/qdrant/qdrant"
       ],
       "resources": [
-        "resources/*"
+        "resources/**"
       ],
       "macOS": {
         "exceptionDomain": "localhost"
