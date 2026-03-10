@@ -2,6 +2,7 @@
 @using AIStudio.Components
 @using AIStudio.Settings
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel
+@using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDynamic>
 
 @foreach (var component in this.RootComponent!.Children)
@@ -133,6 +134,55 @@
                     </MudButtonGroup>
                 }
                 break;
+            case AssistantComponentType.LAYOUT_GRID:
+                if (component is AssistantGrid assistantGrid)
+                {
+                    var grid = assistantGrid;
+                    <MudGrid Justify="@(AssistantComponentPropHelper.GetJustify(grid.Justify) ?? Justify.FlexStart)"
+                             Spacing="@grid.Spacing"
+                             Class="@grid.Class"
+                             Style="@this.GetOptionalStyle(grid.Style)">
+                        @this.RenderChildren(grid.Children)
+                    </MudGrid>
+                }
+                break;
+            case AssistantComponentType.LAYOUT_ITEM:
+                if (component is AssistantItem assistantItem)
+                {
+                    @this.RenderLayoutItem(assistantItem)
+                }
+                break;
+            case AssistantComponentType.LAYOUT_PAPER:
+                if (component is AssistantPaper assistantPaper)
+                {
+                    var paper = assistantPaper;
+                    <MudPaper Elevation="@paper.Elevation"
+                              Outlined="@paper.IsOutlined"
+                              Square="@paper.IsSquare"
+                              Class="@paper.Class"
+                              Style="@this.BuildPaperStyle(paper)">
+                        @this.RenderChildren(paper.Children)
+                    </MudPaper>
+                }
+                break;
+            case AssistantComponentType.LAYOUT_STACK:
+                if (component is AssistantStack assistantStack)
+                {
+                    var stack = assistantStack;
+                    <MudStack Row="@stack.IsRow"
+                              Reverse="@stack.IsReverse"
+                              Breakpoint="@AssistantComponentPropHelper.GetBreakpoint(stack.Breakpoint, Breakpoint.None)"
+                              AlignItems="@(AssistantComponentPropHelper.GetAlignment(stack.Align) ?? AlignItems.Stretch)"
+                              Justify="@(AssistantComponentPropHelper.GetJustify(stack.Justify) ?? Justify.FlexStart)"
+                              StretchItems="@(AssistantComponentPropHelper.GetStretching(stack.Stretch) ?? StretchItems.None)"
+                              Wrap="@(AssistantComponentPropHelper.GetWrap(stack.Wrap) ?? Wrap.Wrap)"
+                              Spacing="@stack.Spacing"
+                              Class="@stack.Class"
+                              Style="@this.GetOptionalStyle(this.GetRawStyle(stack))">
+                        @this.RenderChildren(stack.Children)
+                    </MudStack>
+                }
+                break;
             case AssistantComponentType.PROVIDER_SELECTION:
                 if (component is AssistantProviderSelection providerSelection)
                 {
@@ -244,4 +294,70 @@
                 break;
         }
     </text>;
+
+    private string? GetRawStyle(IAssistantComponent component)
+    {
+        if (!component.Props.TryGetValue("Style", out var rawStyle) || rawStyle is null)
+            return null;
+
+        return rawStyle as string ?? rawStyle.ToString();
+    }
+
+    private string? BuildPaperStyle(AssistantPaper paper)
+    {
+        List<string> styles = [];
+
+        this.AddStyle(styles, "height", paper.Height);
+        this.AddStyle(styles, "max-height", paper.MaxHeight);
+        this.AddStyle(styles, "min-height", paper.MinHeight);
+        this.AddStyle(styles, "width", paper.Width);
+        this.AddStyle(styles, "max-width", paper.MaxWidth);
+        this.AddStyle(styles, "min-width", paper.MinWidth);
+
+        var customStyle = this.GetRawStyle(paper);
+        if (!string.IsNullOrWhiteSpace(customStyle))
+            styles.Add(customStyle.Trim().TrimEnd(';'));
+
+        return styles.Count == 0 ? null : string.Join("; ", styles);
+    }
+
+    private RenderFragment RenderLayoutItem(AssistantItem item) => builder =>
+    {
+        builder.OpenComponent<MudItem>(0);
+
+        if (item.Xs.HasValue)
+            builder.AddAttribute(1, "xs", item.Xs.Value);
+
+        if (item.Sm.HasValue)
+            builder.AddAttribute(2, "sm", item.Sm.Value);
+
+        if (item.Md.HasValue)
+            builder.AddAttribute(3, "md", item.Md.Value);
+
+        if (item.Lg.HasValue)
+            builder.AddAttribute(4, "lg", item.Lg.Value);
+
+        if (item.Xl.HasValue)
+            builder.AddAttribute(5, "xl", item.Xl.Value);
+
+        if (item.Xxl.HasValue)
+            builder.AddAttribute(6, "xxl", item.Xxl.Value);
+
+        var itemClass = item.Class;
+        if (!string.IsNullOrWhiteSpace(itemClass))
+            builder.AddAttribute(7, nameof(MudItem.Class), itemClass);
+
+        var itemStyle = this.GetOptionalStyle(item.Style);
+        if (!string.IsNullOrWhiteSpace(itemStyle))
+            builder.AddAttribute(8, nameof(MudItem.Style), itemStyle);
+
+        builder.AddAttribute(9, nameof(MudItem.ChildContent), this.RenderChildren(item.Children));
+        builder.CloseComponent();
+    };
+
+    private void AddStyle(List<string> styles, string key, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            styles.Add($"{key}: {value.Trim().TrimEnd(';')}");
+    }
 }

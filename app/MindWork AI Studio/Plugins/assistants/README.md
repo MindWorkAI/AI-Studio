@@ -13,6 +13,10 @@ Supported types (matching the Blazor UI components):
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
 - `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`.
 - `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`; `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
+- `LAYOUT_GRID`: renders a `MudGrid`; `Children` must contain only `LAYOUT_ITEM` components and `Props` may include `Justify`, `Spacing`, `Class`, `Style`.
+- `LAYOUT_ITEM`: renders a `MudItem`; use it inside `LAYOUT_GRID` and configure breakpoints with `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`, plus optional `Class`, `Style`.
+- `LAYOUT_PAPER`: renders a `MudPaper`; may include `Elevation`, `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`, `IsOutlined`, `IsSquare`, `Class`, `Style`.
+- `LAYOUT_STACK`: renders a `MudStack`; may include `IsRow`, `IsReverse`, `Breakpoint`, `Align`, `Justify`, `Stretch`, `Wrap`, `Spacing`, `Class`, `Style`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
@@ -24,7 +28,7 @@ Supported types (matching the Blazor UI components):
 Images referenced via the `plugin://` scheme must exist in the plugin directory (e.g., `assets/example.png`). Drop the file there and point `Src` at it. The component will read the file at runtime, encode it as Base64, and render it inside the assistant UI.
 
 ## Prompt Assembly
-Each component exposes a `UserPrompt` string. When the assistant runs, `AssistantDynamic` iterates over `RootComponent.Children` and, for each component that has a prompt, emits:
+Each component exposes a `UserPrompt` string. When the assistant runs, `AssistantDynamic` recursively iterates over the component tree and, for each component that has a prompt, emits:
 
 ```
 context:
@@ -276,6 +280,125 @@ Example:
         ["EndIcon"] = "Icons.Material.Filled.BugReport"
       }
     }
+  }
+}
+```
+
+### `LAYOUT_GRID` reference
+- Use `Type = "LAYOUT_GRID"` to render a MudBlazor grid container.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Required structure:
+  - `Children`: array of `LAYOUT_ITEM` component tables. Other child component types are ignored.
+- Optional props:
+  - `Justify`: one of the MudBlazor `Justify` enum names such as `FlexStart`, `Center`, `SpaceBetween`; omitted values fall back to `FlexStart`.
+  - `Spacing`: integer spacing between grid items; omitted values fall back to `6`.
+  - `Class`, `Style`: forwarded to the rendered `MudGrid` for layout/styling.
+
+Example:
+```lua
+{
+  ["Type"] = "LAYOUT_GRID",
+  ["Props"] = {
+    ["Name"] = "mainGrid",
+    ["Justify"] = "FlexStart",
+    ["Spacing"] = 2
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "LAYOUT_ITEM",
+      ["Props"] = {
+        ["Name"] = "leftItem",
+        ["Xs"] = 12,
+        ["Md"] = 6
+      }
+    },
+    {
+      ["Type"] = "LAYOUT_ITEM",
+      ["Props"] = {
+        ["Name"] = "rightItem",
+        ["Xs"] = 12,
+        ["Md"] = 6
+      }
+    }
+  }
+}
+```
+
+### `LAYOUT_ITEM` reference
+- Use `Type = "LAYOUT_ITEM"` to render a MudBlazor grid item.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Intended parent:
+  - Use this component inside `LAYOUT_GRID`.
+- Optional props:
+  - `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`: integer breakpoint widths. Omit a breakpoint to leave it unset.
+  - `Class`, `Style`: forwarded to the rendered `MudItem` for layout/styling.
+- `Children` may contain any other assistant components you want to place inside the item.
+
+Example:
+```lua
+{
+  ["Type"] = "LAYOUT_ITEM",
+  ["Props"] = {
+    ["Name"] = "contentColumn",
+    ["Xs"] = 12,
+    ["Lg"] = 8
+  }
+}
+```
+
+### `LAYOUT_PAPER` reference
+- Use `Type = "LAYOUT_PAPER"` to render a MudBlazor paper container.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Optional props:
+  - `Elevation`: integer elevation; omitted values fall back to `1`.
+  - `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`: CSS size values such as `100%`, `24rem`, `50vh`.
+  - `IsOutlined`: defaults to `false`; toggles outlined mode.
+  - `IsSquare`: defaults to `false`; removes rounded corners.
+  - `Class`, `Style`: forwarded to the rendered `MudPaper` for layout/styling.
+- `Children` may contain any other assistant components you want to wrap.
+
+Example:
+```lua
+{
+  ["Type"] = "LAYOUT_PAPER",
+  ["Props"] = {
+    ["Name"] = "contentPaper",
+    ["Elevation"] = 2,
+    ["Width"] = "100%",
+    ["IsOutlined"] = true
+  }
+}
+```
+
+### `LAYOUT_STACK` reference
+- Use `Type = "LAYOUT_STACK"` to render a MudBlazor stack layout.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Optional props:
+  - `IsRow`: defaults to `false`; renders items horizontally.
+  - `IsReverse`: defaults to `false`; reverses the visual order.
+  - `Breakpoint`: one of the MudBlazor `Breakpoint` enum names such as `Sm`, `Md`, `Lg`; omitted values fall back to `None`.
+  - `Align`: one of the MudBlazor `AlignItems` enum names such as `Start`, `Center`, `Stretch`; omitted values fall back to `Stretch`.
+  - `Justify`: one of the MudBlazor `Justify` enum names such as `FlexStart`, `Center`, `SpaceBetween`; omitted values fall back to `FlexStart`.
+  - `Stretch`: one of the MudBlazor `StretchItems` enum names such as `None`, `Start`, `End`, `Stretch`; omitted values fall back to `None`.
+  - `Wrap`: one of the MudBlazor `Wrap` enum names such as `Wrap`, `NoWrap`, `WrapReverse`; omitted values fall back to `Wrap`.
+  - `Spacing`: integer spacing between child components; omitted values fall back to `3`.
+  - `Class`, `Style`: forwarded to the rendered `MudStack` for layout/styling.
+- `Children` may contain any other assistant components you want to arrange.
+
+Example:
+```lua
+{
+  ["Type"] = "LAYOUT_STACK",
+  ["Props"] = {
+    ["Name"] = "toolbarRow",
+    ["IsRow"] = true,
+    ["Align"] = "Center",
+    ["Justify"] = "SpaceBetween",
+    ["Spacing"] = 2
   }
 }
 ```

@@ -76,52 +76,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         var rootComponent = this.RootComponent;
         if (rootComponent is not null)
         {
-            foreach (var component in rootComponent.Children)
-            {
-                switch (component.Type)
-                {
-                    case AssistantComponentType.TEXT_AREA:
-                        if (component is AssistantTextArea textArea)
-                        {
-                            this.inputFields.Add(textArea.Name, textArea.PrefillText);
-                        }
-                        break;
-                    case AssistantComponentType.DROPDOWN:
-                        if (component is AssistantDropdown dropdown)
-                        {
-                            this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
-                        }
-                        break;
-                    case AssistantComponentType.SWITCH:
-                        if (component is AssistantSwitch switchComponent)
-                        {
-                            this.switchFields.Add(switchComponent.Name, switchComponent.Value);
-                        }
-                        break;
-                    case AssistantComponentType.WEB_CONTENT_READER:
-                        if (component is AssistantWebContentReader webContent)
-                        {
-                            this.webContentFields.Add(webContent.Name, new WebContentState
-                            {
-                                Preselect = webContent.Preselect,
-                                PreselectContentCleanerAgent = webContent.PreselectContentCleanerAgent,
-                            });
-                        }
-                        break;
-                    case AssistantComponentType.FILE_CONTENT_READER:
-                        if (component is AssistantFileContentReader fileContent)
-                        {
-                            this.fileContentFields.Add(fileContent.Name, new FileContentState());
-                        }
-                        break;
-                    case AssistantComponentType.COLOR_PICKER:
-                        if (component is AssistantColorPicker assistantColorPicker)
-                        {
-                            this.colorPickerFields.Add(assistantColorPicker.Name, assistantColorPicker.Placeholder);
-                        }
-                        break;
-                }
-            }
+            this.InitializeComponentState(rootComponent.Children);
         }
 
         base.OnInitialized();
@@ -277,32 +232,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         var meta = new LuaTable();
         var rootComponent = this.RootComponent;
         if (rootComponent is not null)
-        {
-            foreach (var component in rootComponent.Children)
-            {
-                switch (component)
-                {
-                    case AssistantTextArea textArea:
-                        this.AddMetaEntry(meta, textArea.Name, component.Type, textArea.Label, textArea.UserPrompt);
-                        break;
-                    case AssistantDropdown dropdown:
-                        this.AddMetaEntry(meta, dropdown.Name, component.Type, dropdown.Label, dropdown.UserPrompt);
-                        break;
-                    case AssistantSwitch switchComponent:
-                        this.AddMetaEntry(meta, switchComponent.Name, component.Type, switchComponent.Label, switchComponent.UserPrompt);
-                        break;
-                    case AssistantWebContentReader webContent:
-                        this.AddMetaEntry(meta, webContent.Name, component.Type, null, webContent.UserPrompt);
-                        break;
-                    case AssistantFileContentReader fileContent:
-                        this.AddMetaEntry(meta, fileContent.Name, component.Type, null, fileContent.UserPrompt);
-                        break;
-                    case AssistantColorPicker colorPicker:
-                        this.AddMetaEntry(meta, colorPicker.Name, component.Type, colorPicker.Label, colorPicker.UserPrompt);
-                        break;
-                }
-            }
-        }
+            this.AddMetaEntries(meta, rootComponent.Children);
 
         input["meta"] = meta;
 
@@ -343,89 +273,50 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         if (rootComponent is null)
             return prompt;
 
-        foreach (var component in rootComponent.Children)
+        return this.CollectUserPromptFallback(rootComponent.Children);
+    }
+
+    private void InitializeComponentState(IEnumerable<IAssistantComponent> components)
+    {
+        foreach (var component in components)
         {
-            var userInput = string.Empty;
-            var userDecision = false;
             switch (component.Type)
             {
                 case AssistantComponentType.TEXT_AREA:
-                    if (component is AssistantTextArea textArea)
-                    {
-                        prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.inputFields.TryGetValue(textArea.Name, out userInput))
-                        {
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                        }
-                    }
+                    if (component is AssistantTextArea textArea && !this.inputFields.ContainsKey(textArea.Name))
+                        this.inputFields.Add(textArea.Name, textArea.PrefillText);
                     break;
                 case AssistantComponentType.DROPDOWN:
-                    if (component is AssistantDropdown dropdown)
-                    {
-                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
-                        {
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                        }
-                    }
+                    if (component is AssistantDropdown dropdown && !this.dropdownFields.ContainsKey(dropdown.Name))
+                        this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
                     break;
                 case AssistantComponentType.SWITCH:
-                    if (component is AssistantSwitch switchComponent)
-                    {
-                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{switchComponent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.switchFields.TryGetValue(switchComponent.Name, out userDecision))
-                        {
-                            prompt += $"user decision:{Environment.NewLine}{userDecision}";
-                        }
-                    }
+                    if (component is AssistantSwitch switchComponent && !this.switchFields.ContainsKey(switchComponent.Name))
+                        this.switchFields.Add(switchComponent.Name, switchComponent.Value);
                     break;
                 case AssistantComponentType.WEB_CONTENT_READER:
-                    if (component is AssistantWebContentReader webContent &&
-                        this.webContentFields.TryGetValue(webContent.Name, out var webState))
+                    if (component is AssistantWebContentReader webContent && !this.webContentFields.ContainsKey(webContent.Name))
                     {
-                        if (!string.IsNullOrWhiteSpace(webContent.UserPrompt))
+                        this.webContentFields.Add(webContent.Name, new WebContentState
                         {
-                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{webContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(webState.Content))
-                        {
-                            prompt += $"user prompt:{Environment.NewLine}{webState.Content}";
-                        }
+                            Preselect = webContent.Preselect,
+                            PreselectContentCleanerAgent = webContent.PreselectContentCleanerAgent,
+                        });
                     }
                     break;
                 case AssistantComponentType.FILE_CONTENT_READER:
-                    if (component is AssistantFileContentReader fileContent &&
-                        this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
-                    {
-                        if (!string.IsNullOrWhiteSpace(fileContent.UserPrompt))
-                        {
-                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{fileContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(fileState.Content))
-                        {
-                            prompt += $"user prompt:{Environment.NewLine}{fileState.Content}";
-                        }
-                    }
+                    if (component is AssistantFileContentReader fileContent && !this.fileContentFields.ContainsKey(fileContent.Name))
+                        this.fileContentFields.Add(fileContent.Name, new FileContentState());
                     break;
                 case AssistantComponentType.COLOR_PICKER:
-                    if (component is AssistantColorPicker colorPicker)
-                    {
-                        prompt += $"context:{Environment.NewLine}{colorPicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.inputFields.TryGetValue(colorPicker.Name, out userInput))
-                        {
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                        }
-                    }
-                    break;
-                default:
-                    prompt += $"{userInput}{Environment.NewLine}";
+                    if (component is AssistantColorPicker assistantColorPicker && !this.colorPickerFields.ContainsKey(assistantColorPicker.Name))
+                        this.colorPickerFields.Add(assistantColorPicker.Name, assistantColorPicker.Placeholder);
                     break;
             }
-        }
 
-        return prompt;
+            if (component.Children.Count > 0)
+                this.InitializeComponentState(component.Children);
+        }
     }
 
     private static string MergeClass(string customClass, string fallback)
@@ -570,5 +461,110 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         this.CreateChatThread();
         var time = this.AddUserRequest(await this.CollectUserPromptAsync());
         await this.AddAIResponseAsync(time);
+    }
+
+    private void AddMetaEntries(LuaTable meta, IEnumerable<IAssistantComponent> components)
+    {
+        foreach (var component in components)
+        {
+            switch (component)
+            {
+                case AssistantTextArea textArea:
+                    this.AddMetaEntry(meta, textArea.Name, component.Type, textArea.Label, textArea.UserPrompt);
+                    break;
+                case AssistantDropdown dropdown:
+                    this.AddMetaEntry(meta, dropdown.Name, component.Type, dropdown.Label, dropdown.UserPrompt);
+                    break;
+                case AssistantSwitch switchComponent:
+                    this.AddMetaEntry(meta, switchComponent.Name, component.Type, switchComponent.Label, switchComponent.UserPrompt);
+                    break;
+                case AssistantWebContentReader webContent:
+                    this.AddMetaEntry(meta, webContent.Name, component.Type, null, webContent.UserPrompt);
+                    break;
+                case AssistantFileContentReader fileContent:
+                    this.AddMetaEntry(meta, fileContent.Name, component.Type, null, fileContent.UserPrompt);
+                    break;
+                case AssistantColorPicker colorPicker:
+                    this.AddMetaEntry(meta, colorPicker.Name, component.Type, colorPicker.Label, colorPicker.UserPrompt);
+                    break;
+            }
+
+            if (component.Children.Count > 0)
+                this.AddMetaEntries(meta, component.Children);
+        }
+    }
+
+    private string CollectUserPromptFallback(IEnumerable<IAssistantComponent> components)
+    {
+        var prompt = string.Empty;
+
+        foreach (var component in components)
+        {
+            var userInput = string.Empty;
+            var userDecision = false;
+
+            switch (component.Type)
+            {
+                case AssistantComponentType.TEXT_AREA:
+                    if (component is AssistantTextArea textArea)
+                    {
+                        prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.inputFields.TryGetValue(textArea.Name, out userInput))
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                    }
+                    break;
+                case AssistantComponentType.DROPDOWN:
+                    if (component is AssistantDropdown dropdown)
+                    {
+                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                    }
+                    break;
+                case AssistantComponentType.SWITCH:
+                    if (component is AssistantSwitch switchComponent)
+                    {
+                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{switchComponent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.switchFields.TryGetValue(switchComponent.Name, out userDecision))
+                            prompt += $"user decision:{Environment.NewLine}{userDecision}";
+                    }
+                    break;
+                case AssistantComponentType.WEB_CONTENT_READER:
+                    if (component is AssistantWebContentReader webContent &&
+                        this.webContentFields.TryGetValue(webContent.Name, out var webState))
+                    {
+                        if (!string.IsNullOrWhiteSpace(webContent.UserPrompt))
+                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{webContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+
+                        if (!string.IsNullOrWhiteSpace(webState.Content))
+                            prompt += $"user prompt:{Environment.NewLine}{webState.Content}";
+                    }
+                    break;
+                case AssistantComponentType.FILE_CONTENT_READER:
+                    if (component is AssistantFileContentReader fileContent &&
+                        this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
+                    {
+                        if (!string.IsNullOrWhiteSpace(fileContent.UserPrompt))
+                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{fileContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+
+                        if (!string.IsNullOrWhiteSpace(fileState.Content))
+                            prompt += $"user prompt:{Environment.NewLine}{fileState.Content}";
+                    }
+                    break;
+                case AssistantComponentType.COLOR_PICKER:
+                    if (component is AssistantColorPicker colorPicker)
+                    {
+                        prompt += $"context:{Environment.NewLine}{colorPicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.colorPickerFields.TryGetValue(colorPicker.Name, out userInput))
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                    }
+                    break;
+            }
+
+            if (component.Children.Count > 0)
+                prompt += this.CollectUserPromptFallback(component.Children);
+        }
+
+        return prompt;
     }
 }

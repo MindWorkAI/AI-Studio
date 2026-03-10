@@ -169,6 +169,48 @@ ASSISTANT = {
                 }
             },
             {
+                ["Type"] = "LAYOUT_STACK",
+                ["Props"] = {
+                    ["Name"] = "exampleStack",
+                    ["IsRow"] = true,
+                    ["Align"] = "Center",
+                    ["Justify"] = "SpaceBetween",
+                    ["Wrap"] = "Wrap",
+                    ["Spacing"] = 2,
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                },
+                ["Children"] = {
+                    -- CHILDREN
+                }
+            },
+            {
+                ["Type"] = "LAYOUT_PAPER",
+                ["Props"] = {
+                    ["Name"] = "examplePaper",
+                    ["Elevation"] = 2,
+                    ["Width"] = "100%",
+                    ["Class"] = "pa-4 mb-3",
+                    ["Style"] = "<optional css styles>",
+                },
+                ["Children"] = {
+                    -- CHILDREN
+                }
+            },
+            {
+                ["Type"] = "LAYOUT_GRID",
+                ["Props"] = {
+                    ["Name"] = "exampleGrid",
+                    ["Justify"] = "FlexStart",
+                    ["Spacing"] = 2,
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                },
+                ["Children"] = {
+                    -- CHILDREN
+                }
+            },
+            {
                 ["Type"] = "PROVIDER_SELECTION", -- required
                 ["Props"] = {
                     ["Name"] = "Provider",

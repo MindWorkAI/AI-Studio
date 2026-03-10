@@ -89,7 +89,7 @@ public static class ComponentPropSpecs
             [AssistantComponentType.LAYOUT_PAPER] = new(
                 required: ["Name"],
                 optional: [
-                    "Height", "MaxHeight", "MinHeight", "Width", "MaxWidth", "MinWidth", 
+                    "Elevation", "Height", "MaxHeight", "MinHeight", "Width", "MaxWidth", "MinWidth", 
                     "IsOutlined", "IsSquare", "Class", "Style"
                 ]
             ),

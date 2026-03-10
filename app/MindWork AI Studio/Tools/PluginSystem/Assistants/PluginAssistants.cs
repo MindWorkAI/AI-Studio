@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
@@ -295,6 +296,16 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             {
                 LOGGER.LogWarning("Assistant plugin '{PluginName}' BUTTON_GROUP contains non-BUTTON children. Only BUTTON children are supported and invalid children are ignored.", this.Name);
                 buttonGroup.Children = buttonGroup.Children.Where(child => child.Type == AssistantComponentType.BUTTON).ToList();
+            }
+        }
+
+        if (component is AssistantGrid grid)
+        {
+            var invalidChildren = grid.Children.Where(child => child.Type != AssistantComponentType.LAYOUT_ITEM).ToList();
+            if (invalidChildren.Count > 0)
+            {
+                LOGGER.LogWarning("Assistant plugin '{PluginName}' LAYOUT_GRID contains non-LAYOUT_ITEM children. Only LAYOUT_ITEM children are supported and invalid children are ignored.", this.Name);
+                grid.Children = grid.Children.Where(child => child.Type == AssistantComponentType.LAYOUT_ITEM).ToList();
             }
         }
 
