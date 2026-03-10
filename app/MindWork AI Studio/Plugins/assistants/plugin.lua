@@ -121,6 +121,38 @@ ASSISTANT = {
                 }
             },
             {
+                ["Type"] = "BUTTON",
+                ["Props"] = {
+                    ["Name"] = "buildEmailOutput",
+                    ["Text"] = "Build email output",
+                    ["Size"] = "<Small|Medium|Large>", -- size of the button. Defaults to Medium
+                    ["Variant"] = "<Filled|Outlined|Text>", -- display variation to use. Defaults to Text
+                    ["Color"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the button. Defaults to Default
+                    ["IsFullWidth"] = false, -- ignores sizing and renders a long full width button. Defaults to false
+                    ["StartIcon"] = "Icons.Material.Filled.ArrowRight", -- icon displayed before the text. Defaults to null
+                    ["EndIcon"] = "Icons.Material.Filled.ArrowLeft", -- icon displayed after the text. Defaults to null
+                    ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of start and end icons. Defaults to Inherit
+                    ["IconSize"] = "<Small|Medium|Large>", -- size of icons. Defaults to null. When null, the value of ["Size"] is used
+                    ["Action"] = function(input)
+                        local email = input.fields.emailContent or ""
+                        local translate = input.fields.translateEmail or false
+                        local output = email
+
+                        if translate then
+                            output = output .. "\n\nTranslate this email."
+                        end
+
+                        return {
+                            fields = {
+                                outputBuffer = output
+                            }
+                        }
+                    end,
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                }
+            },
+            {
                 ["Type"] = "PROVIDER_SELECTION", -- required
                 ["Props"] = {
                     ["Name"] = "Provider",

@@ -1,3 +1,5 @@
+using AIStudio.Tools.PluginSystem.Assistants.Icons;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal static class AssistantComponentPropHelper
@@ -49,4 +51,16 @@ internal static class AssistantComponentPropHelper
     {
         props[key] = value;
     }
+
+    public static void WriteObject(Dictionary<string, object> props, string key, object? value)
+    {
+        if (value is null)
+            props.Remove(key);
+        else
+            props[key] = value;
+    }
+    
+    public static MudBlazor.Color GetColor(string value, Color fallback) => Enum.TryParse<MudBlazor.Color>(value, out var color) ? color : fallback;
+    public static string GetIconSvg(string value) => MudBlazorIconRegistry.TryGetSvg(value, out var svg) ? svg : string.Empty;
+    public static Size GetComponentSize(string value, Size fallback) => Enum.TryParse<Size>(value, out var size) ? size : fallback;
 }

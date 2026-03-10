@@ -85,6 +85,27 @@
                                           Style="@assistantDropdown.Style"/>
             }
             break;
+        case AssistantComponentType.BUTTON:
+            if (component is AssistantButton assistantButton)
+            {
+                var button = assistantButton;
+                <div >
+                    <MudButton Variant="@button.GetButtonVariant()"
+                               Color="@AssistantComponentPropHelper.GetColor(button.Color, Color.Default)"
+                               OnClick="@(() => this.ExecuteButtonActionAsync(button))"
+                               Size="@AssistantComponentPropHelper.GetComponentSize(button.Size, Size.Medium)"
+                               FullWidth="@button.IsFullWidth"
+                               StartIcon="@AssistantComponentPropHelper.GetIconSvg(button.StartIcon)"
+                               EndIcon="@AssistantComponentPropHelper.GetIconSvg(button.EndIcon)"
+                               IconColor="@AssistantComponentPropHelper.GetColor(button.IconColor, Color.Inherit)"
+                               IconSize="@AssistantComponentPropHelper.GetComponentSize(button.IconSize, Size.Medium)"
+                               Disabled="@this.IsButtonActionRunning(button.Name)"
+                               Class='@MergeClass(button.Class, "mb-3")'
+                               Style="@this.GetOptionalStyle(button.Style)">
+                        @button.Text
+                    </MudButton></div>
+            }
+            break;
         case AssistantComponentType.PROVIDER_SELECTION:
             if (component is AssistantProviderSelection providerSelection)
             {

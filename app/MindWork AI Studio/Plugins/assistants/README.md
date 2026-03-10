@@ -11,6 +11,7 @@ Supported types (matching the Blazor UI components):
 
 - `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
+- `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
@@ -153,6 +154,69 @@ Example:
     ["UserPrompt"] = "Use this budget information in your answer.",
     ["PrefillText"] = "",
     ["IsSingleLine"] = true
+  }
+}
+```
+
+### `BUTTON` reference
+- Use `Type = "BUTTON"` to render a clickable action button.
+- Required props:
+  - `Name`: unique identifier used to track execution state and logging.
+  - `Text`: visible button label.
+  - `Action`: Lua function called on button click.
+- Optional props:
+  - `Variant`: one of the MudBlazor `Variant` enum names such as `Filled`, `Outlined`, `Text`; omitted values fall back to `Filled`.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Default`, `Primary`, `Secondary`, `Info`; omitted values fall back to `Default`.
+  - `IsFullWidth`: defaults to `false`; when `true`, the button expands to the available width.
+  - `Size`: one of the MudBlazor `Size` enum names such as `Small`, `Medium`, `Large`; omitted values fall back to `Medium`.
+  - `StartIcon`: MudBlazor icon identifier string rendered before the button text.
+  - `EndIcon`: MudBlazor icon identifier string rendered after the button text.
+  - `IconColor`: one of the MudBlazor `Color` enum names; omitted values fall back to `Inherit`.
+  - `IconSize`: one of the MudBlazor `Size` enum names; omitted values fall back to `Medium`.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### `Action(input)` contract
+- The function receives the same `input` structure as `ASSISTANT.BuildPrompt(input)`.
+- Return `nil` for no state update.
+- To update component state, return a table with a `fields` table.
+- `fields` keys must reference existing component `Name` values.
+- Supported write targets:
+  - `TEXT_AREA`, `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`: string values
+  - `SWITCH`: boolean values
+- Unknown field names and wrong value types are ignored and logged.
+
+Example:
+```lua
+{
+  ["Type"] = "BUTTON",
+  ["Props"] = {
+    ["Name"] = "buildEmailOutput",
+    ["Text"] = "Build output",
+    ["Variant"] = "Filled",
+    ["Color"] = "Primary",
+    ["IsFullWidth"] = false,
+    ["Size"] = "Medium",
+    ["StartIcon"] = "Icons.Material.Filled.AutoFixHigh",
+    ["EndIcon"] = "Icons.Material.Filled.ArrowForward",
+    ["IconColor"] = "Inherit",
+    ["IconSize"] = "Medium",
+    ["Action"] = function(input)
+      local email = input.fields.emailContent or ""
+      local translate = input.fields.translateEmail or false
+      local output = email
+
+      if translate then
+        output = output .. "\n\nTranslate this email."
+      end
+
+      return {
+        fields = {
+          outputBuffer = output
+        }
+      }
+    end,
+    ["Class"] = "mb-3",
+    ["Style"] = "min-width: 12rem;"
   }
 }
 ```

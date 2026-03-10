@@ -143,6 +143,34 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
     }
 
+    public async Task<LuaTable?> TryInvokeButtonActionAsync(AssistantButton button, LuaTable input, CancellationToken cancellationToken = default)
+    {
+        if (button.Action is null)
+            return null;
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var results = await this.state.CallAsync(button.Action, [input]);
+            if (results.Length == 0)
+                return null;
+
+            if (results[0].Type is LuaValueType.Nil)
+                return null;
+
+            if (results[0].TryRead<LuaTable>(out var updateTable))
+                return updateTable;
+
+            LOGGER.LogWarning("Assistant plugin '{PluginName}' BUTTON '{ButtonName}' returned a non-table value. The result is ignored.", this.Name, button.Name);
+            return null;
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError(e, "Assistant plugin '{PluginName}' BUTTON '{ButtonName}' action failed to execute.", this.Name, button.Name);
+            return null;
+        }
+    }
+
     /// <summary>
     /// Parses the root <c>FORM</c> component and start to parse its required children (main ui components)
     /// </summary>
@@ -280,7 +308,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 LOGGER.LogWarning($"Component {type} missing required prop '{key}'.");
                 return false;
             }
-            if (!this.TryConvertLuaValue(luaVal, out var dotNetVal))
+            if (!this.TryConvertComponentPropValue(type, key, luaVal, out var dotNetVal))
             {
                 LOGGER.LogWarning($"Component {type}: prop '{key}' has wrong type.");
                 return false;
@@ -293,7 +321,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             if (!propsTable.TryGetValue(key, out var luaVal))
                 continue;
 
-            if (!this.TryConvertLuaValue(luaVal, out var dotNetVal))
+            if (!this.TryConvertComponentPropValue(type, key, luaVal, out var dotNetVal))
             {
                 LOGGER.LogWarning($"Component {type}: optional prop '{key}' has wrong type, skipping.");
                 continue;
@@ -302,6 +330,17 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
 
         return true;
+    }
+
+    private bool TryConvertComponentPropValue(AssistantComponentType type, string key, LuaValue val, out object result)
+    {
+        if (type == AssistantComponentType.BUTTON && key == "Action" && val.TryRead<LuaFunction>(out var action))
+        {
+            result = action;
+            return true;
+        }
+
+        return this.TryConvertLuaValue(val, out result);
     }
     
     private bool TryConvertLuaValue(LuaValue val, out object result)

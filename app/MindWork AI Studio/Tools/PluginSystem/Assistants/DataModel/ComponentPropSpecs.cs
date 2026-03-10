@@ -19,7 +19,10 @@ public static class ComponentPropSpecs
             ),
             [AssistantComponentType.BUTTON] = new(
                 required: ["Name", "Text", "Action"],
-                optional: ["Class", "Style"]
+                optional: [
+                    "Variant", "Color", "IsFullWidth", "Size",
+                    "StartIcon", "EndIcon", "IconColor", "IconSize",  "Class", "Style"
+                ]
             ),
             [AssistantComponentType.DROPDOWN] = new(
                 required: ["Name", "Label", "Default", "Items"],

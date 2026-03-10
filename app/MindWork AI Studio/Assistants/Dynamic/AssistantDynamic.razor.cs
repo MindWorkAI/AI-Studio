@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -47,6 +48,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private readonly Dictionary<string, FileContentState> fileContentFields = new();
     private readonly Dictionary<string, string> colorPickerFields = new();
     private readonly Dictionary<string, string> imageCache = new();
+    private readonly HashSet<string> executingButtonActions = [];
     private string pluginPath = string.Empty;
     private const string PLUGIN_SCHEME = "plugin://";
     private const string ASSISTANT_QUERY_KEY = "assistantId";
@@ -440,6 +442,115 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     }
 
     private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
+
+    private bool IsButtonActionRunning(string buttonName) => this.executingButtonActions.Contains(buttonName);
+
+    private async Task ExecuteButtonActionAsync(AssistantButton button)
+    {
+        if (this.assistantPlugin is null || button.Action is null || string.IsNullOrWhiteSpace(button.Name))
+            return;
+
+        if (!this.executingButtonActions.Add(button.Name))
+            return;
+
+        try
+        {
+            var input = this.BuildPromptInput();
+            var cancellationToken = this.cancellationTokenSource?.Token ?? CancellationToken.None;
+            var result = await this.assistantPlugin.TryInvokeButtonActionAsync(button, input, cancellationToken);
+            if (result is not null)
+                this.ApplyButtonActionResult(result);
+        }
+        finally
+        {
+            this.executingButtonActions.Remove(button.Name);
+            await this.InvokeAsync(this.StateHasChanged);
+        }
+    }
+
+    private void ApplyButtonActionResult(LuaTable result)
+    {
+        if (!result.TryGetValue("fields", out var fieldsValue))
+            return;
+
+        if (!fieldsValue.TryRead<LuaTable>(out var fieldsTable))
+        {
+            this.Logger.LogWarning("Assistant BUTTON action returned a non-table 'fields' value. The result is ignored.");
+            return;
+        }
+
+        foreach (var pair in fieldsTable)
+        {
+            if (!pair.Key.TryRead<string>(out var fieldName) || string.IsNullOrWhiteSpace(fieldName))
+                continue;
+
+            this.TryApplyFieldUpdate(fieldName, pair.Value);
+        }
+    }
+
+    private void TryApplyFieldUpdate(string fieldName, LuaValue value)
+    {
+        if (this.inputFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<string>(out var textValue))
+                this.inputFields[fieldName] = textValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+            return;
+        }
+
+        if (this.dropdownFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<string>(out var dropdownValue))
+                this.dropdownFields[fieldName] = dropdownValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+            return;
+        }
+
+        if (this.switchFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<bool>(out var boolValue))
+                this.switchFields[fieldName] = boolValue;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "boolean");
+            return;
+        }
+
+        if (this.colorPickerFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<string>(out var colorValue))
+                this.colorPickerFields[fieldName] = colorValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+            return;
+        }
+
+        if (this.webContentFields.TryGetValue(fieldName, out var webContentState))
+        {
+            if (value.TryRead<string>(out var webContentValue))
+                webContentState.Content = webContentValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+            return;
+        }
+
+        if (this.fileContentFields.TryGetValue(fieldName, out var fileContentState))
+        {
+            if (value.TryRead<string>(out var fileContentValue))
+                fileContentState.Content = fileContentValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+            return;
+        }
+
+        this.Logger.LogWarning("Assistant BUTTON action tried to update unknown field '{FieldName}'. The value is ignored.", fieldName);
+    }
+
+    private void LogFieldUpdateTypeMismatch(string fieldName, string expectedType)
+    {
+        this.Logger.LogWarning("Assistant BUTTON action tried to write an invalid value to '{FieldName}'. Expected {ExpectedType}.", fieldName, expectedType);
+    }
 
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
