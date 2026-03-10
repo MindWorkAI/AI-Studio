@@ -8,13 +8,12 @@ namespace AIStudio.Tools.Services;
 
 public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiver
 {
-    private static bool IS_INITIALIZED;
-    private static readonly TimeSpan STARTUP_RECOVERY_WINDOW = TimeSpan.FromSeconds(15);
+    private static bool IS_STARTUP_COMPLETED;
 
     private enum ShortcutSyncSource
     {
-        STARTUP,
         CONFIGURATION_CHANGED,
+        STARTUP_COMPLETED,
         PLUGINS_RELOADED,
     }
 
@@ -23,7 +22,6 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
     private readonly SettingsManager settingsManager;
     private readonly MessageBus messageBus;
     private readonly RustService rustService;
-    private readonly DateTimeOffset serviceStartedAt = DateTimeOffset.UtcNow;
 
     public GlobalShortcutService(
         ILogger<GlobalShortcutService> logger,
@@ -37,17 +35,13 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         this.rustService = rustService;
 
         this.messageBus.RegisterComponent(this);
-        this.ApplyFilters([], [Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED]);
+        this.ApplyFilters([], [Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED, Event.STARTUP_COMPLETED]);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Wait until the app is fully initialized:
-        while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
-            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
-
-        // Register shortcuts on startup:
-        await this.RegisterAllShortcuts(ShortcutSyncSource.STARTUP);
+        this.logger.LogInformation("The global shortcut service was initialized.");
+        await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
@@ -64,10 +58,21 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         switch (triggeredEvent)
         {
             case Event.CONFIGURATION_CHANGED:
+                if (!IS_STARTUP_COMPLETED)
+                    return;
+
                 await this.RegisterAllShortcuts(ShortcutSyncSource.CONFIGURATION_CHANGED);
                 break;
 
+            case Event.STARTUP_COMPLETED:
+                IS_STARTUP_COMPLETED = true;
+                await this.RegisterAllShortcuts(ShortcutSyncSource.STARTUP_COMPLETED);
+                break;
+
             case Event.PLUGINS_RELOADED:
+                if (!IS_STARTUP_COMPLETED)
+                    return;
+
                 await this.RegisterAllShortcuts(ShortcutSyncSource.PLUGINS_RELOADED);
                 break;
         }
@@ -88,7 +93,9 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                 if(shortcutId is Shortcut.NONE)
                     continue;
 
-                var (shortcut, isEnabled, usesPersistedFallback) = await this.GetShortcutState(shortcutId);
+                var shortcutState = await this.GetShortcutState(shortcutId, source);
+                var shortcut = shortcutState.Shortcut;
+                var isEnabled = shortcutState.IsEnabled;
                 this.logger.LogInformation(
                     "Sync shortcut '{ShortcutId}' (source='{Source}', enabled={IsEnabled}, configured='{Shortcut}').",
                     shortcutId,
@@ -96,10 +103,10 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                     isEnabled,
                     shortcut);
 
-                if (usesPersistedFallback)
+                if (shortcutState.UsesPersistedFallback)
                 {
                     this.logger.LogWarning(
-                        "Using persisted shortcut fallback for '{ShortcutId}' during startup recovery (source='{Source}', configured='{Shortcut}').",
+                        "Using persisted shortcut fallback for '{ShortcutId}' during startup completion (source='{Source}', configured='{Shortcut}').",
                         shortcutId,
                         source,
                         shortcut);
@@ -151,14 +158,14 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         _ => true,
     };
 
-    private async Task<ShortcutState> GetShortcutState(Shortcut shortcutId)
+    private async Task<ShortcutState> GetShortcutState(Shortcut shortcutId, ShortcutSyncSource source)
     {
         var shortcut = this.GetShortcutValue(shortcutId);
         var isEnabled = this.IsShortcutAllowed(shortcutId);
         if (isEnabled && !string.IsNullOrWhiteSpace(shortcut))
             return new(shortcut, true, false);
 
-        if (!this.IsWithinStartupRecoveryWindow() || shortcutId is not Shortcut.VOICE_RECORDING_TOGGLE)
+        if (source is not ShortcutSyncSource.STARTUP_COMPLETED || shortcutId is not Shortcut.VOICE_RECORDING_TOGGLE)
             return new(shortcut, isEnabled, false);
 
         var settingsSnapshot = await this.settingsManager.TryReadSettingsSnapshot();
@@ -166,16 +173,15 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
             return new(shortcut, isEnabled, false);
 
         var fallbackShortcut = settingsSnapshot.App.ShortcutVoiceRecording;
-        var fallbackEnabled = settingsSnapshot.App.EnabledPreviewFeatures.Contains(PreviewFeatures.PRE_SPEECH_TO_TEXT_2026);
+        var fallbackEnabled =
+            settingsSnapshot.App.EnabledPreviewFeatures.Contains(PreviewFeatures.PRE_SPEECH_TO_TEXT_2026) &&
+            !string.IsNullOrWhiteSpace(settingsSnapshot.App.UseTranscriptionProvider);
+
         if (!fallbackEnabled || string.IsNullOrWhiteSpace(fallbackShortcut))
             return new(shortcut, isEnabled, false);
 
         return new(fallbackShortcut, true, true);
     }
 
-    private bool IsWithinStartupRecoveryWindow() => DateTimeOffset.UtcNow - this.serviceStartedAt <= STARTUP_RECOVERY_WINDOW;
-
     private readonly record struct ShortcutState(string Shortcut, bool IsEnabled, bool UsesPersistedFallback);
-
-    public static void Initialize() => IS_INITIALIZED = true;
 }
