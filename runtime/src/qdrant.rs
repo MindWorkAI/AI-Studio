@@ -15,6 +15,7 @@ use crate::api_token::{APIToken};
 use crate::environment::DATA_DIRECTORY;
 use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
+use once_cell::race::OnceBool;
 use tauri::PathResolver;
 use tempfile::{TempDir, Builder};
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
@@ -40,6 +41,8 @@ static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
 
 static TMPDIR: Lazy<Mutex<Option<TempDir>>> = Lazy::new(|| Mutex::new(None));
 
+static IS_DEV: OnceBool = OnceBool::new();
+
 const PID_FILE_NAME: &str = "qdrant.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Qdrant;
 
@@ -55,7 +58,11 @@ pub struct ProvideQdrantInfo {
 #[get("/system/qdrant/info")]
 pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
     Json(ProvideQdrantInfo {
-        path: Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").to_str().unwrap().to_string(),
+        path:   if IS_DEV.get().unwrap(){
+                    Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant_test").to_str().unwrap().to_string()
+                }else{
+                    Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").to_str().unwrap().to_string()
+                },
         port_http: *QDRANT_SERVER_PORT_HTTP,
         port_grpc: *QDRANT_SERVER_PORT_GRPC,
         fingerprint: CERTIFICATE_FINGERPRINT.get().expect("Certificate fingerprint not available").to_string(),
@@ -64,10 +71,15 @@ pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 }
 
 /// Starts the Qdrant server in a separate process.
-pub fn start_qdrant_server(path_resolver: PathResolver){
-    
+pub fn start_qdrant_server(path_resolver: PathResolver, is_dev:bool){
+    IS_DEV.set(is_dev).expect("Could not set the is_dev flag.");
     let base_path = DATA_DIRECTORY.get().unwrap();
-    let path = Path::new(base_path).join("databases").join("qdrant");
+    let path = if IS_DEV.get().unwrap() {
+        Path::new(base_path).join("databases").join("qdrant_test")
+    }else{
+        Path::new(base_path).join("databases").join("qdrant")
+    };
+
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path){
             error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e.to_string());
@@ -148,7 +160,7 @@ pub fn stop_qdrant_server() {
     }
 
     drop_tmpdir();
-    cleanup_qdrant();
+    cleanup_qdrant(IS_DEV.get().unwrap());
 }
 
 /// Create temporary directory with TLS relevant files
@@ -189,25 +201,28 @@ pub fn drop_tmpdir() {
 }
 
 /// Remove old Pid files and kill the corresponding processes
-pub fn cleanup_qdrant() {
-    let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant").join(PID_FILE_NAME);
+pub fn cleanup_qdrant(is_dev:bool) {
+    let path = if is_dev {
+        Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant_test")
+    }else{
+        Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant")
+    };
+    let pid_path = path.join(PID_FILE_NAME);
     if let Err(e) = kill_stale_process(pid_path, SIDECAR_TYPE) {
         warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
     }
-    if let Err(e) = delete_old_certificates() {
+    if let Err(e) = delete_old_certificates(path) {
         warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
     }
     
 }
 
-pub fn delete_old_certificates() -> Result<(), Box<dyn Error>> {
-    let dir_path =  Path::new(DATA_DIRECTORY.get().unwrap()).join("databases").join("qdrant");
-
-    if !dir_path.exists() {
+pub fn delete_old_certificates(path: PathBuf) -> Result<(), Box<dyn Error>> {
+    if !path.exists() {
         return Ok(());
     }
 
-    for entry in fs::read_dir(dir_path)? {
+    for entry in fs::read_dir(path)? {
         let entry = entry?;
         let path = entry.path();
 
