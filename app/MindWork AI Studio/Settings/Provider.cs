@@ -253,7 +253,7 @@ public sealed record Provider(
                     ["AdditionalJsonApiParameters"] = "{{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}}",
                     ["Model"] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
-                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
+                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     },
                 }
                 """;
