@@ -24,6 +24,17 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            // Check for Qwen 3.5:
+            if(modelName.StartsWith("qwen3.5"))
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
             // Check for Qwen 3:
             if(modelName.StartsWith("qwen3"))
                 return
