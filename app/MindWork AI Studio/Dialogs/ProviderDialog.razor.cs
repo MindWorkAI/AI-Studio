@@ -361,7 +361,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
         catch (JsonException)
         {
-            return T("Invalid JSON.");
+            return T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
         }
     }
 
@@ -494,7 +494,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         if (objectStack.Count != 0)
         {
-            errorMessage = T("Invalid JSON.");
+            errorMessage = T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
             return false;
         }
 
