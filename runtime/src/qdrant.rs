@@ -10,7 +10,6 @@ use once_cell::sync::Lazy;
 use rocket::get;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
-use tauri::api::process::{Command, CommandChild, CommandEvent};
 use crate::api_token::{APIToken};
 use crate::environment::DATA_DIRECTORY;
 use crate::certificate_factory::generate_certificate;
@@ -18,6 +17,8 @@ use std::path::PathBuf;
 use tempfile::{TempDir, Builder};
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
 use crate::sidecar_types::SidecarType;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
 
 // Qdrant server process started in a separate process and can communicate
 // via HTTP or gRPC with the .NET server and the runtime process
@@ -63,7 +64,7 @@ pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 }
 
 /// Starts the Qdrant server in a separate process.
-pub fn start_qdrant_server(){
+pub fn start_qdrant_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>){
     
     let base_path = DATA_DIRECTORY.get().unwrap();
     let path = Path::new(base_path).join("databases").join("qdrant");
@@ -78,7 +79,7 @@ pub fn start_qdrant_server(){
     let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
     let init_path = path.join(".qdrant-initalized").to_str().unwrap().to_string();
     
-    let qdrant_server_environment = HashMap::from_iter([
+    let qdrant_server_environment: HashMap<String, String> = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
         (String::from("QDRANT__SERVICE__GRPC_PORT"), QDRANT_SERVER_PORT_GRPC.to_string()),
         (String::from("QDRANT_INIT_FILE_PATH"), init_path),
@@ -92,7 +93,9 @@ pub fn start_qdrant_server(){
     
     let server_spawn_clone = QDRANT_SERVER.clone();
     tauri::async_runtime::spawn(async move {
-        let (mut rx, child) = Command::new_sidecar("qdrant")
+        let shell = app_handle.shell();
+        let (mut rx, child) = shell
+            .sidecar("qdrant")
             .expect("Failed to create sidecar for Qdrant")
             .args(["--config-path", "resources/databases/qdrant/config.yaml"])
             .envs(qdrant_server_environment)
@@ -110,7 +113,8 @@ pub fn start_qdrant_server(){
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
-                    let line = line.trim_end();
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = line_utf8.trim_end();
                     if line.contains("INFO") || line.contains("info") {
                         info!(Source = "Qdrant Server"; "{line}");
                     } else if line.contains("WARN") || line.contains("warning") {
@@ -123,7 +127,8 @@ pub fn start_qdrant_server(){
                 },
             
                 CommandEvent::Stderr(line) => {
-                    error!(Source = "Qdrant Server (stderr)"; "{line}");
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    error!(Source = "Qdrant Server (stderr)"; "{line_utf8}");
                 },
             
                 _ => {}
