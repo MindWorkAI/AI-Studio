@@ -3,11 +3,48 @@
 This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistant. Treat it as the single source of truth for how AI Studio renders your assistant UI and builds the submitted prompt.
 
 ## Table of Contents
+- [Assistant Plugin Reference](#assistant-plugin-reference)
+  - [How to Use This Documentation](#how-to-use-this-documentation)
+  - [Directory Structure](#directory-structure)
+  - [Structure](#structure)
+    - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
+  - [Component References](#component-references)
+    - [`TEXT_AREA` reference](#text_area-reference)
+    - [`BUTTON` reference](#button-reference)
+      - [`Action(input)` interface](#actioninput-interface)
+    - [`BUTTON_GROUP` reference](#button_group-reference)
+    - [`SWITCH` reference](#switch-reference)
+    - [`COLOR_PICKER` reference](#color_picker-reference)
+  - [Prompt Assembly - UserPrompt Property](#prompt-assembly---userprompt-property)
+  - [Advanced Prompt Assembly - BuildPrompt()](#advanced-prompt-assembly---buildprompt)
+    - [Interface](#interface)
+    - [`input` table shape](#input-table-shape)
+    - [Using `meta` inside BuildPrompt](#using-meta-inside-buildprompt)
+      - [Example: iterate all fields with labels and include their values](#example-iterate-all-fields-with-labels-and-include-their-values)
+      - [Example: handle types differently](#example-handle-types-differently)
+    - [Using `profile` inside BuildPrompt](#using-profile-inside-buildprompt)
+      - [Example: Add user profile context to the prompt](#example-add-user-profile-context-to-the-prompt)
+  - [Advanced Layout Options](#advanced-layout-options)
+    - [`LAYOUT_GRID` reference](#layout_grid-reference)
+    - [`LAYOUT_ITEM` reference](#layout_item-reference)
+    - [`LAYOUT_PAPER` reference](#layout_paper-reference)
+    - [`LAYOUT_STACK` reference](#layout_stack-reference)
+  - [Useful Lua Functions](#useful-lua-functions)
+    - [Included lua libraries](#included-lua-libraries)
+    - [Logging helpers](#logging-helpers)
+      - [Example: Use Logging in lua functions](#example-use-logging-in-lua-functions)
+    - [Date/time helpers (assistant plugins only)](#datetime-helpers-assistant-plugins-only)
+      - [Example: Use Logging in lua functions](#example-use-logging-in-lua-functions)
+  - [General Tips](#general-tips)
+  - [Useful Resources](#useful-resources)
 
-## How to use this Documention
-Fill our here
+## How to Use This Documentation
+Use this README in layers. The early sections are a quick reference for the overall assistant manifest shape and the available component types, while the later `... reference` sections are the full detail for each component and advanced behavior.
+
+When you build a plugin, start with the directory layout and the `Structure` section, then jump to the component references you actually use. The resource links at the end are the primary sources for Lua and MudBlazor behavior, and the `General Tips` section collects the practical rules and gotchas that matter most while authoring `plugin.lua`.
 
 ## Directory Structure
+Each assistant plugin lives in its own directory under the assistants plugin root. In practice, you usually keep the manifest in `plugin.lua`, optional icon rendering in `icon.lua`, and any bundled media in `assets/`.
 
 ```
 .
@@ -72,7 +109,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `ReadOnly`: defaults to `false`; disables editing.
   - `Class`, `Style`: forwarded to the rendered component for layout/styling.
 
-#### Example:
+#### Example Textarea component
 ```lua
 {
   ["Type"] = "TEXT_AREA",
@@ -121,7 +158,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `SWITCH`: boolean values
 - Unknown field names and wrong value types are ignored and logged.
 
-#### Example:
+#### Example Button component
 ```lua
 {
   ["Type"] = "BUTTON",
@@ -172,7 +209,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `Class`, `Style`: forwarded to the rendered `MudButtonGroup` for layout/styling.
 - Child buttons use the existing `BUTTON` props and behavior, including Lua `Action(input)`.
 
-#### Example:
+#### Example Button-Group component
 ```lua
 {
   ["Type"] = "BUTTON_GROUP",
@@ -235,7 +272,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `UncheckedColor`: color used when the switch state is `false`; omitted values default to `Inherit`.
   - `Class`, `Style`: forwarded to the rendered component for layout/styling.
 
-#### Example:
+#### Example Switch component
 ```lua
 {
   ["Type"] = "SWITCH",
@@ -272,7 +309,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `UserPrompt`: prompt context text for the selected color.
   - `Class`, `Style`: forwarded to the rendered component for layout/styling.
 
-#### Example:
+#### Example Colorpicker component
 ```lua
 {
   ["Type"] = "COLOR_PICKER",
@@ -388,7 +425,7 @@ end
 ### Using `profile` inside BuildPrompt
 Profiles are optional user context (e.g., "NeedToKnow" and "Actions"). You can inject this directly into the user prompt if you want the LLM to always see it.
 
-#### Example:
+#### Example: Add user profile context to the prompt
 ```lua
 ASSISTANT.BuildPrompt = function(input)
   local parts = {}
@@ -404,6 +441,22 @@ end
 ## Advanced Layout Options
 
 ### `LAYOUT_GRID` reference
+A 12-column grid system for organizing content with responsive breakpoints for different screen sizes.
+```
++------------------------------------------------------------+
+|                           12                               |
++------------------------------------------------------------+
+
++----------------------------+  +----------------------------+
+|            6               |  |            6               |
++----------------------------+  +----------------------------+
+
++------------+  +------------+  +-----------+  +-------------+
+|      3     |  |      3     |  |     3     |  |      3      |
++------------+  +------------+  +-----------+  +-------------+
+
+```
+
 - Use `Type = "LAYOUT_GRID"` to render a MudBlazor grid container.
 - Required props:
   - `Name`: unique identifier for the layout node.
@@ -414,7 +467,7 @@ end
   - `Spacing`: integer spacing between grid items; omitted values fall back to `6`.
   - `Class`, `Style`: forwarded to the rendered `MudGrid` for layout/styling.
 
-Example:
+#### Example: How to define a flexible grid
 ```lua
 {
   ["Type"] = "LAYOUT_GRID",
@@ -452,9 +505,15 @@ Example:
   }
 }
 ```
+For a visual example and a full explanation look [here](https://www.mudblazor.com/components/grid#spacing)
+
 ---
 
 ### `LAYOUT_ITEM` reference
+`LAYOUT_ITEM` is used to wrap children components to use them into a grid.
+The Breakpoints define how many columns the wrapped components take up in a 12-column grid.
+Read more about breakpoint [here](https://www.mudblazor.com/features/breakpoints#breakpoints).
+
 - Use `Type = "LAYOUT_ITEM"` to render a MudBlazor grid item.
 - Required props:
   - `Name`: unique identifier for the layout node.
@@ -465,7 +524,7 @@ Example:
   - `Class`, `Style`: forwarded to the rendered `MudItem` for layout/styling.
 - `Children` may contain any other assistant components you want to place inside the item.
 
-Example:
+#### Example: How to wrap a child component and define its breakpoints
 ```lua
 {
   ["Type"] = "LAYOUT_ITEM",
@@ -478,11 +537,12 @@ Example:
     {
       ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
       ["Props"] = {...},
-    },
-    ...
+    }
   }
 }
 ```
+For a full explanation look [here](https://www.mudblazor.com/api/MudItem#pages)
+
 ---
 
 ### `LAYOUT_PAPER` reference
@@ -497,7 +557,7 @@ Example:
   - `Class`, `Style`: forwarded to the rendered `MudPaper` for layout/styling.
 - `Children` may contain any other assistant components you want to wrap.
 
-Example:
+#### Example: How to define a MudPaper wrapping child components
 ```lua
 {
   ["Type"] = "LAYOUT_PAPER",
@@ -516,6 +576,8 @@ Example:
   }
 }
 ```
+For a visual example and a full explanation look [here](https://www.mudblazor.com/components/paper#material-design)
+
 ---
 
 ### `LAYOUT_STACK` reference
@@ -534,7 +596,7 @@ Example:
   - `Class`, `Style`: forwarded to the rendered `MudStack` for layout/styling.
 - `Children` may contain any other assistant components you want to arrange.
 
-Example:
+#### Example: Define a stack of children components
 ```lua
 {
   ["Type"] = "LAYOUT_STACK",
@@ -544,11 +606,19 @@ Example:
     ["Align"] = "Center",
     ["Justify"] = "SpaceBetween",
     ["Spacing"] = 2
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+      ["Props"] = {...},
+    },
+    ...
   }
 }
 ```
+For a visual example and a full explanation look [here](https://www.mudblazor.com/components/stack#basic-usage)
 
-## Useful Functions
+## Useful Lua Functions
 ### Included lua libraries
 - [Basic Functions Library](https://www.lua.org/manual/5.2/manual.html#6.1)
 - [Coroutine Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.2)
@@ -566,7 +636,7 @@ The assistant runtime exposes basic logging helpers to Lua. Use them to debug cu
 - `LogWarn(message)`
 - `LogError(message)`
 
-#### Example:
+#### Example: Use Logging in lua functions
 ```lua
 ASSISTANT.BuildPrompt = function(input)
   LogInfo("BuildPrompt called")
@@ -584,7 +654,7 @@ Use these when you need timestamps inside Lua.
   - Members: `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `formatted`.
 - `Timestamp()` returns a UTC timestamp in ISO-8601 format (`O` / round-trip), e.g. `2026-03-02T21:15:30.1234567Z`.
 
-#### Example:
+#### Example: Use the datetime functions in lua 
 ```lua
 local dt = DateTime("yyyy-MM-dd HH:mm:ss")
 LogInfo(dt.formatted)
