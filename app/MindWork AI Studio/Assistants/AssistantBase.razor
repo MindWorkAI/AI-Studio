@@ -83,7 +83,7 @@
                     @if (this.ShowSendTo)
                     {
                         <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
-                            @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
+                            @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo() && this.SettingsManager.IsAssistantVisible(n, withLogging: false)).OrderBy(n => n.Name().Length))
                             {
                                 <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
                                     @assistant.Name()
@@ -113,7 +113,7 @@
 
                         case SendToButton sendToButton:
                             <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
-                                @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
+                                @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo() && this.SettingsManager.IsAssistantVisible(n, withLogging: false)).OrderBy(n => n.Name().Length))
                                 {
                                     <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
                                         @assistant.Name()

@@ -342,6 +342,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (!destination.AllowSendTo())
             return Task.CompletedTask;
         
+        if (!this.SettingsManager.IsAssistantVisible(destination, withLogging: false))
+            return Task.CompletedTask;
+        
         var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
         {
             false => sendToButton.GetText(),
