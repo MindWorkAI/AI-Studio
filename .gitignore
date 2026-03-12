@@ -169,3 +169,6 @@ orleans.codegen.cs
 
 # Ignore GitHub Copilot migration files:
 **/copilot.data.migration.*.xml
+
+# Tauri generated schemas/manifests
+/runtime/gen/
