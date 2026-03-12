@@ -55,6 +55,22 @@
                 Style="@this.UserInputStyle"/>
         </MudElement>
         <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey;">
+            <MudTooltip Text="@T("Insert code formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.Code" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_CODE)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Insert bold formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatBold" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_BOLD)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Insert italic formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatItalic" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_ITALIC)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Insert heading formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.TextFields" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_HEADING)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Insert bulleted list formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_BULLET_LIST)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+
             @if (
                 this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                 && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)

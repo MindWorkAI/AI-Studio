@@ -1594,14 +1594,29 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1142475422"] = "Are you s
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Stop generation"
 
+-- Insert heading formatting
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1347686985"] = "Insert heading formatting"
+
 -- Save chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Save chat"
+
+-- Insert italic formatting
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T182467363"] = "Insert italic formatting"
 
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Type your input here..."
 
+-- Insert bulleted list formatting
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1850228954"] = "Insert bulleted list formatting"
+
 -- Your Prompt (use selected instance '{0}', provider '{1}')
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328"] = "Your Prompt (use selected instance '{0}', provider '{1}')"
+
+-- Insert code formatting
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2278685708"] = "Insert code formatting"
+
+-- Insert bold formatting
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T265791106"] = "Insert bold formatting"
 
 -- Profile usage is disabled according to your chat template settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile usage is disabled according to your chat template settings."

@@ -6,6 +6,7 @@ using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -13,6 +14,13 @@ namespace AIStudio.Components;
 
 public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 {
+    private const string CHAT_INPUT_ID = "chat-user-input";
+    private const string MARKDOWN_CODE = "code";
+    private const string MARKDOWN_BOLD = "bold";
+    private const string MARKDOWN_ITALIC = "italic";
+    private const string MARKDOWN_HEADING = "heading";
+    private const string MARKDOWN_BULLET_LIST = "bullet_list";
+    
     [Parameter]
     public ChatThread? ChatThread { get; set; }
     
@@ -36,6 +44,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+    
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -73,6 +84,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
+        USER_INPUT_ATTRIBUTES["id"] = CHAT_INPUT_ID;
 
         // Get the preselected profile:
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
@@ -462,6 +474,18 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     await this.SendMessage();
                 break;
         }
+    }
+
+    private async Task ApplyMarkdownFormat(string formatType)
+    {
+        if (this.IsInputForbidden())
+            return;
+
+        if(this.dataSourceSelectionComponent?.IsVisible ?? false)
+            this.dataSourceSelectionComponent.Hide();
+
+        this.userInput = await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType);
+        this.hasUnsavedChanges = true;
     }
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
