@@ -29,6 +29,9 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("system");
+        var maxTokens = 4_096;
+        if (TryPopIntParameter(apiParameters, "max_tokens", out var parsedMaxTokens))
+            maxTokens = parsedMaxTokens;
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
@@ -73,7 +76,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
             Messages = [..messages],
             
             System = chatThread.PrepareSystemPrompt(settingsManager),
-            MaxTokens = apiParameters.TryGetValue("max_tokens", out var value) && value is int intValue ? intValue : 4_096,
+            MaxTokens = maxTokens,
             
             // Right now, we only support streaming completions:
             Stream = true,
