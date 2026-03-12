@@ -15,6 +15,7 @@ use tauri::WebviewWindow;
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
+use tauri_plugin_shell::ShellExt;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
@@ -81,6 +82,25 @@ pub fn start_tauri() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(
+            tauri::plugin::Builder::<tauri::Wry, ()>::new("external-link-handler")
+                .on_navigation(|webview, url| {
+                    if !should_open_in_system_browser(webview, url) {
+                        return true;
+                    }
+
+                    match webview.app_handle().shell().open(url.as_str(), None) {
+                        Ok(_) => {
+                            info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
+                        },
+                        Err(error) => {
+                            error!(Source = "Tauri"; "Failed to open external URL '{url}' in system browser: {error}");
+                        },
+                    }
+                    false
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
@@ -174,6 +194,27 @@ pub fn start_tauri() {
     });
 
     warn!(Source = "Tauri"; "Tauri app was stopped.");
+}
+
+fn is_local_host(host: Option<&str>) -> bool {
+    matches!(host, Some("localhost") | Some("127.0.0.1") | Some("::1") | Some("[::1]"))
+}
+
+fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>, url: &tauri::Url) -> bool {
+    if !matches!(url.scheme(), "http" | "https") {
+        return false;
+    }
+
+    if let Ok(current_url) = webview.url() {
+        let same_origin = current_url.scheme() == url.scheme()
+            && current_url.host_str() == url.host_str()
+            && current_url.port_or_known_default() == url.port_or_known_default();
+        if same_origin {
+            return false;
+        }
+    }
+
+    !is_local_host(url.host_str())
 }
 
 /// Our event API endpoint for Tauri events. We try to send an endless stream of events to the client.
