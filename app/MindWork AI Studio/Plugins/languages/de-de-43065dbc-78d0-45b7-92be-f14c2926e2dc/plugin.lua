@@ -3559,7 +3559,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instanzname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
 
 -- Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3502745319"] = "Ungültiges JSON: Fügen Sie die Parameter in korrektem JSON-Format hinzu, z. B. „temperature“: 0.5. Entfernen Sie abschließende Kommas. Die üblichen umgebenden geschweiften Klammern {} dürfen jedoch nicht verwendet werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3502745319"] = "Ungültiges JSON: Fügen Sie die Parameter in korrektem JSON-Format hinzu, z. B. \"temperature\": 0.5. Entfernen Sie abschließende Kommas. Die üblichen umgebenden geschweiften Klammern {} dürfen jedoch nicht verwendet werden."
 
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Verfügbare Modelle anzeigen"
