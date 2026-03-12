@@ -12,6 +12,51 @@ namespace AIStudio.Tools.Rust;
 public readonly record struct FileTypeFilter(string FilterName, string[] FilterExtensions)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileTypeFilter).Namespace, nameof(FileTypeFilter));
+
+    private static string[] AllowedSourceLikeFileNames =>
+    [
+        "Dockerfile",
+        "Containerfile",
+        "Jenkinsfile",
+        "Makefile",
+        "GNUmakefile",
+        "Procfile",
+        "Vagrantfile",
+        "Tiltfile",
+        "Justfile",
+        "Brewfile",
+        "Caddyfile",
+        "Gemfile",
+        "Podfile",
+        "Fastfile",
+        "Appfile",
+        "Rakefile",
+        "Dangerfile",
+        "BUILD",
+        "WORKSPACE",
+        "BUCK",
+    ];
+
+    private static string[] AllowedSourceLikeFileNamePrefixes =>
+    [
+        "Dockerfile",
+        "Containerfile",
+        "Jenkinsfile",
+        "Procfile",
+        "Caddyfile",
+    ];
+
+    public static bool IsAllowedSourceLikeFileName(string filePath)
+    {
+        var fileName = Path.GetFileName(filePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+            return false;
+
+        if (AllowedSourceLikeFileNames.Any(name => string.Equals(name, fileName, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return AllowedSourceLikeFileNamePrefixes.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+    }
     
     public static FileTypeFilter PDF => new(TB("PDF Files"), ["pdf"]);
     
