@@ -1,3 +1,6 @@
+using System.Text;
+using System.Text.Json;
+
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
@@ -334,7 +337,168 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private void OnInputChangeExpertSettings()
     {
-        this.AdditionalJsonApiParameters = this.AdditionalJsonApiParameters.Trim().TrimEnd(',', ' ');
+        this.AdditionalJsonApiParameters = NormalizeAdditionalJsonApiParameters(this.AdditionalJsonApiParameters)
+            .Trim()
+            .TrimEnd(',', ' ');
+    }
+
+    private string? ValidateAdditionalJsonApiParameters(string additionalParams)
+    {
+        if (string.IsNullOrWhiteSpace(additionalParams))
+            return null;
+
+        var normalized = NormalizeAdditionalJsonApiParameters(additionalParams);
+        if (!string.Equals(normalized, additionalParams, StringComparison.Ordinal))
+            this.AdditionalJsonApiParameters = normalized;
+        
+        var json = $"{{{normalized}}}";
+        try
+        {
+            if (!this.TryValidateJsonObjectWithDuplicateCheck(json, out var errorMessage))
+                return errorMessage;
+
+            return null;
+        }
+        catch (JsonException)
+        {
+            return T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
+        }
+    }
+
+    private static string NormalizeAdditionalJsonApiParameters(string input)
+    {
+        var sb = new StringBuilder(input.Length);
+        var inString = false;
+        var escape = false;
+        for (var i = 0; i < input.Length; i++)
+        {
+            var c = input[i];
+            if (inString)
+            {
+                sb.Append(c);
+                if (escape)
+                {
+                    escape = false;
+                    continue;
+                }
+                
+                if (c == '\\')
+                {
+                    escape = true;
+                    continue;
+                }
+                
+                if (c == '"')
+                    inString = false;
+                
+                continue;
+            }
+            
+            if (c == '"')
+            {
+                inString = true;
+                sb.Append(c);
+                continue;
+            }
+            
+            if (TryReadToken(input, i, "True", out var tokenLength))
+            {
+                sb.Append("true");
+                i += tokenLength - 1;
+                continue;
+            }
+            
+            if (TryReadToken(input, i, "False", out tokenLength))
+            {
+                sb.Append("false");
+                i += tokenLength - 1;
+                continue;
+            }
+            
+            if (TryReadToken(input, i, "Null", out tokenLength))
+            {
+                sb.Append("null");
+                i += tokenLength - 1;
+                continue;
+            }
+            
+            sb.Append(c);
+        }
+        
+        return sb.ToString();
+    }
+
+    private static bool TryReadToken(string input, int startIndex, string token, out int tokenLength)
+    {
+        tokenLength = 0;
+        if (startIndex + token.Length > input.Length)
+            return false;
+        
+        if (!input.AsSpan(startIndex, token.Length).SequenceEqual(token))
+            return false;
+        
+        var beforeIndex = startIndex - 1;
+        if (beforeIndex >= 0 && IsIdentifierChar(input[beforeIndex]))
+            return false;
+        
+        var afterIndex = startIndex + token.Length;
+        if (afterIndex < input.Length && IsIdentifierChar(input[afterIndex]))
+            return false;
+        
+        tokenLength = token.Length;
+        return true;
+    }
+
+    private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+    
+    private bool TryValidateJsonObjectWithDuplicateCheck(string json, out string? errorMessage)
+    {
+        errorMessage = null;
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var reader = new Utf8JsonReader(bytes, new JsonReaderOptions
+        {
+            AllowTrailingCommas = false,
+            CommentHandling = JsonCommentHandling.Disallow
+        });
+        
+        var objectStack = new Stack<HashSet<string>>();
+        while (reader.Read())
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.StartObject:
+                    objectStack.Push(new HashSet<string>(StringComparer.Ordinal));
+                    break;
+                
+                case JsonTokenType.EndObject:
+                    if (objectStack.Count > 0)
+                        objectStack.Pop();
+                    break;
+                
+                case JsonTokenType.PropertyName:
+                    if (objectStack.Count == 0)
+                    {
+                        errorMessage = T("Additional API parameters must form a JSON object.");
+                        return false;
+                    }
+
+                    var name = reader.GetString() ?? string.Empty;
+                    if (!objectStack.Peek().Add(name))
+                    {
+                        errorMessage = string.Format(T("Duplicate key '{0}' found."), name);
+                        return false;
+                    }
+                    break;
+            }
+        }
+
+        if (objectStack.Count != 0)
+        {
+            errorMessage = T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
+            return false;
+        }
+
+        return true;
     }
     
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;

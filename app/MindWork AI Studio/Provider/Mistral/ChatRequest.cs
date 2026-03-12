@@ -14,7 +14,8 @@ public readonly record struct ChatRequest(
     string Model,
     IList<IMessageBase> Messages,
     bool Stream,
-    int RandomSeed,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? RandomSeed,
     bool SafePrompt = false
 )
 {
