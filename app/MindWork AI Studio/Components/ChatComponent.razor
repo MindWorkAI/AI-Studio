@@ -54,23 +54,8 @@
                 Class="@this.UserInputClass"
                 Style="@this.UserInputStyle"/>
         </MudElement>
-        <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey;">
-            <MudTooltip Text="@T("Insert code formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.Code" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_CODE)" Disabled="@this.IsInputForbidden()"/>
-            </MudTooltip>
-            <MudTooltip Text="@T("Insert bold formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.FormatBold" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_BOLD)" Disabled="@this.IsInputForbidden()"/>
-            </MudTooltip>
-            <MudTooltip Text="@T("Insert italic formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.FormatItalic" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_ITALIC)" Disabled="@this.IsInputForbidden()"/>
-            </MudTooltip>
-            <MudTooltip Text="@T("Insert heading formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.TextFields" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_HEADING)" Disabled="@this.IsInputForbidden()"/>
-            </MudTooltip>
-            <MudTooltip Text="@T("Insert bulleted list formatting")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_BULLET_LIST)" Disabled="@this.IsInputForbidden()"/>
-            </MudTooltip>
-
+        <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey; gap: 2px;">
+            
             @if (
                 this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                 && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
@@ -97,9 +82,9 @@
                     <MudIconButton Icon="@Icons.Material.Filled.CommentBank" OnClick="@(() => this.StartNewChat(useSameWorkspace: true))"/>
                 </MudTooltip>
             }
+
+            <ChatTemplateSelection MarginLeft="" CanChatThreadBeUsedForTemplate="@this.CanThreadBeSaved" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
-            <ChatTemplateSelection CanChatThreadBeUsedForTemplate="@this.CanThreadBeSaved" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
-            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" @bind-DocumentPaths="@this.chatDocumentPaths" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider"/>
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
@@ -114,7 +99,36 @@
                     <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved)" OnClick="@(() => this.MoveChatToWorkspace())"/>
                 </MudTooltip>
             }
-
+            
+            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" @bind-DocumentPaths="@this.chatDocumentPaths" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider"/>
+            
+            <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
+            
+            <MudTooltip Text="@T("Bold")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatBold" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_BOLD)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Italic")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatItalic" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_ITALIC)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Heading")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.TextFields" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_HEADING)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Bulleted List")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_BULLET_LIST)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Code")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.Code" OnClick="() => this.ApplyMarkdownFormat(MARKDOWN_CODE)" Disabled="@this.IsInputForbidden()"/>
+            </MudTooltip>
+            
+            <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
+            
+            <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
+            
+            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+            {
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
+            }
+            
             @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
             {
                 <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
@@ -126,21 +140,15 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(() => this.CancelStreaming())"/>
                 </MudTooltip>
             }
-            
-            <ProfileSelection CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
 
-            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
-            {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" PopoverButtonClasses="ma-3" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
-            }
-            
+
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
                 <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security reasons.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }
-            <MudIconButton />
+            <MudIconButton/>
         </MudToolBar>
     </FooterContent>
 </InnerScrolling>

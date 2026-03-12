@@ -49,7 +49,7 @@ window.formatChatInputMarkdown = function (inputId, formatType) {
 
     switch (formatType) {
         case 'bold': {
-            const text = hasSelection ? selectedText : 'bold text'
+            const text = hasSelection ? selectedText : ''
             insertedText = `**${text}**`
             selectionStart = start + 2
             selectionEnd = selectionStart + text.length
@@ -57,7 +57,7 @@ window.formatChatInputMarkdown = function (inputId, formatType) {
         }
 
         case 'italic': {
-            const text = hasSelection ? selectedText : 'italic text'
+            const text = hasSelection ? selectedText : ''
             insertedText = `*${text}*`
             selectionStart = start + 1
             selectionEnd = selectionStart + text.length
@@ -74,7 +74,7 @@ window.formatChatInputMarkdown = function (inputId, formatType) {
                 selectionStart = start
                 selectionEnd = start + insertedText.length
             } else {
-                const text = 'Heading'
+                const text = ''
                 insertedText = `# ${text}`
                 selectionStart = start + 2
                 selectionEnd = selectionStart + text.length
@@ -114,9 +114,9 @@ window.formatChatInputMarkdown = function (inputId, formatType) {
                     selectionEnd = selectionStart + selectedText.length
                 }
             } else {
-                const text = 'code'
-                insertedText = `\`\`\`\n${text}\n\`\`\``
-                selectionStart = start + 4
+                const text = ''
+                insertedText = `\`${text}\``
+                selectionStart = start + 1
                 selectionEnd = selectionStart + text.length
             }
 
