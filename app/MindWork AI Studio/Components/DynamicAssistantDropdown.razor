@@ -1,0 +1,21 @@
+<MudStack Row="true" Class='@this.MergeClasses(this.Class, "mb-3")' Style="@this.Style">
+    <MudSelect
+        T="string"
+        Value="@this.Value"
+        ValueChanged="@(val => this.OnValueChanged(val))"
+        Label="@this.Label"
+        Placeholder="@this.Default.Value"
+        AdornmentIcon="@this.Icon"
+        Adornment="Adornment.Start"
+        Variant="Variant.Outlined"
+        Margin="Margin.Dense"
+        MultiSelection="false"
+        >
+        @foreach (var item in Items)
+        {
+            <MudSelectItem Value="@item.Value">
+                @item.Display
+            </MudSelectItem>
+        }
+    </MudSelect>
+</MudStack>

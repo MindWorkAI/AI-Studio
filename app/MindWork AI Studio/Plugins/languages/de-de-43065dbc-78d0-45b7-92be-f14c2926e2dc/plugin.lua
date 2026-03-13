@@ -537,6 +537,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Yes, hide the policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Ja, die Definition des Regelwerks ausblenden"
 
+-- Please select one of your profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] = "Bitte wählen Sie eines Ihrer Profile aus."
+
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage ihrer Angaben."
 
@@ -4935,6 +4938,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Entwick
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Erstellen Sie eine Stellenanzeige anhand einer vorgegebenen Stellenbeschreibung."
 
+-- Installed Assistants
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installierte Assistenten"
+
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "Meine Aufgaben"
 
@@ -6077,6 +6083,33 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3290596792"] = "Fehler beim Exp
 
 -- Microsoft Word export successful
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T4256043333"] = "Export nach Microsoft Word erfolgreich"
+
+-- Failed to parse the UI render tree from the ASSISTANT lua table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Der UI-Render-Baum konnte nicht aus der ASSISTANT-Lua-Tabelle geparst werden."
+
+-- The provided ASSISTANT lua table does not contain a valid UI table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1841068402"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige UI-Tabelle."
+
+-- The provided ASSISTANT lua table does not contain a valid description.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2514141654"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige Beschreibung."
+
+-- The provided ASSISTANT lua table does not contain a valid title.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2814605990"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keinen gültigen Titel."
+
+-- The ASSISTANT lua table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "Die Lua-Tabelle **ASSISTANT** existiert nicht oder ist keine gültige Tabelle."
+
+-- The provided ASSISTANT lua table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige Systemaufforderung."
+
+-- The ASSISTANT table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "Die Tabelle **ASSISTANT** enthält keine gültige Systemanweisung."
+
+-- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "`ASSISTANT.BuildPrompt` ist vorhanden, aber keine Lua-Funktion oder hat eine ungültige Syntax."
+
+-- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält kein boolesches Flag, mit dem sich die Zulassung von Profilen steuern lässt."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
