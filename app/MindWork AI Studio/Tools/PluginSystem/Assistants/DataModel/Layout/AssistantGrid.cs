@@ -2,7 +2,7 @@ using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 
-public sealed class AssistantGrid : AssistantComponentBase
+internal sealed class AssistantGrid : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.LAYOUT_GRID;
     public override Dictionary<string, object> Props { get; set; } = new();

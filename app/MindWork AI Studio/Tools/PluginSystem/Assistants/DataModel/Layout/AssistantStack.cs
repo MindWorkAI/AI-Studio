@@ -2,7 +2,7 @@ using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 
-public sealed class AssistantStack : AssistantComponentBase
+internal sealed class AssistantStack : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.LAYOUT_STACK;
     public override Dictionary<string, object> Props { get; set; } = new();
