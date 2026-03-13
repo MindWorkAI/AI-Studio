@@ -103,5 +103,19 @@ public static class ComponentPropSpecs
                     "Wrap", "Spacing", "Class", "Style",
                 ]
             ),
+            [AssistantComponentType.LAYOUT_ACCORDION] = new(
+                required: ["Name"],
+                optional: [
+                    "AllowMultiSelection", "IsDense", "HasOutline", "IsSquare", "Elevation", 
+                    "HasSectionPaddings", "Class", "Style",
+                ]
+            ),
+            [AssistantComponentType.LAYOUT_ACCORDION_SECTION] = new(
+                required: ["Name", "HeaderText"],
+                optional: [
+                    "IsDisabled", "IsExpanded", "IsDense", "HasInnerPadding", "HideIcon", "HeaderIcon", "HeaderColor",
+                    "HeaderTypo", "HeaderAlign", "MaxHeight","ExpandIcon", "Class", "Style",
+                ]
+            ),
         };
 }

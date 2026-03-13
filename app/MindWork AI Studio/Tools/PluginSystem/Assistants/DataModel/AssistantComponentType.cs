@@ -21,4 +21,6 @@ public enum AssistantComponentType
     LAYOUT_GRID,
     LAYOUT_PAPER,
     LAYOUT_STACK,
+    LAYOUT_ACCORDION,
+    LAYOUT_ACCORDION_SECTION,
 }

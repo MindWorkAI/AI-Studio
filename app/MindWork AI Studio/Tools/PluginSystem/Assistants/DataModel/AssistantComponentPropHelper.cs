@@ -66,7 +66,9 @@ internal static class AssistantComponentPropHelper
     public static string GetIconSvg(string value) => MudBlazorIconRegistry.TryGetSvg(value, out var svg) ? svg : string.Empty;
     public static Size GetComponentSize(string value, Size fallback) => Enum.TryParse<Size>(value, out var size) ? size : fallback;
     public static Justify? GetJustify(string value) => Enum.TryParse<Justify>(value, out var justify) ? justify : null;
-    public static AlignItems? GetAlignment(string value) => Enum.TryParse<AlignItems>(value, out var alignment) ? alignment : null;
+    public static AlignItems? GetItemsAlignment(string value) => Enum.TryParse<AlignItems>(value, out var alignment) ? alignment : null;
+    public static Align GetAlignment(string value, Align fallback = Align.Inherit) => Enum.TryParse<Align>(value, out var alignment) ? alignment : fallback;
+    public static Typo GetTypography(string value, Typo fallback = Typo.body1) => Enum.TryParse<Typo>(value, out var typo) ? typo : fallback;
     public static Wrap? GetWrap(string value) => Enum.TryParse<Wrap>(value, out var wrap) ? wrap : null;
     public static StretchItems? GetStretching(string value) => Enum.TryParse<StretchItems>(value, out var stretch) ? stretch : null;
     public static Breakpoint GetBreakpoint(string value, Breakpoint fallback) => Enum.TryParse<Breakpoint>(value, out var breakpoint) ? breakpoint : fallback;

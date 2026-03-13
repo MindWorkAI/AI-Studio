@@ -52,6 +52,10 @@ public class AssistantComponentFactory
                 return new AssistantPaper { Props = props, Children = children };
             case AssistantComponentType.LAYOUT_STACK:
                 return new AssistantStack { Props = props, Children = children };
+            case AssistantComponentType.LAYOUT_ACCORDION:
+                return new AssistantAccordion { Props = props, Children = children };
+            case AssistantComponentType.LAYOUT_ACCORDION_SECTION:
+                return new AssistantAccordionSection { Props = props, Children = children };
             default:
                 LOGGER.LogError($"Unknown assistant component type!\n{type} is not a supported assistant component type");
                 throw new Exception($"Unknown assistant component type: {type}");

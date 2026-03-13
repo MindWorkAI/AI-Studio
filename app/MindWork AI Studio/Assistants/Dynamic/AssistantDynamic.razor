@@ -201,7 +201,7 @@
                     <MudStack Row="@stack.IsRow"
                               Reverse="@stack.IsReverse"
                               Breakpoint="@AssistantComponentPropHelper.GetBreakpoint(stack.Breakpoint, Breakpoint.None)"
-                              AlignItems="@(AssistantComponentPropHelper.GetAlignment(stack.Align) ?? AlignItems.Stretch)"
+                              AlignItems="@(AssistantComponentPropHelper.GetItemsAlignment(stack.Align) ?? AlignItems.Stretch)"
                               Justify="@(AssistantComponentPropHelper.GetJustify(stack.Justify) ?? Justify.FlexStart)"
                               StretchItems="@(AssistantComponentPropHelper.GetStretching(stack.Stretch) ?? StretchItems.None)"
                               Wrap="@(AssistantComponentPropHelper.GetWrap(stack.Wrap) ?? Wrap.Wrap)"
@@ -212,6 +212,53 @@
                     </MudStack>
                 }
                 break;
+            case AssistantComponentType.LAYOUT_ACCORDION:
+                if (component is AssistantAccordion assistantAccordion)
+                {
+                    var accordion = assistantAccordion;
+                    <MudExpansionPanels MultiExpansion="@accordion.AllowMultiSelection"
+                                        Dense="@accordion.IsDense"
+                                        Outlined="@accordion.HasOutline"
+                                        Square="@accordion.IsSquare"
+                                        Elevation="@accordion.Elevation"
+                                        Gutters="@accordion.HasSectionPaddings"
+                                        Class="@MergeClass(accordion.Class, "my-6")"
+                                        Style="@this.GetOptionalStyle(accordion.Style)">
+                        @this.RenderChildren(accordion.Children)
+                    </MudExpansionPanels>
+                }
+                break;
+            case AssistantComponentType.LAYOUT_ACCORDION_SECTION:
+                if (component is AssistantAccordionSection assistantAccordionSection)
+                {
+                    var accordionSection = assistantAccordionSection;
+                    var textColor = accordionSection.IsDisabled ? Color.Info : AssistantComponentPropHelper.GetColor(accordionSection.HeaderColor, Color.Inherit);
+                    <MudExpansionPanel KeepContentAlive="@accordionSection.KeepContentAlive"
+                                       disabled="@accordionSection.IsDisabled"
+                                       Expanded="@accordionSection.IsExpanded"
+                                       Dense="@accordionSection.IsDense"
+                                       Gutters="@accordionSection.HasInnerPadding"
+                                       HideIcon="@accordionSection.HideIcon"
+                                       Icon="@AssistantComponentPropHelper.GetIconSvg(accordionSection.ExpandIcon)"
+                                       MaxHeight="@accordionSection.MaxHeight"
+                                       Class="@accordionSection.Class"
+                                       Style="@this.GetOptionalStyle(accordionSection.Style)">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@AssistantComponentPropHelper.GetIconSvg(accordionSection.HeaderIcon)" class="mr-3"></MudIcon>
+                                <MudText Align="@AssistantComponentPropHelper.GetAlignment(accordionSection.HeaderAlign)" 
+                                         Color="@textColor"
+                                         Typo="@AssistantComponentPropHelper.GetTypography(accordionSection.HeaderTypo)">
+                                    @accordionSection.HeaderText
+                                </MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            @this.RenderChildren(accordionSection.Children)
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            break;
             case AssistantComponentType.PROVIDER_SELECTION:
                 if (component is AssistantProviderSelection providerSelection)
                 {

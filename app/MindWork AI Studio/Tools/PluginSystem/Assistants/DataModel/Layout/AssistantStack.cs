@@ -68,9 +68,9 @@ internal sealed class AssistantStack : AssistantComponentBase
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Class), value);
     }
     
-    public int Style
+    public string Style
     {
-        get => AssistantComponentPropHelper.ReadInt(this.Props, nameof(this.Style), 3);
-        set => AssistantComponentPropHelper.WriteInt(this.Props, nameof(this.Style), value);
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
 }

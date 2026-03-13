@@ -194,6 +194,46 @@ ASSISTANT = {
                 }
             },
             {
+                ["Type"] = "LAYOUT_ACCORDION",
+                ["Props"] = {
+                    ["Name"] = "exampleAccordion",
+                    ["AllowMultiSelection"] = false, -- if true, multiple sections can stay open at the same time
+                    ["IsDense"] = false, -- denser layout with less spacing
+                    ["HasOutline"] = false, -- outlined accordion panels
+                    ["IsSquare"] = false, -- removes rounded corners
+                    ["Elevation"] = 0, -- shadow depth of the accordion container
+                    ["HasSectionPaddings"] = true, -- controls section gutters / inner frame paddings
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                },
+                ["Children"] = {
+                    -- LAYOUT_ACCORDION_SECTION elements
+                }
+            },
+            {
+                ["Type"] = "LAYOUT_ACCORDION_SECTION",
+                ["Props"] = {
+                    ["Name"] = "exampleAccordionSection", -- required
+                    ["HeaderText"] = "<section title shown in the accordion header>", -- required
+                    ["IsDisabled"] = false, -- disables expanding/collapsing and interaction
+                    ["IsExpanded"] = false, -- initial expansion state
+                    ["IsDense"] = false, -- denser panel layout
+                    ["HasInnerPadding"] = true, -- controls padding around the section content
+                    ["HideIcon"] = false, -- hides the expand/collapse icon
+                    ["HeaderIcon"] = "Icons.Material.Filled.ExpandMore", -- icon shown before the header text
+                    ["HeaderColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
+                    ["HeaderTypo"] = "<body1|subtitle1|h6|...>", -- MudBlazor typo value used for the header
+                    ["HeaderAlign"] = "<Start|Center|End|Justify>", -- header text alignment
+                    ["MaxHeight"] = 320, -- nullable integer pixel height for the expanded content area
+                    ["ExpandIcon"] = "Icons.Material.Filled.ExpandMore", -- override the expand/collapse icon
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                },
+                ["Children"] = {
+                    -- CHILDREN
+                }
+            },
+            {
                 ["Type"] = "LAYOUT_PAPER",
                 ["Props"] = {
                     ["Name"] = "examplePaper",
