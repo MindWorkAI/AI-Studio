@@ -1,15 +1,21 @@
+@using AIStudio.Tools.PluginSystem.Assistants.DataModel
 <MudStack Row="true" Class='@this.MergeClasses(this.Class, "mb-3")' Style="@this.Style">
     <MudSelect
         T="string"
         Value="@this.Value"
         ValueChanged="@(val => this.OnValueChanged(val))"
         Label="@this.Label"
+        HelperText="@this.HelperText"
         Placeholder="@this.Default.Value"
-        AdornmentIcon="@this.Icon"
-        Adornment="Adornment.Start"
-        Variant="Variant.Outlined"
-        Margin="Margin.Dense"
-        MultiSelection="false"
+        OpenIcon="@this.OpenIcon"
+        CloseIcon="@this.CloseIcon"
+        Adornment="@this.IconPosition"
+        AdornmentColor="@this.IconColor"
+        Variant="@this.Variant"
+        Margin="Margin.Normal"
+        MultiSelection="@this.IsMultiselect"
+        SelectAll="@this.HasSelectAll"
+        SelectAllText="@this.SelectAllText"
         >
         @foreach (var item in Items)
         {

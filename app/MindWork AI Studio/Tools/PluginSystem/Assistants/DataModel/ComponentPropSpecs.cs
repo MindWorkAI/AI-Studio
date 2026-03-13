@@ -30,7 +30,10 @@ public static class ComponentPropSpecs
             ),
             [AssistantComponentType.DROPDOWN] = new(
                 required: ["Name", "Label", "Default", "Items"],
-                optional: ["UserPrompt", "Class", "Style"]
+                optional: [
+                    "UserPrompt", "IsMultiselect", "HasSelectAll", "SelectAllText", "HelperText",
+                    "OpenIcon", "CloseIcon", "IconColor", "IconPositon", "Variant", "Class", "Style"
+                ]
             ),
             [AssistantComponentType.PROVIDER_SELECTION] = new(
                 required: ["Name", "Label"],

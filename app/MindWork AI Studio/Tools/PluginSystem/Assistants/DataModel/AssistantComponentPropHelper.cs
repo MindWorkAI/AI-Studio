@@ -61,6 +61,8 @@ internal static class AssistantComponentPropHelper
     }
     
     public static MudBlazor.Color GetColor(string value, Color fallback) => Enum.TryParse<MudBlazor.Color>(value, out var color) ? color : fallback;
+    public static MudBlazor.Variant GetVariant(string value, Variant fallback) => Enum.TryParse<MudBlazor.Variant>(value, out var variant) ? variant : fallback;
+    public static MudBlazor.Adornment GetAdornment(string value, Adornment fallback) => Enum.TryParse<MudBlazor.Adornment>(value, out var adornment) ? adornment : fallback;
     public static string GetIconSvg(string value) => MudBlazorIconRegistry.TryGetSvg(value, out var svg) ? svg : string.Empty;
     public static Size GetComponentSize(string value, Size fallback) => Enum.TryParse<Size>(value, out var size) ? size : fallback;
     public static Justify? GetJustify(string value) => Enum.TryParse<Justify>(value, out var justify) ? justify : null;

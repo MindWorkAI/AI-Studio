@@ -7,6 +7,7 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
   - [How to Use This Documentation](#how-to-use-this-documentation)
   - [Directory Structure](#directory-structure)
   - [Structure](#structure)
+    - [Minimal Requirements Assistant Table](#example-minimal-requirements-assistant-table)
     - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
   - [Component References](#component-references)
     - [`TEXT_AREA` reference](#text_area-reference)
@@ -63,6 +64,24 @@ Each assistant plugin lives in its own directory under the assistants plugin roo
 - `ASSISTANT` is the root table. It must contain `Title`, `Description`, `SystemPrompt`, `SubmitText`, `AllowProfiles`, and the nested `UI` definition.
 - `UI.Type` is always `"FORM"` and `UI.Children` is a list of component tables.
 - Each component table declares `Type`, an optional `Children` array, and a `Props` table that feeds the component’s parameters.
+
+### Example: Minimal Requirements Assistant Table
+```lua
+ASSISTANT = {
+    ["Title"] = "",
+    ["Description"] = "",
+    ["SystemPrompt"] = "",
+    ["SubmitText"] = "",
+    ["AllowProfiles"] = true,
+    ["UI"] = {
+        ["Type"] = "FORM",
+        ["Children"] = {
+          -- Components
+        }
+    },
+}
+```
+
 
 #### Supported types (matching the Blazor UI components):
 
@@ -692,5 +711,6 @@ LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
 
 ## Useful Resources
 - [plugin.lua - Lua Manifest](https://github.com/MindWorkAI/AI-Studio/tree/main/app/MindWork%20AI%20Studio/Plugins/assistants/plugin.lua)
+- [AI Studio Repository](https://github.com/MindWorkAI/AI-Studio/)
 - [Lua 5.2 Reference Manual](https://www.lua.org/manual/5.2/manual.html)
 - [MudBlazor Documentation](https://www.mudblazor.com/docs/overview)

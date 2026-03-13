@@ -288,7 +288,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                     break;
                 case AssistantComponentType.DROPDOWN:
                     if (component is AssistantDropdown dropdown && !this.dropdownFields.ContainsKey(dropdown.Name))
-                        this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
+                        this.dropdownFields.Add(dropdown.Name, dropdown.Default.Display);
                     break;
                 case AssistantComponentType.SWITCH:
                     if (component is AssistantSwitch switchComponent && !this.switchFields.ContainsKey(switchComponent.Name))

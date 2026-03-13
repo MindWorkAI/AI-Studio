@@ -51,6 +51,60 @@ internal sealed class AssistantDropdown : AssistantComponentBase
             : "string";
         set => this.Props[nameof(this.ValueType)] = value;
     }
+    
+    public bool IsMultiselect
+    {
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsMultiselect), false);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsMultiselect), value);
+    }
+
+    public bool HasSelectAll
+    {
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HasSelectAll), false);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.HasSelectAll), value);
+    }
+
+    public string SelectAllText
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.SelectAllText));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.SelectAllText), value);
+    }
+
+    public string HelperText
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.HelperText));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.HelperText), value);
+    }
+    
+    public string OpenIcon
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.OpenIcon));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.OpenIcon), value);
+    }
+    
+    public string CloseIcon
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.CloseIcon));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.CloseIcon), value);
+    }
+    
+    public string IconColor
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.IconColor));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.IconColor), value);
+    }
+    
+    public string IconPositon
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.IconPositon));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.IconPositon), value);
+    }
+    
+    public string Variant
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Variant));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Variant), value);
+    }
 
     public IEnumerable<object> GetParsedDropdownValues()
     {

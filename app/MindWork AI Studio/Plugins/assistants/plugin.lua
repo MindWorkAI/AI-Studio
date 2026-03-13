@@ -70,7 +70,7 @@ ASSISTANT = {
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["Label"] = "<heading of your component>", -- required
-                    ["Adornment"] = "<Start|End|None>", --  location of the `AdornmentIcon` OR `AdornmentText`; CASE SENSITIV
+                    ["Adornment"] = "<Start|End|None>", --  location of the `AdornmentIcon` OR `AdornmentText`; CASE SENSITIVE
                     ["AdornmentIcon"] = "Icons.Material.Filled.AppSettingsAlt", -- The Mudblazor icon displayed for the adornment
                     ["AdornmentText"] = "", -- The text displayed for the adornment
                     ["AdornmentColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- the color of AdornmentText or AdornmentIcon; CASE SENSITIVE
@@ -90,10 +90,19 @@ ASSISTANT = {
             {
                 ["Type"] = "DROPDOWN", -- required
                 ["Props"] = {
-                    ["Name"] = "<unique identifier of this component>", -- required
-                    ["Label"] = "<heading of your component>", -- required
+                    ["Name"] = "<unique identifier of component>", -- required
+                    ["Label"] = "<heading of component>", -- required
                     ["UserPrompt"] = "<direct input of instructions, questions, or tasks by a user>",
-                    ["ValueType"] = "<data type of item values>", -- required
+                    ["IsMultiselect"] = false,
+                    ["HasSelectAll"] = false,
+                    ["SelectAllText"] = "<label for 'SelectAll'-Button",
+                    ["HelperText"] = "<helping text rendered under the component>",
+                    ["OpenIcon"] = "Icons.Material.Filled.ArrowDropDown",
+                    ["OpenClose"] = "Icons.Material.Filled.ArrowDropUp",
+                    ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
+                    ["IconPositon"] = "<Start|End>",
+                    ["Variant"] = "<Text|Filled|Outlined>",
+                    ["ValueType"] = "<string|int|bool>", -- required
                     ["Default"] = { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" }, -- required
                     ["Items"] = {
                         { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" },
