@@ -11,6 +11,7 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
     - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
   - [Component References](#component-references)
     - [`TEXT_AREA` reference](#text_area-reference)
+    - [`DROPDOWN` reference](#dropdown-reference)
     - [`BUTTON` reference](#button-reference)
       - [`Action(input)` interface](#actioninput-interface)
     - [`BUTTON_GROUP` reference](#button_group-reference)
@@ -103,26 +104,26 @@ ASSISTANT = {
 
 Images referenced via the `plugin://` scheme must exist in the plugin directory (e.g., `assets/example.png`). Drop the file there and point `Src` at it. The component will read the file at runtime, encode it as Base64, and render it inside the assistant UI.
 
-| Component             | Required Props                      | Optional Props                                                                                                                                                                                                       | Renders                                                                                                                       |
-|-----------------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `TEXT_AREA`           | `Name`, `Label`                     | `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style` | [MudTextField](https://www.mudblazor.com/components/textfield)                                                                |
-| `DROPDOWN`            | `Name`, `Label`, `Default`, `Items` | `ValueType`, `UserPrompt`                                                                                                                                                                                            | [MudSelect](https://www.mudblazor.com/components/select)                                                                      |
-| `BUTTON`              | `Name`, `Text`, `Action`            | `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`                                                                                                         | [MudButton](https://www.mudblazor.com/components/button)                                                                      |
-| `SWITCH`              | `Name`, `Label`, `Value`            | `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`                                                                           | [MudSwitch](https://www.mudblazor.com/components/switch)                                                                      |
-| `PROVIDER_SELECTION`  | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProviderSelection.razor) |
-| `PROFILE_SELECTION`   | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProfileSelection.razor)  |
-| `FILE_CONTENT_READER` | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadFileContent.razor)   |
-| `WEB_CONTENT_READER`  | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)    |
-| `COLOR_PICKER`        | `Name`, `Label`                     | `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                            |
-| `HEADING`             | `Text`                              | `Level`                                                                                                                                                                                                              | [MudText Typo="Typo.<h2\|h3\|h4\|h5\|h6>"](https://www.mudblazor.com/components/typography)                                   |
-| `TEXT`                | `Content`                           | `None`                                                                                                                                                                                                               | [MudText Typo="Typo.body1"](https://www.mudblazor.com/components/typography)                                                  |
-| `LIST`                | `Type`, `Text`                      | `Href`                                                                                                                                                                                                               | [MudList](https://www.mudblazor.com/componentss/list)                                                                         |
-| `IMAGE`               | `Src`                               | `Alt`, `Caption`,`Src`                                                                                                                                                                                               | [MudImage](https://www.mudblazor.com/components/image)                                                                        |
-| `BUTTON_GROUP`        | `None`                              | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButtonGroup](https://www.mudblazor.com/components/buttongroup)                                                            |
-| `LAYOUT_PAPER`        | `None`                              | `Elevation`, `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`, `IsOutlined`, `IsSquare`, `Class`, `Style`                                                                                         | [MudPaper](https://www.mudblazor.com/components/paper)                                                                        |
-| `LAYOUT_ITEM`         | `None`                              | `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`, `Class`, `Style`                                                                                                                                                                | [MudItem](https://www.mudblazor.com/api/MudItem)                                                                              |
-| `LAYOUT_STACK`        | `None`                              | `IsRow`, `IsReverse`, `Breakpoint`, `Align`, `Justify`, `Stretch`, `Wrap`, `Spacing`, `Class`, `Style`                                                                                                               | [MudStack](https://www.mudblazor.com/components/stack)                                                                        |
-| `LAYOUT_GRID`         | `None`                              | `Justify`, `Spacing`, `Class`, `Style`                                                                                                                                                                               | [MudGrid](https://www.mudblazor.com/components/grid)                                                                          |
+| Component             | Required Props                      | Optional Props                                                                                                                                                                                                       | Renders                                                                                                                          |
+|-----------------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `TEXT_AREA`           | `Name`, `Label`                     | `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style` | [MudTextField](https://www.mudblazor.com/components/textfield)                                                                   |
+| `DROPDOWN`            | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `ValueType`, `UserPrompt`                                                            | [MudSelect](https://www.mudblazor.com/components/select)                                                                         |
+| `BUTTON`              | `Name`, `Text`, `Action`            | `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`                                                                                                         | [MudButton](https://www.mudblazor.com/components/button)                                                                         |
+| `SWITCH`              | `Name`, `Label`, `Value`            | `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`                                                                           | [MudSwitch](https://www.mudblazor.com/components/switch)                                                                         |
+| `PROVIDER_SELECTION`  | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProviderSelection.razor)    |
+| `PROFILE_SELECTION`   | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProfileSelection.razor)     |
+| `FILE_CONTENT_READER` | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadFileContent.razor)      |
+| `WEB_CONTENT_READER`  | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)       |
+| `COLOR_PICKER`        | `Name`, `Label`                     | `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                               |
+| `HEADING`             | `Text`                              | `Level`                                                                                                                                                                                                              | [MudText Typo="Typo.<h2\|h3\|h4\|h5\|h6>"](https://www.mudblazor.com/components/typography)                                      |
+| `TEXT`                | `Content`                           | `None`                                                                                                                                                                                                               | [MudText Typo="Typo.body1"](https://www.mudblazor.com/components/typography)                                                     |
+| `LIST`                | `Type`, `Text`                      | `Href`                                                                                                                                                                                                               | [MudList](https://www.mudblazor.com/componentss/list)                                                                            |
+| `IMAGE`               | `Src`                               | `Alt`, `Caption`,`Src`                                                                                                                                                                                               | [MudImage](https://www.mudblazor.com/components/image)                                                                           |
+| `BUTTON_GROUP`        | `None`                              | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButtonGroup](https://www.mudblazor.com/components/buttongroup)                                                               |
+| `LAYOUT_PAPER`        | `None`                              | `Elevation`, `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`, `IsOutlined`, `IsSquare`, `Class`, `Style`                                                                                         | [MudPaper](https://www.mudblazor.com/components/paper)                                                                           |
+| `LAYOUT_ITEM`         | `None`                              | `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`, `Class`, `Style`                                                                                                                                                                | [MudItem](https://www.mudblazor.com/api/MudItem)                                                                                 |
+| `LAYOUT_STACK`        | `None`                              | `IsRow`, `IsReverse`, `Breakpoint`, `Align`, `Justify`, `Stretch`, `Wrap`, `Spacing`, `Class`, `Style`                                                                                                               | [MudStack](https://www.mudblazor.com/components/stack)                                                                           |
+| `LAYOUT_GRID`         | `None`                              | `Justify`, `Spacing`, `Class`, `Style`                                                                                                                                                                               | [MudGrid](https://www.mudblazor.com/components/grid)                                                                             |
 More information on rendered components can be found [here](https://www.mudblazor.com/docs/overview).
 
 ## Component References
@@ -170,6 +171,66 @@ More information on rendered components can be found [here](https://www.mudblazo
 ```
 ---
 
+### `DROPDOWN` reference
+- Use `Type = "DROPDOWN"` to render a MudBlazor select field.
+- Required props:
+  - `Name`: unique state key used in prompt assembly, button actions, and `BuildPrompt(input.fields)`.
+  - `Label`: visible field label.
+  - `Default`: dropdown item table with the shape `{ ["Value"] = "<internal value>", ["Display"] = "<visible label>" }`.
+  - `Items`: array of dropdown item tables with the same shape as `Default`.
+- Optional props:
+  - `UserPrompt`: prompt context text for this field.
+  - `ValueType`: one of `string`, `int`, `double`, `bool`; currently the dropdown values exposed to prompt building and button actions are handled as the configured item `Value`s, with typical usage being `string`.
+  - `IsMultiselect`: defaults to `false`; when `true`, the component allows selecting multiple items.
+  - `HasSelectAll`: defaults to `false`; enables MudBlazor's select-all behavior for multiselect dropdowns.
+  - `SelectAllText`: custom label for the select-all action in multiselect mode.
+  - `HelperText`: helper text rendered below the dropdown.
+  - `OpenIcon`: MudBlazor icon identifier used while the dropdown is closed.
+  - `CloseIcon`: MudBlazor icon identifier used while the dropdown is open.
+  - `IconColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; invalid or omitted values fall back to `Default`.
+  - `IconPositon`: one of `Start` or `End`; controls where the icon adornment is rendered.
+  - `Variant`: one of the MudBlazor `Variant` enum names such as `Text`, `Filled`, `Outlined`; invalid or omitted values fall back to `Outlined`.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+- Dropdown item shape:
+  - `Value`: the internal raw value stored in component state and passed to prompt building.
+  - `Display`: the visible label shown to the user in the menu and selection text.
+- Behavior notes:
+  - For single-select dropdowns, `input.fields.<Name>` is a single raw value such as `germany`.
+  - For multiselect dropdowns, `input.fields.<Name>` is an array-like Lua table of raw values.
+  - The UI shows the `Display` text, while prompt assembly and `BuildPrompt(input)` receive the raw `Value`.
+  - `Default` should usually also exist in `Items`. If it is missing there, the runtime currently still renders it as an available option.
+
+#### Example Dropdown component
+```lua
+{
+  ["Type"] = "DROPDOWN",
+  ["Props"] = {
+    ["Name"] = "targetCountries",
+    ["Label"] = "Target countries",
+    ["UserPrompt"] = "Use the selected countries in your answer.",
+    ["ValueType"] = "string",
+    ["IsMultiselect"] = true,
+    ["HasSelectAll"] = true,
+    ["SelectAllText"] = "Select all countries",
+    ["HelperText"] = "Pick one or more countries.",
+    ["OpenIcon"] = "Icons.Material.Filled.ArrowDropDown",
+    ["CloseIcon"] = "Icons.Material.Filled.ArrowDropUp",
+    ["IconColor"] = "Secondary",
+    ["IconPositon"] = "End",
+    ["Variant"] = "Filled",
+    ["Default"] = { ["Value"] = "germany", ["Display"] = "Germany" },
+    ["Items"] = {
+      { ["Value"] = "germany", ["Display"] = "Germany" },
+      { ["Value"] = "austria", ["Display"] = "Austria" },
+      { ["Value"] = "france", ["Display"] = "France" }
+    },
+    ["Class"] = "mb-3",
+    ["Style"] = "min-width: 16rem;"
+  }
+}
+```
+---
+
 ### `BUTTON` reference
 - Use `Type = "BUTTON"` to render a clickable action button.
 - Required props:
@@ -193,7 +254,8 @@ More information on rendered components can be found [here](https://www.mudblazo
 - To update component state, return a table with a `fields` table.
 - `fields` keys must reference existing component `Name` values.
 - Supported write targets:
-  - `TEXT_AREA`, `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`: string values
+  - `TEXT_AREA`, single-select `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`: string values
+  - multiselect `DROPDOWN`: array-like Lua table of strings
   - `SWITCH`: boolean values
 - Unknown field names and wrong value types are ignored and logged.
 
@@ -390,7 +452,8 @@ If you want full control over prompt composition, define `ASSISTANT.BuildPrompt`
 ### `input` table shape
 The function receives a single `input` Lua table with:
 - `input.fields`: values keyed by component `Name`
-  - Text area, dropdown, and readers are strings
+  - Text area, single-select dropdown, and readers are strings
+  - Multiselect dropdown is an array-like Lua table of strings
   - Switch is a boolean
   - Color picker is the selected color as a string
 - `input.meta`: per-component metadata keyed by component `Name`
