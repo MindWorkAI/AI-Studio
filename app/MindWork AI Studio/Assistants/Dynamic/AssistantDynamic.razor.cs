@@ -43,6 +43,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     
     private readonly Dictionary<string, string> inputFields = new();
     private readonly Dictionary<string, string> dropdownFields = new();
+    private readonly Dictionary<string, HashSet<string>> multiselectDropdownFields = new();
     private readonly Dictionary<string, bool> switchFields = new();
     private readonly Dictionary<string, WebContentState> webContentFields = new();
     private readonly Dictionary<string, FileContentState> fileContentFields = new();
@@ -218,6 +219,8 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             fields[entry.Key] = entry.Value ?? string.Empty;
         foreach (var entry in this.dropdownFields)
             fields[entry.Key] = entry.Value ?? string.Empty;
+        foreach (var entry in this.multiselectDropdownFields)
+            fields[entry.Key] = CreateLuaArray(entry.Value);
         foreach (var entry in this.switchFields)
             fields[entry.Key] = entry.Value;
         foreach (var entry in this.webContentFields)
@@ -287,8 +290,18 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                         this.inputFields.Add(textArea.Name, textArea.PrefillText);
                     break;
                 case AssistantComponentType.DROPDOWN:
-                    if (component is AssistantDropdown dropdown && !this.dropdownFields.ContainsKey(dropdown.Name))
-                        this.dropdownFields.Add(dropdown.Name, dropdown.Default.Display);
+                    if (component is AssistantDropdown dropdown)
+                    {
+                        if (dropdown.IsMultiselect)
+                        {
+                            if (!this.multiselectDropdownFields.ContainsKey(dropdown.Name))
+                                this.multiselectDropdownFields.Add(dropdown.Name, CreateInitialMultiselectValues(dropdown));
+                        }
+                        else if (!this.dropdownFields.ContainsKey(dropdown.Name))
+                        {
+                            this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
+                        }
+                    }
                     break;
                 case AssistantComponentType.SWITCH:
                     if (component is AssistantSwitch switchComponent && !this.switchFields.ContainsKey(switchComponent.Name))
@@ -399,6 +412,17 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             return;
         }
 
+        if (this.multiselectDropdownFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<LuaTable>(out var multiselectDropdownValue))
+                this.multiselectDropdownFields[fieldName] = ReadStringValues(multiselectDropdownValue);
+            else if (value.TryRead<string>(out var singleDropdownValue))
+                this.multiselectDropdownFields[fieldName] = string.IsNullOrWhiteSpace(singleDropdownValue) ? [] : [singleDropdownValue];
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string[]");
+            return;
+        }
+
         if (this.switchFields.ContainsKey(fieldName))
         {
             if (value.TryRead<bool>(out var boolValue))
@@ -442,6 +466,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     {
         this.Logger.LogWarning("Assistant BUTTON action tried to write an invalid value to '{FieldName}'. Expected {ExpectedType}.", fieldName, expectedType);
     }
+
+    private EventCallback<HashSet<string>> CreateMultiselectDropdownChangedCallback(string fieldName) =>
+        EventCallback.Factory.Create<HashSet<string>>(this, values =>
+        {
+            this.multiselectDropdownFields[fieldName] = values;
+        });
 
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
@@ -517,7 +547,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                     if (component is AssistantDropdown dropdown)
                     {
                         prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
+                        if (dropdown.IsMultiselect && this.multiselectDropdownFields.TryGetValue(dropdown.Name, out var selections))
+                            prompt += $"user prompt:{Environment.NewLine}{string.Join(Environment.NewLine, selections.OrderBy(static value => value, StringComparer.Ordinal))}";
+                        else if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
                             prompt += $"user prompt:{Environment.NewLine}{userInput}";
                     }
                     break;
@@ -566,5 +598,37 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
 
         return prompt;
+    }
+
+    private static HashSet<string> CreateInitialMultiselectValues(AssistantDropdown dropdown)
+    {
+        if (string.IsNullOrWhiteSpace(dropdown.Default.Value))
+            return [];
+
+        return [dropdown.Default.Value];
+    }
+
+    private static LuaTable CreateLuaArray(IEnumerable<string> values)
+    {
+        var luaArray = new LuaTable();
+        var index = 1;
+
+        foreach (var value in values.OrderBy(static value => value, StringComparer.Ordinal))
+            luaArray[index++] = value;
+
+        return luaArray;
+    }
+
+    private static HashSet<string> ReadStringValues(LuaTable values)
+    {
+        var parsedValues = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var entry in values)
+        {
+            if (entry.Value.TryRead<string>(out var value) && !string.IsNullOrWhiteSpace(value))
+                parsedValues.Add(value);
+        }
+
+        return parsedValues;
     }
 }

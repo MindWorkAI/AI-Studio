@@ -87,22 +87,42 @@
             case AssistantComponentType.DROPDOWN:
                 if (component is AssistantDropdown assistantDropdown)
                 {
-                    <DynamicAssistantDropdown Items="@assistantDropdown.Items"
-                                              @bind-Value="@this.dropdownFields[assistantDropdown.Name]"
-                                              Default="@assistantDropdown.Default"
-                                              Label="@assistantDropdown.Label"
-                                              HelperText="@assistantDropdown.HelperText"
-                                              OpenIcon="@AssistantComponentPropHelper.GetIconSvg(assistantDropdown.OpenIcon)"
-                                              CloseIcon="@AssistantComponentPropHelper.GetIconSvg(assistantDropdown.CloseIcon)"
-                                              IconColor="@AssistantComponentPropHelper.GetColor(assistantDropdown.IconColor, Color.Default)"
-                                              IconPosition="@AssistantComponentPropHelper.GetAdornment(assistantDropdown.IconPositon, Adornment.End)"
-                                              Variant="@AssistantComponentPropHelper.GetVariant(assistantDropdown.Variant, Variant.Outlined)"
-                                              IsMultiselect="@assistantDropdown.IsMultiselect"
-                                              HasSelectAll="@assistantDropdown.HasSelectAll"
-                                              SelectAllText="@assistantDropdown.SelectAllText"
-                                              Class="@assistantDropdown.Class"
-                                              Style="@this.GetOptionalStyle(assistantDropdown.Style)" 
-                    />
+                    if (assistantDropdown.IsMultiselect)
+                    {
+                        <DynamicAssistantDropdown Items="@assistantDropdown.Items"
+                                                  SelectedValues="@this.multiselectDropdownFields[assistantDropdown.Name]"
+                                                  SelectedValuesChanged="@this.CreateMultiselectDropdownChangedCallback(assistantDropdown.Name)"
+                                                  Default="@assistantDropdown.Default"
+                                                  Label="@assistantDropdown.Label"
+                                                  HelperText="@assistantDropdown.HelperText"
+                                                  OpenIcon="@AssistantComponentPropHelper.GetIconSvg(assistantDropdown.OpenIcon)"
+                                                  CloseIcon="@AssistantComponentPropHelper.GetIconSvg(assistantDropdown.CloseIcon)"
+                                                  IconColor="@AssistantComponentPropHelper.GetColor(assistantDropdown.IconColor, Color.Default)"
+                                                  IconPosition="@AssistantComponentPropHelper.GetAdornment(assistantDropdown.IconPositon, Adornment.End)"
+                                                  Variant="@AssistantComponentPropHelper.GetVariant(assistantDropdown.Variant, Variant.Outlined)"
+                                                  IsMultiselect="@true"
+                                                  HasSelectAll="@assistantDropdown.HasSelectAll"
+                                                  SelectAllText="@assistantDropdown.SelectAllText"
+                                                  Class="@assistantDropdown.Class"
+                                                  Style="@this.GetOptionalStyle(assistantDropdown.Style)" />
+                    }
+                    else
+                    {
+                        <DynamicAssistantDropdown Items="@assistantDropdown.Items"
+                                                  @bind-Value="@this.dropdownFields[assistantDropdown.Name]"
+                                                  Default="@assistantDropdown.Default"
+                                                  Label="@assistantDropdown.Label"
+                                                  HelperText="@assistantDropdown.HelperText"
+                                                  OpenIcon="@AssistantComponentPropHelper.GetIconSvg(assistantDropdown.OpenIcon)"
+                                                  CloseIcon="@AssistantComponentPropHelper.GetIconSvg(assistantDropdown.CloseIcon)"
+                                                  IconColor="@AssistantComponentPropHelper.GetColor(assistantDropdown.IconColor, Color.Default)"
+                                                  IconPosition="@AssistantComponentPropHelper.GetAdornment(assistantDropdown.IconPositon, Adornment.End)"
+                                                  Variant="@AssistantComponentPropHelper.GetVariant(assistantDropdown.Variant, Variant.Outlined)"
+                                                  HasSelectAll="@assistantDropdown.HasSelectAll"
+                                                  SelectAllText="@assistantDropdown.SelectAllText"
+                                                  Class="@assistantDropdown.Class"
+                                                  Style="@this.GetOptionalStyle(assistantDropdown.Style)" />
+                    }
                 }
                 break;
             case AssistantComponentType.BUTTON:

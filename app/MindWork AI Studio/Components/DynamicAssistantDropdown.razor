@@ -1,27 +1,52 @@
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel
 <MudStack Row="true" Class='@this.MergeClasses(this.Class, "mb-3")' Style="@this.Style">
-    <MudSelect
-        T="string"
-        Value="@this.Value"
-        ValueChanged="@(val => this.OnValueChanged(val))"
-        Label="@this.Label"
-        HelperText="@this.HelperText"
-        Placeholder="@this.Default.Value"
-        OpenIcon="@this.OpenIcon"
-        CloseIcon="@this.CloseIcon"
-        Adornment="@this.IconPosition"
-        AdornmentColor="@this.IconColor"
-        Variant="@this.Variant"
-        Margin="Margin.Normal"
-        MultiSelection="@this.IsMultiselect"
-        SelectAll="@this.HasSelectAll"
-        SelectAllText="@this.SelectAllText"
-        >
-        @foreach (var item in Items)
-        {
-            <MudSelectItem Value="@item.Value">
-                @item.Display
-            </MudSelectItem>
-        }
-    </MudSelect>
+    @if (this.IsMultiselect)
+    {
+        <MudSelect
+            T="string"
+            SelectedValues="@this.SelectedValues"
+            SelectedValuesChanged="@this.OnSelectedValuesChanged"
+            Label="@this.Label"
+            HelperText="@this.HelperText"
+            Placeholder="@this.Default.Display"
+            OpenIcon="@this.OpenIcon"
+            CloseIcon="@this.CloseIcon"
+            Adornment="@this.IconPosition"
+            AdornmentColor="@this.IconColor"
+            Variant="@this.Variant"
+            Margin="Margin.Normal"
+            MultiSelection="@true"
+            SelectAll="@this.HasSelectAll"
+            SelectAllText="@this.SelectAllText">
+            @foreach (var item in Items)
+            {
+                <MudSelectItem Value="@item.Value">
+                    @item.Display
+                </MudSelectItem>
+            }
+        </MudSelect>
+    }
+    else
+    {
+        <MudSelect
+            T="string"
+            Value="@this.Value"
+            ValueChanged="@(val => this.OnValueChanged(val))"
+            Label="@this.Label"
+            HelperText="@this.HelperText"
+            Placeholder="@this.Default.Display"
+            OpenIcon="@this.OpenIcon"
+            CloseIcon="@this.CloseIcon"
+            Adornment="@this.IconPosition"
+            AdornmentColor="@this.IconColor"
+            Variant="@this.Variant"
+            Margin="Margin.Normal">
+            @foreach (var item in Items)
+            {
+                <MudSelectItem Value="@item.Value">
+                    @item.Display
+                </MudSelectItem>
+            }
+        </MudSelect>
+    }
 </MudStack>

@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Microsoft.AspNetCore.Components;
@@ -16,6 +17,10 @@ namespace AIStudio.Components
         [Parameter] public string Value { get; set; } = string.Empty;
 
         [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+        [Parameter] public HashSet<string> SelectedValues { get; set; } = [];
+
+        [Parameter] public EventCallback<HashSet<string>> SelectedValuesChanged { get; set; }
 
         [Parameter] public string Label { get; set; } = string.Empty;
         
@@ -50,6 +55,20 @@ namespace AIStudio.Components
                 this.Value = newValue;
                 await this.ValueChanged.InvokeAsync(newValue);
             }
+        }
+
+        private async Task OnSelectedValuesChanged(IEnumerable<string?>? newValues)
+        {
+            var updatedValues = newValues?
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!)
+                .ToHashSet(StringComparer.Ordinal) ?? [];
+
+            if (this.SelectedValues.SetEquals(updatedValues))
+                return;
+
+            this.SelectedValues = updatedValues;
+            await this.SelectedValuesChanged.InvokeAsync(updatedValues);
         }
 
         private string MergeClasses(string custom, string fallback)
