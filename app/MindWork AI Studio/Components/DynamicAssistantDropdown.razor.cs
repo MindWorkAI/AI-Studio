@@ -71,6 +71,38 @@ namespace AIStudio.Components
             await this.SelectedValuesChanged.InvokeAsync(updatedValues);
         }
 
+        private List<AssistantDropdownItem> GetRenderedItems()
+        {
+            var items = this.Items ?? [];
+            if (string.IsNullOrWhiteSpace(this.Default.Value))
+                return items;
+
+            if (items.Any(item => string.Equals(item.Value, this.Default.Value, StringComparison.Ordinal)))
+                return items;
+
+            return [this.Default, .. items];
+        }
+
+        private string GetMultiSelectionText(List<string?>? selectedValues)
+        {
+            if (selectedValues is null || selectedValues.Count == 0)
+                return this.Default.Display;
+
+            var labels = selectedValues
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => this.ResolveDisplayText(value!))
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToList();
+
+            return labels.Count == 0 ? this.Default.Display : string.Join(", ", labels);
+        }
+
+        private string ResolveDisplayText(string value)
+        {
+            var item = this.GetRenderedItems().FirstOrDefault(item => string.Equals(item.Value, value, StringComparison.Ordinal));
+            return item?.Display ?? value;
+        }
+
         private string MergeClasses(string custom, string fallback)
         {
             var trimmedCustom = custom?.Trim() ?? string.Empty;

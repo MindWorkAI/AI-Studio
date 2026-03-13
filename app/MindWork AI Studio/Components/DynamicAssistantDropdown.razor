@@ -6,6 +6,7 @@
             T="string"
             SelectedValues="@this.SelectedValues"
             SelectedValuesChanged="@this.OnSelectedValuesChanged"
+            MultiSelectionTextFunc="@this.GetMultiSelectionText"
             Label="@this.Label"
             HelperText="@this.HelperText"
             Placeholder="@this.Default.Display"
@@ -18,7 +19,7 @@
             MultiSelection="@true"
             SelectAll="@this.HasSelectAll"
             SelectAllText="@this.SelectAllText">
-            @foreach (var item in Items)
+            @foreach (var item in this.GetRenderedItems())
             {
                 <MudSelectItem Value="@item.Value">
                     @item.Display
@@ -41,7 +42,7 @@
             AdornmentColor="@this.IconColor"
             Variant="@this.Variant"
             Margin="Margin.Normal">
-            @foreach (var item in Items)
+            @foreach (var item in this.GetRenderedItems())
             {
                 <MudSelectItem Value="@item.Value">
                     @item.Display
