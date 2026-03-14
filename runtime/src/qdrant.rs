@@ -163,7 +163,7 @@ pub fn stop_qdrant_server() {
     cleanup_qdrant(IS_DEV.get().unwrap());
 }
 
-/// Create temporary directory with TLS relevant files
+/// Create a temporary directory with TLS relevant files
 pub fn create_temp_tls_files(path: &PathBuf) -> Result<(PathBuf, PathBuf), Box<dyn Error>> {
     let cert = generate_certificate();
     
