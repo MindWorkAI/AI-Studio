@@ -82,7 +82,7 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
     let (cert_path, key_path) = create_temp_tls_files(&path).unwrap();
     let storage_path = path.join("storage").to_str().unwrap().to_string();
     let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
-    let init_path = path.join(".qdrant-initalized").to_str().unwrap().to_string();
+    let init_path = path.join(".qdrant-initialized").to_str().unwrap().to_string();
     
     let qdrant_server_environment = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
