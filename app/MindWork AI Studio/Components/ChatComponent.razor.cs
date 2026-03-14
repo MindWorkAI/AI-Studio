@@ -6,7 +6,6 @@ using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
