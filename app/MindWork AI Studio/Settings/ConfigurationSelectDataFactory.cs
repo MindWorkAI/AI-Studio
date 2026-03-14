@@ -2,6 +2,7 @@ using AIStudio.Assistants.Agenda;
 using AIStudio.Assistants.Coding;
 using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.RewriteImprove;
+using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Provider;
@@ -196,6 +197,30 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var voice in Enum.GetValues<SentenceStructure>())
             yield return new(voice.Name(), voice);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AudienceProfile>> GetSlideBuilderAudienceProfileData()
+    {
+        foreach (var profile in Enum.GetValues<AudienceProfile>())
+            yield return new(profile.Name(), profile);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AudienceAgeGroup>> GetSlideBuilderAudienceAgeGroupData()
+    {
+        foreach (var ageGroup in Enum.GetValues<AudienceAgeGroup>())
+            yield return new(ageGroup.Name(), ageGroup);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AudienceOrganizationalLevel>> GetSlideBuilderAudienceOrganizationalLevelData()
+    {
+        foreach (var level in Enum.GetValues<AudienceOrganizationalLevel>())
+            yield return new(level.Name(), level);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AudienceExpertise>> GetSlideBuilderAudienceExpertiseData()
+    {
+        foreach (var expertise in Enum.GetValues<AudienceExpertise>())
+            yield return new(expertise.Name(), expertise);
     }
     
     public static IEnumerable<ConfigurationSelectData<string>> GetProfilesData(IEnumerable<Profile> profiles)
