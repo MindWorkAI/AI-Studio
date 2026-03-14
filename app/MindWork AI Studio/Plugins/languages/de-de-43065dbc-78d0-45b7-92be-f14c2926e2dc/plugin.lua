@@ -1593,6 +1593,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Chat vers
 -- Are you sure you want to move this chat? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1142475422"] = "Sind Sie sicher, dass Sie diesen Chat verschieben möchten? Alle ungespeicherten Änderungen gehen verloren."
 
+-- Bold
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1165397398"] = "Fett"
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Generierung stoppen"
 
@@ -1605,8 +1608,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Geben Sie
 -- Your Prompt (use selected instance '{0}', provider '{1}')
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328"] = "Ihr Prompt (verwendete Instanz: '{0}', Anbieter: '{1}')"
 
+-- Code
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
+
+-- Italic
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Kursiv"
+
 -- Profile usage is disabled according to your chat template settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Die Profilnutzung ist gemäß den Einstellungen ihrer Chat-Vorlage deaktiviert."
+
+-- Bulleted List
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2957125464"] = "Aufzählungszeichen"
 
 -- Delete this chat & start a new one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2991985411"] = "Diesen Chat löschen & einen neuen beginnen."
@@ -1625,6 +1637,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Cha
 
 -- New disappearing chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Neuen selbstlöschenden Chat starten"
+
+-- Heading
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Überschrift"
 
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Bitte wählen Sie den Arbeitsbereich aus, in den Sie den Chat verschieben möchten."
