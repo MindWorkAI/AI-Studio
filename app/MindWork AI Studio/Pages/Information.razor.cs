@@ -58,7 +58,9 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionDatabase => $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}";
+    private string VersionDatabase => this.DatabaseClient.IsAvailable
+        ? $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}"
+        : $"{T("Database")}: {this.DatabaseClient.Name} - {T("not available")}";
     
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;

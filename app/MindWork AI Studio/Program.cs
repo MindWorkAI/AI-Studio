@@ -86,37 +86,46 @@ internal sealed class Program
         }
         
         var qdrantInfo = await rust.GetQdrantInfo();
-        if (qdrantInfo.Path == string.Empty)
+        DatabaseClient databaseClient;
+        if (!qdrantInfo.IsAvailable)
         {
-            Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
-            return;
+            Console.WriteLine($"Warning: Qdrant is not available. Starting without vector database. Reason: '{qdrantInfo.UnavailableReason ?? "unknown"}'.");
+            databaseClient = new NoDatabaseClient("Qdrant", qdrantInfo.UnavailableReason);
         }
-        
-        if (qdrantInfo.PortHttp == 0)
+        else
         {
-            Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
-            return;
-        }
+            if (qdrantInfo.Path == string.Empty)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
+                return;
+            }
+            
+            if (qdrantInfo.PortHttp == 0)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
+                return;
+            }
 
-        if (qdrantInfo.PortGrpc == 0)
-        {
-            Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
-            return;
-        }
+            if (qdrantInfo.PortGrpc == 0)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
+                return;
+            }
 
-        if (qdrantInfo.Fingerprint == string.Empty)
-        {
-            Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
-            return;
-        }
-        
-        if (qdrantInfo.ApiToken == string.Empty)
-        {
-            Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
-            return;
-        }
+            if (qdrantInfo.Fingerprint == string.Empty)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
+                return;
+            }
+            
+            if (qdrantInfo.ApiToken == string.Empty)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
+                return;
+            }
 
-        var databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
+            databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
+        }
         
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
