@@ -5,6 +5,10 @@
 /// </summary>
 public readonly record struct QdrantInfo
 {
+    public bool IsAvailable { get; init; }
+
+    public string? UnavailableReason { get; init; }
+
     public string Path { get; init; }
     
     public int PortHttp { get; init; }

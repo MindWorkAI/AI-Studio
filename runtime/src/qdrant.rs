@@ -39,9 +39,16 @@ static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
 });
 
 static TMPDIR: Lazy<Mutex<Option<TempDir>>> = Lazy::new(|| Mutex::new(None));
+static QDRANT_STATUS: Lazy<Mutex<QdrantStatus>> = Lazy::new(|| Mutex::new(QdrantStatus::default()));
 
 const PID_FILE_NAME: &str = "qdrant.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Qdrant;
+
+#[derive(Default)]
+struct QdrantStatus {
+    is_available: bool,
+    unavailable_reason: Option<String>,
+}
 
 fn qdrant_base_path() -> PathBuf {
     let qdrant_directory = if is_dev() { "qdrant_test" } else { "qdrant" };
@@ -57,16 +64,36 @@ pub struct ProvideQdrantInfo {
     port_grpc: u16,
     fingerprint: String,
     api_token: String,
+    is_available: bool,
+    unavailable_reason: Option<String>,
 }
 
 #[get("/system/qdrant/info")]
 pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
+    let status = QDRANT_STATUS.lock().unwrap();
+    let is_available = status.is_available;
+    let unavailable_reason = status.unavailable_reason.clone();
+
     Json(ProvideQdrantInfo {
-        path: qdrant_base_path().to_str().unwrap().to_string(),
-        port_http: *QDRANT_SERVER_PORT_HTTP,
-        port_grpc: *QDRANT_SERVER_PORT_GRPC,
-        fingerprint: CERTIFICATE_FINGERPRINT.get().expect("Certificate fingerprint not available").to_string(),
-        api_token: API_TOKEN.to_hex_text().to_string(),
+        path: if is_available {
+            qdrant_base_path().to_string_lossy().to_string()
+        } else {
+            String::new()
+        },
+        port_http: if is_available { *QDRANT_SERVER_PORT_HTTP } else { 0 },
+        port_grpc: if is_available { *QDRANT_SERVER_PORT_GRPC } else { 0 },
+        fingerprint: if is_available {
+            CERTIFICATE_FINGERPRINT.get().cloned().unwrap_or_default()
+        } else {
+            String::new()
+        },
+        api_token: if is_available {
+            API_TOKEN.to_hex_text().to_string()
+        } else {
+            String::new()
+        },
+        is_available,
+        unavailable_reason,
     })
 }
 
@@ -76,13 +103,23 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path){
             error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
+            set_qdrant_unavailable(format!("The Qdrant data directory could not be created: {e}"));
+            return;
         };
     }
 
-    let (cert_path, key_path) = create_temp_tls_files(&path).unwrap();
-    let storage_path = path.join("storage").to_str().unwrap().to_string();
-    let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
-    let init_path = path.join(".qdrant-initialized").to_str().unwrap().to_string();
+    let (cert_path, key_path) = match create_temp_tls_files(&path) {
+        Ok(paths) => paths,
+        Err(e) => {
+            error!(Source="Qdrant"; "TLS files for Qdrant could not be created: {e}");
+            set_qdrant_unavailable(format!("TLS files for Qdrant could not be created: {e}"));
+            return;
+        }
+    };
+
+    let storage_path = path.join("storage").to_string_lossy().to_string();
+    let snapshot_path = path.join("snapshots").to_string_lossy().to_string();
+    let init_path = path.join(".qdrant-initialized").to_string_lossy().to_string();
     
     let qdrant_server_environment = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
@@ -90,24 +127,52 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
         (String::from("QDRANT_INIT_FILE_PATH"), init_path),
         (String::from("QDRANT__STORAGE__STORAGE_PATH"), storage_path),
         (String::from("QDRANT__STORAGE__SNAPSHOTS_PATH"), snapshot_path),
-        (String::from("QDRANT__TLS__CERT"), cert_path.to_str().unwrap().to_string()),
-        (String::from("QDRANT__TLS__KEY"), key_path.to_str().unwrap().to_string()),
+        (String::from("QDRANT__TLS__CERT"), cert_path.to_string_lossy().to_string()),
+        (String::from("QDRANT__TLS__KEY"), key_path.to_string_lossy().to_string()),
         (String::from("QDRANT__SERVICE__ENABLE_TLS"), "true".to_string()),
         (String::from("QDRANT__SERVICE__API_KEY"), API_TOKEN.to_hex_text().to_string()),
     ]);
     
     let server_spawn_clone = QDRANT_SERVER.clone();
-    let qdrant_relative_source_path = String::from("resources/databases/qdrant/config.yaml");
-    let qdrant_source_path = path_resolver.resolve_resource(qdrant_relative_source_path);
+    let qdrant_relative_source_path = "resources/databases/qdrant/config.yaml";
+    let qdrant_source_path = match path_resolver.resolve_resource(qdrant_relative_source_path) {
+        Some(path) => path,
+        None => {
+            let reason = format!("The Qdrant config resource '{qdrant_relative_source_path}' could not be resolved.");
+            error!(Source = "Qdrant"; "{reason} Starting the app without Qdrant.");
+            set_qdrant_unavailable(reason);
+            return;
+        }
+    };
+
+    let qdrant_source_path_display = qdrant_source_path.to_string_lossy().to_string();
     tauri::async_runtime::spawn(async move {
-        let (mut rx, child) = Command::new_sidecar("qdrant")
-            .expect("Failed to create sidecar for Qdrant")
-            .args(["--config-path", qdrant_source_path.unwrap().to_str().unwrap()])
+        let sidecar = match Command::new_sidecar("qdrant") {
+            Ok(sidecar) => sidecar,
+            Err(e) => {
+                let reason = format!("Failed to create sidecar for Qdrant: {e}");
+                error!(Source = "Qdrant"; "{reason}");
+                set_qdrant_unavailable(reason);
+                return;
+            }
+        };
+
+        let (mut rx, child) = match sidecar
+            .args(["--config-path", qdrant_source_path_display.as_str()])
             .envs(qdrant_server_environment)
             .spawn()
-            .expect("Failed to spawn Qdrant server process.");
+        {
+            Ok(process) => process,
+            Err(e) => {
+                let reason = format!("Failed to spawn Qdrant server process with config path '{}': {e}", qdrant_source_path_display);
+                error!(Source = "Qdrant"; "{reason}");
+                set_qdrant_unavailable(reason);
+                return;
+            }
+        };
 
         let server_pid = child.pid();
+        set_qdrant_available();
         info!(Source = "Bootloader Qdrant"; "Qdrant server process started with PID={server_pid}.");
         log_potential_stale_process(path.join(PID_FILE_NAME), server_pid, SIDECAR_TYPE);
 
@@ -145,7 +210,10 @@ pub fn stop_qdrant_server() {
     if let Some(server_process) = QDRANT_SERVER.lock().unwrap().take() {
         let server_kill_result = server_process.kill();
         match server_kill_result {
-            Ok(_) => warn!(Source = "Qdrant"; "Qdrant server process was stopped."),
+            Ok(_) => {
+                set_qdrant_unavailable("Qdrant server was stopped.".to_string());
+                warn!(Source = "Qdrant"; "Qdrant server process was stopped.")
+            },
             Err(e) => error!(Source = "Qdrant"; "Failed to stop Qdrant server process: {e}."),
         }
     } else {
@@ -204,6 +272,18 @@ pub fn cleanup_qdrant() {
         warn!(Source = "Qdrant"; "Error during the cleanup of Qdrant: {}", e);
     }
     
+}
+
+fn set_qdrant_available() {
+    let mut status = QDRANT_STATUS.lock().unwrap();
+    status.is_available = true;
+    status.unavailable_reason = None;
+}
+
+fn set_qdrant_unavailable(reason: String) {
+    let mut status = QDRANT_STATUS.lock().unwrap();
+    status.is_available = false;
+    status.unavailable_reason = Some(reason);
 }
 
 pub fn delete_old_certificates(path: PathBuf) -> Result<(), Box<dyn Error>> {
