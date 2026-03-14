@@ -80,10 +80,10 @@
                 
                 @if (!this.FooterButtons.Any(x => x.Type is ButtonTypes.SEND_TO))
                 {
-                    @if (this.ShowSendTo)
+                    @if (this.ShowSendTo && this.VisibleSendToAssistants.Count > 0)
                     {
                         <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
-                            @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
+                            @foreach (var assistant in this.VisibleSendToAssistants)
                             {
                                 <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, new()))">
                                     @assistant.Name()
@@ -112,14 +112,17 @@
                             break;
 
                         case SendToButton sendToButton:
-                            <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
-                                @foreach (var assistant in Enum.GetValues<Components>().Where(n => n.AllowSendTo()).OrderBy(n => n.Name().Length))
-                                {
-                                    <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
-                                        @assistant.Name()
-                                    </MudMenuItem>
-                                }
-                            </MudMenu>
+                            @if (this.VisibleSendToAssistants.Count > 0)
+                            {
+                                <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" StartIcon="@Icons.Material.Filled.Apps" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@TB("Send to ...")" Variant="Variant.Filled" Style="@this.GetSendToColor()" Class="rounded">
+                                    @foreach (var assistant in this.VisibleSendToAssistants)
+                                    {
+                                        <MudMenuItem OnClick="@(async () => await this.SendToAssistant(assistant, sendToButton))">
+                                            @assistant.Name()
+                                        </MudMenuItem>
+                                    }
+                                </MudMenu>
+                            }
                             break;
                     }
                 }
@@ -147,6 +150,9 @@
                 {
                     <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
                 }
+
+                <MudSpacer />
+                <HalluzinationReminder ContainerClass="my-0 ml-2"/>
             </MudStack>
         </FooterContent>
     </InnerScrolling>

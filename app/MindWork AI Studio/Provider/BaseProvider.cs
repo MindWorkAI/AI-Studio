@@ -731,7 +731,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="keysToRemove">Optional list of keys to remove from the final dictionary
     /// (case-insensitive). The parameters stream, model, and messages are removed by default.</param>
     protected IDictionary<string, object> ParseAdditionalApiParameters(
-        params List<string> keysToRemove)
+        params string[] keysToRemove)
     {
         if(string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters))
             return new Dictionary<string, object>();
@@ -744,14 +744,23 @@ public abstract class BaseProvider : IProvider, ISecretId
             var dict = ConvertToDictionary(jsonDoc);
 
             // Some keys are always removed because we set them:
-            keysToRemove.Add("stream");
-            keysToRemove.Add("model");
-            keysToRemove.Add("messages");
+            var removeSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (keysToRemove.Length > 0)
+                removeSet.UnionWith(keysToRemove);
+            
+            removeSet.Add("stream");
+            removeSet.Add("model");
+            removeSet.Add("messages");
 
             // Remove the specified keys (case-insensitive):
-            var removeSet = new HashSet<string>(keysToRemove, StringComparer.OrdinalIgnoreCase);
-            foreach (var key in removeSet)
-                dict.Remove(key);
+            if (removeSet.Count > 0)
+            {
+                foreach (var key in dict.Keys.ToList())
+                {
+                    if (removeSet.Contains(key))
+                        dict.Remove(key);
+                }
+            }
 
             return dict;
         }
@@ -760,6 +769,85 @@ public abstract class BaseProvider : IProvider, ISecretId
             this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", ex.Message);
             return new Dictionary<string, object>();
         }
+    }
+    
+    protected static bool TryPopIntParameter(IDictionary<string, object> parameters, string key, out int value)
+    {
+        value = default;
+        if (!TryPopParameter(parameters, key, out var raw) || raw is null)
+            return false;
+        
+        switch (raw)
+        {
+            case int i:
+                value = i;
+                return true;
+            
+            case long l when l is >= int.MinValue and <= int.MaxValue:
+                value = (int)l;
+                return true;
+            
+            case double d when d is >= int.MinValue and <= int.MaxValue:
+                value = (int)d;
+                return true;
+            
+            case decimal m when m is >= int.MinValue and <= int.MaxValue:
+                value = (int)m;
+                return true;
+        }
+        
+        return false;
+    }
+    
+    protected static bool TryPopBoolParameter(IDictionary<string, object> parameters, string key, out bool value)
+    {
+        value = default;
+        if (!TryPopParameter(parameters, key, out var raw) || raw is null)
+            return false;
+        
+        switch (raw)
+        {
+            case bool b:
+                value = b;
+                return true;
+            
+            case string s when bool.TryParse(s, out var parsed):
+                value = parsed;
+                return true;
+            
+            case int i:
+                value = i != 0;
+                return true;
+            
+            case long l:
+                value = l != 0;
+                return true;
+            
+            case double d:
+                value = Math.Abs(d) > double.Epsilon;
+                return true;
+            
+            case decimal m:
+                value = m != 0;
+                return true;
+        }
+        
+        return false;
+    }
+    
+    private static bool TryPopParameter(IDictionary<string, object> parameters, string key, out object? value)
+    {
+        value = null;
+        if (parameters.Count == 0)
+            return false;
+        
+        var foundKey = parameters.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+        if (foundKey is null)
+            return false;
+        
+        value = parameters[foundKey];
+        parameters.Remove(foundKey);
+        return true;
     }
 
     private static IDictionary<string, object> ConvertToDictionary(JsonElement element)
