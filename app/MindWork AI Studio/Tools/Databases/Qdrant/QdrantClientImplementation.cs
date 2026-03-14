@@ -43,8 +43,8 @@ public class QdrantClientImplementation : DatabaseClient
 
     private async Task<string> GetVersion()
     {
-        var operation =  await this.GrpcClient.HealthAsync();
-        return "v"+operation.Version;
+        var operation = await this.GrpcClient.HealthAsync();
+        return $"v{operation.Version}";
     }
 
     private async Task<string> GetCollectionsAmount()

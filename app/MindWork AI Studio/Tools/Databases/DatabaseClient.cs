@@ -3,6 +3,8 @@
 public abstract class DatabaseClient(string name, string path)
 {
     public string Name => name;
+
+    public virtual bool IsAvailable => true;
     
     private string Path => path;
 
