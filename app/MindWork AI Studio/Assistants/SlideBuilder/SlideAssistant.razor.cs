@@ -176,7 +176,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int numberOfSheets;
     private int numberOfBulletPoints;
     private int timeSpecification;
-    private int calculatedNumberOfSlides = 0;
+    private int calculatedNumberOfSlides;
     private string importantAspects = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
 
