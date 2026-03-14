@@ -5,7 +5,6 @@ namespace AIStudio.Components;
 
 public partial class HalluzinationReminder: ComponentBase
 {
-    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(HalluzinationReminder).Namespace, nameof(HalluzinationReminder));
     
     [Parameter]
