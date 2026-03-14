@@ -1768,6 +1768,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Mana
 -- Available Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Available Data Sources"
 
+-- LLMs can make mistakes. Check important information.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
+
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Issues"
 
@@ -3532,6 +3535,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1870831108"] = "Failed to l
 -- Please enter a model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Please enter a model name."
 
+-- Additional API parameters must form a JSON object.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2051143391"] = "Additional API parameters must form a JSON object."
+
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Model"
 
@@ -3553,11 +3559,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instance Na
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3361153305"] = "Show Expert Settings"
 
+-- Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3502745319"] = "Invalid JSON: Add the parameters in proper JSON formatting, e.g., \\\"temperature\\\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though."
+
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Show available models"
 
 -- This host uses the model configured at the provider level. No model selection is available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3783329915"] = "This host uses the model configured at the provider level. No model selection is available."
+
+-- Duplicate key '{0}' found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Duplicate key '{0}' found."
 
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually."

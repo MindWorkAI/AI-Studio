@@ -64,17 +64,28 @@ public sealed class SettingsManager
     /// </summary>
     public async Task LoadSettings()
     {
+        var settingsSnapshot = await this.TryReadSettingsSnapshot();
+        if (settingsSnapshot is not null)
+            this.ConfigurationData = settingsSnapshot;
+    }
+
+    /// <summary>
+    /// Reads the settings from disk without mutating the current in-memory state.
+    /// </summary>
+    /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
+    public async Task<Data?> TryReadSettingsSnapshot()
+    {
         if(!this.IsSetUp)
         {
             this.logger.LogWarning("Cannot load settings, because the configuration is not set up yet.");
-            return;
+            return null;
         }
 
         var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
         if(!File.Exists(settingsPath))
         {
             this.logger.LogWarning("Cannot load settings, because the settings file does not exist.");
-            return;
+            return null;
         }
 
         // We read the `"Version": "V3"` line to determine the version of the settings file:
@@ -87,30 +98,28 @@ public sealed class SettingsManager
 
             // Extract the version from the line:
             var settingsVersionText = line.Split('"')[3];
-                
+
             // Parse the version:
             Enum.TryParse(settingsVersionText, out Version settingsVersion);
             if(settingsVersion is Version.UNKNOWN)
             {
                 this.logger.LogError("Unknown version of the settings file found.");
-                this.ConfigurationData = new();
-                return;
+                return new();
             }
-                
-            this.ConfigurationData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
-            
+
+            var settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+
             //
             // We filter the enabled preview features based on the preview visibility.
             // This is necessary when the app starts up: some preview features may have
             // been disabled or released from the last time the app was started.
             //
-            this.ConfigurationData.App.EnabledPreviewFeatures = this.ConfigurationData.App.PreviewVisibility.FilterPreviewFeatures(this.ConfigurationData.App.EnabledPreviewFeatures);
-
-            return;
+            settingsData.App.EnabledPreviewFeatures = settingsData.App.PreviewVisibility.FilterPreviewFeatures(settingsData.App.EnabledPreviewFeatures);
+            return settingsData;
         }
-        
+
         this.logger.LogError("Failed to read the version of the settings file.");
-        this.ConfigurationData = new();
+        return new();
     }
 
     /// <summary>

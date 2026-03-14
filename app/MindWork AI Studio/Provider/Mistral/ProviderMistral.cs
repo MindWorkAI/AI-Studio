@@ -36,6 +36,8 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
+        var safePrompt = TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt) && parsedSafePrompt;
+        var randomSeed = TryPopIntParameter(apiParameters, "random_seed", out var parsedRandomSeed) ? parsedRandomSeed : (int?)null;
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
@@ -52,7 +54,8 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
             
             // Right now, we only support streaming completions:
             Stream = true,
-            SafePrompt = apiParameters.TryGetValue("safe_prompt", out var value) && value is true,
+            RandomSeed = randomSeed,
+            SafePrompt = safePrompt,
             AdditionalApiParameters = apiParameters
         }, JSON_SERIALIZER_OPTIONS);
 
