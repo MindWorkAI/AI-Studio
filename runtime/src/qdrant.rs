@@ -82,7 +82,7 @@ pub fn start_qdrant_server(path_resolver: PathResolver, is_dev:bool){
 
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path){
-            error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e.to_string());
+            error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
         };
     }
     let (cert_path, key_path) =create_temp_tls_files(&path).unwrap();
