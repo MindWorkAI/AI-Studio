@@ -6,7 +6,7 @@ namespace AIStudio.Assistants.SlideBuilder;
 
 public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuilder>
 {
-    public override Tools.Components Component => Tools.Components.SLIDE_BUILDER_ASSISTANT;
+    protected override Tools.Components Component => Tools.Components.SLIDE_BUILDER_ASSISTANT;
     
     protected override string Title => T("Slide Assistant");
     
