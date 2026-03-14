@@ -87,13 +87,11 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                     SystemPrompt = SystemPrompts.DEFAULT
                 };
             }
-
-            var presentationTitle = string.IsNullOrWhiteSpace(this.inputTitle) ? this.T("Empty") : this.inputTitle;
-
+            
             return new ChatThread
             {
                 ChatId = Guid.NewGuid(),
-                Name = string.Format(T("{0} - Slide Builder Session"), presentationTitle),
+                Name = string.Format(T("{0} - Slide Builder Session"), this.inputTitle),
                 SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks =
                 [
@@ -123,7 +121,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                             Text = $"""
                                    # PRESENTATION_TITLE
                                    ```
-                                   {presentationTitle}
+                                   {this.inputTitle}
                                    ```
                                    
                                    # PRESENTATION_CONTENT
