@@ -115,8 +115,8 @@ pub fn start_tauri() {
                 start_dotnet_server();
             }
 
-            cleanup_qdrant(is_dev());
-            start_qdrant_server(app.path_resolver(), is_dev());
+            cleanup_qdrant();
+            start_qdrant_server(app.path_resolver());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
