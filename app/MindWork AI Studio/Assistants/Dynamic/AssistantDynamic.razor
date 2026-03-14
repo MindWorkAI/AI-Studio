@@ -67,7 +67,7 @@
             case AssistantComponentType.WEB_CONTENT_READER:
                 if (component is AssistantWebContentReader webContent && this.webContentFields.TryGetValue(webContent.Name, out var webState))
                 {
-                    <div class="@webContent.Class" style="@webContent.Style">
+                    <div class="@webContent.Class" style="@this.GetOptionalStyle(webContent.Style)">
                         <ReadWebContent @bind-Content="@webState.Content"
                                         ProviderSettings="@this.providerSettings"
                                         @bind-AgentIsRunning="@webState.AgentIsRunning"
@@ -79,7 +79,7 @@
             case AssistantComponentType.FILE_CONTENT_READER:
                 if (component is AssistantFileContentReader fileContent && this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
                 {
-                    <div class="@fileContent.Class" style="@fileContent.Style">
+                    <div class="@fileContent.Class" style="@this.GetOptionalStyle(fileContent.Style)">
                         <ReadFileContent @bind-FileContent="@fileState.Content" />
                     </div>
                 }
@@ -207,7 +207,7 @@
                               Wrap="@(AssistantComponentPropHelper.GetWrap(stack.Wrap) ?? Wrap.Wrap)"
                               Spacing="@stack.Spacing"
                               Class="@stack.Class"
-                              Style="@this.GetOptionalStyle(this.GetRawStyle(stack))">
+                              Style="@this.GetOptionalStyle(stack.Style)">
                         @this.RenderChildren(stack.Children)
                     </MudStack>
                 }
@@ -262,7 +262,7 @@
             case AssistantComponentType.PROVIDER_SELECTION:
                 if (component is AssistantProviderSelection providerSelection)
                 {
-                    <div class="@providerSelection.Class" style="@providerSelection.Style">
+                    <div class="@providerSelection.Class" style="@this.GetOptionalStyle(providerSelection.Style)">
                         <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider" />
                     </div>
                 }
@@ -271,7 +271,7 @@
                 if (component is AssistantProfileSelection profileSelection)
                 {
                     var selection = profileSelection;
-                    <div class="@selection.Class" style="@selection.Style">
+                    <div class="@selection.Class" style="@this.GetOptionalStyle(selection.Style)">
                         <ProfileFormSelection Validation="@((Profile profile) => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.currentProfile" />
                     </div>
                 }
@@ -371,14 +371,6 @@
         }
     </text>;
 
-    private string? GetRawStyle(IAssistantComponent component)
-    {
-        if (!component.Props.TryGetValue("Style", out var rawStyle) || rawStyle is null)
-            return null;
-
-        return rawStyle as string ?? rawStyle.ToString();
-    }
-
     private string? BuildPaperStyle(AssistantPaper paper)
     {
         List<string> styles = [];
@@ -390,7 +382,7 @@
         this.AddStyle(styles, "max-width", paper.MaxWidth);
         this.AddStyle(styles, "min-width", paper.MinWidth);
 
-        var customStyle = this.GetRawStyle(paper);
+        var customStyle = paper.Style;
         if (!string.IsNullOrWhiteSpace(customStyle))
             styles.Add(customStyle.Trim().TrimEnd(';'));
 
