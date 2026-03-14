@@ -294,12 +294,32 @@ public sealed class SettingsManager
 
     public Profile GetPreselectedProfile(Tools.Components component)
     {
-        var preselection = component.PreselectedProfile(this);
-        if (preselection != Profile.NO_PROFILE)
-            return preselection;
-        
-        preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedProfile, StringComparison.OrdinalIgnoreCase));
-        return preselection ?? Profile.NO_PROFILE;
+        var preselection = component.GetProfilePreselection(this);
+        if (preselection.DoNotPreselectProfile)
+            return Profile.NO_PROFILE;
+
+        if (preselection.UseSpecificProfile)
+        {
+            var componentProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(preselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+            return componentProfile ?? Profile.NO_PROFILE;
+        }
+
+        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
+        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
+            return Profile.NO_PROFILE;
+
+        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+        return appProfile ?? Profile.NO_PROFILE;
+    }
+
+    public Profile GetAppPreselectedProfile()
+    {
+        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
+        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
+            return Profile.NO_PROFILE;
+
+        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+        return appProfile ?? Profile.NO_PROFILE;
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)

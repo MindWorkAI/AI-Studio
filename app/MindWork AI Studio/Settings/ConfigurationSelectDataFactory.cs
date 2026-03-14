@@ -204,6 +204,15 @@ public static class ConfigurationSelectDataFactory
             yield return new(profile.GetSafeName(), profile.Id);
     }
 
+    public static IEnumerable<ConfigurationSelectData<ProfilePreselection>> GetComponentProfilesData(IEnumerable<Profile> profiles)
+    {
+        yield return new(TB("Use app default profile"), ProfilePreselection.AppDefault);
+        yield return new(Profile.NO_PROFILE.GetSafeName(), ProfilePreselection.NoProfile);
+
+        foreach (var profile in profiles)
+            yield return new(profile.GetSafeName(), ProfilePreselection.Specific(profile.Id));
+    }
+
     public static IEnumerable<ConfigurationSelectData<string>> GetTranscriptionProvidersData(IEnumerable<TranscriptionProvider> transcriptionProviders)
     {
         foreach (var provider in transcriptionProviders)
