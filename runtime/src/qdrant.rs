@@ -172,10 +172,10 @@ pub fn create_temp_tls_files(path: &PathBuf) -> Result<(PathBuf, PathBuf), Box<d
     let key_path = temp_dir.join("key.pem");
 
     let mut cert_file = File::create(&cert_path)?;
-    cert_file.write_all(&*cert.certificate)?;
+    cert_file.write_all(&cert.certificate)?;
 
     let mut key_file = File::create(&key_path)?;
-    key_file.write_all(&*cert.private_key)?;
+    key_file.write_all(&cert.private_key)?;
     
     CERTIFICATE_FINGERPRINT.set(cert.fingerprint).expect("Could not set the certificate fingerprint.");
 
