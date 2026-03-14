@@ -105,6 +105,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        if (!this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Title))
+        {
+            this.Logger.LogInformation("Assistant '{AssistantTitle}' is hidden. Redirecting to the assistants overview.", this.Title);
+            this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
+            return;
+        }
         
         this.formChangeTimer.AutoReset = false;
         this.formChangeTimer.Elapsed += async (_, _) =>
@@ -142,6 +149,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
 
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
+
+    private IReadOnlyList<Tools.Components> VisibleSendToAssistants => Enum.GetValues<AIStudio.Tools.Components>()
+        .Where(this.CanSendToAssistant)
+        .OrderBy(component => component.Name().Length)
+        .ToArray();
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
@@ -339,7 +351,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
-        if (!destination.AllowSendTo())
+        if (!this.CanSendToAssistant(destination))
             return Task.CompletedTask;
         
         var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
@@ -368,6 +380,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.NavigationManager.NavigateTo(sendToData.Route);
         return Task.CompletedTask;
+    }
+
+    private bool CanSendToAssistant(Tools.Components component)
+    {
+        if (!component.AllowSendTo())
+            return false;
+
+        return this.SettingsManager.IsAssistantVisible(component, withLogging: false);
     }
     
     private async Task InnerResetForm()
