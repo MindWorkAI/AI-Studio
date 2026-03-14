@@ -31,9 +31,24 @@ public class DataSlideBuilder
     public string PreselectedOtherLanguage { get; set; } = string.Empty;
     
     /// <summary>
-    /// Preselect the complexity?
+    /// Preselect the audience profile?
     /// </summary>
-    public TargetGroup PreselectedTargetGroup { get; set; }
+    public AudienceProfile PreselectedAudienceProfile { get; set; }
+
+    /// <summary>
+    /// Preselect the audience age group?
+    /// </summary>
+    public AudienceAgeGroup PreselectedAudienceAgeGroup { get; set; }
+
+    /// <summary>
+    /// Preselect the audience organizational level?
+    /// </summary>
+    public AudienceOrganizationalLevel PreselectedAudienceOrganizationalLevel { get; set; }
+
+    /// <summary>
+    /// Preselect the audience expertise?
+    /// </summary>
+    public AudienceExpertise PreselectedAudienceExpertise { get; set; }
     
     /// <summary>
     /// Preselect any important aspects that the Slide Builder should take into account?

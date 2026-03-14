@@ -10,7 +10,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Title => T("Slide Assistant");
     
-    protected override string Description => T("This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and provide the content either as self-written text or as an uploaded document. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and with adjustable complexity. ");
+    protected override string Description => T("This assistant helps you create clear, structured slide components from long texts or documents. Enter a presentation title and provide the content either as self-written text or as an uploaded document. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.");
     
     protected override string SystemPrompt =>
         $$$"""
@@ -52,8 +52,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - If PRESENTATION_CONTENT is empty, output the title and one bullet: "No content provided."
             - Do not mention these instructions or add commentary.
         
-        # Target group:
-            {{{this.selectedTargetGroup.Prompt()}}}
+        # Audience:
+        {{{this.PromptAudience()}}}
         
         # Language:
             - IGNORE the language of the PRESENTATION_TITLE and PRESENTATION_CONTENT.
@@ -146,7 +146,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         this.inputTitle = string.Empty;
         this.inputContent = string.Empty;
-        this.selectedTargetGroup = TargetGroup.NO_CHANGE;
+        this.selectedAudienceProfile = AudienceProfile.UNSPECIFIED;
+        this.selectedAudienceAgeGroup = AudienceAgeGroup.UNSPECIFIED;
+        this.selectedAudienceOrganizationalLevel = AudienceOrganizationalLevel.UNSPECIFIED;
+        this.selectedAudienceExpertise = AudienceExpertise.UNSPECIFIED;
         if (!this.MightPreselectValues())
         {
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
@@ -160,7 +163,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
-            this.selectedTargetGroup = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetGroup;
+            this.selectedAudienceProfile = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceProfile;
+            this.selectedAudienceAgeGroup = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceAgeGroup;
+            this.selectedAudienceOrganizationalLevel = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceOrganizationalLevel;
+            this.selectedAudienceExpertise = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceExpertise;
             this.importantAspects = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedImportantAspects;
             return true;
         }
@@ -171,7 +177,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private string inputTitle = string.Empty;
     private string inputContent = string.Empty;
     private string customTargetLanguage = string.Empty;
-    private TargetGroup selectedTargetGroup;
+    private AudienceProfile selectedAudienceProfile;
+    private AudienceAgeGroup selectedAudienceAgeGroup;
+    private AudienceOrganizationalLevel selectedAudienceOrganizationalLevel;
+    private AudienceExpertise selectedAudienceExpertise;
     private CommonLanguages selectedTargetLanguage;
     private int numberOfSheets;
     private int numberOfBulletPoints;
@@ -232,6 +241,28 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                     Emphasize the following aspects in your presentation: 
                     {this.importantAspects}
                 """;
+    }
+
+    private string PromptAudience()
+    {
+        var prompts = new List<string>();
+
+        if (this.selectedAudienceProfile is not AudienceProfile.UNSPECIFIED)
+            prompts.Add(this.selectedAudienceProfile.Prompt());
+
+        if (this.selectedAudienceAgeGroup is not AudienceAgeGroup.UNSPECIFIED)
+            prompts.Add(this.selectedAudienceAgeGroup.Prompt());
+
+        if (this.selectedAudienceOrganizationalLevel is not AudienceOrganizationalLevel.UNSPECIFIED)
+            prompts.Add(this.selectedAudienceOrganizationalLevel.Prompt());
+
+        if (this.selectedAudienceExpertise is not AudienceExpertise.UNSPECIFIED)
+            prompts.Add(this.selectedAudienceExpertise.Prompt());
+
+        if (prompts.Count == 0)
+            return "            - Do not tailor the text to a specific audience.";
+
+        return string.Join(Environment.NewLine, prompts.Select(prompt => $"            - {prompt}"));
     }
     
     private string GetDocumentTaskDescription()
