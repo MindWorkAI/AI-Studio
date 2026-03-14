@@ -144,7 +144,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 **Rust:**
 - Tauri 1.8 - Desktop application framework
-- Rocket 0.5 - HTTPS API server
+- Rocket - HTTPS API server
 - tokio - Async runtime
 - keyring - OS keyring integration
 - pdfium-render - PDF text extraction
@@ -152,7 +152,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 **.NET:**
 - Blazor Server - UI framework
-- MudBlazor 8.12 - Component library
+- MudBlazor - Component library
 - LuaCSharp - Lua scripting engine
 - HtmlAgilityPack - HTML parsing
 - ReverseMarkdown - HTML to Markdown conversion
@@ -168,7 +168,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 1. Create changelog file: `app/MindWork AI Studio/wwwroot/changelog/vX.Y.Z.md`
 2. Commit changelog
-3. Run from `app/Build`: `dotnet run release --action <patch|minor|major>`
+3. Run from `app/Build`: `dotnet run release --action <build|month|year>`
 4. Create PR with version bump and changes
 5. After PR merge, maintainer creates git tag: `vX.Y.Z`
 6. GitHub Actions builds release binaries for all platforms
@@ -183,3 +183,22 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **MudBlazor** - Component library requires DI setup in Program.cs
 - **Encryption** - Initialized before Rust service is marked ready
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
+
+## Changelogs
+Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
+and should be written in a non-technical way, focusing on user-facing changes and improvements. Additionally, changes made regarding the plugin system
+should be included in the changelog, especially if they affect how users can configure the app or if they introduce new capabilities for plugins. Plugin
+developers should also be informed about these changes, as they might need to update their plugins accordingly. When adding entries to the changelog,
+please ensure they are clear and concise, avoiding technical jargon where possible. Each entry starts with a dash and a space (`- `) and one of the
+following words:
+
+- Added
+- Improved
+- Changed
+- Fixed
+- Updated
+- Removed
+- Downgraded
+- Upgraded
+
+The entire changelog is sorted by these categories in the order shown above. The language used for the changelog is US English.
