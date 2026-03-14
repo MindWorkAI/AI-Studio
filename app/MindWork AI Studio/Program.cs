@@ -178,7 +178,7 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
-        builder.Services.AddSingleton<DatabaseClient>(databaseClient);
+        builder.Services.AddSingleton(databaseClient);
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         
