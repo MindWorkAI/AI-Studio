@@ -78,8 +78,8 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
             error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
         };
     }
-    let (cert_path, key_path) =create_temp_tls_files(&path).unwrap();
-    
+
+    let (cert_path, key_path) = create_temp_tls_files(&path).unwrap();
     let storage_path = path.join("storage").to_str().unwrap().to_string();
     let snapshot_path = path.join("snapshots").to_str().unwrap().to_string();
     let init_path = path.join(".qdrant-initalized").to_str().unwrap().to_string();
