@@ -370,6 +370,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             result = action;
             return true;
         }
+        
+        if (type == AssistantComponentType.SWITCH && key == "OnChanged" && val.TryRead<LuaFunction>(out var onChanged))
+        {
+            result = onChanged;
+            return true;
+        }
 
         return this.TryConvertLuaValue(val, out result);
     }

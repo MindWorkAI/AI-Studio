@@ -30,14 +30,11 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     // Reuse chat-level provider filtering/preselection instead of NONE.
     protected override Tools.Components Component => Tools.Components.CHAT;
 
-    private string? inputText;
     private string title = string.Empty;
     private string description = string.Empty;
     private string systemPrompt = string.Empty;
     private bool allowProfiles = true;
     private string submitText = string.Empty;
-    private string selectedTargetLanguage = string.Empty;
-    private string customTargetLanguage = string.Empty;
     private bool showFooterProfileSelection = true;
     private PluginAssistants? assistantPlugin;
     
@@ -86,7 +83,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private PluginAssistants? ResolveAssistantPlugin()
     {
-        var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
+        var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>()
+            .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
+            .ToList();
         if (assistantPlugins.Count == 0)
             return null;
 

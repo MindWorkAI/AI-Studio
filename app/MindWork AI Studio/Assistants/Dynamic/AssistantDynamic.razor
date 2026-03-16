@@ -5,9 +5,18 @@
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDynamic>
 
-@foreach (var component in this.RootComponent!.Children)
+@if (this.RootComponent is null)
 {
-    @this.RenderComponent(component)
+    <MudAlert Severity="Severity.Warning">
+        @this.T("No assistant plugin are currently installed.")
+    </MudAlert>
+}
+else
+{
+    @foreach (var component in this.RootComponent.Children)
+    {
+        @this.RenderComponent(component)
+    }
 }
 
 @code {
