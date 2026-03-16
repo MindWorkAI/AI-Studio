@@ -55,6 +55,7 @@
             <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">
                 @T("Use the default system prompt")
             </MudButton>
+            <ReadFileContent Text="@T("Load system prompt from file")" @bind-FileContent="@this.DataSystemPrompt"/>
             
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Predefined User Input")
