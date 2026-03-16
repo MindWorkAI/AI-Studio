@@ -7,9 +7,9 @@ public static class AudienceExpertiseExtensions
     public static string Name(this AudienceExpertise expertise) => expertise switch
     {
         AudienceExpertise.UNSPECIFIED => TB("Unspecified expertise"),
-        AudienceExpertise.NON_EXPERTS => TB("Non-experts"),
-        AudienceExpertise.BASIC => TB("Basic"),
-        AudienceExpertise.INTERMEDIATE => TB("Intermediate"),
+        AudienceExpertise.NON_EXPERTS => TB("No expertise"),
+        AudienceExpertise.BASIC => TB("Basic expertise"),
+        AudienceExpertise.INTERMEDIATE => TB("Intermediate expertise"),
         AudienceExpertise.EXPERTS => TB("Experts"),
         
         _ => TB("Unspecified expertise"),

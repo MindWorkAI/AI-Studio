@@ -1,25 +1,45 @@
 @attribute [Route(Routes.ASSISTANT_SLIDE_BUILDER)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSlideBuilder>
 
-<MudTextField T="string" @bind-Text="@this.inputTitle" Validation="@this.ValidatingTitle" Adornment="Adornment.Start" Label="@T("Your title")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudText Typo="Typo.h5"  Class="mb-1 mt-3"> @T("Content to derive slide from")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("You can enter text, use one or more documents or images, or use both. At least one of these options is required.")
+</MudJustifiedText>
+<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-<MudTextField T="string" @bind-Text="@this.inputContent" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Your content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-<MudText Typo="Typo.h5"  Class="mb-1 mt-1"> @T("Upload documents for input")</MudText>
-<AttachDocuments Name="Upload documents for input" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.providerSettings"/>
-<MudTextField T="string" AutoGrow="true" Lines="2" @bind-Text="@this.importantAspects" class="mb-3 mt-5" Label="@T("(Optional) Important Aspects")" HelperText="@T("(Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")"  ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start"/>
+<MudText Typo="Typo.h6"  Class="mb-1 mt-1"> @T("Attach documents")</MudText>
+<AttachDocuments Name="Documents for input" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.providerSettings"/>
 
+<MudText Typo="Typo.h5"  Class="mb-3 mt-6"> @T("Details about the desired presentation")</MudText>
+
+<MudText Typo="Typo.h6"  Class="mb-1"> @T("Title")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Please enter a title for the presentation. This will help the LLM to select more relevant content.")
+</MudJustifiedText>
+<MudTextField T="string" @bind-Text="@this.inputTitle" Validation="@this.ValidatingTitle" Adornment="Adornment.Start" Label="@T("Presentation title")" Variant="Variant.Outlined" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+<MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Important Aspects")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")
+</MudJustifiedText>
+<MudTextField T="string" AutoGrow="true" Lines="3" @bind-Text="@this.importantAspects" class="mb-1" Label="@T("(Optional) Important Aspects")" HelperText="@T("(Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.")"  ShrinkLabel="true" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start"/>
+
+<MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Extent of the planned presentation")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.")
+</MudJustifiedText>
 <MudGrid>
     <MudItem xs="4">
-        <MudNumericField @bind-Value="numberOfSheets"
-                         Label="Number of slides"
+        <MudNumericField @bind-Value="@this.numberOfSheets"
+                         Label="@T("Number of slides")"
                          Variant="Variant.Outlined"
                          Class="mb-3"
                          Min="0" />
     </MudItem>
     
     <MudItem xs="4">
-        <MudNumericField @bind-Value="numberOfBulletPoints"
-                         Label="Number of bullet points"
+        <MudNumericField @bind-Value="@this.numberOfBulletPoints"
+                         Label="@T("Number of bullet points")"
                          Variant="Variant.Outlined"
                          Min="0"
                          Max="7"
@@ -27,15 +47,21 @@
     </MudItem>
 
     <MudItem xs="4">
-        <MudNumericField @bind-Value="timeSpecification"
-                         Label="Time specification (minutes)"
+        <MudNumericField @bind-Value="@this.timeSpecification"
+                         Label="@T("Time specification (minutes)")"
                          Variant="Variant.Outlined"
                          Class="mb-3"
                          Min="0" />
     </MudItem>
 </MudGrid>
-    
+
+<MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Language")</MudText>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
+
+<MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Audience")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.")
+</MudJustifiedText>
 <EnumSelection T="AudienceProfile" NameFunc="@(profile => profile.Name())" @bind-Value="@this.selectedAudienceProfile" Icon="@Icons.Material.Filled.Groups" Label="@T("Audience profile")" />
 <EnumSelection T="AudienceAgeGroup" NameFunc="@(ageGroup => ageGroup.Name())" @bind-Value="@this.selectedAudienceAgeGroup" Icon="@Icons.Material.Filled.Cake" Label="@T("Audience age group")" />
 <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(level => level.Name())" @bind-Value="@this.selectedAudienceOrganizationalLevel" Icon="@Icons.Material.Filled.AccountTree" Label="@T("Audience organizational level")" />

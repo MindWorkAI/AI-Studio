@@ -10,7 +10,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Title => T("Slide Assistant");
     
-    protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as self-written text or with one or more uploaded documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.");
+    protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.");
     
     protected override string SystemPrompt =>
         $$$"""
@@ -144,6 +144,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         this.inputTitle = string.Empty;
         this.inputContent = string.Empty;
+        this.loadedDocumentPaths.Clear();
         this.selectedAudienceProfile = AudienceProfile.UNSPECIFIED;
         this.selectedAudienceAgeGroup = AudienceAgeGroup.UNSPECIFIED;
         this.selectedAudienceOrganizationalLevel = AudienceOrganizationalLevel.UNSPECIFIED;
@@ -209,10 +210,18 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     }
     private string? ValidatingContext(string text)
     {
-        if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide some input");
+        if(string.IsNullOrWhiteSpace(text) && !this.HasValidInputDocuments())
+            return T("Please provide a text or at least one valid document or image.");
         
         return null;
+    }
+
+    private bool HasValidInputDocuments() => this.loadedDocumentPaths.Any(n => n is { Exists: true });
+
+    private async Task OnDocumentsChanged(HashSet<FileAttachment> _)
+    {
+        if(this.form is not null)
+            await this.form.Validate();
     }
     
     private string? ValidateCustomLanguage(string language)
