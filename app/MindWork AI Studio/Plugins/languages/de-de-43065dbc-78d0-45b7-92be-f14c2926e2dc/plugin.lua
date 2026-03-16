@@ -2727,6 +2727,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T428040679"] = "Erstellung von In
 -- Useful assistants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T586430036"] = "Nützliche Assistenten"
 
+-- Voice recording has been disabled for this session because audio playback could not be initialized on the client.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1123032432"] = "Die Sprachaufnahme wurde für diese Sitzung deaktiviert, da die Audiowiedergabe auf dem Client nicht initialisiert werden konnte."
+
 -- Failed to create the transcription provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1689988905"] = "Der Anbieter für die Transkription konnte nicht erstellt werden."
 
@@ -2735,6 +2738,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2144994226"] = "Audioaufn
 
 -- Stop recording and start transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T224155287"] = "Aufnahme beenden und Transkription starten"
+
+-- Voice recording is unavailable because the client could not initialize audio playback.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2260302339"] = "Die Sprachaufnahme ist nicht verfügbar, da der Client die Audiowiedergabe nicht initialisieren konnte."
 
 -- Start recording your voice for a transcription
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2372624045"] = "Beginnen Sie mit der Aufnahme Ihrer Stimme für eine Transkription"
