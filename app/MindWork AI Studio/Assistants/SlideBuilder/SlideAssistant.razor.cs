@@ -111,7 +111,36 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                         }
                     },
                     
-                    this.chatThread.Blocks.First().DeepClone(changeHideState: true, hideFromUser: true),
+                    // Hidden user block with inputContent data:
+                    new ContentBlock
+                    {
+                        Time = this.chatThread.Blocks.First().Time,
+                        Role = ChatRole.USER,
+                        HideFromUser = true,
+                        ContentType = ContentType.TEXT,
+                        Content = new ContentText
+                        {
+                            Text = string.IsNullOrWhiteSpace(this.inputContent)
+                                ? $"""
+                                   # PRESENTATION_TITLE
+                                   ```
+                                   {this.inputTitle}
+                                   ```
+                                   """
+                                
+                                : $"""
+                                   # PRESENTATION_TITLE
+                                   ```
+                                   {this.inputTitle}
+                                   ```
+                                   
+                                   # PRESENTATION_CONTENT
+                                   ```
+                                   {this.inputContent}
+                                   ```
+                                   """,
+                        }
+                    },
                     
                     // Then, append the last block of the current chat thread
                     // (which is expected to be the AI response):
