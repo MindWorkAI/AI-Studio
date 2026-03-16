@@ -103,9 +103,9 @@ ASSISTANT = {
 - `LAYOUT_ACCORDION_SECTION`: renders a `MudExpansionPanel`; requires `Name`, `HeaderText`, and may include `IsDisabled`, `IsExpanded`, `IsDense`, `HasInnerPadding`, `HideIcon`, `HeaderIcon`, `HeaderColor`, `HeaderTypo`, `HeaderAlign`, `MaxHeight`, `ExpandIcon`, `Class`, `Style`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
-- `DATE_PICKER`: date input based on `MudDatePicker`; requires `Name`, `Label`, and may include `Value`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
-- `DATE_RANGE_PICKER`: date range input based on `MudDateRangePicker`; requires `Name`, `Label`, and may include `Value`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
-- `TIME_PICKER`: time input based on `MudTimePicker`; requires `Name`, `Label`, and may include `Value`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `DATE_PICKER`: date input based on `MudDatePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `DATE_RANGE_PICKER`: date range input based on `MudDateRangePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `TIME_PICKER`: time input based on `MudTimePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
 - `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
 - `FILE_CONTENT_READER`: renders `ReadFileContent`; include `Name`, `UserPrompt`.
@@ -124,9 +124,9 @@ Images referenced via the `plugin://` scheme must exist in the plugin directory 
 | `PROFILE_SELECTION`        | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProfileSelection.razor)        |
 | `FILE_CONTENT_READER`      | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadFileContent.razor)         |
 | `WEB_CONTENT_READER`       | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)          |
-| `COLOR_PICKER`             | `Name`, `Label`                     | `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                                  |
-| `DATE_PICKER`              | `Name`, `Label`                     | `Value`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                                  | [MudDatePicker](https://www.mudblazor.com/components/datepicker)                                                                    |
-| `DATE_RANGE_PICKER`        | `Name`, `Label`                     | `Value`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                           | [MudDateRangePicker](https://www.mudblazor.com/components/daterangepicker)                                                          |
+| `COLOR_PICKER`             | `Name`, `Label`                     | `Placeholder`, `Color`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                                  |
+| `DATE_PICKER`              | `Name`, `Label`                     | `Value`, `Color`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudDatePicker](https://www.mudblazor.com/components/datepicker)                                                                    |
+| `DATE_RANGE_PICKER`        | `Name`, `Label`                     | `Value`, `Color`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                  | [MudDateRangePicker](https://www.mudblazor.com/components/daterangepicker)                                                          |
 | `TIME_PICKER`              | `Name`, `Label`                     | `Value`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                          | [MudTimePicker](https://www.mudblazor.com/components/timepicker)                                                                    |
 | `HEADING`                  | `Text`                              | `Level`                                                                                                                                                                                                              | [MudText Typo="Typo.<h2\|h3\|h4\|h5\|h6>"](https://www.mudblazor.com/components/typography)                                         |
 | `TEXT`                     | `Content`                           | `None`                                                                                                                                                                                                               | [MudText Typo="Typo.body1"](https://www.mudblazor.com/components/typography)                                                        |
@@ -489,6 +489,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 - Optional props:
   - `Value`: initial date string. Use the same format as `DateFormat`; default recommendation is `yyyy-MM-dd`.
   - `Placeholder`: hint text shown before a date is selected.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Primary`.
   - `HelperText`: helper text rendered below the picker.
   - `DateFormat`: output and parsing format; defaults to `yyyy-MM-dd`.
   - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
@@ -504,6 +505,7 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Label"] = "Deadline",
     ["Value"] = "2026-03-31",
     ["Placeholder"] = "YYYY-MM-DD",
+    ["Color"] = "Warning",
     ["HelperText"] = "Pick the target completion date.",
     ["DateFormat"] = "yyyy-MM-dd",
     ["PickerVariant"] = "Dialog",
@@ -521,6 +523,7 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `Label`: visible field label.
 - Optional props:
   - `Value`: initial range string using `<start> - <end>`, for example `2026-03-01 - 2026-03-31`.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Primary`.
   - `PlaceholderStart`: hint text for the start date input.
   - `PlaceholderEnd`: hint text for the end date input.
   - `HelperText`: helper text rendered below the picker.
@@ -537,6 +540,7 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Name"] = "travelWindow",
     ["Label"] = "Travel window",
     ["Value"] = "2026-06-01 - 2026-06-07",
+    ["Color"] = "Secondary",
     ["PlaceholderStart"] = "Start date",
     ["PlaceholderEnd"] = "End date",
     ["HelperText"] = "Select the full period.",
@@ -557,6 +561,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 - Optional props:
   - `Value`: initial time string. Use the same format as `TimeFormat`; default recommendations are `HH:mm` or `hh:mm tt`.
   - `Placeholder`: hint text shown before a time is selected.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Primary`.
   - `HelperText`: helper text rendered below the picker.
   - `TimeFormat`: output and parsing format; defaults to `HH:mm`, or `hh:mm tt` when `AmPm = true`.
   - `AmPm`: defaults to `false`; toggles 12-hour mode.
@@ -573,6 +578,7 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Label"] = "Meeting time",
     ["Value"] = "14:30",
     ["Placeholder"] = "HH:mm",
+    ["Color"] = "Error",
     ["HelperText"] = "Pick the preferred meeting time.",
     ["TimeFormat"] = "HH:mm",
     ["AmPm"] = false,

@@ -35,6 +35,12 @@ internal sealed class AssistantTimePicker : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.HelperText));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.HelperText), value);
     }
+    
+    public string Color
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Color));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Color), value);
+    }
 
     public string TimeFormat
     {

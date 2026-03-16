@@ -23,6 +23,12 @@ internal sealed class AssistantDatePicker : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Value));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Value), value);
     }
+    
+    public string Color
+    {
+        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Color));
+        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Color), value);
+    }
 
     public string Placeholder
     {
