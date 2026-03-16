@@ -432,6 +432,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Load output rules from document
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2168201568"] = "Regeln für die Ausgabe aus einem Dokument laden"
 
+-- Choose whether the policy should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2214900121"] = "Wählen Sie, ob das Regelwerk das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2322771068"] = "Profil vorauswählen"
+
 -- The analysis rules specify what the AI should pay particular attention to while reviewing the documents you provide, and which aspects it should highlight or save. For example, if you want to extract the potential of green hydrogen for agriculture from a variety of general publications, you can explicitly define this in the analysis rules.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T238145218"] = "Die Analyseregeln legen fest, worauf die KI bei der Prüfung der von Ihnen bereitgestellten Dokumente besonders achten und welche Aspekte sie hervorheben oder speichern soll. Wenn Sie beispielsweise das Potenzial von grünem Wasserstoff für die Landwirtschaft aus einer Vielzahl allgemeiner Publikationen extrahieren möchten, können Sie dies in den Analyseregeln explizit definieren."
 
@@ -1276,7 +1282,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3646084045"] 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
 -- Please select one of your profiles.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T465395981"] = "Bitte wählen Sie eines ihrer Profile aus."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T465395981"] = "Bitte wählen Sie eines Ihrer Profile aus."
 
 -- Text or email
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T534887559"] = "Text oder E-Mail"
@@ -1355,6 +1361,189 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::
 
 -- Marketing (advertisements, sales texts)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::WRITINGSTYLESEXTENSIONS::T945714286"] = "Marketing (Werbung, Verkaufstexte)"
+
+-- Children
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEAGEGROUPEXTENSIONS::T188567026"] = "Kinder"
+
+-- Unspecified age group
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEAGEGROUPEXTENSIONS::T300604284"] = "Nicht angegebene Altersgruppe"
+
+-- Adults
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEAGEGROUPEXTENSIONS::T3335941460"] = "Erwachsene"
+
+-- Teenagers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEAGEGROUPEXTENSIONS::T3696960735"] = "Jugendliche"
+
+-- No expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS::T1612807521"] = "Keine Vorkenntnisse"
+
+-- Intermediate expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS::T2131860427"] = "Mittlere Kenntnisse"
+
+-- Unspecified expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS::T2879202483"] = "Nicht spezifizierte Fachkenntnisse"
+
+-- Basic expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS::T2909686714"] = "Grundlegende Kenntnisse"
+
+-- Experts
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEEXPERTISEEXTENSIONS::T3130182982"] = "Experten"
+
+-- Individual contributors
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T1893672448"] = "Einzelne Mitwirkende"
+
+-- Team leads
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T2112906979"] = "Teamleitung"
+
+-- Board members
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T2483400884"] = "Vorstand"
+
+-- Unspecified organizational level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T2633679224"] = "Nicht angegebene Organisationsebene"
+
+-- Trainees
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T2678344512"] = "Einstieg"
+
+-- Managers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T3187355853"] = "Management"
+
+-- Executives
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEORGANIZATIONALLEVELEXTENSIONS::T3317335174"] = "Führung"
+
+-- Journalists
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T1589799277"] = "Journalisten"
+
+-- Healthcare professionals
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T1652521346"] = "Medizinisches Fachpersonal"
+
+-- Unspecified audience profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T1845793571"] = "Nicht angegebenes Zielgruppenprofil"
+
+-- Lawyers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T1959098902"] = "Anwälte"
+
+-- Investors
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T2516036290"] = "Investoren"
+
+-- Students
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T2905889225"] = "Studierende"
+
+-- Scientists
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T332785734"] = "Wissenschaftler"
+
+-- Business professionals
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T3670621687"] = "Business Professionals"
+
+-- Engineers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T3904961809"] = "Ingenieure"
+
+-- Public officials
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T439009390"] = "Amtsträger"
+
+-- Software developers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T831424531"] = "Softwareentwickler"
+
+-- Important Aspects
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1379883528"] = "Wichtige Aspekte"
+
+-- Extent of the planned presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1408740929"] = "Umfang der geplanten Präsentation"
+
+-- You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841"] = "Vielleicht möchten Sie wichtige Aspekte angeben, die das LLM bei der Erstellung der Folien berücksichtigen soll. Zum Beispiel die Verwendung von Emojis oder bestimmte Themen, die hervorgehoben werden sollen."
+
+-- Details about the desired presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367"] = "Details zur gewünschten Präsentation"
+
+-- Text content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1820253043"] = "Textinhalt"
+
+-- Slide Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1883918574"] = "Folienassistent"
+
+-- Please provide a text or at least one valid document or image.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2013746884"] = "Bitte geben Sie einen Text oder mindestens ein gültiges Dokument oder Bild an."
+
+-- Content to derive slide from
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2086228265"] = "Inhalt, aus dem die Folie erstellt werden soll"
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T237828418"] = "Zielsprache"
+
+-- (Optional) Important Aspects
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T24391765"] = "(Optional) Wichtige Aspekte"
+
+-- Audience age group
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2496533563"] = "Altersgruppe"
+
+-- You can enter text, use one or more documents or images, or use both. At least one of these options is required.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2542045947"] = "Sie können Text eingeben, ein oder mehrere Dokumente oder Bilder verwenden oder beides nutzen. Mindestens eine dieser Optionen ist erforderlich."
+
+-- Language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2591284123"] = "Sprache"
+
+-- Audience organizational level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2599228833"] = "Organisatorische Ebene der Zielgruppe"
+
+-- Number of slides
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965"] = "Anzahl der Folien"
+
+-- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2910177051"] = "Dieser Assistent hilft Ihnen, aus langen Texten oder Dokumenten klare, strukturierte Folien zu erstellen. Geben Sie einen Titel für die Präsentation ein und stellen Sie den Inhalt entweder als Text oder über ein oder mehrere Dokumente bereit. Unter „Wichtige Aspekte“ können Sie dem LLM Anweisungen zur Ausgabe oder Formatierung geben. Legen Sie die Anzahl der Folien entweder direkt oder anhand der gewünschten Präsentationsdauer fest. Sie können auch die Anzahl der Aufzählungspunkte angeben. Wenn der Standardwert 0 nicht geändert wird, bestimmt das LLM selbstständig, wie viele Folien oder Aufzählungspunkte erstellt werden. Die Ausgabe kann flexibel in verschiedenen Sprachen erzeugt und auf eine bestimmte Zielgruppe zugeschnitten werden."
+
+-- The result of your previous slide builder session.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3000286990"] = "Das Ergebnis Ihrer vorherigen Folienassistent-Sitzung."
+
+-- Please enter a title for the presentation. This will help the LLM to select more relevant content.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3013824309"] = "Bitte geben Sie einen Titel für die Präsentation ein. Dies hilft dem LLM, relevantere Inhalte auszuwählen."
+
+-- Please provide a title
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3049299559"] = "Bitte geben Sie einen Titel ein"
+
+-- Create Slides
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3079776593"] = "Folien erstellen"
+
+-- Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3465256803"] = "Bitte geben Sie die Zielgruppe für die geplante Präsentation an. So kann das LLM eine Präsentation erstellen, die zu Ihren Anforderungen passt. Sie können das Profil der Zielgruppe, die Altersgruppe, die Organisationsebene und die Fachkenntnisse angeben. Sie müssen nicht alle diese Parameter festlegen; Sie können zum Beispiel nur das Profil der Zielgruppe angeben und die anderen Parameter bei ihren Standardwerten belassen."
+
+-- (Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3476149293"] = "(Optional) Gib Aspekte an, die das LLM beim Erstellen der Folien berücksichtigen soll. Zum Beispiel die Verwendung von Emojis oder bestimmte Themen, die hervorgehoben werden sollen."
+
+-- Audience
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3506118019"] = "Zielgruppe"
+
+-- Time specification (minutes)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3539067305"] = "Zeitangabe (Minuten)"
+
+-- Audience profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3649769130"] = "Profil der Zielgruppe"
+
+-- Attach documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3666048746"] = "Dokumente anhängen"
+
+-- Number of bullet points
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3796347042"] = "Anzahl der Aufzählungspunkte"
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Presentation title
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3893271035"] = "Präsentationstitel"
+
+-- {0} - Slide Builder Session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3922788056"] = "{0} – Folienassistent-Sitzung"
+
+-- Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4131419342"] = "Bitte geben Sie den Umfang der geplanten Präsentation an. Das kann die Anzahl der Folien, die Anzahl der Aufzählungspunkte pro Folie oder die Zeitvorgabe für die Präsentation sein. Das hilft dem LLM, eine Präsentation zu erstellen, die Ihren Anforderungen entspricht. Lassen Sie die Standardwerte unverändert, wenn Sie keine besonderen Anforderungen an den Umfang der Präsentation haben. Möglicherweise möchten Sie nur einen dieser Parameter angeben, zum Beispiel die Zeitvorgabe, und die anderen auf den Standardwerten belassen."
+
+-- Audience expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4279519256"] = "Fachkenntnisse der Zielgruppe"
+
+-- Title
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"] = "Titel"
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
 -- Your word or phrase
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1847246020"] = "Ihr Wort oder Phrase"
@@ -1897,7 +2086,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PREVIEWRELEASECANDIDATE::T3451939995"] = 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PREVIEWRELEASECANDIDATE::T696585888"] = "Release-Kandidaten sind der letzte Schritt, bevor eine Funktion als stabil gilt."
 
 -- Select one of your profiles
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEFORMSELECTION::T2003449133"] = "Wählen Sie eines ihrer Profile aus"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEFORMSELECTION::T2003449133"] = "Wählen Sie eines Ihrer Profile aus"
 
 -- Open Profile Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEFORMSELECTION::T3654011106"] = "Profil-Optionen öffnen"
@@ -3768,6 +3957,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1471770981"
 -- Preselect whether participants needs to arrive and depart
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1648427207"] = "Legen Sie im Voraus fest, ob Teilnehmer anreisen und abreisen müssen"
 
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1766361623"] = "Wählen Sie, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
 -- Preselect a start time?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1901151023"] = "Startzeit vorauswählen?"
 
@@ -3780,8 +3972,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T1998244307"
 -- Preselect whether the meeting is virtual
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T2084951012"] = "Wählen Sie aus, ob das Meeting virtuell ist"
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T2322771068"] = "Profil vorauswählen"
 
 -- When enabled, you can preselect most agenda options. This is might be useful when you need to create similar agendas often.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T2373110543"] = "Wenn diese Option aktiviert ist, können Sie die meisten Agendapunkte vorauswählen. Das kann hilfreich sein, wenn Sie häufig ähnliche Agenden erstellst."
@@ -3834,9 +4026,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3709527588"
 -- Preselect a topic?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3835166371"] = "Ein Thema vorauswählen?"
 
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T4004501229"] = "Eines ihrer Profile vorauswählen?"
-
 -- Preselect the agenda language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T4055846391"] = "Wählen Sie die Sprache der Agenda vorab aus"
 
@@ -3873,14 +4062,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1608
 -- Yes, you can only retrieve one bias per day
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1765683725"] = "Ja, Sie können nur einmal pro Tag eine Voreingenommenheit abrufen."
 
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1766361623"] = "Wähle aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T180921696"] = "Zurücksetzen"
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
-
 -- No restriction. You can retrieve as many biases as you want per day.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2305356277"] = "Keine Einschränkung. Sie können beliebig viele Vorurteile pro Tag abrufen."
+
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2322771068"] = "Profil vorauswählen"
 
 -- Which language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2345162613"] = "Welche Sprache soll vorausgewählt werden?"
@@ -3905,9 +4097,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T3848
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T3875604319"] = "Optionen sind vorausgewählt"
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T4004501229"] = "Möchten Sie eines ihrer Profile vorauswählen?"
 
 -- Are you sure you want to reset your bias-of-the-day statistics? The system will no longer remember which biases you already know. As a result, biases you are already familiar with may be addressed again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T405627382"] = "Sind Sie sicher, dass Sie ihre „Vorurteil des Tages“-Statistiken zurücksetzen möchten? Das System merkt sich dann nicht mehr, welche Verzerrungen Sie bereits kennen. Dadurch kann es sein, dass Ihnen bereits bekannte Verzerrungen erneut angezeigt werden."
@@ -3939,8 +4128,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1773585398"] 
 -- Provider selection when creating new chats
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T189306836"] = "Anbieterauswahl beim Erstellen neuer Chats"
 
--- Would you like to set one of your profiles as the default for chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1933521846"] = "Möchten Sie eines ihrer Profile als Standardprofil für Chats festlegen?"
+-- Choose whether chats should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1915793195"] = "Wählen Sie aus, ob Chats das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden sollen."
+
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2322771068"] = "Profil vorauswählen"
 
 -- Apply default data source option when sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Standarddatenquelle verwenden, wenn Assistentenergebnisse in den Chat gesendet werden"
@@ -3977,9 +4169,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] 
 
 -- Latest message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Die neueste Nachricht wird nach dem Laden eines Chats angezeigt."
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4004501229"] = "Eines ihrer Profile vorauswählen?"
 
 -- Do you want to apply the default data source options when sending assistant results to chat?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Möchten Sie die Standardoptionen für Datenquellen verwenden, wenn die Ergebnisse des Assistenten an den Chat gesendet werden?"
@@ -4041,11 +4230,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"
 -- Compiler messages are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1110902070"] = "Compiler-Nachrichten sind vorausgewählt"
 
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1766361623"] = "Wählen Sie aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
 -- Preselect a programming language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2181567002"] = "Programmiersprache vorauswählen"
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2322771068"] = "Profil vorauswählen"
 
 -- When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2619641701"] = "Wenn aktiviert, können Sie die Code-Optionen im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Programmiersprache oder ein bestimmtes LLM-Modell bevorzugen."
@@ -4061,9 +4253,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T3015105896"
 
 -- Coding options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T3567850751"] = "Codierungsoptionen sind vorausgewählt"
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T4004501229"] = "Eines ihrer Profile vorauswählen?"
 
 -- Preselect another programming language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T4230412334"] = "Eine andere Programmiersprache vorauswählen"
@@ -4164,23 +4353,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T12806662
 -- Preselect ERI server options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1664055662"] = "ERI-Serveroptionen vorauswählen?"
 
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1766361623"] = "Wählen Sie, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
 -- No ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1793785587"] = "Keine ERI-Serveroptionen sind vorausgewählt"
 
 -- Most ERI server options can be customized and saved directly in the ERI server assistant. For this, the ERI server assistant has an auto-save function.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T2093534613"] = "Die meisten ERI-Serveroptionen können direkt im ERI-Server-Assistenten angepasst und gespeichert werden. Dazu verfügt der ERI-Server-Assistent über eine automatische Speicherfunktion."
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T2322771068"] = "Profil vorauswählen"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T3448155331"] = "Schließen"
 
 -- Assistant: ERI Server Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T3629372826"] = "Assistent: ERI-Server-Optionen"
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T4004501229"] = "Möchten Sie eines ihrer Profile vorauswählen?"
 
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI-Serveroptionen sind vorausgewählt"
@@ -4329,6 +4518,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1633101
 -- Web content reader is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1701127912"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist nicht vorausgewählt"
 
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1766361623"] = "Wählen Sie aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
 -- Content cleaner agent is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
 
@@ -4338,8 +4530,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2090693
 -- When enabled, you can preselect some legal check options. This is might be useful when you prefer a specific LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2164667361"] = "Wenn aktiviert, können Sie einige rechtliche Prüfoptionen vorauswählen. Dies kann nützlich sein, wenn Sie ein bestimmtes LLM-Modell bevorzugen."
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2322771068"] = "Profil vorauswählen"
 
 -- Legal check options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T252916114"] = "Rechtsprüfungsoptionen sind vorausgewählt"
@@ -4359,17 +4551,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3641773
 -- Preselect the content cleaner agent?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3649428096"] = "Assistent zur Inhaltsbereinigungs vorauswählen?"
 
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4004501229"] = "Eines ihrer Profile vorauswählen?"
-
 -- Assistant: Legal Check Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4033382756"] = "Assistent: Optionen für rechtliche Prüfung"
 
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T629158142"] = "Den Web-Content-Reader zum Lesen von Webinhalten vorauswählen?"
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T1766361623"] = "Wählen Sie, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2322771068"] = "Profil vorauswählen"
 
 -- Which language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2345162613"] = "Welche Sprache soll vorausgewählt werden?"
@@ -4391,9 +4583,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3710380967
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3875604319"] = "Optionen sind vorausgewählt"
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T4004501229"] = "Möchten Sie eines ihrer Profile vorauswählen?"
 
 -- Preselect options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T42672465"] = "Optionen vorauswählen?"
@@ -4481,6 +4670,69 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3745021518
 
 -- No rewrite & improve text options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T553954963"] = "Keine Optionen für „Text umformulieren & verbessern“ sind vorausgewählt"
+
+-- Preselect the audience expertise
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1017131030"] = "Expertise der Zielgruppe vorauswählen"
+
+-- When enabled, you can preselect slide builder options. This is might be useful when you prefer a specific language or LLM model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1393378753"] = "Wenn diese Option aktiviert ist, können Sie Optionen für den Folienassistent vorab auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+
+-- Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1528169602"] = "Wählen Sie Aspekte vorab aus, auf die sich das LLM bei der Erstellung von Folien konzentrieren soll, z. B. Aufzählungspunkte oder bestimmte Themen, die hervorgehoben werden sollen."
+
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Wählen Sie aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
+-- Preselect the audience organizational level
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2014662371"] = "Organisationsebene der Zielgruppe vorauswählen"
+
+-- Which audience organizational level should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T216511105"] = "Welche organisatorische Ebene der Zielgruppe soll vorausgewählt werden?"
+
+-- Preselect Slide Assistant options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T227645894"] = "Optionen des Folienassistenten vorauswählen?"
+
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2322771068"] = "Profil vorauswählen"
+
+-- Which language should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2345162613"] = "Welche Sprache sollte vorausgewählt sein?"
+
+-- Preselect another language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2382415529"] = "Andere Sprache vorauswählen"
+
+-- Preselect the language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2571465005"] = "Sprache vorauswählen"
+
+-- Preselect the audience age group
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2645589441"] = "Altersgruppe der Zielgruppe vorauswählen"
+
+-- Assistant: Slide Assistant Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3215549988"] = "Assistent: Optionen für die Erstellung von Folien"
+
+-- Which audience expertise should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3228597992"] = "Welche Expertise der Zielgruppe sollte vorausgewählt werden?"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Schließen"
+
+-- Preselect important aspects
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Wichtige Aspekte vorauswählen"
+
+-- No Slide Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T4214398691"] = "Keine Optionen für den Folienassistenten sind vorausgewählt."
+
+-- Preselect the audience profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T861397972"] = "Zielgruppenprofil vorauswählen"
+
+-- Slide Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T93124146"] = "Optionen des Folienassistenten sind vorausgewählt"
+
+-- Which audience age group should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T956845877"] = "Welche Altersgruppe der Zielgruppe sollte vorausgewählt sein?"
+
+-- Which audience profile should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T973572510"] = "Welches Zielgruppenprofil soll vorausgewählt sein?"
 
 -- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "Wenn diese Option aktiviert ist, können Sie Synonymoptionen im Voraus auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
@@ -4701,6 +4953,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1417
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1462295644"] = "Eine andere Zielsprache auswählen"
 
+-- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1766361623"] = "Wählen Sie, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
+
 -- Assistant: Writing E-Mails Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T2021226503"] = "Assistent: Optionen zum Schreiben von E-Mails"
 
@@ -4710,8 +4965,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T2116
 -- Preselect your name for the closing salutation?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T221974240"] = "Ihren Namen für die Grußformel vorauswählen?"
 
--- Would you like to preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T2221665527"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+-- Preselect a profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T2322771068"] = "Profil vorauswählen"
 
 -- Preselect a writing style
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T28456020"] = "Wähle einen Schreibstil vor"
@@ -4730,9 +4985,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3547
 
 -- Preselect e-mail options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832719342"] = "E-Mail-Optionen vorauswählen?"
-
--- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T4004501229"] = "Eines ihrer Profile vorauswählen?"
 
 -- Save
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1294818664"] = "Speichern"
@@ -4920,6 +5172,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1617786407"] = "Programmieren"
 -- Analyze a text or an email for tasks you need to complete.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analysieren Sie einen Text oder eine E-Mail nach Aufgaben, die Sie erledigen müssen."
 
+-- Slide Assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1883918574"] = "Folienassistent"
+
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Texte zusammenfassen"
 
@@ -4958,6 +5213,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "Meine Aufgaben"
 
 -- E-Mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3026443472"] = "E-Mail"
+
+-- Develop slide content based on a given topic and content.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311912219"] = "Folieninhalte basierend auf einem vorgegebenen Thema und Inhalt erstellen."
 
 -- Translate AI Studio text content into other languages
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3181803840"] = "AI Studio Textinhalte in andere Sprachen übersetzen."
@@ -5691,6 +5949,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3491430707
 -- Install updates automatically
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3569059463"] = "Updates automatisch installieren"
 
+-- Use app default profile
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3587225583"] = "Standardprofil der App verwenden"
+
 -- Disable workspaces
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3612390107"] = "Arbeitsbereiche deaktivieren"
 
@@ -5870,6 +6131,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1546040625"] = "Meine A
 
 -- Grammar & Spelling Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammatik- & Rechtschreib-Assistent"
+
+-- Slide Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1883918574"] = "Folienassistent"
 
 -- Legal Check Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Rechtlichen Prüfungs-Assistent"

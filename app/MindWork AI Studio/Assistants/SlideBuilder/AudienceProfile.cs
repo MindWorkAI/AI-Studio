@@ -1,0 +1,17 @@
+namespace AIStudio.Assistants.SlideBuilder;
+
+public enum AudienceProfile
+{
+    UNSPECIFIED = 0,
+
+    STUDENTS,
+    SCIENTISTS,
+    LAWYERS,
+    INVESTORS,
+    ENGINEERS,
+    SOFTWARE_DEVELOPERS,
+    JOURNALISTS,
+    HEALTHCARE_PROFESSIONALS,
+    PUBLIC_OFFICIALS,
+    BUSINESS_PROFESSIONALS,
+}
