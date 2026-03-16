@@ -72,4 +72,5 @@ internal static class AssistantComponentPropHelper
     public static Wrap? GetWrap(string value) => Enum.TryParse<Wrap>(value, out var wrap) ? wrap : null;
     public static StretchItems? GetStretching(string value) => Enum.TryParse<StretchItems>(value, out var stretch) ? stretch : null;
     public static Breakpoint GetBreakpoint(string value, Breakpoint fallback) => Enum.TryParse<Breakpoint>(value, out var breakpoint) ? breakpoint : fallback;
+    public static PickerVariant GetPickerVariant(string pickerValue, PickerVariant fallback) => Enum.TryParse<PickerVariant>(pickerValue, out var variant) ? variant : fallback;
 }

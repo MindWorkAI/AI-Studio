@@ -403,6 +403,70 @@ else
                     </MudItem>
                 }
                 break;
+            case AssistantComponentType.DATE_PICKER:
+                if (component is AssistantDatePicker assistantDatePicker)
+                {
+                    var datePicker = assistantDatePicker;
+                    var format = datePicker.GetDateFormat();
+
+                    <MudPaper Class="d-flex" Elevation="0">
+                        <MudDatePicker Date="@this.ParseDatePickerValue(this.datePickerFields[datePicker.Name], format)"
+                                       DateChanged="@((DateTime? value) => this.SetDatePickerValue(datePicker.Name, value, format))"
+                                       Label="@datePicker.Label"
+                                       Placeholder="@datePicker.Placeholder"
+                                       HelperText="@datePicker.HelperText"
+                                       DateFormat="@format"
+                                       PickerVariant="@AssistantComponentPropHelper.GetPickerVariant(datePicker.PickerVariant, PickerVariant.Static)"
+                                       Variant="Variant.Outlined"
+                                       Class='@MergeClass(datePicker.Class, "mb-3")'
+                                       Style="@this.GetOptionalStyle(datePicker.Style)"
+                                       />
+                        </MudPaper>
+                }
+                break;
+            case AssistantComponentType.DATE_RANGE_PICKER:
+                if (component is AssistantDateRangePicker assistantDateRangePicker)
+                {
+                    var dateRangePicker = assistantDateRangePicker;
+                    var format = dateRangePicker.GetDateFormat();
+
+                    <MudPaper Class="d-flex" Elevation="0">
+                        <MudDateRangePicker DateRange="@this.ParseDateRangePickerValue(this.dateRangePickerFields[dateRangePicker.Name], format)"
+                                            DateRangeChanged="@(value => this.SetDateRangePickerValue(dateRangePicker.Name, value, format))"
+                                            Label="@dateRangePicker.Label"
+                                            PlaceholderStart="@dateRangePicker.PlaceholderStart"
+                                            PlaceholderEnd="@dateRangePicker.PlaceholderEnd"
+                                            HelperText="@dateRangePicker.HelperText"
+                                            DateFormat="@format"
+                                            PickerVariant="@AssistantComponentPropHelper.GetPickerVariant(dateRangePicker.PickerVariant, PickerVariant.Static)"
+                                            Variant="Variant.Outlined"
+                                            Class='@MergeClass(dateRangePicker.Class, "mb-3")'
+                                            Style="@this.GetOptionalStyle(dateRangePicker.Style)"
+                                            />
+                        </MudPaper>
+                }
+                break;
+            case AssistantComponentType.TIME_PICKER:
+                if (component is AssistantTimePicker assistantTimePicker)
+                {
+                    var timePicker = assistantTimePicker;
+                    var format = timePicker.GetTimeFormat();
+
+                    <MudPaper Class="d-flex" Elevation="0">
+                        <MudTimePicker Time="@this.ParseTimePickerValue(this.timePickerFields[timePicker.Name], format)"
+                                       TimeChanged="@((TimeSpan? value) => this.SetTimePickerValue(timePicker.Name, value, format))"
+                                       Label="@timePicker.Label"
+                                       Placeholder="@timePicker.Placeholder"
+                                       HelperText="@timePicker.HelperText"
+                                       TimeFormat="@format"
+                                       AmPm="@timePicker.AmPm"
+                                       PickerVariant="@AssistantComponentPropHelper.GetPickerVariant(timePicker.PickerVariant, PickerVariant.Static)"
+                                       Variant="Variant.Outlined"
+                                       Class='@MergeClass(timePicker.Class, "mb-3")'
+                                       Style="@this.GetOptionalStyle(timePicker.Style)"/>
+                        </MudPaper>
+                }
+                break;
         }
     </text>;
 

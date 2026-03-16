@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -45,12 +46,18 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private readonly Dictionary<string, WebContentState> webContentFields = new();
     private readonly Dictionary<string, FileContentState> fileContentFields = new();
     private readonly Dictionary<string, string> colorPickerFields = new();
+    private readonly Dictionary<string, string> datePickerFields = new();
+    private readonly Dictionary<string, string> dateRangePickerFields = new();
+    private readonly Dictionary<string, string> timePickerFields = new();
     private readonly Dictionary<string, string> imageCache = new();
     private readonly HashSet<string> executingButtonActions = [];
     private readonly HashSet<string> executingSwitchActions = [];
     private string pluginPath = string.Empty;
     private const string PLUGIN_SCHEME = "plugin://";
     private const string ASSISTANT_QUERY_KEY = "assistantId";
+    private static readonly CultureInfo INVARIANT_CULTURE = CultureInfo.InvariantCulture;
+    private static readonly string[] FALLBACK_DATE_FORMATS = ["yyyy-MM-dd", "dd.MM.yyyy", "MM/dd/yyyy"];
+    private static readonly string[] FALLBACK_TIME_FORMATS = ["HH:mm", "HH:mm:ss", "hh:mm tt", "h:mm tt"];
     
     protected override void OnInitialized()
     {
@@ -135,6 +142,18 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         foreach (var entry in this.colorPickerFields)
         {
             this.colorPickerFields[entry.Key] = string.Empty;
+        }
+        foreach (var entry in this.datePickerFields)
+        {
+            this.datePickerFields[entry.Key] = string.Empty;
+        }
+        foreach (var entry in this.dateRangePickerFields)
+        {
+            this.dateRangePickerFields[entry.Key] = string.Empty;
+        }
+        foreach (var entry in this.timePickerFields)
+        {
+            this.timePickerFields[entry.Key] = string.Empty;
         }
     }
 
@@ -228,6 +247,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         foreach (var entry in this.fileContentFields)
             fields[entry.Key] = entry.Value.Content ?? string.Empty;
         foreach (var entry in this.colorPickerFields)
+            fields[entry.Key] = entry.Value ?? string.Empty;
+        foreach (var entry in this.datePickerFields)
+            fields[entry.Key] = entry.Value ?? string.Empty;
+        foreach (var entry in this.dateRangePickerFields)
+            fields[entry.Key] = entry.Value ?? string.Empty;
+        foreach (var entry in this.timePickerFields)
             fields[entry.Key] = entry.Value ?? string.Empty;
 
         input["fields"] = fields;
@@ -324,6 +349,18 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                 case AssistantComponentType.COLOR_PICKER:
                     if (component is AssistantColorPicker assistantColorPicker && !this.colorPickerFields.ContainsKey(assistantColorPicker.Name))
                         this.colorPickerFields.Add(assistantColorPicker.Name, assistantColorPicker.Placeholder);
+                    break;
+                case AssistantComponentType.DATE_PICKER:
+                    if (component is AssistantDatePicker datePicker && !this.datePickerFields.ContainsKey(datePicker.Name))
+                        this.datePickerFields.Add(datePicker.Name, datePicker.Value);
+                    break;
+                case AssistantComponentType.DATE_RANGE_PICKER:
+                    if (component is AssistantDateRangePicker dateRangePicker && !this.dateRangePickerFields.ContainsKey(dateRangePicker.Name))
+                        this.dateRangePickerFields.Add(dateRangePicker.Name, dateRangePicker.Value);
+                    break;
+                case AssistantComponentType.TIME_PICKER:
+                    if (component is AssistantTimePicker timePicker && !this.timePickerFields.ContainsKey(timePicker.Name))
+                        this.timePickerFields.Add(timePicker.Name, timePicker.Value);
                     break;
             }
 
@@ -473,6 +510,33 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             return;
         }
 
+        if (this.datePickerFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<string>(out var dateValue))
+                this.datePickerFields[fieldName] = dateValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
+            return;
+        }
+
+        if (this.dateRangePickerFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<string>(out var dateRangeValue))
+                this.dateRangePickerFields[fieldName] = dateRangeValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
+            return;
+        }
+
+        if (this.timePickerFields.ContainsKey(fieldName))
+        {
+            if (value.TryRead<string>(out var timeValue))
+                this.timePickerFields[fieldName] = timeValue ?? string.Empty;
+            else
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
+            return;
+        }
+
         if (this.webContentFields.TryGetValue(fieldName, out var webContentState))
         {
             if (value.TryRead<string>(out var webContentValue))
@@ -549,6 +613,15 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                 case AssistantColorPicker colorPicker:
                     this.AddMetaEntry(meta, colorPicker.Name, component.Type, colorPicker.Label, colorPicker.UserPrompt);
                     break;
+                case AssistantDatePicker datePicker:
+                    this.AddMetaEntry(meta, datePicker.Name, component.Type, datePicker.Label, datePicker.UserPrompt);
+                    break;
+                case AssistantDateRangePicker dateRangePicker:
+                    this.AddMetaEntry(meta, dateRangePicker.Name, component.Type, dateRangePicker.Label, dateRangePicker.UserPrompt);
+                    break;
+                case AssistantTimePicker timePicker:
+                    this.AddMetaEntry(meta, timePicker.Name, component.Type, timePicker.Label, timePicker.UserPrompt);
+                    break;
             }
 
             if (component.Children.Count > 0)
@@ -623,6 +696,30 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                             prompt += $"user prompt:{Environment.NewLine}{userInput}";
                     }
                     break;
+                case AssistantComponentType.DATE_PICKER:
+                    if (component is AssistantDatePicker datePicker)
+                    {
+                        prompt += $"context:{Environment.NewLine}{datePicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.datePickerFields.TryGetValue(datePicker.Name, out userInput))
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                    }
+                    break;
+                case AssistantComponentType.DATE_RANGE_PICKER:
+                    if (component is AssistantDateRangePicker dateRangePicker)
+                    {
+                        prompt += $"context:{Environment.NewLine}{dateRangePicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.dateRangePickerFields.TryGetValue(dateRangePicker.Name, out userInput))
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                    }
+                    break;
+                case AssistantComponentType.TIME_PICKER:
+                    if (component is AssistantTimePicker timePicker)
+                    {
+                        prompt += $"context:{Environment.NewLine}{timePicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                        if (this.timePickerFields.TryGetValue(timePicker.Name, out userInput))
+                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
+                    }
+                    break;
             }
 
             if (component.Children.Count > 0)
@@ -662,5 +759,125 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
 
         return parsedValues;
+    }
+
+    private DateTime? ParseDatePickerValue(string? value, string? format)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (TryParseDate(value, format, out var parsedDate))
+            return parsedDate;
+
+        return null;
+    }
+
+    private void SetDatePickerValue(string fieldName, DateTime? value, string? format)
+    {
+        this.datePickerFields[fieldName] = value.HasValue ? FormatDate(value.Value, format) : string.Empty;
+    }
+
+    private DateRange? ParseDateRangePickerValue(string? value, string? format)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var parts = value.Split(" - ", 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+            return null;
+
+        if (!TryParseDate(parts[0], format, out var start) || !TryParseDate(parts[1], format, out var end))
+            return null;
+
+        return new DateRange(start, end);
+    }
+
+    private void SetDateRangePickerValue(string fieldName, DateRange? value, string? format)
+    {
+        if (value?.Start is null || value.End is null)
+        {
+            this.dateRangePickerFields[fieldName] = string.Empty;
+            return;
+        }
+
+        this.dateRangePickerFields[fieldName] = $"{FormatDate(value.Start.Value, format)} - {FormatDate(value.End.Value, format)}";
+    }
+
+    private TimeSpan? ParseTimePickerValue(string? value, string? format)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (TryParseTime(value, format, out var parsedTime))
+            return parsedTime;
+
+        return null;
+    }
+
+    private void SetTimePickerValue(string fieldName, TimeSpan? value, string? format)
+    {
+        this.timePickerFields[fieldName] = value.HasValue ? FormatTime(value.Value, format) : string.Empty;
+    }
+
+    private static bool TryParseDate(string value, string? format, out DateTime parsedDate)
+    {
+        if (!string.IsNullOrWhiteSpace(format) &&
+            DateTime.TryParseExact(value, format, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate))
+        {
+            return true;
+        }
+
+        if (DateTime.TryParseExact(value, FALLBACK_DATE_FORMATS, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate))
+            return true;
+
+        return DateTime.TryParse(value, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate);
+    }
+
+    private static bool TryParseTime(string value, string? format, out TimeSpan parsedTime)
+    {
+        if (!string.IsNullOrWhiteSpace(format) &&
+            DateTime.TryParseExact(value, format, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out var dateTime))
+        {
+            parsedTime = dateTime.TimeOfDay;
+            return true;
+        }
+
+        if (DateTime.TryParseExact(value, FALLBACK_TIME_FORMATS, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out dateTime))
+        {
+            parsedTime = dateTime.TimeOfDay;
+            return true;
+        }
+
+        if (TimeSpan.TryParse(value, INVARIANT_CULTURE, out parsedTime))
+            return true;
+
+        parsedTime = default;
+        return false;
+    }
+
+    private static string FormatDate(DateTime value, string? format)
+    {
+        try
+        {
+            return value.ToString(string.IsNullOrWhiteSpace(format) ? "yyyy-MM-dd" : format, INVARIANT_CULTURE);
+        }
+        catch (FormatException)
+        {
+            return value.ToString("yyyy-MM-dd", INVARIANT_CULTURE);
+        }
+    }
+
+    private static string FormatTime(TimeSpan value, string? format)
+    {
+        var dateTime = DateTime.Today.Add(value);
+
+        try
+        {
+            return dateTime.ToString(string.IsNullOrWhiteSpace(format) ? "HH:mm" : format, INVARIANT_CULTURE);
+        }
+        catch (FormatException)
+        {
+            return dateTime.ToString("HH:mm", INVARIANT_CULTURE);
+        }
     }
 }

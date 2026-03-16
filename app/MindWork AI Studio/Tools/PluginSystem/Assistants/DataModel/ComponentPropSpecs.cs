@@ -81,6 +81,27 @@ public static class ComponentPropSpecs
                     "PickerVariant", "UserPrompt", "Class", "Style"
                 ]
             ),
+            [AssistantComponentType.DATE_PICKER] = new(
+                required: ["Name", "Label"],
+                optional: [
+                    "Value", "Placeholder", "HelperText", "DateFormat",
+                    "PickerVariant", "UserPrompt", "Class", "Style"
+                ]
+            ),
+            [AssistantComponentType.DATE_RANGE_PICKER] = new(
+                required: ["Name", "Label"],
+                optional: [
+                    "Value", "PlaceholderStart", "PlaceholderEnd", "HelperText", "DateFormat",
+                    "PickerVariant", "UserPrompt", "Class", "Style"
+                ]
+            ),
+            [AssistantComponentType.TIME_PICKER] = new(
+                required: ["Name", "Label"],
+                optional: [
+                    "Value", "Placeholder", "HelperText", "TimeFormat", "AmPm",
+                    "PickerVariant", "UserPrompt", "Class", "Style"
+                ]
+            ),
             [AssistantComponentType.LAYOUT_ITEM] = new(
                 required: ["Name"],
                 optional: ["Xs", "Sm", "Md", "Lg", "Xl", "Xxl", "Class", "Style"]

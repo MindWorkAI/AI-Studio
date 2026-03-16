@@ -17,6 +17,9 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
     - [`BUTTON_GROUP` reference](#button_group-reference)
     - [`SWITCH` reference](#switch-reference)
     - [`COLOR_PICKER` reference](#color_picker-reference)
+    - [`DATE_PICKER` reference](#date_picker-reference)
+    - [`DATE_RANGE_PICKER` reference](#date_range_picker-reference)
+    - [`TIME_PICKER` reference](#time_picker-reference)
   - [Prompt Assembly - UserPrompt Property](#prompt-assembly---userprompt-property)
   - [Advanced Prompt Assembly - BuildPrompt()](#advanced-prompt-assembly---buildprompt)
     - [Interface](#interface)
@@ -100,6 +103,9 @@ ASSISTANT = {
 - `LAYOUT_ACCORDION_SECTION`: renders a `MudExpansionPanel`; requires `Name`, `HeaderText`, and may include `IsDisabled`, `IsExpanded`, `IsDense`, `HasInnerPadding`, `HideIcon`, `HeaderIcon`, `HeaderColor`, `HeaderTypo`, `HeaderAlign`, `MaxHeight`, `ExpandIcon`, `Class`, `Style`.
 - `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`.
 - `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `DATE_PICKER`: date input based on `MudDatePicker`; requires `Name`, `Label`, and may include `Value`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `DATE_RANGE_PICKER`: date range input based on `MudDateRangePicker`; requires `Name`, `Label`, and may include `Value`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `TIME_PICKER`: time input based on `MudTimePicker`; requires `Name`, `Label`, and may include `Value`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
 - `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
 - `FILE_CONTENT_READER`: renders `ReadFileContent`; include `Name`, `UserPrompt`.
@@ -119,6 +125,9 @@ Images referenced via the `plugin://` scheme must exist in the plugin directory 
 | `FILE_CONTENT_READER`      | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadFileContent.razor)         |
 | `WEB_CONTENT_READER`       | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)          |
 | `COLOR_PICKER`             | `Name`, `Label`                     | `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                                  |
+| `DATE_PICKER`              | `Name`, `Label`                     | `Value`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                                  | [MudDatePicker](https://www.mudblazor.com/components/datepicker)                                                                    |
+| `DATE_RANGE_PICKER`        | `Name`, `Label`                     | `Value`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                           | [MudDateRangePicker](https://www.mudblazor.com/components/daterangepicker)                                                          |
+| `TIME_PICKER`              | `Name`, `Label`                     | `Value`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                          | [MudTimePicker](https://www.mudblazor.com/components/timepicker)                                                                    |
 | `HEADING`                  | `Text`                              | `Level`                                                                                                                                                                                                              | [MudText Typo="Typo.<h2\|h3\|h4\|h5\|h6>"](https://www.mudblazor.com/components/typography)                                         |
 | `TEXT`                     | `Content`                           | `None`                                                                                                                                                                                                               | [MudText Typo="Typo.body1"](https://www.mudblazor.com/components/typography)                                                        |
 | `LIST`                     | `Type`, `Text`                      | `Href`                                                                                                                                                                                                               | [MudList](https://www.mudblazor.com/componentss/list)                                                                               |
@@ -265,7 +274,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 - To update component state, return a table with a `fields` table.
 - `fields` keys must reference existing component `Name` values.
 - Supported write targets:
-  - `TEXT_AREA`, single-select `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`: string values
+  - `TEXT_AREA`, single-select `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`: string values
   - multiselect `DROPDOWN`: array-like Lua table of strings
   - `SWITCH`: boolean values
 - Unknown field names and wrong value types are ignored and logged.
@@ -470,6 +479,109 @@ More information on rendered components can be found [here](https://www.mudblazo
 }
 ```
 
+---
+
+### `DATE_PICKER` reference
+- Use `Type = "DATE_PICKER"` to render a MudBlazor date picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Value`: initial date string. Use the same format as `DateFormat`; default recommendation is `yyyy-MM-dd`.
+  - `Placeholder`: hint text shown before a date is selected.
+  - `HelperText`: helper text rendered below the picker.
+  - `DateFormat`: output and parsing format; defaults to `yyyy-MM-dd`.
+  - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
+  - `UserPrompt`: prompt context text for the selected date.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example DatePicker component
+```lua
+{
+  ["Type"] = "DATE_PICKER",
+  ["Props"] = {
+    ["Name"] = "deadline",
+    ["Label"] = "Deadline",
+    ["Value"] = "2026-03-31",
+    ["Placeholder"] = "YYYY-MM-DD",
+    ["HelperText"] = "Pick the target completion date.",
+    ["DateFormat"] = "yyyy-MM-dd",
+    ["PickerVariant"] = "Dialog",
+    ["UserPrompt"] = "Use this as the relevant deadline."
+  }
+}
+```
+
+---
+
+### `DATE_RANGE_PICKER` reference
+- Use `Type = "DATE_RANGE_PICKER"` to render a MudBlazor date range picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Value`: initial range string using `<start> - <end>`, for example `2026-03-01 - 2026-03-31`.
+  - `PlaceholderStart`: hint text for the start date input.
+  - `PlaceholderEnd`: hint text for the end date input.
+  - `HelperText`: helper text rendered below the picker.
+  - `DateFormat`: output and parsing format for both dates; defaults to `yyyy-MM-dd`.
+  - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
+  - `UserPrompt`: prompt context text for the selected date range.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example DateRangePicker component
+```lua
+{
+  ["Type"] = "DATE_RANGE_PICKER",
+  ["Props"] = {
+    ["Name"] = "travelWindow",
+    ["Label"] = "Travel window",
+    ["Value"] = "2026-06-01 - 2026-06-07",
+    ["PlaceholderStart"] = "Start date",
+    ["PlaceholderEnd"] = "End date",
+    ["HelperText"] = "Select the full period.",
+    ["DateFormat"] = "yyyy-MM-dd",
+    ["PickerVariant"] = "Dialog",
+    ["UserPrompt"] = "Use this as the allowed date range."
+  }
+}
+```
+
+---
+
+### `TIME_PICKER` reference
+- Use `Type = "TIME_PICKER"` to render a MudBlazor time picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Value`: initial time string. Use the same format as `TimeFormat`; default recommendations are `HH:mm` or `hh:mm tt`.
+  - `Placeholder`: hint text shown before a time is selected.
+  - `HelperText`: helper text rendered below the picker.
+  - `TimeFormat`: output and parsing format; defaults to `HH:mm`, or `hh:mm tt` when `AmPm = true`.
+  - `AmPm`: defaults to `false`; toggles 12-hour mode.
+  - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
+  - `UserPrompt`: prompt context text for the selected time.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example TimePicker component
+```lua
+{
+  ["Type"] = "TIME_PICKER",
+  ["Props"] = {
+    ["Name"] = "meetingTime",
+    ["Label"] = "Meeting time",
+    ["Value"] = "14:30",
+    ["Placeholder"] = "HH:mm",
+    ["HelperText"] = "Pick the preferred meeting time.",
+    ["TimeFormat"] = "HH:mm",
+    ["AmPm"] = false,
+    ["PickerVariant"] = "Dialog",
+    ["UserPrompt"] = "Use this as the preferred time."
+  }
+}
+```
+
 ## Prompt Assembly - UserPrompt Property
 Each component exposes a `UserPrompt` string. When the assistant runs, `AssistantDynamic` recursively iterates over the component tree and, for each component that has a prompt, emits:
 
@@ -481,7 +593,7 @@ user prompt:
 <value extracted from the component>
 ```
 
-For switches the “value” is the boolean `true/false`; for readers it is the fetched/selected content; for color pickers it is the selected color text (for example `#FFAA00` or `rgba(...)`, depending on the picker mode). Always provide a meaningful `UserPrompt` so the final concatenated prompt remains coherent from the LLM’s perspective.
+For switches the “value” is the boolean `true/false`; for readers it is the fetched/selected content; for color pickers it is the selected color text (for example `#FFAA00` or `rgba(...)`, depending on the picker mode); for date and time pickers it is the formatted date, date range, or time string. Always provide a meaningful `UserPrompt` so the final concatenated prompt remains coherent from the LLM’s perspective.
 
 ## Advanced Prompt Assembly - BuildPrompt()
 If you want full control over prompt composition, define `ASSISTANT.BuildPrompt` as a Lua function. When present, AI Studio calls it and uses its return value as the final user prompt. The default prompt assembly is skipped.
@@ -499,8 +611,11 @@ The function receives a single `input` Lua table with:
   - Multiselect dropdown is an array-like Lua table of strings
   - Switch is a boolean
   - Color picker is the selected color as a string
+  - Date picker is the selected date as a string
+  - Date range picker is the selected range as a single string in `<start> - <end>` format
+  - Time picker is the selected time as a string
 - `input.meta`: per-component metadata keyed by component `Name`
-  - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`, `COLOR_PICKER`)
+  - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`)
   - `Label` (string, when provided)
   - `UserPrompt` (string, when provided)
 - `input.profile`: selected profile data
@@ -514,7 +629,7 @@ input = {
   },
   meta = {
     ["<Name>"] = {
-      Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER|COLOR_PICKER>",
+      Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER|COLOR_PICKER|DATE_PICKER|DATE_RANGE_PICKER|TIME_PICKER>",
       Label = "<string?>",
       UserPrompt = "<string?>"
     },
@@ -558,6 +673,12 @@ ASSISTANT.BuildPrompt = function(input)
     if meta.Type == "SWITCH" then
       table.insert(parts, name .. ": " .. tostring(value))
     elseif meta.Type == "COLOR_PICKER" and value and value ~= "" then
+      table.insert(parts, name .. ": " .. value)
+    elseif meta.Type == "DATE_PICKER" and value and value ~= "" then
+      table.insert(parts, name .. ": " .. value)
+    elseif meta.Type == "DATE_RANGE_PICKER" and value and value ~= "" then
+      table.insert(parts, name .. ": " .. value)
+    elseif meta.Type == "TIME_PICKER" and value and value ~= "" then
       table.insert(parts, name .. ": " .. value)
     elseif value and value ~= "" then
       table.insert(parts, name .. ": " .. value)
@@ -874,6 +995,10 @@ Use `LAYOUT_ACCORDION` as the outer wrapper and put the actual content into one 
 - [Mathematical Functions Library](https://www.lua.org/manual/5.2/manual.html#6.6)
 - [Bitwise Operations Library](https://www.lua.org/manual/5.2/manual.html#6.7)
 ---
+
+> **Warning:** some common lua functions might not be available in this lua environment. Examples are:
+> 1. `tostring()`
+> 2. `pairs()`\\`ipairs()`
 
 ### Logging helpers
 The assistant runtime exposes basic logging helpers to Lua. Use them to debug custom prompt building.

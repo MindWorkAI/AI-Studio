@@ -343,6 +343,53 @@ ASSISTANT = {
                     ["UserPrompt"] = "<help text reminding the user what kind of file they should load>",
                 }
             },
+            {
+                ["Type"] = "DATE_PICKER",
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["Value"] = "2026-03-16", -- optional initial value
+                    ["Placeholder"] = "YYYY-MM-DD",
+                    ["HelperText"] = "<optional help text rendered under the picker>",
+                    ["DateFormat"] = "yyyy-MM-dd",
+                    ["PickerVariant"] = "<Dialog|Inline|Static>",
+                    ["UserPrompt"] = "<prompt context for the selected date>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                }
+            },
+            {
+                ["Type"] = "DATE_RANGE_PICKER",
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["Value"] = "2026-03-16 - 2026-03-20", -- optional initial range
+                    ["PlaceholderStart"] = "Start date",
+                    ["PlaceholderEnd"] = "End date",
+                    ["HelperText"] = "<optional help text rendered under the picker>",
+                    ["DateFormat"] = "yyyy-MM-dd",
+                    ["PickerVariant"] = "<Dialog|Inline|Static>",
+                    ["UserPrompt"] = "<prompt context for the selected date range>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                }
+            },
+            {
+                ["Type"] = "TIME_PICKER",
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Label"] = "<heading of your component>", -- required
+                    ["Value"] = "14:30", -- optional initial time
+                    ["Placeholder"] = "HH:mm",
+                    ["HelperText"] = "<optional help text rendered under the picker>",
+                    ["TimeFormat"] = "HH:mm",
+                    ["AmPm"] = false,
+                    ["PickerVariant"] = "<Dialog|Inline|Static>",
+                    ["UserPrompt"] = "<prompt context for the selected time>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                }
+            },
         }
     },
 }

@@ -44,6 +44,12 @@ public class AssistantComponentFactory
                 return new AssistantImage { Props = props, Children = children };
             case AssistantComponentType.COLOR_PICKER:
                 return new AssistantColorPicker { Props = props, Children = children };
+            case AssistantComponentType.DATE_PICKER:
+                return new AssistantDatePicker { Props = props, Children = children };
+            case AssistantComponentType.DATE_RANGE_PICKER:
+                return new AssistantDateRangePicker { Props = props, Children = children };
+            case AssistantComponentType.TIME_PICKER:
+                return new AssistantTimePicker { Props = props, Children = children };
             case AssistantComponentType.LAYOUT_ITEM:
                 return new AssistantItem { Props = props, Children = children };
             case AssistantComponentType.LAYOUT_GRID:
