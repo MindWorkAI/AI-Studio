@@ -1,9 +1,7 @@
-@using AIStudio.Settings.DataModel
-
 @namespace AIStudio.Components
 @inherits MSGComponentBase
 
-@if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager) && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
+@if (this.ShouldRenderVoiceRecording)
 {
     <MudTooltip Text="@this.Tooltip">
         @if (this.isTranscribing || this.isPreparing)
@@ -16,6 +14,7 @@
                                  ToggledChanged="@this.OnRecordingToggled"
                                  Icon="@Icons.Material.Filled.Mic"
                                  ToggledIcon="@Icons.Material.Filled.Stop"
+                                 Disabled="@(!this.IsVoiceRecordingAvailable)"
                                  Color="Color.Primary"
                                  ToggledColor="Color.Error"/>
         }
