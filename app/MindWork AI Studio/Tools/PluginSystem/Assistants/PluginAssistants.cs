@@ -146,13 +146,23 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     public async Task<LuaTable?> TryInvokeButtonActionAsync(AssistantButton button, LuaTable input, CancellationToken cancellationToken = default)
     {
-        if (button.Action is null)
+        return await this.TryInvokeComponentCallbackAsync(button.Action, AssistantComponentType.BUTTON, button.Name, input, cancellationToken);
+    }
+
+    public async Task<LuaTable?> TryInvokeSwitchChangedAsync(AssistantSwitch switchComponent, LuaTable input, CancellationToken cancellationToken = default)
+    {
+        return await this.TryInvokeComponentCallbackAsync(switchComponent.OnChanged, AssistantComponentType.SWITCH, switchComponent.Name, input, cancellationToken);
+    }
+
+    private async Task<LuaTable?> TryInvokeComponentCallbackAsync(LuaFunction? callback, AssistantComponentType componentType, string componentName, LuaTable input, CancellationToken cancellationToken = default)
+    {
+        if (callback is null)
             return null;
 
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var results = await this.state.CallAsync(button.Action, [input]);
+            var results = await this.state.CallAsync(callback, [input]);
             if (results.Length == 0)
                 return null;
 
@@ -162,12 +172,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             if (results[0].TryRead<LuaTable>(out var updateTable))
                 return updateTable;
 
-            LOGGER.LogWarning("Assistant plugin '{PluginName}' BUTTON '{ButtonName}' returned a non-table value. The result is ignored.", this.Name, button.Name);
+            LOGGER.LogWarning("Assistant plugin '{PluginName}' {ComponentType} '{ComponentName}' callback returned a non-table value. The result is ignored.", this.Name, componentType, componentName);
             return null;
         }
         catch (Exception e)
         {
-            LOGGER.LogError(e, "Assistant plugin '{PluginName}' BUTTON '{ButtonName}' action failed to execute.", this.Name, button.Name);
+            LOGGER.LogError(e, "Assistant plugin '{PluginName}' {ComponentType} '{ComponentName}' callback failed to execute.", this.Name, componentType, componentName);
             return null;
         }
     }

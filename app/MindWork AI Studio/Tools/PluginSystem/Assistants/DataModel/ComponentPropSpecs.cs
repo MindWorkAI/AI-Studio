@@ -20,7 +20,7 @@ public static class ComponentPropSpecs
             [AssistantComponentType.BUTTON] = new(
                 required: ["Name", "Text", "Action"],
                 optional: [
-                    "Variant", "Color", "IsFullWidth", "Size",
+                    "IsIconButton", "Variant", "Color", "IsFullWidth", "Size",
                     "StartIcon", "EndIcon", "IconColor", "IconSize",  "Class", "Style"
                 ]
             ),
@@ -46,7 +46,7 @@ public static class ComponentPropSpecs
             [AssistantComponentType.SWITCH] = new(
                 required: ["Name", "Label", "Value"],
                 optional: [ 
-                    "LabelOn", "LabelOff", "LabelPlacement", "Icon", "IconColor", "UserPrompt", 
+                    "OnChanged", "LabelOn", "LabelOff", "LabelPlacement", "Icon", "IconColor", "UserPrompt", 
                     "CheckedColor", "UncheckedColor", "Disabled", "Class", "Style",
                 ]
             ),

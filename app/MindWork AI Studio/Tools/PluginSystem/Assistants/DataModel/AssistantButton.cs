@@ -19,6 +19,12 @@ public sealed class AssistantButton : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Text));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Text), value);
     }
+    
+    public bool IsIconButton
+    {
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsIconButton), false);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsIconButton), value);
+    }
 
     public LuaFunction? Action
     {

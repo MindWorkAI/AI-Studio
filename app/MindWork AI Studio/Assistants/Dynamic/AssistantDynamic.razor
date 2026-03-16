@@ -129,22 +129,47 @@
                 if (component is AssistantButton assistantButton)
                 {
                     var button = assistantButton;
-                    <div>
-                        <MudButton Variant="@button.GetButtonVariant()"
-                                   Color="@AssistantComponentPropHelper.GetColor(button.Color, Color.Default)"
-                                   OnClick="@(() => this.ExecuteButtonActionAsync(button))"
-                                   Size="@AssistantComponentPropHelper.GetComponentSize(button.Size, Size.Medium)"
-                                   FullWidth="@button.IsFullWidth"
-                                   StartIcon="@AssistantComponentPropHelper.GetIconSvg(button.StartIcon)"
-                                   EndIcon="@AssistantComponentPropHelper.GetIconSvg(button.EndIcon)"
-                                   IconColor="@AssistantComponentPropHelper.GetColor(button.IconColor, Color.Inherit)"
-                                   IconSize="@AssistantComponentPropHelper.GetComponentSize(button.IconSize, Size.Medium)"
-                                   Disabled="@this.IsButtonActionRunning(button.Name)"
-                                   Class='@MergeClass(button.Class, "mb-3")'
-                                   Style="@this.GetOptionalStyle(button.Style)">
-                            @button.Text
-                        </MudButton>
-                    </div>
+                    var icon = AssistantComponentPropHelper.GetIconSvg(button.StartIcon);
+                    var iconColor = AssistantComponentPropHelper.GetColor(button.IconColor, Color.Inherit);
+                    var color = AssistantComponentPropHelper.GetColor(button.Color, Color.Default);
+                    var size = AssistantComponentPropHelper.GetComponentSize(button.Size, Size.Medium);
+                    var iconSize = AssistantComponentPropHelper.GetComponentSize(button.IconSize, Size.Medium);
+                    var variant = button.GetButtonVariant();
+                    var disabled = this.IsButtonActionRunning(button.Name);
+                    var buttonClass = MergeClass(button.Class, "mb-3");
+                    var style = this.GetOptionalStyle(button.Style);
+                    
+                    if (!button.IsIconButton)
+                    {
+                        <div>
+                            <MudButton Variant="@variant"
+                                       Color="@color"
+                                       OnClick="@(() => this.ExecuteButtonActionAsync(button))"
+                                       Size="@size"
+                                       FullWidth="@button.IsFullWidth"
+                                       StartIcon="@icon"
+                                       EndIcon="@AssistantComponentPropHelper.GetIconSvg(button.EndIcon)"
+                                       IconColor="@iconColor"
+                                       IconSize="@iconSize"
+                                       Disabled="@disabled"
+                                       Class="@buttonClass"
+                                       Style="@style">
+                                @button.Text
+                            </MudButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@icon"
+                                       Color="@color"
+                                       Variant="@variant"
+                                       Size="@size"
+                                       OnClick="@(() => this.ExecuteButtonActionAsync(button))"
+                                       Disabled="@disabled"
+                                       Class="@buttonClass"
+                                       Style="@style" />
+                    }
+                    
                 }
                 break;
             case AssistantComponentType.BUTTON_GROUP:
@@ -281,16 +306,17 @@
                 {
                     var assistantSwitch = switchComponent;
                     var currentValue = this.switchFields[assistantSwitch.Name];
-                    <MudField Label="@assistantSwitch.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@assistantSwitch.Disabled">
+                    var disabled = assistantSwitch.Disabled || this.IsSwitchActionRunning(assistantSwitch.Name);
+                    <MudField Label="@assistantSwitch.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@disabled">
                         <MudSwitch T="bool"
                                    Value="@currentValue"
-                                   ValueChanged="@((bool value) => this.switchFields[assistantSwitch.Name] = value)"
+                                   ValueChanged="@((bool value) => this.ExecuteSwitchChangedAsync(assistantSwitch, value))"
                                    LabelPlacement="@assistantSwitch.GetLabelPlacement()"
                                    Color="@assistantSwitch.GetColor(assistantSwitch.CheckedColor)"
                                    UncheckedColor="@assistantSwitch.GetColor(assistantSwitch.UncheckedColor)"
                                    ThumbIcon="@assistantSwitch.GetIconSvg()"
                                    ThumbIconColor="@assistantSwitch.GetColor(assistantSwitch.IconColor)"
-                                   Disabled="@assistantSwitch.Disabled"
+                                   Disabled="@disabled"
                                    Class="@assistantSwitch.Class"
                                    Style="@this.GetOptionalStyle(assistantSwitch.Style)">
                             @(currentValue ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)

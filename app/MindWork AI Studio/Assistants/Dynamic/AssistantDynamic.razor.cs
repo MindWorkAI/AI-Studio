@@ -50,6 +50,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private readonly Dictionary<string, string> colorPickerFields = new();
     private readonly Dictionary<string, string> imageCache = new();
     private readonly HashSet<string> executingButtonActions = [];
+    private readonly HashSet<string> executingSwitchActions = [];
     private string pluginPath = string.Empty;
     private const string PLUGIN_SCHEME = "plugin://";
     private const string ASSISTANT_QUERY_KEY = "assistantId";
@@ -348,6 +349,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
 
     private bool IsButtonActionRunning(string buttonName) => this.executingButtonActions.Contains(buttonName);
+    private bool IsSwitchActionRunning(string switchName) => this.executingSwitchActions.Contains(switchName);
 
     private async Task ExecuteButtonActionAsync(AssistantButton button)
     {
@@ -363,7 +365,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             var cancellationToken = this.cancellationTokenSource?.Token ?? CancellationToken.None;
             var result = await this.assistantPlugin.TryInvokeButtonActionAsync(button, input, cancellationToken);
             if (result is not null)
-                this.ApplyButtonActionResult(result);
+                this.ApplyActionResult(result, AssistantComponentType.BUTTON);
         }
         finally
         {
@@ -372,14 +374,45 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
     }
 
-    private void ApplyButtonActionResult(LuaTable result)
+    private async Task ExecuteSwitchChangedAsync(AssistantSwitch switchComponent, bool value)
+    {
+        if (string.IsNullOrWhiteSpace(switchComponent.Name))
+            return;
+
+        this.switchFields[switchComponent.Name] = value;
+
+        if (this.assistantPlugin is null || switchComponent.OnChanged is null)
+        {
+            await this.InvokeAsync(this.StateHasChanged);
+            return;
+        }
+
+        if (!this.executingSwitchActions.Add(switchComponent.Name))
+            return;
+
+        try
+        {
+            var input = this.BuildPromptInput();
+            var cancellationToken = this.cancellationTokenSource?.Token ?? CancellationToken.None;
+            var result = await this.assistantPlugin.TryInvokeSwitchChangedAsync(switchComponent, input, cancellationToken);
+            if (result is not null)
+                this.ApplyActionResult(result, AssistantComponentType.SWITCH);
+        }
+        finally
+        {
+            this.executingSwitchActions.Remove(switchComponent.Name);
+            await this.InvokeAsync(this.StateHasChanged);
+        }
+    }
+
+    private void ApplyActionResult(LuaTable result, AssistantComponentType sourceType)
     {
         if (!result.TryGetValue("fields", out var fieldsValue))
             return;
 
         if (!fieldsValue.TryRead<LuaTable>(out var fieldsTable))
         {
-            this.Logger.LogWarning("Assistant BUTTON action returned a non-table 'fields' value. The result is ignored.");
+            this.Logger.LogWarning("Assistant {ComponentType} callback returned a non-table 'fields' value. The result is ignored.", sourceType);
             return;
         }
 
@@ -388,18 +421,18 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             if (!pair.Key.TryRead<string>(out var fieldName) || string.IsNullOrWhiteSpace(fieldName))
                 continue;
 
-            this.TryApplyFieldUpdate(fieldName, pair.Value);
+            this.TryApplyFieldUpdate(fieldName, pair.Value, sourceType);
         }
     }
 
-    private void TryApplyFieldUpdate(string fieldName, LuaValue value)
+    private void TryApplyFieldUpdate(string fieldName, LuaValue value, AssistantComponentType sourceType)
     {
         if (this.inputFields.ContainsKey(fieldName))
         {
             if (value.TryRead<string>(out var textValue))
                 this.inputFields[fieldName] = textValue ?? string.Empty;
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
             return;
         }
 
@@ -408,7 +441,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             if (value.TryRead<string>(out var dropdownValue))
                 this.dropdownFields[fieldName] = dropdownValue ?? string.Empty;
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
             return;
         }
 
@@ -419,7 +452,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             else if (value.TryRead<string>(out var singleDropdownValue))
                 this.multiselectDropdownFields[fieldName] = string.IsNullOrWhiteSpace(singleDropdownValue) ? [] : [singleDropdownValue];
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string[]");
+                this.LogFieldUpdateTypeMismatch(fieldName, "string[]", sourceType);
             return;
         }
 
@@ -428,7 +461,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             if (value.TryRead<bool>(out var boolValue))
                 this.switchFields[fieldName] = boolValue;
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "boolean");
+                this.LogFieldUpdateTypeMismatch(fieldName, "boolean", sourceType);
             return;
         }
 
@@ -437,7 +470,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             if (value.TryRead<string>(out var colorValue))
                 this.colorPickerFields[fieldName] = colorValue ?? string.Empty;
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
             return;
         }
 
@@ -446,7 +479,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             if (value.TryRead<string>(out var webContentValue))
                 webContentState.Content = webContentValue ?? string.Empty;
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
             return;
         }
 
@@ -455,16 +488,16 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             if (value.TryRead<string>(out var fileContentValue))
                 fileContentState.Content = fileContentValue ?? string.Empty;
             else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string");
+                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
             return;
         }
 
-        this.Logger.LogWarning("Assistant BUTTON action tried to update unknown field '{FieldName}'. The value is ignored.", fieldName);
+        this.Logger.LogWarning("Assistant {ComponentType} callback tried to update unknown field '{FieldName}'. The value is ignored.", sourceType, fieldName);
     }
 
-    private void LogFieldUpdateTypeMismatch(string fieldName, string expectedType)
+    private void LogFieldUpdateTypeMismatch(string fieldName, string expectedType, AssistantComponentType sourceType)
     {
-        this.Logger.LogWarning("Assistant BUTTON action tried to write an invalid value to '{FieldName}'. Expected {ExpectedType}.", fieldName, expectedType);
+        this.Logger.LogWarning("Assistant {ComponentType} callback tried to write an invalid value to '{FieldName}'. Expected {ExpectedType}.", sourceType, fieldName, expectedType);
     }
 
     private EventCallback<HashSet<string>> CreateMultiselectDropdownChangedCallback(string fieldName) =>

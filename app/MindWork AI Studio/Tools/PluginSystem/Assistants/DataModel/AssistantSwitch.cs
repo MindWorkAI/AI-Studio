@@ -1,8 +1,9 @@
 using AIStudio.Tools.PluginSystem.Assistants.Icons;
+using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantSwitch : AssistantComponentBase
+public sealed class AssistantSwitch : AssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.SWITCH;
     public override Dictionary<string, object> Props { get; set; } = new();
@@ -36,6 +37,12 @@ internal sealed class AssistantSwitch : AssistantComponentBase
     {
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
+    }
+    
+    public LuaFunction? OnChanged
+    {
+        get => this.Props.TryGetValue(nameof(this.OnChanged), out var value) && value is LuaFunction onChanged ? onChanged : null;
+        set => AssistantComponentPropHelper.WriteObject(this.Props, nameof(this.OnChanged), value);
     }
 
     public string LabelOn
