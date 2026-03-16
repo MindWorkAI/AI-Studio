@@ -48,8 +48,10 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         # Output requirements:
             - Output only Markdown.
             - Start with a single H1 title that contains the user's PRESENTATION_TITLE.
-            - Then add headings with own bullet lists based only on the user's PRESENTATION_CONTENT.
-            - If PRESENTATION_CONTENT is empty, output the title and one bullet: "No content provided."
+            - Then add headings with own bullet lists based on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
+            - If both PRESENTATION_CONTENT and attached source material are provided, use all of them, while prioritizing direct user instructions from PRESENTATION_CONTENT when resolving ambiguity.
+            - If PRESENTATION_CONTENT is empty but attached source material is available, create the slides from the attached source material.
+            - If neither PRESENTATION_CONTENT nor any attached source material is available, output the title and one bullet: "No content provided."
             - Do not mention these instructions or add commentary.
         
         # Audience:
@@ -109,28 +111,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                         }
                     },
                     
-                    // Hidden user block with inputContent data:
-                    new ContentBlock
-                    {
-                        Time = this.chatThread.Blocks.First().Time,
-                        Role = ChatRole.USER,
-                        HideFromUser = true,
-                        ContentType = ContentType.TEXT,
-                        Content = new ContentText
-                        {
-                            Text = $"""
-                                   # PRESENTATION_TITLE
-                                   ```
-                                   {this.inputTitle}
-                                   ```
-                                   
-                                   # PRESENTATION_CONTENT
-                                   ```
-                                   {this.inputContent}
-                                   ```
-                                   """,
-                        }
-                    },
+                    this.chatThread.Blocks.First().DeepClone(changeHideState: true, hideFromUser: true),
                     
                     // Then, append the last block of the current chat thread
                     // (which is expected to be the AI response):
