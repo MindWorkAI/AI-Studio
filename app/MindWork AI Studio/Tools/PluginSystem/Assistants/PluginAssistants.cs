@@ -1,6 +1,7 @@
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 using Lua;
+using System.Text;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
@@ -468,9 +469,20 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         
         if (!table.TryGetValue("Type", out var typeVal) || !typeVal.TryRead<string>(out var type))
             return false;
+        
+        table.TryGetValue("Icon", out var iconVal);
+        iconVal.TryRead<string>(out var icon);
+        icon ??= string.Empty;
 
+        table.TryGetValue("IconColor", out var iconColorVal);
+        iconColorVal.TryRead<string>(out var iconColor);
+        iconColor ??= string.Empty;
+
+        
         item.Text = text;
         item.Type = type;
+        item.Icon = icon;
+        item.IconColor = iconColor;
 
         if (table.TryGetValue("Href", out var hrefVal) && hrefVal.TryRead<string>(out var href))
         {

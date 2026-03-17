@@ -20,7 +20,22 @@ else
 }
 
 @code {
-    private RenderFragment RenderChildren(IEnumerable<IAssistantComponent> children) => @<text>
+    private RenderFragment RenderSwitch(AssistantSwitch assistantSwitch) => @<MudSwitch T="bool"
+                Value="@switchFields[assistantSwitch.Name]"
+                ValueChanged="@((bool value) => ExecuteSwitchChangedAsync(assistantSwitch, value))"
+                LabelPlacement="@assistantSwitch.GetLabelPlacement()"
+                Color="@assistantSwitch.GetColor(assistantSwitch.CheckedColor)"
+                UncheckedColor="@assistantSwitch.GetColor(assistantSwitch.UncheckedColor)"
+                ThumbIcon="@assistantSwitch.GetIconSvg()"
+                ThumbIconColor="@assistantSwitch.GetColor(assistantSwitch.IconColor)"
+                Disabled="@(assistantSwitch.Disabled || IsSwitchActionRunning(assistantSwitch.Name))"
+                Class="@assistantSwitch.Class"
+                Style="@GetOptionalStyle(assistantSwitch.Style)">
+        @(switchFields[assistantSwitch.Name] ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)
+    </MudSwitch>;
+}
+
+@code {private RenderFragment RenderChildren(IEnumerable<IAssistantComponent> children) => @<text>
         @foreach (var child in children)
         {
             @this.RenderComponent(child)
@@ -145,12 +160,11 @@ else
                     var iconSize = AssistantComponentPropHelper.GetComponentSize(button.IconSize, Size.Medium);
                     var variant = button.GetButtonVariant();
                     var disabled = this.IsButtonActionRunning(button.Name);
-                    var buttonClass = MergeClass(button.Class, "mb-3");
+                    var buttonClass = MergeClass(button.Class, "");
                     var style = this.GetOptionalStyle(button.Style);
                     
                     if (!button.IsIconButton)
                     {
-                        <div>
                             <MudButton Variant="@variant"
                                        Color="@color"
                                        OnClick="@(() => this.ExecuteButtonActionAsync(button))"
@@ -165,7 +179,6 @@ else
                                        Style="@style">
                                 @button.Text
                             </MudButton>
-                        </div>
                     }
                     else
                     {
@@ -314,23 +327,17 @@ else
                 if (component is AssistantSwitch switchComponent)
                 {
                     var assistantSwitch = switchComponent;
-                    var currentValue = this.switchFields[assistantSwitch.Name];
-                    var disabled = assistantSwitch.Disabled || this.IsSwitchActionRunning(assistantSwitch.Name);
-                    <MudField Label="@assistantSwitch.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@disabled">
-                        <MudSwitch T="bool"
-                                   Value="@currentValue"
-                                   ValueChanged="@((bool value) => this.ExecuteSwitchChangedAsync(assistantSwitch, value))"
-                                   LabelPlacement="@assistantSwitch.GetLabelPlacement()"
-                                   Color="@assistantSwitch.GetColor(assistantSwitch.CheckedColor)"
-                                   UncheckedColor="@assistantSwitch.GetColor(assistantSwitch.UncheckedColor)"
-                                   ThumbIcon="@assistantSwitch.GetIconSvg()"
-                                   ThumbIconColor="@assistantSwitch.GetColor(assistantSwitch.IconColor)"
-                                   Disabled="@disabled"
-                                   Class="@assistantSwitch.Class"
-                                   Style="@this.GetOptionalStyle(assistantSwitch.Style)">
-                            @(currentValue ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)
-                        </MudSwitch>
-                    </MudField>
+                    
+                    if (string.IsNullOrEmpty(assistantSwitch.Label))
+                    {
+                        @this.RenderSwitch(assistantSwitch)
+                    }
+                    else
+                    {
+                        <MudField Label="@assistantSwitch.Label" Variant="Variant.Outlined" Class="mb-3" Disabled="@assistantSwitch.Disabled">
+                            @this.RenderSwitch(assistantSwitch)
+                        </MudField> 
+                    }
                 }
                 break;
             case AssistantComponentType.HEADING:
@@ -368,13 +375,16 @@ else
                     <MudList T="string" Class='@MergeClass(list.Class, "mb-6")' Style="@this.GetOptionalStyle(list.Style)">
                         @foreach (var item in list.Items)
                         {
+                            var iconColor = AssistantComponentPropHelper.GetColor(item.IconColor, Color.Default);
+                            
                             @if (item.Type == "LINK")
                             {
-                                <MudListItem T="string" Icon="@Icons.Material.Filled.Link" Target="_blank" Href="@item.Href">@item.Text</MudListItem>
+                                <MudListItem T="string" Icon="@Icons.Material.Filled.Link" IconColor="@iconColor" Target="_blank" Href="@item.Href">@item.Text</MudListItem>
                             }
                             else
                             {
-                                <MudListItem T="string">@item.Text</MudListItem>
+                                var icon = !string.IsNullOrEmpty(item.Icon) ? AssistantComponentPropHelper.GetIconSvg(item.Icon) : string.Empty;
+                                <MudListItem T="string" Icon="@icon" IconColor="@iconColor">@item.Text</MudListItem>
                             }
                         }
                     </MudList>
@@ -385,7 +395,6 @@ else
                 {
                     var colorPicker = assistantColorPicker;
                     var variant = colorPicker.GetPickerVariant();
-                    var elevation = variant == PickerVariant.Static ? 6 : 0;
                     var rounded = variant == PickerVariant.Static;
 
                     <MudItem Class="d-flex">
@@ -397,8 +406,8 @@ else
                                         ShowModeSwitch="@colorPicker.ShowModeSwitch"
                                         PickerVariant="@variant"
                                         Rounded="@rounded"
-                                        Elevation="@elevation"
-                                        Style="@($"color: {this.colorPickerFields[colorPicker.Name]};")"
+                                        Elevation="@colorPicker.Elevation"
+                                        Style="@($"color: {this.colorPickerFields[colorPicker.Name]};{colorPicker.Style}")"
                                         Class="@MergeClass(colorPicker.Class, "mb-3")" />
                     </MudItem>
                 }
@@ -417,6 +426,7 @@ else
                                        Placeholder="@datePicker.Placeholder"
                                        HelperText="@datePicker.HelperText"
                                        DateFormat="@format"
+                                       Elevation="@datePicker.Elevation"
                                        PickerVariant="@AssistantComponentPropHelper.GetPickerVariant(datePicker.PickerVariant, PickerVariant.Static)"
                                        Variant="Variant.Outlined"
                                        Class='@MergeClass(datePicker.Class, "mb-3")'
@@ -441,6 +451,7 @@ else
                                             HelperText="@dateRangePicker.HelperText"
                                             DateFormat="@format"
                                             PickerVariant="@AssistantComponentPropHelper.GetPickerVariant(dateRangePicker.PickerVariant, PickerVariant.Static)"
+                                            Elevation="@dateRangePicker.Elevation"
                                             Variant="Variant.Outlined"
                                             Class='@MergeClass(dateRangePicker.Class, "mb-3")'
                                             Style="@this.GetOptionalStyle(dateRangePicker.Style)"
@@ -464,6 +475,7 @@ else
                                        TimeFormat="@format"
                                        AmPm="@timePicker.AmPm"
                                        PickerVariant="@AssistantComponentPropHelper.GetPickerVariant(timePicker.PickerVariant, PickerVariant.Static)"
+                                       Elevation="@timePicker.Elevation"
                                        Variant="Variant.Outlined"
                                        Class='@MergeClass(timePicker.Class, "mb-3")'
                                        Style="@this.GetOptionalStyle(timePicker.Style)"/>

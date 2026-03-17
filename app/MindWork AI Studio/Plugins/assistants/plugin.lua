@@ -114,7 +114,7 @@ ASSISTANT = {
                 ["Type"] = "SWITCH",
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required
-                    ["Label"] = "<heading of your component>", -- required
+                    ["Label"] = "<heading of your component>", -- Switches render mode between boxed switch and normal switch
                     ["Value"] = true, -- initial switch state
                     ["OnChanged"] = function(input) -- optional; same input and return contract as BUTTON.Action(input)
                         return nil
@@ -297,13 +297,18 @@ ASSISTANT = {
                         { 
                             ["Type"] = "LINK", -- required 
                             ["Text"] = "<user readable link text>", 
-                            ["Href"] = "<link>" -- required 
+                            ["Href"] = "<link>", -- required
+                            ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                         },
                         { 
                             ["Type"] = "TEXT", -- required 
-                            ["Text"] = "<user readable text>"
+                            ["Text"] = "<user readable text>",
+                            ["Icon"] = "Icons.Material.Filled.HorizontalRule",
+                            ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                         }
-                    }
+                    },
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
                 }
             },
             {

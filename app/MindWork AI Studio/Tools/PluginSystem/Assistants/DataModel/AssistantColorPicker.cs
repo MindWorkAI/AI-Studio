@@ -52,6 +52,12 @@ internal sealed class AssistantColorPicker : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
     }
+    
+    public int Elevation
+    {
+        get => AssistantComponentPropHelper.ReadInt(this.Props, nameof(this.Elevation), 6);
+        set => AssistantComponentPropHelper.WriteInt(this.Props, nameof(this.Elevation), value);
+    }
 
     public string Class
     {

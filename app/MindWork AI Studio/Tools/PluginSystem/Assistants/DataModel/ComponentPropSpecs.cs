@@ -18,9 +18,9 @@ public static class ComponentPropSpecs
                 ]
             ),
             [AssistantComponentType.BUTTON] = new(
-                required: ["Name", "Text", "Action"],
+                required: ["Name", "Action"],
                 optional: [
-                    "IsIconButton", "Variant", "Color", "IsFullWidth", "Size",
+                    "Text", "IsIconButton", "Variant", "Color", "IsFullWidth", "Size",
                     "StartIcon", "EndIcon", "IconColor", "IconSize",  "Class", "Style"
                 ]
             ),
@@ -44,10 +44,10 @@ public static class ComponentPropSpecs
                 optional: ["ValidationMessage", "Class", "Style"]
             ),
             [AssistantComponentType.SWITCH] = new(
-                required: ["Name", "Label", "Value"],
+                required: ["Name", "Value"],
                 optional: [ 
-                    "OnChanged", "LabelOn", "LabelOff", "LabelPlacement", "Icon", "IconColor", "UserPrompt", 
-                    "CheckedColor", "UncheckedColor", "Disabled", "Class", "Style",
+                    "Label", "OnChanged", "LabelOn", "LabelOff", "LabelPlacement", "Icon", "IconColor",
+                    "UserPrompt", "CheckedColor", "UncheckedColor", "Disabled", "Class", "Style",
                 ]
             ),
             [AssistantComponentType.HEADING] = new(
@@ -84,7 +84,7 @@ public static class ComponentPropSpecs
             [AssistantComponentType.DATE_PICKER] = new(
                 required: ["Name", "Label"],
                 optional: [
-                    "Value", "Placeholder", "HelperText", "DateFormat", "Color",
+                    "Value", "Placeholder", "HelperText", "DateFormat", "Color", "Elevation",
                     "PickerVariant", "UserPrompt", "Class", "Style"
                 ]
             ),
@@ -92,14 +92,14 @@ public static class ComponentPropSpecs
                 required: ["Name", "Label"],
                 optional: [
                     "Value", "PlaceholderStart", "PlaceholderEnd", "HelperText", "DateFormat",
-                    "Color", "PickerVariant", "UserPrompt", "Class", "Style"
+                    "Elevation", "Color", "PickerVariant", "UserPrompt", "Class", "Style"
                 ]
             ),
             [AssistantComponentType.TIME_PICKER] = new(
                 required: ["Name", "Label"],
                 optional: [
                     "Value", "Placeholder", "HelperText", "TimeFormat", "AmPm", "Color",
-                    "PickerVariant", "UserPrompt", "Class", "Style"
+                    "Elevation", "PickerVariant", "UserPrompt", "Class", "Style"
                 ]
             ),
             [AssistantComponentType.LAYOUT_ITEM] = new(
