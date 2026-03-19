@@ -1,6 +1,6 @@
 namespace AIStudio.Assistants.Dynamic;
 
-internal sealed class WebContentState
+public sealed class WebContentState
 {
     public string Content { get; set; } = string.Empty;
     public bool Preselect { get; set; }

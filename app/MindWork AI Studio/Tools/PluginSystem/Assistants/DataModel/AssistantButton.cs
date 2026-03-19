@@ -2,17 +2,11 @@ using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public sealed class AssistantButton : AssistantComponentBase
+public sealed class AssistantButton : NamedAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.BUTTON;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
-
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
 
     public string Text
     {

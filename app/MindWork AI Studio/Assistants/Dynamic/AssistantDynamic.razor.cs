@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-
+using System.Text;
 using AIStudio.Dialogs.Settings;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Lua;
@@ -39,16 +35,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private bool showFooterProfileSelection = true;
     private PluginAssistants? assistantPlugin;
     
-    private readonly Dictionary<string, string> inputFields = new();
-    private readonly Dictionary<string, string> dropdownFields = new();
-    private readonly Dictionary<string, HashSet<string>> multiselectDropdownFields = new();
-    private readonly Dictionary<string, bool> switchFields = new();
-    private readonly Dictionary<string, WebContentState> webContentFields = new();
-    private readonly Dictionary<string, FileContentState> fileContentFields = new();
-    private readonly Dictionary<string, string> colorPickerFields = new();
-    private readonly Dictionary<string, string> datePickerFields = new();
-    private readonly Dictionary<string, string> dateRangePickerFields = new();
-    private readonly Dictionary<string, string> timePickerFields = new();
+    private readonly AssistantState assistantState = new();
     private readonly Dictionary<string, string> imageCache = new();
     private readonly HashSet<string> executingButtonActions = [];
     private readonly HashSet<string> executingSwitchActions = [];
@@ -126,35 +113,11 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     protected override void ResetForm()
     {
-        foreach (var entry in this.inputFields)
-        {
-            this.inputFields[entry.Key] = string.Empty;
-        }
-        foreach (var entry in this.webContentFields)
-        {
-            entry.Value.Content = string.Empty;
-            entry.Value.AgentIsRunning = false;
-        }
-        foreach (var entry in this.fileContentFields)
-        {
-            entry.Value.Content = string.Empty;
-        }
-        foreach (var entry in this.colorPickerFields)
-        {
-            this.colorPickerFields[entry.Key] = string.Empty;
-        }
-        foreach (var entry in this.datePickerFields)
-        {
-            this.datePickerFields[entry.Key] = string.Empty;
-        }
-        foreach (var entry in this.dateRangePickerFields)
-        {
-            this.dateRangePickerFields[entry.Key] = string.Empty;
-        }
-        foreach (var entry in this.timePickerFields)
-        {
-            this.timePickerFields[entry.Key] = string.Empty;
-        }
+        this.assistantState.Clear();
+
+        var rootComponent = this.RootComponent;
+        if (rootComponent is not null)
+            this.InitializeComponentState(rootComponent.Children);
     }
 
     protected override bool MightPreselectValues()
@@ -232,37 +195,10 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private LuaTable BuildPromptInput()
     {
         var input = new LuaTable();
-
-        var fields = new LuaTable();
-        foreach (var entry in this.inputFields)
-            fields[entry.Key] = entry.Value ?? string.Empty;
-        foreach (var entry in this.dropdownFields)
-            fields[entry.Key] = entry.Value ?? string.Empty;
-        foreach (var entry in this.multiselectDropdownFields)
-            fields[entry.Key] = CreateLuaArray(entry.Value);
-        foreach (var entry in this.switchFields)
-            fields[entry.Key] = entry.Value;
-        foreach (var entry in this.webContentFields)
-            fields[entry.Key] = entry.Value.Content ?? string.Empty;
-        foreach (var entry in this.fileContentFields)
-            fields[entry.Key] = entry.Value.Content ?? string.Empty;
-        foreach (var entry in this.colorPickerFields)
-            fields[entry.Key] = entry.Value ?? string.Empty;
-        foreach (var entry in this.datePickerFields)
-            fields[entry.Key] = entry.Value ?? string.Empty;
-        foreach (var entry in this.dateRangePickerFields)
-            fields[entry.Key] = entry.Value ?? string.Empty;
-        foreach (var entry in this.timePickerFields)
-            fields[entry.Key] = entry.Value ?? string.Empty;
-
-        input["fields"] = fields;
-
-        var meta = new LuaTable();
         var rootComponent = this.RootComponent;
-        if (rootComponent is not null)
-            this.AddMetaEntries(meta, rootComponent.Children);
-
-        input["meta"] = meta;
+        input["state"] = rootComponent is not null
+            ? this.assistantState.ToLuaTable(rootComponent.Children)
+            : new LuaTable();
 
         var profile = new LuaTable
         {
@@ -274,24 +210,6 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         input["profile"] = profile;
 
         return input;
-    }
-
-    private void AddMetaEntry(LuaTable meta, string name, AssistantComponentType type, string? label, string? userPrompt)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            return;
-
-        var entry = new LuaTable
-        {
-            ["Type"] = type.ToString(),
-        };
-
-        if (!string.IsNullOrWhiteSpace(label))
-            entry["Label"] = label!;
-        if (!string.IsNullOrWhiteSpace(userPrompt))
-            entry["UserPrompt"] = userPrompt!;
-
-        meta[name] = entry;
     }
 
     private string CollectUserPromptFallback()
@@ -308,61 +226,8 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     {
         foreach (var component in components)
         {
-            switch (component.Type)
-            {
-                case AssistantComponentType.TEXT_AREA:
-                    if (component is AssistantTextArea textArea && !this.inputFields.ContainsKey(textArea.Name))
-                        this.inputFields.Add(textArea.Name, textArea.PrefillText);
-                    break;
-                case AssistantComponentType.DROPDOWN:
-                    if (component is AssistantDropdown dropdown)
-                    {
-                        if (dropdown.IsMultiselect)
-                        {
-                            if (!this.multiselectDropdownFields.ContainsKey(dropdown.Name))
-                                this.multiselectDropdownFields.Add(dropdown.Name, CreateInitialMultiselectValues(dropdown));
-                        }
-                        else if (!this.dropdownFields.ContainsKey(dropdown.Name))
-                        {
-                            this.dropdownFields.Add(dropdown.Name, dropdown.Default.Value);
-                        }
-                    }
-                    break;
-                case AssistantComponentType.SWITCH:
-                    if (component is AssistantSwitch switchComponent && !this.switchFields.ContainsKey(switchComponent.Name))
-                        this.switchFields.Add(switchComponent.Name, switchComponent.Value);
-                    break;
-                case AssistantComponentType.WEB_CONTENT_READER:
-                    if (component is AssistantWebContentReader webContent && !this.webContentFields.ContainsKey(webContent.Name))
-                    {
-                        this.webContentFields.Add(webContent.Name, new WebContentState
-                        {
-                            Preselect = webContent.Preselect,
-                            PreselectContentCleanerAgent = webContent.PreselectContentCleanerAgent,
-                        });
-                    }
-                    break;
-                case AssistantComponentType.FILE_CONTENT_READER:
-                    if (component is AssistantFileContentReader fileContent && !this.fileContentFields.ContainsKey(fileContent.Name))
-                        this.fileContentFields.Add(fileContent.Name, new FileContentState());
-                    break;
-                case AssistantComponentType.COLOR_PICKER:
-                    if (component is AssistantColorPicker assistantColorPicker && !this.colorPickerFields.ContainsKey(assistantColorPicker.Name))
-                        this.colorPickerFields.Add(assistantColorPicker.Name, assistantColorPicker.Placeholder);
-                    break;
-                case AssistantComponentType.DATE_PICKER:
-                    if (component is AssistantDatePicker datePicker && !this.datePickerFields.ContainsKey(datePicker.Name))
-                        this.datePickerFields.Add(datePicker.Name, datePicker.Value);
-                    break;
-                case AssistantComponentType.DATE_RANGE_PICKER:
-                    if (component is AssistantDateRangePicker dateRangePicker && !this.dateRangePickerFields.ContainsKey(dateRangePicker.Name))
-                        this.dateRangePickerFields.Add(dateRangePicker.Name, dateRangePicker.Value);
-                    break;
-                case AssistantComponentType.TIME_PICKER:
-                    if (component is AssistantTimePicker timePicker && !this.timePickerFields.ContainsKey(timePicker.Name))
-                        this.timePickerFields.Add(timePicker.Name, timePicker.Value);
-                    break;
-            }
+            if (component is IStatefulAssistantComponent statefulComponent)
+                statefulComponent.InitializeState(this.assistantState);
 
             if (component.Children.Count > 0)
                 this.InitializeComponentState(component.Children);
@@ -415,7 +280,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         if (string.IsNullOrWhiteSpace(switchComponent.Name))
             return;
 
-        this.switchFields[switchComponent.Name] = value;
+        this.assistantState.Bools[switchComponent.Name] = value;
 
         if (this.assistantPlugin is null || switchComponent.OnChanged is null)
         {
@@ -463,123 +328,28 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private void TryApplyFieldUpdate(string fieldName, LuaValue value, AssistantComponentType sourceType)
     {
-        if (this.inputFields.ContainsKey(fieldName))
+        if (this.assistantState.TryApplyValue(fieldName, value, out var expectedType))
+            return;
+
+        if (!string.IsNullOrWhiteSpace(expectedType))
         {
-            if (value.TryRead<string>(out var textValue))
-                this.inputFields[fieldName] = textValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
+            this.Logger.LogWarning($"Assistant {sourceType} callback tried to write an invalid value to '{fieldName}'. Expected {expectedType}.");
             return;
         }
 
-        if (this.dropdownFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<string>(out var dropdownValue))
-                this.dropdownFields[fieldName] = dropdownValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        if (this.multiselectDropdownFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<LuaTable>(out var multiselectDropdownValue))
-                this.multiselectDropdownFields[fieldName] = ReadStringValues(multiselectDropdownValue);
-            else if (value.TryRead<string>(out var singleDropdownValue))
-                this.multiselectDropdownFields[fieldName] = string.IsNullOrWhiteSpace(singleDropdownValue) ? [] : [singleDropdownValue];
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string[]", sourceType);
-            return;
-        }
-
-        if (this.switchFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<bool>(out var boolValue))
-                this.switchFields[fieldName] = boolValue;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "boolean", sourceType);
-            return;
-        }
-
-        if (this.colorPickerFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<string>(out var colorValue))
-                this.colorPickerFields[fieldName] = colorValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        if (this.datePickerFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<string>(out var dateValue))
-                this.datePickerFields[fieldName] = dateValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        if (this.dateRangePickerFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<string>(out var dateRangeValue))
-                this.dateRangePickerFields[fieldName] = dateRangeValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        if (this.timePickerFields.ContainsKey(fieldName))
-        {
-            if (value.TryRead<string>(out var timeValue))
-                this.timePickerFields[fieldName] = timeValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        if (this.webContentFields.TryGetValue(fieldName, out var webContentState))
-        {
-            if (value.TryRead<string>(out var webContentValue))
-                webContentState.Content = webContentValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        if (this.fileContentFields.TryGetValue(fieldName, out var fileContentState))
-        {
-            if (value.TryRead<string>(out var fileContentValue))
-                fileContentState.Content = fileContentValue ?? string.Empty;
-            else
-                this.LogFieldUpdateTypeMismatch(fieldName, "string", sourceType);
-            return;
-        }
-
-        this.Logger.LogWarning("Assistant {ComponentType} callback tried to update unknown field '{FieldName}'. The value is ignored.", sourceType, fieldName);
-    }
-
-    private void LogFieldUpdateTypeMismatch(string fieldName, string expectedType, AssistantComponentType sourceType)
-    {
-        this.Logger.LogWarning("Assistant {ComponentType} callback tried to write an invalid value to '{FieldName}'. Expected {ExpectedType}.", sourceType, fieldName, expectedType);
+        this.Logger.LogWarning($"Assistant {sourceType} callback tried to update unknown field '{fieldName}'. The value is ignored.");
     }
 
     private EventCallback<HashSet<string>> CreateMultiselectDropdownChangedCallback(string fieldName) =>
         EventCallback.Factory.Create<HashSet<string>>(this, values =>
         {
-            this.multiselectDropdownFields[fieldName] = values;
+            this.assistantState.MultiSelect[fieldName] = values;
         });
 
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
-        if (profile == default || profile == Profile.NO_PROFILE)
-        {
-            if (!string.IsNullOrWhiteSpace(profileSelection.ValidationMessage))
-                return profileSelection.ValidationMessage;
-
-            return this.T("Please select one of your profiles.");
-        }
-
-        return null;
+        if (profile != default && profile != Profile.NO_PROFILE) return null;
+        return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.T("Please select one of your profiles.");
     }
     
     private async Task Submit()
@@ -589,176 +359,22 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         await this.AddAIResponseAsync(time);
     }
 
-    private void AddMetaEntries(LuaTable meta, IEnumerable<IAssistantComponent> components)
-    {
-        foreach (var component in components)
-        {
-            switch (component)
-            {
-                case AssistantTextArea textArea:
-                    this.AddMetaEntry(meta, textArea.Name, component.Type, textArea.Label, textArea.UserPrompt);
-                    break;
-                case AssistantDropdown dropdown:
-                    this.AddMetaEntry(meta, dropdown.Name, component.Type, dropdown.Label, dropdown.UserPrompt);
-                    break;
-                case AssistantSwitch switchComponent:
-                    this.AddMetaEntry(meta, switchComponent.Name, component.Type, switchComponent.Label, switchComponent.UserPrompt);
-                    break;
-                case AssistantWebContentReader webContent:
-                    this.AddMetaEntry(meta, webContent.Name, component.Type, null, webContent.UserPrompt);
-                    break;
-                case AssistantFileContentReader fileContent:
-                    this.AddMetaEntry(meta, fileContent.Name, component.Type, null, fileContent.UserPrompt);
-                    break;
-                case AssistantColorPicker colorPicker:
-                    this.AddMetaEntry(meta, colorPicker.Name, component.Type, colorPicker.Label, colorPicker.UserPrompt);
-                    break;
-                case AssistantDatePicker datePicker:
-                    this.AddMetaEntry(meta, datePicker.Name, component.Type, datePicker.Label, datePicker.UserPrompt);
-                    break;
-                case AssistantDateRangePicker dateRangePicker:
-                    this.AddMetaEntry(meta, dateRangePicker.Name, component.Type, dateRangePicker.Label, dateRangePicker.UserPrompt);
-                    break;
-                case AssistantTimePicker timePicker:
-                    this.AddMetaEntry(meta, timePicker.Name, component.Type, timePicker.Label, timePicker.UserPrompt);
-                    break;
-            }
-
-            if (component.Children.Count > 0)
-                this.AddMetaEntries(meta, component.Children);
-        }
-    }
-
     private string CollectUserPromptFallback(IEnumerable<IAssistantComponent> components)
     {
-        var prompt = string.Empty;
+        var prompt = new StringBuilder();
 
         foreach (var component in components)
         {
-            var userInput = string.Empty;
-            var userDecision = false;
-
-            switch (component.Type)
-            {
-                case AssistantComponentType.TEXT_AREA:
-                    if (component is AssistantTextArea textArea)
-                    {
-                        prompt += $"context:{Environment.NewLine}{textArea.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.inputFields.TryGetValue(textArea.Name, out userInput))
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                    }
-                    break;
-                case AssistantComponentType.DROPDOWN:
-                    if (component is AssistantDropdown dropdown)
-                    {
-                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{dropdown.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (dropdown.IsMultiselect && this.multiselectDropdownFields.TryGetValue(dropdown.Name, out var selections))
-                            prompt += $"user prompt:{Environment.NewLine}{string.Join(Environment.NewLine, selections.OrderBy(static value => value, StringComparer.Ordinal))}";
-                        else if (this.dropdownFields.TryGetValue(dropdown.Name, out userInput))
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                    }
-                    break;
-                case AssistantComponentType.SWITCH:
-                    if (component is AssistantSwitch switchComponent)
-                    {
-                        prompt += $"{Environment.NewLine}context:{Environment.NewLine}{switchComponent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.switchFields.TryGetValue(switchComponent.Name, out userDecision))
-                            prompt += $"user decision:{Environment.NewLine}{userDecision}";
-                    }
-                    break;
-                case AssistantComponentType.WEB_CONTENT_READER:
-                    if (component is AssistantWebContentReader webContent &&
-                        this.webContentFields.TryGetValue(webContent.Name, out var webState))
-                    {
-                        if (!string.IsNullOrWhiteSpace(webContent.UserPrompt))
-                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{webContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-
-                        if (!string.IsNullOrWhiteSpace(webState.Content))
-                            prompt += $"user prompt:{Environment.NewLine}{webState.Content}";
-                    }
-                    break;
-                case AssistantComponentType.FILE_CONTENT_READER:
-                    if (component is AssistantFileContentReader fileContent &&
-                        this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
-                    {
-                        if (!string.IsNullOrWhiteSpace(fileContent.UserPrompt))
-                            prompt += $"{Environment.NewLine}context:{Environment.NewLine}{fileContent.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-
-                        if (!string.IsNullOrWhiteSpace(fileState.Content))
-                            prompt += $"user prompt:{Environment.NewLine}{fileState.Content}";
-                    }
-                    break;
-                case AssistantComponentType.COLOR_PICKER:
-                    if (component is AssistantColorPicker colorPicker)
-                    {
-                        prompt += $"context:{Environment.NewLine}{colorPicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.colorPickerFields.TryGetValue(colorPicker.Name, out userInput))
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                    }
-                    break;
-                case AssistantComponentType.DATE_PICKER:
-                    if (component is AssistantDatePicker datePicker)
-                    {
-                        prompt += $"context:{Environment.NewLine}{datePicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.datePickerFields.TryGetValue(datePicker.Name, out userInput))
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                    }
-                    break;
-                case AssistantComponentType.DATE_RANGE_PICKER:
-                    if (component is AssistantDateRangePicker dateRangePicker)
-                    {
-                        prompt += $"context:{Environment.NewLine}{dateRangePicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.dateRangePickerFields.TryGetValue(dateRangePicker.Name, out userInput))
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                    }
-                    break;
-                case AssistantComponentType.TIME_PICKER:
-                    if (component is AssistantTimePicker timePicker)
-                    {
-                        prompt += $"context:{Environment.NewLine}{timePicker.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-                        if (this.timePickerFields.TryGetValue(timePicker.Name, out userInput))
-                            prompt += $"user prompt:{Environment.NewLine}{userInput}";
-                    }
-                    break;
-            }
+            if (component is IStatefulAssistantComponent statefulComponent)
+                prompt.Append(statefulComponent.UserPromptFallback(this.assistantState));
 
             if (component.Children.Count > 0)
-                prompt += this.CollectUserPromptFallback(component.Children);
+            {
+                prompt.Append(this.CollectUserPromptFallback(component.Children));
+            }
         }
 
-        return prompt;
-    }
-
-    private static HashSet<string> CreateInitialMultiselectValues(AssistantDropdown dropdown)
-    {
-        if (string.IsNullOrWhiteSpace(dropdown.Default.Value))
-            return [];
-
-        return [dropdown.Default.Value];
-    }
-
-    private static LuaTable CreateLuaArray(IEnumerable<string> values)
-    {
-        var luaArray = new LuaTable();
-        var index = 1;
-
-        foreach (var value in values.OrderBy(static value => value, StringComparer.Ordinal))
-            luaArray[index++] = value;
-
-        return luaArray;
-    }
-
-    private static HashSet<string> ReadStringValues(LuaTable values)
-    {
-        var parsedValues = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (var entry in values)
-        {
-            if (entry.Value.TryRead<string>(out var value) && !string.IsNullOrWhiteSpace(value))
-                parsedValues.Add(value);
-        }
-
-        return parsedValues;
+        return prompt.ToString();
     }
 
     private DateTime? ParseDatePickerValue(string? value, string? format)
@@ -774,7 +390,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private void SetDatePickerValue(string fieldName, DateTime? value, string? format)
     {
-        this.datePickerFields[fieldName] = value.HasValue ? FormatDate(value.Value, format) : string.Empty;
+        this.assistantState.Dates[fieldName] = value.HasValue ? FormatDate(value.Value, format) : string.Empty;
     }
 
     private DateRange? ParseDateRangePickerValue(string? value, string? format)
@@ -796,11 +412,11 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     {
         if (value?.Start is null || value.End is null)
         {
-            this.dateRangePickerFields[fieldName] = string.Empty;
+            this.assistantState.DateRanges[fieldName] = string.Empty;
             return;
         }
 
-        this.dateRangePickerFields[fieldName] = $"{FormatDate(value.Start.Value, format)} - {FormatDate(value.End.Value, format)}";
+        this.assistantState.DateRanges[fieldName] = $"{FormatDate(value.Start.Value, format)} - {FormatDate(value.End.Value, format)}";
     }
 
     private TimeSpan? ParseTimePickerValue(string? value, string? format)
@@ -816,7 +432,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private void SetTimePickerValue(string fieldName, TimeSpan? value, string? format)
     {
-        this.timePickerFields[fieldName] = value.HasValue ? FormatTime(value.Value, format) : string.Empty;
+        this.assistantState.Times[fieldName] = value.HasValue ? FormatTime(value.Value, format) : string.Empty;
     }
 
     private static bool TryParseDate(string value, string? format, out DateTime parsedDate)

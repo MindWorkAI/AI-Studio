@@ -1,27 +1,15 @@
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantDropdown : AssistantComponentBase
+internal sealed class AssistantDropdown : StatefulAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.DROPDOWN;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
 
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
-
     public string Label
     {
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Label));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Label), value);
-    }
-
-    public string UserPrompt
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
     }
 
     public AssistantDropdownItem Default
@@ -105,6 +93,41 @@ internal sealed class AssistantDropdown : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Variant));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Variant), value);
     }
+
+    #region Implementation of IStatefulAssistantComponent
+
+    public override void InitializeState(AssistantState state)
+    {
+        if (this.IsMultiselect)
+        {
+            if (!state.MultiSelect.ContainsKey(this.Name))
+                state.MultiSelect[this.Name] = string.IsNullOrWhiteSpace(this.Default.Value) ? [] : [this.Default.Value];
+
+            return;
+        }
+
+        if (!state.SingleSelect.ContainsKey(this.Name))
+            state.SingleSelect[this.Name] = this.Default.Value;
+    }
+
+    public override string UserPromptFallback(AssistantState state)
+    {
+        var userInput = string.Empty;
+        
+        var promptFragment = $"{Environment.NewLine}context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+        if (this.IsMultiselect && state.MultiSelect.TryGetValue(this.Name, out var selections))
+        {
+            promptFragment += $"user prompt:{Environment.NewLine}{string.Join(Environment.NewLine, selections.OrderBy(static value => value, StringComparer.Ordinal))}";
+        }
+        else if (state.SingleSelect.TryGetValue(this.Name, out userInput))
+        {
+            promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
+        }
+
+        return promptFragment;
+    }
+
+    #endregion
 
     public IEnumerable<object> GetParsedDropdownValues()
     {

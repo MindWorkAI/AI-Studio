@@ -1,5 +1,4 @@
 @attribute [Route(Routes.ASSISTANT_DYNAMIC)]
-@using AIStudio.Components
 @using AIStudio.Settings
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout
@@ -21,7 +20,7 @@ else
 
 @code {
     private RenderFragment RenderSwitch(AssistantSwitch assistantSwitch) => @<MudSwitch T="bool"
-                Value="@switchFields[assistantSwitch.Name]"
+                Value="@this.assistantState.Bools[assistantSwitch.Name]"
                 ValueChanged="@((bool value) => ExecuteSwitchChangedAsync(assistantSwitch, value))"
                 LabelPlacement="@assistantSwitch.GetLabelPlacement()"
                 Color="@assistantSwitch.GetColor(assistantSwitch.CheckedColor)"
@@ -31,7 +30,7 @@ else
                 Disabled="@(assistantSwitch.Disabled || IsSwitchActionRunning(assistantSwitch.Name))"
                 Class="@assistantSwitch.Class"
                 Style="@GetOptionalStyle(assistantSwitch.Style)">
-        @(switchFields[assistantSwitch.Name] ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)
+        @(this.assistantState.Bools[assistantSwitch.Name] ? assistantSwitch.LabelOn : assistantSwitch.LabelOff)
     </MudSwitch>;
 }
 
@@ -51,7 +50,8 @@ else
                     var lines = textArea.IsSingleLine ? 1 : 6;
 
                     <MudTextField T="string"
-                                  @bind-Text="@this.inputFields[textArea.Name]"
+                                  Text="@this.assistantState.Text[textArea.Name]"
+                                  TextChanged="@((string value) => this.assistantState.Text[textArea.Name] = value)"
                                   Label="@textArea.Label"
                                   HelperText="@textArea.HelperText"
                                   HelperTextOnFocus="@textArea.HelperTextOnFocus"
@@ -89,8 +89,9 @@ else
                 }
                 break;
             case AssistantComponentType.WEB_CONTENT_READER:
-                if (component is AssistantWebContentReader webContent && this.webContentFields.TryGetValue(webContent.Name, out var webState))
+                if (component is AssistantWebContentReader webContent)
                 {
+                    var webState = this.assistantState.WebContent[webContent.Name];
                     <div class="@webContent.Class" style="@this.GetOptionalStyle(webContent.Style)">
                         <ReadWebContent @bind-Content="@webState.Content"
                                         ProviderSettings="@this.providerSettings"
@@ -101,8 +102,9 @@ else
                 }
                 break;
             case AssistantComponentType.FILE_CONTENT_READER:
-                if (component is AssistantFileContentReader fileContent && this.fileContentFields.TryGetValue(fileContent.Name, out var fileState))
+                if (component is AssistantFileContentReader fileContent)
                 {
+                    var fileState = this.assistantState.FileContent[fileContent.Name];
                     <div class="@fileContent.Class" style="@this.GetOptionalStyle(fileContent.Style)">
                         <ReadFileContent @bind-FileContent="@fileState.Content" />
                     </div>
@@ -114,7 +116,7 @@ else
                     if (assistantDropdown.IsMultiselect)
                     {
                         <DynamicAssistantDropdown Items="@assistantDropdown.Items"
-                                                  SelectedValues="@this.multiselectDropdownFields[assistantDropdown.Name]"
+                                                  SelectedValues="@this.assistantState.MultiSelect[assistantDropdown.Name]"
                                                   SelectedValuesChanged="@this.CreateMultiselectDropdownChangedCallback(assistantDropdown.Name)"
                                                   Default="@assistantDropdown.Default"
                                                   Label="@assistantDropdown.Label"
@@ -133,7 +135,8 @@ else
                     else
                     {
                         <DynamicAssistantDropdown Items="@assistantDropdown.Items"
-                                                  @bind-Value="@this.dropdownFields[assistantDropdown.Name]"
+                                                  Value="@this.assistantState.SingleSelect[assistantDropdown.Name]"
+                                                  ValueChanged="@((string value) => this.assistantState.SingleSelect[assistantDropdown.Name] = value)"
                                                   Default="@assistantDropdown.Default"
                                                   Label="@assistantDropdown.Label"
                                                   HelperText="@assistantDropdown.HelperText"
@@ -398,7 +401,8 @@ else
                     var rounded = variant == PickerVariant.Static;
 
                     <MudItem Class="d-flex">
-                        <MudColorPicker @bind-Text="@this.colorPickerFields[colorPicker.Name]"
+                        <MudColorPicker Text="@this.assistantState.Colors[colorPicker.Name]"
+                                        TextChanged="@((string value) => this.assistantState.Colors[colorPicker.Name] = value)"
                                         Label="@colorPicker.Label"
                                         Placeholder="@colorPicker.Placeholder"
                                         ShowAlpha="@colorPicker.ShowAlpha"
@@ -407,7 +411,7 @@ else
                                         PickerVariant="@variant"
                                         Rounded="@rounded"
                                         Elevation="@colorPicker.Elevation"
-                                        Style="@($"color: {this.colorPickerFields[colorPicker.Name]};{colorPicker.Style}")"
+                                        Style="@($"color: {this.assistantState.Colors[colorPicker.Name]};{colorPicker.Style}")"
                                         Class="@MergeClass(colorPicker.Class, "mb-3")" />
                     </MudItem>
                 }
@@ -419,7 +423,7 @@ else
                     var format = datePicker.GetDateFormat();
 
                     <MudPaper Class="d-flex" Elevation="0">
-                        <MudDatePicker Date="@this.ParseDatePickerValue(this.datePickerFields[datePicker.Name], format)"
+                        <MudDatePicker Date="@this.ParseDatePickerValue(this.assistantState.Dates[datePicker.Name], format)"
                                        DateChanged="@((DateTime? value) => this.SetDatePickerValue(datePicker.Name, value, format))"
                                        Label="@datePicker.Label"
                                        Color="@AssistantComponentPropHelper.GetColor(datePicker.Color, Color.Primary)"
@@ -442,7 +446,7 @@ else
                     var format = dateRangePicker.GetDateFormat();
 
                     <MudPaper Class="d-flex" Elevation="0">
-                        <MudDateRangePicker DateRange="@this.ParseDateRangePickerValue(this.dateRangePickerFields[dateRangePicker.Name], format)"
+                        <MudDateRangePicker DateRange="@this.ParseDateRangePickerValue(this.assistantState.DateRanges[dateRangePicker.Name], format)"
                                             DateRangeChanged="@(value => this.SetDateRangePickerValue(dateRangePicker.Name, value, format))"
                                             Label="@dateRangePicker.Label"
                                             Color="@AssistantComponentPropHelper.GetColor(dateRangePicker.Color, Color.Primary)"
@@ -466,7 +470,7 @@ else
                     var format = timePicker.GetTimeFormat();
 
                     <MudPaper Class="d-flex" Elevation="0">
-                        <MudTimePicker Time="@this.ParseTimePickerValue(this.timePickerFields[timePicker.Name], format)"
+                        <MudTimePicker Time="@this.ParseTimePickerValue(this.assistantState.Times[timePicker.Name], format)"
                                        TimeChanged="@((TimeSpan? value) => this.SetTimePickerValue(timePicker.Name, value, format))"
                                        Label="@timePicker.Label"
                                        Color="@AssistantComponentPropHelper.GetColor(timePicker.Color, Color.Primary)"

@@ -1,19 +1,11 @@
-using Lua;
-
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 
-internal sealed class AssistantItem : AssistantComponentBase
+internal sealed class AssistantItem : NamedAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.LAYOUT_ITEM;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
 
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
-    
     public int? Xs
     {
         get => AssistantComponentPropHelper.ReadNullableInt(this.Props, nameof(this.Xs));

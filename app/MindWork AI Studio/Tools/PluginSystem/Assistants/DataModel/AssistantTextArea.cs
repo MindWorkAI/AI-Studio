@@ -2,17 +2,11 @@ using AIStudio.Tools.PluginSystem.Assistants.Icons;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantTextArea : AssistantComponentBase
+internal sealed class AssistantTextArea : StatefulAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.TEXT_AREA;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
-
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
 
     public string Label
     {
@@ -54,12 +48,6 @@ internal sealed class AssistantTextArea : AssistantComponentBase
     {
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.AdornmentColor));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.AdornmentColor), value);
-    }
-
-    public string UserPrompt
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
     }
 
     public string PrefillText
@@ -109,6 +97,27 @@ internal sealed class AssistantTextArea : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
+
+    #region Implementation of IStatefulAssistantComponent
+
+    public override void InitializeState(AssistantState state)
+    {
+        if (!state.Text.ContainsKey(this.Name))
+            state.Text[this.Name] = this.PrefillText;
+    }
+
+    public override string UserPromptFallback(AssistantState state)
+    {
+        var userInput = string.Empty;
+        
+        var promptFragment = $"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+        if (state.Text.TryGetValue(this.Name, out userInput) && !string.IsNullOrWhiteSpace(userInput))
+            promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
+
+        return promptFragment;
+    }
+
+    #endregion
 
     public Adornment GetAdornmentPos() => Enum.TryParse<MudBlazor.Adornment>(this.Adornment, out var position) ? position : MudBlazor.Adornment.Start;
     

@@ -256,6 +256,7 @@ public static partial class PluginFactory
         }
 
         // Add some useful libraries:
+        state.OpenBasicLibrary();
         state.OpenModuleLibrary();
         state.OpenStringLibrary();
         state.OpenTableLibrary();

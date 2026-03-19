@@ -1,22 +1,12 @@
+using AIStudio.Assistants.Dynamic;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantWebContentReader : AssistantComponentBase
+internal sealed class AssistantWebContentReader : StatefulAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.WEB_CONTENT_READER;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
-
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
-
-    public string UserPrompt
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
-    }
 
     public bool Preselect
     {
@@ -41,4 +31,35 @@ internal sealed class AssistantWebContentReader : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
+
+    #region Implemention of StatefulAssistantComponent
+
+    public override void InitializeState(AssistantState state)
+    {
+        if (!state.WebContent.ContainsKey(this.Name))
+        {
+            state.WebContent[this.Name] = new WebContentState
+            {
+                Preselect = this.Preselect,
+                PreselectContentCleanerAgent = this.PreselectContentCleanerAgent,
+            };
+        }
+    }
+
+    public override string UserPromptFallback(AssistantState state)
+    {
+        var promptFragment = string.Empty;
+        if (state.WebContent.TryGetValue(this.Name, out var webState))
+        {
+            if (!string.IsNullOrWhiteSpace(this.UserPrompt))
+                promptFragment = $"{Environment.NewLine}context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+
+            if (!string.IsNullOrWhiteSpace(webState.Content))
+                promptFragment = $"user prompt:{Environment.NewLine}{webState.Content}";
+        }
+
+        return promptFragment;
+    }
+
+    #endregion
 }

@@ -1,16 +1,10 @@
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantProviderSelection : AssistantComponentBase
+internal sealed class AssistantProviderSelection : NamedAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.PROVIDER_SELECTION;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
-
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
 
     public string Label
     {

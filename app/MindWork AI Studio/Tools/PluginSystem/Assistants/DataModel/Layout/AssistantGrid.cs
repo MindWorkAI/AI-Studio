@@ -1,19 +1,11 @@
-using Lua;
-
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 
-internal sealed class AssistantGrid : AssistantComponentBase
+internal sealed class AssistantGrid : NamedAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.LAYOUT_GRID;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
 
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
-    
     public string Justify
     {
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Justify));

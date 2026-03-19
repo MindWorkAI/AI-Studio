@@ -1,8 +1,6 @@
-using Lua;
-
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 
-internal sealed class AssistantAccordionSection : AssistantComponentBase
+internal sealed class AssistantAccordionSection : NamedAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.LAYOUT_ACCORDION_SECTION;
     public override Dictionary<string, object> Props { get; set; } = new();
@@ -10,12 +8,6 @@ internal sealed class AssistantAccordionSection : AssistantComponentBase
 
     public bool KeepContentAlive = true;
 
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
-    
     public string HeaderText
     {
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.HeaderText));

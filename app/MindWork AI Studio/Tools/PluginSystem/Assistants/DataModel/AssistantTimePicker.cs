@@ -1,16 +1,10 @@
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantTimePicker : AssistantComponentBase
+internal sealed class AssistantTimePicker : StatefulAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.TIME_PICKER;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
-
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
 
     public string Label
     {
@@ -59,12 +53,6 @@ internal sealed class AssistantTimePicker : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.PickerVariant));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.PickerVariant), value);
     }
-
-    public string UserPrompt
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
-    }
     
     public int Elevation
     {
@@ -83,6 +71,27 @@ internal sealed class AssistantTimePicker : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
+
+    #region Implementation of IStatefulAssistantComponent
+
+    public override void InitializeState(AssistantState state)
+    {
+        if (!state.Times.ContainsKey(this.Name))
+            state.Times[this.Name] = this.Value;
+    }
+
+    public override string UserPromptFallback(AssistantState state)
+    {
+        var userInput = string.Empty;
+        
+        var promptFragment = $"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+        if (state.Times.TryGetValue(this.Name, out userInput) && !string.IsNullOrWhiteSpace(userInput))
+            promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
+
+        return promptFragment;
+    }
+
+    #endregion
 
     public string GetTimeFormat()
     {

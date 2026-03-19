@@ -3,17 +3,11 @@ using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public sealed class AssistantSwitch : AssistantComponentBase
+public sealed class AssistantSwitch : StatefulAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.SWITCH;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
-
-    public string Name
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Name));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Name), value);
-    }
 
     public string Label
     {
@@ -31,12 +25,6 @@ public sealed class AssistantSwitch : AssistantComponentBase
     {
         get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Disabled), false);
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.Disabled), value);
-    }
-
-    public string UserPrompt
-    {
-        get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.UserPrompt));
-        set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.UserPrompt), value);
     }
     
     public LuaFunction? OnChanged
@@ -98,6 +86,27 @@ public sealed class AssistantSwitch : AssistantComponentBase
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Style));
         set => AssistantComponentPropHelper.WriteString(this.Props, nameof(this.Style), value);
     }
+
+    #region Implementation of IStatefulAssistantComponent
+
+    public override void InitializeState(AssistantState state)
+    {
+        if (!state.Bools.ContainsKey(this.Name))
+            state.Bools[this.Name] = this.Value;
+    }
+
+    public override string UserPromptFallback(AssistantState state)
+    {
+        var userDecision = false;
+        
+        var promptFragment = $"{Environment.NewLine}context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+        state.Bools.TryGetValue(this.Name, out userDecision);
+        promptFragment += $"user decision: {userDecision}";
+
+        return promptFragment;
+    }
+
+    #endregion
 
     public MudBlazor.Color GetColor(string colorString) => Enum.TryParse<Color>(colorString, out var color) ? color : MudBlazor.Color.Inherit;
     public Placement GetLabelPlacement() => Enum.TryParse<Placement>(this.LabelPlacement, out var placement) ? placement : Placement.Right;
