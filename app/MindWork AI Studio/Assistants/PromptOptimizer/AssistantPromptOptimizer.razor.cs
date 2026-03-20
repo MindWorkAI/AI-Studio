@@ -13,7 +13,7 @@ using Microsoft.Extensions.FileProviders;
 
 namespace AIStudio.Assistants.PromptOptimizer;
 
-public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPanel>
+public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialogPromptOptimizer>
 {
     private static readonly Regex JSON_CODE_FENCE_REGEX = new(
         pattern: """```(?:json)?\s*(?<json>\{[\s\S]*\})\s*```""",
@@ -31,7 +31,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
 
     protected override string Title => T("Prompt Optimizer");
 
-    protected override string Description => T("Optimize a prompt using your prompt guideline and get targeted recommendations for future versions.");
+    protected override string Description => T("Optimize a prompt using either the default or your individual prompt guideline and get targeted recommendations for future versions of the prompt.");
 
     protected override string SystemPrompt =>
         """
@@ -70,22 +70,37 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
     protected override void ResetForm()
     {
         this.inputPrompt = string.Empty;
-        this.selectedTargetLanguage = CommonLanguages.AS_IS;
-        this.customTargetLanguage = string.Empty;
-        this.importantAspects = string.Empty;
         this.useCustomPromptGuide = false;
         this.customPromptGuideFiles.Clear();
         this.currentCustomPromptGuidePath = string.Empty;
         this.customPromptingGuidelineContent = string.Empty;
+        this.hasUpdatedDefaultRecommendations = false;
         this.ResetGuidelineSummaryToDefault();
         this.ResetOutput();
+
+        if (!this.MightPreselectValues())
+        {
+            this.selectedTargetLanguage = CommonLanguages.AS_IS;
+            this.customTargetLanguage = string.Empty;
+            this.importantAspects = string.Empty;
+        }
     }
 
-    protected override bool MightPreselectValues() => false;
+    protected override bool MightPreselectValues()
+    {
+        if (!this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)
+            return false;
+
+        this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedTargetLanguage;
+        this.customTargetLanguage = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedOtherLanguage;
+        this.importantAspects = this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedImportantAspects;
+        return true;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         this.ResetGuidelineSummaryToDefault();
+        this.hasUpdatedDefaultRecommendations = false;
 
         var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).FirstOrDefault();
         if (deferredContent is not null)
@@ -95,7 +110,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
     }
 
     private string inputPrompt = string.Empty;
-    private CommonLanguages selectedTargetLanguage;
+    private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
     private string importantAspects = string.Empty;
     private bool useCustomPromptGuide;
@@ -103,6 +118,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
     private string currentCustomPromptGuidePath = string.Empty;
     private string customPromptingGuidelineContent = string.Empty;
     private bool isLoadingCustomPromptGuide;
+    private bool hasUpdatedDefaultRecommendations;
 
     private string optimizedPrompt = string.Empty;
     private string recClarityDirectness = string.Empty;
@@ -112,7 +128,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
     private string recRoleDefinition = string.Empty;
     private string recLanguageChoice = string.Empty;
 
-    private bool HasOptimizationResult => !string.IsNullOrWhiteSpace(this.optimizedPrompt);
+    private bool ShowUpdatedPromptGuidelinesIndicator => !this.useCustomPromptGuide && this.hasUpdatedDefaultRecommendations;
     private bool CanPreviewCustomPromptGuide => this.useCustomPromptGuide && this.customPromptGuideFiles.Count > 0;
     private string CustomPromptGuideFileName => this.customPromptGuideFiles.Count switch
     {
@@ -159,6 +175,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
 
         this.ClearInputIssues();
         this.ResetOutput();
+        this.hasUpdatedDefaultRecommendations = false;
 
         var promptingGuideline = await this.GetPromptingGuidelineForOptimizationAsync();
         if (string.IsNullOrWhiteSpace(promptingGuideline))
@@ -177,12 +194,12 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
         if (!TryParseOptimizationResult(aiResponse, out var parsedResult))
         {
             this.optimizedPrompt = aiResponse.Trim();
-            this.recClarityDirectness = T("Add clearer goals and explicit quality expectations.");
-            this.recExamplesContext = T("Add short examples and background context for your specific use case.");
-            this.recSequentialSteps = T("Break the task into numbered steps if order matters.");
-            this.recStructureMarkers = T("Use headings or markers to separate context, task, and constraints.");
-            this.recRoleDefinition = T("Define a role for the model to focus output style and expertise.");
-            this.recLanguageChoice = T("Use English for complex prompts and explicitly request response language if needed.");
+            if (!this.useCustomPromptGuide)
+            {
+                this.ApplyFallbackRecommendations();
+                this.hasUpdatedDefaultRecommendations = true;
+            }
+
             this.AddInputIssue(T("The model response was not in the expected JSON format. The raw response is shown as optimized prompt."));
             this.AddVisibleOptimizedPromptBlock();
             return;
@@ -298,12 +315,31 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
     private void ApplyOptimizationResult(PromptOptimizationResult optimizationResult)
     {
         this.optimizedPrompt = optimizationResult.OptimizedPrompt.Trim();
-        this.recClarityDirectness = this.EmptyFallback(optimizationResult.Recommendations.ClarityAndDirectness);
-        this.recExamplesContext = this.EmptyFallback(optimizationResult.Recommendations.ExamplesAndContext);
-        this.recSequentialSteps = this.EmptyFallback(optimizationResult.Recommendations.SequentialSteps);
-        this.recStructureMarkers = this.EmptyFallback(optimizationResult.Recommendations.StructureWithMarkers);
-        this.recRoleDefinition = this.EmptyFallback(optimizationResult.Recommendations.RoleDefinition);
-        this.recLanguageChoice = this.EmptyFallback(optimizationResult.Recommendations.LanguageChoice);
+        if (this.useCustomPromptGuide)
+            return;
+
+        this.ApplyRecommendations(optimizationResult.Recommendations);
+        this.hasUpdatedDefaultRecommendations = true;
+    }
+
+    private void ApplyRecommendations(PromptOptimizationRecommendations recommendations)
+    {
+        this.recClarityDirectness = this.EmptyFallback(recommendations.ClarityAndDirectness);
+        this.recExamplesContext = this.EmptyFallback(recommendations.ExamplesAndContext);
+        this.recSequentialSteps = this.EmptyFallback(recommendations.SequentialSteps);
+        this.recStructureMarkers = this.EmptyFallback(recommendations.StructureWithMarkers);
+        this.recRoleDefinition = this.EmptyFallback(recommendations.RoleDefinition);
+        this.recLanguageChoice = this.EmptyFallback(recommendations.LanguageChoice);
+    }
+
+    private void ApplyFallbackRecommendations()
+    {
+        this.recClarityDirectness = T("Add clearer goals and explicit quality expectations.");
+        this.recExamplesContext = T("Add short examples and background context for your specific use case.");
+        this.recSequentialSteps = T("Break the task into numbered steps if order matters.");
+        this.recStructureMarkers = T("Use headings or markers to separate context, task, and constraints.");
+        this.recRoleDefinition = T("Define a role for the model to focus output style and expertise.");
+        this.recLanguageChoice = T("Use English for complex prompts and explicitly request response language if needed.");
     }
 
     private string EmptyFallback(string text)
@@ -322,11 +358,11 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
     private void ResetGuidelineSummaryToDefault()
     {
         this.recClarityDirectness = T("Use clear, explicit instructions and directly state quality expectations.");
-        this.recExamplesContext = T("Include short examples and context that explain the purpose behind requirements.");
+        this.recExamplesContext = T("Include short examples and context that explain the purpose behind your requirements.");
         this.recSequentialSteps = T("Prefer numbered steps when task order matters.");
         this.recStructureMarkers = T("Separate context, task, constraints, and output format with headings or markers.");
         this.recRoleDefinition = T("Assign a role to shape tone, expertise, and focus.");
-        this.recLanguageChoice = T("For complex tasks, write prompts in English and request response language explicitly if needed.");
+        this.recLanguageChoice = T("For complex tasks, write prompts in English.");
     }
 
     private void AddVisibleOptimizedPromptBlock()
@@ -411,14 +447,16 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<NoSettingsPane
             return;
         }
 
-        // Keep only a single file and prefer the newly attached one over the previous selection.
         var selected = files.FirstOrDefault(file => !string.Equals(file.FilePath, this.currentCustomPromptGuidePath, StringComparison.OrdinalIgnoreCase))
                        ?? files.First();
+
+        var replacedPrevious = !string.IsNullOrWhiteSpace(this.currentCustomPromptGuidePath) &&
+                               !string.Equals(this.currentCustomPromptGuidePath, selected.FilePath, StringComparison.OrdinalIgnoreCase);
 
         this.customPromptGuideFiles = [ selected ];
         this.currentCustomPromptGuidePath = selected.FilePath;
 
-        if (files.Count > 1)
+        if (files.Count > 1 || replacedPrevious)
             this.Snackbar.Add(T("Replaced the previously selected custom prompt guide file."), Severity.Info);
 
         await this.LoadCustomPromptGuidelineContentAsync(selected);

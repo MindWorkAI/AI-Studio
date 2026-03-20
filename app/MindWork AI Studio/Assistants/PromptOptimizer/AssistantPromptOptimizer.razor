@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_PROMPT_OPTIMIZER)]
-@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogPromptOptimizer>
 
 <MudTextField T="string"
               @bind-Text="@this.inputPrompt"
@@ -14,27 +14,61 @@
               Class="mb-3"
               UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
+<EnumSelection T="CommonLanguages"
+               NameFunc="@(language => language.NameSelectingOptional())"
+               @bind-Value="@this.selectedTargetLanguage"
+               Icon="@Icons.Material.Filled.Translate"
+               Label="@T("Language for the optimized prompt")"
+               AllowOther="@true"
+               OtherValue="CommonLanguages.OTHER"
+               @bind-OtherInput="@this.customTargetLanguage"
+               ValidateOther="@this.ValidateCustomLanguage"
+               LabelOther="@T("Custom language")"/>
+
+<MudTextField T="string"
+              AutoGrow="true"
+              Lines="2"
+              @bind-Text="@this.importantAspects"
+              Class="mb-3"
+              Label="@T("(Optional) Important Aspects for the prompt")"
+              HelperText="@T("(Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as role precision, step ordering, output structure, or constraints.")"
+              ShrinkLabel="true"
+              Variant="Variant.Outlined"
+              AdornmentIcon="@Icons.Material.Filled.List"
+              Adornment="Adornment.Start"/>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudText Typo="Typo.h6">@T("Prompt Recommendations")</MudText>
+    @if (this.ShowUpdatedPromptGuidelinesIndicator)
+    {
+        <MudTooltip Text="@T("Prompt recommendations updated from your latest optimization.")">
+            <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" Color="Color.Info" Size="Size.Medium" Class="ml-2"/>
+        </MudTooltip>
+    }
+</MudStack>
 
 @if (!this.useCustomPromptGuide)
 {
+    <MudJustifiedText Class="mb-3">@T("Use these recommendations, that are based on our own prompt guide, to improve the clarity, directness, and relevance of your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
+
     <MudGrid Class="mb-3">
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recClarityDirectness" Label="@T("Be clear and direct")" ReadOnly="true" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recClarityDirectness" Label="@T("Be clear and direct")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recExamplesContext" Label="@T("Add examples and context")" ReadOnly="true" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recExamplesContext" Label="@T("Add examples and context")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recSequentialSteps" Label="@T("Use sequential steps")" ReadOnly="true" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recSequentialSteps" Label="@T("Use sequential steps")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recStructureMarkers" Label="@T("Structure with markers")" ReadOnly="true" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recStructureMarkers" Label="@T("Structure with markers")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recRoleDefinition" Label="@T("Give the model a role")" ReadOnly="true" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recRoleDefinition" Label="@T("Give the model a role")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recLanguageChoice" Label="@T("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recLanguageChoice" Label="@T("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
     </MudGrid>
 }
@@ -64,7 +98,7 @@
 
     <MudTextField T="string"
                   Text="@this.CustomPromptGuideFileName"
-                  Label="@T("Custom guide file")"
+                  Label="@T("Custom prompt guide file")"
                   ReadOnly="true"
                   Disabled="@(!this.useCustomPromptGuide)"
                   Variant="Variant.Outlined"
@@ -79,28 +113,4 @@
     </MudButton>
 </MudStack>
 
-<EnumSelection T="CommonLanguages"
-               NameFunc="@(language => language.NameSelectingOptional())"
-               @bind-Value="@this.selectedTargetLanguage"
-               Icon="@Icons.Material.Filled.Translate"
-               Label="@T("Language for the optimized prompt")"
-               AllowOther="@true"
-               OtherValue="CommonLanguages.OTHER"
-               @bind-OtherInput="@this.customTargetLanguage"
-               ValidateOther="@this.ValidateCustomLanguage"
-               LabelOther="@T("Custom language")"/>
-
-<MudTextField T="string"
-              AutoGrow="true"
-              Lines="2"
-              @bind-Text="@this.importantAspects"
-              Class="mb-3"
-              Label="@T("(Optional) Important Aspects for the prompt")"
-              HelperText="@T("(Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as role precision, step ordering, output structure, or constraints.")"
-              ShrinkLabel="true"
-              Variant="Variant.Outlined"
-              AdornmentIcon="@Icons.Material.Filled.List"
-              Adornment="Adornment.Start"/>
-
 <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
-
