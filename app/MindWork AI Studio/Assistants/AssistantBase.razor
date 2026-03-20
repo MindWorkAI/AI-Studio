@@ -8,6 +8,13 @@
         <MudText Typo="Typo.h3">
             @this.Title
         </MudText>
+
+        <MudSpacer/>
+        
+        @if (this.HeaderActions is not null)
+        {
+            @this.HeaderActions
+        }
         
         @if (this.HasSettingsPanel)
         {
@@ -70,6 +77,11 @@
                         <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
                     }
                 }
+            }
+
+            @if (this.ShowResult && this.AfterResultContent is not null)
+            {
+                @this.AfterResultContent
             }
             
             <div id="@AFTER_RESULT_DIV_ID" class="mt-3">
