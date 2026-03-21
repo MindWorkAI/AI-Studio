@@ -9,6 +9,12 @@ let mathJaxReadyPromise = null
 let batchScheduled = false
 let typesetInProgress = false
 
+function applyMathJaxConfiguration() {
+    window.MathJax = window.MathJax ?? {}
+    window.MathJax.options = window.MathJax.options ?? {}
+    window.MathJax.options.enableMenu = false
+}
+
 function isMathJaxReady() {
     return typeof window.MathJax?.typesetPromise === 'function' || typeof window.MathJax?.typeset === 'function'
 }
@@ -35,6 +41,7 @@ function ensureMathJaxLoaded() {
         return mathJaxReadyPromise
 
     mathJaxReadyPromise = new Promise((resolve, reject) => {
+        applyMathJaxConfiguration()
         let script = document.getElementById(MATH_JAX_SCRIPT_ID)
 
         const onLoad = () => {
