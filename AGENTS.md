@@ -185,7 +185,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 ## Important Development Notes
 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
-- **End of file formatting** - Do not append an extra empty line at the end of files. Preserve the existing file-ending style unless a specific formatter or file format requires a change.
+- **End of file formatting** - Do not append an extra empty line at the end of files.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Agent-run .NET builds** - Do not run `.NET` builds from an agent. Ask the user to run the build locally in their IDE, preferably via `cd app/Build && dotnet run build` in an IDE terminal, then wait for their feedback before continuing.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
@@ -193,7 +193,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **MudBlazor** - Component library requires DI setup in Program.cs
 - **Encryption** - Initialized before Rust service is marked ready
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
-- **Empty lines** - Avoid adding extra empty lines at the end of files. Follow the existing file-ending style.
+- **Empty lines** - Avoid adding extra empty lines at the end of files.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
