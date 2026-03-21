@@ -205,6 +205,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         var lines = normalizedWithUnixLineEndings.Split('\n');
         var markdownBuilder = new StringBuilder();
         var mathBuilder = new StringBuilder();
+        
         var segments = new List<MarkdownRenderSegment>();
         string? activeCodeFenceMarker = null;
         var inMathBlock = false;
@@ -215,13 +216,13 @@ public partial class ContentBlockComponent : MSGComponentBase
 
             if (!inMathBlock && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
             {
-                AppendLine(markdownBuilder, line);
+                markdownBuilder.AppendLine(line);
                 continue;
             }
 
             if (activeCodeFenceMarker is not null)
             {
-                AppendLine(markdownBuilder, line);
+                markdownBuilder.AppendLine(line);
                 continue;
             }
 
@@ -242,7 +243,10 @@ public partial class ContentBlockComponent : MSGComponentBase
                 continue;
             }
 
-            AppendLine(inMathBlock ? mathBuilder : markdownBuilder, line);
+            if (inMathBlock)
+                mathBuilder.AppendLine(line);
+            else
+                markdownBuilder.AppendLine(line);
         }
 
         if (inMathBlock)
@@ -309,18 +313,13 @@ public partial class ContentBlockComponent : MSGComponentBase
         return true;
     }
 
-    private static void AppendLine(StringBuilder builder, string line)
-    {
-        builder.AppendLine(line);
-    }
-
     private enum MarkdownRenderSegmentType
     {
         MARKDOWN,
         MATH_BLOCK,
     }
 
-    private readonly record struct MarkdownRenderSegment(MarkdownRenderSegmentType Type, string Content);
+    private sealed record MarkdownRenderSegment(MarkdownRenderSegmentType Type, string Content);
     
     private async Task RemoveBlock()
     {
