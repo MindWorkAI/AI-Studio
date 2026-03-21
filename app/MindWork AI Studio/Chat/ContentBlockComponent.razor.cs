@@ -8,8 +8,10 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The UI component for a chat content block, i.e., for any IContent.
 /// </summary>
-public partial class ContentBlockComponent : MSGComponentBase
+public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
 {
+    private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
+    private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
     private const string HTML_START_TAG = "<";
     private const string HTML_END_TAG = "</";
     private const string HTML_SELF_CLOSING_TAG = "/>";
@@ -89,11 +91,18 @@ public partial class ContentBlockComponent : MSGComponentBase
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
     private bool HideContent { get; set; }
     private bool hasRenderHash;
     private int lastRenderHash;
     private string cachedMarkdownRenderPlanInput = string.Empty;
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
+    private ElementReference mathContentContainer;
+    private string lastMathRenderSignature = string.Empty;
+    private bool hasActiveMathContainer;
+    private bool isDisposed;
 
     #region Overrides of ComponentBase
 
@@ -107,6 +116,12 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         this.RegisterStreamingEvents();
         return base.OnParametersSetAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await this.SyncMathRenderIfNeededAsync();
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     /// <inheritdoc />
@@ -214,6 +229,81 @@ public partial class ContentBlockComponent : MSGComponentBase
         this.cachedMarkdownRenderPlanInput = text;
         this.cachedMarkdownRenderPlan = BuildMarkdownRenderPlan(text);
         return this.cachedMarkdownRenderPlan;
+    }
+
+    private async Task SyncMathRenderIfNeededAsync()
+    {
+        if (this.isDisposed)
+            return;
+
+        if (!this.TryGetCompletedMathRenderState(out var mathRenderSignature))
+        {
+            await this.DisposeMathContainerIfNeededAsync();
+            return;
+        }
+
+        if (string.Equals(this.lastMathRenderSignature, mathRenderSignature, StringComparison.Ordinal))
+            return;
+
+        await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature);
+        this.lastMathRenderSignature = mathRenderSignature;
+        this.hasActiveMathContainer = true;
+    }
+
+    private async Task DisposeMathContainerIfNeededAsync()
+    {
+        if (!this.hasActiveMathContainer)
+        {
+            this.lastMathRenderSignature = string.Empty;
+            return;
+        }
+
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        this.hasActiveMathContainer = false;
+        this.lastMathRenderSignature = string.Empty;
+    }
+
+    private bool TryGetCompletedMathRenderState(out string mathRenderSignature)
+    {
+        mathRenderSignature = string.Empty;
+
+        if (this.HideContent || this.Type is not ContentType.TEXT || this.Content.IsStreaming || this.Content is not ContentText textContent || textContent.InitialRemoteWait)
+            return false;
+
+        var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
+        mathRenderSignature = CreateMathRenderSignature(renderPlan);
+        return !string.IsNullOrEmpty(mathRenderSignature);
+    }
+
+    private static string CreateMathRenderSignature(MarkdownRenderPlan renderPlan)
+    {
+        var hash = new HashCode();
+        var mathSegmentCount = 0;
+
+        foreach (var segment in renderPlan.Segments)
+        {
+            if (segment.Type is not MarkdownRenderSegmentType.MATH_BLOCK)
+                continue;
+
+            mathSegmentCount++;
+            hash.Add(segment.Start);
+            hash.Add(segment.Length);
+            hash.Add(segment.GetContent(renderPlan.Source).GetHashCode(StringComparison.Ordinal));
+        }
+
+        return mathSegmentCount == 0
+            ? string.Empty
+            : $"{mathSegmentCount}:{hash.ToHashCode()}";
     }
 
     private static MarkdownRenderPlan BuildMarkdownRenderPlan(string text)
@@ -428,9 +518,11 @@ public partial class ContentBlockComponent : MSGComponentBase
 
         public MarkdownRenderSegmentType Type { get; } = type;
 
-        private int Start { get; } = start;
+        public int Start { get; } = start;
 
-        private int Length { get; } = length;
+        public int Length { get; } = length;
+
+        public int RenderKey { get; } = HashCode.Combine(type, start, length);
 
         public string GetContent(string source)
         {
@@ -516,5 +608,15 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
         this.Content.FileAttachments = result.ToList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (this.isDisposed)
+            return;
+
+        this.isDisposed = true;
+        await this.DisposeMathContainerIfNeededAsync();
+        this.Dispose();
     }
 }
