@@ -53,6 +53,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public NavBehavior NavigationBehavior { get; set; } = NavBehavior.NEVER_EXPAND_USE_TOOLTIPS;
 
     /// <summary>
+    /// Which page should be opened first when the app starts?
+    /// </summary>
+    public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
+
+    /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);

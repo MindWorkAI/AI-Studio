@@ -146,6 +146,16 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: MANUAL, AUTOMATIC
 -- CONFIG["SETTINGS"]["DataApp.UpdateInstallation"] = "MANUAL"
 
+-- Configure the page that should be opened when AI Studio starts.
+-- Allowed values are: HOME, CHAT, ASSISTANTS, INFORMATION, PLUGINS, SUPPORTERS, SETTINGS
+-- CONFIG["SETTINGS"]["DataApp.StartPage"] = "CHAT"
+--
+-- Allow users to change the configured start page locally.
+-- Allowed values are: true, false
+-- When set to true, the configured start page becomes the organization default,
+-- but users can still choose another start page in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
+
 -- Configure the user permission to add providers:
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
