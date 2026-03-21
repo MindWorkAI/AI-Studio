@@ -95,7 +95,7 @@ public partial class Home : MSGComponentBase
         ## Step 4: Load OpenAI Models
         1. Ensure you have an internet connection and your API key is valid.
         2. Click "Reload" to retrieve a list of available OpenAI models.
-        3. Select "gpt-4o" to use the latest model.
+        3. Select "gpt-5.4" to use a current model.
         4. Provide a name for this combination of provider, API key, and model. This is called the "instance name". For example, you can name it based on the usage context, such as "Personal OpenAI" or "Work OpenAI".
         
         ## Step 5: Save the Provider
