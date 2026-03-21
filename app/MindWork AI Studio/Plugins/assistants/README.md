@@ -24,9 +24,9 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
   - [Advanced Prompt Assembly - BuildPrompt()](#advanced-prompt-assembly---buildprompt)
     - [Interface](#interface)
     - [`input` table shape](#input-table-shape)
-    - [Using `meta` inside BuildPrompt](#using-meta-inside-buildprompt)
-      - [Example: iterate all fields with labels and include their values](#example-iterate-all-fields-with-labels-and-include-their-values)
-      - [Example: handle types differently](#example-handle-types-differently)
+    - [Using component metadata inside BuildPrompt](#using-component-metadata-inside-buildprompt)
+      - [Example: build a prompt from two fields](#example-build-a-prompt-from-two-fields)
+      - [Example: reuse a label from `Props`](#example-reuse-a-label-from-props)
     - [Using `profile` inside BuildPrompt](#using-profile-inside-buildprompt)
       - [Example: Add user profile context to the prompt](#example-add-user-profile-context-to-the-prompt)
   - [Advanced Layout Options](#advanced-layout-options)
@@ -147,7 +147,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `TEXT_AREA` reference
 - Use `Type = "TEXT_AREA"` to render a MudBlazor text input or textarea.
 - Required props:
-  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Label`: visible field label.
 - Optional props:
   - `HelperText`: helper text rendered below the input.
@@ -190,7 +190,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `DROPDOWN` reference
 - Use `Type = "DROPDOWN"` to render a MudBlazor select field.
 - Required props:
-  - `Name`: unique state key used in prompt assembly, button actions, and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly, button actions, and `BuildPrompt(input)`.
   - `Label`: visible field label.
   - `Default`: dropdown item table with the shape `{ ["Value"] = "<internal value>", ["Display"] = "<visible label>" }`.
   - `Items`: array of dropdown item tables with the same shape as `Default`.
@@ -211,8 +211,8 @@ More information on rendered components can be found [here](https://www.mudblazo
   - `Value`: the internal raw value stored in component state and passed to prompt building.
   - `Display`: the visible label shown to the user in the menu and selection text.
 - Behavior notes:
-  - For single-select dropdowns, `input.fields.<Name>` is a single raw value such as `germany`.
-  - For multiselect dropdowns, `input.fields.<Name>` is an array-like Lua table of raw values.
+  - For single-select dropdowns, `input.<Name>.Value` is a single raw value such as `germany`.
+  - For multiselect dropdowns, `input.<Name>.Value` is an array-like Lua table of raw values.
   - The UI shows the `Display` text, while prompt assembly and `BuildPrompt(input)` receive the raw `Value`.
   - `Default` should usually also exist in `Items`. If it is missing there, the runtime currently still renders it as an available option.
 
@@ -272,13 +272,20 @@ More information on rendered components can be found [here](https://www.mudblazo
 #### `Action(input)` interface
 - The function receives the same `input` structure as `ASSISTANT.BuildPrompt(input)`.
 - Return `nil` for no state update.
-- To update component state, return a table with a `fields` table.
-- `fields` keys must reference existing component `Name` values.
-- Supported write targets:
+- Each named component is available as `input.<Name>` and exposes:
+  - `Type`: component type such as `TEXT_AREA` or `SWITCH`
+  - `Value`: current component value
+  - `Props`: readable component props
+- To update component state, return a table with a `state` table.
+- `state` keys must reference existing component `Name` values.
+- Each component update may include:
+  - `Value`: updates the current state value
+  - `Props`: partial prop updates for writable props
+- Supported `Value` write targets:
   - `TEXT_AREA`, single-select `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`: string values
   - multiselect `DROPDOWN`: array-like Lua table of strings
   - `SWITCH`: boolean values
-- Unknown field names and wrong value types are ignored and logged.
+- Unknown component names, wrong value types, unsupported prop values, and non-writeable props are ignored and logged.
 
 #### Example Button component
 ```lua
@@ -296,8 +303,8 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["IconColor"] = "Inherit",
     ["IconSize"] = "Medium",
     ["Action"] = function(input)
-      local email = input.fields.emailContent or ""
-      local translate = input.fields.translateEmail or false
+      local email = input.emailContent and input.emailContent.Value or ""
+      local translate = input.translateEmail and input.translateEmail.Value or false
       local output = email
 
       if translate then
@@ -305,8 +312,10 @@ More information on rendered components can be found [here](https://www.mudblazo
       end
 
       return {
-        fields = {
-          outputTextField = output
+        state = {
+          outputTextField = {
+            Value = output
+          }
         }
       }
     end,
@@ -330,8 +339,10 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["StartIcon"] = "Icons.Material.Filled.Refresh",
     ["Action"] = function(input)
       return {
-        fields = {
-          outputTextField = "Preview refreshed at " .. Timestamp()
+        state = {
+          outputTextField = {
+            Value = "Preview refreshed at " .. Timestamp()
+          }
         }
       }
     end
@@ -374,8 +385,10 @@ More information on rendered components can be found [here](https://www.mudblazo
         ["Text"] = "Build output",
         ["Action"] = function(input)
           return {
-            fields = {
-              outputBuffer = input.fields.emailContent or ""
+            state = {
+              outputBuffer = {
+                Value = input.emailContent and input.emailContent.Value or ""
+              }
             }
           }
         end,
@@ -388,7 +401,8 @@ More information on rendered components can be found [here](https://www.mudblazo
         ["Name"] = "logColor",
         ["Text"] = "Log color",
         ["Action"] = function(input)
-          LogError("ColorPicker value: " .. tostring(input.fields.colorPicker or ""))
+          local colorValue = input.colorPicker and input.colorPicker.Value or ""
+          LogError("ColorPicker value: " .. colorValue)
           return nil
         end,
         ["EndIcon"] = "Icons.Material.Filled.BugReport"
@@ -402,11 +416,11 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `SWITCH` reference
 - Use `Type = "SWITCH"` to render a boolean toggle.
 - Required props:
-  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Value`: initial boolean state (`true` or `false`).
 - Optional props:
   - `Label`: If set, renders the switch inside an outlines Box, otherwise renders it raw. Visible label for the switch field.
-  - `OnChanged`: Lua callback invoked after the switch value changes. It receives the same `input` table as `BUTTON.Action(input)` and may return `{ fields = { ... } }` to update component state. The new switch value is already reflected in `input.fields[Name]`.
+  - `OnChanged`: Lua callback invoked after the switch value changes. It receives the same `input` table as `BUTTON.Action(input)` and may return `{ state = { ... } }` to update component state. The new switch value is already reflected in `input.<Name>.Value`.
   - `Disabled`: defaults to `false`; disables user interaction while still allowing the value to be included in prompt assembly.
   - `UserPrompt`: prompt context text for this field.
   - `LabelOn`: text shown when the switch value is `true`.
@@ -427,10 +441,12 @@ More information on rendered components can be found [here](https://www.mudblazo
     ["Label"] = "Include summary",
     ["Value"] = true,
     ["OnChanged"] = function(input)
-      local includeSummary = input.fields.IncludeSummary or false
+      local includeSummary = input.IncludeSummary and input.IncludeSummary.Value or false
       return {
-        fields = {
-          SummaryMode = includeSummary and "short-summary" or "no-summary"
+        state = {
+          SummaryMode = {
+            Value = includeSummary and "short-summary" or "no-summary"
+          }
         }
       }
     end,
@@ -452,7 +468,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `COLOR_PICKER` reference
 - Use `Type = "COLOR_PICKER"` to render a MudBlazor color picker.
 - Required props:
-  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Label`: visible field label.
 - Optional props:
   - `Placeholder`: default color hex string (e.g. `#FF10FF`) or initial hint text.
@@ -485,7 +501,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `DATE_PICKER` reference
 - Use `Type = "DATE_PICKER"` to render a MudBlazor date picker.
 - Required props:
-  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Label`: visible field label.
 - Optional props:
   - `Value`: initial date string. Use the same format as `DateFormat`; default recommendation is `yyyy-MM-dd`.
@@ -520,7 +536,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `DATE_RANGE_PICKER` reference
 - Use `Type = "DATE_RANGE_PICKER"` to render a MudBlazor date range picker.
 - Required props:
-  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Label`: visible field label.
 - Optional props:
   - `Value`: initial range string using `<start> - <end>`, for example `2026-03-01 - 2026-03-31`.
@@ -557,7 +573,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `TIME_PICKER` reference
 - Use `Type = "TIME_PICKER"` to render a MudBlazor time picker.
 - Required props:
-  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input.fields)`.
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Label`: visible field label.
 - Optional props:
   - `Value`: initial time string. Use the same format as `TimeFormat`; default recommendations are `HH:mm` or `hh:mm tt`.
@@ -613,34 +629,24 @@ If you want full control over prompt composition, define `ASSISTANT.BuildPrompt`
 ---
 ### `input` table shape
 The function receives a single `input` Lua table with:
-- `input.fields`: values keyed by component `Name`
-  - Text area, single-select dropdown, and readers are strings
-  - Multiselect dropdown is an array-like Lua table of strings
-  - Switch is a boolean
-  - Color picker is the selected color as a string
-  - Date picker is the selected date as a string
-  - Date range picker is the selected range as a single string in `<start> - <end>` format
-  - Time picker is the selected time as a string
-- `input.meta`: per-component metadata keyed by component `Name`
+- `input.<Name>`: one entry per named component
   - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`)
-  - `Label` (string, when provided)
-  - `UserPrompt` (string, when provided)
+  - `Value` (current component value)
+  - `Props` (readable component props)
 - `input.profile`: selected profile data
   - `Name`, `NeedToKnow`, `Actions`, `Num`
   - When no profile is selected, values match the built-in "Use no profile" entry
+  - `profile` is a reserved key in the input table
 ```
 input = {
-  fields = {
-    ["<Name>"] = "<string|boolean>",
-    ...
-  },
-  meta = {
-    ["<Name>"] = {
-      Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER|COLOR_PICKER|DATE_PICKER|DATE_RANGE_PICKER|TIME_PICKER>",
+  ["<Name>"] = {
+    Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER|COLOR_PICKER|DATE_PICKER|DATE_RANGE_PICKER|TIME_PICKER>",
+    Value = "<string|boolean|table>",
+    Props = {
+      Name = "<string>",
       Label = "<string?>",
       UserPrompt = "<string?>"
-    },
-    ...
+    }
   },
   profile = {
     Name = "<string>",
@@ -654,47 +660,66 @@ input = {
 ```
 ---
 
-### Using `meta` inside BuildPrompt
-`input.meta` is useful when you want to dynamically build the prompt based on component type or reuse existing UI text (labels/user prompts).
+### Using component metadata inside BuildPrompt
+`input.<Name>.Type` and `input.<Name>.Props` are useful when you want to build prompts from a few specific fields without depending on the default `UserPrompt` assembly.
 
-#### Example: iterate all fields with labels and include their values
+#### Example: build a prompt from two fields
 ```lua
 ASSISTANT.BuildPrompt = function(input)
+  local topic = input.Topic and input.Topic.Value or ""
+  local includeSummary = input.IncludeSummary and input.IncludeSummary.Value or false
+
   local parts = {}
-  for name, value in pairs(input.fields) do
-    local meta = input.meta[name]
-    if meta and meta.Label and value ~= "" then
-      table.insert(parts, meta.Label .. ": " .. tostring(value))
-    end
+  if topic ~= "" then
+    table.insert(parts, "Topic: " .. topic)
   end
+
+  if includeSummary then
+    table.insert(parts, "Add a short summary at the end.")
+  end
+
   return table.concat(parts, "\n")
 end
 ```
 
-#### Example: handle types differently
+#### Example: reuse a label from `Props`
 ```lua
 ASSISTANT.BuildPrompt = function(input)
-  local parts = {}
-  for name, meta in pairs(input.meta) do
-    local value = input.fields[name]
-    if meta.Type == "SWITCH" then
-      table.insert(parts, name .. ": " .. tostring(value))
-    elseif meta.Type == "COLOR_PICKER" and value and value ~= "" then
-      table.insert(parts, name .. ": " .. value)
-    elseif meta.Type == "DATE_PICKER" and value and value ~= "" then
-      table.insert(parts, name .. ": " .. value)
-    elseif meta.Type == "DATE_RANGE_PICKER" and value and value ~= "" then
-      table.insert(parts, name .. ": " .. value)
-    elseif meta.Type == "TIME_PICKER" and value and value ~= "" then
-      table.insert(parts, name .. ": " .. value)
-    elseif value and value ~= "" then
-      table.insert(parts, name .. ": " .. value)
-    end
+  local main = input.Main
+  if not main then
+    return ""
   end
-  return table.concat(parts, "\n")
+
+  local label = main.Props and main.Props.Label or "Main"
+  local value = main.Value or ""
+  return label .. ": " .. value
 end
 ```
---- 
+---
+
+### Callback result shape
+Callbacks may return a partial state update:
+
+```lua
+return {
+  state = {
+    ["<Name>"] = {
+      Value = "<optional new value>",
+      Props = {
+        -- optional writable prop updates
+      }
+    }
+  }
+}
+```
+
+- `Value` is optional
+- `Props` is optional
+- `Props` updates are partial
+- non-writeable props are ignored and logged
+
+---
+
 ### Using `profile` inside BuildPrompt
 Profiles are optional user context (e.g., "NeedToKnow" and "Actions"). You can inject this directly into the user prompt if you want the LLM to always see it.
 
@@ -707,7 +732,7 @@ ASSISTANT.BuildPrompt = function(input)
     table.insert(parts, input.profile.NeedToKnow)
     table.insert(parts, "")
   end
-  table.insert(parts, input.fields.Main or "")
+  table.insert(parts, input.Main and input.Main.Value or "")
   return table.concat(parts, "\n")
 end
 ```
@@ -1012,14 +1037,14 @@ The assistant runtime exposes basic logging helpers to Lua. Use them to debug cu
 
 - `LogDebug(message)`
 - `LogInfo(message)`
-- `LogWarn(message)`
+- `LogWarning(message)`
 - `LogError(message)`
 
 #### Example: Use Logging in lua functions
 ```lua
 ASSISTANT.BuildPrompt = function(input)
   LogInfo("BuildPrompt called")
-  return input.fields.Text or ""
+  return input.Text and input.Text.Value or ""
 end
 ```
 ---

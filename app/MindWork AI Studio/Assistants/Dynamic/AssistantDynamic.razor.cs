@@ -194,9 +194,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private LuaTable BuildPromptInput()
     {
-        var input = new LuaTable();
+        var state = new LuaTable();
         var rootComponent = this.RootComponent;
-        input["state"] = rootComponent is not null
+        state = rootComponent is not null
             ? this.assistantState.ToLuaTable(rootComponent.Children)
             : new LuaTable();
 
@@ -207,9 +207,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
             ["Actions"] = this.currentProfile.Actions,
             ["Num"] = this.currentProfile.Num,
         };
-        input["profile"] = profile;
+        state["profile"] = profile;
 
-        return input;
+        return state;
     }
 
     private string CollectUserPromptFallback()
@@ -308,22 +308,52 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private void ApplyActionResult(LuaTable result, AssistantComponentType sourceType)
     {
-        if (!result.TryGetValue("fields", out var fieldsValue))
+        if (!result.TryGetValue("state", out var statesValue))
             return;
 
-        if (!fieldsValue.TryRead<LuaTable>(out var fieldsTable))
+        if (!statesValue.TryRead<LuaTable>(out var stateTable))
         {
-            this.Logger.LogWarning("Assistant {ComponentType} callback returned a non-table 'fields' value. The result is ignored.", sourceType);
+            this.Logger.LogWarning($"Assistant {sourceType} callback returned a non-table 'state' value. The result is ignored.");
             return;
         }
 
-        foreach (var pair in fieldsTable)
+        foreach (var component in stateTable)
         {
-            if (!pair.Key.TryRead<string>(out var fieldName) || string.IsNullOrWhiteSpace(fieldName))
+            if (!component.Key.TryRead<string>(out var componentName) || string.IsNullOrWhiteSpace(componentName))
                 continue;
 
-            this.TryApplyFieldUpdate(fieldName, pair.Value, sourceType);
+            if (!component.Value.TryRead<LuaTable>(out var componentUpdate))
+            {
+                this.Logger.LogWarning($"Assistant {sourceType} callback returned a non-table update for '{componentName}'. The result is ignored.");
+                continue;
+            }
+
+            this.TryApplyComponentUpdate(componentName, componentUpdate, sourceType);
         }
+    }
+
+    private void TryApplyComponentUpdate(string componentName, LuaTable componentUpdate, AssistantComponentType sourceType)
+    {
+        if (componentUpdate.TryGetValue("Value", out var value))
+            this.TryApplyFieldUpdate(componentName, value, sourceType);
+
+        if (!componentUpdate.TryGetValue("Props", out var propsValue))
+            return;
+
+        if (!propsValue.TryRead<LuaTable>(out var propsTable))
+        {
+            this.Logger.LogWarning($"Assistant {sourceType} callback returned a non-table 'Props' value for '{componentName}'. The props update is ignored.");
+            return;
+        }
+
+        var rootComponent = this.RootComponent;
+        if (rootComponent is null || !TryFindNamedComponent(rootComponent.Children, componentName, out var component))
+        {
+            this.Logger.LogWarning($"Assistant {sourceType} callback tried to update props of unknown component '{componentName}'. The props update is ignored.");
+            return;
+        }
+
+        this.ApplyPropUpdates(component, propsTable, sourceType);
     }
 
     private void TryApplyFieldUpdate(string fieldName, LuaValue value, AssistantComponentType sourceType)
@@ -339,6 +369,51 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
         this.Logger.LogWarning($"Assistant {sourceType} callback tried to update unknown field '{fieldName}'. The value is ignored.");
     }
+
+    private void ApplyPropUpdates(IAssistantComponent component, LuaTable propsTable, AssistantComponentType sourceType)
+    {
+        var propSpec = ComponentPropSpecs.SPECS.GetValueOrDefault(component.Type);
+
+        foreach (var prop in propsTable)
+        {
+            if (!prop.Key.TryRead<string>(out var propName) || string.IsNullOrWhiteSpace(propName))
+                continue;
+
+            if (propSpec is not null && propSpec.NonWriteable.Contains(propName, StringComparer.Ordinal))
+            {
+                this.Logger.LogWarning($"Assistant {sourceType} callback tried to update non-writeable prop '{propName}' on component '{GetComponentName(component)}'. The value is ignored.");
+                continue;
+            }
+
+            if (!AssistantLuaConversion.TryReadScalarOrStructuredValue(prop.Value, out var convertedValue))
+            {
+                this.Logger.LogWarning($"Assistant {sourceType} callback returned an unsupported value for prop '{propName}' on component '{GetComponentName(component)}'. The props update is ignored.");
+                continue;
+            }
+
+            component.Props[propName] = convertedValue;
+        }
+    }
+
+    private static bool TryFindNamedComponent(IEnumerable<IAssistantComponent> components, string componentName, out IAssistantComponent component)
+    {
+        foreach (var candidate in components)
+        {
+            if (candidate is INamedAssistantComponent named && string.Equals(named.Name, componentName, StringComparison.Ordinal))
+            {
+                component = candidate;
+                return true;
+            }
+
+            if (candidate.Children.Count > 0 && TryFindNamedComponent(candidate.Children, componentName, out component))
+                return true;
+        }
+
+        component = null!;
+        return false;
+    }
+
+    private static string GetComponentName(IAssistantComponent component) => component is INamedAssistantComponent named ? named.Name : component.Type.ToString();
 
     private EventCallback<HashSet<string>> CreateMultiselectDropdownChangedCallback(string fieldName) =>
         EventCallback.Factory.Create<HashSet<string>>(this, values =>

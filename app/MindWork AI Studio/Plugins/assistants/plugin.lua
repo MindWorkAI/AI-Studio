@@ -147,8 +147,8 @@ ASSISTANT = {
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of start and end icons on text buttons. Defaults to Inherit
                     ["IconSize"] = "<Small|Medium|Large>", -- size of icons. Defaults to null. When null, the value of ["Size"] is used
                     ["Action"] = function(input)
-                        local email = input.fields.emailContent or ""
-                        local translate = input.fields.translateEmail or false
+                        local email = input.emailContent and input.emailContent.Value or ""
+                        local translate = input.translateEmail and input.translateEmail.Value or false
                         local output = email
 
                         if translate then
@@ -156,8 +156,10 @@ ASSISTANT = {
                         end
 
                         return {
-                            fields = {
-                                outputBuffer = output
+                            state = {
+                                outputBuffer = {
+                                    Value = output
+                                }
                             }
                         }
                     end,
