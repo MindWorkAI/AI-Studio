@@ -2,7 +2,6 @@ using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
-using System.Text;
 
 namespace AIStudio.Chat;
 
@@ -11,6 +10,14 @@ namespace AIStudio.Chat;
 /// </summary>
 public partial class ContentBlockComponent : MSGComponentBase
 {
+    private const string HTML_START_TAG = "<";
+    private const string HTML_END_TAG = "</";
+    private const string HTML_SELF_CLOSING_TAG = "/>";
+    private const string CODE_FENCE_MARKER_BACKTICK = "```";
+    private const string CODE_FENCE_MARKER_TILDE = "~~~";
+    private const string MATH_BLOCK_MARKER = "$$";
+    private const string HTML_CODE_FENCE_PREFIX = "```html";
+
     private static readonly string[] HTML_TAG_MARKERS =
     [
         "<!doctype",
@@ -83,6 +90,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool HideContent { get; set; }
     private bool hasRenderHash;
     private int lastRenderHash;
+    private string cachedMarkdownRenderPlanInput = string.Empty;
+    private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
 
     #region Overrides of ComponentBase
 
@@ -195,122 +204,179 @@ public partial class ContentBlockComponent : MSGComponentBase
         CodeBlock = { Theme = this.CodeColorPalette },
     };
 
-    private static IReadOnlyList<MarkdownRenderSegment> GetMarkdownRenderSegments(string text)
+    private MarkdownRenderPlan GetMarkdownRenderPlan(string text)
+    {
+        if (ReferenceEquals(this.cachedMarkdownRenderPlanInput, text) || string.Equals(this.cachedMarkdownRenderPlanInput, text, StringComparison.Ordinal))
+            return this.cachedMarkdownRenderPlan;
+
+        this.cachedMarkdownRenderPlanInput = text;
+        this.cachedMarkdownRenderPlan = BuildMarkdownRenderPlan(text);
+        return this.cachedMarkdownRenderPlan;
+    }
+
+    private static MarkdownRenderPlan BuildMarkdownRenderPlan(string text)
     {
         var normalized = NormalizeMarkdownForRendering(text);
         if (string.IsNullOrWhiteSpace(normalized))
-            return [];
+            return MarkdownRenderPlan.EMPTY;
 
-        var normalizedWithUnixLineEndings = normalized.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
-        var lines = normalizedWithUnixLineEndings.Split('\n');
-        var markdownBuilder = new StringBuilder();
-        var mathBuilder = new StringBuilder();
-        
+        var normalizedSpan = normalized.AsSpan();
         var segments = new List<MarkdownRenderSegment>();
-        string? activeCodeFenceMarker = null;
+        var activeCodeFenceMarker = '\0';
         var inMathBlock = false;
+        var markdownSegmentStart = 0;
+        var mathContentStart = 0;
 
-        foreach (var line in lines)
+        for (var lineStart = 0; lineStart < normalizedSpan.Length;)
         {
-            var trimmedLine = line.Trim();
+            var lineEnd = lineStart;
+            while (lineEnd < normalizedSpan.Length && normalizedSpan[lineEnd] is not '\r' and not '\n')
+                lineEnd++;
 
+            var nextLineStart = lineEnd;
+            if (nextLineStart < normalizedSpan.Length)
+            {
+                if (normalizedSpan[nextLineStart] == '\r')
+                    nextLineStart++;
+
+                if (nextLineStart < normalizedSpan.Length && normalizedSpan[nextLineStart] == '\n')
+                    nextLineStart++;
+            }
+
+            var trimmedLine = TrimWhitespace(normalizedSpan[lineStart..lineEnd]);
             if (!inMathBlock && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
             {
-                markdownBuilder.AppendLine(line);
+                lineStart = nextLineStart;
                 continue;
             }
 
-            if (activeCodeFenceMarker is not null)
+            if (activeCodeFenceMarker != '\0')
             {
-                markdownBuilder.AppendLine(line);
+                lineStart = nextLineStart;
                 continue;
             }
 
-            if (trimmedLine == "$$")
+            if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER.AsSpan()))
             {
                 if (inMathBlock)
                 {
-                    segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, mathBuilder.ToString().Trim('\r', '\n')));
-                    mathBuilder.Clear();
+                    var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
+                    segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
+
+                    markdownSegmentStart = nextLineStart;
                     inMathBlock = false;
                 }
                 else
                 {
-                    FlushMarkdownSegment();
+                    AddMarkdownSegment(markdownSegmentStart, lineStart);
+                    mathContentStart = nextLineStart;
                     inMathBlock = true;
                 }
-
-                continue;
             }
 
-            if (inMathBlock)
-                mathBuilder.AppendLine(line);
-            else
-                markdownBuilder.AppendLine(line);
+            lineStart = nextLineStart;
         }
 
         if (inMathBlock)
-            return [new(MarkdownRenderSegmentType.MARKDOWN, normalized)];
+            return new(normalized, [new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length)]);
 
-        FlushMarkdownSegment();
-        return segments.Count > 0 ? segments : [new(MarkdownRenderSegmentType.MARKDOWN, normalized)];
+        AddMarkdownSegment(markdownSegmentStart, normalized.Length);
+        if (segments.Count == 0)
+            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length));
 
-        void FlushMarkdownSegment()
+        return new(normalized, segments);
+
+        void AddMarkdownSegment(int start, int end)
         {
-            if (markdownBuilder.Length == 0)
+            if (end <= start)
                 return;
 
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, markdownBuilder.ToString()));
-            markdownBuilder.Clear();
+            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, start, end - start));
         }
     }
 
     private static string NormalizeMarkdownForRendering(string text)
     {
-        var cleaned = text.RemoveThinkTags().Trim();
-        if (string.IsNullOrWhiteSpace(cleaned))
+        var textWithoutThinkTags = text.RemoveThinkTags();
+        var trimmed = TrimWhitespace(textWithoutThinkTags.AsSpan());
+        if (trimmed.IsEmpty)
             return string.Empty;
 
-        if (cleaned.Contains("```", StringComparison.Ordinal))
+        var cleaned = trimmed.Length == textWithoutThinkTags.Length
+            ? textWithoutThinkTags
+            : trimmed.ToString();
+
+        if (cleaned.Contains(CODE_FENCE_MARKER_BACKTICK, StringComparison.Ordinal))
             return cleaned;
 
         if (LooksLikeRawHtml(cleaned))
-            return $"```html{Environment.NewLine}{cleaned}{Environment.NewLine}```";
+            return $"{HTML_CODE_FENCE_PREFIX}{Environment.NewLine}{cleaned}{Environment.NewLine}{CODE_FENCE_MARKER_BACKTICK}";
 
         return cleaned;
     }
 
     private static bool LooksLikeRawHtml(string text)
     {
-        var content = text.TrimStart();
-        if (!content.StartsWith("<", StringComparison.Ordinal))
+        var content = text.AsSpan();
+        var start = 0;
+        while (start < content.Length && char.IsWhiteSpace(content[start]))
+            start++;
+
+        content = content[start..];
+        if (!content.StartsWith(HTML_START_TAG.AsSpan(), StringComparison.Ordinal))
             return false;
 
         foreach (var marker in HTML_TAG_MARKERS)
-            if (content.Contains(marker, StringComparison.OrdinalIgnoreCase))
+            if (content.IndexOf(marker.AsSpan(), StringComparison.OrdinalIgnoreCase) >= 0)
                 return true;
 
-        return content.Contains("</", StringComparison.Ordinal) || content.Contains("/>", StringComparison.Ordinal);
+        return content.IndexOf(HTML_END_TAG.AsSpan(), StringComparison.Ordinal) >= 0
+               || content.IndexOf(HTML_SELF_CLOSING_TAG.AsSpan(), StringComparison.Ordinal) >= 0;
     }
 
-    private static bool TryUpdateCodeFenceState(string trimmedLine, ref string? activeCodeFenceMarker)
+    private static bool TryUpdateCodeFenceState(ReadOnlySpan<char> trimmedLine, ref char activeCodeFenceMarker)
     {
-        string? fenceMarker = null;
-        if (trimmedLine.StartsWith("```", StringComparison.Ordinal))
-            fenceMarker = "```";
-        else if (trimmedLine.StartsWith("~~~", StringComparison.Ordinal))
-            fenceMarker = "~~~";
+        var fenceMarker = '\0';
+        if (trimmedLine.StartsWith(CODE_FENCE_MARKER_BACKTICK.AsSpan(), StringComparison.Ordinal))
+            fenceMarker = '`';
+        else if (trimmedLine.StartsWith(CODE_FENCE_MARKER_TILDE.AsSpan(), StringComparison.Ordinal))
+            fenceMarker = '~';
 
-        if (fenceMarker is null)
+        if (fenceMarker == '\0')
             return false;
 
-        activeCodeFenceMarker = activeCodeFenceMarker is null
+        activeCodeFenceMarker = activeCodeFenceMarker == '\0'
             ? fenceMarker
             : activeCodeFenceMarker == fenceMarker
-                ? null
+                ? '\0'
                 : activeCodeFenceMarker;
 
         return true;
+    }
+
+    private static ReadOnlySpan<char> TrimWhitespace(ReadOnlySpan<char> text)
+    {
+        var start = 0;
+        var end = text.Length - 1;
+
+        while (start < text.Length && char.IsWhiteSpace(text[start]))
+            start++;
+
+        while (end >= start && char.IsWhiteSpace(text[end]))
+            end--;
+
+        return start > end ? ReadOnlySpan<char>.Empty : text[start..(end + 1)];
+    }
+
+    private static (int Start, int End) TrimLineBreaks(ReadOnlySpan<char> text, int start, int end)
+    {
+        while (start < end && text[start] is '\r' or '\n')
+            start++;
+
+        while (end > start && text[end - 1] is '\r' or '\n')
+            end--;
+
+        return (start, end);
     }
 
     private enum MarkdownRenderSegmentType
@@ -319,7 +385,33 @@ public partial class ContentBlockComponent : MSGComponentBase
         MATH_BLOCK,
     }
 
-    private sealed record MarkdownRenderSegment(MarkdownRenderSegmentType Type, string Content);
+    private sealed record MarkdownRenderPlan(string Source, IReadOnlyList<MarkdownRenderSegment> Segments)
+    {
+        public static readonly MarkdownRenderPlan EMPTY = new(string.Empty, []);
+    }
+
+    private sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length)
+    {
+        private string? cachedContent;
+
+        public MarkdownRenderSegmentType Type { get; } = type;
+
+        public int Start { get; } = start;
+
+        public int Length { get; } = length;
+
+        public string GetContent(string source)
+        {
+            if (this.cachedContent is not null)
+                return this.cachedContent;
+
+            this.cachedContent = this.Start == 0 && this.Length == source.Length
+                ? source
+                : source.Substring(this.Start, this.Length);
+
+            return this.cachedContent;
+        }
+    }
     
     private async Task RemoveBlock()
     {

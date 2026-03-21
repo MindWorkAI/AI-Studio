@@ -96,16 +96,17 @@
                             }
                             else
                             {
-                                var renderSegments = GetMarkdownRenderSegments(textContent.Text);
-                                foreach (var segment in renderSegments)
+                                var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
+                                foreach (var segment in renderPlan.Segments)
                                 {
+                                    var segmentContent = segment.GetContent(renderPlan.Source);
                                     if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
                                     {
-                                        <MudMarkdown Value="@segment.Content" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                        <MudMarkdown Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
                                     }
                                     else
                                     {
-                                        <MathJaxBlock Value="@segment.Content" Class="mb-5" />
+                                        <MathJaxBlock Value="@segmentContent" Class="mb-5" />
                                     }
                                 }
                                 @if (textContent.Sources.Count > 0)
