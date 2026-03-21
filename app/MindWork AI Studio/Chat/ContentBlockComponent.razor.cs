@@ -15,7 +15,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     private const string HTML_SELF_CLOSING_TAG = "/>";
     private const string CODE_FENCE_MARKER_BACKTICK = "```";
     private const string CODE_FENCE_MARKER_TILDE = "~~~";
-    private const string MATH_BLOCK_MARKER = "$$";
+    private const string MATH_BLOCK_MARKER_DOLLAR = "$$";
+    private const string MATH_BLOCK_MARKER_BRACKET_OPEN = """\[""";
+    private const string MATH_BLOCK_MARKER_BRACKET_CLOSE = """\]""";
     private const string HTML_CODE_FENCE_PREFIX = "```html";
 
     private static readonly string[] HTML_TAG_MARKERS =
@@ -223,7 +225,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         var normalizedSpan = normalized.AsSpan();
         var segments = new List<MarkdownRenderSegment>();
         var activeCodeFenceMarker = '\0';
-        var inMathBlock = false;
+        var activeMathBlockFenceType = MathBlockFenceType.NONE;
         var markdownSegmentStart = 0;
         var mathContentStart = 0;
 
@@ -244,7 +246,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             }
 
             var trimmedLine = TrimWhitespace(normalizedSpan[lineStart..lineEnd]);
-            if (!inMathBlock && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
+            if (activeMathBlockFenceType is MathBlockFenceType.NONE && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
             {
                 lineStart = nextLineStart;
                 continue;
@@ -256,28 +258,51 @@ public partial class ContentBlockComponent : MSGComponentBase
                 continue;
             }
 
-            if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER.AsSpan()))
+            if (activeMathBlockFenceType is MathBlockFenceType.NONE)
             {
-                if (inMathBlock)
-                {
-                    var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
-                    segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
-
-                    markdownSegmentStart = nextLineStart;
-                    inMathBlock = false;
-                }
-                else
+                if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
                 {
                     AddMarkdownSegment(markdownSegmentStart, lineStart);
                     mathContentStart = nextLineStart;
-                    inMathBlock = true;
+                    activeMathBlockFenceType = MathBlockFenceType.DOLLAR;
+                    lineStart = nextLineStart;
+                    continue;
                 }
+
+                if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_OPEN.AsSpan()))
+                {
+                    AddMarkdownSegment(markdownSegmentStart, lineStart);
+                    mathContentStart = nextLineStart;
+                    activeMathBlockFenceType = MathBlockFenceType.BRACKET;
+                    lineStart = nextLineStart;
+                    continue;
+                }
+            }
+            else if (activeMathBlockFenceType is MathBlockFenceType.DOLLAR && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
+            {
+                var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
+                segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
+
+                markdownSegmentStart = nextLineStart;
+                activeMathBlockFenceType = MathBlockFenceType.NONE;
+                lineStart = nextLineStart;
+                continue;
+            }
+            else if (activeMathBlockFenceType is MathBlockFenceType.BRACKET && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_CLOSE.AsSpan()))
+            {
+                var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
+                segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
+
+                markdownSegmentStart = nextLineStart;
+                activeMathBlockFenceType = MathBlockFenceType.NONE;
+                lineStart = nextLineStart;
+                continue;
             }
 
             lineStart = nextLineStart;
         }
 
-        if (inMathBlock)
+        if (activeMathBlockFenceType is not MathBlockFenceType.NONE)
             return new(normalized, [new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length)]);
 
         AddMarkdownSegment(markdownSegmentStart, normalized.Length);
@@ -385,6 +410,13 @@ public partial class ContentBlockComponent : MSGComponentBase
         MATH_BLOCK,
     }
 
+    private enum MathBlockFenceType
+    {
+        NONE,
+        DOLLAR,
+        BRACKET,
+    }
+
     private sealed record MarkdownRenderPlan(string Source, IReadOnlyList<MarkdownRenderSegment> Segments)
     {
         public static readonly MarkdownRenderPlan EMPTY = new(string.Empty, []);
@@ -396,9 +428,9 @@ public partial class ContentBlockComponent : MSGComponentBase
 
         public MarkdownRenderSegmentType Type { get; } = type;
 
-        public int Start { get; } = start;
+        private int Start { get; } = start;
 
-        public int Length { get; } = length;
+        private int Length { get; } = length;
 
         public string GetContent(string source)
         {
