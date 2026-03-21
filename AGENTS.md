@@ -36,6 +36,7 @@ This builds the .NET app as a Tauri "sidecar" binary, which is required even for
 - If the context fits better, it is also acceptable to ask the user to start the build using their IDE's built-in build action, as long as it is clear the build must be run locally by the user.
 - After asking for the build, wait for the user's feedback before diagnosing issues, making follow-up changes, or suggesting the next step.
 - Treat the user's build output, error messages, or success confirmation as the source of truth for further troubleshooting.
+- For reference: https://github.com/openai/codex/issues/4915
 
 ### Running Tests
 Currently, no automated test suite exists in the repository.
