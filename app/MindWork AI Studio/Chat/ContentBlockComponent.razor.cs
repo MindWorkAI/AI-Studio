@@ -2,6 +2,7 @@ using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
+using System.Text;
 
 namespace AIStudio.Chat;
 
@@ -194,6 +195,72 @@ public partial class ContentBlockComponent : MSGComponentBase
         CodeBlock = { Theme = this.CodeColorPalette },
     };
 
+    private static IReadOnlyList<MarkdownRenderSegment> GetMarkdownRenderSegments(string text)
+    {
+        var normalized = NormalizeMarkdownForRendering(text);
+        if (string.IsNullOrWhiteSpace(normalized))
+            return [];
+
+        var normalizedWithUnixLineEndings = normalized.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+        var lines = normalizedWithUnixLineEndings.Split('\n');
+        var markdownBuilder = new StringBuilder();
+        var mathBuilder = new StringBuilder();
+        var segments = new List<MarkdownRenderSegment>();
+        string? activeCodeFenceMarker = null;
+        var inMathBlock = false;
+
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+
+            if (!inMathBlock && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
+            {
+                AppendLine(markdownBuilder, line);
+                continue;
+            }
+
+            if (activeCodeFenceMarker is not null)
+            {
+                AppendLine(markdownBuilder, line);
+                continue;
+            }
+
+            if (trimmedLine == "$$")
+            {
+                if (inMathBlock)
+                {
+                    segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, mathBuilder.ToString().Trim('\r', '\n')));
+                    mathBuilder.Clear();
+                    inMathBlock = false;
+                }
+                else
+                {
+                    FlushMarkdownSegment();
+                    inMathBlock = true;
+                }
+
+                continue;
+            }
+
+            AppendLine(inMathBlock ? mathBuilder : markdownBuilder, line);
+        }
+
+        if (inMathBlock)
+            return [new(MarkdownRenderSegmentType.MARKDOWN, normalized)];
+
+        FlushMarkdownSegment();
+        return segments.Count > 0 ? segments : [new(MarkdownRenderSegmentType.MARKDOWN, normalized)];
+
+        void FlushMarkdownSegment()
+        {
+            if (markdownBuilder.Length == 0)
+                return;
+
+            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, markdownBuilder.ToString()));
+            markdownBuilder.Clear();
+        }
+    }
+
     private static string NormalizeMarkdownForRendering(string text)
     {
         var cleaned = text.RemoveThinkTags().Trim();
@@ -221,6 +288,39 @@ public partial class ContentBlockComponent : MSGComponentBase
 
         return content.Contains("</", StringComparison.Ordinal) || content.Contains("/>", StringComparison.Ordinal);
     }
+
+    private static bool TryUpdateCodeFenceState(string trimmedLine, ref string? activeCodeFenceMarker)
+    {
+        string? fenceMarker = null;
+        if (trimmedLine.StartsWith("```", StringComparison.Ordinal))
+            fenceMarker = "```";
+        else if (trimmedLine.StartsWith("~~~", StringComparison.Ordinal))
+            fenceMarker = "~~~";
+
+        if (fenceMarker is null)
+            return false;
+
+        activeCodeFenceMarker = activeCodeFenceMarker is null
+            ? fenceMarker
+            : activeCodeFenceMarker == fenceMarker
+                ? null
+                : activeCodeFenceMarker;
+
+        return true;
+    }
+
+    private static void AppendLine(StringBuilder builder, string line)
+    {
+        builder.AppendLine(line);
+    }
+
+    private enum MarkdownRenderSegmentType
+    {
+        MARKDOWN,
+        MATH_BLOCK,
+    }
+
+    private readonly record struct MarkdownRenderSegment(MarkdownRenderSegmentType Type, string Content);
     
     private async Task RemoveBlock()
     {

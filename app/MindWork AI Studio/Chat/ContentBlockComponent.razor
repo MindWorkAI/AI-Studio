@@ -96,7 +96,18 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@NormalizeMarkdownForRendering(textContent.Text)" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                var renderSegments = GetMarkdownRenderSegments(textContent.Text);
+                                foreach (var segment in renderSegments)
+                                {
+                                    if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
+                                    {
+                                        <MudMarkdown Value="@segment.Content" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                    }
+                                    else
+                                    {
+                                        <MathJaxBlock Value="@segment.Content" Class="mb-5" />
+                                    }
+                                }
                                 @if (textContent.Sources.Count > 0)
                                 {
                                     <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
