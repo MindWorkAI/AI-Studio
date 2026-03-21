@@ -1,4 +1,5 @@
 using AIStudio.Components;
+using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
@@ -10,6 +11,9 @@ public partial class Home : MSGComponentBase
 {
     [Inject]
     private HttpClient HttpClient { get; init; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
     
@@ -25,6 +29,19 @@ public partial class Home : MSGComponentBase
         // Read the last change content asynchronously
         // without blocking the UI thread:
         _ = this.ReadLastChangeAsync();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (this.SettingsManager.StartupStartPageRedirectHandled || !this.SettingsManager.HasCompletedInitialSettingsLoad)
+            return base.OnAfterRenderAsync(firstRender);
+
+        this.SettingsManager.StartupStartPageRedirectHandled = true;
+        var startPageRoute = this.SettingsManager.ConfigurationData.App.StartPage.ToRoute();
+        if (!string.IsNullOrWhiteSpace(startPageRoute))
+            this.NavigationManager.NavigateTo(startPageRoute, replace: true);
+
+        return base.OnAfterRenderAsync(firstRender);
     }
 
     private void InitializeAdvantagesItems()

@@ -53,6 +53,16 @@ public sealed class SettingsManager
     public bool IsDarkMode { get; set; }
 
     /// <summary>
+    /// Ensures that the startup start-page redirect is evaluated at most once per app session.
+    /// </summary>
+    public bool StartupStartPageRedirectHandled { get; set; }
+
+    /// <summary>
+    /// Indicates that the initial settings load attempt has completed.
+    /// </summary>
+    public bool HasCompletedInitialSettingsLoad { get; private set; }
+
+    /// <summary>
     /// The configuration data.
     /// </summary>
     public Data ConfigurationData { get; private set; } = new();
@@ -67,6 +77,8 @@ public sealed class SettingsManager
         var settingsSnapshot = await this.TryReadSettingsSnapshot();
         if (settingsSnapshot is not null)
             this.ConfigurationData = settingsSnapshot;
+
+        this.HasCompletedInitialSettingsLoad = true;
     }
 
     /// <summary>

@@ -52,6 +52,11 @@ public sealed class Data
     public List<Guid> EnabledPlugins { get; set; } = [];
 
     /// <summary>
+    /// Metadata for managed settings that use a plugin-provided editable default.
+    /// </summary>
+    public Dictionary<string, ManagedEditableDefaultState> ManagedEditableDefaults { get; set; } = [];
+
+    /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;

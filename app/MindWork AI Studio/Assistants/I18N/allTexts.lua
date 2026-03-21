@@ -2269,6 +2269,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1364944735"]
 -- Select preview features
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1439783084"] = "Select preview features"
 
+-- Your organization provided a default start page, but you can still change it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1454730224"] = "Your organization provided a default start page, but you can still change it."
+
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Select the desired behavior for the navigation bar."
 
@@ -2317,6 +2320,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"]
 -- Administration settings are visible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591866808"] = "Administration settings are visible"
 
+-- Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2655930524"] = "Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio."
+
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Save energy?"
 
@@ -2364,6 +2370,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T71162186"] =
 
 -- Energy saving is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T716338721"] = "Energy saving is disabled"
+
+-- Start page
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T78084670"] = "Start page"
 
 -- Preview feature visibility
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] = "Preview feature visibility"
@@ -5884,11 +5893,20 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1188453609
 -- Show also prototype features: these are works in progress; expect bugs and missing features
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245257804"] = "Show also prototype features: these are works in progress; expect bugs and missing features"
 
+-- Settings
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1258653480"] = "Settings"
+
 -- No key is sending the input
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1311973034"] = "No key is sending the input"
 
 -- Navigation never expands, no tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1402851833"] = "Navigation never expands, no tooltips"
+
+-- Welcome
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1485461907"] = "Welcome"
+
+-- Assistants
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1614176092"] = "Assistants"
 
 -- Store chats automatically
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1664293672"] = "Store chats automatically"
@@ -5914,6 +5932,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2195945406
 -- Install updates manually
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T220653235"] = "Install updates manually"
 
+-- Plugins
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2222816203"] = "Plugins"
+
 -- Also show features ready for release; these should be stable
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2301448762"] = "Also show features ready for release; these should be stable"
 
@@ -5934,6 +5955,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2566503670
 
 -- No minimum confidence level chosen
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2828607242"] = "No minimum confidence level chosen"
+
+-- Supporters
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2929332068"] = "Supporters"
 
 -- Do not specify the language
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2960082609"] = "Do not specify the language"
@@ -5968,8 +5992,14 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3711207137
 -- Also show features in alpha: these are in development; expect bugs and missing features
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4146964761"] = "Also show features in alpha: these are in development; expect bugs and missing features"
 
+-- Information
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4256323669"] = "Information"
+
 -- All preview features are hidden
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4289410063"] = "All preview features are hidden"
+
+-- Chat
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T578410699"] = "Chat"
 
 -- When possible, use the LLM provider which was used for each chat in the first place
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T75376144"] = "When possible, use the LLM provider which was used for each chat in the first place"

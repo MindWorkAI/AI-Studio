@@ -133,6 +133,17 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Always expand navigation"), NavBehavior.ALWAYS_EXPAND);
     }
 
+    public static IEnumerable<ConfigurationSelectData<StartPage>> GetStartPageData()
+    {
+        yield return new(TB("Welcome"), StartPage.HOME);
+        yield return new(TB("Chat"), StartPage.CHAT);
+        yield return new(TB("Assistants"), StartPage.ASSISTANTS);
+        yield return new(TB("Information"), StartPage.INFORMATION);
+        yield return new(TB("Plugins"), StartPage.PLUGINS);
+        yield return new(TB("Supporters"), StartPage.SUPPORTERS);
+        yield return new(TB("Settings"), StartPage.SETTINGS);
+    }
+
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
     {
         foreach (var source in Enum.GetValues<IconSources>())

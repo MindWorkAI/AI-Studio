@@ -36,6 +36,16 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// The ID of the plugin that locked this configuration.
     /// </summary>
     public Guid LockedByConfigPluginId { get; private set; }
+
+    /// <summary>
+    /// How this setting is managed by a configuration plugin, if at all.
+    /// </summary>
+    public ManagedConfigurationMode? ManagedMode { get; private set; }
+
+    /// <summary>
+    /// The ID of the plugin that currently provides an editable default value.
+    /// </summary>
+    public Guid EditableDefaultByConfigPluginId { get; private set; }
     
     /// <summary>
     /// The default value for the configuration property. This is used when resetting the property to its default state.
@@ -65,6 +75,8 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     {
         this.IsLocked = true;
         this.LockedByConfigPluginId = pluginId;
+        this.ManagedMode = ManagedConfigurationMode.LOCKED;
+        this.EditableDefaultByConfigPluginId = Guid.Empty;
     }
     
     /// <summary>
@@ -75,6 +87,9 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     {
         this.IsLocked = false;
         this.LockedByConfigPluginId = Guid.Empty;
+        if (this.ManagedMode is ManagedConfigurationMode.LOCKED)
+            this.ManagedMode = null;
+
         this.Reset();
     }
 
@@ -85,6 +100,30 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     {
         this.IsLocked = false;
         this.LockedByConfigPluginId = Guid.Empty;
+        if (this.ManagedMode is ManagedConfigurationMode.LOCKED)
+            this.ManagedMode = null;
+    }
+
+    /// <summary>
+    /// Marks the setting as having an editable default provided by a configuration plugin.
+    /// </summary>
+    public void SetEditableDefaultConfiguration(Guid pluginId)
+    {
+        this.IsLocked = false;
+        this.LockedByConfigPluginId = Guid.Empty;
+        this.ManagedMode = ManagedConfigurationMode.EDITABLE_DEFAULT;
+        this.EditableDefaultByConfigPluginId = pluginId;
+    }
+
+    /// <summary>
+    /// Clears the editable-default state without changing the current value.
+    /// </summary>
+    public void ClearEditableDefaultConfiguration()
+    {
+        if (this.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
+            this.ManagedMode = null;
+
+        this.EditableDefaultByConfigPluginId = Guid.Empty;
     }
 
     /// <summary>
@@ -128,5 +167,18 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
         var memberExpression = this.PropertyExpression.GetMemberExpression();
         if (memberExpression.Member is System.Reflection.PropertyInfo propertyInfo)
             propertyInfo.SetValue(configInstance, value);
+    }
+
+    /// <summary>
+    /// Gets the current value of the configuration property.
+    /// </summary>
+    public TValue GetValue()
+    {
+        var configInstance = this.ConfigSelection.Compile().Invoke(SETTINGS_MANAGER.ConfigurationData);
+        var memberExpression = this.PropertyExpression.GetMemberExpression();
+        if (memberExpression.Member is System.Reflection.PropertyInfo propertyInfo && propertyInfo.GetValue(configInstance) is TValue value)
+            return value;
+
+        return default!;
     }
 }
