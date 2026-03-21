@@ -193,6 +193,7 @@ please ensure they are clear and concise, avoiding technical jargon where possib
 following words:
 
 - Added
+- Released
 - Improved
 - Changed
 - Fixed
