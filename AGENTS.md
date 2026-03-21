@@ -182,6 +182,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 ## Important Development Notes
 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
+- **End of file formatting** - Do not append an extra empty line at the end of files. Preserve the existing file-ending style unless a specific formatter or file format requires a change.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Agent-run .NET builds** - Prefer `cd app/Build && dotnet run build`. When calling `dotnet` directly, use visible progress output and do not treat temporary silence as a failed build.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
