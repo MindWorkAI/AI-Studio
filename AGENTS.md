@@ -29,6 +29,11 @@ dotnet run build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
+### Running .NET builds from an agent
+- Prefer `cd app/Build && dotnet run build` for repo builds. This is the canonical build flow for the .NET sidecar in this project.
+- If a direct `dotnet` command is required, always quote paths with spaces and prefer live-progress output such as `-v normal` instead of `-v minimal`.
+- Run .NET builds as a long-lived or polled command session instead of a single short command invocation that may be cut off by an output timeout.
+- Use `--no-restore` when dependencies are already restored. Treat restore failures separately from compile failures, because restore/network issues may come from the agent sandbox rather than the project itself.
 
 ### Running Tests
 Currently, no automated test suite exists in the repository.
@@ -178,6 +183,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
 - **Spaces in paths** - Always quote paths with spaces in bash commands
+- **Agent-run .NET builds** - Prefer `cd app/Build && dotnet run build`. When calling `dotnet` directly, use visible progress output and do not treat temporary silence as a failed build.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 - **MudBlazor** - Component library requires DI setup in Program.cs
