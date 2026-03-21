@@ -193,6 +193,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **MudBlazor** - Component library requires DI setup in Program.cs
 - **Encryption** - Initialized before Rust service is marked ready
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
+- **Naming conventions** - Constants, enum members, and `static readonly` fields use `UPPER_SNAKE_CASE` such as `MY_CONSTANT`.
 - **Empty lines** - Avoid adding extra empty lines at the end of files.
 
 ## Changelogs
