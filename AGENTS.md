@@ -30,10 +30,12 @@ dotnet run build
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
 ### Running .NET builds from an agent
-- Prefer `cd app/Build && dotnet run build` for repo builds. This is the canonical build flow for the .NET sidecar in this project.
-- If a direct `dotnet` command is required, always quote paths with spaces and prefer live-progress output such as `-v normal` instead of `-v minimal`.
-- Run .NET builds as a long-lived or polled command session instead of a single short command invocation that may be cut off by an output timeout.
-- Use `--no-restore` when dependencies are already restored. Treat restore failures separately from compile failures, because restore/network issues may come from the agent sandbox rather than the project itself.
+- Do not run `.NET` builds such as `dotnet run build`, `dotnet build`, or similar build commands from an agent. Codex agents can hit a known sandbox issue during `.NET` builds, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related failures.
+- Instead, ask the user to run the `.NET` build locally in their IDE and report the result back.
+- Recommend the canonical repo build flow for the user: open an IDE terminal in the repository and run `cd app/Build && dotnet run build`.
+- If the context fits better, it is also acceptable to ask the user to start the build using their IDE's built-in build action, as long as it is clear the build must be run locally by the user.
+- After asking for the build, wait for the user's feedback before diagnosing issues, making follow-up changes, or suggesting the next step.
+- Treat the user's build output, error messages, or success confirmation as the source of truth for further troubleshooting.
 
 ### Running Tests
 Currently, no automated test suite exists in the repository.
@@ -184,12 +186,13 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
 - **End of file formatting** - Do not append an extra empty line at the end of files. Preserve the existing file-ending style unless a specific formatter or file format requires a change.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
-- **Agent-run .NET builds** - Prefer `cd app/Build && dotnet run build`. When calling `dotnet` directly, use visible progress output and do not treat temporary silence as a failed build.
+- **Agent-run .NET builds** - Do not run `.NET` builds from an agent. Ask the user to run the build locally in their IDE, preferably via `cd app/Build && dotnet run build` in an IDE terminal, then wait for their feedback before continuing.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 - **MudBlazor** - Component library requires DI setup in Program.cs
 - **Encryption** - Initialized before Rust service is marked ready
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
+- **Empty lines** - Avoid adding extra empty lines at the end of files. Follow the existing file-ending style.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
