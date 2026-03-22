@@ -98,9 +98,14 @@ impl Encryption {
     /// Encrypts the given data.
     pub fn encrypt(&self, data: &str) -> Result<EncryptedText, String> {
         let cipher = Aes256CbcEnc::new(&self.key.into(), &self.iv.into());
-        let encrypted = cipher.encrypt_padded_vec_mut::<Pkcs7>(data.as_bytes());
+        let data = data.as_bytes();
+        let mut buffer = vec![0u8; data.len() + 16];
+        buffer[..data.len()].copy_from_slice(data);
+        let encrypted = cipher
+            .encrypt_padded_mut::<Pkcs7>(&mut buffer, data.len())
+            .map_err(|e| format!("Error encrypting data: {e}"))?;
         let mut result = BASE64_STANDARD.encode(self.secret_key_salt);
-        result.push_str(&BASE64_STANDARD.encode(&encrypted));
+        result.push_str(&BASE64_STANDARD.encode(encrypted));
         Ok(EncryptedText::new(result))
     }
 
@@ -118,9 +123,12 @@ impl Encryption {
         }
 
         let cipher = Aes256CbcDec::new(&self.key.into(), &self.iv.into());
-        let decrypted = cipher.decrypt_padded_vec_mut::<Pkcs7>(encrypted).map_err(|e| format!("Error decrypting data: {e}"))?;
+        let mut buffer = encrypted.to_vec();
+        let decrypted = cipher
+            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+            .map_err(|e| format!("Error decrypting data: {e}"))?;
 
-        String::from_utf8(decrypted).map_err(|e| format!("Error converting decrypted data to string: {}", e))
+        String::from_utf8(decrypted.to_vec()).map_err(|e| format!("Error converting decrypted data to string: {}", e))
     }
 }
 

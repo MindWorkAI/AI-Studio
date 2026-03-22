@@ -26,7 +26,6 @@ rocket = { version = "0.5.1", features = ["json", "tls"] }
 rand = "0.9.1"
 rand_chacha = "0.9"
 base64 = "0.22.1"
-cipher = { version = "0.4.4", features = ["std"] }
 aes = "0.8.4"
 cbc = "0.1.2"
 pbkdf2 = "0.12.2"
