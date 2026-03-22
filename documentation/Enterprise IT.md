@@ -15,123 +15,116 @@ AI Studio checks about every 16 minutes to see if the configuration ID, the serv
 ## Configure the devices
 So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:
 
-- **Registry** (only available for Microsoft Windows): On Windows devices, AI Studio first tries to read the information from the registry. The registry information can be managed and distributed centrally as a so-called Group Policy Object (GPO).
+- **Windows Registry / GPO**: On Windows, AI Studio first tries to read the enterprise configuration metadata from the registry. This is the preferred option for centrally managed Windows devices.
 
-- **Environment variables**: On all operating systems (on Windows as a fallback after the registry), AI Studio tries to read the configuration metadata from environment variables.
+- **Policy files**: AI Studio can read simple YAML policy files from a system-wide directory. On Linux and macOS, this is the preferred option. On Windows, it is used as a fallback after the registry.
+
+- **Environment variables**: Environment variables are still supported on all operating systems, but they are now only used as the last fallback.
+
+### Source order and fallback behavior
+
+AI Studio does **not** merge the registry, policy files, and environment variables. Instead, it checks them in order and uses the **first source that contains at least one valid enterprise configuration**:
+
+- **Windows:** Registry -> Policy files -> Environment variables
+- **Linux:** Policy files -> Environment variables
+- **macOS:** Policy files -> Environment variables
+
+The encryption secret follows the same rule. It is only used from the same source that provided the active enterprise configurations.
 
 ### Multiple configurations (recommended)
 
-AI Studio supports loading multiple enterprise configurations simultaneously. This enables hierarchical configuration schemes, e.g., organization-wide settings combined with department-specific settings. The following keys and variables are used:
+AI Studio supports loading multiple enterprise configurations simultaneously. This enables hierarchical configuration schemes, such as organization-wide settings combined with institute- or department-specific settings.
 
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `configs` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS`: A combined format containing one or more configuration entries. Each entry consists of a configuration ID and a server URL separated by `@`. Multiple entries are separated by `;`. The format is: `id1@url1;id2@url2;id3@url3`. The configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier).
+The preferred format is a fixed set of indexed pairs:
 
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_encryption_secret` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`: A base64-encoded 32-byte encryption key for decrypting API keys in configuration plugins. This is optional and only needed if you want to include encrypted API keys in your configuration. All configurations share the same encryption secret.
+- Registry values `config_id0` to `config_id9` together with `config_server_url0` to `config_server_url9`
+- Environment variables `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID0` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID9` together with `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL0` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL9`
+- Policy files `config0.yaml` to `config9.yaml`
 
-**Example:** To configure two enterprise configurations (one for the organization and one for a department):
+Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to ten configurations are supported per device.
 
-```
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS=9072b77d-ca81-40da-be6a-861da525ef7b@https://intranet.my-company.com:30100/ai-studio/configuration;a1b2c3d4-e5f6-7890-abcd-ef1234567890@https://intranet.my-company.com:30100/ai-studio/department-config
-```
+If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `0`, then `1`, and so on up to `9`.
 
-**Priority:** When multiple configurations define the same setting (e.g., a provider with the same ID), the first definition wins. The order of entries in the variable determines priority. Place the organization-wide configuration first, followed by department-specific configurations if the organization should have higher priority.
+### Windows registry example
 
-### Windows GPO / PowerShell example for `configs`
+The Windows registry path is:
 
-If you distribute multiple GPOs, each GPO should read and write the same registry value (`configs`) and only update its own `id@url` entry. Other entries must stay untouched.
+`HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`
 
-The following PowerShell example provides helper functions for appending and removing entries safely:
+Example values:
 
-```powershell
-$RegistryPath = "HKCU:\Software\github\MindWork AI Studio\Enterprise IT"
-$ConfigsValueName = "configs"
+- `config_id0` = `9072b77d-ca81-40da-be6a-861da525ef7b`
+- `config_server_url0` = `https://intranet.example.org/ai-studio/configuration`
+- `config_id1` = `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+- `config_server_url1` = `https://intranet.example.org/ai-studio/department-config`
+- `config_encryption_secret` = `BASE64...`
 
-function Get-ConfigEntries {
-    param([string]$RawValue)
+This approach works well with GPOs because each slot can be managed independently without rewriting a shared combined string.
 
-    if ([string]::IsNullOrWhiteSpace($RawValue)) { return @() }
+### Policy files
 
-    $entries = @()
-    foreach ($part in $RawValue.Split(';')) {
-        $trimmed = $part.Trim()
-        if ([string]::IsNullOrWhiteSpace($trimmed)) { continue }
+#### Windows policy directory
 
-        $pair = $trimmed.Split('@', 2)
-        if ($pair.Count -ne 2) { continue }
+`%ProgramData%\MindWorkAI\AI-Studio\`
 
-        $id = $pair[0].Trim().ToLowerInvariant()
-        $url = $pair[1].Trim()
-        if ([string]::IsNullOrWhiteSpace($id) -or [string]::IsNullOrWhiteSpace($url)) { continue }
+#### Linux policy directories
 
-        $entries += [PSCustomObject]@{
-            Id  = $id
-            Url = $url
-        }
-    }
+AI Studio checks each directory listed in `$XDG_CONFIG_DIRS` and looks for a `mindwork-ai-studio` subdirectory in each one. If `$XDG_CONFIG_DIRS` is empty or not set, AI Studio falls back to:
 
-    return $entries
-}
+`/etc/xdg/mindwork-ai-studio/`
 
-function ConvertTo-ConfigValue {
-    param([array]$Entries)
+The directories from `$XDG_CONFIG_DIRS` are processed in order.
 
-    return ($Entries | ForEach-Object { "$($_.Id)@$($_.Url)" }) -join ';'
-}
+#### macOS policy directory
 
-function Add-EnterpriseConfigEntry {
-    param(
-        [Parameter(Mandatory=$true)][Guid]$ConfigId,
-        [Parameter(Mandatory=$true)][string]$ServerUrl
-    )
+`/Library/Application Support/MindWork/AI Studio/`
 
-    if (-not (Test-Path $RegistryPath)) {
-        New-Item -Path $RegistryPath -Force | Out-Null
-    }
+#### Policy file names and content
 
-    $raw = (Get-ItemProperty -Path $RegistryPath -Name $ConfigsValueName -ErrorAction SilentlyContinue).$ConfigsValueName
-    $entries = Get-ConfigEntries -RawValue $raw
-    $normalizedId = $ConfigId.ToString().ToLowerInvariant()
-    $normalizedUrl = $ServerUrl.Trim()
+Configuration files:
 
-    # Replace only this one ID, keep all other entries unchanged.
-    $entries = @($entries | Where-Object { $_.Id -ne $normalizedId })
-    $entries += [PSCustomObject]@{
-        Id  = $normalizedId
-        Url = $normalizedUrl
-    }
+- `config0.yaml`
+- `config1.yaml`
+- ...
+- `config9.yaml`
 
-    Set-ItemProperty -Path $RegistryPath -Name $ConfigsValueName -Type String -Value (ConvertTo-ConfigValue -Entries $entries)
-}
+Each configuration file contains one configuration ID and one server URL:
 
-function Remove-EnterpriseConfigEntry {
-    param(
-        [Parameter(Mandatory=$true)][Guid]$ConfigId
-    )
-
-    if (-not (Test-Path $RegistryPath)) { return }
-
-    $raw = (Get-ItemProperty -Path $RegistryPath -Name $ConfigsValueName -ErrorAction SilentlyContinue).$ConfigsValueName
-    $entries = Get-ConfigEntries -RawValue $raw
-    $normalizedId = $ConfigId.ToString().ToLowerInvariant()
-
-    # Remove only this one ID, keep all other entries unchanged.
-    $updated = @($entries | Where-Object { $_.Id -ne $normalizedId })
-    Set-ItemProperty -Path $RegistryPath -Name $ConfigsValueName -Type String -Value (ConvertTo-ConfigValue -Entries $updated)
-}
-
-# Example usage:
-# Add-EnterpriseConfigEntry -ConfigId "9072b77d-ca81-40da-be6a-861da525ef7b" -ServerUrl "https://intranet.example.org:30100/ai-studio/configuration"
-# Remove-EnterpriseConfigEntry -ConfigId "9072b77d-ca81-40da-be6a-861da525ef7b"
+```yaml
+id: "9072b77d-ca81-40da-be6a-861da525ef7b"
+server_url: "https://intranet.example.org/ai-studio/configuration"
 ```
 
-### Single configuration (legacy)
+Optional encryption secret file:
 
-The following single-configuration keys and variables are still supported for backwards compatibility. AI Studio always reads both the multi-config and legacy variables and merges all found configurations into one list. If a configuration ID appears in both, the entry from the multi-config format takes priority (first occurrence wins). This means you can migrate to the new format incrementally without losing existing configurations:
+- `config_encryption_secret.yaml`
 
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_id` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID`: This must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). It uniquely identifies the configuration. You can use an ID per department, institute, or even per person.
+```yaml
+config_encryption_secret: "BASE64..."
+```
 
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_server_url` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL`: An HTTP or HTTPS address using an IP address or DNS name. This is the web server from which AI Studio attempts to load the specified configuration as a ZIP file.
+### Environment variable example
 
-- Key `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT`, value `config_encryption_secret` or variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`: A base64-encoded 32-byte encryption key for decrypting API keys in configuration plugins. This is optional and only needed if you want to include encrypted API keys in your configuration.
+If you need the fallback environment-variable format, configure the values like this:
+
+```bash
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID0=9072b77d-ca81-40da-be6a-861da525ef7b
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL0=https://intranet.example.org/ai-studio/configuration
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID1=a1b2c3d4-e5f6-7890-abcd-ef1234567890
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL1=https://intranet.example.org/ai-studio/department-config
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET=BASE64...
+```
+
+### Legacy formats (still supported)
+
+The following older formats are still supported for backwards compatibility:
+
+- Registry value `configs` or environment variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS`: Combined format `id1@url1;id2@url2;...`
+- Registry value `config_id` or environment variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID`
+- Registry value `config_server_url` or environment variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL`
+- Registry value `config_encryption_secret` or environment variable `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`
+
+Within a single source, AI Studio reads the new indexed pairs first, then the combined legacy format, and finally the legacy single-configuration format. This makes it possible to migrate gradually without breaking older setups.
 
 ### How configurations are downloaded
 
@@ -183,7 +176,7 @@ intranet.my-company.com:30100 {
 
 ## Important: Plugin ID must match the enterprise configuration ID
 
-The `ID` field inside your configuration plugin (the Lua file) **must** be identical to the enterprise configuration ID used in the registry or environment variable. AI Studio uses this ID to match downloaded configurations to their plugins. If the IDs do not match, AI Studio will log a warning and the configuration may not be displayed correctly on the Information page.
+The `ID` field inside your configuration plugin (the Lua file) **must** be identical to the enterprise configuration ID configured on the client device, whether it comes from the registry, a policy file, or an environment variable. AI Studio uses this ID to match downloaded configurations to their plugins. If the IDs do not match, AI Studio will log a warning and the configuration may not be displayed correctly on the Information page.
 
 For example, if your enterprise configuration ID is `9072b77d-ca81-40da-be6a-861da525ef7b`, then your plugin must declare:
 
@@ -233,9 +226,10 @@ You can include encrypted API keys in your configuration plugins for cloud provi
    In AI Studio, enable the "Show administration settings" toggle in the app settings. Then click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
 
 2. **Deploy the encryption secret:**
-   Distribute the secret to all client machines via Group Policy (Windows Registry) or environment variables:
-   - Registry: `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret`
-   - Environment: `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`
+   Distribute the secret to all client machines using the same source you use for the enterprise configurations:
+   - Windows Registry / GPO: `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret`
+   - Policy file: `config_encryption_secret.yaml`
+   - Environment fallback: `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`
 
    You must also deploy the same secret on the machine where you will export the encrypted API keys (step 3).
 
