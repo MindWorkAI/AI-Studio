@@ -112,14 +112,12 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var userInput = string.Empty;
-        
         var promptFragment = $"{Environment.NewLine}context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
         if (this.IsMultiselect && state.MultiSelect.TryGetValue(this.Name, out var selections))
         {
             promptFragment += $"user prompt:{Environment.NewLine}{string.Join(Environment.NewLine, selections.OrderBy(static value => value, StringComparer.Ordinal))}";
         }
-        else if (state.SingleSelect.TryGetValue(this.Name, out userInput))
+        else if (state.SingleSelect.TryGetValue(this.Name, out var userInput))
         {
             promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
         }

@@ -1,7 +1,12 @@
+using System.Globalization;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal sealed class AssistantDatePicker : StatefulAssistantComponentBase
 {
+    private static readonly CultureInfo INVARIANT_CULTURE = CultureInfo.InvariantCulture;
+    private static readonly string[] FALLBACK_DATE_FORMATS = ["dd.MM.yyyy", "yyyy-MM-dd",  "MM/dd/yyyy"];
+
     public override AssistantComponentType Type => AssistantComponentType.DATE_PICKER;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
@@ -76,10 +81,8 @@ internal sealed class AssistantDatePicker : StatefulAssistantComponentBase
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var userInput = string.Empty;
-        
         var promptFragment = $"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-        if (state.Dates.TryGetValue(this.Name, out userInput) && !string.IsNullOrWhiteSpace(userInput))
+        if (state.Dates.TryGetValue(this.Name, out var userInput) && !string.IsNullOrWhiteSpace(userInput))
             promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
 
         return promptFragment;
@@ -88,4 +91,38 @@ internal sealed class AssistantDatePicker : StatefulAssistantComponentBase
     #endregion
 
     public string GetDateFormat() => string.IsNullOrWhiteSpace(this.DateFormat) ? "yyyy-MM-dd" : this.DateFormat;
+
+    public DateTime? ParseValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return TryParseDate(value, this.GetDateFormat(), out var parsedDate) ? parsedDate : null;
+    }
+
+    public string FormatValue(DateTime? value) => value.HasValue ? FormatDate(value.Value, this.GetDateFormat()) : string.Empty;
+
+    private static bool TryParseDate(string value, string? format, out DateTime parsedDate)
+    {
+        if (!string.IsNullOrWhiteSpace(format) &&
+            DateTime.TryParseExact(value, format, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate))
+        {
+            return true;
+        }
+
+        return DateTime.TryParseExact(value, FALLBACK_DATE_FORMATS, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate) ||
+               DateTime.TryParse(value, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate);
+    }
+
+    private static string FormatDate(DateTime value, string? format)
+    {
+        try
+        {
+            return value.ToString(string.IsNullOrWhiteSpace(format) ? FALLBACK_DATE_FORMATS[0] : format, INVARIANT_CULTURE);
+        }
+        catch (FormatException)
+        {
+            return value.ToString(FALLBACK_DATE_FORMATS[0], INVARIANT_CULTURE);
+        }
+    }
 }

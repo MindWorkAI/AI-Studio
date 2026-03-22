@@ -97,10 +97,8 @@ public sealed class AssistantSwitch : StatefulAssistantComponentBase
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var userDecision = false;
-        
         var promptFragment = $"{Environment.NewLine}context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-        state.Bools.TryGetValue(this.Name, out userDecision);
+        state.Bools.TryGetValue(this.Name, out var userDecision);
         promptFragment += $"user decision: {userDecision}";
 
         return promptFragment;

@@ -1,3 +1,4 @@
+using System.Text;
 using AIStudio.Assistants.Dynamic;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
@@ -48,17 +49,18 @@ internal sealed class AssistantWebContentReader : StatefulAssistantComponentBase
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var promptFragment = string.Empty;
+        var promptFragment = new StringBuilder();
+        
         if (state.WebContent.TryGetValue(this.Name, out var webState))
         {
             if (!string.IsNullOrWhiteSpace(this.UserPrompt))
-                promptFragment = $"{Environment.NewLine}context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
+                promptFragment.Append($"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}");
 
             if (!string.IsNullOrWhiteSpace(webState.Content))
-                promptFragment = $"user prompt:{Environment.NewLine}{webState.Content}";
+                promptFragment.Append($"user prompt:{Environment.NewLine}{webState.Content}");
         }
 
-        return promptFragment;
+        return promptFragment.ToString();
     }
 
     #endregion

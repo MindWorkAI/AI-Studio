@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
@@ -40,31 +39,29 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private readonly HashSet<string> executingButtonActions = [];
     private readonly HashSet<string> executingSwitchActions = [];
     private string pluginPath = string.Empty;
-    private const string PLUGIN_SCHEME = "plugin://";
     private const string ASSISTANT_QUERY_KEY = "assistantId";
-    private static readonly CultureInfo INVARIANT_CULTURE = CultureInfo.InvariantCulture;
-    private static readonly string[] FALLBACK_DATE_FORMATS = ["yyyy-MM-dd", "dd.MM.yyyy", "MM/dd/yyyy"];
-    private static readonly string[] FALLBACK_TIME_FORMATS = ["HH:mm", "HH:mm:ss", "hh:mm tt", "h:mm tt"];
-    
+
+    #region Implementation of AssistantBase
+
     protected override void OnInitialized()
     {
-        var assistantPlugin = this.ResolveAssistantPlugin();
-        if (assistantPlugin is null)
+        var pluginAssistant = this.ResolveAssistantPlugin();
+        if (pluginAssistant is null)
         {
             this.Logger.LogWarning("AssistantDynamic could not resolve a registered assistant plugin.");
             base.OnInitialized();
             return;
         }
 
-        this.assistantPlugin = assistantPlugin;
-        this.RootComponent = assistantPlugin.RootComponent;
-        this.title = assistantPlugin.AssistantTitle;
-        this.description = assistantPlugin.AssistantDescription;
-        this.systemPrompt = assistantPlugin.SystemPrompt;
-        this.submitText = assistantPlugin.SubmitText;
-        this.allowProfiles = assistantPlugin.AllowProfiles;
-        this.showFooterProfileSelection = !assistantPlugin.HasEmbeddedProfileSelection;
-        this.pluginPath = assistantPlugin.PluginPath;
+        this.assistantPlugin = pluginAssistant;
+        this.RootComponent = pluginAssistant.RootComponent;
+        this.title = pluginAssistant.AssistantTitle;
+        this.description = pluginAssistant.AssistantDescription;
+        this.systemPrompt = pluginAssistant.SystemPrompt;
+        this.submitText = pluginAssistant.SubmitText;
+        this.allowProfiles = pluginAssistant.AllowProfiles;
+        this.showFooterProfileSelection = !pluginAssistant.HasEmbeddedProfileSelection;
+        this.pluginPath = pluginAssistant.PluginPath;
 
         var rootComponent = this.RootComponent;
         if (rootComponent is not null)
@@ -74,20 +71,41 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
         base.OnInitialized();
     }
+    
+    protected override void ResetForm()
+    {
+        this.assistantState.Clear();
+
+        var rootComponent = this.RootComponent;
+        if (rootComponent is not null)
+            this.InitializeComponentState(rootComponent.Children);
+    }
+
+    protected override bool MightPreselectValues()
+    {
+        // Dynamic assistants have arbitrary fields supplied via plugins, so there
+        // isn't a built-in settings section to prefill values. Always return
+        // false to keep the plugin-specified defaults.
+        return false;
+    }
+
+    #endregion
+
+    #region Implementation of dynamic plugin init
 
     private PluginAssistants? ResolveAssistantPlugin()
     {
-        var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>()
+        var pluginAssistants = PluginFactory.RunningPlugins.OfType<PluginAssistants>()
             .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
             .ToList();
-        if (assistantPlugins.Count == 0)
+        if (pluginAssistants.Count == 0)
             return null;
 
         var requestedPluginId = this.TryGetAssistantIdFromQuery();
-        if (requestedPluginId is not { } id) return assistantPlugins.First();
+        if (requestedPluginId is not { } id) return pluginAssistants.First();
         
-        var requestedPlugin = assistantPlugins.FirstOrDefault(p => p.Id == id);
-        return requestedPlugin ?? assistantPlugins.First();
+        var requestedPlugin = pluginAssistants.FirstOrDefault(p => p.Id == id);
+        return requestedPlugin ?? pluginAssistants.First();
     }
 
     private Guid? TryGetAssistantIdFromQuery()
@@ -111,22 +129,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         return null;
     }
 
-    protected override void ResetForm()
-    {
-        this.assistantState.Clear();
-
-        var rootComponent = this.RootComponent;
-        if (rootComponent is not null)
-            this.InitializeComponentState(rootComponent.Children);
-    }
-
-    protected override bool MightPreselectValues()
-    {
-        // Dynamic assistants have arbitrary fields supplied via plugins, so there
-        // isn't a built-in settings section to prefill values. Always return
-        // false to keep the plugin-specified defaults.
-        return false;
-    }
+    #endregion
 
     private string ResolveImageSource(AssistantImage image)
     {
@@ -136,51 +139,9 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         if (this.imageCache.TryGetValue(image.Src, out var cached) && !string.IsNullOrWhiteSpace(cached))
             return cached;
 
-        var resolved = image.Src;
-
-        if (resolved.StartsWith(PLUGIN_SCHEME, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(this.pluginPath))
-        {
-            var relative = resolved[PLUGIN_SCHEME.Length..].TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
-            var filePath = Path.Join(this.pluginPath, relative);
-            if (File.Exists(filePath))
-            {
-                var mime = GetImageMimeType(filePath);
-                var data = Convert.ToBase64String(File.ReadAllBytes(filePath));
-                resolved = $"data:{mime};base64,{data}";
-            }
-            else
-            {
-                resolved = string.Empty;
-            }
-        }
-        else if (Uri.TryCreate(resolved, UriKind.Absolute, out var uri))
-        {
-            if (uri.Scheme is not ("http" or "https" or "data"))
-                resolved = string.Empty;
-        }
-        else
-        {
-            resolved = string.Empty;
-        }
-
+        var resolved = image.ResolveSource(this.pluginPath);
         this.imageCache[image.Src] = resolved;
         return resolved;
-    }
-
-    private static string GetImageMimeType(string path)
-    {
-        var extension = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
-        return extension switch
-        {
-            "svg" => "image/svg+xml",
-            "png" => "image/png",
-            "jpg" => "image/jpeg",
-            "jpeg" => "image/jpeg",
-            "gif" => "image/gif",
-            "webp" => "image/webp",
-            "bmp" => "image/bmp",
-            _ => "image/png",
-        };
     }
 
     private async Task<string> CollectUserPromptAsync()
@@ -216,10 +177,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     {
         var prompt = string.Empty;
         var rootComponent = this.RootComponent;
-        if (rootComponent is null)
-            return prompt;
-
-        return this.CollectUserPromptFallback(rootComponent.Children);
+        return rootComponent is null ? prompt : this.CollectUserPromptFallback(rootComponent.Children);
     }
 
     private void InitializeComponentState(IEnumerable<IAssistantComponent> components)
@@ -236,15 +194,12 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private static string MergeClass(string customClass, string fallback)
     {
-        var trimmedCustom = customClass?.Trim() ?? string.Empty;
-        var trimmedFallback = fallback?.Trim() ?? string.Empty;
+        var trimmedCustom = customClass.Trim();
+        var trimmedFallback = fallback.Trim();
         if (string.IsNullOrEmpty(trimmedCustom))
             return trimmedFallback;
 
-        if (string.IsNullOrEmpty(trimmedFallback))
-            return trimmedCustom;
-
-        return $"{trimmedCustom} {trimmedFallback}";
+        return string.IsNullOrEmpty(trimmedFallback) ? trimmedCustom : $"{trimmedCustom} {trimmedFallback}";
     }
 
     private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
@@ -423,7 +378,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
 
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
-        if (profile != default && profile != Profile.NO_PROFILE) return null;
+        if (profile != null && profile != Profile.NO_PROFILE) return null;
         return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.T("Please select one of your profiles.");
     }
     
@@ -450,125 +405,5 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         }
 
         return prompt.ToString();
-    }
-
-    private DateTime? ParseDatePickerValue(string? value, string? format)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        if (TryParseDate(value, format, out var parsedDate))
-            return parsedDate;
-
-        return null;
-    }
-
-    private void SetDatePickerValue(string fieldName, DateTime? value, string? format)
-    {
-        this.assistantState.Dates[fieldName] = value.HasValue ? FormatDate(value.Value, format) : string.Empty;
-    }
-
-    private DateRange? ParseDateRangePickerValue(string? value, string? format)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        var parts = value.Split(" - ", 2, StringSplitOptions.TrimEntries);
-        if (parts.Length != 2)
-            return null;
-
-        if (!TryParseDate(parts[0], format, out var start) || !TryParseDate(parts[1], format, out var end))
-            return null;
-
-        return new DateRange(start, end);
-    }
-
-    private void SetDateRangePickerValue(string fieldName, DateRange? value, string? format)
-    {
-        if (value?.Start is null || value.End is null)
-        {
-            this.assistantState.DateRanges[fieldName] = string.Empty;
-            return;
-        }
-
-        this.assistantState.DateRanges[fieldName] = $"{FormatDate(value.Start.Value, format)} - {FormatDate(value.End.Value, format)}";
-    }
-
-    private TimeSpan? ParseTimePickerValue(string? value, string? format)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        if (TryParseTime(value, format, out var parsedTime))
-            return parsedTime;
-
-        return null;
-    }
-
-    private void SetTimePickerValue(string fieldName, TimeSpan? value, string? format)
-    {
-        this.assistantState.Times[fieldName] = value.HasValue ? FormatTime(value.Value, format) : string.Empty;
-    }
-
-    private static bool TryParseDate(string value, string? format, out DateTime parsedDate)
-    {
-        if (!string.IsNullOrWhiteSpace(format) &&
-            DateTime.TryParseExact(value, format, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate))
-        {
-            return true;
-        }
-
-        if (DateTime.TryParseExact(value, FALLBACK_DATE_FORMATS, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate))
-            return true;
-
-        return DateTime.TryParse(value, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out parsedDate);
-    }
-
-    private static bool TryParseTime(string value, string? format, out TimeSpan parsedTime)
-    {
-        if (!string.IsNullOrWhiteSpace(format) &&
-            DateTime.TryParseExact(value, format, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out var dateTime))
-        {
-            parsedTime = dateTime.TimeOfDay;
-            return true;
-        }
-
-        if (DateTime.TryParseExact(value, FALLBACK_TIME_FORMATS, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out dateTime))
-        {
-            parsedTime = dateTime.TimeOfDay;
-            return true;
-        }
-
-        if (TimeSpan.TryParse(value, INVARIANT_CULTURE, out parsedTime))
-            return true;
-
-        parsedTime = default;
-        return false;
-    }
-
-    private static string FormatDate(DateTime value, string? format)
-    {
-        try
-        {
-            return value.ToString(string.IsNullOrWhiteSpace(format) ? "yyyy-MM-dd" : format, INVARIANT_CULTURE);
-        }
-        catch (FormatException)
-        {
-            return value.ToString("yyyy-MM-dd", INVARIANT_CULTURE);
-        }
-    }
-
-    private static string FormatTime(TimeSpan value, string? format)
-    {
-        var dateTime = DateTime.Today.Add(value);
-
-        try
-        {
-            return dateTime.ToString(string.IsNullOrWhiteSpace(format) ? "HH:mm" : format, INVARIANT_CULTURE);
-        }
-        catch (FormatException)
-        {
-            return dateTime.ToString("HH:mm", INVARIANT_CULTURE);
-        }
     }
 }

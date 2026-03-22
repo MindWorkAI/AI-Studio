@@ -1,7 +1,12 @@
+using System.Globalization;
+
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal sealed class AssistantTimePicker : StatefulAssistantComponentBase
 {
+    private static readonly CultureInfo INVARIANT_CULTURE = CultureInfo.InvariantCulture;
+    private static readonly string[] FALLBACK_TIME_FORMATS = ["HH:mm", "HH:mm:ss", "hh:mm tt", "h:mm tt"];
+
     public override AssistantComponentType Type => AssistantComponentType.TIME_PICKER;
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
@@ -82,10 +87,8 @@ internal sealed class AssistantTimePicker : StatefulAssistantComponentBase
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var userInput = string.Empty;
-        
         var promptFragment = $"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-        if (state.Times.TryGetValue(this.Name, out userInput) && !string.IsNullOrWhiteSpace(userInput))
+        if (state.Times.TryGetValue(this.Name, out var userInput) && !string.IsNullOrWhiteSpace(userInput))
             promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
 
         return promptFragment;
@@ -99,5 +102,46 @@ internal sealed class AssistantTimePicker : StatefulAssistantComponentBase
             return this.TimeFormat;
 
         return this.AmPm ? "hh:mm tt" : "HH:mm";
+    }
+
+    public TimeSpan? ParseValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return TryParseTime(value, this.GetTimeFormat(), out var parsedTime) ? parsedTime : null;
+    }
+
+    public string FormatValue(TimeSpan? value) => value.HasValue ? FormatTime(value.Value, this.GetTimeFormat()) : string.Empty;
+
+    private static bool TryParseTime(string value, string? format, out TimeSpan parsedTime)
+    {
+        if ((!string.IsNullOrWhiteSpace(format) &&
+             DateTime.TryParseExact(value, format, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out var dateTime)) ||
+            DateTime.TryParseExact(value, FALLBACK_TIME_FORMATS, INVARIANT_CULTURE, DateTimeStyles.AllowWhiteSpaces, out dateTime))
+        {
+            parsedTime = dateTime.TimeOfDay;
+            return true;
+        }
+
+        if (TimeSpan.TryParse(value, INVARIANT_CULTURE, out parsedTime))
+            return true;
+
+        parsedTime = TimeSpan.Zero;
+        return false;
+    }
+
+    private static string FormatTime(TimeSpan value, string? format)
+    {
+        var dateTime = DateTime.Today.Add(value);
+
+        try
+        {
+            return dateTime.ToString(string.IsNullOrWhiteSpace(format) ? FALLBACK_TIME_FORMATS[0] : format, INVARIANT_CULTURE);
+        }
+        catch (FormatException)
+        {
+            return dateTime.ToString(FALLBACK_TIME_FORMATS[0], INVARIANT_CULTURE);
+        }
     }
 }

@@ -423,8 +423,8 @@ else
                     var format = datePicker.GetDateFormat();
 
                     <MudPaper Class="d-flex" Elevation="0">
-                        <MudDatePicker Date="@this.ParseDatePickerValue(this.assistantState.Dates[datePicker.Name], format)"
-                                       DateChanged="@((DateTime? value) => this.SetDatePickerValue(datePicker.Name, value, format))"
+                        <MudDatePicker Date="@datePicker.ParseValue(this.assistantState.Dates[datePicker.Name])"
+                                       DateChanged="@((DateTime? value) => this.assistantState.Dates[datePicker.Name] = datePicker.FormatValue(value))"
                                        Label="@datePicker.Label"
                                        Color="@AssistantComponentPropHelper.GetColor(datePicker.Color, Color.Primary)"
                                        Placeholder="@datePicker.Placeholder"
@@ -446,8 +446,8 @@ else
                     var format = dateRangePicker.GetDateFormat();
 
                     <MudPaper Class="d-flex" Elevation="0">
-                        <MudDateRangePicker DateRange="@this.ParseDateRangePickerValue(this.assistantState.DateRanges[dateRangePicker.Name], format)"
-                                            DateRangeChanged="@(value => this.SetDateRangePickerValue(dateRangePicker.Name, value, format))"
+                        <MudDateRangePicker DateRange="@dateRangePicker.ParseValue(this.assistantState.DateRanges[dateRangePicker.Name])"
+                                            DateRangeChanged="@(value => this.assistantState.DateRanges[dateRangePicker.Name] = dateRangePicker.FormatValue(value))"
                                             Label="@dateRangePicker.Label"
                                             Color="@AssistantComponentPropHelper.GetColor(dateRangePicker.Color, Color.Primary)"
                                             PlaceholderStart="@dateRangePicker.PlaceholderStart"
@@ -470,8 +470,8 @@ else
                     var format = timePicker.GetTimeFormat();
 
                     <MudPaper Class="d-flex" Elevation="0">
-                        <MudTimePicker Time="@this.ParseTimePickerValue(this.assistantState.Times[timePicker.Name], format)"
-                                       TimeChanged="@((TimeSpan? value) => this.SetTimePickerValue(timePicker.Name, value, format))"
+                        <MudTimePicker Time="@timePicker.ParseValue(this.assistantState.Times[timePicker.Name])"
+                                       TimeChanged="@((TimeSpan? value) => this.assistantState.Times[timePicker.Name] = timePicker.FormatValue(value))"
                                        Label="@timePicker.Label"
                                        Color="@AssistantComponentPropHelper.GetColor(timePicker.Color, Color.Primary)"
                                        Placeholder="@timePicker.Placeholder"
