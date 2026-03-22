@@ -4,10 +4,11 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use hmac::Hmac;
-use log::info;
+use log::{error, info};
 use once_cell::sync::Lazy;
 use pbkdf2::pbkdf2;
-use rand::{RngCore, SeedableRng};
+use rand::rngs::SysRng;
+use rand::{Rng, SeedableRng};
 use rocket::{data, Data, Request};
 use rocket::data::ToByteUnit;
 use rocket::http::Status;
@@ -31,15 +32,25 @@ pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
 
     // We use a cryptographically secure pseudo-random number generator
     // to generate the secret password & salt. ChaCha20Rng is the algorithm
-    // of our choice:
-    let mut rng = rand_chacha::ChaChaRng::from_os_rng();
+    // of our choice. If the OS-backed RNG is unavailable, we fail fast instead
+    // of falling back to a weaker RNG because these values protect the IPC
+    // channel and must remain cryptographically secure.
+    let mut sys_rng = SysRng;
+    let mut rng = rand_chacha::ChaChaRng::try_from_rng(&mut sys_rng)
+        .unwrap_or_else(|e| {
+            error!(Source = "Encryption"; "Failed to seed ChaChaRng from SysRng: {e}");
+            panic!("Failed to seed ChaChaRng from SysRng: {e}");
+        });
 
     // Fill the secret key & salt with random bytes:
     rng.fill_bytes(&mut secret_key);
     rng.fill_bytes(&mut secret_key_salt);
 
     info!("Secret password for the IPC channel was generated successfully.");
-    Encryption::new(&secret_key, &secret_key_salt).unwrap()
+    Encryption::new(&secret_key, &secret_key_salt).unwrap_or_else(|e| {
+        error!(Source = "Encryption"; "Failed to initialize encryption for the IPC channel: {e}");
+        panic!("Failed to initialize encryption for the IPC channel: {e}");
+    })
 });
 
 /// The encryption struct used for the IPC channel.

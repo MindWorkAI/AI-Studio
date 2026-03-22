@@ -23,8 +23,8 @@ flexi_logger = "0.31.8"
 log = { version = "0.4.29", features = ["kv"] }
 once_cell = "1.21.4"
 rocket = { version = "0.5.1", features = ["json", "tls"] }
-rand = "0.9.1"
-rand_chacha = "0.9"
+rand = "0.10.0"
+rand_chacha = "0.10.0"
 base64 = "0.22.1"
 aes = "0.8.4"
 cbc = "0.1.2"
