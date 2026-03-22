@@ -705,6 +705,37 @@ mod tests {
     }
 
     #[test]
+    fn parse_enterprise_source_values_supports_gaps_between_indexed_slots() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id0"), String::from(TEST_ID_A));
+        values.insert(
+            String::from("config_server_url0"),
+            String::from("https://slot0.example.org"),
+        );
+        values.insert(String::from("config_id4"), String::from(TEST_ID_B));
+        values.insert(
+            String::from("config_server_url4"),
+            String::from("https://slot4.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                EnterpriseConfig {
+                    id: String::from("9072b77d-ca81-40da-be6a-861da525ef7b"),
+                    server_url: String::from("https://slot0.example.org"),
+                },
+                EnterpriseConfig {
+                    id: String::from(TEST_ID_B),
+                    server_url: String::from("https://slot4.example.org"),
+                },
+            ]
+        );
+    }
+
+    #[test]
     fn select_effective_enterprise_source_uses_first_source_with_configs_only() {
         let selected = select_effective_enterprise_source(vec![
             EnterpriseSourceData {
@@ -802,6 +833,39 @@ mod tests {
         assert_eq!(
             values.get("config_encryption_secret").map(String::as_str),
             Some("SECRET-A")
+        );
+    }
+
+    #[test]
+    fn load_policy_values_from_directories_supports_gaps_between_policy_slots() {
+        let directory = tempdir().unwrap();
+
+        fs::write(
+            directory.path().join("config0.yaml"),
+            "id: \"9072b77d-ca81-40da-be6a-861da525ef7b\"\nserver_url: \"https://slot0.example.org\"",
+        )
+        .unwrap();
+        fs::write(
+            directory.path().join("config4.yaml"),
+            "id: \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\nserver_url: \"https://slot4.example.org\"",
+        )
+        .unwrap();
+
+        let values = load_policy_values_from_directories(&[directory.path().to_path_buf()]);
+        let source = parse_enterprise_source_values("policy files", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                EnterpriseConfig {
+                    id: String::from("9072b77d-ca81-40da-be6a-861da525ef7b"),
+                    server_url: String::from("https://slot0.example.org"),
+                },
+                EnterpriseConfig {
+                    id: String::from(TEST_ID_B),
+                    server_url: String::from("https://slot4.example.org"),
+                },
+            ]
         );
     }
 
