@@ -8,6 +8,8 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
     
     public static bool HasValidEnterpriseSnapshot { get; private set; }
 
+    private readonly record struct EnterpriseEnvironmentSnapshot(Guid ConfigurationId, string ConfigurationServerUrl, string? ETag);
+
 #if DEBUG
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(6);
 #else
@@ -36,6 +38,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         {
             logger.LogInformation("Start updating of the enterprise environment.");
             HasValidEnterpriseSnapshot = false;
+            var previousSnapshot = BuildNormalizedSnapshot(CURRENT_ENVIRONMENTS);
 
             //
             // Step 1: Fetch all active configurations.
@@ -165,12 +168,33 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             if (effectiveEnvironments.Count == 0)
                 logger.LogInformation("AI Studio runs without any enterprise configurations.");
 
+            var effectiveSnapshot = BuildNormalizedSnapshot(effectiveEnvironments);
             CURRENT_ENVIRONMENTS = effectiveEnvironments;
             HasValidEnterpriseSnapshot = true;
+
+            if (!previousSnapshot.SequenceEqual(effectiveSnapshot))
+                await MessageBus.INSTANCE.SendMessage<bool>(null, Event.ENTERPRISE_ENVIRONMENTS_CHANGED);
         }
         catch (Exception e)
         {
             logger.LogError(e, "An error occurred while updating the enterprise environment.");
         }
+    }
+
+    private static List<EnterpriseEnvironmentSnapshot> BuildNormalizedSnapshot(IEnumerable<EnterpriseEnvironment> environments)
+    {
+        return environments
+            .Where(environment => environment.IsActive)
+            .Select(environment => new EnterpriseEnvironmentSnapshot(
+                environment.ConfigurationId,
+                NormalizeServerUrl(environment.ConfigurationServerUrl),
+                environment.ETag?.ToString()))
+            .OrderBy(environment => environment.ConfigurationId)
+            .ToList();
+    }
+
+    private static string NormalizeServerUrl(string serverUrl)
+    {
+        return serverUrl.Trim().TrimEnd('/');
     }
 }
