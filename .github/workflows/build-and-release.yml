@@ -5,15 +5,70 @@ on:
       - main
     tags:
       - "v*.*.*"
+  pull_request:
+    types:
+      - labeled
+      - synchronize
+      - reopened
 
 env:
   RETENTION_INTERMEDIATE_ASSETS: 1
   RETENTION_RELEASE_ASSETS: 30
     
 jobs:
+  determine_run_mode:
+    name: Determine run mode
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      is_release: ${{ steps.determine.outputs.is_release }}
+      is_main_push: ${{ steps.determine.outputs.is_main_push }}
+      is_labeled_pr: ${{ steps.determine.outputs.is_labeled_pr }}
+      build_enabled: ${{ steps.determine.outputs.build_enabled }}
+      artifact_retention_days: ${{ steps.determine.outputs.artifact_retention_days }}
+
+    steps:
+      - name: Determine run mode
+        id: determine
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          is_release=false
+          is_main_push=false
+          is_labeled_pr=false
+          build_enabled=false
+          artifact_retention_days=0
+
+          if [[ "$REF" == refs/tags/v* ]]; then
+            is_release=true
+            build_enabled=true
+            artifact_retention_days=${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          elif [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/main" ]]; then
+            is_main_push=true
+            build_enabled=true
+            artifact_retention_days=7
+          elif [[ "$EVENT_NAME" == "pull_request" && "$PR_HEAD_REPO" == "$REPOSITORY" && " $PR_LABELS " == *" run-pipeline "* ]]; then
+            is_labeled_pr=true
+            build_enabled=true
+            artifact_retention_days=3
+          fi
+
+          echo "is_release=${is_release}" >> "$GITHUB_OUTPUT"
+          echo "is_main_push=${is_main_push}" >> "$GITHUB_OUTPUT"
+          echo "is_labeled_pr=${is_labeled_pr}" >> "$GITHUB_OUTPUT"
+          echo "build_enabled=${build_enabled}" >> "$GITHUB_OUTPUT"
+          echo "artifact_retention_days=${artifact_retention_days}" >> "$GITHUB_OUTPUT"
+
   read_metadata:
     name: Read metadata
     runs-on: ubuntu-latest
+    needs: determine_run_mode
+    if: needs.determine_run_mode.outputs.build_enabled == 'true'
     permissions:
       contents: read
     outputs:
@@ -62,6 +117,7 @@ jobs:
 
       - name: Read changelog
         id: read_changelog
+        if: needs.determine_run_mode.outputs.is_release == 'true'
         run: |
           # Ensure, that the matching changelog file for the current version exists:
           if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
@@ -81,7 +137,8 @@ jobs:
 
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})
-    needs: read_metadata
+    needs: [determine_run_mode, read_metadata]
+    if: needs.determine_run_mode.outputs.build_enabled == 'true'
     permissions:
       contents: read
     
@@ -649,7 +706,7 @@ jobs:
           cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
 
       - name: Upload artifact (macOS)
-        if: startsWith(matrix.platform, 'macos') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'macos')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
@@ -657,10 +714,10 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
             runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - MSI)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
@@ -668,10 +725,10 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - NSIS)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
@@ -679,20 +736,20 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Linux - Debian Package)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Linux - AppImage)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
@@ -700,7 +757,7 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
         
   create_release:
     name: Prepare & create release
