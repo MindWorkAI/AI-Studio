@@ -62,6 +62,8 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override Func<Task> SubmitAction => this.OptimizePromptAsync;
 
+    protected override bool SubmitDisabled => this.useCustomPromptGuide && this.customPromptGuideFiles.Count == 0;
+
     protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,
@@ -197,7 +199,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             if (!this.useCustomPromptGuide)
             {
                 this.ApplyFallbackRecommendations();
-                this.hasUpdatedDefaultRecommendations = true;
+                this.MarkRecommendationsUpdated();
             }
 
             this.AddInputIssue(T("The model response was not in the expected JSON format. The raw response is shown as optimized prompt."));
@@ -319,6 +321,11 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             return;
 
         this.ApplyRecommendations(optimizationResult.Recommendations);
+        this.MarkRecommendationsUpdated();
+    }
+
+    private void MarkRecommendationsUpdated()
+    {
         this.hasUpdatedDefaultRecommendations = true;
     }
 

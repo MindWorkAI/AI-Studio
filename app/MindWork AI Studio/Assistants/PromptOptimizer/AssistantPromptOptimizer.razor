@@ -39,17 +39,20 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h6">@T("Prompt Recommendations")</MudText>
-    @if (this.ShowUpdatedPromptGuidelinesIndicator)
-    {
-        <MudTooltip Text="@T("Prompt recommendations updated from your latest optimization.")">
-            <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" Color="Color.Info" Size="Size.Medium" Class="ml-2"/>
-        </MudTooltip>
-    }
 </MudStack>
+
+@if (this.ShowUpdatedPromptGuidelinesIndicator)
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="mb-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.body2">@T("Prompt recommendations were updated based on your latest optimization.")</MudText>
+        </MudStack>
+    </MudAlert>
+}
 
 @if (!this.useCustomPromptGuide)
 {
-    <MudJustifiedText Class="mb-3">@T("Use these recommendations, that are based on our own prompt guide, to improve the clarity, directness, and relevance of your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
+    <MudJustifiedText Class="mb-3">@T("Use these recommendations, that are based on the default prompt guide, to improve the clarity, directness, and relevance of your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
 
     <MudGrid Class="mb-3">
         <MudItem xs="12" sm="6" md="4">
@@ -71,6 +74,11 @@
             <MudTextField T="string" Value="@this.recLanguageChoice" Label="@T("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
         </MudItem>
     </MudGrid>
+} 
+
+@if (this.useCustomPromptGuide)
+{
+<MudJustifiedText Class="mb-3">@T("Use the prompt recommendations from the custom prompt guide that was provided by the user.")</MudJustifiedText>
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" StretchItems="StretchItems.None" Class="mb-3">
