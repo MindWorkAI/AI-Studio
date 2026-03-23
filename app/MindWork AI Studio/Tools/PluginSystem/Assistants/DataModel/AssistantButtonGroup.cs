@@ -1,6 +1,6 @@
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public sealed class AssistantButtonGroup : AssistantComponentBase
+public sealed class AssistantButtonGroup : NamedAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.BUTTON_GROUP;
     public override Dictionary<string, object> Props { get; set; } = new();

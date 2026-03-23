@@ -28,7 +28,7 @@ public static class ComponentPropSpecs
                 nonWriteable: ["Name", "Class", "Style" ]
             ),
             [AssistantComponentType.BUTTON_GROUP] = new(
-                required: [],
+                required: ["Name"],
                 optional: ["Variant", "Color", "Size", "OverrideStyles", "Vertical", "DropShadow", "Class", "Style"],
                 nonWriteable: ["Class", "Style" ]
                 

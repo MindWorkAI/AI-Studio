@@ -94,7 +94,7 @@ ASSISTANT = {
 - `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
 - `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
 - `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`. Use this for stateless actions, including icon-only action buttons.
-- `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`; `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
+- `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`;`Props` must include `Name`, `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
 - `LAYOUT_GRID`: renders a `MudGrid`; `Children` must contain only `LAYOUT_ITEM` components and `Props` may include `Justify`, `Spacing`, `Class`, `Style`.
 - `LAYOUT_ITEM`: renders a `MudItem`; use it inside `LAYOUT_GRID` and configure breakpoints with `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`, plus optional `Class`, `Style`.
 - `LAYOUT_PAPER`: renders a `MudPaper`; may include `Elevation`, `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`, `IsOutlined`, `IsSquare`, `Class`, `Style`.
@@ -119,6 +119,7 @@ Images referenced via the `plugin://` scheme must exist in the plugin directory 
 | `TEXT_AREA`                | `Name`, `Label`                     | `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style` | [MudTextField](https://www.mudblazor.com/components/textfield)                                                                      |
 | `DROPDOWN`                 | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `ValueType`, `UserPrompt`                                                            | [MudSelect](https://www.mudblazor.com/components/select)                                                                            |
 | `BUTTON`                   | `Name`, `Text`, `Action`            | `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`                                                                                         | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
+| `BUTTON_GROUP`             | `Name`, `Children`                  | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
 | `SWITCH`                   | `Name`, `Label`, `Value`            | `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`                                                              | [MudSwitch](https://www.mudblazor.com/components/switch)                                                                            |
 | `PROVIDER_SELECTION`       | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProviderSelection.razor)       |
 | `PROFILE_SELECTION`        | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProfileSelection.razor)        |
@@ -354,6 +355,7 @@ More information on rendered components can be found [here](https://www.mudblazo
 ### `BUTTON_GROUP` reference
 - Use `Type = "BUTTON_GROUP"` to render multiple `BUTTON` children as a single MudBlazor button group.
 - Required structure:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
   - `Children`: array of `BUTTON` component tables. Other child component types are ignored.
 - Optional props:
   - `Variant`: one of the MudBlazor `Variant` enum names such as `Filled`, `Outlined`, `Text`; omitted values fall back to `Filled`.
@@ -1076,6 +1078,7 @@ LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
 
 ## Useful Resources
 - [plugin.lua - Lua Manifest](https://github.com/MindWorkAI/AI-Studio/tree/main/app/MindWork%20AI%20Studio/Plugins/assistants/plugin.lua)
+- [Supported Icons](https://www.mudblazor.com/features/icons#icons)
 - [AI Studio Repository](https://github.com/MindWorkAI/AI-Studio/)
 - [Lua 5.2 Reference Manual](https://www.lua.org/manual/5.2/manual.html)
 - [MudBlazor Documentation](https://www.mudblazor.com/docs/overview)

@@ -170,6 +170,7 @@ ASSISTANT = {
             {
                 ["Type"] = "BUTTON_GROUP",
                 ["Props"] = {
+                    ["Name"] = "buttonGroup",
                     ["Variant"] = "<Filled|Outlined|Text>", -- display variation of the group. Defaults to Filled
                     ["Color"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the group. Defaults to Default
                     ["Size"] = "<Small|Medium|Large>", -- size of the group. Defaults to Medium
