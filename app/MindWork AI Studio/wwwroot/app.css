@@ -151,3 +151,18 @@
     top: 0em !important;
     left: 2.2em !important;
 }
+
+.chat-mathjax-block {
+    text-align: left;
+}
+
+.chat-mathjax-block mjx-container[display="true"] {
+    text-align: left !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.chat-mathjax-block mjx-container[display="true"] mjx-math {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}

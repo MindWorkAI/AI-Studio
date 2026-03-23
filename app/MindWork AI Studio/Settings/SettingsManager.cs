@@ -53,6 +53,16 @@ public sealed class SettingsManager
     public bool IsDarkMode { get; set; }
 
     /// <summary>
+    /// Ensures that the startup start-page redirect is evaluated at most once per app session.
+    /// </summary>
+    public bool StartupStartPageRedirectHandled { get; set; }
+
+    /// <summary>
+    /// Indicates that the initial settings load attempt has completed.
+    /// </summary>
+    public bool HasCompletedInitialSettingsLoad { get; private set; }
+
+    /// <summary>
     /// The configuration data.
     /// </summary>
     public Data ConfigurationData { get; private set; } = new();
@@ -64,17 +74,30 @@ public sealed class SettingsManager
     /// </summary>
     public async Task LoadSettings()
     {
+        var settingsSnapshot = await this.TryReadSettingsSnapshot();
+        if (settingsSnapshot is not null)
+            this.ConfigurationData = settingsSnapshot;
+
+        this.HasCompletedInitialSettingsLoad = true;
+    }
+
+    /// <summary>
+    /// Reads the settings from disk without mutating the current in-memory state.
+    /// </summary>
+    /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
+    public async Task<Data?> TryReadSettingsSnapshot()
+    {
         if(!this.IsSetUp)
         {
             this.logger.LogWarning("Cannot load settings, because the configuration is not set up yet.");
-            return;
+            return null;
         }
 
         var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
         if(!File.Exists(settingsPath))
         {
             this.logger.LogWarning("Cannot load settings, because the settings file does not exist.");
-            return;
+            return null;
         }
 
         // We read the `"Version": "V3"` line to determine the version of the settings file:
@@ -87,30 +110,28 @@ public sealed class SettingsManager
 
             // Extract the version from the line:
             var settingsVersionText = line.Split('"')[3];
-                
+
             // Parse the version:
             Enum.TryParse(settingsVersionText, out Version settingsVersion);
             if(settingsVersion is Version.UNKNOWN)
             {
                 this.logger.LogError("Unknown version of the settings file found.");
-                this.ConfigurationData = new();
-                return;
+                return new();
             }
-                
-            this.ConfigurationData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
-            
+
+            var settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+
             //
             // We filter the enabled preview features based on the preview visibility.
             // This is necessary when the app starts up: some preview features may have
             // been disabled or released from the last time the app was started.
             //
-            this.ConfigurationData.App.EnabledPreviewFeatures = this.ConfigurationData.App.PreviewVisibility.FilterPreviewFeatures(this.ConfigurationData.App.EnabledPreviewFeatures);
-
-            return;
+            settingsData.App.EnabledPreviewFeatures = settingsData.App.PreviewVisibility.FilterPreviewFeatures(settingsData.App.EnabledPreviewFeatures);
+            return settingsData;
         }
-        
+
         this.logger.LogError("Failed to read the version of the settings file.");
-        this.ConfigurationData = new();
+        return new();
     }
 
     /// <summary>
@@ -285,12 +306,32 @@ public sealed class SettingsManager
 
     public Profile GetPreselectedProfile(Tools.Components component)
     {
-        var preselection = component.PreselectedProfile(this);
-        if (preselection != Profile.NO_PROFILE)
-            return preselection;
-        
-        preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedProfile, StringComparison.OrdinalIgnoreCase));
-        return preselection ?? Profile.NO_PROFILE;
+        var preselection = component.GetProfilePreselection(this);
+        if (preselection.DoNotPreselectProfile)
+            return Profile.NO_PROFILE;
+
+        if (preselection.UseSpecificProfile)
+        {
+            var componentProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(preselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+            return componentProfile ?? Profile.NO_PROFILE;
+        }
+
+        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
+        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
+            return Profile.NO_PROFILE;
+
+        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+        return appProfile ?? Profile.NO_PROFILE;
+    }
+
+    public Profile GetAppPreselectedProfile()
+    {
+        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
+        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
+            return Profile.NO_PROFILE;
+
+        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+        return appProfile ?? Profile.NO_PROFILE;
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)

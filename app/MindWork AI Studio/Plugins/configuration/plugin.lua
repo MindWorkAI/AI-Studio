@@ -146,6 +146,16 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: MANUAL, AUTOMATIC
 -- CONFIG["SETTINGS"]["DataApp.UpdateInstallation"] = "MANUAL"
 
+-- Configure the page that should be opened when AI Studio starts.
+-- Allowed values are: HOME, CHAT, ASSISTANTS, INFORMATION, PLUGINS, SUPPORTERS, SETTINGS
+-- CONFIG["SETTINGS"]["DataApp.StartPage"] = "CHAT"
+--
+-- Allow users to change the configured start page locally.
+-- Allowed values are: true, false
+-- When set to true, the configured start page becomes the organization default,
+-- but users can still choose another start page in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
+
 -- Configure the user permission to add providers:
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
@@ -163,8 +173,8 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the enabled preview features:
 -- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
--- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_DOCUMENT_ANALYSIS_2025.
--- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_DOCUMENT_ANALYSIS_2025" }
+-- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_SPEECH_TO_TEXT_2026.
+-- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_SPEECH_TO_TEXT_2026" }
 
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
@@ -189,7 +199,7 @@ CONFIG["SETTINGS"] = {}
 --   TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT, LEGAL_CHECK_ASSISTANT,
 --   SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT, JOB_POSTING_ASSISTANT,
 --   BIAS_DAY_ASSISTANT, ERI_ASSISTANT, DOCUMENT_ANALYSIS_ASSISTANT,
---   I18N_ASSISTANT
+--   SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
 -- Configure a global shortcut for starting and stopping dictation.

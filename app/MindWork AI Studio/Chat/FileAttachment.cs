@@ -84,6 +84,9 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     {
         var extension = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
 
+        if (FileTypeFilter.Executables.FilterExtensions.Contains(extension))
+            return FileAttachmentType.FORBIDDEN;
+
         // Check if it's an image file:
         if (FileTypeFilter.AllImages.FilterExtensions.Contains(extension))
             return FileAttachmentType.IMAGE;
@@ -96,7 +99,8 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
         if (FileTypeFilter.PDF.FilterExtensions.Contains(extension) ||
             FileTypeFilter.Text.FilterExtensions.Contains(extension) ||
             FileTypeFilter.AllOffice.FilterExtensions.Contains(extension) ||
-            FileTypeFilter.AllSourceCode.FilterExtensions.Contains(extension))
+            FileTypeFilter.AllSourceCode.FilterExtensions.Contains(extension) ||
+            FileTypeFilter.IsAllowedSourceLikeFileName(filePath))
             return FileAttachmentType.DOCUMENT;
 
         // All other file types are forbidden:
