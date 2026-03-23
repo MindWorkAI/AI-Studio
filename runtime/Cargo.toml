@@ -45,9 +45,7 @@ sysinfo = "0.38.4"
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 time = "0.3.47" # -> Rocket
 bytes = "1.11.1" # -> almost every dependency
-aws-lc-rs = "1.16.2" # -> reqwest
 tar = "0.4.45" # -> Tauri v1
-rustls-webpki = "0.103.10" # -> tokio, reqwest
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # See issue https://github.com/tauri-apps/tauri/issues/4470
