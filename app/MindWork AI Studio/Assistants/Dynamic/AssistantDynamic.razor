@@ -48,6 +48,7 @@ else
                 if (component is AssistantTextArea textArea)
                 {
                     var lines = textArea.IsSingleLine ? 1 : 6;
+                    var autoGrow = !textArea.IsSingleLine;
 
                     <MudTextField T="string"
                                   Text="@this.assistantState.Text[textArea.Name]"
@@ -60,12 +61,12 @@ else
                                   MaxLength="@textArea.MaxLength"
                                   Immediate="@textArea.IsImmediate"
                                   Adornment="@textArea.GetAdornmentPos()"
-                                  AdornmentIcon="@textArea.GetIconSvg()"
+                                  AdornmentIcon="@AssistantComponentPropHelper.GetIconSvg(textArea.AdornmentIcon)"
                                   AdornmentText="@textArea.AdornmentText"
                                   AdornmentColor="@textArea.GetAdornmentColor()"
                                   Variant="Variant.Outlined"
                                   Lines="@lines"
-                                  AutoGrow="@true"
+                                  AutoGrow="@autoGrow"
                                   MaxLines="12"
                                   Class='@MergeClass(textArea.Class, "mb-3")'
                                   Style="@this.GetOptionalStyle(textArea.Style)" />
