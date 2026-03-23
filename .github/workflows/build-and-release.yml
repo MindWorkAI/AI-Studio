@@ -7,6 +7,7 @@ on:
       - "v*.*.*"
   pull_request:
     types:
+      - opened
       - labeled
       - synchronize
       - reopened
@@ -25,6 +26,7 @@ jobs:
       is_release: ${{ steps.determine.outputs.is_release }}
       is_main_push: ${{ steps.determine.outputs.is_main_push }}
       is_labeled_pr: ${{ steps.determine.outputs.is_labeled_pr }}
+      is_pr_build: ${{ steps.determine.outputs.is_pr_build }}
       is_internal_pr: ${{ steps.determine.outputs.is_internal_pr }}
       build_enabled: ${{ steps.determine.outputs.build_enabled }}
       artifact_retention_days: ${{ steps.determine.outputs.artifact_retention_days }}
@@ -43,6 +45,7 @@ jobs:
           is_release=false
           is_main_push=false
           is_labeled_pr=false
+          is_pr_build=false
           is_internal_pr=false
           build_enabled=false
           artifact_retention_days=0
@@ -62,13 +65,12 @@ jobs:
             build_enabled=true
             artifact_retention_days=7
             skip_reason=""
-          elif [[ "$EVENT_NAME" == "pull_request" && "$is_internal_pr" == "true" && " $PR_LABELS " == *" run-pipeline "* ]]; then
+          elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " == *" run-pipeline "* ]]; then
             is_labeled_pr=true
+            is_pr_build=true
             build_enabled=true
             artifact_retention_days=3
             skip_reason=""
-          elif [[ "$EVENT_NAME" == "pull_request" && "$is_internal_pr" != "true" ]]; then
-            skip_reason="Build disabled: PR comes from a fork (${PR_HEAD_REPO}) and fork PRs are intentionally excluded."
           elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " != *" run-pipeline "* ]]; then
             skip_reason="Build disabled: PR does not have the required 'run-pipeline' label."
           fi
@@ -76,6 +78,7 @@ jobs:
           echo "is_release=${is_release}" >> "$GITHUB_OUTPUT"
           echo "is_main_push=${is_main_push}" >> "$GITHUB_OUTPUT"
           echo "is_labeled_pr=${is_labeled_pr}" >> "$GITHUB_OUTPUT"
+          echo "is_pr_build=${is_pr_build}" >> "$GITHUB_OUTPUT"
           echo "is_internal_pr=${is_internal_pr}" >> "$GITHUB_OUTPUT"
           echo "build_enabled=${build_enabled}" >> "$GITHUB_OUTPUT"
           echo "artifact_retention_days=${artifact_retention_days}" >> "$GITHUB_OUTPUT"
@@ -91,6 +94,7 @@ jobs:
           IS_RELEASE: ${{ steps.determine.outputs.is_release }}
           IS_MAIN_PUSH: ${{ steps.determine.outputs.is_main_push }}
           IS_LABELED_PR: ${{ steps.determine.outputs.is_labeled_pr }}
+          IS_PR_BUILD: ${{ steps.determine.outputs.is_pr_build }}
           IS_INTERNAL_PR: ${{ steps.determine.outputs.is_internal_pr }}
           BUILD_ENABLED: ${{ steps.determine.outputs.build_enabled }}
           ARTIFACT_RETENTION_DAYS: ${{ steps.determine.outputs.artifact_retention_days }}
@@ -104,6 +108,7 @@ jobs:
           echo "is_release: ${IS_RELEASE}"
           echo "is_main_push: ${IS_MAIN_PUSH}"
           echo "is_labeled_pr: ${IS_LABELED_PR}"
+          echo "is_pr_build: ${IS_PR_BUILD}"
           echo "is_internal_pr: ${IS_INTERNAL_PR}"
           echo "build_enabled: ${BUILD_ENABLED}"
           echo "artifact_retention_days: ${ARTIFACT_RETENTION_DAYS}"
@@ -122,6 +127,7 @@ jobs:
             echo "| is_release | ${IS_RELEASE} |"
             echo "| is_main_push | ${IS_MAIN_PUSH} |"
             echo "| is_labeled_pr | ${IS_LABELED_PR} |"
+            echo "| is_pr_build | ${IS_PR_BUILD} |"
             echo "| is_internal_pr | ${IS_INTERNAL_PR} |"
             echo "| build_enabled | ${BUILD_ENABLED} |"
             echo "| artifact_retention_days | ${ARTIFACT_RETENTION_DAYS} |"
@@ -215,36 +221,42 @@ jobs:
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
             tauri_bundle: 'dmg updater'
+            tauri_bundle_pr: 'dmg'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
             tauri_bundle: 'dmg updater'
+            tauri_bundle_pr: 'dmg'
 
           - platform: 'ubuntu-22.04' # for x86-based Linux
             rust_target: 'x86_64-unknown-linux-gnu'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage deb updater'
+            tauri_bundle_pr: 'appimage deb'
             
           - platform: 'ubuntu-22.04-arm' # for ARM-based Linux
             rust_target: 'aarch64-unknown-linux-gnu'
             dotnet_runtime: 'linux-arm64'
             dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
             tauri_bundle: 'appimage deb updater'
+            tauri_bundle_pr: 'appimage deb'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis updater'
+            tauri_bundle_pr: 'nsis'
 
           - platform: 'windows-latest' # for ARM-based Windows
             rust_target: 'aarch64-pc-windows-msvc'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis updater'
+            tauri_bundle_pr: 'nsis'
     
     runs-on: ${{ matrix.platform }}
     steps:
@@ -753,10 +765,18 @@ jobs:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
+          bundles="${{ matrix.tauri_bundle }}"
+
+          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
+            echo "Running PR test build without updater bundle signing"
+            bundles="${{ matrix.tauri_bundle_pr }}"
+          else
+            export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
+            export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
+          fi
+
           cd runtime
-          export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
-          export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles"
           
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
@@ -764,10 +784,18 @@ jobs:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
+          $bundles = "${{ matrix.tauri_bundle }}"
+
+          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
+            Write-Output "Running PR test build without updater bundle signing"
+            $bundles = "${{ matrix.tauri_bundle_pr }}"
+          } else {
+            $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
+            $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
+          }
+
           cd runtime
-          $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
-          $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles
 
       - name: Upload artifact (macOS)
         if: startsWith(matrix.platform, 'macos')
