@@ -25,8 +25,10 @@ jobs:
       is_release: ${{ steps.determine.outputs.is_release }}
       is_main_push: ${{ steps.determine.outputs.is_main_push }}
       is_labeled_pr: ${{ steps.determine.outputs.is_labeled_pr }}
+      is_internal_pr: ${{ steps.determine.outputs.is_internal_pr }}
       build_enabled: ${{ steps.determine.outputs.build_enabled }}
       artifact_retention_days: ${{ steps.determine.outputs.artifact_retention_days }}
+      skip_reason: ${{ steps.determine.outputs.skip_reason }}
 
     steps:
       - name: Determine run mode
@@ -41,28 +43,90 @@ jobs:
           is_release=false
           is_main_push=false
           is_labeled_pr=false
+          is_internal_pr=false
           build_enabled=false
           artifact_retention_days=0
+          skip_reason="Build disabled: event did not match main push, release tag, or labeled internal PR."
+
+          if [[ "$EVENT_NAME" == "pull_request" && "$PR_HEAD_REPO" == "$REPOSITORY" ]]; then
+            is_internal_pr=true
+          fi
 
           if [[ "$REF" == refs/tags/v* ]]; then
             is_release=true
             build_enabled=true
             artifact_retention_days=${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+            skip_reason=""
           elif [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/main" ]]; then
             is_main_push=true
             build_enabled=true
             artifact_retention_days=7
-          elif [[ "$EVENT_NAME" == "pull_request" && "$PR_HEAD_REPO" == "$REPOSITORY" && " $PR_LABELS " == *" run-pipeline "* ]]; then
+            skip_reason=""
+          elif [[ "$EVENT_NAME" == "pull_request" && "$is_internal_pr" == "true" && " $PR_LABELS " == *" run-pipeline "* ]]; then
             is_labeled_pr=true
             build_enabled=true
             artifact_retention_days=3
+            skip_reason=""
+          elif [[ "$EVENT_NAME" == "pull_request" && "$is_internal_pr" != "true" ]]; then
+            skip_reason="Build disabled: PR comes from a fork (${PR_HEAD_REPO}) and fork PRs are intentionally excluded."
+          elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " != *" run-pipeline "* ]]; then
+            skip_reason="Build disabled: PR does not have the required 'run-pipeline' label."
           fi
 
           echo "is_release=${is_release}" >> "$GITHUB_OUTPUT"
           echo "is_main_push=${is_main_push}" >> "$GITHUB_OUTPUT"
           echo "is_labeled_pr=${is_labeled_pr}" >> "$GITHUB_OUTPUT"
+          echo "is_internal_pr=${is_internal_pr}" >> "$GITHUB_OUTPUT"
           echo "build_enabled=${build_enabled}" >> "$GITHUB_OUTPUT"
           echo "artifact_retention_days=${artifact_retention_days}" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=${skip_reason}" >> "$GITHUB_OUTPUT"
+
+      - name: Log run mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ', ') }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+          IS_RELEASE: ${{ steps.determine.outputs.is_release }}
+          IS_MAIN_PUSH: ${{ steps.determine.outputs.is_main_push }}
+          IS_LABELED_PR: ${{ steps.determine.outputs.is_labeled_pr }}
+          IS_INTERNAL_PR: ${{ steps.determine.outputs.is_internal_pr }}
+          BUILD_ENABLED: ${{ steps.determine.outputs.build_enabled }}
+          ARTIFACT_RETENTION_DAYS: ${{ steps.determine.outputs.artifact_retention_days }}
+          SKIP_REASON: ${{ steps.determine.outputs.skip_reason }}
+        run: |
+          echo "event_name: ${EVENT_NAME}"
+          echo "ref: ${REF}"
+          echo "repository: ${REPOSITORY}"
+          echo "pr_head_repo: ${PR_HEAD_REPO}"
+          echo "pr_labels: ${PR_LABELS}"
+          echo "is_release: ${IS_RELEASE}"
+          echo "is_main_push: ${IS_MAIN_PUSH}"
+          echo "is_labeled_pr: ${IS_LABELED_PR}"
+          echo "is_internal_pr: ${IS_INTERNAL_PR}"
+          echo "build_enabled: ${BUILD_ENABLED}"
+          echo "artifact_retention_days: ${ARTIFACT_RETENTION_DAYS}"
+          echo "skip_reason: ${SKIP_REASON}"
+
+          {
+            echo "### Run Mode"
+            echo ""
+            echo "| Key | Value |"
+            echo "| --- | --- |"
+            echo "| event_name | ${EVENT_NAME} |"
+            echo "| ref | ${REF} |"
+            echo "| repository | ${REPOSITORY} |"
+            echo "| pr_head_repo | ${PR_HEAD_REPO} |"
+            echo "| pr_labels | ${PR_LABELS} |"
+            echo "| is_release | ${IS_RELEASE} |"
+            echo "| is_main_push | ${IS_MAIN_PUSH} |"
+            echo "| is_labeled_pr | ${IS_LABELED_PR} |"
+            echo "| is_internal_pr | ${IS_INTERNAL_PR} |"
+            echo "| build_enabled | ${BUILD_ENABLED} |"
+            echo "| artifact_retention_days | ${ARTIFACT_RETENTION_DAYS} |"
+            echo "| skip_reason | ${SKIP_REASON} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   read_metadata:
     name: Read metadata
