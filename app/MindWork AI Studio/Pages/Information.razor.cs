@@ -117,7 +117,10 @@ public partial class Information : MSGComponentBase
     
     protected override async Task OnInitializedAsync()
     {
+        this.ApplyFilters([], [ Event.ENTERPRISE_ENVIRONMENTS_CHANGED ]);
         await base.OnInitializedAsync();
+
+        this.RefreshEnterpriseConfigurationState();
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
@@ -141,10 +144,8 @@ public partial class Information : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.PLUGINS_RELOADED:
-                this.configPlugins = PluginFactory.AvailablePlugins
-                    .Where(x => x.Type is PluginType.CONFIGURATION)
-                    .OfType<IAvailablePlugin>()
-                    .ToList();
+            case Event.ENTERPRISE_ENVIRONMENTS_CHANGED:
+                this.RefreshEnterpriseConfigurationState();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
@@ -153,6 +154,16 @@ public partial class Information : MSGComponentBase
     }
 
     #endregion
+
+    private void RefreshEnterpriseConfigurationState()
+    {
+        this.configPlugins = PluginFactory.AvailablePlugins
+            .Where(x => x.Type is PluginType.CONFIGURATION)
+            .OfType<IAvailablePlugin>()
+            .ToList();
+
+        this.enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
+    }
 
     private async Task DeterminePandocVersion()
     {

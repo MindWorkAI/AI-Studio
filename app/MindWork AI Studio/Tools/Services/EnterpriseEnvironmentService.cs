@@ -171,6 +171,9 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             var effectiveSnapshot = BuildNormalizedSnapshot(effectiveEnvironments);
             CURRENT_ENVIRONMENTS = effectiveEnvironments;
             HasValidEnterpriseSnapshot = true;
+
+            if (!previousSnapshot.SequenceEqual(effectiveSnapshot))
+                await MessageBus.INSTANCE.SendMessage<bool>(null, Event.ENTERPRISE_ENVIRONMENTS_CHANGED);
         }
         catch (Exception e)
         {
