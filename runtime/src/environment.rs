@@ -197,7 +197,7 @@ struct EnterpriseSourceData {
 #[get("/system/enterprise/config/id")]
 pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration ID.");
-    resolve_effective_enterprise_source()
+    resolve_effective_enterprise_config_source()
         .configs
         .into_iter()
         .next()
@@ -208,7 +208,7 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
 #[get("/system/enterprise/config/server")]
 pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration server URL.");
-    resolve_effective_enterprise_source()
+    resolve_effective_enterprise_config_source()
         .configs
         .into_iter()
         .next()
@@ -219,21 +219,27 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
 #[get("/system/enterprise/config/encryption_secret")]
 pub fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
-    resolve_effective_enterprise_source().encryption_secret
+    resolve_effective_enterprise_secret_source().encryption_secret
 }
 
 /// Returns all enterprise configurations from the effective source.
 #[get("/system/enterprise/configs")]
 pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
     info!("Trying to read the effective enterprise configurations.");
-    Json(resolve_effective_enterprise_source().configs)
+    Json(resolve_effective_enterprise_config_source().configs)
 }
 
-fn resolve_effective_enterprise_source() -> EnterpriseSourceData {
-    select_effective_enterprise_source(gather_enterprise_sources())
+fn resolve_effective_enterprise_config_source() -> EnterpriseSourceData {
+    select_effective_enterprise_config_source(gather_enterprise_sources())
 }
 
-fn select_effective_enterprise_source(sources: Vec<EnterpriseSourceData>) -> EnterpriseSourceData {
+fn resolve_effective_enterprise_secret_source() -> EnterpriseSourceData {
+    select_effective_enterprise_secret_source(gather_enterprise_sources())
+}
+
+fn select_effective_enterprise_config_source(
+    sources: Vec<EnterpriseSourceData>,
+) -> EnterpriseSourceData {
     for source in sources {
         if !source.configs.is_empty() {
             info!("Using enterprise configuration source '{}'.", source.source_name);
@@ -244,6 +250,22 @@ fn select_effective_enterprise_source(sources: Vec<EnterpriseSourceData>) -> Ent
     }
 
     info!("No enterprise configuration source provided any valid configurations.");
+    EnterpriseSourceData::default()
+}
+
+fn select_effective_enterprise_secret_source(
+    sources: Vec<EnterpriseSourceData>,
+) -> EnterpriseSourceData {
+    for source in sources {
+        if !source.encryption_secret.is_empty() {
+            info!("Using enterprise encryption-secret source '{}'.", source.source_name);
+            return source;
+        }
+
+        info!("Enterprise encryption-secret source '{}' did not provide a usable secret.", source.source_name);
+    }
+
+    info!("No enterprise source provided an enterprise encryption secret.");
     EnterpriseSourceData::default()
 }
 
@@ -624,7 +646,8 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 mod tests {
     use super::{
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
-        normalize_locale_tag, parse_enterprise_source_values, select_effective_enterprise_source,
+        normalize_locale_tag, parse_enterprise_source_values,
+        select_effective_enterprise_config_source, select_effective_enterprise_secret_source,
         EnterpriseConfig, EnterpriseSourceData,
     };
     use std::collections::HashMap;
@@ -736,8 +759,8 @@ mod tests {
     }
 
     #[test]
-    fn select_effective_enterprise_source_uses_first_source_with_configs_only() {
-        let selected = select_effective_enterprise_source(vec![
+    fn select_effective_enterprise_config_source_uses_first_source_with_configs_only() {
+        let selected = select_effective_enterprise_config_source(vec![
             EnterpriseSourceData {
                 source_name: String::from("registry"),
                 configs: vec![EnterpriseConfig {
@@ -759,6 +782,85 @@ mod tests {
         assert_eq!(selected.source_name, "registry");
         assert_eq!(selected.encryption_secret, "");
         assert_eq!(selected.configs.len(), 1);
+    }
+
+    #[test]
+    fn select_effective_enterprise_secret_source_allows_secret_only_source() {
+        let selected = select_effective_enterprise_secret_source(vec![
+            EnterpriseSourceData {
+                source_name: String::from("policy files"),
+                configs: Vec::new(),
+                encryption_secret: String::from("POLICY-SECRET"),
+            },
+            EnterpriseSourceData {
+                source_name: String::from("environment"),
+                configs: vec![EnterpriseConfig {
+                    id: String::from(TEST_ID_B),
+                    server_url: String::from("https://env.example.org"),
+                }],
+                encryption_secret: String::new(),
+            },
+        ]);
+
+        assert_eq!(selected.source_name, "policy files");
+        assert_eq!(selected.encryption_secret, "POLICY-SECRET");
+        assert!(selected.configs.is_empty());
+    }
+
+    #[test]
+    fn select_effective_enterprise_secret_source_falls_back_independently_from_configs() {
+        let selected = select_effective_enterprise_secret_source(vec![
+            EnterpriseSourceData {
+                source_name: String::from("registry"),
+                configs: vec![EnterpriseConfig {
+                    id: TEST_ID_A.to_lowercase(),
+                    server_url: String::from("https://registry.example.org"),
+                }],
+                encryption_secret: String::new(),
+            },
+            EnterpriseSourceData {
+                source_name: String::from("environment"),
+                configs: Vec::new(),
+                encryption_secret: String::from("ENV-SECRET"),
+            },
+        ]);
+
+        assert_eq!(selected.source_name, "environment");
+        assert_eq!(selected.encryption_secret, "ENV-SECRET");
+        assert!(selected.configs.is_empty());
+    }
+
+    #[test]
+    fn select_effective_enterprise_secret_source_ignores_empty_secrets() {
+        let selected = select_effective_enterprise_secret_source(vec![
+            EnterpriseSourceData {
+                source_name: String::from("policy files"),
+                configs: Vec::new(),
+                encryption_secret: String::new(),
+            },
+            EnterpriseSourceData {
+                source_name: String::from("environment"),
+                configs: Vec::new(),
+                encryption_secret: String::from("VALID-SECRET"),
+            },
+        ]);
+
+        assert_eq!(selected.source_name, "environment");
+        assert_eq!(selected.encryption_secret, "VALID-SECRET");
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_supports_secret_without_configs() {
+        let mut values = HashMap::new();
+        values.insert(
+            String::from("config_encryption_secret"),
+            String::from(" SECRET-ONLY "),
+        );
+
+        let source = parse_enterprise_source_values("environment variables", &values);
+
+        assert!(source.configs.is_empty());
+        assert_eq!(source.encryption_secret, "SECRET-ONLY");
     }
 
     #[test]
@@ -867,6 +969,23 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn load_policy_values_from_directories_supports_secret_only_policy_files() {
+        let directory = tempdir().unwrap();
+
+        fs::write(
+            directory.path().join("config_encryption_secret.yaml"),
+            "config_encryption_secret: \"POLICY-SECRET\"",
+        )
+        .unwrap();
+
+        let values = load_policy_values_from_directories(&[directory.path().to_path_buf()]);
+        let source = parse_enterprise_source_values("policy files", &values);
+
+        assert!(source.configs.is_empty());
+        assert_eq!(source.encryption_secret, "POLICY-SECRET");
     }
 
     #[test]

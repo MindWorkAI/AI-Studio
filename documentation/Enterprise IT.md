@@ -23,13 +23,15 @@ So that MindWork AI Studio knows where to load which configuration, this informa
 
 ### Source order and fallback behavior
 
-AI Studio does **not** merge the registry, policy files, and environment variables. Instead, it checks them in order and uses the **first source that contains at least one valid enterprise configuration**:
+AI Studio does **not** merge the registry, policy files, and environment variables. Instead, it checks them in order:
 
 - **Windows:** Registry -> Policy files -> Environment variables
 - **Linux:** Policy files -> Environment variables
 - **macOS:** Policy files -> Environment variables
 
-The encryption secret follows the same rule. It is only used from the same source that provided the active enterprise configurations.
+For enterprise configurations, AI Studio uses the **first source that contains at least one valid enterprise configuration**.
+
+For the encryption secret, AI Studio uses the **first source that contains a non-empty encryption secret**, even if that source does not contain any enterprise configuration IDs or server URLs. This allows secret-only setups during migration or on machines that only need encrypted API key support.
 
 ### Multiple configurations (recommended)
 
@@ -226,7 +228,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
    In AI Studio, enable the "Show administration settings" toggle in the app settings. Then click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
 
 2. **Deploy the encryption secret:**
-   Distribute the secret to all client machines using the same source you use for the enterprise configurations:
+   Distribute the secret to all client machines using any supported enterprise source. The secret can be deployed on its own, even when no enterprise configuration IDs or server URLs are defined on that machine:
    - Windows Registry / GPO: `HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret`
    - Policy file: `config_encryption_secret.yaml`
    - Environment fallback: `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET`
