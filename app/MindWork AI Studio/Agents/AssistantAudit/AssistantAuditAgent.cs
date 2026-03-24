@@ -92,7 +92,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         var provider = this.ResolveProvider();
         if (provider == AIStudio.Settings.Provider.NONE)
         {
-            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(TB("No provider is configured for the assistant plugin audit agent."))));
+            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(TB("No provider is configured for Security Audit-Agent."))));
 
             return new AssistantAuditResult
             {
