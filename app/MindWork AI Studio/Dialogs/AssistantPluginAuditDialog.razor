@@ -1,0 +1,88 @@
+@using AIStudio.Agents.AssistantAudit
+@inherits MSGComponentBase
+
+<MudDialog DefaultFocus="DefaultFocus.FirstChild">
+    <DialogContent>
+        @if (this.plugin is null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">
+                @T("The assistant plugin could not be resolved for auditing.")
+            </MudAlert>
+        }
+        else
+        {
+            <MudStack Spacing="2">
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("The audit uses a simulated prompt preview. Empty or placeholder values in the preview are expected during this security check.")
+                </MudAlert>
+
+                <MudPaper Class="pa-3 border-dashed border rounded-lg">
+                    <MudText Typo="Typo.h6">@this.plugin.Name</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-2">@this.plugin.Description</MudText>
+                    <MudText Typo="Typo.body2">
+                        @T("Audit provider"): <strong>@this.ProviderLabel</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        @T("Required minimum level"): <strong>@this.MinimumLevelLabel</strong>
+                    </MudText>
+                </MudPaper>
+
+                <MudExpansionPanels MultiExpansion="true">
+                    <MudExpansionPanel Text="@T("System Prompt")" Expanded="true">
+                        <MudTextField T="string" Text="@this.plugin.SystemPrompt" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2" />
+                    </MudExpansionPanel>
+                    <MudExpansionPanel Text="@T("Prompt Preview")" Expanded="true">
+                        <MudTextField T="string" Text="@this.promptPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2" />
+                    </MudExpansionPanel>
+                    <MudExpansionPanel Text="@T("Components")">
+                        <MudTextField T="string" Text="@this.componentSummary" ReadOnly="true" Variant="Variant.Outlined" Lines="10" Class="mt-2" />
+                    </MudExpansionPanel>
+                    <MudExpansionPanel Text="@T("Lua Manifest")">
+                        <MudTextField T="string" Text="@this.luaCode" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" />
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+
+                @if (this.audit is not null)
+                {
+                    <MudAlert Severity="@this.audit.Level.GetSeverity()" Dense="true">
+                        <strong>@this.audit.Level.GetName()</strong>: @this.audit.Summary
+                    </MudAlert>
+
+                    @if (this.audit.Findings.Count > 0)
+                    {
+                        <MudList T="string" Dense="true" Class="border rounded-lg">
+                            @foreach (var finding in this.audit.Findings)
+                            {
+                                <MudListItem T="string">
+                                    <div>
+                                        <strong>@finding.Category</strong>
+                                        @if (!string.IsNullOrWhiteSpace(finding.Location))
+                                        {
+                                            <span> (@finding.Location)</span>
+                                        }
+                                        <div>@finding.Description</div>
+                                        @if (!string.IsNullOrWhiteSpace(finding.Recommendation))
+                                        {
+                                            <div><em>@finding.Recommendation</em></div>
+                                        }
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                }
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.CloseWithoutActivation" Variant="Variant.Filled">
+            @(this.audit is null ? T("Cancel") : T("Close"))
+        </MudButton>
+        <MudButton OnClick="@this.RunAudit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!this.CanRunAudit)">
+            @T("Run Audit")
+        </MudButton>
+        <MudButton OnClick="@this.EnablePlugin" Variant="Variant.Filled" Color="@this.EnableButtonColor" Disabled="@(!this.CanEnablePlugin)">
+            @T("Enable Plugin")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
