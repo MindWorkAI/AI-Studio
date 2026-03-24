@@ -1,8 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Text;
-
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Standard;
@@ -238,6 +235,27 @@ public static partial class PluginFactory
         
         // Check for the voice recording shortcut:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check if audit is required before it can be activated
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Register new preselected provider for the security audit
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Change the minimum required audit level that is required for the allowance of assistants
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.MinimumLevel, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check if external plugins are strictly forbidden, when the minimum audit level is fell below
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check if security audits are invoked automatically and transparent for the user
+        // TODO: USE THIS SETTING
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
