@@ -39,6 +39,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private readonly HashSet<string> executingButtonActions = [];
     private readonly HashSet<string> executingSwitchActions = [];
     private string pluginPath = string.Empty;
+    private PluginAssistantAudit? audit;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
 
     #region Implementation of AssistantBase
@@ -62,6 +63,8 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         this.allowProfiles = pluginAssistant.AllowProfiles;
         this.showFooterProfileSelection = !pluginAssistant.HasEmbeddedProfileSelection;
         this.pluginPath = pluginAssistant.PluginPath;
+        var pluginHash = pluginAssistant.ComputeAuditHash();
+        this.audit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == pluginAssistant.Id && x.PluginHash == pluginHash);
 
         var rootComponent = this.RootComponent;
         if (rootComponent is not null)
@@ -403,7 +406,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
                 prompt.Append(this.CollectUserPromptFallback(component.Children));
             }
         }
-
-        return prompt.ToString();
+        
+        return prompt.Append(Environment.NewLine).ToString();
     }
 }

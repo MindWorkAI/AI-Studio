@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_DYNAMIC)]
+@using AIStudio.Agents.AssistantAudit
 @using AIStudio.Settings
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout
@@ -12,6 +13,15 @@
 }
 else
 {
+    @if (this.audit is not null && this.audit.Level is not AssistantAuditLevel.SAFE)
+    {
+        <MudPaper Class="pa-4 ma-4" Elevation="0">
+            <MudAlert Severity="@this.audit.Level.GetSeverity()" Variant="Variant.Filled" Square="false" Elevation="6" Class="pa-4">
+                <strong>@this.audit.Level.GetName().ToUpperInvariant(): </strong>@this.audit.Summary
+            </MudAlert>
+        </MudPaper>
+    }
+
     @foreach (var component in this.RootComponent.Children)
     {
         @this.RenderComponent(component)
