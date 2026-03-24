@@ -1,4 +1,5 @@
 using AIStudio.Agents;
+using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.Qdrant;
@@ -176,6 +177,7 @@ internal sealed class Program
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
+        builder.Services.AddTransient<AssistantAuditAgent>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
