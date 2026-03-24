@@ -45,7 +45,7 @@ When the order of tasks matters, provide instructions as a numbered list.
 
 # 4 – Structure Prompts with Markers
 
-Headings (e.g., `#` or `###`) or quotation marks (`"""`) help the model parse complex prompts, especially when mixing instructions, context, and data.
+Headings (e.g., `#` or `###`) or backticks (` `````` `) help the model parse complex prompts, especially when mixing instructions, context, and data.
 
 **Less Effective:**
 ```text
@@ -57,7 +57,7 @@ Summarize the text above as a bullet point list of the most important points.
 **More Effective:**
 ```text
 # Text: 
-"""{text input here}"""
+```{text input here}```
 
 # Task: 
 Summarize the text above as a bullet point list of the most important points.

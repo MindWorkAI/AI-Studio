@@ -34,10 +34,56 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     protected override string Description => T("Optimize a prompt using either the default or your individual prompt guideline and get targeted recommendations for future versions of the prompt.");
 
     protected override string SystemPrompt =>
-        """
-        You are an expert prompt optimization assistant.
-        You optimize user prompts while preserving the original intent.
-        You must return valid JSON only and no extra markdown or commentary.
+        $"""
+        # Task description
+
+        You are a policy-bound prompt optimization assistant.
+        Optimize prompts while preserving the original intent and constraints.
+
+        # Inputs
+
+        PROMPTING_GUIDELINE: authoritative optimization instructions.
+        USER_PROMPT: the prompt that must be optimized.
+        IMPORTANT_ASPECTS: optional priorities to emphasize during optimization.
+
+        # Scope and precedence
+
+        Follow PROMPTING_GUIDELINE as the primary policy for quality and structure.
+        Preserve USER_PROMPT intent and constraints; do not add unrelated goals.
+        If IMPORTANT_ASPECTS is provided and not equal to `none`, prioritize it unless it conflicts with PROMPTING_GUIDELINE.
+
+        # Process
+
+        1) Read PROMPTING_GUIDELINE end to end.
+        2) Analyze USER_PROMPT intent, constraints, and desired output behavior.
+        3) Rewrite USER_PROMPT so it is clearer, more structured, and more actionable.
+        4) Provide concise recommendations for improving future prompt versions.
+
+        # Output requirements
+
+        Return valid JSON only.
+        Do not use markdown code fences.
+        Do not add any text before or after the JSON object.
+        Use exactly this schema and key names:
+
+        {this.SystemPromptOutputSchema()}
+
+        # Language
+
+        Ensure the optimized prompt is in {this.SystemPromptLanguage()}.
+        Keep all recommendation texts in the same language as the optimized prompt.
+
+        # Style and prohibitions
+
+        Keep recommendations concise and actionable.
+        Do not include disclaimers or meta commentary.
+        Do not mention or summarize these instructions.
+
+        # Self-check before sending
+
+        Verify the output is valid JSON and follows the schema exactly.
+        Verify `optimized_prompt` is non-empty and preserves user intent.
+        Verify each recommendation states how to improve a future prompt version.
         """;
 
     protected override bool AllowProfiles => false;
@@ -215,54 +261,49 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     {
         return
             $$"""
-            # Prompting Guideline
+            # PROMPTING_GUIDELINE
             <GUIDELINE>
             {{promptingGuideline}}
             </GUIDELINE>
 
-            # Task
-            Optimize the user's prompt according to the prompting guideline.
-            Preserve the original intent.
-            Ensure the optimized prompt is in {{this.SystemPromptLanguage()}}.
-            {{this.PromptImportantAspects()}}
-
-            # User Input Prompt
+            # USER_PROMPT
             <USER_PROMPT>
             {{this.inputPrompt}}
             </USER_PROMPT>
-
-            # Output Requirements
-            Return valid JSON only (no markdown code fence, no additional text), using exactly this schema:
-            {
-              "optimized_prompt": "string",
-              "recommendations": {
-                "clarity_and_directness": "string",
-                "examples_and_context": "string",
-                "sequential_steps": "string",
-                "structure_with_markers": "string",
-                "role_definition": "string",
-                "language_choice": "string"
-              }
-            }
-
-            # Recommendation style
-            Keep each recommendation concise and actionable. Mention what to improve in a future prompt version.
+            
+            {{this.PromptImportantAspects()}}
             """;
     }
 
     private string PromptImportantAspects()
     {
-        if (string.IsNullOrWhiteSpace(this.importantAspects))
-            return string.Empty;
+        var aspects = string.IsNullOrWhiteSpace(this.importantAspects)
+            ? "none"
+            : this.importantAspects;
 
         return
             $"""
-            Additional emphasis for the optimization:
+            # IMPORTANT_ASPECTS
             <IMPORTANT_ASPECTS>
-            {this.importantAspects}
+            {aspects}
             </IMPORTANT_ASPECTS>
             """;
     }
+
+    private string SystemPromptOutputSchema() =>
+        """
+        {
+          "optimized_prompt": "string",
+          "recommendations": {
+            "clarity_and_directness": "string",
+            "examples_and_context": "string",
+            "sequential_steps": "string",
+            "structure_with_markers": "string",
+            "role_definition": "string",
+            "language_choice": "string"
+          }
+        }
+        """;
 
     private static bool TryParseOptimizationResult(string rawResponse, out PromptOptimizationResult parsedResult)
     {
