@@ -11,7 +11,7 @@ namespace AIStudio.Agents.AssistantAudit;
 
 public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginTypeExtensions).Namespace, nameof(PluginTypeExtensions));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantAuditAgent).Namespace, nameof(AssistantAuditAgent));
     
     protected override Type Type => Type.SYSTEM;
 
