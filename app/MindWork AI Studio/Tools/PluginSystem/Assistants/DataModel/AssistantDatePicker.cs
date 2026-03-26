@@ -81,11 +81,8 @@ internal sealed class AssistantDatePicker : StatefulAssistantComponentBase
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var promptFragment = $"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}";
-        if (state.Dates.TryGetValue(this.Name, out var userInput) && !string.IsNullOrWhiteSpace(userInput))
-            promptFragment += $"user prompt:{Environment.NewLine}{userInput}";
-
-        return promptFragment;
+        state.Dates.TryGetValue(this.Name, out var userInput);
+        return this.BuildAuditPromptBlock(userInput);
     }
 
     #endregion

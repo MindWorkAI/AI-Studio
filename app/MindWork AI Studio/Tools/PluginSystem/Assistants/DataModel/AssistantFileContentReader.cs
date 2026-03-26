@@ -1,4 +1,3 @@
-using System.Text;
 using AIStudio.Assistants.Dynamic;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
@@ -31,15 +30,8 @@ internal sealed class AssistantFileContentReader : StatefulAssistantComponentBas
 
     public override string UserPromptFallback(AssistantState state)
     {
-        var promptFragment = new StringBuilder();
-        
-        if (state.FileContent.TryGetValue(this.Name, out var fileState))
-            promptFragment.Append($"context:{Environment.NewLine}{this.UserPrompt}{Environment.NewLine}---{Environment.NewLine}");
-        
-        if (!string.IsNullOrWhiteSpace(fileState?.Content))
-            promptFragment.Append($"user prompt:{Environment.NewLine}{fileState.Content}");
-
-        return promptFragment.ToString();
+        state.FileContent.TryGetValue(this.Name, out var fileState);
+        return this.BuildAuditPromptBlock(fileState?.Content);
     }
 
     #endregion
