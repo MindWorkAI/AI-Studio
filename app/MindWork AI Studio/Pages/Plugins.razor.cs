@@ -1,6 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem;
 
@@ -14,6 +15,8 @@ public partial class Plugins : MSGComponentBase
     private const string GROUP_ENABLED = "Enabled";
     private const string GROUP_DISABLED = "Disabled";
     private const string GROUP_INTERNAL = "Internal";
+
+    private DataAssistantPluginAudit AssistantPluginAuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
     
     private TableGroupDefinition<IPluginMetadata> groupConfig = null!;
 
@@ -56,7 +59,7 @@ public partial class Plugins : MSGComponentBase
             return;
         }
 
-        if (pluginMeta.Type is not PluginType.ASSISTANT || !this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation)
+        if (pluginMeta.Type is not PluginType.ASSISTANT || !this.AssistantPluginAuditSettings.RequireAuditBeforeActivation)
         {
             this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginMeta.Id);
             await this.SettingsManager.StoreSettings();
@@ -72,9 +75,15 @@ public partial class Plugins : MSGComponentBase
         var cachedAudit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == pluginMeta.Id);
         if (cachedAudit is not null && cachedAudit.PluginHash == pluginHash)
         {
-            if (cachedAudit.Level < this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel && this.SettingsManager.ConfigurationData.AssistantPluginAudit.BlockActivationBelowMinimum)
+            if (cachedAudit.Level < this.AssistantPluginAuditSettings.MinimumLevel && this.AssistantPluginAuditSettings.BlockActivationBelowMinimum)
             {
                 await this.DialogService.ShowMessageBox(this.T("Assistant Audit"), $"{cachedAudit.Level.GetName()}: {cachedAudit.Summary}", this.T("Close"));
+                return;
+            }
+
+            if (cachedAudit.Level < this.AssistantPluginAuditSettings.MinimumLevel &&
+                !await this.ConfirmActivationBelowMinimumAsync(pluginMeta.Name, cachedAudit.Level))
+            {
                 return;
             }
 
@@ -101,6 +110,26 @@ public partial class Plugins : MSGComponentBase
 
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task<bool> ConfirmActivationBelowMinimumAsync(string pluginName, AssistantAuditLevel actualLevel)
+    {
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                x => x.Message,
+                string.Format(
+                    this.T("The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    pluginName,
+                    actualLevel.GetName(),
+                    this.AssistantPluginAuditSettings.MinimumLevel.GetName())
+            },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Potentially Dangerous Plugin"), dialogParameters,
+            DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is not null && !dialogResult.Canceled;
     }
     
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);

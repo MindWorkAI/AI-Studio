@@ -1,4 +1,5 @@
 @using AIStudio.Agents.AssistantAudit
+@using AIStudio.Components
 @inherits MSGComponentBase
 
 <MudDialog DefaultFocus="DefaultFocus.FirstChild">
@@ -11,9 +12,9 @@
         }
         else
         {
-            <MudStack Spacing="2">
-                <MudAlert Severity="Severity.Info" Dense="true">
-                    @T("The audit uses a simulated prompt preview. Empty or placeholder values in the preview are expected during this security check.")
+                <MudStack Spacing="2">
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                    @T("This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.")
                 </MudAlert>
 
                 <MudPaper Class="pa-3 border-dashed border rounded-lg">
@@ -23,53 +24,214 @@
                         @T("Audit provider"): <strong>@this.ProviderLabel</strong>
                     </MudText>
                     <MudText Typo="Typo.body2">
-                        @T("Required minimum level"): <strong>@this.MinimumLevelLabel</strong>
+                        @T("Minimum required safety level"): <strong>@this.MinimumLevelLabel</strong>
                     </MudText>
                 </MudPaper>
 
                 <MudExpansionPanels MultiExpansion="true">
-                    <MudExpansionPanel Text="@T("System Prompt")" Expanded="true">
-                        <MudTextField T="string" Text="@this.plugin.SystemPrompt" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2" />
+                    <MudExpansionPanel Expanded="true">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.EditNote" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudText>@T("System Prompt")</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTextField T="string" Text="@this.plugin.RawSystemPrompt" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2"/>
+                        </ChildContent>
                     </MudExpansionPanel>
-                    <MudExpansionPanel Text="@T("Prompt Preview")" Expanded="true">
-                        <MudTextField T="string" Text="@this.promptPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2" />
+                    <MudExpansionPanel Expanded="false">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.Preview" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudText>@T("Prompt Preview")</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTextField T="string" Text="@this.promptPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2"/>
+                        </ChildContent>
                     </MudExpansionPanel>
-                    <MudExpansionPanel Text="@T("Components")">
-                        <MudTextField T="string" Text="@this.componentSummary" ReadOnly="true" Variant="Variant.Outlined" Lines="10" Class="mt-2" />
+                    <MudExpansionPanel KeepContentAlive="false">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.AccountTree" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudText>@T("Components")</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTreeView T="ITreeItem" Items="@this.componentTreeItems" ReadOnly="true" Hover="true" Dense="true" Disabled="false" ExpandOnClick="true" Class="mt-3">
+                            <ItemTemplate Context="item">
+                                @if (item.Value is AssistantAuditTreeItem treeItem)
+                                {
+                                    <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@item.Children">
+                                        <BodyContent>
+                                            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                                <MudText Style="justify-self: start;">
+                                                    @treeItem.Text
+                                                </MudText>
+                                                @if (!string.IsNullOrWhiteSpace(treeItem.Caption))
+                                                {
+                                                    if (treeItem.IsComponent)
+                                                    {
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="justify-self: end;">
+                                                            @treeItem.Caption
+                                                        </MudText>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudText Typo="Typo.overline" Color="Color.Primary" Style="justify-self: end;">
+                                                            @treeItem.Caption
+                                                        </MudText>
+                                                    }
+                                                }
+                                            </div>
+                                        </BodyContent>
+                                    </MudTreeViewItem>
+                                }
+                            </ItemTemplate>
+                        </MudTreeView>
+                        </ChildContent>
                     </MudExpansionPanel>
-                    <MudExpansionPanel Text="@T("Lua Manifest")">
-                        <MudTextField T="string" Text="@this.luaCode" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" />
+                    <MudExpansionPanel KeepContentAlive="false">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.FolderZip" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudText>@T("Plugin Structure")</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTreeView T="ITreeItem" Items="@this.fileSystemTreeItems" ReadOnly="true" Hover="true" Dense="true" Disabled="false" ExpandOnClick="true" Class="mt-3">
+                                <ItemTemplate Context="item">
+                                    @if (item.Value is AssistantAuditTreeItem treeItem)
+                                    {
+                                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@item.Children">
+                                            <BodyContent>
+                                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                                    <MudText Style="justify-self: start;">
+                                                        @treeItem.Text
+                                                    </MudText>
+                                                    @if (!string.IsNullOrWhiteSpace(treeItem.Caption))
+                                                    {
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="justify-self: end;">
+                                                            @treeItem.Caption
+                                                        </MudText>
+                                                    }
+                                                </div>
+                                            </BodyContent>
+                                        </MudTreeViewItem>
+                                    }
+                                </ItemTemplate>
+                            </MudTreeView>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                    <MudExpansionPanel KeepContentAlive="false">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.Code" class="mr-3" Color="Color.Primary"></MudIcon>
+                                <MudText>@T("Lua Manifest")</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudExpansionPanels Elevation="0" Dense="true">
+                                @foreach (var file in this.luaFiles)
+                                {
+                                    var fileInfo = new FileInfo(Path.Combine(this.plugin.PluginPath, file.Key));
+                                    <MudExpansionPanel Expanded="false" Icon="@Icons.Material.Outlined.ArrowDropDown">
+                                        <TitleContent>
+                                            <div class="d-flex align-center justify-start">
+                                                <MudTooltip Placement="Placement.Left" Arrow="true">
+                                                    <ChildContent>
+                                                        <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Color="Color.Info" Class="mr-1"/>
+                                                    </ChildContent>
+                                                    <TooltipContent>
+                                                        <MudPaper Class="pa-3" >
+                                                            <MudStack Spacing="1">
+                                                                <MudText Typo="Typo.subtitle2">@file.Key</MudText>
+                                                                <MudDivider/>
+                                                                    <MudText Typo="Typo.body2">@T("Size"): @this.FormatFileSize(fileInfo.Length)</MudText>
+                                                                    <MudText Typo="Typo.body2">@T("Created"): @this.FormatFileTimestamp(fileInfo.CreationTime)</MudText>
+                                                                    <MudText Typo="Typo.body2">@T("Last accessed"): @this.FormatFileTimestamp(fileInfo.LastAccessTime)</MudText>
+                                                                    <MudText Typo="Typo.body2">@T("Last modified"): @this.FormatFileTimestamp(fileInfo.LastWriteTime)</MudText>
+                                                            </MudStack>
+                                                        </MudPaper>
+                                                    </TooltipContent>
+                                                </MudTooltip>
+                                                <MudText Class="">@file.Key</MudText>
+                                            </div>
+                                        </TitleContent>
+                                        <ChildContent>
+                                            <MudTextField T="string" Text="@file.Value" ReadOnly="true" Variant="Variant.Outlined" Lines="25" Class="mt-2" Style="font-family: monospace"/>
+                                        </ChildContent>
+                                    </MudExpansionPanel>
+                                }
+                            </MudExpansionPanels>
+                        </ChildContent>
                     </MudExpansionPanel>
                 </MudExpansionPanels>
 
                 @if (this.audit is not null)
                 {
-                    <MudAlert Severity="@this.audit.Level.GetSeverity()" Dense="true">
-                        <strong>@this.audit.Level.GetName()</strong>: @this.audit.Summary
-                    </MudAlert>
+                    <MudStack Spacing="2" Class="mt-4">
+                        <MudText Typo="Typo.h6">@T("Audit Result")</MudText>
 
-                    @if (this.audit.Findings.Count > 0)
-                    {
-                        <MudList T="string" Dense="true" Class="border rounded-lg">
-                            @foreach (var finding in this.audit.Findings)
+                        @if (this.audit.Findings.Count == 0 && this.audit.Level is not AssistantAuditLevel.UNKNOWN)
+                        {
+                            <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Icon="@Icons.Material.Filled.VerifiedUser">
+                                <strong>@T("Safe")</strong><span>: @T("No security issues were found during this check.")</span>
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="@this.GetAuditResultSeverity()" Variant="Variant.Filled" Dense="true">
+                                <strong>@this.audit.Level.GetName()</strong><span>: @this.audit.Summary</span>
+                            </MudAlert>
+
+                            @if (this.IsActivationBlockedBySettings)
                             {
-                                <MudListItem T="string">
-                                    <div>
-                                        <strong>@finding.Category</strong>
-                                        @if (!string.IsNullOrWhiteSpace(finding.Location))
-                                        {
-                                            <span> (@finding.Location)</span>
-                                        }
-                                        <div>@finding.Description</div>
-                                        @if (!string.IsNullOrWhiteSpace(finding.Recommendation))
-                                        {
-                                            <div><em>@finding.Recommendation</em></div>
-                                        }
-                                    </div>
-                                </MudListItem>
+                                <MudAlert Severity="Severity.Error" Variant="Variant.Text" Dense="true" Icon="@Icons.Material.Filled.Block">
+                                    @T("This plugin cannot be activated because its audit result is below the required safety level and your settings block activation in this case.")
+                                </MudAlert>
                             }
-                        </MudList>
-                    }
+                            else if (this.RequiresActivationConfirmation)
+                            {
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true" Icon="@Icons.Material.Filled.WarningAmber">
+                                    @T("This plugin is below the required safety level. Your settings still allow activation, but enabling it requires an extra confirmation because it may be unsafe.")
+                                </MudAlert>
+                            }
+
+                            <MudText Typo="Typo.subtitle2">@T("Findings")</MudText>
+                            <MudStack Spacing="2">
+                                @foreach (var finding in this.audit.Findings)
+                                {
+                                    <MudAlert Severity="@this.GetFindingSeverity(finding.Severity)"
+                                              Variant="Variant.Text"
+                                              Dense="true"
+                                              Icon="@this.GetFindingIcon(finding.Severity)"
+                                              Class="pa-3"
+                                              Elevation="3">
+                                        <MudStack Spacing="1" Class="mt-n2">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                                <MudText Typo="Typo.subtitle2">@finding.Category</MudText>
+                                                <MudChip T="string"
+                                                         Variant="Variant.Text"
+                                                         Color="@this.GetFindingColor(finding.Severity)"
+                                                         Size="Size.Small">
+                                                    @finding.Severity.GetName()
+                                                </MudChip>
+                                            </MudStack>
+
+                                            @if (!string.IsNullOrEmpty(finding.Location))
+                                            {
+                                                <MudText Typo="Typo.caption">@finding.Location</MudText>
+                                            }
+
+                                            <MudText Typo="Typo.body2">@finding.Description</MudText>
+                                        </MudStack>
+                                    </MudAlert>
+                                }
+                            </MudStack>
+                        }
+                    </MudStack>
                 }
             </MudStack>
         }
@@ -79,10 +241,13 @@
             @(this.audit is null ? T("Cancel") : T("Close"))
         </MudButton>
         <MudButton OnClick="@this.RunAudit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!this.CanRunAudit)">
-            @T("Run Audit")
+            @T("Start Security Check")
         </MudButton>
-        <MudButton OnClick="@this.EnablePlugin" Variant="Variant.Filled" Color="@this.EnableButtonColor" Disabled="@(!this.CanEnablePlugin)">
-            @T("Enable Plugin")
-        </MudButton>
+        @if (this.CanEnablePlugin)
+        {
+            <MudButton OnClick="@this.EnablePlugin" Variant="Variant.Filled" Color="@this.EnableButtonColor">
+                @T("Enable Assistant Plugin")
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>

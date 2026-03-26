@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider;
@@ -20,9 +21,9 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     protected override string JobDescription =>
         """
         You audit Lua-based newly installed or updated assistant plugins in-depth for security risks in private and enterprise environments.
-        The Lua code is parsed into functional assistants that help users with various tasks, like coding, e-mails, translations 
+        The Lua code is parsed into functional assistants that help users with various tasks, like coding, emails, translations 
         and now everything that plugin devs develop. Assistants have a system prompt that is set once and sanitized by us with a security pre- and postamble.
-        The user prompt is build dynamically at submit and consists of user prompt context followed by the actual user input (Text, Decisions, Time and Date, File and Web content etc.)
+        The user prompt is built dynamically when the assistant is submitted and consists of user prompt context followed by the actual user input (text, decisions, time and date, file and web content, etc.)
         You analyze the plugin manifest code, the assistants' system prompt, the simulated user prompt,
         and the list of UI components. The simulated user prompt may contain empty, null-like, or
         placeholder values. Treat these placeholders as intentional audit input and focus on prompt
@@ -92,7 +93,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         var provider = this.ResolveProvider();
         if (provider == AIStudio.Settings.Provider.NONE)
         {
-            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(TB("No provider is configured for Security Audit-Agent."))));
+            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(TB("No provider is configured for the Security Audit Agent."))));
 
             return new AssistantAuditResult
             {
@@ -104,6 +105,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         logger.LogInformation($"The assistant plugin audit agent uses the provider '{provider.InstanceName}' ({provider.UsedLLMProvider.ToName()}, confidence={provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
 
         var promptPreview = await plugin.BuildAuditPromptPreviewAsync(token);
+        var luaManifest = FormatLuaManifest(plugin.ReadAllLuaFiles());
         var userPrompt = $$"""
                            Audit this assistant plugin.
 
@@ -115,7 +117,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
 
                            Assistant system prompt:
                            ```
-                           {{plugin.SystemPrompt}}
+                           {{plugin.RawSystemPrompt}}
                            ```
 
                            Simulated user prompt preview:
@@ -130,7 +132,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
 
                            Lua manifest:
                            ```lua
-                           {{plugin.ReadManifestCode()}}
+                           {{luaManifest}}
                            ```
                            """;
 
@@ -148,7 +150,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         if (response.Content is not ContentText content || string.IsNullOrWhiteSpace(content.Text))
         {
             logger.LogWarning($"The assistant plugin audit agent did not return text: {response}");
-            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.PendingActions, string.Format(TB("The Security Audit was unsuccessful, because the LLMs response was unusable. The Audit Level remains Unknown, so please try again later."))));
+            await MessageBus.INSTANCE.SendWarning(new (Icons.Material.Filled.PendingActions, string.Format(TB("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
             
             return new AssistantAuditResult
             {
@@ -209,5 +211,25 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         }
 
         return [];
+    }
+
+    private static string FormatLuaManifest(IReadOnlyDictionary<string, string> luaFiles)
+    {
+        if (luaFiles.Count == 0)
+            return string.Empty;
+
+        var builder = new StringBuilder();
+
+        foreach (var luaFile in luaFiles.OrderBy(file => file.Key, StringComparer.Ordinal))
+        {
+            if (builder.Length > 0)
+                builder.AppendLine().AppendLine();
+
+            builder.Append("-- File: ");
+            builder.AppendLine(luaFile.Key);
+            builder.AppendLine(luaFile.Value);
+        }
+
+        return builder.ToString().TrimEnd();
     }
 }

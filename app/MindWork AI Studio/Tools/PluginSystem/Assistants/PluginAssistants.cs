@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 using Lua;
@@ -29,6 +30,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public AssistantForm? RootComponent { get; private set; }
     public string AssistantTitle { get; private set; } = string.Empty;
     public string AssistantDescription { get; private set; } = string.Empty;
+    public string RawSystemPrompt { get; private set; } = string.Empty;
     public string SystemPrompt { get; private set; } = string.Empty;
     public string SubmitText { get; private set; } = string.Empty;
     public bool AllowProfiles { get; private set; } = true;
@@ -112,9 +114,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 message = TB("ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.");
         }
 
+        var rawSystemPrompt = assistantSystemPrompt.Trim();
+
         this.AssistantTitle = assistantTitle;
         this.AssistantDescription = assistantDescription;
-        this.SystemPrompt = BuildSecureSystemPrompt(assistantSystemPrompt);
+        this.RawSystemPrompt = rawSystemPrompt;
+        this.SystemPrompt = BuildSecureSystemPrompt(rawSystemPrompt);
         this.SubmitText = assistantSubmitText;
         this.AllowProfiles = assistantAllowProfiles;
 
@@ -189,19 +194,52 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         return builder.ToString().TrimEnd();
     }
 
-    public string ReadManifestCode()
+    public ImmutableDictionary<string, string> ReadAllLuaFiles()
     {
-        var manifestPath = Path.Combine(this.PluginPath, "plugin.lua");
-        return File.Exists(manifestPath) ? File.ReadAllText(manifestPath) : string.Empty;
+        if (!Directory.Exists(this.PluginPath))
+            return ImmutableDictionary.Create<string, string>();
+        
+        var fileMap = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.Ordinal);
+        
+        foreach (var filePath in Directory.EnumerateFiles(this.PluginPath, "*.lua", SearchOption.AllDirectories).OrderBy(path => path, StringComparer.Ordinal))
+        {
+            var relativePath = Path.GetRelativePath(this.PluginPath, filePath);
+            fileMap[relativePath] = File.ReadAllText(filePath);
+        }
+
+        return fileMap.ToImmutable();
     }
 
+    /// <summary>
+    /// Computes a stable audit hash across all Lua files by hashing a canonical
+    /// sequence of relative path length, relative path, content length, and content
+    /// for each file in ordinal path order.
+    /// </summary>
     public string ComputeAuditHash()
     {
-        var manifestCode = this.ReadManifestCode();
-        if (string.IsNullOrWhiteSpace(manifestCode))
+        var luaFiles = this.ReadAllLuaFiles();
+
+        if (luaFiles.Count == 0)
             return string.Empty;
 
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(manifestCode));
+        using var stream = new MemoryStream();
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
+
+        foreach (var (relativePath, content) in luaFiles.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+        {
+            var normalizedPath = relativePath.Replace('\\', '/');
+            var pathBytes = Encoding.UTF8.GetBytes(normalizedPath);
+            var contentBytes = Encoding.UTF8.GetBytes(content);
+
+            writer.Write(pathBytes.Length);
+            writer.Write(pathBytes);
+            writer.Write(contentBytes.Length);
+            writer.Write(contentBytes);
+        }
+
+        writer.Flush();
+
+        var bytes = SHA256.HashData(stream.ToArray());
         return Convert.ToHexString(bytes);
     }
 
