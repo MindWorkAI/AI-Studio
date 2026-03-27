@@ -31,14 +31,14 @@
               @bind-Text="@this.importantAspects"
               Class="mb-3"
               Label="@T("(Optional) Important Aspects for the prompt")"
-              HelperText="@T("(Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as role precision, step ordering, output structure, or constraints.")"
+              HelperText="@T("(Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as output structure, or constraints.")"
               ShrinkLabel="true"
               Variant="Variant.Outlined"
               AdornmentIcon="@Icons.Material.Filled.List"
               Adornment="Adornment.Start"/>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-    <MudText Typo="Typo.h6">@T("Prompt Recommendations")</MudText>
+    <MudText Typo="Typo.h6">@T("Recommendations for your prompt")</MudText>
 </MudStack>
 
 @if (this.ShowUpdatedPromptGuidelinesIndicator)
@@ -52,7 +52,7 @@
 
 @if (!this.useCustomPromptGuide)
 {
-    <MudJustifiedText Class="mb-3">@T("Use these recommendations, that are based on the default prompt guide, to improve the clarity, directness, and relevance of your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
+    <MudJustifiedText Class="mb-3">@T("Use these recommendations, that are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
 
     <MudGrid Class="mb-3">
         <MudItem xs="12" sm="6" md="4">
@@ -78,7 +78,7 @@
 
 @if (this.useCustomPromptGuide)
 {
-<MudJustifiedText Class="mb-3">@T("Use the prompt recommendations from the custom prompt guide that was provided by the user.")</MudJustifiedText>
+<MudJustifiedText Class="mb-3">@T("Use the prompt recommendations from the custom prompt guide.")</MudJustifiedText>
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" StretchItems="StretchItems.None" Class="mb-3">
