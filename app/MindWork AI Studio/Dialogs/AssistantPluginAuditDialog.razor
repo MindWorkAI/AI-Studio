@@ -48,7 +48,6 @@
                             </div>
                         </TitleContent>
                         <ChildContent>
-                            <MudAlert Severity="Severity.Info"></MudAlert>
                             @{
                                 var promptBuilder = this.plugin.HasCustomPromptBuilder;
                                 var sortDirection = promptBuilder ? SortDirection.Ascending : SortDirection.Descending;
@@ -220,31 +219,52 @@
                             <MudStack Spacing="2">
                                 @foreach (var finding in this.audit.Findings)
                                 {
-                                    <MudAlert Severity="@this.GetFindingSeverity(finding.Severity)"
-                                              Variant="Variant.Text"
-                                              Dense="true"
-                                              Icon="@this.GetFindingIcon(finding.Severity)"
-                                              Class="pa-3"
-                                              Elevation="3">
-                                        <MudStack Spacing="1" Class="mt-n2">
-                                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                                                <MudText Typo="Typo.subtitle2">@finding.Category</MudText>
-                                                <MudChip T="string"
-                                                         Variant="Variant.Text"
-                                                         Color="@this.GetFindingColor(finding.Severity)"
-                                                         Size="Size.Small">
-                                                    @finding.Severity.GetName()
-                                                </MudChip>
+                                    var severityUi = finding.Severity switch
+                                    {
+                                        AssistantAuditLevel.UNKNOWN => (
+                                            AlertStyling: "color: rgb(12,128,223); background-color: rgba(33,150,243,0.06);",
+                                            AlertIcon: Icons.Material.Filled.QuestionMark,
+                                            ChipColor: Color.Info
+                                        ),
+                                        AssistantAuditLevel.DANGEROUS => (
+                                            AlertStyling: "color: rgb(242,28,13); background-color: rgba(244,67,54,0.06);",
+                                            AlertIcon: Icons.Material.Filled.Dangerous,
+                                            ChipColor: Color.Error
+                                        ),
+                                        AssistantAuditLevel.CAUTION => (
+                                            AlertStyling: "color: rgb(214,129,0); background-color: rgba(255,152,0,0.06);",
+                                            AlertIcon: Icons.Material.Filled.Warning,
+                                            ChipColor: Color.Warning
+                                        ),
+                                        AssistantAuditLevel.SAFE => (
+                                            AlertStyling: "color: rgb(0,163,68); background-color: rgba(0,200,83,0.06);",
+                                            AlertIcon: Icons.Material.Filled.Verified,
+                                            ChipColor: Color.Success
+                                        ),
+                                        _ => (
+                                            AlertStyling: "color: rgb(12,128,223); background-color: rgba(33,150,243,0.06);",
+                                            AlertIcon: Icons.Material.Filled.QuestionMark,
+                                            ChipColor: Color.Info
+                                        )
+                                    };
+                                    
+                                    <MudCard Class="pa-1 mud-alert mud-alert-text-error" Elevation="3" Style="@severityUi.AlertStyling">
+                                        <MudCardContent>
+                                            <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+                                                <MudElement HtmlTag="div" Class="mt-1 me-1">
+                                                    <MudIcon Icon="@severityUi.AlertIcon" Title="@finding.SeverityText" />
+                                                </MudElement>
+                                                <MudStack Spacing="1" Style="width: 100%">
+                                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                                        <MudText Typo="Typo.subtitle2">@finding.Category</MudText>
+                                                        <MudChip T="string" Variant="Variant.Text" Class="pt-n2" Size="Size.Small" Color="@severityUi.ChipColor">@finding.Severity.GetName()</MudChip>
+                                                    </MudStack>
+                                                    <MudText Typo="Typo.caption" Class="mt-n3 mb-3">@finding.Location</MudText>
+                                                    <MudText Typo="Typo.body2" Class="mt-n2 mb-2">@finding.Description</MudText>
+                                                </MudStack>
                                             </MudStack>
-
-                                            @if (!string.IsNullOrEmpty(finding.Location))
-                                            {
-                                                <MudText Typo="Typo.caption">@finding.Location</MudText>
-                                            }
-
-                                            <MudText Typo="Typo.body2">@finding.Description</MudText>
-                                        </MudStack>
-                                    </MudAlert>
+                                        </MudCardContent>
+                                    </MudCard>
                                 }
                             </MudStack>
                         }
@@ -252,6 +272,28 @@
                 }
             </MudStack>
         }
+        
+        @if (this.isAuditing)
+        {
+            <MudCard Class="pa-1 mt-4" Elevation="3" Style="width: 100%">
+                <MudCardContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+                        <MudElement HtmlTag="div" Class="mt-1 me-1">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="25px" Height="25px"/>
+                        </MudElement>
+                        <MudStack Spacing="1" Style="width: 100%">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudSkeleton SkeletonType="SkeletonType.Text" Width="50%"/>
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="15%" Height="25px" Class="pt-n2" Style="border-radius: 15px"/>
+                            </MudStack>
+                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="25%" Class="mt-n2 mb-2"/>
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="30px"/>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+        
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.CloseWithoutActivation" Variant="Variant.Filled">

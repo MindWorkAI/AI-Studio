@@ -52,8 +52,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string MinimumLevelLabel => this.MinimumLevel.GetName();
 
-    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE &&
-                                !this.isAuditing;
+    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing;
 
     private bool IsAuditBelowMinimum => this.audit is not null && this.audit.Level < this.MinimumLevel;
 
