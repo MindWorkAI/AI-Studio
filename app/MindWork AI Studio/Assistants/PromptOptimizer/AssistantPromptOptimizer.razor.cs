@@ -31,7 +31,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override string Title => T("Prompt Optimizer");
 
-    protected override string Description => T("Optimize a prompt using either the default or your individual prompt guideline and get targeted recommendations for future versions of the prompt.");
+    protected override string Description => T("Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.");
 
     protected override string SystemPrompt =>
         $"""
@@ -277,17 +277,12 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private string PromptImportantAspects()
     {
-        var aspects = string.IsNullOrWhiteSpace(this.importantAspects)
-            ? "none"
-            : this.importantAspects;
-
-        return
-            $"""
-            # IMPORTANT_ASPECTS
-            <IMPORTANT_ASPECTS>
-            {aspects}
-            </IMPORTANT_ASPECTS>
-            """;
+        return string.IsNullOrWhiteSpace(this.importantAspects) ? string.Empty : $"""
+             # IMPORTANT_ASPECTS
+             <IMPORTANT_ASPECTS>
+             {this.importantAspects}
+             </IMPORTANT_ASPECTS>
+             """;
     }
 
     private string SystemPromptOutputSchema() =>
