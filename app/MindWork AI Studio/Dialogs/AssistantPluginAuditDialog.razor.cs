@@ -172,30 +172,6 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         _ => Severity.Normal,
     };
 
-    private Severity GetFindingSeverity(AssistantAuditLevel severity) => severity switch
-    {
-        AssistantAuditLevel.DANGEROUS => Severity.Error,
-        AssistantAuditLevel.CAUTION => Severity.Warning,
-        AssistantAuditLevel.SAFE => Severity.Success,
-        _ => Severity.Normal,
-    };
-
-    private string GetFindingIcon(AssistantAuditLevel severity) => severity switch
-    {
-        AssistantAuditLevel.DANGEROUS => Icons.Material.Filled.Dangerous,
-        AssistantAuditLevel.CAUTION => Icons.Material.Filled.WarningAmber,
-        AssistantAuditLevel.SAFE => Icons.Material.Filled.Verified,
-        _ => Icons.Material.Filled.Info,
-    };
-
-    private Color GetFindingColor(AssistantAuditLevel severity) => severity switch
-    {
-        AssistantAuditLevel.DANGEROUS => Color.Error,
-        AssistantAuditLevel.CAUTION => Color.Warning,
-        AssistantAuditLevel.SAFE => Color.Success,
-        _ => Color.Default,
-    };
-
     /// <summary>
     /// Creates the full audit tree for the assistant component hierarchy.
     /// The dialog owns this mapping because it is pure presentation logic for the audit UI.
