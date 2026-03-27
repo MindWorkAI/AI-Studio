@@ -32,6 +32,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private PluginAssistants? plugin;
     private PluginAssistantAudit? audit;
     private string promptPreview = string.Empty;
+    private string promptFallbackPreview = string.Empty;
     private string componentSummary = string.Empty;
     private ImmutableDictionary<string, string> luaFiles = ImmutableDictionary.Create<string, string>();
     private IReadOnlyCollection<TreeItemData<ITreeItem>> componentTreeItems = [];
@@ -76,6 +77,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         if (this.plugin is not null)
         {
             this.promptPreview = await this.plugin.BuildAuditPromptPreviewAsync();
+            this.promptFallbackPreview = this.plugin.BuildAuditPromptFallbackPreview();
             this.componentSummary = this.plugin.CreateAuditComponentSummary();
             this.componentTreeItems = this.CreateAuditTreeItems(this.plugin.RootComponent);
             this.fileSystemTreeItems = this.CreatePluginFileSystemTreeItems(this.plugin.PluginPath);
@@ -376,8 +378,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             Value = new AssistantAuditTreeItem
             {
                 Text = Path.GetFileName(filePath),
-                Caption = string.Format(TB("{0} | Last modified {1}"), this.FormatFileSize(fileInfo.Length),
-                    this.FormatFileTimestamp(fileInfo.LastWriteTime)),
+                Caption = string.Empty,
                 Icon = this.GetFileIcon(filePath),
                 Expandable = false,
                 IsComponent = false,

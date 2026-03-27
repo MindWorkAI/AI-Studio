@@ -184,6 +184,15 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         return !string.IsNullOrWhiteSpace(prompt) ? prompt : CollectPromptFallback(this.RootComponent?.Children ?? [], assistantState);
     }
 
+    public string BuildAuditPromptFallbackPreview()
+    {
+        var assistantState = new AssistantState();
+        if (this.RootComponent is not null)
+            InitializeState(this.RootComponent.Children, assistantState);
+
+        return CollectPromptFallback(this.RootComponent?.Children ?? [], assistantState);
+    }
+
     public string CreateAuditComponentSummary()
     {
         if (this.RootComponent is null)

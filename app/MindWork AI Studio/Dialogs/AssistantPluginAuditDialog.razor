@@ -14,8 +14,8 @@
         {
                 <MudStack Spacing="2">
                     <MudAlert Severity="Severity.Info" Dense="true">
-                    @T("This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.")
-                </MudAlert>
+                        @T("This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.")
+                    </MudAlert>
 
                 <MudPaper Class="pa-3 border-dashed border rounded-lg">
                     <MudText Typo="Typo.h6">@this.plugin.Name</MudText>
@@ -44,11 +44,28 @@
                         <TitleContent>
                             <div class="d-flex">
                                 <MudIcon Icon="@Icons.Material.Filled.Preview" class="mr-3" Color="Color.Primary"></MudIcon>
-                                <MudText>@T("Prompt Preview")</MudText>
+                                <MudText>@T("User Prompt Preview")</MudText>
                             </div>
                         </TitleContent>
                         <ChildContent>
-                            <MudTextField T="string" Text="@this.promptPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="8" Class="mt-2"/>
+                            <MudAlert Severity="Severity.Info"></MudAlert>
+                            @{
+                                var promptBuilder = this.plugin.HasCustomPromptBuilder;
+                                var sortDirection = promptBuilder ? SortDirection.Ascending : SortDirection.Descending;
+                                var badgeColor = promptBuilder ? Color.Success : Color.Error;
+                                var fallbackBadgeColor = !promptBuilder ? Color.Success : Color.Error;
+
+                                var fallbackText = promptBuilder ? T("Fallback Prompt") : T("User Prompt");
+                                
+                                <MudTabs Centered="true" SortDirection="@sortDirection" Rounded="true" ApplyEffectsToContainer="true">
+                                    <MudTabPanel SortKey="A" Text="@T("Advanced Prompt Building")" Icon="@Icons.Material.Filled.Build" BadgeDot="@true" BadgeColor="@badgeColor" Disabled="@(!promptBuilder)">
+                                        <MudTextField T="string" Text="@this.promptPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="10"/>
+                                    </MudTabPanel>
+                                    <MudTabPanel SortKey="B" Text="@fallbackText" Icon="@Icons.Material.Filled.EditNote" BadgeDot="@true" BadgeColor="@fallbackBadgeColor">
+                                        <MudTextField T="string" Text="@this.promptFallbackPreview" ReadOnly="true" Variant="Variant.Outlined" Lines="10"/>
+                                    </MudTabPanel>
+                                </MudTabs>
+                            }
                         </ChildContent>
                     </MudExpansionPanel>
                     <MudExpansionPanel KeepContentAlive="false">

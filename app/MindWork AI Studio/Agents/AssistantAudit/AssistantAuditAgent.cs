@@ -110,8 +110,19 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         logger.LogInformation($"The assistant plugin audit agent uses the provider '{provider.InstanceName}' ({provider.UsedLLMProvider.ToName()}, confidence={provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
 
         var promptPreview = await plugin.BuildAuditPromptPreviewAsync(token);
+        var promptFallbackPreview = plugin.BuildAuditPromptFallbackPreview();
         var luaManifest = FormatLuaManifest(plugin.ReadAllLuaFiles());
         var componentOverview = plugin.CreateAuditComponentSummary();
+        var promptMechanism = plugin.HasCustomPromptBuilder ? "BuildPrompt (active) with UserPrompt fallback also shown for reference" : "UserPrompt fallback";
+        var promptFallbackSection = plugin.HasCustomPromptBuilder
+            ? $$"""
+               UserPrompt fallback preview (reference only, not the active prompt path):
+               ```
+               {{promptFallbackPreview}}
+               ```
+
+               """
+            : string.Empty;
         var userPrompt = $$"""
                            Audit this assistant plugin for concrete security risks.
                            Only report findings that are supported by the provided material.
@@ -128,10 +139,15 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
                            {{plugin.RawSystemPrompt}}
                            ```
 
-                           Simulated user prompt preview:
+                           Active prompt construction method:
+                           {{promptMechanism}}
+
+                           Effective user prompt preview:
                            ```
                            {{promptPreview}}
                            ```
+
+                           {{promptFallbackSection}}
 
                            Component overview (compact structure summary):
                            ```
