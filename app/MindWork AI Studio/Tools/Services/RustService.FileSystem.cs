@@ -81,4 +81,21 @@ public sealed partial class RustService
         
         return await result.Content.ReadFromJsonAsync<FileSaveResponse>(this.jsonRustSerializerOptions);
     }
+
+    public async Task<TokenizerUploadResponse> ValidateAndStoreTokenizer(string? modelId, string filePath)
+    {
+        var result = await this.http.PostAsJsonAsync("/tokenizer/val-and-store", new {
+            model_id = modelId,
+            file_path = filePath,
+        }, this.jsonRustSerializerOptions);
+
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to validate and store the tokenizer '{result.StatusCode}'");
+            return new TokenizerUploadResponse(-1, "An error occured while validating and storing the tokenizer");
+        }
+
+        return await result.Content.ReadFromJsonAsync<TokenizerUploadResponse>(this.jsonRustSerializerOptions);
+    }
+    
 }

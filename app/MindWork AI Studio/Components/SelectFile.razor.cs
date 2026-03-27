@@ -27,6 +27,9 @@ public partial class SelectFile : MSGComponentBase
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
+    
+    [Parameter]
+    public bool IsClearable { get; set; } = false;
 
     [Inject]
     public RustService RustService { get; set; } = null!;
