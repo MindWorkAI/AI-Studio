@@ -120,6 +120,8 @@ public sealed class Data
     public DataGrammarSpelling GrammarSpelling { get; init; } = new();
     
     public DataRewriteImprove RewriteImprove { get; init; } = new();
+    
+    public DataPromptOptimizer PromptOptimizer { get; init; } = new();
 
     public DataEMail EMail { get; init; } = new();
     

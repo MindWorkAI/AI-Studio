@@ -8,6 +8,13 @@
         <MudText Typo="Typo.h3">
             @this.Title
         </MudText>
+
+        <MudSpacer/>
+        
+        @if (this.HeaderActions is not null)
+        {
+            @this.HeaderActions
+        }
         
         @if (this.HasSettingsPanel)
         {
@@ -31,7 +38,7 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@this.SubmitDisabled" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@(this.SubmitDisabled || this.isProcessing)" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.isProcessing && this.cancellationTokenSource is not null)
@@ -70,6 +77,11 @@
                         <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
                     }
                 }
+            }
+
+            @if (this.ShowResult && this.AfterResultContent is not null)
+            {
+                @this.AfterResultContent
             }
             
             <div id="@AFTER_RESULT_DIV_ID" class="mt-3">
