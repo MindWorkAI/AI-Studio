@@ -59,7 +59,7 @@ public partial class Plugins : MSGComponentBase
             return;
         }
 
-        if (pluginMeta.Type is not PluginType.ASSISTANT || !this.AssistantPluginAuditSettings.RequireAuditBeforeActivation)
+        if (pluginMeta.Type is not PluginType.ASSISTANT)
         {
             this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginMeta.Id);
             await this.SettingsManager.StoreSettings();
@@ -71,31 +71,37 @@ public partial class Plugins : MSGComponentBase
         if (assistantPlugin is null)
             return;
 
-        var pluginHash = assistantPlugin.ComputeAuditHash();
-        var cachedAudit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == pluginMeta.Id);
-        if (cachedAudit is not null && cachedAudit.PluginHash == pluginHash)
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+        if (securityState.RequiresAudit)
         {
-            if (cachedAudit.Level < this.AssistantPluginAuditSettings.MinimumLevel && this.AssistantPluginAuditSettings.BlockActivationBelowMinimum)
-            {
-                await this.DialogService.ShowMessageBox(this.T("Assistant Audit"), $"{cachedAudit.Level.GetName()}: {cachedAudit.Summary}", this.T("Close"));
-                return;
-            }
-
-            if (cachedAudit.Level < this.AssistantPluginAuditSettings.MinimumLevel &&
-                !await this.ConfirmActivationBelowMinimumAsync(pluginMeta.Name, cachedAudit.Level))
-            {
-                return;
-            }
-
-            this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginMeta.Id);
-            await this.SettingsManager.StoreSettings();
-            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
             return;
         }
 
+        if (securityState.IsBelowMinimum && securityState.IsBlocked)
+        {
+            var blockedAudit = securityState.Audit;
+            if (blockedAudit is not null)
+                await this.DialogService.ShowMessageBox(this.T("Assistant Audit"), $"{blockedAudit.Level.GetName()}: {blockedAudit.Summary}", this.T("Close"));
+            return;
+        }
+
+        if (securityState.IsBelowMinimum && securityState.CanOverride &&
+            !await this.ConfirmActivationBelowMinimumAsync(pluginMeta.Name, securityState.Audit!.Level))
+        {
+            return;
+        }
+
+        this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginMeta.Id);
+        await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task OpenAssistantAuditDialogAsync(Guid pluginId)
+    {
         var parameters = new DialogParameters<AssistantPluginAuditDialog>
         {
-            { x => x.PluginId, pluginMeta.Id },
+            { x => x.PluginId, pluginId },
         };
         var dialog = await this.DialogService.ShowAsync<AssistantPluginAuditDialog>(this.T("Assistant Audit"), parameters, DialogOptions.FULLSCREEN);
         var result = await dialog.Result;
@@ -106,7 +112,7 @@ public partial class Plugins : MSGComponentBase
             this.UpsertAuditCard(auditResult.Audit);
 
         if (auditResult.ActivatePlugin)
-            this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginMeta.Id);
+            this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginId);
 
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
@@ -132,7 +138,43 @@ public partial class Plugins : MSGComponentBase
         return dialogResult is not null && !dialogResult.Canceled;
     }
     
+    private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
+    {
+        if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
+            return false;
+
+        var assistantPlugin = this.TryGetAssistantPlugin(pluginMeta.Id);
+        if (assistantPlugin is null)
+            return false;
+
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+        return securityState.IsBlocked && !securityState.RequiresAudit;
+    }
+
+    private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
+    {
+        if (isEnabled)
+            return this.T("Disable plugin");
+
+        if (pluginMeta.Type is not PluginType.ASSISTANT)
+            return this.T("Enable plugin");
+
+        var assistantPlugin = this.TryGetAssistantPlugin(pluginMeta.Id);
+        if (assistantPlugin is null)
+            return this.T("Enable plugin");
+
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+        if (securityState.RequiresAudit)
+            return securityState.ActionLabel;
+
+        return securityState.IsBlocked
+            ? securityState.Description
+            : this.T("Enable plugin");
+    }
+
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
+
+    private PluginAssistants? TryGetAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == pluginId);
 
     private void UpsertAuditCard(PluginAssistantAudit audit)
     {
@@ -150,7 +192,7 @@ public partial class Plugins : MSGComponentBase
     {
         switch (triggeredEvent)
         {
-            case Event.PLUGINS_RELOADED:
+            case Event.PLUGINS_RELOADED or Event.CONFIGURATION_CHANGED:
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
