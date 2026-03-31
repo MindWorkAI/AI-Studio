@@ -22,6 +22,7 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     protected override bool ShowProfileSelection => this.showFooterProfileSelection;
     protected override string SubmitText => this.submitText;
     protected override Func<Task> SubmitAction => this.Submit;
+    protected override bool SubmitDisabled => this.isSecurityBlocked;
     // Dynamic assistants do not have dedicated settings yet.
     // Reuse chat-level provider filtering/preselection instead of NONE.
     protected override Tools.Components Component => Tools.Components.CHAT;
@@ -40,6 +41,8 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     private readonly HashSet<string> executingSwitchActions = [];
     private string pluginPath = string.Empty;
     private PluginAssistantAudit? audit;
+    private string securityMessage = string.Empty;
+    private bool isSecurityBlocked;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
 
     #region Implementation of AssistantBase
@@ -66,6 +69,16 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
         var pluginHash = pluginAssistant.ComputeAuditHash();
         this.audit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == pluginAssistant.Id && x.PluginHash == pluginHash);
 
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, pluginAssistant);
+        if (!securityState.CanStartAssistant)
+        {
+            this.assistantPlugin = pluginAssistant;
+            this.securityMessage = securityState.Description;
+            this.isSecurityBlocked = true;
+            base.OnInitialized();
+            return;
+        }
+        
         var rootComponent = this.RootComponent;
         if (rootComponent is not null)
         {
@@ -387,6 +400,13 @@ public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
     
     private async Task Submit()
     {
+        if (this.assistantPlugin is not null)
+        {
+            var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.assistantPlugin);
+            if (!securityState.CanStartAssistant)
+                return;
+        }
+
         this.CreateChatThread();
         var time = this.AddUserRequest(await this.CollectUserPromptAsync());
         await this.AddAIResponseAsync(time);

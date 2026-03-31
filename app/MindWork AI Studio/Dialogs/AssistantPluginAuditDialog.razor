@@ -1,5 +1,4 @@
 @using AIStudio.Agents.AssistantAudit
-@using AIStudio.Components
 @inherits MSGComponentBase
 
 <MudDialog DefaultFocus="DefaultFocus.FirstChild">
@@ -299,7 +298,7 @@
         <MudButton OnClick="@this.CloseWithoutActivation" Variant="Variant.Filled">
             @(this.audit is null ? T("Cancel") : T("Close"))
         </MudButton>
-        <MudButton OnClick="@this.RunAudit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!this.CanRunAudit)">
+        <MudButton OnClick="@this.RunAudit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!this.CanRunAudit || this.justAudited)">
             @T("Start Security Check")
         </MudButton>
         @if (this.CanEnablePlugin)

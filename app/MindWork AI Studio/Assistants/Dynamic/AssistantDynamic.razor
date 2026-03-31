@@ -5,7 +5,21 @@
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDynamic>
 
-@if (this.RootComponent is null)
+@if (!string.IsNullOrWhiteSpace(this.securityMessage))
+{
+    <MudPaper Class="pa-4 ma-4" Elevation="0">
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Square="false" Elevation="6" Class="pa-4">
+            @this.securityMessage
+        </MudAlert>
+        @if (this.assistantPlugin is not null)
+        {
+            <div class="mt-4">
+                <AssistantPluginSecurityCard Plugin="@this.assistantPlugin"/>
+            </div>
+        }
+    </MudPaper>
+}
+else if (this.RootComponent is null)
 {
     <MudAlert Severity="Severity.Warning">
         @this.T("No assistant plugin are currently installed.")

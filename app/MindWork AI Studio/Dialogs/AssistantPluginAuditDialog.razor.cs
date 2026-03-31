@@ -1,3 +1,7 @@
+using System.Collections;
+using System.Collections.Immutable;
+using System.Globalization;
+using System.Reflection;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Components;
 using AIStudio.Provider;
@@ -6,17 +10,12 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Microsoft.AspNetCore.Components;
-using System.Collections;
-using System.Collections.Immutable;
-using System.Globalization;
-using System.Reflection;
 
 namespace AIStudio.Dialogs;
 
 public partial class AssistantPluginAuditDialog : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginAuditDialog).Namespace,
-        nameof(AssistantPluginAuditDialog));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginAuditDialog).Namespace, nameof(AssistantPluginAuditDialog));
 
     [CascadingParameter] 
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -37,7 +36,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private ImmutableDictionary<string, string> luaFiles = ImmutableDictionary.Create<string, string>();
     private IReadOnlyCollection<TreeItemData<ITreeItem>> componentTreeItems = [];
     private IReadOnlyCollection<TreeItemData<ITreeItem>> fileSystemTreeItems = [];
-    private CultureInfo fileInfoCulture = CultureInfo.InvariantCulture;
+    private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
     private bool isAuditing;
 
     private AIStudio.Settings.Provider CurrentProvider => this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
@@ -63,13 +62,14 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private bool CanEnablePlugin => this.audit is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
 
     private Color EnableButtonColor => this.RequiresActivationConfirmation ? Color.Warning : Color.Success;
+    private bool justAudited;
 
     private const ushort BYTES_PER_KILOBYTE = 1024;
 
     protected override async Task OnInitializedAsync()
     {
         var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
-        this.fileInfoCulture = this.CreateFileInfoCulture(activeLanguagePlugin.IETFTag);
+        this.currentCultureInfo = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
 
         this.plugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>()
             .FirstOrDefault(x => x.Id == this.PluginId);
@@ -116,6 +116,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         finally
         {
             this.isAuditing = false;
+            this.justAudited = true;
             await this.InvokeAsync(this.StateHasChanged);
         }
     }
@@ -453,7 +454,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         string stringValue when string.IsNullOrWhiteSpace(stringValue) => TB("empty"),
         string stringValue => stringValue,
         bool boolValue => boolValue ? "true" : "false",
-        _ => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+        _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty,
     };
 
     private string GetStructuredValueCaption(object? value) => value switch
@@ -477,37 +478,23 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         _ => Icons.Material.Filled.DataArray,
     };
 
-    private string FormatFileTimestamp(DateTime timestamp) => timestamp.ToString("g", this.fileInfoCulture);
+    private string FormatFileTimestamp(DateTime timestamp) => CommonTools.FormatTimestampToGeneral(timestamp, this.currentCultureInfo);
 
     private string FormatFileSize(long bytes)
     {
         if (bytes < BYTES_PER_KILOBYTE)
-            return string.Format(this.fileInfoCulture, TB("{0} B"), bytes);
+            return string.Format(this.currentCultureInfo, TB("{0} B"), bytes);
 
         var kilobyte = bytes / (double)BYTES_PER_KILOBYTE;
         if (kilobyte < BYTES_PER_KILOBYTE)
-            return string.Format(this.fileInfoCulture, TB("{0:0.##} KB"), kilobyte);
+            return string.Format(this.currentCultureInfo, TB("{0:0.##} KB"), kilobyte);
 
         var megabyte = kilobyte / BYTES_PER_KILOBYTE;
         if (megabyte < BYTES_PER_KILOBYTE)
-            return string.Format(this.fileInfoCulture, TB("{0:0.##} MB"), megabyte);
+            return string.Format(this.currentCultureInfo, TB("{0:0.##} MB"), megabyte);
 
         var gigabyte = megabyte / BYTES_PER_KILOBYTE;
-        return string.Format(this.fileInfoCulture, TB("{0:0.##} GB"), gigabyte);
+        return string.Format(this.currentCultureInfo, TB("{0:0.##} GB"), gigabyte);
     }
 
-    private CultureInfo CreateFileInfoCulture(string ietfTag)
-    {
-        if (string.IsNullOrWhiteSpace(ietfTag))
-            return CultureInfo.InvariantCulture;
-
-        try
-        {
-            return CultureInfo.GetCultureInfo(ietfTag);
-        }
-        catch (CultureNotFoundException)
-        {
-            return CultureInfo.InvariantCulture;
-        }
-    }
 }
