@@ -235,6 +235,6 @@
         "type": "Project"
       }
     },
-    "net9.0/osx-arm64": {}
+    "net9.0/win-x64": {}
   }
 }
