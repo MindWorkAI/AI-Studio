@@ -1,9 +1,7 @@
+@attribute [Route(Routes.ASSISTANTS)]
 @using AIStudio.Dialogs.Settings
 @using AIStudio.Settings.DataModel
-@using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.PluginSystem.Assistants
-@using ReverseMarkdown.Converters
-@attribute [Route(Routes.ASSISTANTS)]
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -41,11 +39,17 @@
             <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
                 @foreach (var assistantPlugin in this.AssistantPlugins)
                 {
+                    var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
                     <AssistantBlock TSettings="SettingsDialogDynamic"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"
-                                    Link="@($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}")"/>
+                                    Disabled="@(!securityState.CanStartAssistant)"
+                                    Link="@($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}")">
+                        <SecurityBadge>
+                            <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
+                        </SecurityBadge>
+                    </AssistantBlock>
                 }
             </MudStack>
         }
