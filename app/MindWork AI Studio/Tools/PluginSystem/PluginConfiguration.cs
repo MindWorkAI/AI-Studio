@@ -111,6 +111,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: how should updates be installed?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UpdateInstallation, this.Id, settingsTable, dryRun);
+
+        // Config: what should be the start page?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.StartPage, this.Id, settingsTable, dryRun);
         
         // Config: allow the user to add providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);

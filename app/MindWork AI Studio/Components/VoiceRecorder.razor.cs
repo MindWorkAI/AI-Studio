@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -21,24 +22,25 @@ public partial class VoiceRecorder : MSGComponentBase
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
 
+    [Inject]
+    private VoiceRecordingAvailabilityService VoiceRecordingAvailabilityService { get; init; } = null!;
+
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         // Register for global shortcut events:
-        this.ApplyFilters([], [Event.TAURI_EVENT_RECEIVED]);
+        this.ApplyFilters([], [Event.TAURI_EVENT_RECEIVED, Event.VOICE_RECORDING_AVAILABILITY_CHANGED]);
 
         await base.OnInitializedAsync();
+    }
 
-        try
-        {
-            // Initialize sound effects. This "warms up" the AudioContext and preloads all sounds for reliable playback:
-            await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
-        }
-        catch (Exception ex)
-        {
-            this.Logger.LogError(ex, "Failed to initialize sound effects.");
-        }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && this.ShouldRenderVoiceRecording)
+            await this.EnsureSoundEffectsAvailableAsync("during the first interactive render");
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
@@ -54,6 +56,10 @@ public partial class VoiceRecorder : MSGComponentBase
                 }
                 
                 break;
+
+            case Event.VOICE_RECORDING_AVAILABILITY_CHANGED:
+                this.StateHasChanged();
+                break;
         }
     }
 
@@ -62,6 +68,12 @@ public partial class VoiceRecorder : MSGComponentBase
     /// </summary>
     private async Task ToggleRecordingFromShortcut()
     {
+        if (!this.IsVoiceRecordingAvailable)
+        {
+            this.Logger.LogDebug("Ignoring shortcut: voice recording is unavailable in the current session.");
+            return;
+        }
+
         // Don't allow toggle if transcription is in progress or preparing:
         if (this.isTranscribing || this.isPreparing)
         {
@@ -85,27 +97,38 @@ public partial class VoiceRecorder : MSGComponentBase
     private string? finalRecordingPath;
     private DotNetObjectReference<VoiceRecorder>? dotNetReference;
 
-    private string Tooltip => this.isTranscribing
-        ? T("Transcription in progress...")
-        : this.isRecording
-            ? T("Stop recording and start transcription")
-            : T("Start recording your voice for a transcription");
+    private bool ShouldRenderVoiceRecording => PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager)
+                                               && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider);
+
+    private bool IsVoiceRecordingAvailable => this.ShouldRenderVoiceRecording
+                                              && this.VoiceRecordingAvailabilityService.IsAvailable;
+
+    private string Tooltip => !this.VoiceRecordingAvailabilityService.IsAvailable
+        ? T("Voice recording is unavailable because the client could not initialize audio playback.")
+        : this.isTranscribing
+            ? T("Transcription in progress...")
+            : this.isRecording
+                ? T("Stop recording and start transcription")
+                : T("Start recording your voice for a transcription");
     
     private async Task OnRecordingToggled(bool toggled)
     {
         if (toggled)
         {
+            if (!this.IsVoiceRecordingAvailable)
+            {
+                this.Logger.LogDebug("Ignoring recording start: voice recording is unavailable in the current session.");
+                return;
+            }
+
             this.isPreparing = true;
             this.StateHasChanged();
-            
-            try
+
+            if (!await this.EnsureSoundEffectsAvailableAsync("before starting audio recording"))
             {
-                // Warm up sound effects:
-                await this.JsRuntime.InvokeVoidAsync("initSoundEffects");
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Failed to initialize sound effects.");
+                this.isPreparing = false;
+                this.StateHasChanged();
+                return;
             }
 
             var mimeTypes = GetPreferredMimeTypes(
@@ -416,11 +439,66 @@ public partial class VoiceRecorder : MSGComponentBase
         }
     }
 
-    private sealed class AudioRecordingResult
+    private async Task<bool> EnsureSoundEffectsAvailableAsync(string context)
     {
-        public string MimeType { get; init; } = string.Empty;
+        if (!this.ShouldRenderVoiceRecording)
+            return false;
 
-        public bool ChangedMimeType { get; init; }
+        if (!this.VoiceRecordingAvailabilityService.IsAvailable)
+            return false;
+
+        try
+        {
+            var result = await this.JsRuntime.InvokeAsync<SoundEffectsInitializationResult>("initSoundEffects");
+            if (result.Success)
+                return true;
+
+            var failureDetails = BuildSoundEffectsFailureDetails(result);
+            this.Logger.LogError("Failed to initialize sound effects {Context}. {FailureDetails}", context, failureDetails);
+            await this.DisableVoiceRecordingAsync(failureDetails);
+        }
+        catch (JSDisconnectedException ex)
+        {
+            this.Logger.LogError(ex, "Failed to initialize sound effects {Context}. The JS runtime disconnected.", context);
+            await this.DisableVoiceRecordingAsync("The JS runtime disconnected while initializing audio playback.");
+        }
+        catch (OperationCanceledException ex)
+        {
+            this.Logger.LogError(ex, "Failed to initialize sound effects {Context}. The interop call was canceled.", context);
+            await this.DisableVoiceRecordingAsync("The interop call for audio playback initialization was canceled.");
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Failed to initialize sound effects {Context}.", context);
+            await this.DisableVoiceRecordingAsync(ex.Message);
+        }
+
+        return false;
+    }
+
+    private async Task DisableVoiceRecordingAsync(string reason)
+    {
+        if (!this.VoiceRecordingAvailabilityService.TryDisable(reason))
+            return;
+
+        this.Logger.LogWarning("Voice recording was disabled for the current session. Reason: {Reason}", reason);
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.MicOff, this.T("Voice recording has been disabled for this session because audio playback could not be initialized on the client.")));
+        await this.SendMessage(Event.VOICE_RECORDING_AVAILABILITY_CHANGED, reason);
+        this.StateHasChanged();
+    }
+
+    private static string BuildSoundEffectsFailureDetails(SoundEffectsInitializationResult result)
+    {
+        var details = new List<string>();
+        if (result.FailedPaths.Length > 0)
+            details.Add($"Failed sound files: {string.Join(", ", result.FailedPaths)}.");
+
+        if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+            details.Add($"Client error: {result.ErrorMessage}");
+
+        return details.Count > 0
+            ? string.Join(" ", details)
+            : "The client did not provide additional details.";
     }
 
     #region Overrides of MSGComponentBase

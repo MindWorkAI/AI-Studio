@@ -25,13 +25,22 @@ public static partial class PluginFactory
 
     /// <summary>
     /// Initializes the enterprise encryption service by reading the encryption secret
-    /// from the Windows Registry or environment variables.
+    /// from the effective enterprise source.
     /// </summary>
     /// <param name="rustService">The Rust service to use for reading the encryption secret.</param>
     public static async Task InitializeEnterpriseEncryption(Services.RustService rustService)
     {
-        LOG.LogInformation("Initializing enterprise encryption service...");
         var encryptionSecret = await rustService.EnterpriseEnvConfigEncryptionSecret();
+        InitializeEnterpriseEncryption(encryptionSecret);
+    }
+
+    /// <summary>
+    /// Initializes the enterprise encryption service using a prefetched secret value.
+    /// </summary>
+    /// <param name="encryptionSecret">The base64-encoded enterprise encryption secret.</param>
+    public static void InitializeEnterpriseEncryption(string? encryptionSecret)
+    {
+        LOG.LogInformation("Initializing enterprise encryption service...");
         var enterpriseEncryptionLogger = Program.LOGGER_FACTORY.CreateLogger<EnterpriseEncryption>();
         EnterpriseEncryption = new EnterpriseEncryption(enterpriseEncryptionLogger, encryptionSecret);
 
