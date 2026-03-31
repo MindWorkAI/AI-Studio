@@ -1,6 +1,5 @@
 @using AIStudio.Provider
 @using AIStudio.Provider.SelfHosted
-@using AIStudio.Tools.Rust
 @inherits MSGComponentBase
 
 <MudDialog>
@@ -125,7 +124,6 @@
                 Validation="@this.providerValidation.ValidatingInstanceName"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
-            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" @bind-DocumentPaths="@this.chatDocumentPaths" CatchAllDocuments="true" UseSmallForm="true" ValidateMediaFileTypes="true" AllowedFileTypes="[FileTypes.JSON]"/>
             
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
