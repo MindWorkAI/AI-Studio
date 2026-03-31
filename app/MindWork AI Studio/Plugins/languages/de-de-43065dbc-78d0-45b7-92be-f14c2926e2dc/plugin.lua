@@ -48,14 +48,26 @@ LANG_NAME = "Deutsch (Deutschland)"
 
 UI_TEXT_CONTENT = {}
 
+-- No audit provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826200"] = "Es ist kein Audit-Anbieter konfiguriert."
+
 -- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“, bitte versuchen Sie es später erneut."
+
+-- The audit agent did not return a usable response.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188890"] = "Der Audit-Agent hat keine verwendbare Antwort zurückgegeben."
 
 -- No provider is configured for the Security Audit Agent.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "Für den Sicherheitsprüfungs-Agenten ist kein Anbieter konfiguriert."
 
--- Needs Review
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T1114911302"] = "Audit Erforderlich"
+-- The audit result was empty.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "Das Prüfergebnis war leer."
+
+-- The audit agent returned invalid JSON.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T917600186"] = "Der Audit-Agent hat ungültiges JSON zurückgegeben."
+
+-- Concerning
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T1500095429"] = "Bedenklich"
 
 -- Dangerous
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3421510547"] = "Gefährlich"
@@ -1772,6 +1784,60 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "Das Bil
 
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Einstellungen öffnen"
+
+-- Show or hide the detailed security information.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Detaillierte Sicherheitsinformationen anzeigen oder ausblenden."
+
+-- Assistant Audit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1506922856"] = "Assistentenprüfung"
+
+-- Plugin ID
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1661076691"] = "Plugin-ID"
+
+-- Audit level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1681369326"] = "Audit-Stufe"
+
+-- Availability
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1805629238"] = "Verfügbarkeit"
+
+-- Assistant Security
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1841954939"] = "Sicherheit des Assistenten"
+
+-- Required minimum
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2354026284"] = "Erforderliches Minimum"
+
+-- Audit provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2757790517"] = "Audit-Anbieter"
+
+-- No audit yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3138877447"] = "Noch keine Prüfung vorhanden"
+
+-- Confidence
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3243388657"] = "Gewissheit"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3424652889"] = "Unbekannt"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3448155331"] = "Schließen"
+
+-- No stored audit details are available yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3647137899"] = "Es sind noch keine gespeicherten Audit-Details verfügbar."
+
+-- Current hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3896860082"] = "Aktueller Hash"
+
+-- Audited at
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4103354206"] = "Geprüft am"
+
+-- No security findings were stored for this assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4256679240"] = "Für dieses Assistenten-Plugin wurden keine Sicherheitsbefunde gespeichert."
+
+-- Audit hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T53507304"] = "Prüf-Hash"
+
+-- {0} Finding(s)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T631393016"] = "{0} Fund(e)"
 
 -- Click the paperclip to attach files, or click the number to see your attached files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Klicken Sie auf die Büroklammer, um Dateien anzuhängen, oder klicken Sie auf die Zahl, um Ihre angehängten Dateien anzuzeigen."
@@ -6743,6 +6809,69 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T6
 
 -- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält kein boolesches Flag, mit dem sich die Zulassung von Profilen steuern lässt."
+
+-- This assistant is currently locked.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T123211529"] = "Dieser Assistent ist derzeit gesperrt."
+
+-- Audit Required
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1669285905"] = "Prüfung erforderlich"
+
+-- The stored audit matches the current plugin code and meets your required minimum level \"{0}\".
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1711101916"] = "Das gespeicherte Audit stimmt mit dem aktuellen Plugin-Code überein und erfüllt Ihr erforderliches Mindestniveau „{0}“."
+
+-- Run Security Check Again
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1737337972"] = "Sicherheitsprüfung erneut ausführen"
+
+-- Changed
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2311397435"] = "Geändert"
+
+-- No security audit exists yet, and your current security settings require one before this assistant plugin may be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2687548907"] = "Es gibt noch kein Sicherheitsaudit, und Ihre aktuellen Sicherheitseinstellungen verlangen eines, bevor dieses Assistenten-Plugin aktiviert oder verwendet werden kann."
+
+-- This assistant can still be used because your settings allow it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2730893303"] = "Dieser Assistent kann weiterhin verwendet werden, weil Ihre Einstellungen dies zulassen."
+
+-- Not Audited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2828154864"] = "Nicht geprüft"
+
+-- This assistant is locked until it is audited again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2868721080"] = "Dieser Assistent ist gesperrt, bis er erneut geprüft wird."
+
+-- Open Security Check
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T290241209"] = "Sicherheitsprüfung öffnen"
+
+-- Restricted
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3325062668"] = "Eingeschränkt"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3424652889"] = "Unbekannt"
+
+-- Unlocked
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3606159420"] = "Entsperrt"
+
+-- The current audit result is \"{0}\", which is below your required minimum level \"{1}\". Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T375463020"] = "Das aktuelle Audit-Ergebnis ist „{0}“ und liegt damit unter Ihrem erforderlichen Mindestniveau „{1}“. Ihre Einstellungen erlauben weiterhin die manuelle Aktivierung, aber der Assistent behält diesen Sicherheitsstatus bei und sollte sorgfältig überprüft werden."
+
+-- Blocked
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3816336467"] = "Blockiert"
+
+-- This assistant is currently unlocked.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3824876012"] = "Dieser Assistent ist derzeit entsperrt."
+
+-- No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3899951594"] = "Es gibt noch kein Sicherheitsaudit. Ihre aktuellen Sicherheitseinstellungen verlangen kein Audit, bevor dieses Assistenten-Plugin verwendet werden darf."
+
+-- Start Security Check
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T811648299"] = "Sicherheitsprüfung starten"
+
+-- This assistant currently has no stored audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T921972844"] = "Für diesen Assistenten ist derzeit kein gespeichertes Audit vorhanden."
+
+-- The current audit result \"{0}\" is below your required minimum level \"{1}\". Your security settings therefore block this assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T940300655"] = "Das aktuelle Audit-Ergebnis „{0}“ liegt unter Ihrem erforderlichen Mindestniveau „{1}“. Daher blockieren Ihre Sicherheitseinstellungen dieses Assistenten-Plugin."
+
+-- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "Der Plugin-Code wurde nach der letzten Sicherheitsprüfung geändert. Das gespeicherte Ergebnis stimmt nicht mehr mit dem aktuellen Code überein, daher muss dieses Assistenten-Plugin erneut geprüft werden, bevor es aktiviert oder verwendet werden darf."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
