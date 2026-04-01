@@ -154,6 +154,17 @@ public static partial class ProviderExtensions
                 Capability.RESPONSES_API, Capability.CHAT_COMPLETION_API,
             ];
         
+        if(modelName is "gpt-5.3" || modelName.StartsWith("gpt-5.3-"))
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING, Capability.OPTIONAL_REASONING,
+                Capability.WEB_SEARCH,
+                Capability.RESPONSES_API, Capability.CHAT_COMPLETION_API,
+            ];
+        
         if(modelName is "gpt-5.4" || modelName.StartsWith("gpt-5.4-"))
             return
             [
@@ -172,6 +183,7 @@ public static partial class ProviderExtensions
                 
                 Capability.FUNCTION_CALLING,
                 Capability.RESPONSES_API,
+                Capability.WEB_SEARCH,
             ];
     }
 }
