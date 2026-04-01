@@ -138,7 +138,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
                 ```
                 {this.inputText}
                 ```
-             """);
+             """,
+            hideContentFromUser: true);
 
         await this.AddAIResponseAsync(time);
     }

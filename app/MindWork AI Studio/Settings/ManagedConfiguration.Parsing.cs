@@ -63,8 +63,10 @@ public static partial class ManagedConfiguration
         
         if(dryRun)
             return successful;
-        
-        return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -128,8 +130,10 @@ public static partial class ManagedConfiguration
 
         if(dryRun)
             return successful;
-        
-        return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
     
     /// <summary>
@@ -216,7 +220,9 @@ public static partial class ManagedConfiguration
             }
         }
         
-        return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -857,4 +863,91 @@ public static partial class ManagedConfiguration
 
         return successful;
     }
+
+    private static bool HandleParsedScalarValue<TClass, TValue>(
+        Guid configPluginId,
+        bool dryRun,
+        bool successful,
+        ConfigMeta<TClass, TValue> configMeta,
+        TValue configuredValue,
+        ManagedConfigurationMode managedMode,
+        string settingName)
+    {
+        if (dryRun)
+            return successful;
+
+        switch (successful)
+        {
+            case true when managedMode is ManagedConfigurationMode.LOCKED:
+                ClearEditableDefaultState(settingName);
+                configMeta.ClearEditableDefaultConfiguration();
+                configMeta.SetValue(configuredValue);
+                configMeta.LockConfiguration(configPluginId);
+                break;
+
+            case true when managedMode is ManagedConfigurationMode.EDITABLE_DEFAULT:
+                var currentValueSerialized = SerializeManagedScalarValue(configMeta.GetValue());
+                var configuredValueSerialized = SerializeManagedScalarValue(configuredValue);
+
+                string lastAppliedValue;
+                if (!TryGetEditableDefaultState(settingName, out var editableDefaultState))
+                {
+                    configMeta.SetValue(configuredValue);
+                    lastAppliedValue = configuredValueSerialized;
+                }
+                else
+                {
+                    lastAppliedValue = editableDefaultState.LastAppliedValue;
+                    if (string.Equals(currentValueSerialized, lastAppliedValue, StringComparison.Ordinal))
+                    {
+                        configMeta.SetValue(configuredValue);
+                        lastAppliedValue = configuredValueSerialized;
+                    }
+                }
+
+                SetEditableDefaultState(settingName, configPluginId, lastAppliedValue);
+                configMeta.UnlockConfiguration();
+                configMeta.SetEditableDefaultConfiguration(configPluginId);
+                break;
+
+            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId:
+                configMeta.ResetLockedConfiguration();
+                break;
+
+            case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
+                            && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
+                            && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
+                configMeta.ClearEditableDefaultConfiguration();
+                ClearEditableDefaultState(settingName);
+                break;
+        }
+
+        return successful;
+    }
+
+    private static ManagedConfigurationMode ReadManagedConfigurationMode<TClass, TValue>(
+        Expression<Func<TClass, TValue>> propertyExpression,
+        LuaTable settings)
+    {
+        var allowUserOverrideSettingName = $"{SettingsManager.ToSettingName(propertyExpression)}.AllowUserOverride";
+        if (!settings.TryGetValue(allowUserOverrideSettingName, out var allowUserOverrideValue))
+            return ManagedConfigurationMode.LOCKED;
+
+        if (allowUserOverrideValue.TryRead<bool>(out var allowUserOverride))
+            return allowUserOverride ? ManagedConfigurationMode.EDITABLE_DEFAULT : ManagedConfigurationMode.LOCKED;
+
+        if (allowUserOverrideValue.TryRead<string>(out var allowUserOverrideText) && bool.TryParse(allowUserOverrideText, out allowUserOverride))
+            return allowUserOverride ? ManagedConfigurationMode.EDITABLE_DEFAULT : ManagedConfigurationMode.LOCKED;
+
+        return ManagedConfigurationMode.LOCKED;
+    }
+
+    private static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
+    {
+        null => string.Empty,
+        string text => text,
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
+        
+        _ => value.ToString() ?? string.Empty,
+    };
 }

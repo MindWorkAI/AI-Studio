@@ -1,6 +1,5 @@
 @attribute [Route(Routes.ABOUT)]
 @using AIStudio.Tools.PluginSystem
-@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -85,7 +84,7 @@
                                     @T("AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.")
                                 </MudText>
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
+                                    @foreach (var env in this.enterpriseEnvironments.Where(e => e.IsActive))
                                     {
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                               HeaderText="@T("Waiting for the configuration plugin...")"
@@ -123,7 +122,7 @@
                                     </MudText>
                                 }
                                 <MudCollapse Expanded="@this.showEnterpriseConfigDetails">
-                                    @foreach (var env in EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Where(e => e.IsActive))
+                                    @foreach (var env in this.enterpriseEnvironments.Where(e => e.IsActive))
                                     {
                                         var matchingPlugin = this.FindManagedConfigurationPlugin(env.ConfigurationId);
                                         if (matchingPlugin is null)

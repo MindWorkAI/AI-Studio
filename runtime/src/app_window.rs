@@ -107,16 +107,16 @@ pub fn start_tauri() {
             DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the data directory.")).unwrap();
             CONFIG_DIRECTORY.set(app.path_resolver().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
 
-            cleanup_qdrant();
-            cleanup_dotnet_server();
-
             if is_dev() {
                 #[cfg(debug_assertions)]
                 create_startup_env_file();
             } else {
+                cleanup_dotnet_server();
                 start_dotnet_server();
             }
-            start_qdrant_server();
+
+            cleanup_qdrant();
+            start_qdrant_server(app.path_resolver());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();

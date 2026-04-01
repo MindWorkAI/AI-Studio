@@ -17,7 +17,7 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
     }
     
-    public async Task<FileSelectionResponse> SelectFile(string title, FileType[]? filter = null, string? initialFile = null)
+    public async Task<FileSelectionResponse> SelectFile(string title, FileTypeFilter[]? filter = null, string? initialFile = null)
     {
         var payload = new SelectFileOptions
         {
@@ -36,7 +36,7 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<FileSelectionResponse>(this.jsonRustSerializerOptions);
     }
 
-    public async Task<FilesSelectionResponse> SelectFiles(string title, FileType[]? filter = null, string? initialFile = null)
+    public async Task<FilesSelectionResponse> SelectFiles(string title, FileTypeFilter[]? filter = null, string? initialFile = null)
     {
         var payload = new SelectFileOptions
         {
@@ -63,7 +63,7 @@ public sealed partial class RustService
     /// <param name="initialFile">An optional initial file path to pre-fill in the dialog.</param>
     /// <returns>A <see cref="FileSaveResponse"/> object containing information about whether the user canceled the
     /// operation and whether the select operation was successful.</returns>
-    public async Task<FileSaveResponse> SaveFile(string title, FileType[]? filter = null, string? initialFile = null)
+    public async Task<FileSaveResponse> SaveFile(string title, FileTypeFilter[]? filter = null, string? initialFile = null)
     {
         var payload = new SaveFileOptions
         {

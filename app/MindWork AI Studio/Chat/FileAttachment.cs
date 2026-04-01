@@ -79,37 +79,24 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
 
     /// <summary>
     /// Determines the file attachment type based on the file extension.
-    /// Uses centrally defined file types from <see cref="FileTypes"/>.
+    /// Uses centrally defined file type filters from <see cref="FileTypes"/>.
     /// </summary>
     /// <param name="filePath">The file path to analyze.</param>
     /// <returns>The corresponding FileAttachmentType.</returns>
     private static FileAttachmentType DetermineFileType(string filePath)
     {
-        var extension = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.EXECUTABLES))
+            return FileAttachmentType.FORBIDDEN;
 
-        // Check if it's an image file:
-        if (FileTypes.OnlyAllowTypes(FileTypes.IMAGE).Contains(extension))
-        {
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
             return FileAttachmentType.IMAGE;
         }
 
-        // Check if it's an audio file:
-        if (FileTypes.OnlyAllowTypes(FileTypes.AUDIO).Contains(extension))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
             return FileAttachmentType.AUDIO;
 
-        // Check if it's an allowed document file (PDF, Text, or Office):
-        if (FileTypes.OnlyAllowTypes(FileTypes.DOCUMENT).Contains(extension))
-        {
-            return FileAttachmentType.DOCUMENT;
-        }
-
-        // All other file types are forbidden:
-        return FileAttachmentType.FORBIDDEN;
-    }
-
-    private static bool IsAllowed(string filePath, FileType[] allowedTypes)
-    {
-        var extension = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
-        return FileTypes.OnlyAllowTypes(allowedTypes).Contains(extension);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT)
+            ? FileAttachmentType.DOCUMENT
+            : FileAttachmentType.FORBIDDEN;
     }
 }

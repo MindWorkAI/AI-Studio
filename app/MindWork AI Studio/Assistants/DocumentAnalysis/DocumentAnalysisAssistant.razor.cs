@@ -176,7 +176,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyOutputRules = string.Empty;
             this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
             this.policyPreselectedProviderId = string.Empty;
-            this.policyPreselectedProfileId = Profile.NO_PROFILE.Id;
+            this.policyPreselectedProfile = ProfilePreselection.NoProfile;
         }
     }
 
@@ -203,7 +203,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyOutputRules = this.selectedPolicy.OutputRules;
             this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
-            this.policyPreselectedProfileId = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? Profile.NO_PROFILE.Id : this.selectedPolicy.PreselectedProfile;
+            this.policyPreselectedProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
 
             return true;
         }
@@ -242,7 +242,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
-        this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfileId;
+        this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
 
         // Enterprise configurations cannot be modified at all:
         if(this.selectedPolicy.IsEnterpriseConfiguration)
@@ -274,7 +274,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string policyOutputRules = string.Empty;
     private ConfidenceLevel policyMinimumProviderConfidence = ConfidenceLevel.NONE;
     private string policyPreselectedProviderId = string.Empty;
-    private string policyPreselectedProfileId = Profile.NO_PROFILE.Id;
+    private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
     
@@ -450,14 +450,21 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private Profile ResolveProfileSelection()
     {
-        if (this.selectedPolicy is not null && !string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile))
+        if (this.selectedPolicy is null)
+            return this.SettingsManager.GetPreselectedProfile(this.Component);
+
+        var policyProfilePreselection = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
+        if (policyProfilePreselection.DoNotPreselectProfile)
+            return Profile.NO_PROFILE;
+
+        if (policyProfilePreselection.UseSpecificProfile)
         {
-            var policyProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProfile);
+            var policyProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == policyProfilePreselection.SpecificProfileId);
             if (policyProfile is not null)
                 return policyProfile;
         }
 
-        return this.SettingsManager.GetPreselectedProfile(this.Component);
+        return this.SettingsManager.GetAppPreselectedProfile();
     }
 
     private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)
@@ -479,11 +486,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ApplyPolicyPreselection();
     }
 
-    private async Task PolicyPreselectedProfileWasChangedAsync(Profile profile)
+    private async Task PolicyPreselectedProfileWasChangedAsync(ProfilePreselection selection)
     {
-        this.policyPreselectedProfileId = profile.Id;
+        this.policyPreselectedProfile = selection;
         if (this.selectedPolicy is not null)
-            this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfileId;
+            this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
 
         this.currentProfile = this.ResolveProfileSelection();
         await this.AutoSave();
@@ -734,7 +741,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return string.Empty;
         
         var preselectedProvider = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProvider) ? string.Empty : this.selectedPolicy.PreselectedProvider;
-        var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? Profile.NO_PROFILE.Id : this.selectedPolicy.PreselectedProfile;
+        var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? string.Empty : this.selectedPolicy.PreselectedProfile;
         var id = string.IsNullOrWhiteSpace(this.selectedPolicy.Id) ? Guid.NewGuid().ToString() : this.selectedPolicy.Id;
         
         return $$"""

@@ -98,6 +98,14 @@ public partial class Chat : MSGComponentBase
         await this.DialogService.ShowAsync<SettingsDialogWorkspaces>(T("Open Workspaces Configuration"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
+    private async Task RefreshWorkspaces()
+    {
+        if (this.workspaces is null)
+            return;
+
+        await this.workspaces.ForceRefreshFromDiskAsync();
+    }
+
     #region Overrides of MSGComponentBase
 
     protected override void DisposeResources()

@@ -246,68 +246,68 @@ public static partial class ManagedConfiguration
     public static bool IsConfigurationLeftOver<TClass, TValue>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, TValue>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
+        IReadOnlyList<IAvailablePlugin> availablePlugins)
         where TValue : Enum
     {
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
+        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
         {
-            configMeta.ResetLockedConfiguration();
-            return true;
+            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
+            if (plugin is null)
+            {
+                configMeta.ResetLockedConfiguration();
+                return true;
+            }
         }
 
-        return false;
+        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins);
     }
 
     public static bool IsConfigurationLeftOver<TClass>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, string>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
+        IReadOnlyList<IAvailablePlugin> availablePlugins)
     {
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
+        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
         {
-            configMeta.ResetLockedConfiguration();
-            return true;
+            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
+            if (plugin is null)
+            {
+                configMeta.ResetLockedConfiguration();
+                return true;
+            }
         }
 
-        return false;
+        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins);
     }
 
     // ReSharper disable MethodOverloadWithOptionalParameter
     public static bool IsConfigurationLeftOver<TClass, TValue>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, TValue>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins,
+        IReadOnlyList<IAvailablePlugin> availablePlugins,
         ISpanParsable<TValue>? _ = null)
         where TValue : struct, ISpanParsable<TValue>
     {
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
+        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
         {
-            configMeta.ResetLockedConfiguration();
-            return true;
+            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
+            if (plugin is null)
+            {
+                configMeta.ResetLockedConfiguration();
+                return true;
+            }
         }
 
-        return false;
+        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins);
     }
 
     // ReSharper restore MethodOverloadWithOptionalParameter
@@ -412,5 +412,45 @@ public static partial class ManagedConfiguration
 
         var configPath = $"{configName}.{className}.{propertyName}";
         return configPath;
+    }
+
+    private static string SettingName<TClass, TValue>(Expression<Func<TClass, TValue>> propertyExpression) => SettingsManager.ToSettingName(propertyExpression);
+
+    private static bool TryGetEditableDefaultState(string settingName, out ManagedEditableDefaultState editableDefaultState)
+    {
+        return SETTINGS_MANAGER.ConfigurationData.ManagedEditableDefaults.TryGetValue(settingName, out editableDefaultState!);
+    }
+
+    private static void SetEditableDefaultState(string settingName, Guid pluginId, string lastAppliedValue)
+    {
+        SETTINGS_MANAGER.ConfigurationData.ManagedEditableDefaults[settingName] = new()
+        {
+            ConfigPluginId = pluginId,
+            LastAppliedValue = lastAppliedValue,
+        };
+    }
+
+    private static bool ClearEditableDefaultState(string settingName) => SETTINGS_MANAGER.ConfigurationData.ManagedEditableDefaults.Remove(settingName);
+
+    private static bool CleanupEditableDefaultState<TClass, TValue>(
+        ConfigMeta<TClass, TValue> configMeta,
+        string settingName,
+        IReadOnlyList<IAvailablePlugin> availablePlugins)
+    {
+        if (!TryGetEditableDefaultState(settingName, out var editableDefaultState))
+        {
+            if (configMeta.ManagedMode is not ManagedConfigurationMode.EDITABLE_DEFAULT)
+                return false;
+
+            configMeta.ClearEditableDefaultConfiguration();
+            return true;
+        }
+
+        var plugin = availablePlugins.FirstOrDefault(x => x.Id == editableDefaultState.ConfigPluginId);
+        if (plugin is not null)
+            return false;
+
+        configMeta.ClearEditableDefaultConfiguration();
+        return ClearEditableDefaultState(settingName);
     }
 }
