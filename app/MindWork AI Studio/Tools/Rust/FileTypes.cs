@@ -9,10 +9,7 @@ namespace AIStudio.Tools.Rust;
 public static class FileTypes
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypeFilter).Namespace, nameof(FileTypeFilter));
-
-    // Keep SOURCE_LIKE in the same leaf style as the other file types.
-    // These values are not sufficient for Dockerfile-style files without extensions,
-    // therefore IsAllowedSourceLikeFileName is still required for real matching.
+    
     public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.Leaf(TB("Source like"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Makefile", "GNUmakefile", "Procfile", "Vagrantfile",
         "Tiltfile", "Justfile", "Brewfile", "Caddyfile", "Gemfile", "Podfile", "Fastfile", "Appfile", "Rakefile", "Dangerfile",
