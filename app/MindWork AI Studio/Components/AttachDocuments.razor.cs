@@ -181,7 +181,7 @@ public partial class AttachDocuments : MSGComponentBase
                 {
                     if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                         continue;
-                   
+ 
                     this.DocumentPaths.Add(FileAttachment.FromPath(path));
                 }
 

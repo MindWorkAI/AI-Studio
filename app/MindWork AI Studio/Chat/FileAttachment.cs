@@ -90,7 +90,7 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
         if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
             return FileAttachmentType.IMAGE;
 
-        // Check if it's an audio file
+        // Check if it's an audio file:
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
             return FileAttachmentType.AUDIO;
 
