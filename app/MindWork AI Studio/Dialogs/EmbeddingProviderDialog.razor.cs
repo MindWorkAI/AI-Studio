@@ -96,7 +96,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
     private readonly ProviderValidation providerValidation;
-
+    
     public EmbeddingProviderDialog()
     {
         this.providerValidation = new()

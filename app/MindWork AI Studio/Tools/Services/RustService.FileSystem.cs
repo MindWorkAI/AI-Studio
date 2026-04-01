@@ -59,7 +59,7 @@ public sealed partial class RustService
     /// Initiates a dialog to let the user select a file for a writing operation.
     /// </summary>
     /// <param name="title">The title of the save file dialog.</param>
-    /// <param name="filter">An optional file type filter for filtering specific file formats.</param>
+    /// <param name="filter">Optional file type filters for filtering specific file formats.</param>
     /// <param name="initialFile">An optional initial file path to pre-fill in the dialog.</param>
     /// <returns>A <see cref="FileSaveResponse"/> object containing information about whether the user canceled the
     /// operation and whether the select operation was successful.</returns>

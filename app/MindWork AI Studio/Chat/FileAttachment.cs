@@ -82,17 +82,22 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     /// <returns>The corresponding FileAttachmentType.</returns>
     private static FileAttachmentType DetermineFileType(string filePath)
     {
+        // Check if it's an executable:
         if (FileTypes.IsAllowedPath(filePath, FileTypes.EXECUTABLES))
             return FileAttachmentType.FORBIDDEN;
 
+        // Check if it's an image file:
         if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
             return FileAttachmentType.IMAGE;
 
+        // Check if it's an audio file
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
             return FileAttachmentType.AUDIO;
 
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT)
-            ? FileAttachmentType.DOCUMENT
-            : FileAttachmentType.FORBIDDEN;
+        // Check if it's an allowed document file (PDF, Text, LaTeX, or Office):
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
+            return FileAttachmentType.DOCUMENT;
+
+        return FileAttachmentType.FORBIDDEN;
     }
 }
