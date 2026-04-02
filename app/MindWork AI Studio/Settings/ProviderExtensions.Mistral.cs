@@ -24,7 +24,17 @@ public static partial class ProviderExtensions
             return
             [
                 Capability.TEXT_INPUT, 
-                Capability.SINGLE_IMAGE_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
+        if (modelName.IndexOf("mistral-large-latest") is not -1)                  // The latest mistral-Large-3 model
+            return
+            [
+                Capability.TEXT_INPUT, 
+                Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
                 Capability.OPTIONAL_REASONING,
@@ -38,7 +48,19 @@ public static partial class ProviderExtensions
             return
             [
                 Capability.TEXT_INPUT, 
-                Capability.SINGLE_IMAGE_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.OPTIONAL_REASONING,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
+        if (modelName.IndexOf("mistral-medium-latest") is not -1)           // The latest mistral-medium-3.1 model
+            return
+            [
+                Capability.TEXT_INPUT, 
+                Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
                 
                 Capability.OPTIONAL_REASONING,
@@ -52,7 +74,19 @@ public static partial class ProviderExtensions
             return
             [
                 Capability.TEXT_INPUT, 
-                Capability.SINGLE_IMAGE_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
+        if (modelName.IndexOf("mistral-small-latest") is not -1)        // The latest mistral-medium-3.1 model
+            return
+            [
+                Capability.TEXT_INPUT, 
+                Capability.MULTIPLE_IMAGE_INPUT,
                 Capability.TEXT_OUTPUT,
 
                 Capability.OPTIONAL_REASONING,

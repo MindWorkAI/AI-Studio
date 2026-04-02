@@ -151,7 +151,7 @@ public static partial class ProviderExtensions
                 return
                 [
                     Capability.TEXT_INPUT, 
-                    Capability.SINGLE_IMAGE_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                 
                     Capability.OPTIONAL_REASONING,
@@ -164,7 +164,7 @@ public static partial class ProviderExtensions
                 return
                 [
                     Capability.TEXT_INPUT, 
-                    Capability.SINGLE_IMAGE_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
 
                     Capability.OPTIONAL_REASONING,
