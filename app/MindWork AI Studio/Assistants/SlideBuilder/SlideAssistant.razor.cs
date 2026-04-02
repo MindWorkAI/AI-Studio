@@ -8,7 +8,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 {
     protected override Tools.Components Component => Tools.Components.SLIDE_BUILDER_ASSISTANT;
     
-    protected override string Title => T("Slide Assistant");
+    protected override string Title => T("Slide Planner Assistant");
     
     protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.");
     
