@@ -1819,6 +1819,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3403290862"] = "The selec
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Select a provider first"
 
+-- Estimated amount of tokens:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T377990776"] = "Estimated amount of tokens:"
+
 -- Start new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Start new chat in workspace '{0}'"
 
@@ -3553,6 +3556,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(O
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2646845972"] = "Add"
 
+-- Selected file path for the custom tokenizer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T278585345"] = "Selected file path for the custom tokenizer"
+
 -- No models loaded or available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2810182573"] = "No models loaded or available."
 
@@ -3561,6 +3567,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2842060373"] = "In
 
 -- Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T290547799"] = "Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually."
+
+-- Choose a custom tokenizer here
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3787466119"] = "Choose a custom tokenizer here"
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T416738168"] = "Model selection"
@@ -5398,6 +5407,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startup log file
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Browse AI Studio's source code on GitHub — we welcome your contributions."
 
+-- The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1132433749"] = "The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer."
+
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the plugin ID differs from the enterprise configuration ID."
 
@@ -5637,6 +5649,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Used .NET SDK"
+
+-- We use the DeepSeek Tokenizer to estimate the number of tokens an input will generate.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T591393704"] = "We use the DeepSeek Tokenizer to estimate the number of tokens an input will generate."
 
 -- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated."
@@ -6664,29 +6679,80 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T304
 -- AI source selection with AI retrieval context validation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "AI source selection with AI retrieval context validation"
 
--- Executable Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2217313358"] = "Executable Files"
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
 
--- All Source Code Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2460199369"] = "All Source Code Files"
+-- Office Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office Files"
 
--- All Audio Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2575722901"] = "All Audio Files"
+-- Executable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1364437037"] = "Executable"
 
--- All Video Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2850789856"] = "All Video Files"
+-- Mail
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1399880782"] = "Mail"
 
--- PDF Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T3108466742"] = "PDF Files"
+-- Source like
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1487238587"] = "Source like"
 
--- All Image Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T4086723714"] = "All Image Files"
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1494001562"] = "Image"
 
--- Text Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T639143005"] = "Text Files"
+-- Video
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1533528076"] = "Video"
 
--- All Office Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T709668067"] = "All Office Files"
+-- Source Code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1569048941"] = "Source Code"
+
+-- Config
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1779622119"] = "Config"
+
+-- Audio
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2291602489"] = "Audio"
+
+-- Custom
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Custom"
+
+-- Media
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"
+
+-- Source like prefix
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like prefix"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
+
+-- Office Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office Files"
+
+-- Executable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1364437037"] = "Executable"
+
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1494001562"] = "Image"
+
+-- Video
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1533528076"] = "Video"
+
+-- Source Code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1569048941"] = "Source Code"
+
+-- Config
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1779622119"] = "Config"
+
+-- Audio
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2291602489"] = "Audio"
+
+-- Custom
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Custom"
+
+-- Media
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"

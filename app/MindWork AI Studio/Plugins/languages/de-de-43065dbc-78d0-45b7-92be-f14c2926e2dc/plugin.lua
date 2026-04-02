@@ -1821,6 +1821,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3403290862"] = "Der ausge
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Wähle zuerst einen Anbieter aus"
 
+-- Estimated amount of tokens:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T377990776"] = "Geschätzte Anzahl an Tokens:"
+
 -- Start new chat in workspace "{0}"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Chat im Arbeitsbereich \"{0}\" starten"
 
@@ -5400,6 +5403,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startprotokollda
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über ihre Beiträge."
 
+-- The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1132433749"] = "Die Tokenizer‑Bibliothek dient als Basis‑Framework für die Integration des DeepSeek‑Tokenizers."
+
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID-Konflikt: Die Plugin-ID stimmt nicht mit der ID der Unternehmenskonfiguration überein."
 
@@ -5639,6 +5645,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bib
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Verwendetes .NET SDK"
+
+-- We use the DeepSeek Tokenizer to estimate the number of tokens an input will generate.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T591393704"] = "Wir verwenden den DeepSeek‑Tokenizer, um die Token‑Anzahl einer Eingabe zu schätzen."
 
 -- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "Diese Bibliothek wird verwendet, um Sidecar-Prozesse zu verwalten und sicherzustellen, dass veraltete oder Zombie-Sidecars erkannt und beendet werden."
@@ -6666,29 +6675,47 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T304
 -- AI-based data source selection with AI retrieval context validation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "KI-basierte Datenquellen-Auswahl mit Validierung des Abrufkontexts"
 
--- Executable Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2217313358"] = "Ausführbare Dateien"
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
 
--- All Source Code Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2460199369"] = "Alle Quellcodedateien"
+-- Office Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office-Dateien"
 
--- All Audio Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2575722901"] = "Alle Audiodateien"
+-- Executable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1364437037"] = "Ausführbare Dateien"
 
--- All Video Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2850789856"] = "Alle Videodateien"
+-- Mail
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1399880782"] = "E-Mail"
 
--- PDF Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T3108466742"] = "PDF-Dateien"
+-- Source like
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1487238587"] = "Source Code ähnlich"
 
--- All Image Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T4086723714"] = "Alle Bilddateien"
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1494001562"] = "Bild"
 
--- Text Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T639143005"] = "Textdateien"
+-- Video
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1533528076"] = "Video"
 
--- All Office Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T709668067"] = "Alle Office-Dateien"
+-- Source Code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1569048941"] = "Quellcode"
+
+-- Config
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1779622119"] = "Konfiguration"
+
+-- Audio
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2291602489"] = "Audio"
+
+-- Custom
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Benutzerdefiniert"
+
+-- Media
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Medien"
+
+-- Source like prefix
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code ähnlicher Prefix"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc-Installation"

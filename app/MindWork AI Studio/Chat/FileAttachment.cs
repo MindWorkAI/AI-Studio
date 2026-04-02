@@ -58,11 +58,14 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     /// extracting the filename, and reading the file size.
     /// </summary>
     /// <param name="filePath">The full path to the file.</param>
+    /// <param name="allowedTypes">Optional: The allowed file types.</param>
     /// <returns>A FileAttachment instance with populated properties.</returns>
-    public static FileAttachment FromPath(string filePath)
+    public static FileAttachment FromPath(string filePath, FileType[]? allowedTypes=null)
     {
         var fileName = Path.GetFileName(filePath);
         var fileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
+        if (allowedTypes != null && !IsAllowed(filePath, allowedTypes))
+            return new FileAttachment(FileAttachmentType.FORBIDDEN, fileName, filePath, fileSize);
         var type = DetermineFileType(filePath);
 
         return type switch
@@ -76,34 +79,24 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
 
     /// <summary>
     /// Determines the file attachment type based on the file extension.
-    /// Uses centrally defined file type filters from <see cref="FileTypeFilter"/>.
+    /// Uses centrally defined file type filters from <see cref="FileTypes"/>.
     /// </summary>
     /// <param name="filePath">The file path to analyze.</param>
     /// <returns>The corresponding FileAttachmentType.</returns>
     private static FileAttachmentType DetermineFileType(string filePath)
     {
-        var extension = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
-
-        if (FileTypeFilter.Executables.FilterExtensions.Contains(extension))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.EXECUTABLES))
             return FileAttachmentType.FORBIDDEN;
 
-        // Check if it's an image file:
-        if (FileTypeFilter.AllImages.FilterExtensions.Contains(extension))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
             return FileAttachmentType.IMAGE;
+        }
 
-        // Check if it's an audio file:
-        if (FileTypeFilter.AllAudio.FilterExtensions.Contains(extension))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
             return FileAttachmentType.AUDIO;
 
-        // Check if it's an allowed document file (PDF, Text, or Office):
-        if (FileTypeFilter.PDF.FilterExtensions.Contains(extension) ||
-            FileTypeFilter.Text.FilterExtensions.Contains(extension) ||
-            FileTypeFilter.AllOffice.FilterExtensions.Contains(extension) ||
-            FileTypeFilter.AllSourceCode.FilterExtensions.Contains(extension) ||
-            FileTypeFilter.IsAllowedSourceLikeFileName(filePath))
-            return FileAttachmentType.DOCUMENT;
-
-        // All other file types are forbidden:
-        return FileAttachmentType.FORBIDDEN;
+        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT)
+            ? FileAttachmentType.DOCUMENT
+            : FileAttachmentType.FORBIDDEN;
     }
 }

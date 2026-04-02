@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -16,7 +17,7 @@ public static class PandocExport
     
     public static async Task<bool> ToMicrosoftWord(RustService rustService, IDialogService dialogService, string dialogTitle, IContent markdownContent)
     {
-        var response = await rustService.SaveFile(dialogTitle, new("Microsoft Word", ["docx"]));
+        var response = await rustService.SaveFile(dialogTitle, [FileTypes.MS_WORD]);
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");

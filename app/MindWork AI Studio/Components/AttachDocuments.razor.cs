@@ -48,6 +48,9 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool UseSmallForm { get; set; }
     
+    [Parameter]
+    public FileType[]? AllowedFileTypes { get; set; }
+    
     /// <summary>
     /// When true, validate media file types before attaching. Default is true. That means that
     /// the user cannot attach unsupported media file types when the provider or model does not
@@ -181,7 +184,6 @@ public partial class AttachDocuments : MSGComponentBase
                 {
                     if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                         continue;
-
                     this.DocumentPaths.Add(FileAttachment.FromPath(path));
                 }
 
@@ -226,7 +228,7 @@ public partial class AttachDocuments : MSGComponentBase
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
                 continue;
 
-            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
+            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath, this.AllowedFileTypes));
         }
         
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);

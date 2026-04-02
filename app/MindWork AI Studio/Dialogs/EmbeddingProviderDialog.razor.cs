@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -89,6 +90,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private string dataFilePath = string.Empty;
 
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -96,7 +98,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
     private readonly ProviderValidation providerValidation;
-    
+
     public EmbeddingProviderDialog()
     {
         this.providerValidation = new()
@@ -264,6 +266,13 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             await this.form.Validate();
         }
     }
+    
+    private async Task OnDataFilePathChanged(string filePath)
+    {
+        await this.RustService.ValidateAndStoreTokenizer(this.DataModel.DisplayName, filePath);
+    }
+
+    
 
     private void OnHostChanged(Host selectedHost)
     {
