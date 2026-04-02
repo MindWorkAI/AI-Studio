@@ -171,8 +171,7 @@ public sealed class ContentText : IContent
 
         if (string.IsNullOrWhiteSpace(chatModel.Id))
         {
-            LOGGER.LogWarning(
-                "Skipping AI request because model ID is null or white space.");
+            LOGGER.LogWarning("Skipping AI request because model ID is null or white space.");
             return false;
         }
 
@@ -194,9 +193,7 @@ public sealed class ContentText : IContent
         var availableModels = loadedModels.Where(model => !string.IsNullOrWhiteSpace(model.Id)).ToList();
         if (availableModels.Count == 0)
         {
-            LOGGER.LogWarning(
-                "Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).",
-                provider.InstanceName, provider.Provider);
+            LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }
 
