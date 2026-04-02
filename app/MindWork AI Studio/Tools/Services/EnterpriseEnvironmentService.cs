@@ -1,4 +1,8 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Settings;
+
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AIStudio.Tools.Services;
 
@@ -7,6 +11,14 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
     public static List<EnterpriseEnvironment> CURRENT_ENVIRONMENTS = [];
     
     public static bool HasValidEnterpriseSnapshot { get; private set; }
+    
+    private static EnterpriseSecretSnapshot CURRENT_SECRET_SNAPSHOT;
+
+    private readonly record struct EnterpriseEnvironmentSnapshot(Guid ConfigurationId, string ConfigurationServerUrl, string? ETag);
+    
+    private readonly record struct EnterpriseSecretSnapshot(bool HasSecret, string Fingerprint);
+    
+    private readonly record struct EnterpriseSecretTarget(string SecretId, string SecretName, SecretStoreType StoreType) : ISecretId;
 
 #if DEBUG
     private static readonly TimeSpan CHECK_INTERVAL = TimeSpan.FromMinutes(6);
@@ -36,6 +48,8 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         {
             logger.LogInformation("Start updating of the enterprise environment.");
             HasValidEnterpriseSnapshot = false;
+            var previousSnapshot = BuildNormalizedSnapshot(CURRENT_ENVIRONMENTS);
+            var previousSecretSnapshot = CURRENT_SECRET_SNAPSHOT;
 
             //
             // Step 1: Fetch all active configurations.
@@ -51,6 +65,21 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
                 await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigs failed");
                 return;
             }
+
+            string enterpriseEncryptionSecret;
+            try
+            {
+                enterpriseEncryptionSecret = await rustService.EnterpriseEnvConfigEncryptionSecret();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to fetch the enterprise encryption secret from the Rust service.");
+                await MessageBus.INSTANCE.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "EnterpriseEnvConfigEncryptionSecret failed");
+                return;
+            }
+
+            var nextSecretSnapshot = await BuildSecretSnapshot(enterpriseEncryptionSecret);
+            var wasSecretChanged = previousSecretSnapshot != nextSecretSnapshot;
 
             //
             // Step 2: Determine ETags and build the list of reachable configurations.
@@ -165,12 +194,116 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             if (effectiveEnvironments.Count == 0)
                 logger.LogInformation("AI Studio runs without any enterprise configurations.");
 
+            var effectiveSnapshot = BuildNormalizedSnapshot(effectiveEnvironments);
+
+            if (PluginFactory.IsInitialized && wasSecretChanged)
+            {
+                logger.LogInformation("The enterprise encryption secret changed. Refreshing the enterprise encryption service and reloading plugins.");
+                PluginFactory.InitializeEnterpriseEncryption(enterpriseEncryptionSecret);
+                await this.RemoveEnterpriseManagedApiKeysAsync();
+                await PluginFactory.LoadAll();
+            }
+
             CURRENT_ENVIRONMENTS = effectiveEnvironments;
+            CURRENT_SECRET_SNAPSHOT = nextSecretSnapshot;
             HasValidEnterpriseSnapshot = true;
+
+            if (!previousSnapshot.SequenceEqual(effectiveSnapshot) || wasSecretChanged)
+                await MessageBus.INSTANCE.SendMessage<bool>(null, Event.ENTERPRISE_ENVIRONMENTS_CHANGED);
         }
         catch (Exception e)
         {
             logger.LogError(e, "An error occurred while updating the enterprise environment.");
+        }
+    }
+
+    private static List<EnterpriseEnvironmentSnapshot> BuildNormalizedSnapshot(IEnumerable<EnterpriseEnvironment> environments)
+    {
+        return environments
+            .Where(environment => environment.IsActive)
+            .Select(environment => new EnterpriseEnvironmentSnapshot(
+                environment.ConfigurationId,
+                NormalizeServerUrl(environment.ConfigurationServerUrl),
+                environment.ETag?.ToString()))
+            .OrderBy(environment => environment.ConfigurationId)
+            .ToList();
+    }
+
+    private static async Task<EnterpriseSecretSnapshot> BuildSecretSnapshot(string secret)
+    {
+        if (string.IsNullOrWhiteSpace(secret))
+            return new EnterpriseSecretSnapshot(false, string.Empty);
+
+        return new EnterpriseSecretSnapshot(true, await ComputeSecretFingerprint(secret));
+    }
+
+    private static async Task<string> ComputeSecretFingerprint(string secret)
+    {
+        using var secretStream = new MemoryStream(Encoding.UTF8.GetBytes(secret));
+        var hash = await SHA256.HashDataAsync(secretStream);
+        return Convert.ToHexString(hash);
+    }
+
+    private static string NormalizeServerUrl(string serverUrl)
+    {
+        return serverUrl.Trim().TrimEnd('/');
+    }
+
+    private async Task RemoveEnterpriseManagedApiKeysAsync()
+    {
+        var secretTargets = GetEnterpriseManagedSecretTargets();
+        if (secretTargets.Count == 0)
+        {
+            logger.LogInformation("No enterprise-managed API keys are currently known in the settings. No keyring cleanup is required.");
+            return;
+        }
+
+        logger.LogInformation("Removing {SecretCount} enterprise-managed API key(s) from the OS keyring after an enterprise encryption secret change.", secretTargets.Count);
+        foreach (var target in secretTargets)
+        {
+            try
+            {
+                var deleteResult = await rustService.DeleteAPIKey(target, target.StoreType);
+                if (deleteResult.Success)
+                {
+                    if (deleteResult.WasEntryFound)
+                        logger.LogInformation("Successfully deleted enterprise-managed API key '{SecretName}' from the OS keyring.", target.SecretName);
+                    else
+                        logger.LogInformation("Enterprise-managed API key '{SecretName}' was already absent from the OS keyring.", target.SecretName);
+                }
+                else
+                    logger.LogWarning("Failed to delete enterprise-managed API key '{SecretName}' from the OS keyring: {Issue}", target.SecretName, deleteResult.Issue);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning(e, "Failed to delete enterprise-managed API key '{SecretName}' from the OS keyring.", target.SecretName);
+            }
+        }
+    }
+
+    private static List<EnterpriseSecretTarget> GetEnterpriseManagedSecretTargets()
+    {
+        var configurationData = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>().ConfigurationData;
+        var secretTargets = new HashSet<EnterpriseSecretTarget>();
+
+        AddEnterpriseManagedSecretTargets(configurationData.Providers, SecretStoreType.LLM_PROVIDER, secretTargets);
+        AddEnterpriseManagedSecretTargets(configurationData.EmbeddingProviders, SecretStoreType.EMBEDDING_PROVIDER, secretTargets);
+        AddEnterpriseManagedSecretTargets(configurationData.TranscriptionProviders, SecretStoreType.TRANSCRIPTION_PROVIDER, secretTargets);
+
+        return secretTargets.ToList();
+    }
+
+    private static void AddEnterpriseManagedSecretTargets<TSecret>(
+        IEnumerable<TSecret> secrets,
+        SecretStoreType storeType,
+        ISet<EnterpriseSecretTarget> secretTargets) where TSecret : ISecretId, IConfigurationObject
+    {
+        foreach (var secret in secrets)
+        {
+            if (!secret.IsEnterpriseConfiguration || secret.EnterpriseConfigurationPluginId == Guid.Empty)
+                continue;
+
+            secretTargets.Add(new EnterpriseSecretTarget(secret.SecretId, secret.SecretName, storeType));
         }
     }
 }

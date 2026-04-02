@@ -75,14 +75,16 @@ public partial class Information : MSGComponentBase
         .Where(x => x.Type is PluginType.CONFIGURATION)
         .OfType<IAvailablePlugin>()
         .ToList();
+
+    private List<EnterpriseEnvironment> enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
     
     private sealed record DatabaseDisplayInfo(string Label, string Value);
 
     private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
 
-    private static bool HasAnyActiveEnvironment => EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.Any(e => e.IsActive);
+    private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
-    private bool HasAnyLoadedEnterpriseConfigurationPlugin => EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS
+    private bool HasAnyLoadedEnterpriseConfigurationPlugin => this.enterpriseEnvironments
         .Where(e => e.IsActive)
         .Any(env => this.FindManagedConfigurationPlugin(env.ConfigurationId) is not null);
 
@@ -94,7 +96,7 @@ public partial class Information : MSGComponentBase
     {
         get
         {
-            return HasAnyActiveEnvironment switch
+            return this.HasAnyActiveEnvironment switch
             {
                 // Case 1: No enterprise config and no plugin - no details available
                 false when this.configPlugins.Count == 0 => false,
@@ -115,7 +117,10 @@ public partial class Information : MSGComponentBase
     
     protected override async Task OnInitializedAsync()
     {
+        this.ApplyFilters([], [ Event.ENTERPRISE_ENVIRONMENTS_CHANGED ]);
         await base.OnInitializedAsync();
+
+        this.RefreshEnterpriseConfigurationState();
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
@@ -139,10 +144,8 @@ public partial class Information : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.PLUGINS_RELOADED:
-                this.configPlugins = PluginFactory.AvailablePlugins
-                    .Where(x => x.Type is PluginType.CONFIGURATION)
-                    .OfType<IAvailablePlugin>()
-                    .ToList();
+            case Event.ENTERPRISE_ENVIRONMENTS_CHANGED:
+                this.RefreshEnterpriseConfigurationState();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
@@ -151,6 +154,16 @@ public partial class Information : MSGComponentBase
     }
 
     #endregion
+
+    private void RefreshEnterpriseConfigurationState()
+    {
+        this.configPlugins = PluginFactory.AvailablePlugins
+            .Where(x => x.Type is PluginType.CONFIGURATION)
+            .OfType<IAvailablePlugin>()
+            .ToList();
+
+        this.enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
+    }
 
     private async Task DeterminePandocVersion()
     {
