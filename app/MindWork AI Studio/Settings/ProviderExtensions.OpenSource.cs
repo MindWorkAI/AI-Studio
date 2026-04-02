@@ -113,6 +113,18 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            // Check for Qwen 3.6:
+            if(modelName.IndexOf("qwen3.6-plus") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.VIDEO_INPUT,
+                    Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
             if(modelName.IndexOf("-vl-") is not -1)
                 return [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
