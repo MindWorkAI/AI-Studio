@@ -15,6 +15,7 @@ public partial class Plugins : MSGComponentBase
     private const string GROUP_ENABLED = "Enabled";
     private const string GROUP_DISABLED = "Disabled";
     private const string GROUP_INTERNAL = "Internal";
+    private bool isAutoAuditing;
 
     private DataAssistantPluginAudit AssistantPluginAuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
     
@@ -50,6 +51,12 @@ public partial class Plugins : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await this.TryAutoAuditAssistantsAsync();
+    }
+
     #endregion
 
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
@@ -75,31 +82,6 @@ public partial class Plugins : MSGComponentBase
             return;
 
         var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-        if (securityState.RequiresAudit)
-        {
-            if (this.AssistantPluginAuditSettings.AutomaticallyAuditAssistants)
-            {
-                var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
-                if (audit.Level is AssistantAuditLevel.UNKNOWN)
-                {
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(T("The Security Audit returned an invalid result, please try again manually."))));
-                    await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
-                    return;
-                }
-
-                this.UpsertAuditCard(audit);
-                await this.SettingsManager.StoreSettings();
-                await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-
-                securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-            }
-            else
-            {
-                await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
-                return;
-            }
-        }
-
         if (securityState.RequiresAudit)
         {
             await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
@@ -204,6 +186,47 @@ public partial class Plugins : MSGComponentBase
 
     private PluginAssistants? TryGetAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == pluginId);
 
+    private async Task TryAutoAuditAssistantsAsync()
+    {
+        if (this.isAutoAuditing || !this.AssistantPluginAuditSettings.AutomaticallyAuditAssistants)
+            return;
+
+        this.isAutoAuditing = true;
+
+        try
+        {
+            var wasConfigurationChanged = false;
+            var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
+            foreach (var assistantPlugin in assistantPlugins)
+            {
+                var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+                if (!securityState.RequiresAudit)
+                    continue;
+
+                var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
+                if (audit.Level is AssistantAuditLevel.UNKNOWN)
+                {
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(this.T("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
+                    continue;
+                }
+
+                this.UpsertAuditCard(audit);
+                wasConfigurationChanged = true;
+            }
+
+            if (!wasConfigurationChanged)
+                return;
+
+            await this.SettingsManager.StoreSettings();
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        }
+        finally
+        {
+            this.isAutoAuditing = false;
+            await this.InvokeAsync(this.StateHasChanged);
+        }
+    }
+
     private void UpsertAuditCard(PluginAssistantAudit audit)
     {
         var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
@@ -220,7 +243,12 @@ public partial class Plugins : MSGComponentBase
     {
         switch (triggeredEvent)
         {
-            case Event.PLUGINS_RELOADED or Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                await this.TryAutoAuditAssistantsAsync();
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+
+            case Event.CONFIGURATION_CHANGED:
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
