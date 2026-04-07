@@ -40,7 +40,7 @@
                 @foreach (var assistantPlugin in this.AssistantPlugins)
                 {
                     var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-                    <AssistantBlock TSettings="SettingsDialogDynamic"
+                    <AssistantBlock TSettings="NoSettingsPanel"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"

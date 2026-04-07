@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace AIStudio.Assistants.Dynamic;
 
-public partial class AssistantDynamic : AssistantBaseCore<SettingsDialogDynamic>
+public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 {
     [Parameter] 
     public AssistantForm? RootComponent { get; set; } = null!;
