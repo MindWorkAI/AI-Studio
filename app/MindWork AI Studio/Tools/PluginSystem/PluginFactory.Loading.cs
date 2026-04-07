@@ -254,7 +254,6 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
         
         // Check if security audits are invoked automatically and transparent for the user
-        // TODO: USE THIS SETTING
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         

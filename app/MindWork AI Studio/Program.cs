@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -178,6 +179,7 @@ internal sealed class Program
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
         builder.Services.AddTransient<AssistantAuditAgent>();
+        builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();

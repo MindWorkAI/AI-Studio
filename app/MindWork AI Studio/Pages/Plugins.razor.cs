@@ -23,6 +23,9 @@ public partial class Plugins : MSGComponentBase
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
+    [Inject]
+    private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -72,6 +75,31 @@ public partial class Plugins : MSGComponentBase
             return;
 
         var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+        if (securityState.RequiresAudit)
+        {
+            if (this.AssistantPluginAuditSettings.AutomaticallyAuditAssistants)
+            {
+                var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
+                if (audit.Level is AssistantAuditLevel.UNKNOWN)
+                {
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(T("The Audit returned an invalid result, please try again."))));
+                    await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
+                    return;
+                }
+
+                this.UpsertAuditCard(audit);
+                await this.SettingsManager.StoreSettings();
+                await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+
+                securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+            }
+            else
+            {
+                await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
+                return;
+            }
+        }
+
         if (securityState.RequiresAudit)
         {
             await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
