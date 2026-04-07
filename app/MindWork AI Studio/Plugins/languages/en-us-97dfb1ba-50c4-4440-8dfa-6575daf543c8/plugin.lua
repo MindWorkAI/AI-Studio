@@ -5973,6 +5973,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 -- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2531356312"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required minimum level \\\"{2}\\\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"
 
+-- The Security Audit returned an invalid result, please try again manually.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2652785775"] = "The Security Audit returned an invalid result, please try again manually."
+
 -- Enabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Enabled Plugins"
 

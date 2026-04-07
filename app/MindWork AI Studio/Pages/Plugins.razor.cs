@@ -82,7 +82,7 @@ public partial class Plugins : MSGComponentBase
                 var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
                 if (audit.Level is AssistantAuditLevel.UNKNOWN)
                 {
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(T("The Audit returned an invalid result, please try again."))));
+                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(T("The Security Audit returned an invalid result, please try again manually."))));
                     await this.OpenAssistantAuditDialogAsync(pluginMeta.Id);
                     return;
                 }
