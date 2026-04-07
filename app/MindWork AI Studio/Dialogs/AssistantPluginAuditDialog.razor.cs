@@ -21,7 +21,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Inject]
-    private AssistantAuditAgent AuditAgent { get; init; } = null!;
+    private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -96,22 +96,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
         try
         {
-            var result = await this.AuditAgent.AuditAsync(this.plugin);
-            this.audit = new PluginAssistantAudit
-            {
-                PluginId = this.plugin.Id,
-                PluginHash = this.plugin.ComputeAuditHash(),
-                AuditedAtUtc = DateTimeOffset.UtcNow,
-                AuditProviderId = this.CurrentProvider.Id,
-                AuditProviderName = this.CurrentProvider == AIStudio.Settings.Provider.NONE
-                    ? string.Empty
-                    : this.CurrentProvider.InstanceName,
-                Level = AssistantAuditLevelExtensions.Parse(result.Level),
-                Summary = result.Summary,
-                Confidence = result.Confidence,
-                PromptPreview = this.promptPreview,
-                Findings = result.Findings,
-            };
+            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin);
         }
         finally
         {

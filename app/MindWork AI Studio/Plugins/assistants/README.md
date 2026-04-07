@@ -1030,10 +1030,6 @@ Use `LAYOUT_ACCORDION` as the outer wrapper and put the actual content into one 
 - [Bitwise Operations Library](https://www.lua.org/manual/5.2/manual.html#6.7)
 ---
 
-> **Warning:** some common lua functions might not be available in this lua environment. Examples are:
-> 1. `tostring()`
-> 2. `pairs()`\\`ipairs()`
-
 ### Logging helpers
 The assistant runtime exposes basic logging helpers to Lua. Use them to debug custom prompt building.
 

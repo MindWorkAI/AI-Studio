@@ -73,7 +73,7 @@ public static class PluginAssistantSecurityResolver
         var auditSettings = settingsManager.ConfigurationData.AssistantPluginAudit;
         var currentHash = plugin.ComputeAuditHash();
         var audit = settingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == plugin.Id);
-        var hasAudit = audit is not null;
+        var hasAudit = audit is not null && audit.Level is not AssistantAuditLevel.UNKNOWN;
         var hashMatches = hasAudit && string.Equals(audit!.PluginHash, currentHash, StringComparison.Ordinal);
         var hasHashMismatch = hasAudit && !hashMatches;
         var isBelowMinimum = hashMatches && audit is not null && audit.Level < auditSettings.MinimumLevel;
