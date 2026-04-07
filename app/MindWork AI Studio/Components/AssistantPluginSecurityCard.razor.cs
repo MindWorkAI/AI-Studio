@@ -35,15 +35,6 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            
-        }
-        return base.OnAfterRenderAsync(firstRender);
-    }
-
     private async Task OpenAuditDialogAsync()
     {
         if (this.Plugin is null)

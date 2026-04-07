@@ -96,6 +96,7 @@ else
                                   Style="@this.GetOptionalStyle(textArea.Style)" />
                 }
                 break;
+                
             case AssistantComponentType.IMAGE:
                 if (component is AssistantImage assistantImage)
                 {
@@ -113,6 +114,7 @@ else
                     }
                 }
                 break;
+                
             case AssistantComponentType.WEB_CONTENT_READER:
                 if (component is AssistantWebContentReader webContent)
                 {
@@ -126,6 +128,7 @@ else
                     </div>
                 }
                 break;
+                
             case AssistantComponentType.FILE_CONTENT_READER:
                 if (component is AssistantFileContentReader fileContent)
                 {
@@ -135,6 +138,7 @@ else
                     </div>
                 }
                 break;
+                
             case AssistantComponentType.DROPDOWN:
                 if (component is AssistantDropdown assistantDropdown)
                 {
@@ -177,6 +181,7 @@ else
                     }
                 }
                 break;
+                
             case AssistantComponentType.BUTTON:
                 if (component is AssistantButton assistantButton)
                 {
@@ -219,9 +224,9 @@ else
                                        Class="@buttonClass"
                                        Style="@style" />
                     }
-                    
                 }
                 break;
+                
             case AssistantComponentType.BUTTON_GROUP:
                 if (component is AssistantButtonGroup assistantButtonGroup)
                 {
@@ -238,6 +243,7 @@ else
                     </MudButtonGroup>
                 }
                 break;
+                
             case AssistantComponentType.LAYOUT_GRID:
                 if (component is AssistantGrid assistantGrid)
                 {
@@ -250,12 +256,14 @@ else
                     </MudGrid>
                 }
                 break;
+                
             case AssistantComponentType.LAYOUT_ITEM:
                 if (component is AssistantItem assistantItem)
                 {
                     @this.RenderLayoutItem(assistantItem)
                 }
                 break;
+                
             case AssistantComponentType.LAYOUT_PAPER:
                 if (component is AssistantPaper assistantPaper)
                 {
@@ -269,6 +277,7 @@ else
                     </MudPaper>
                 }
                 break;
+                
             case AssistantComponentType.LAYOUT_STACK:
                 if (component is AssistantStack assistantStack)
                 {
@@ -287,6 +296,7 @@ else
                     </MudStack>
                 }
                 break;
+                
             case AssistantComponentType.LAYOUT_ACCORDION:
                 if (component is AssistantAccordion assistantAccordion)
                 {
@@ -303,6 +313,7 @@ else
                     </MudExpansionPanels>
                 }
                 break;
+                
             case AssistantComponentType.LAYOUT_ACCORDION_SECTION:
                 if (component is AssistantAccordionSection assistantAccordionSection)
                 {
@@ -334,6 +345,7 @@ else
                     </MudExpansionPanel>
                 }
             break;
+                
             case AssistantComponentType.PROVIDER_SELECTION:
                 if (component is AssistantProviderSelection providerSelection)
                 {
@@ -342,6 +354,7 @@ else
                     </div>
                 }
                 break;
+                
             case AssistantComponentType.PROFILE_SELECTION:
                 if (component is AssistantProfileSelection profileSelection)
                 {
@@ -351,6 +364,7 @@ else
                     </div>
                 }
                 break;
+                
             case AssistantComponentType.SWITCH:
                 if (component is AssistantSwitch switchComponent)
                 {
@@ -368,27 +382,23 @@ else
                     }
                 }
                 break;
+                
             case AssistantComponentType.HEADING:
                 if (component is AssistantHeading assistantHeading)
                 {
                     var heading = assistantHeading;
-                    @switch (assistantHeading.Level)
+                    var typo = heading.Level switch
                     {
-                        case 1:
-                            <MudText Typo="Typo.h4" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
-                            break;
-                        case 2:
-                            <MudText Typo="Typo.h5" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
-                            break;
-                        case 3:
-                            <MudText Typo="Typo.h6" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
-                            break;
-                        default:
-                            <MudText Typo="Typo.h4" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
-                            break;
-                    }
+                        1 => Typo.h4,
+                        2 => Typo.h5,
+                        3 => Typo.h6,
+                        _ => Typo.h5
+                    };
+
+                    <MudText Typo="@typo" Class="@heading.Class" Style="@this.GetOptionalStyle(heading.Style)">@heading.Text</MudText>
                 }
                 break;
+                
             case AssistantComponentType.TEXT:
                 if (component is AssistantText assistantText)
                 {
@@ -396,6 +406,7 @@ else
                     <MudText Typo="Typo.body1" Class='@MergeClass(text.Class, "mb-3")' Style="@this.GetOptionalStyle(text.Style)">@text.Content</MudText>
                 }
                 break;
+                
             case AssistantComponentType.LIST:
                 if (component is AssistantList assistantList)
                 {
@@ -418,6 +429,7 @@ else
                     </MudList>
                 }
                 break;
+                
             case AssistantComponentType.COLOR_PICKER:
                 if (component is AssistantColorPicker assistantColorPicker)
                 {
@@ -441,6 +453,7 @@ else
                     </MudItem>
                 }
                 break;
+                
             case AssistantComponentType.DATE_PICKER:
                 if (component is AssistantDatePicker assistantDatePicker)
                 {
@@ -464,6 +477,7 @@ else
                         </MudPaper>
                 }
                 break;
+                
             case AssistantComponentType.DATE_RANGE_PICKER:
                 if (component is AssistantDateRangePicker assistantDateRangePicker)
                 {
@@ -488,6 +502,7 @@ else
                         </MudPaper>
                 }
                 break;
+                
             case AssistantComponentType.TIME_PICKER:
                 if (component is AssistantTimePicker assistantTimePicker)
                 {

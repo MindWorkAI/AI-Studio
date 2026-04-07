@@ -496,5 +496,4 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         var gigabyte = megabyte / BYTES_PER_KILOBYTE;
         return string.Format(this.currentCultureInfo, TB("{0:0.##} GB"), gigabyte);
     }
-
 }

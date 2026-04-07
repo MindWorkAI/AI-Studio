@@ -29,6 +29,7 @@ public sealed class AssistantAuditFinding
             AssistantAuditLevel.SAFE => "low",
             _ => "unknown",
         };
+        
         init => this.Severity = value?.Trim().ToLowerInvariant() switch
         {
             "critical" => AssistantAuditLevel.DANGEROUS,
