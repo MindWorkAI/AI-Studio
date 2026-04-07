@@ -88,61 +88,71 @@
                                 @state.Description
                             </MudAlert>
 
-                            <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
-                                <tbody>
-                                    <tr>
-                                        <td style="width: 180px;">
-                                            <MudText Typo="Typo.body2"><b>@T("Plugin ID")</b></MudText>
-                                        </td>
-                                        <td><code style="font-size: 0.8rem;">@this.Plugin.Id</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <MudText Typo="Typo.body2"><b>@T("Current hash")</b></MudText>
-                                        </td>
-                                        <td><code style="font-size: 0.8rem;">@GetShortHash(state.CurrentHash)</code></td>
-                                    </tr>
-                                    @if (state.Audit is not null)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <MudText Typo="Typo.body2"><b>@T("Audit hash")</b></MudText>
-                                            </td>
-                                            <td><code style="font-size: 0.8rem;">@GetShortHash(state.Audit.PluginHash)</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <MudText Typo="Typo.body2"><b>@T("Audit provider")</b></MudText>
-                                            </td>
-                                            <td><MudText Typo="Typo.body2">@this.GetAuditProviderLabel()</MudText></td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <MudText Typo="Typo.body2"><b>@T("Audited at")</b></MudText>
-                                            </td>
-                                            <td><MudText Typo="Typo.body2">@this.FormatFileTimestamp(state.Audit.AuditedAtUtc.ToLocalTime().DateTime)</MudText></td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <MudText Typo="Typo.body2"><b>@T("Audit level")</b></MudText>
-                                            </td>
-                                            <td><MudText Typo="Typo.body2">@state.AuditLabel</MudText></td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <MudText Typo="Typo.body2"><b>@T("Availability")</b></MudText>
-                                            </td>
-                                            <td><MudText Typo="Typo.body2">@state.AvailabilityLabel</MudText></td>
-                                        </tr>
-                                    }
-                                    <tr>
-                                        <td>
-                                            <MudText Typo="Typo.body2"><b>@T("Required minimum")</b></MudText>
-                                        </td>
-                                        <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.GetName()</MudText></td>
-                                    </tr>
-                                </tbody>
-                            </MudSimpleTable>
+                            <MudPaper Outlined="true" Class="pa-2">
+                                <div class="d-flex align-center justify-space-between gap-2">
+                                    <MudText Typo="Typo.subtitle2">@T("Technical Details")</MudText>
+                                    <MudIconButton Icon="@(this.showMetadata ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                                   Size="Size.Small"
+                                                   OnClick="@this.ToggleMetadata" />
+                                </div>
+                                <MudCollapse Expanded="@this.showMetadata">
+                                    <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width: 180px;">
+                                                    <MudText Typo="Typo.body2"><b>@T("Plugin ID")</b></MudText>
+                                                </td>
+                                                <td><code style="font-size: 0.8rem;">@this.Plugin.Id</code></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <MudText Typo="Typo.body2"><b>@T("Current hash")</b></MudText>
+                                                </td>
+                                                <td><code style="font-size: 0.8rem;">@GetShortHash(state.CurrentHash)</code></td>
+                                            </tr>
+                                            @if (state.Audit is not null)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audit hash")</b></MudText>
+                                                    </td>
+                                                    <td><code style="font-size: 0.8rem;">@GetShortHash(state.Audit.PluginHash)</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audit provider")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@this.GetAuditProviderLabel()</MudText></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audited at")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@this.FormatFileTimestamp(state.Audit.AuditedAtUtc.ToLocalTime().DateTime)</MudText></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audit level")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@state.AuditLabel</MudText></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Availability")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@state.AvailabilityLabel</MudText></td>
+                                                </tr>
+                                            }
+                                            <tr>
+                                                <td>
+                                                    <MudText Typo="Typo.body2"><b>@T("Required minimum")</b></MudText>
+                                                </td>
+                                                <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.GetName()</MudText></td>
+                                            </tr>
+                                        </tbody>
+                                    </MudSimpleTable>
+                                </MudCollapse>
+                            </MudPaper>
 
                             @if (state.Audit is null)
                             {
@@ -158,20 +168,22 @@
                             }
                             else
                             {
-                                <MudStack Spacing="2">
-                                    @foreach (var finding in state.Audit.Findings)
-                                    {
-                                        <MudAlert Severity="@finding.Severity.GetSeverity()" Variant="Variant.Text" Dense="@true">
-                                            <strong>@finding.Category</strong><span>: @finding.Description</span>
-                                            @if (!string.IsNullOrWhiteSpace(finding.Location))
-                                            {
-                                                <div>
-                                                    <MudText Typo="Typo.caption">@finding.Location</MudText>
-                                                </div>
-                                            }
-                                        </MudAlert>
-                                    }
-                                </MudStack>
+                                <div style="max-height: min(22rem, 45vh); overflow-y: auto; padding-right: 0.25rem;">
+                                    <MudStack Spacing="2">
+                                        @foreach (var finding in state.Audit.Findings)
+                                        {
+                                            <MudAlert Severity="@finding.Severity.GetSeverity()" Variant="Variant.Text" Dense="@true">
+                                                <strong>@finding.Category</strong><span>: @finding.Description</span>
+                                                @if (!string.IsNullOrWhiteSpace(finding.Location))
+                                                {
+                                                    <div>
+                                                        <MudText Typo="Typo.caption">@finding.Location</MudText>
+                                                    </div>
+                                                }
+                                            </MudAlert>
+                                        }
+                                    </MudStack>
+                                </div>
                             }
                         </MudStack>
                     </MudCardContent>

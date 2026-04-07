@@ -24,12 +24,14 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
     private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
     private bool showSecurityCard;
     private bool showDetails;
+    private bool showMetadata;
 
     protected override async Task OnInitializedAsync()
     {
         var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
         this.currentCultureInfo = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
         this.showDetails = !this.Compact;
+        this.showMetadata = false;
         
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         await base.OnInitializedAsync();
@@ -72,6 +74,8 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
     private void HideSecurityCard() => this.showSecurityCard = false;
 
     private void ToggleDetails() => this.showDetails = !this.showDetails;
+
+    private void ToggleMetadata() => this.showMetadata = !this.showMetadata;
 
     private static void UpsertAudit(List<PluginAssistantAudit> audits, PluginAssistantAudit audit)
     {
