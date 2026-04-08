@@ -13,7 +13,8 @@ public readonly record struct ChatRequest(
     string Model,
     IList<IMessageBase> Messages,
     bool Stream,
-    int Seed
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? Seed
 )
 {
     // Attention: The "required" modifier is not supported for [JsonExtensionData].

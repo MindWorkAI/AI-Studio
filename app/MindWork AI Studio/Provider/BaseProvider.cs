@@ -565,6 +565,78 @@ public abstract class BaseProvider : IProvider, ISecretId
         streamReader.Dispose();
     }
 
+    /// <summary>
+    /// Streams the chat completion from an OpenAI-compatible provider using the Chat Completion API.
+    /// </summary>
+    /// <param name="providerName">The provider name for logging and error reporting.</param>
+    /// <param name="chatModel">The selected chat model.</param>
+    /// <param name="chatThread">The current chat thread.</param>
+    /// <param name="settingsManager">The settings manager.</param>
+    /// <param name="requestFactory">Builds the provider-specific request body.</param>
+    /// <param name="storeType">The secret store type.</param>
+    /// <param name="isTryingSecret">Whether the API key is optional.</param>
+    /// <param name="systemPromptRole">The system prompt role to use.</param>
+    /// <param name="requestPath">The request path, relative to the provider base URL.</param>
+    /// <param name="headersAction">Optional additional headers to add.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <typeparam name="TRequest">The request DTO type.</typeparam>
+    /// <typeparam name="TDelta">The delta stream line type.</typeparam>
+    /// <typeparam name="TAnnotation">The annotation stream line type.</typeparam>
+    /// <returns>The streamed content chunks.</returns>
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamOpenAICompatibleChatCompletion<TRequest, TDelta, TAnnotation>(
+        string providerName,
+        Model chatModel,
+        ChatThread chatThread,
+        SettingsManager settingsManager,
+        Func<TextMessage, IDictionary<string, object>, Task<TRequest>> requestFactory,
+        SecretStoreType storeType = SecretStoreType.LLM_PROVIDER,
+        bool isTryingSecret = false,
+        string systemPromptRole = "system",
+        string requestPath = "chat/completions",
+        Action<HttpRequestHeaders>? headersAction = null,
+        [EnumeratorCancellation] CancellationToken token = default)
+        where TDelta : IResponseStreamLine
+        where TAnnotation : IAnnotationStreamLine
+    {
+        // Get the API key:
+        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
+        if(!requestedSecret.Success && !isTryingSecret)
+            yield break;
+
+        // Prepare the system prompt:
+        var systemPrompt = new TextMessage
+        {
+            Role = systemPromptRole,
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
+        };
+
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters();
+
+        // Prepare the provider HTTP chat request:
+        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters), JSON_SERIALIZER_OPTIONS);
+
+        async Task<HttpRequestMessage> RequestBuilder()
+        {
+            // Build the HTTP post request:
+            var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
+
+            // Set the authorization header:
+            if (requestedSecret.Success)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+
+            // Set provider-specific headers:
+            headersAction?.Invoke(request.Headers);
+
+            // Set the content:
+            request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
+            return request;
+        }
+
+        await foreach (var content in this.StreamChatCompletionInternal<TDelta, TAnnotation>(providerName, RequestBuilder, token))
+            yield return content;
+    }
+
     protected async Task<string> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
     {
         try
