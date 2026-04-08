@@ -20,20 +20,23 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
                            "Mistral",
                            chatModel,
                            chatThread,
                            settingsManager,
                            async (systemPrompt, apiParameters) =>
                            {
-                               var safePrompt = TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt) && parsedSafePrompt;
-                               var randomSeed = TryPopIntParameter(apiParameters, "random_seed", out var parsedRandomSeed) ? parsedRandomSeed : (int?)null;
+                               if (TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt))
+                                   apiParameters["safe_prompt"] = parsedSafePrompt;
+
+                               if (TryPopIntParameter(apiParameters, "random_seed", out var parsedRandomSeed))
+                                   apiParameters["random_seed"] = parsedRandomSeed;
 
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
 
-                               return new ChatRequest
+                               return new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
 
@@ -44,8 +47,6 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
-                                   RandomSeed = randomSeed,
-                                   SafePrompt = safePrompt,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
