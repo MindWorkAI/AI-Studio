@@ -22,19 +22,20 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                            "Groq",
                            chatModel,
                            chatThread,
                            settingsManager,
                            async (systemPrompt, apiParameters) =>
                            {
-                               var seed = TryPopIntParameter(apiParameters, "seed", out var parsedSeed) ? parsedSeed : (int?)null;
+                               if (TryPopIntParameter(apiParameters, "seed", out var parsedSeed))
+                                   apiParameters["seed"] = parsedSeed;
 
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
 
-                               return new ChatRequest
+                               return new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
 
@@ -45,7 +46,6 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
-                                   Seed = seed,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
