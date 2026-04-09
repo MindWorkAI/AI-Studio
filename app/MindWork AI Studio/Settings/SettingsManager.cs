@@ -304,6 +304,43 @@ public sealed class SettingsManager
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
     }
 
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
+    {
+        var minimumLevel = this.GetMinimumConfidenceLevel(Tools.Components.CHAT);
+
+        bool IsSelectableProvider(Provider provider) =>
+            provider != Provider.NONE
+            && provider.UsedLLMProvider != LLMProviders.NONE
+            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+
+        Provider? FindProviderById(string? providerId)
+        {
+            if (string.IsNullOrWhiteSpace(providerId))
+                return null;
+
+            var provider = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId);
+            return provider is not null && IsSelectableProvider(provider) ? provider : null;
+        }
+
+        var chatProvider = FindProviderById(chatProviderId);
+        if (chatProvider is not null)
+            return chatProvider;
+
+        var defaultChatProvider = this.ConfigurationData.Chat.PreselectOptions
+            ? FindProviderById(this.ConfigurationData.Chat.PreselectedProvider)
+            : null;
+        if (defaultChatProvider is not null)
+            return defaultChatProvider;
+
+        var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
+        if (defaultAppProvider is not null)
+            return defaultAppProvider;
+
+        var selectableProviders = this.ConfigurationData.Providers.Where(IsSelectableProvider).ToList();
+        return selectableProviders.Count == 1 ? selectableProviders[0] : Provider.NONE;
+    }
+
     public Profile GetPreselectedProfile(Tools.Components component)
     {
         var preselection = component.GetProfilePreselection(this);
