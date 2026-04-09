@@ -26,7 +26,7 @@ public sealed class MappingRegistryGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor NO_ICONS_FOUND = new(
         id: "MBI002",
         title: "No MudBlazor icons were discovered",
-        messageFormat: "The generator found '{0}', but no nested icon constants were discovered below it.",
+        messageFormat: "The generator found '{0}', but no nested icon constants were discovered below it",
         category: "SourceGeneration",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
