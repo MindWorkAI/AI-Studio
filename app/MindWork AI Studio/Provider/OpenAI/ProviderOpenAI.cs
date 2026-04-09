@@ -79,9 +79,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         //
         // Prepare the tools we want to use:
         //
-        IList<Tool> tools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
+        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
         {
-            true => [ Tools.WEB_SEARCH ],
+            true => [ ProviderTools.WEB_SEARCH ],
             _ => []
         };
         
@@ -178,7 +178,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 Store = false,
                 
                 // Tools we want to use:
-                Tools = tools,
+                ProviderTools = providerTools,
                 
                 // Additional API parameters:
                 AdditionalApiParameters = apiParameters

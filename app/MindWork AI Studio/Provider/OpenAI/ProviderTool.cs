@@ -1,7 +1,7 @@
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
-/// Represents a tool used by the AI model.
+/// Represents a tool executed on the provider side.
 /// </summary>
 /// <remarks>
 /// Right now, only our OpenAI provider is using tools. Thus, this class is located in the
@@ -9,4 +9,4 @@ namespace AIStudio.Provider.OpenAI;
 /// be moved into the provider namespace.
 /// </remarks>
 /// <param name="Type">The type of the tool.</param>
-public record Tool(string Type);
+public record ProviderTool(string Type);
