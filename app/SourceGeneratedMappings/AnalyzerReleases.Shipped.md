@@ -2,7 +2,7 @@
 
 ### New Rules
 
-| Rule ID | Category         | Severity | Notes                    |
-|---------|------------------|----------|--------------------------|
-| MBI001  | SourceGeneration | Info     | MappingRegistryGenerator |
-| MBI002  | SourceGeneration | Warning  | MappingRegistryGenerator |
+ Rule ID | Category         | Severity | Notes                    
+---------|------------------|----------|--------------------------
+ MBI001  | SourceGeneration | Info     | MappingRegistryGenerator
+ MBI002  | SourceGeneration | Warning  | MappingRegistryGenerator
