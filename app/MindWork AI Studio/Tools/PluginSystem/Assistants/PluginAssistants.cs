@@ -43,7 +43,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public void TryLoad()
     {
         if(!this.TryProcessAssistant(out var issue))
-            this.pluginIssues.Add(issue);
+            this.PluginIssues.Add(issue);
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.RegisterLuaHelpers();
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
-        if (!this.state.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
+        if (!this.State.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
         {
             message = TB("The ASSISTANT lua table does not exist or is not a valid table.");
             return false;
@@ -148,7 +148,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var results = await this.state.CallAsync(this.buildPromptFunction, [input], cancellationToken);
+            var results = await this.State.CallAsync(this.buildPromptFunction, [input], cancellationToken);
             if (results.Length == 0)
                 return string.Empty;
 
@@ -276,7 +276,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var results = await this.state.CallAsync(callback, [input], cancellationToken);
+            var results = await this.State.CallAsync(callback, [input], cancellationToken);
             if (results.Length == 0)
                 return null;
 
@@ -498,7 +498,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private void RegisterLuaHelpers()
     {
         
-        this.state.Environment["LogInfo"] = new LuaFunction((context, _) =>
+        this.State.Environment["LogInfo"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -507,7 +507,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(0);
         });
         
-        this.state.Environment["LogDebug"] = new LuaFunction((context, _) =>
+        this.State.Environment["LogDebug"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -516,7 +516,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(0);
         });
         
-        this.state.Environment["LogWarning"] = new LuaFunction((context, _) =>
+        this.State.Environment["LogWarning"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -525,7 +525,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(0);
         });
         
-        this.state.Environment["LogError"] = new LuaFunction((context, _) =>
+        this.State.Environment["LogError"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
             
@@ -534,7 +534,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(0);
         });
 
-        this.state.Environment["DateTime"] = new LuaFunction((context, _) =>
+        this.State.Environment["DateTime"] = new LuaFunction((context, _) =>
         {
             var format = context.ArgumentCount > 0 ? context.GetArgument<string>(0) : "yyyy-MM-dd HH:mm:ss";
             var now = DateTime.Now;
@@ -554,7 +554,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(context.Return(table));
         });
         
-        this.state.Environment["Timestamp"] = new LuaFunction((context, _) =>
+        this.State.Environment["Timestamp"] = new LuaFunction((context, _) =>
         {
             var timestamp = DateTime.UtcNow.ToString("o");
             return new(context.Return(timestamp));

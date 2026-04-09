@@ -26,7 +26,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     public async Task InitializeAsync(bool dryRun)
     {
         if(!this.TryProcessConfiguration(dryRun, out var issue))
-            this.pluginIssues.Add(issue);
+            this.PluginIssues.Add(issue);
 
         if (!dryRun)
         {
@@ -93,7 +93,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         this.configObjects.Clear();
         
         // Ensure that the main CONFIG table exists and is a valid Lua table:
-        if (!this.state.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
+        if (!this.State.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
         {
             message = TB("The CONFIG table does not exist or is not a valid table.");
             return false;
