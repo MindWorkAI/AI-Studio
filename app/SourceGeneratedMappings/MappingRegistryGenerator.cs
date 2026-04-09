@@ -33,10 +33,7 @@ public sealed class MappingRegistryGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterSourceOutput(context.CompilationProvider, static (spc, compilation) =>
-        {
-            Generate(spc, compilation);
-        });
+        context.RegisterSourceOutput(context.CompilationProvider, Generate);
     }
 
     private static void Generate(SourceProductionContext context, Compilation compilation)
@@ -49,7 +46,7 @@ public sealed class MappingRegistryGenerator : IIncrementalGenerator
         }
 
         var icons = new List<IconDefinition>();
-        CollectIcons(rootType, new List<string>(), icons);
+        CollectIcons(rootType, [], icons);
 
         if (icons.Count == 0)
         {
