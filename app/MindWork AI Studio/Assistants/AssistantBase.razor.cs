@@ -93,6 +93,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected ChatThread? chatThread;
     protected IContent? lastUserPrompt;
     protected CancellationTokenSource? cancellationTokenSource;
+    protected HashSet<string> selectedToolIds = [];
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
 
@@ -124,6 +125,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -223,6 +225,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
+            RuntimeComponent = this.Component,
         };
     }
 
@@ -239,6 +242,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = chatId,
             Name = name,
             Blocks = [],
+            RuntimeComponent = this.Component,
         };
         
         return chatId;
@@ -249,6 +253,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+    }
+
+    protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = updatedToolIds;
+        return Task.CompletedTask;
     }
     
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
@@ -297,6 +307,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.chatThread.Blocks.Add(this.resultingContentBlock);
             this.chatThread.SelectedProvider = this.providerSettings.Id;
+            this.chatThread.RuntimeComponent = this.Component;
+            this.chatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
+                ? [..this.selectedToolIds]
+                : [];
         }
 
         this.isProcessing = true;

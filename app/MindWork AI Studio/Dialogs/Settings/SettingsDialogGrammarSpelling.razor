@@ -19,6 +19,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.GRAMMAR_SPELLING_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider = selectedValue)"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.GRAMMAR_SPELLING_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "id": "get_current_weather",
+  "displayName": "Current Weather",
+  "icon": "material-icons:cloud",
+  "implementationKey": "get_current_weather",
+  "visibleIn": {
+    "chat": true,
+    "assistants": true
+  },
+  "settingsSchema": {
+    "type": "object",
+    "properties": {
+      "demoLabel": {
+        "type": "string",
+        "title": "Demo Label",
+        "description": "Required demo setting for validating tool settings in tests.",
+        "secret": false
+      }
+    },
+    "required": [
+      "demoLabel"
+    ]
+  },
+  "function": {
+    "name": "get_current_weather",
+    "description": "Get the current weather in a given location.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "The city to find the weather for, e.g. 'San Francisco'."
+        },
+        "state": {
+          "type": "string",
+          "description": "The two-letter abbreviation for the state, e.g. 'CA'."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit to fetch the temperature in.",
+          "enum": [
+            "celsius",
+            "fahrenheit"
+          ]
+        }
+      },
+      "required": [
+        "city",
+        "state",
+        "unit"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

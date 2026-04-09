@@ -15,6 +15,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.IconFinder.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.IconFinder.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.ICON_FINDER_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.IconFinder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.IconFinder.PreselectedProvider = selectedValue)"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.ICON_FINDER_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

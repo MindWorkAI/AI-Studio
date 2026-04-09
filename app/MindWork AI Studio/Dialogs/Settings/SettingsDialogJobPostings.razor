@@ -26,6 +26,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.JobPostings.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.JobPostings.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.JobPostings.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.JOB_POSTING_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.JobPostings.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.JobPostings.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.JobPostings.PreselectedProvider = selectedValue)"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.JOB_POSTING_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

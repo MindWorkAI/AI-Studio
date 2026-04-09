@@ -23,36 +23,26 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                            "self-hosted provider",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           () => host switch
                            {
-                               // Build the list of messages. The image format depends on the host:
-                               // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
-                               // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
-                               var messages = host switch
-                               {
-                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
-                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
-                               };
-
-                               return new ChatCompletionAPIRequest
+                               Host.OLLAMA => chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
+                               _ => chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
+                           },
+                           (systemPrompt, messages, apiParameters, stream, tools) =>
+                               Task.FromResult(new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
-
-                                   // Build the messages:
-                                   // - First of all the system prompt
-                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-
-                                   // Right now, we only support streaming completions:
-                                   Stream = true,
+                                   Stream = stream,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               };
-                           },
+                               }),
                            isTryingSecret: true,
                            requestPath: host.ChatURL(),
                            token: token))

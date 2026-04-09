@@ -115,6 +115,59 @@
                                         <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
                                     }
                                 </div>
+
+                                @if (this.Role is ChatRole.AI && !string.IsNullOrWhiteSpace(textContent.ToolRuntimeStatus.Message))
+                                {
+                                    <MudAlert Dense="@true" Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">
+                                        @textContent.ToolRuntimeStatus.Message
+                                    </MudAlert>
+                                }
+
+                                @if (this.Role is ChatRole.AI && textContent.ToolInvocations.Count > 0)
+                                {
+                                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">
+                                        @string.Format(T("Tool Calls ({0})"), textContent.ToolInvocations.Count)
+                                    </MudText>
+                                    <MudExpansionPanels MultiExpansion="@true" Class="mt-4">
+                                        @foreach (var invocation in textContent.ToolInvocations.OrderBy(x => x.Order))
+                                        {
+                                            <ExpansionPanel HeaderIcon="@invocation.ToolIcon" HeaderText="@($"{invocation.Order}. {invocation.ToolName}")">
+                                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                                                    <MudChip T="string" Color="@ContentBlockComponent.GetTraceColor(invocation.Status)" Size="Size.Small" Variant="Variant.Outlined">
+                                                        @this.GetTraceStatusText(invocation)
+                                                    </MudChip>
+                                                </MudStack>
+
+                                                @if (!string.IsNullOrWhiteSpace(invocation.StatusMessage))
+                                                {
+                                                    <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-3">@invocation.StatusMessage</MudText>
+                                                }
+
+                                                <MudText Typo="Typo.subtitle2">@T("Arguments")</MudText>
+                                                @if (invocation.Arguments.Count == 0)
+                                                {
+                                                    <MudText Typo="Typo.body2" Class="mb-3">@T("No arguments")</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudList T="string" Dense="@true" Class="mb-3">
+                                                        @foreach (var argument in invocation.Arguments)
+                                                        {
+                                                            <MudListItem T="string">
+                                                                <MudText Typo="Typo.body2"><strong>@argument.Key:</strong> @argument.Value</MudText>
+                                                            </MudListItem>
+                                                        }
+                                                    </MudList>
+                                                }
+
+                                                <MudText Typo="Typo.subtitle2">@T("Result")</MudText>
+                                                <MudPaper Class="pa-3 mt-2">
+                                                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@invocation.Result</MudText>
+                                                </MudPaper>
+                                            </ExpansionPanel>
+                                        }
+                                    </MudExpansionPanels>
+                                }
                             }
                         }
                     }

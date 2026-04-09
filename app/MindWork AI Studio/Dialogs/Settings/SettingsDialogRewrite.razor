@@ -21,6 +21,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.REWRITE_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.RewriteImprove.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.RewriteImprove.PreselectedProvider = selectedValue)"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.REWRITE_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

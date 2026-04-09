@@ -32,6 +32,7 @@
                 <ConfigurationProviderSelection Component="Components.BIAS_DAY_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider = selectedValue)"/>
             </MudPaper>
         </MudField>
+        <ToolDefaultsConfiguration Component="Components.BIAS_DAY_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

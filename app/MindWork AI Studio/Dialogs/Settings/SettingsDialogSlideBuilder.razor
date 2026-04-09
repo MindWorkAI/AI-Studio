@@ -25,6 +25,7 @@
             <ConfigurationProviderSelection Component="Components.SLIDE_BUILDER_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProvider = selectedValue)"/>
             <ConfigurationSelect OptionDescription="@T("Preselect a profile")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)" SelectedValue="@(() => ProfilePreselection.FromStoredValue(this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProfile))" Data="@ConfigurationSelectDataFactory.GetComponentProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedProfile = selectedValue)" OptionHelp="@T("Choose whether the assistant should use the app default profile, no profile, or a specific profile.")"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.SLIDE_BUILDER_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

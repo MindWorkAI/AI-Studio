@@ -1,5 +1,6 @@
 using AIStudio.Agents;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
@@ -168,6 +169,10 @@ internal sealed class Program
         builder.Services.AddSingleton(rust);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<IToolImplementation, GetCurrentWeatherTool>();
+        builder.Services.AddSingleton<ToolRegistry>();
+        builder.Services.AddSingleton<ToolExecutor>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();

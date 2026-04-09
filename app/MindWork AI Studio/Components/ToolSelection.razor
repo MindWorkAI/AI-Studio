@@ -1,0 +1,64 @@
+@using AIStudio.Settings
+@using AIStudio.Tools.ToolCallingSystem
+@inherits MSGComponentBase
+
+<div class="d-flex">
+    <MudTooltip Text="@T("Select tools")" Placement="Placement.Top">
+        <MudIconButton Icon="@Icons.Material.Filled.Build" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleSelection"/>
+    </MudTooltip>
+
+    <MudPopover Open="@this.showSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h5">@T("Tool Selection")</MudText>
+                        <MudSpacer />
+                    </MudStack>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Style="min-width: 28em; max-height: 60vh; max-width: 48vw; overflow: auto;">
+                @if (!this.SupportsTools)
+                {
+                    <MudText Typo="Typo.body1">@T("The selected provider or model does not support tool calling.")</MudText>
+                }
+                else if (this.Disabled)
+                {
+                    <MudAlert Dense="@true" Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                        @T("Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")
+                    </MudAlert>
+                }
+                else if (this.catalog.Count == 0)
+                {
+                    <MudText Typo="Typo.body1">@T("No tools are available in this context.")</MudText>
+                }
+
+                @if (this.SupportsTools && this.catalog.Count > 0)
+                {
+                    @foreach (var item in this.catalog)
+                    {
+                        var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
+                        var isConfigured = item.ConfigurationState.IsConfigured;
+                        <MudPaper Class="pa-2 mb-2 border rounded-lg">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudSwitch T="bool" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || this.Disabled || !this.SupportsTools)" />
+                                    <MudIcon Icon="@item.Definition.Icon" />
+                                    <MudText Typo="Typo.body1">@item.Definition.DisplayName</MudText>
+                                </MudStack>
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(item.Definition.Id))" />
+                            </MudStack>
+                            @if (!isConfigured)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@T("Required settings are missing. Configure this tool before enabling it.")</MudText>
+                            }
+                        </MudPaper>
+                    }
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" OnClick="@this.Hide">@T("Close")</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudPopover>
+</div>

@@ -19,6 +19,7 @@
             <ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedLanguagePluginId = selectedValue)" OptionHelp="@T("Select the language plugin used for comparision.")"/>
             <ConfigurationProviderSelection Component="Components.I18N_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.I18N.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.I18N.PreselectedProvider = selectedValue)"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.I18N_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

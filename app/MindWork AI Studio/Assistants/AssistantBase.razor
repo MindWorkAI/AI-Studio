@@ -151,6 +151,11 @@
                     <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
                 }
 
+                @if (this.SettingsManager.IsToolSelectionVisible(this.Component))
+                {
+                    <ToolSelection Component="@this.Component" LLMProvider="@this.providerSettings" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessing" />
+                }
+
                 <MudSpacer />
                 <HalluzinationReminder ContainerClass="my-0 ml-2"/>
             </MudStack>

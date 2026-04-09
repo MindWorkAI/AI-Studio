@@ -10,10 +10,13 @@ using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -572,6 +575,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="chatModel">The selected chat model.</param>
     /// <param name="chatThread">The current chat thread.</param>
     /// <param name="settingsManager">The settings manager.</param>
+    /// <param name="messagesFactory">Builds the provider-specific base messages.</param>
     /// <param name="requestFactory">Builds the provider-specific request body.</param>
     /// <param name="storeType">The secret store type.</param>
     /// <param name="isTryingSecret">Whether the API key is optional.</param>
@@ -579,16 +583,16 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="requestPath">The request path, relative to the provider base URL.</param>
     /// <param name="headersAction">Optional additional headers to add.</param>
     /// <param name="token">The cancellation token.</param>
-    /// <typeparam name="TRequest">The request DTO type.</typeparam>
     /// <typeparam name="TDelta">The delta stream line type.</typeparam>
     /// <typeparam name="TAnnotation">The annotation stream line type.</typeparam>
     /// <returns>The streamed content chunks.</returns>
-    protected async IAsyncEnumerable<ContentStreamChunk> StreamOpenAICompatibleChatCompletion<TRequest, TDelta, TAnnotation>(
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamOpenAICompatibleChatCompletion<TDelta, TAnnotation>(
         string providerName,
         Model chatModel,
         ChatThread chatThread,
         SettingsManager settingsManager,
-        Func<TextMessage, IDictionary<string, object>, Task<TRequest>> requestFactory,
+        Func<Task<IList<IMessageBase>>> messagesFactory,
+        Func<TextMessage, IList<IMessageBase>, IDictionary<string, object>, bool, IList<object>?, Task<ChatCompletionAPIRequest>> requestFactory,
         SecretStoreType storeType = SecretStoreType.LLM_PROVIDER,
         bool isTryingSecret = false,
         string systemPromptRole = "system",
@@ -613,8 +617,114 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
 
+        var baseMessages = await messagesFactory();
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        if (toolRegistry is not null && toolExecutor is not null)
+        {
+            var runnableTools = await toolRegistry.GetRunnableToolsAsync(
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                this.Provider.GetModelCapabilities(chatModel),
+                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+
+            if (runnableTools.Count > 0)
+            {
+                var providerTools = runnableTools.Select(x => (object)new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = x.Definition.Function.Name,
+                        description = x.Definition.Function.Description,
+                        parameters = x.Definition.Function.Parameters,
+                        strict = x.Definition.Function.Strict,
+                    }
+                }).ToList();
+
+                var internalMessages = new List<IMessageBase>();
+                var toolCallCount = 0;
+                while (true)
+                {
+                    var requestDto = await requestFactory(systemPrompt, [..baseMessages, ..internalMessages], apiParameters, false, providerTools);
+                    var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
+                    var responseMessage = response?.Choices.FirstOrDefault()?.Message;
+                    if (responseMessage is null)
+                        yield break;
+
+                    if (responseMessage.ToolCalls.Count == 0)
+                    {
+                        currentAssistantContent!.ToolRuntimeStatus = new();
+                        if (!string.IsNullOrWhiteSpace(responseMessage.Content))
+                            yield return new ContentStreamChunk(responseMessage.Content, []);
+
+                        yield break;
+                    }
+
+                    currentAssistantContent!.ToolRuntimeStatus = new ToolRuntimeStatus
+                    {
+                        IsRunning = true,
+                        ToolNames = responseMessage.ToolCalls
+                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Definition?.DisplayName ?? x.Function.Name)
+                            .ToList(),
+                    };
+                    await currentAssistantContent.StreamingEvent();
+
+                    internalMessages.Add(new AssistantToolCallMessage
+                    {
+                        Content = responseMessage.Content,
+                        ToolCalls = responseMessage.ToolCalls,
+                    });
+
+                    foreach (var toolCall in responseMessage.ToolCalls)
+                    {
+                        toolCallCount++;
+                        if (toolCallCount > 10)
+                        {
+                            var limitMessage = "Tool calling stopped because the maximum of 10 tool calls was reached.";
+                            currentAssistantContent.ToolInvocations.Add(new ToolInvocationTrace
+                            {
+                                Order = toolCallCount,
+                                ToolId = toolCall.Function.Name,
+                                ToolName = toolCall.Function.Name,
+                                ToolCallId = toolCall.Id,
+                                Status = ToolInvocationTraceStatus.BLOCKED,
+                                StatusMessage = limitMessage,
+                                Result = limitMessage,
+                            });
+                            currentAssistantContent.ToolRuntimeStatus = new();
+                            await currentAssistantContent.StreamingEvent();
+                            yield return new ContentStreamChunk(limitMessage, []);
+                            yield break;
+                        }
+
+                        var (toolContent, trace) = await toolExecutor.ExecuteAsync(
+                            toolCall.Id,
+                            toolCall.Function.Name,
+                            toolCall.Function.Arguments,
+                            runnableTools,
+                            toolCallCount,
+                            token);
+
+                        currentAssistantContent.ToolInvocations.Add(trace);
+                        internalMessages.Add(new ToolResultMessage
+                        {
+                            Content = toolContent,
+                            ToolCallId = toolCall.Id,
+                            Name = toolCall.Function.Name,
+                        });
+                    }
+
+                    await currentAssistantContent.StreamingEvent();
+                }
+            }
+        }
+
         // Prepare the provider HTTP chat request:
-        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters), JSON_SERIALIZER_OPTIONS);
+        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, baseMessages, apiParameters, true, null), JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -635,6 +745,27 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         await foreach (var content in this.StreamChatCompletionInternal<TDelta, TAnnotation>(providerName, RequestBuilder, token))
             yield return content;
+    }
+
+    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(
+        ChatCompletionAPIRequest requestDto,
+        string requestPath,
+        RequestedSecret requestedSecret,
+        Action<HttpRequestHeaders>? headersAction,
+        CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
+        if (requestedSecret.Success)
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+
+        headersAction?.Invoke(request.Headers);
+        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+
+        using var response = await this.httpClient.SendAsync(request, token);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     protected async Task<string> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)

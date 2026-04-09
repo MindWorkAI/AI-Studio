@@ -1,6 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Chat;
@@ -199,6 +200,23 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
+                hash.Add(text.ToolInvocations.Count);
+                hash.Add(text.ToolRuntimeStatus.IsRunning);
+                hash.Add(text.ToolRuntimeStatus.Message);
+                foreach (var invocation in text.ToolInvocations)
+                {
+                    hash.Add(invocation.Order);
+                    hash.Add(invocation.ToolId);
+                    hash.Add(invocation.Status);
+                    hash.Add(invocation.StatusMessage);
+                    hash.Add(invocation.Result);
+                    hash.Add(invocation.Arguments.Count);
+                    foreach (var argument in invocation.Arguments)
+                    {
+                        hash.Add(argument.Key);
+                        hash.Add(argument.Value);
+                    }
+                }
                 break;
 
             case ContentImage image:
@@ -215,6 +233,22 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
+
+    private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
+    {
+        ToolInvocationTraceStatus.SUCCESS => Color.Success,
+        ToolInvocationTraceStatus.ERROR => Color.Error,
+        ToolInvocationTraceStatus.BLOCKED => Color.Warning,
+        _ => Color.Default,
+    };
+
+    private string GetTraceStatusText(ToolInvocationTrace trace) => trace.Status switch
+    {
+        ToolInvocationTraceStatus.SUCCESS => this.T("Executed"),
+        ToolInvocationTraceStatus.ERROR => this.T("Failed"),
+        ToolInvocationTraceStatus.BLOCKED => this.T("Blocked"),
+        _ => this.T("Unknown"),
+    };
 
     private MudMarkdownStyling MarkdownStyling => new()
     {

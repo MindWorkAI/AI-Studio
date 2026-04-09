@@ -1,0 +1,30 @@
+@using AIStudio.Tools.ToolCallingSystem
+@inherits SettingsPanelBase
+
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Tools")">
+    <MudText Typo="Typo.body1" Class="mb-4">
+        @T("Configure global settings for each tool. Tool defaults for chat and assistants are configured in the corresponding feature settings.")
+    </MudText>
+
+    <MudTable Items="@this.items" Hover="@true" Dense="@true">
+        <HeaderContent>
+            <MudTh>@T("Tool")</MudTh>
+            <MudTh>@T("State")</MudTh>
+            <MudTh>@T("Actions")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@context.Definition.Icon" />
+                    <MudText Typo="Typo.body1">@context.Definition.DisplayName</MudText>
+                </MudStack>
+            </MudTd>
+            <MudTd>
+                @(context.ConfigurationState.IsConfigured ? T("Configured") : T("Configuration required"))
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</ExpansionPanel>

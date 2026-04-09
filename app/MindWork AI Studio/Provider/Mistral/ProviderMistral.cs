@@ -20,12 +20,13 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
                            "Mistral",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           () => chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
+                           (systemPrompt, messages, apiParameters, stream, tools) =>
                            {
                                if (TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt))
                                    apiParameters["safe_prompt"] = parsedSafePrompt;
@@ -33,22 +34,15 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
                                if (TryPopIntParameter(apiParameters, "random_seed", out var parsedRandomSeed))
                                    apiParameters["random_seed"] = parsedRandomSeed;
 
-                               // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
-
-                               return new ChatCompletionAPIRequest
+                               return Task.FromResult(new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
-
-                                   // Build the messages:
-                                   // - First of all the system prompt
-                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-
-                                   // Right now, we only support streaming completions:
-                                   Stream = true,
+                                   Stream = stream,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               };
+                               });
                            },
                            token: token))
             yield return content;

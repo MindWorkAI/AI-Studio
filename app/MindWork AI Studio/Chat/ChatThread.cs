@@ -1,8 +1,10 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Chat;
@@ -79,6 +81,12 @@ public sealed record ChatThread
     /// The content blocks of the chat thread.
     /// </summary>
     public List<ContentBlock> Blocks { get; init; } = [];
+
+    [JsonIgnore]
+    public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.CHAT;
+
+    [JsonIgnore]
+    public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
     
     private bool allowProfile = true;
 

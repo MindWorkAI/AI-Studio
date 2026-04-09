@@ -64,6 +64,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private HashSet<string> selectedToolIds = [];
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
@@ -91,6 +92,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT);
 
         // Apply template's file attachments, if any:
         foreach (var attachment in this.currentChatTemplate.FileAttachments)
@@ -607,6 +609,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         using (this.cancellationTokenSource = new())
         {
             this.StateHasChanged();
+            this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
+            this.ChatThread.RuntimeSelectedToolIds = [..this.selectedToolIds];
             
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
@@ -635,6 +639,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (this.cancellationTokenSource is not null)
             if(!this.cancellationTokenSource.IsCancellationRequested)
                 await this.cancellationTokenSource.CancelAsync();
+    }
+
+    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = updatedToolIds;
+        return Task.CompletedTask;
     }
     
     private async Task SaveThread()
@@ -700,6 +710,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT);
         
         //
         // Reset the LLM provider considering the user's settings:

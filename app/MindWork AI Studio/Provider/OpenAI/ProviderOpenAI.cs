@@ -63,19 +63,18 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
+        var useChatCompletionsForTools =
+            chatThread.RuntimeSelectedToolIds.Count > 0 &&
+            modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) &&
+            modelCapabilities.Contains(Capability.FUNCTION_CALLING);
+        if (useChatCompletionsForTools)
+            usingResponsesAPI = false;
         
         // Prepare the request path based on the API we are using:
         var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
         
         LOGGER.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
         
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         //
         // Prepare the tools we want to use:
         //
@@ -89,60 +88,81 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
+        if (!usingResponsesAPI)
+        {
+            await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+                               "OpenAI",
+                               chatModel,
+                               chatThread,
+                               settingsManager,
+                               () => chatThread.Blocks.BuildMessagesAsync(
+                                   this.Provider,
+                                   chatModel,
+                                   role => role switch
+                                   {
+                                       ChatRole.USER => "user",
+                                       ChatRole.AI => "assistant",
+                                       ChatRole.AGENT => "assistant",
+                                       ChatRole.SYSTEM => systemPromptRole,
+                                       _ => "user",
+                                   },
+                                   text => new SubContentText
+                                   {
+                                       Text = text,
+                                   },
+                                   async attachment => new SubContentImageUrlNested
+                                   {
+                                       ImageUrl = new SubContentImageUrlData
+                                       {
+                                           Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                                               ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                                               : string.Empty,
+                                       },
+                                   }),
+                               (systemPrompt, messages, apiParameters, stream, tools) => Task.FromResult(new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
+                                   Messages = [systemPrompt, ..messages],
+                                   Stream = stream,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
+                                   AdditionalApiParameters = apiParameters,
+                               }),
+                               systemPromptRole: systemPromptRole,
+                               requestPath: "chat/completions",
+                               token: token))
+                yield return content;
+
+            yield break;
+        }
+
+        // Prepare the system prompt:
+        var systemPrompt = new TextMessage
+        {
+            Role = systemPromptRole,
+            Content = chatThread.PrepareSystemPrompt(settingsManager),
+        };
+
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
             this.Provider, chatModel,
-
-            // OpenAI-specific role mapping:
             role => role switch
             {
                 ChatRole.USER => "user",
                 ChatRole.AI => "assistant",
                 ChatRole.AGENT => "assistant",
                 ChatRole.SYSTEM => systemPromptRole,
-
                 _ => "user",
             },
-
-            // OpenAI's text sub-content depends on the model, whether we are using
-            // the Responses API or the Chat Completion API:
-            text => usingResponsesAPI switch
+            text => new SubContentInputText
             {
-                // Responses API uses INPUT_TEXT:
-                true => new SubContentInputText
-                {
-                    Text = text,
-                },
-
-                // Chat Completion API uses TEXT:
-                false => new SubContentText
-                {
-                    Text = text,
-                },
+                Text = text,
             },
-
-            // OpenAI's image sub-content depends on the model as well,
-            // whether we are using the Responses API or the Chat Completion API:
-            async attachment => usingResponsesAPI switch
+            async attachment => new SubContentInputImage
             {
-                // Responses API uses INPUT_IMAGE:
-                true => new SubContentInputImage
-                {
-                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                        : string.Empty,
-                },
-                
-                // Chat Completion API uses IMAGE_URL:
-                false => new SubContentImageUrlNested
-                {
-                    ImageUrl = new SubContentImageUrlData
-                    {
-                        Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                            ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                            : string.Empty,
-                    },
-                }
+                ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                    ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                    : string.Empty,
             });
         
         //

@@ -1,0 +1,46 @@
+@using AIStudio.Tools.ToolCallingSystem
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@this.toolDefinition?.Icon" Class="mr-2" />
+            @(this.toolDefinition?.DisplayName ?? T("Tool Settings"))
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (this.toolDefinition is null)
+        {
+            <MudText Typo="Typo.body1">@T("The selected tool could not be loaded.")</MudText>
+        }
+        else
+        {
+            @foreach (var property in this.toolDefinition.SettingsSchema.Properties)
+            {
+                var fieldName = property.Key;
+                var field = property.Value;
+                if (field.EnumValues.Count > 0)
+                {
+                    <MudSelect T="string" Label="@field.Title" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+                        @foreach (var option in field.EnumValues)
+                        {
+                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField T="string" Label="@field.Title" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@field.Description" InputType="@(field.Secret ? InputType.Password : InputType.Text)" />
+                }
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Text">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Save" Variant="Variant.Filled" Disabled="@(this.toolDefinition is null)">
+            @T("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

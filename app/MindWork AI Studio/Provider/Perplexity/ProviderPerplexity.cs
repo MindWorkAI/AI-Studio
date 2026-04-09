@@ -30,28 +30,22 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ResponseStreamLine, NoChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ResponseStreamLine, NoChatCompletionAnnotationStreamLine>(
                            "Perplexity",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
-                           {
-                               // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
-
-                               return new ChatCompletionAPIRequest
+                           () => chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
+                           (systemPrompt, messages, apiParameters, stream, tools) =>
+                               Task.FromResult(new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
-
-                                   // Build the messages:
-                                   // - First of all the system prompt
-                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-                                   Stream = true,
+                                   Stream = stream,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               };
-                           },
+                               }),
                            token: token))
             yield return content;
     }

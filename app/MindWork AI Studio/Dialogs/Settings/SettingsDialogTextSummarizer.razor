@@ -29,6 +29,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.TextSummarizer.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.TextSummarizer.MinimumProviderConfidence = selectedValue)"/>
             <ConfigurationProviderSelection Component="Components.TEXT_SUMMARIZER_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedProvider = selectedValue)"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.TEXT_SUMMARIZER_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">
