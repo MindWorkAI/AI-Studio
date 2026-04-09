@@ -9,7 +9,9 @@ using Microsoft.CodeAnalysis.Text;
 namespace SourceGeneratedMappings;
 
 [Generator]
+#pragma warning disable RS1036
 public sealed class MappingRegistryGenerator : IIncrementalGenerator
+#pragma warning restore RS1036
 {
     private const string GENERATED_NAMESPACE = "AIStudio.Tools.PluginSystem.Assistants.Icons";
     private const string ROOT_TYPE_NAME = "MudBlazor.Icons";
@@ -80,8 +82,8 @@ public sealed class MappingRegistryGenerator : IIncrementalGenerator
                 continue;
 
             icons.Add(new IconDefinition(
-                QualifiedName: $"Icons.{groupPath}.{field.Name}",
-                Svg: svg));
+                $"Icons.{groupPath}.{field.Name}",
+                svg));
         }
     }
 
@@ -126,5 +128,10 @@ public sealed class MappingRegistryGenerator : IIncrementalGenerator
         return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(value, quote: true);
     }
 
-    private sealed record IconDefinition(string QualifiedName, string Svg);
+    private sealed class IconDefinition(string qualifiedName, string svg)
+    {
+        public string QualifiedName { get; } = qualifiedName;
+        
+        public string Svg { get; } = svg;
+    }
 }
