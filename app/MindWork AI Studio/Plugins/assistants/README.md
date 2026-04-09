@@ -1,0 +1,1080 @@
+# Assistant Plugin Reference
+
+This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistant. Treat it as the single source of truth for how AI Studio renders your assistant UI and builds the submitted prompt.
+
+## Table of Contents
+- [Assistant Plugin Reference](#assistant-plugin-reference)
+  - [How to Use This Documentation](#how-to-use-this-documentation)
+  - [Directory Structure](#directory-structure)
+  - [Structure](#structure)
+    - [Minimal Requirements Assistant Table](#example-minimal-requirements-assistant-table)
+    - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
+  - [Component References](#component-references)
+    - [`TEXT_AREA` reference](#text_area-reference)
+    - [`DROPDOWN` reference](#dropdown-reference)
+    - [`BUTTON` reference](#button-reference)
+      - [`Action(input)` interface](#actioninput-interface)
+    - [`BUTTON_GROUP` reference](#button_group-reference)
+    - [`SWITCH` reference](#switch-reference)
+    - [`COLOR_PICKER` reference](#color_picker-reference)
+    - [`DATE_PICKER` reference](#date_picker-reference)
+    - [`DATE_RANGE_PICKER` reference](#date_range_picker-reference)
+    - [`TIME_PICKER` reference](#time_picker-reference)
+  - [Prompt Assembly - UserPrompt Property](#prompt-assembly---userprompt-property)
+  - [Advanced Prompt Assembly - BuildPrompt()](#advanced-prompt-assembly---buildprompt)
+    - [Interface](#interface)
+    - [`input` table shape](#input-table-shape)
+    - [Using component metadata inside BuildPrompt](#using-component-metadata-inside-buildprompt)
+      - [Example: build a prompt from two fields](#example-build-a-prompt-from-two-fields)
+      - [Example: reuse a label from `Props`](#example-reuse-a-label-from-props)
+    - [Using `profile` inside BuildPrompt](#using-profile-inside-buildprompt)
+      - [Example: Add user profile context to the prompt](#example-add-user-profile-context-to-the-prompt)
+  - [Advanced Layout Options](#advanced-layout-options)
+    - [`LAYOUT_GRID` reference](#layout_grid-reference)
+    - [`LAYOUT_ITEM` reference](#layout_item-reference)
+    - [`LAYOUT_PAPER` reference](#layout_paper-reference)
+    - [`LAYOUT_STACK` reference](#layout_stack-reference)
+    - [`LAYOUT_ACCORDION` reference](#layout_accordion-reference)
+    - [`LAYOUT_ACCORDION_SECTION` reference](#layout_accordion_section-reference)
+  - [Useful Lua Functions](#useful-lua-functions)
+    - [Included lua libraries](#included-lua-libraries)
+    - [Logging helpers](#logging-helpers)
+      - [Example: Use Logging in lua functions](#example-use-logging-in-lua-functions)
+    - [Date/time helpers (assistant plugins only)](#datetime-helpers-assistant-plugins-only)
+      - [Example: Use Logging in lua functions](#example-use-logging-in-lua-functions)
+  - [General Tips](#general-tips)
+  - [Useful Resources](#useful-resources)
+
+## How to Use This Documentation
+Use this README in layers. The early sections are a quick reference for the overall assistant manifest shape and the available component types, while the later `... reference` sections are the full detail for each component and advanced behavior.
+
+When you build a plugin, start with the directory layout and the `Structure` section, then jump to the component references you actually use. The resource links at the end are the primary sources for Lua and MudBlazor behavior, and the `General Tips` section collects the practical rules and gotchas that matter most while authoring `plugin.lua`.
+
+## Directory Structure
+Each assistant plugin lives in its own directory under the assistants plugin root. In practice, you usually keep the manifest in `plugin.lua`, optional icon rendering in `icon.lua`, and any bundled media in `assets/`.
+
+```
+.
+└── com.github.mindwork-ai.ai-studio/
+    └── data/
+        └── plugins/
+            └── assistants/
+                └── your-assistant-directory/
+                    ├── assets/
+                    │   └── your-media-files.jpg
+                    ├── icon.lua
+                    └── plugin.lua
+```
+
+## Structure
+- `ASSISTANT` is the root table. It must contain `Title`, `Description`, `SystemPrompt`, `SubmitText`, `AllowProfiles`, and the nested `UI` definition.
+- `UI.Type` is always `"FORM"` and `UI.Children` is a list of component tables.
+- Each component table declares `Type`, an optional `Children` array, and a `Props` table that feeds the component’s parameters.
+
+### Example: Minimal Requirements Assistant Table
+```lua
+ASSISTANT = {
+    ["Title"] = "",
+    ["Description"] = "",
+    ["SystemPrompt"] = "",
+    ["SubmitText"] = "",
+    ["AllowProfiles"] = true,
+    ["UI"] = {
+        ["Type"] = "FORM",
+        ["Children"] = {
+          -- Components
+        }
+    },
+}
+```
+
+
+#### Supported types (matching the Blazor UI components):
+
+- `TEXT_AREA`: user input field based on `MudTextField`; requires `Name`, `Label`, and may include `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style`.
+- `DROPDOWN`: selects between variants; `Props` must include `Name`, `Label`, `Default`, `Items`, and optionally `ValueType` plus `UserPrompt`.
+- `BUTTON`: invokes a Lua callback; `Props` must include `Name`, `Text`, `Action`, and may include `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`. Use this for stateless actions, including icon-only action buttons.
+- `BUTTON_GROUP`: groups multiple `BUTTON` children in a `MudButtonGroup`;`Props` must include `Name`, `Children` must contain only `BUTTON` components and `Props` may include `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`.
+- `LAYOUT_GRID`: renders a `MudGrid`; `Children` must contain only `LAYOUT_ITEM` components and `Props` may include `Justify`, `Spacing`, `Class`, `Style`.
+- `LAYOUT_ITEM`: renders a `MudItem`; use it inside `LAYOUT_GRID` and configure breakpoints with `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`, plus optional `Class`, `Style`.
+- `LAYOUT_PAPER`: renders a `MudPaper`; may include `Elevation`, `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`, `IsOutlined`, `IsSquare`, `Class`, `Style`.
+- `LAYOUT_STACK`: renders a `MudStack`; may include `IsRow`, `IsReverse`, `Breakpoint`, `Align`, `Justify`, `Stretch`, `Wrap`, `Spacing`, `Class`, `Style`.
+- `LAYOUT_ACCORDION`: renders a `MudExpansionPanels`; may include `AllowMultiSelection`, `IsDense`, `HasOutline`, `IsSquare`, `Elevation`, `HasSectionPaddings`, `Class`, `Style`.
+- `LAYOUT_ACCORDION_SECTION`: renders a `MudExpansionPanel`; requires `Name`, `HeaderText`, and may include `IsDisabled`, `IsExpanded`, `IsDense`, `HasInnerPadding`, `HideIcon`, `HeaderIcon`, `HeaderColor`, `HeaderTypo`, `HeaderAlign`, `MaxHeight`, `ExpandIcon`, `Class`, `Style`.
+- `SWITCH`: boolean option; requires `Name`, `Label`, `Value`, and may include `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`.
+- `COLOR_PICKER`: color input based on `MudColorPicker`; requires `Name`, `Label`, and may include `Placeholder`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `DATE_PICKER`: date input based on `MudDatePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `DATE_RANGE_PICKER`: date range input based on `MudDateRangePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `TIME_PICKER`: time input based on `MudTimePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
+- `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
+- `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
+- `FILE_CONTENT_READER`: renders `ReadFileContent`; include `Name`, `UserPrompt`.
+- `IMAGE`: embeds a static illustration; `Props` must include `Src` plus optionally `Alt` and `Caption`. `Src` can be an HTTP/HTTPS URL, a `data:` URI, or a plugin-relative path (`plugin://assets/your-image.png`). The runtime will convert plugin-relative paths into `data:` URLs (base64).
+- `HEADING`, `TEXT`, `LIST`: descriptive helpers.
+
+Images referenced via the `plugin://` scheme must exist in the plugin directory (e.g., `assets/example.png`). Drop the file there and point `Src` at it. The component will read the file at runtime, encode it as Base64, and render it inside the assistant UI.
+
+| Component                  | Required Props                      | Optional Props                                                                                                                                                                                                       | Renders                                                                                                                             |
+|----------------------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `TEXT_AREA`                | `Name`, `Label`                     | `HelperText`, `HelperTextOnFocus`, `Adornment`, `AdornmentIcon`, `AdornmentText`, `AdornmentColor`, `Counter`, `MaxLength`, `IsImmediate`, `UserPrompt`, `PrefillText`, `IsSingleLine`, `ReadOnly`, `Class`, `Style` | [MudTextField](https://www.mudblazor.com/components/textfield)                                                                      |
+| `DROPDOWN`                 | `Name`, `Label`, `Default`, `Items` | `IsMultiselect`, `HasSelectAll`, `SelectAllText`, `HelperText`, `OpenIcon`, `CloseIcon`, `IconColor`, `IconPositon`, `Variant`, `ValueType`, `UserPrompt`                                                            | [MudSelect](https://www.mudblazor.com/components/select)                                                                            |
+| `BUTTON`                   | `Name`, `Text`, `Action`            | `IsIconButton`, `Variant`, `Color`, `IsFullWidth`, `Size`, `StartIcon`, `EndIcon`, `IconColor`, `IconSize`, `Class`, `Style`                                                                                         | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
+| `BUTTON_GROUP`             | `Name`, `Children`                  | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButton](https://www.mudblazor.com/components/button) / [MudIconButton](https://www.mudblazor.com/components/button#icon-button) |
+| `SWITCH`                   | `Name`, `Label`, `Value`            | `OnChanged`, `Disabled`, `UserPrompt`, `LabelOn`, `LabelOff`, `LabelPlacement`, `Icon`, `IconColor`, `CheckedColor`, `UncheckedColor`, `Class`, `Style`                                                              | [MudSwitch](https://www.mudblazor.com/components/switch)                                                                            |
+| `PROVIDER_SELECTION`       | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProviderSelection.razor)       |
+| `PROFILE_SELECTION`        | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProfileSelection.razor)        |
+| `FILE_CONTENT_READER`      | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadFileContent.razor)         |
+| `WEB_CONTENT_READER`       | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)          |
+| `COLOR_PICKER`             | `Name`, `Label`                     | `Placeholder`, `Color`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                                  |
+| `DATE_PICKER`              | `Name`, `Label`                     | `Value`, `Color`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudDatePicker](https://www.mudblazor.com/components/datepicker)                                                                    |
+| `DATE_RANGE_PICKER`        | `Name`, `Label`                     | `Value`, `Color`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                  | [MudDateRangePicker](https://www.mudblazor.com/components/daterangepicker)                                                          |
+| `TIME_PICKER`              | `Name`, `Label`                     | `Value`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                          | [MudTimePicker](https://www.mudblazor.com/components/timepicker)                                                                    |
+| `HEADING`                  | `Text`                              | `Level`                                                                                                                                                                                                              | [MudText Typo="Typo.<h2\|h3\|h4\|h5\|h6>"](https://www.mudblazor.com/components/typography)                                         |
+| `TEXT`                     | `Content`                           | `None`                                                                                                                                                                                                               | [MudText Typo="Typo.body1"](https://www.mudblazor.com/components/typography)                                                        |
+| `LIST`                     | `None`                              | `Items (LIST_ITEM)`, `Class`, `Style`                                                                                                                                                                                | [MudList](https://www.mudblazor.com/componentss/list)                                                                               |
+| `LIST_ITEM`                | `Type`, `Text`                      | `Href`,  `Icon`, `IconColor`                                                                                                                                                                                         | [MudList](https://www.mudblazor.com/componentss/list)                                                                               |
+| `IMAGE`                    | `Src`                               | `Alt`, `Caption`,`Src`                                                                                                                                                                                               | [MudImage](https://www.mudblazor.com/components/image)                                                                              |
+| `BUTTON_GROUP`             | `None`                              | `Variant`, `Color`, `Size`, `OverrideStyles`, `Vertical`, `DropShadow`, `Class`, `Style`                                                                                                                             | [MudButtonGroup](https://www.mudblazor.com/components/buttongroup)                                                                  |
+| `LAYOUT_PAPER`             | `None`                              | `Elevation`, `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`, `IsOutlined`, `IsSquare`, `Class`, `Style`                                                                                         | [MudPaper](https://www.mudblazor.com/components/paper)                                                                              |
+| `LAYOUT_ITEM`              | `None`                              | `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`, `Class`, `Style`                                                                                                                                                                | [MudItem](https://www.mudblazor.com/api/MudItem)                                                                                    |
+| `LAYOUT_STACK`             | `None`                              | `IsRow`, `IsReverse`, `Breakpoint`, `Align`, `Justify`, `Stretch`, `Wrap`, `Spacing`, `Class`, `Style`                                                                                                               | [MudStack](https://www.mudblazor.com/components/stack)                                                                              |
+| `LAYOUT_GRID`              | `None`                              | `Justify`, `Spacing`, `Class`, `Style`                                                                                                                                                                               | [MudGrid](https://www.mudblazor.com/components/grid)                                                                                |
+| `LAYOUT_ACCORDION`         | `None`                              | `AllowMultiSelection`, `IsDense`, `HasOutline`, `IsSquare`, `Elevation`, `HasSectionPaddings`, `Class`, `Style`                                                                                                      | [MudExpansionPanels](https://www.mudblazor.com/components/expansionpanels)                                                          |
+| `LAYOUT_ACCORDION_SECTION` | `Name`, `HeaderText`                | `IsDisabled`, `IsExpanded`, `IsDense`, `HasInnerPadding`, `HideIcon`, `HeaderIcon`, `HeaderColor`, `HeaderTypo`, `HeaderAlign`, `MaxHeight`, `ExpandIcon`, `Class`, `Style`                                          | [MudExpansionPanel](https://www.mudblazor.com/components/expansionpanels)                                                           |
+More information on rendered components can be found [here](https://www.mudblazor.com/docs/overview).
+
+## Component References
+
+### `TEXT_AREA` reference
+- Use `Type = "TEXT_AREA"` to render a MudBlazor text input or textarea.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `HelperText`: helper text rendered below the input.
+  - `HelperTextOnFocus`: defaults to `false`; show helper text only while the field is focused.
+  - `Adornment`: one of `Start`, `End`, `None`; invalid or omitted values fall back to `Start`.
+  - `AdornmentIcon`: MudBlazor icon identifier string for the adornment.
+  - `AdornmentText`: plain adornment text. Do not set this together with `AdornmentIcon`.
+  - `AdornmentColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; invalid or omitted values fall back to `Default`.
+  - `Counter`: nullable integer. Omit it to hide the counter entirely. Set `0` to show only the current character count. Set `1` or higher to show `current/max`.
+  - `MaxLength`: maximum number of characters allowed; defaults to `524288`.
+  - `IsImmediate`: defaults to `false`; updates the bound value on each input event instead of on blur/change.
+  - `UserPrompt`: prompt context text for this field.
+  - `PrefillText`: initial input value.
+  - `IsSingleLine`: defaults to `false`; render as a one-line input instead of a textarea.
+  - `ReadOnly`: defaults to `false`; disables editing.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example Textarea component
+```lua
+{
+  ["Type"] = "TEXT_AREA",
+  ["Props"] = {
+    ["Name"] = "Budget",
+    ["Label"] = "Budget",
+    ["HelperText"] = "Enter the expected amount.",
+    ["Adornment"] = "Start",
+    ["AdornmentIcon"] = "Icons.Material.Filled.AttachMoney",
+    ["AdornmentColor"] = "Success",
+    ["Counter"] = 0,
+    ["MaxLength"] = 100,
+    ["IsImmediate"] = true,
+    ["UserPrompt"] = "Use this budget information in your answer.",
+    ["PrefillText"] = "",
+    ["IsSingleLine"] = true
+  }
+}
+```
+---
+
+### `DROPDOWN` reference
+- Use `Type = "DROPDOWN"` to render a MudBlazor select field.
+- Required props:
+  - `Name`: unique state key used in prompt assembly, button actions, and `BuildPrompt(input)`.
+  - `Label`: visible field label.
+  - `Default`: dropdown item table with the shape `{ ["Value"] = "<internal value>", ["Display"] = "<visible label>" }`.
+  - `Items`: array of dropdown item tables with the same shape as `Default`.
+- Optional props:
+  - `UserPrompt`: prompt context text for this field.
+  - `ValueType`: one of `string`, `int`, `double`, `bool`; currently the dropdown values exposed to prompt building and button actions are handled as the configured item `Value`s, with typical usage being `string`.
+  - `IsMultiselect`: defaults to `false`; when `true`, the component allows selecting multiple items.
+  - `HasSelectAll`: defaults to `false`; enables MudBlazor's select-all behavior for multiselect dropdowns.
+  - `SelectAllText`: custom label for the select-all action in multiselect mode.
+  - `HelperText`: helper text rendered below the dropdown.
+  - `OpenIcon`: MudBlazor icon identifier used while the dropdown is closed.
+  - `CloseIcon`: MudBlazor icon identifier used while the dropdown is open.
+  - `IconColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; invalid or omitted values fall back to `Default`.
+  - `IconPositon`: one of `Start` or `End`; controls where the icon adornment is rendered.
+  - `Variant`: one of the MudBlazor `Variant` enum names such as `Text`, `Filled`, `Outlined`; invalid or omitted values fall back to `Outlined`.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+- Dropdown item shape:
+  - `Value`: the internal raw value stored in component state and passed to prompt building.
+  - `Display`: the visible label shown to the user in the menu and selection text.
+- Behavior notes:
+  - For single-select dropdowns, `input.<Name>.Value` is a single raw value such as `germany`.
+  - For multiselect dropdowns, `input.<Name>.Value` is an array-like Lua table of raw values.
+  - The UI shows the `Display` text, while prompt assembly and `BuildPrompt(input)` receive the raw `Value`.
+  - `Default` should usually also exist in `Items`. If it is missing there, the runtime currently still renders it as an available option.
+
+#### Example Dropdown component
+```lua
+{
+  ["Type"] = "DROPDOWN",
+  ["Props"] = {
+    ["Name"] = "targetCountries",
+    ["Label"] = "Target countries",
+    ["UserPrompt"] = "Use the selected countries in your answer.",
+    ["ValueType"] = "string",
+    ["IsMultiselect"] = true,
+    ["HasSelectAll"] = true,
+    ["SelectAllText"] = "Select all countries",
+    ["HelperText"] = "Pick one or more countries.",
+    ["OpenIcon"] = "Icons.Material.Filled.ArrowDropDown",
+    ["CloseIcon"] = "Icons.Material.Filled.ArrowDropUp",
+    ["IconColor"] = "Secondary",
+    ["IconPositon"] = "End",
+    ["Variant"] = "Filled",
+    ["Default"] = { ["Value"] = "germany", ["Display"] = "Germany" },
+    ["Items"] = {
+      { ["Value"] = "germany", ["Display"] = "Germany" },
+      { ["Value"] = "austria", ["Display"] = "Austria" },
+      { ["Value"] = "france", ["Display"] = "France" }
+    },
+    ["Class"] = "mb-3",
+    ["Style"] = "min-width: 16rem;"
+  }
+}
+```
+---
+
+### `BUTTON` reference
+- Use `Type = "BUTTON"` to render a clickable action button.
+- `BUTTON` is the only action-button component in the assistant plugin API. Keep plugin authoring simple by treating it as one concept with two visual modes:
+  - default button mode: text button, optionally with start/end icons
+  - icon-button mode: set `IsIconButton = true` to render the action as an icon-only button
+- Do not model persistent on/off state with `BUTTON`. For boolean toggles, use `SWITCH`. The plugin API intentionally does not expose a separate `TOGGLE_BUTTON` component.
+- Required props:
+  - `Name`: unique identifier used to track execution state and logging.
+  - `Text`: button label used for standard buttons. Keep providing it for icon buttons too so the manifest stays self-describing.
+  - `Action`: Lua function called on button click.
+- Optional props:
+  - `IsIconButton`: defaults to `false`; when `true`, renders the action as a `MudIconButton` using `StartIcon` as the icon glyph.
+  - `Variant`: one of the MudBlazor `Variant` enum names such as `Filled`, `Outlined`, `Text`; omitted values fall back to `Filled`.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Default`, `Primary`, `Secondary`, `Info`; omitted values fall back to `Default`.
+  - `IsFullWidth`: defaults to `false`; when `true`, the button expands to the available width.
+  - `Size`: one of the MudBlazor `Size` enum names such as `Small`, `Medium`, `Large`; omitted values fall back to `Medium`.
+  - `StartIcon`: MudBlazor icon identifier string rendered before the button text, or used as the icon itself when `IsIconButton = true`.
+  - `EndIcon`: MudBlazor icon identifier string rendered after the button text.
+  - `IconColor`: one of the MudBlazor `Color` enum names for text-button icons; omitted values fall back to `Inherit`.
+  - `IconSize`: one of the MudBlazor `Size` enum names; omitted values fall back to `Medium`.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### `Action(input)` interface
+- The function receives the same `input` structure as `ASSISTANT.BuildPrompt(input)`.
+- Return `nil` for no state update.
+- Each named component is available as `input.<Name>` and exposes:
+  - `Type`: component type such as `TEXT_AREA` or `SWITCH`
+  - `Value`: current component value
+  - `Props`: readable component props
+- To update component state, return a table with a `state` table.
+- `state` keys must reference existing component `Name` values.
+- Each component update may include:
+  - `Value`: updates the current state value
+  - `Props`: partial prop updates for writable props
+- Supported `Value` write targets:
+  - `TEXT_AREA`, single-select `DROPDOWN`, `WEB_CONTENT_READER`, `FILE_CONTENT_READER`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`: string values
+  - multiselect `DROPDOWN`: array-like Lua table of strings
+  - `SWITCH`: boolean values
+- Unknown component names, wrong value types, unsupported prop values, and non-writeable props are ignored and logged.
+
+#### Example Button component
+```lua
+{
+  ["Type"] = "BUTTON",
+  ["Props"] = {
+    ["Name"] = "buildEmailOutput",
+    ["Text"] = "Build output",
+    ["Variant"] = "Filled",
+    ["Color"] = "Primary",
+    ["IsFullWidth"] = false,
+    ["Size"] = "Medium",
+    ["StartIcon"] = "Icons.Material.Filled.AutoFixHigh",
+    ["EndIcon"] = "Icons.Material.Filled.ArrowForward",
+    ["IconColor"] = "Inherit",
+    ["IconSize"] = "Medium",
+    ["Action"] = function(input)
+      local email = input.emailContent and input.emailContent.Value or ""
+      local translate = input.translateEmail and input.translateEmail.Value or false
+      local output = email
+
+      if translate then
+        output = output .. "\n\nTranslate this email:"
+      end
+
+      return {
+        state = {
+          outputTextField = {
+            Value = output
+          }
+        }
+      }
+    end,
+    ["Class"] = "mb-3",
+    ["Style"] = "min-width: 12rem;"
+  }
+}
+```
+
+#### Example Icon-Button action
+```lua
+{
+  ["Type"] = "BUTTON",
+  ["Props"] = {
+    ["Name"] = "refreshPreview",
+    ["Text"] = "Refresh preview",
+    ["IsIconButton"] = true,
+    ["Variant"] = "Outlined",
+    ["Color"] = "Primary",
+    ["Size"] = "Medium",
+    ["StartIcon"] = "Icons.Material.Filled.Refresh",
+    ["Action"] = function(input)
+      return {
+        state = {
+          outputTextField = {
+            Value = "Preview refreshed at " .. Timestamp()
+          }
+        }
+      }
+    end
+  }
+}
+```
+---
+
+### `BUTTON_GROUP` reference
+- Use `Type = "BUTTON_GROUP"` to render multiple `BUTTON` children as a single MudBlazor button group.
+- Required structure:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Children`: array of `BUTTON` component tables. Other child component types are ignored.
+- Optional props:
+  - `Variant`: one of the MudBlazor `Variant` enum names such as `Filled`, `Outlined`, `Text`; omitted values fall back to `Filled`.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Default`, `Primary`, `Secondary`, `Info`; omitted values fall back to `Default`.
+  - `Size`: one of the MudBlazor `Size` enum names such as `Small`, `Medium`, `Large`; omitted values fall back to `Medium`.
+  - `OverrideStyles`: defaults to `false`; enables MudBlazor button-group style overrides.
+  - `Vertical`: defaults to `false`; when `true`, buttons are rendered vertically instead of horizontally.
+  - `DropShadow`: defaults to `true`; controls the group shadow.
+  - `Class`, `Style`: forwarded to the rendered `MudButtonGroup` for layout/styling.
+- Child buttons use the existing `BUTTON` props and behavior, including Lua `Action(input)`. That includes `IsIconButton = true` when you want an icon-only action inside the group.
+
+#### Example Button-Group component
+```lua
+{
+  ["Type"] = "BUTTON_GROUP",
+  ["Props"] = {
+    ["Variant"] = "Filled",
+    ["Color"] = "Primary",
+    ["Size"] = "Medium",
+    ["OverrideStyles"] = false,
+    ["Vertical"] = false,
+    ["DropShadow"] = true
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "BUTTON",
+      ["Props"] = {
+        ["Name"] = "buildEmailOutput",
+        ["Text"] = "Build output",
+        ["Action"] = function(input)
+          return {
+            state = {
+              outputBuffer = {
+                Value = input.emailContent and input.emailContent.Value or ""
+              }
+            }
+          }
+        end,
+        ["StartIcon"] = "Icons.Material.Filled.Build"
+      }
+    },
+    {
+      ["Type"] = "BUTTON",
+      ["Props"] = {
+        ["Name"] = "logColor",
+        ["Text"] = "Log color",
+        ["Action"] = function(input)
+          local colorValue = input.colorPicker and input.colorPicker.Value or ""
+          LogError("ColorPicker value: " .. colorValue)
+          return nil
+        end,
+        ["EndIcon"] = "Icons.Material.Filled.BugReport"
+      }
+    }
+  }
+}
+```
+---
+
+### `SWITCH` reference
+- Use `Type = "SWITCH"` to render a boolean toggle.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Value`: initial boolean state (`true` or `false`).
+- Optional props:
+  - `Label`: If set, renders the switch inside an outlines Box, otherwise renders it raw. Visible label for the switch field.
+  - `OnChanged`: Lua callback invoked after the switch value changes. It receives the same `input` table as `BUTTON.Action(input)` and may return `{ state = { ... } }` to update component state. The new switch value is already reflected in `input.<Name>.Value`.
+  - `Disabled`: defaults to `false`; disables user interaction while still allowing the value to be included in prompt assembly.
+  - `UserPrompt`: prompt context text for this field.
+  - `LabelOn`: text shown when the switch value is `true`.
+  - `LabelOff`: text shown when the switch value is `false`.
+  - `LabelPlacement`: one of `Bottom`, `End`, `Left`, `Right`, `Start`, `Top`; omitted values follow the renderer default.
+  - `Icon`: MudBlazor icon identifier string displayed inside the switch thumb.
+  - `IconColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Inherit`.
+  - `CheckedColor`: color used when the switch state is `true`; omitted values default to `Inherit`.
+  - `UncheckedColor`: color used when the switch state is `false`; omitted values default to `Inherit`.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example Switch component
+```lua
+{
+  ["Type"] = "SWITCH",
+  ["Props"] = {
+    ["Name"] = "IncludeSummary",
+    ["Label"] = "Include summary",
+    ["Value"] = true,
+    ["OnChanged"] = function(input)
+      local includeSummary = input.IncludeSummary and input.IncludeSummary.Value or false
+      return {
+        state = {
+          SummaryMode = {
+            Value = includeSummary and "short-summary" or "no-summary"
+          }
+        }
+      }
+    end,
+    ["Disabled"] = false,
+    ["UserPrompt"] = "Decide whether the final answer should include a short summary.",
+    ["LabelOn"] = "Summary enabled",
+    ["LabelOff"] = "Summary disabled",
+    ["LabelPlacement"] = "End",
+    ["Icon"] = "Icons.Material.Filled.Summarize",
+    ["IconColor"] = "Primary",
+    ["CheckedColor"] = "Success",
+    ["UncheckedColor"] = "Default",
+    ["Class"] = "mb-6",
+  }
+}
+```
+---
+
+### `COLOR_PICKER` reference
+- Use `Type = "COLOR_PICKER"` to render a MudBlazor color picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Placeholder`: default color hex string (e.g. `#FF10FF`) or initial hint text.
+  - `ShowAlpha`: defaults to `true`; enables alpha channel editing.
+  - `ShowToolbar`: defaults to `true`; shows picker/grid/palette toolbar.
+  - `ShowModeSwitch`: defaults to `true`; allows switching between HEX/RGB(A)/HSL modes.
+  - `PickerVariant`: one of `DIALOG`, `INLINE`, `STATIC`; invalid or omitted values fall back to `STATIC`.
+  - `UserPrompt`: prompt context text for the selected color.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example Colorpicker component
+```lua
+{
+  ["Type"] = "COLOR_PICKER",
+  ["Props"] = {
+    ["Name"] = "accentColor",
+    ["Label"] = "Accent color",
+    ["Placeholder"] = "#FFAA00",
+    ["ShowAlpha"] = false,
+    ["ShowToolbar"] = true,
+    ["ShowModeSwitch"] = true,
+    ["PickerVariant"] = "STATIC",
+    ["UserPrompt"] = "Use this as the accent color for the generated design."
+  }
+}
+```
+
+---
+
+### `DATE_PICKER` reference
+- Use `Type = "DATE_PICKER"` to render a MudBlazor date picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Value`: initial date string. Use the same format as `DateFormat`; default recommendation is `yyyy-MM-dd`.
+  - `Placeholder`: hint text shown before a date is selected.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Primary`.
+  - `HelperText`: helper text rendered below the picker.
+  - `DateFormat`: output and parsing format; defaults to `yyyy-MM-dd`.
+  - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
+  - `UserPrompt`: prompt context text for the selected date.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example DatePicker component
+```lua
+{
+  ["Type"] = "DATE_PICKER",
+  ["Props"] = {
+    ["Name"] = "deadline",
+    ["Label"] = "Deadline",
+    ["Value"] = "2026-03-31",
+    ["Placeholder"] = "YYYY-MM-DD",
+    ["Color"] = "Warning",
+    ["HelperText"] = "Pick the target completion date.",
+    ["DateFormat"] = "yyyy-MM-dd",
+    ["PickerVariant"] = "Dialog",
+    ["UserPrompt"] = "Use this as the relevant deadline."
+  }
+}
+```
+
+---
+
+### `DATE_RANGE_PICKER` reference
+- Use `Type = "DATE_RANGE_PICKER"` to render a MudBlazor date range picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Value`: initial range string using `<start> - <end>`, for example `2026-03-01 - 2026-03-31`.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Primary`.
+  - `PlaceholderStart`: hint text for the start date input.
+  - `PlaceholderEnd`: hint text for the end date input.
+  - `HelperText`: helper text rendered below the picker.
+  - `DateFormat`: output and parsing format for both dates; defaults to `yyyy-MM-dd`.
+  - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
+  - `UserPrompt`: prompt context text for the selected date range.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example DateRangePicker component
+```lua
+{
+  ["Type"] = "DATE_RANGE_PICKER",
+  ["Props"] = {
+    ["Name"] = "travelWindow",
+    ["Label"] = "Travel window",
+    ["Value"] = "2026-06-01 - 2026-06-07",
+    ["Color"] = "Secondary",
+    ["PlaceholderStart"] = "Start date",
+    ["PlaceholderEnd"] = "End date",
+    ["HelperText"] = "Select the full period.",
+    ["DateFormat"] = "yyyy-MM-dd",
+    ["PickerVariant"] = "Dialog",
+    ["UserPrompt"] = "Use this as the allowed date range."
+  }
+}
+```
+
+---
+
+### `TIME_PICKER` reference
+- Use `Type = "TIME_PICKER"` to render a MudBlazor time picker.
+- Required props:
+  - `Name`: unique state key used in prompt assembly and `BuildPrompt(input)`.
+  - `Label`: visible field label.
+- Optional props:
+  - `Value`: initial time string. Use the same format as `TimeFormat`; default recommendations are `HH:mm` or `hh:mm tt`.
+  - `Placeholder`: hint text shown before a time is selected.
+  - `Color`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values default to `Primary`.
+  - `HelperText`: helper text rendered below the picker.
+  - `TimeFormat`: output and parsing format; defaults to `HH:mm`, or `hh:mm tt` when `AmPm = true`.
+  - `AmPm`: defaults to `false`; toggles 12-hour mode.
+  - `PickerVariant`: one of `Dialog`, `Inline`, `Static`; invalid or omitted values fall back to `Dialog`.
+  - `UserPrompt`: prompt context text for the selected time.
+  - `Class`, `Style`: forwarded to the rendered component for layout/styling.
+
+#### Example TimePicker component
+```lua
+{
+  ["Type"] = "TIME_PICKER",
+  ["Props"] = {
+    ["Name"] = "meetingTime",
+    ["Label"] = "Meeting time",
+    ["Value"] = "14:30",
+    ["Placeholder"] = "HH:mm",
+    ["Color"] = "Error",
+    ["HelperText"] = "Pick the preferred meeting time.",
+    ["TimeFormat"] = "HH:mm",
+    ["AmPm"] = false,
+    ["PickerVariant"] = "Dialog",
+    ["UserPrompt"] = "Use this as the preferred time."
+  }
+}
+```
+
+## Prompt Assembly - UserPrompt Property
+Each component exposes a `UserPrompt` string. When the assistant runs, `AssistantDynamic` recursively iterates over the component tree and, for each component that has a prompt, emits:
+
+```
+context:
+<UserPrompt>
+---
+user prompt:
+<value extracted from the component>
+```
+
+For switches the “value” is the boolean `true/false`; for readers it is the fetched/selected content; for color pickers it is the selected color text (for example `#FFAA00` or `rgba(...)`, depending on the picker mode); for date and time pickers it is the formatted date, date range, or time string. Always provide a meaningful `UserPrompt` so the final concatenated prompt remains coherent from the LLM’s perspective.
+
+## Advanced Prompt Assembly - BuildPrompt()
+If you want full control over prompt composition, define `ASSISTANT.BuildPrompt` as a Lua function. When present, AI Studio calls it and uses its return value as the final user prompt. The default prompt assembly is skipped.
+
+---
+### Interface
+- `ASSISTANT.BuildPrompt(LuaTable input) => string` must return a **string**, the complete User Prompt.
+- If the function is missing, returns `nil`, or returns a non-string, AI Studio falls back to the default prompt assembly.
+- Errors in the function are caught and logged, then fall back to the default prompt assembly.
+---
+### `input` table shape
+The function receives a single `input` Lua table with:
+- `input.<Name>`: one entry per named component
+  - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`)
+  - `Value` (current component value)
+  - `Props` (readable component props)
+- `input.profile`: selected profile data
+  - `Name`, `NeedToKnow`, `Actions`, `Num`
+  - When no profile is selected, values match the built-in "Use no profile" entry
+  - `profile` is a reserved key in the input table
+```
+input = {
+  ["<Name>"] = {
+    Type = "<TEXT_AREA|DROPDOWN|SWITCH|WEB_CONTENT_READER|FILE_CONTENT_READER|COLOR_PICKER|DATE_PICKER|DATE_RANGE_PICKER|TIME_PICKER>",
+    Value = "<string|boolean|table>",
+    Props = {
+      Name = "<string>",
+      Label = "<string?>",
+      UserPrompt = "<string?>"
+    }
+  },
+  profile = {
+    Name = "<string>",
+    NeedToKnow = "<string>",
+    Actions = "<string>",
+    Num = <number>
+  }
+}
+
+-- <Name> is the value you set in the components name property
+```
+---
+
+### Using component metadata inside BuildPrompt
+`input.<Name>.Type` and `input.<Name>.Props` are useful when you want to build prompts from a few specific fields without depending on the default `UserPrompt` assembly.
+
+#### Example: build a prompt from two fields
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local topic = input.Topic and input.Topic.Value or ""
+  local includeSummary = input.IncludeSummary and input.IncludeSummary.Value or false
+
+  local parts = {}
+  if topic ~= "" then
+    table.insert(parts, "Topic: " .. topic)
+  end
+
+  if includeSummary then
+    table.insert(parts, "Add a short summary at the end.")
+  end
+
+  return table.concat(parts, "\n")
+end
+```
+
+#### Example: reuse a label from `Props`
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local main = input.Main
+  if not main then
+    return ""
+  end
+
+  local label = main.Props and main.Props.Label or "Main"
+  local value = main.Value or ""
+  return label .. ": " .. value
+end
+```
+---
+
+### Callback result shape
+Callbacks may return a partial state update:
+
+```lua
+return {
+  state = {
+    ["<Name>"] = {
+      Value = "<optional new value>",
+      Props = {
+        -- optional writable prop updates
+      }
+    }
+  }
+}
+```
+
+- `Value` is optional
+- `Props` is optional
+- `Props` updates are partial
+- non-writeable props are ignored and logged
+
+---
+
+### Using `profile` inside BuildPrompt
+Profiles are optional user context (e.g., "NeedToKnow" and "Actions"). You can inject this directly into the user prompt if you want the LLM to always see it.
+
+#### Example: Add user profile context to the prompt
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local parts = {}
+  if input.profile and input.profile.NeedToKnow ~= "" then
+    table.insert(parts, "User context:")
+    table.insert(parts, input.profile.NeedToKnow)
+    table.insert(parts, "")
+  end
+  table.insert(parts, input.Main and input.Main.Value or "")
+  return table.concat(parts, "\n")
+end
+```
+## Advanced Layout Options
+
+### `LAYOUT_GRID` reference
+A 12-column grid system for organizing content with responsive breakpoints for different screen sizes.
+```
++------------------------------------------------------------+
+|                           12                               |
++------------------------------------------------------------+
+
++----------------------------+  +----------------------------+
+|            6               |  |            6               |
++----------------------------+  +----------------------------+
+
++------------+  +------------+  +-----------+  +-------------+
+|      3     |  |      3     |  |     3     |  |      3      |
++------------+  +------------+  +-----------+  +-------------+
+
+```
+
+- Use `Type = "LAYOUT_GRID"` to render a MudBlazor grid container.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Required structure:
+  - `Children`: array of `LAYOUT_ITEM` component tables. Other child component types are ignored.
+- Optional props:
+  - `Justify`: one of the MudBlazor `Justify` enum names such as `FlexStart`, `Center`, `SpaceBetween`; omitted values fall back to `FlexStart`.
+  - `Spacing`: integer spacing between grid items; omitted values fall back to `6`.
+  - `Class`, `Style`: forwarded to the rendered `MudGrid` for layout/styling.
+
+#### Example: How to define a flexible grid
+```lua
+{
+  ["Type"] = "LAYOUT_GRID",
+  ["Props"] = {
+    ["Name"] = "mainGrid",
+    ["Justify"] = "FlexStart",
+    ["Spacing"] = 2
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "LAYOUT_ITEM",
+      ["Props"] = {
+        ["Name"] = "contentColumn",
+        ["Xs"] = 12,
+        ["Lg"] = 8
+      },
+      ["Children"] = {
+        ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+        ["Props"] = {...},
+      },
+    },
+    {
+      ["Type"] = "LAYOUT_ITEM",
+      ["Props"] = {
+        ["Name"] = "contentColumn2",
+        ["Xs"] = 12,
+        ["Lg"] = 8
+      },
+      ["Children"] = {
+        ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+        ["Props"] = {...},
+      },
+    },
+    ...
+  }
+}
+```
+For a visual example and a full explanation look [here](https://www.mudblazor.com/components/grid#spacing)
+
+---
+
+### `LAYOUT_ITEM` reference
+`LAYOUT_ITEM` is used to wrap children components to use them into a grid.
+The Breakpoints define how many columns the wrapped components take up in a 12-column grid.
+Read more about breakpoint [here](https://www.mudblazor.com/features/breakpoints#breakpoints).
+
+- Use `Type = "LAYOUT_ITEM"` to render a MudBlazor grid item.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Intended parent:
+  - Use this component inside `LAYOUT_GRID`.
+- Optional props:
+  - `Xs`, `Sm`, `Md`, `Lg`, `Xl`, `Xxl`: integer breakpoint widths. Omit a breakpoint to leave it unset.
+  - `Class`, `Style`: forwarded to the rendered `MudItem` for layout/styling.
+- `Children` may contain any other assistant components you want to place inside the item.
+
+#### Example: How to wrap a child component and define its breakpoints
+```lua
+{
+  ["Type"] = "LAYOUT_ITEM",
+  ["Props"] = {
+    ["Name"] = "contentColumn",
+    ["Xs"] = 12,
+    ["Lg"] = 8
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+      ["Props"] = {...},
+    }
+  }
+}
+```
+For a full explanation look [here](https://www.mudblazor.com/api/MudItem#pages)
+
+---
+
+### `LAYOUT_PAPER` reference
+- Use `Type = "LAYOUT_PAPER"` to render a MudBlazor paper container.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Optional props:
+  - `Elevation`: integer elevation; omitted values fall back to `1`.
+  - `Height`, `MaxHeight`, `MinHeight`, `Width`, `MaxWidth`, `MinWidth`: CSS size values such as `100%`, `24rem`, `50vh`.
+  - `IsOutlined`: defaults to `false`; toggles outlined mode.
+  - `IsSquare`: defaults to `false`; removes rounded corners.
+  - `Class`, `Style`: forwarded to the rendered `MudPaper` for layout/styling.
+- `Children` may contain any other assistant components you want to wrap.
+
+#### Example: How to define a MudPaper wrapping child components
+```lua
+{
+  ["Type"] = "LAYOUT_PAPER",
+  ["Props"] = {
+    ["Name"] = "contentPaper",
+    ["Elevation"] = 2,
+    ["Width"] = "100%",
+    ["IsOutlined"] = true
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+      ["Props"] = {...},
+    },
+    ...
+  }
+}
+```
+For a visual example and a full explanation look [here](https://www.mudblazor.com/components/paper#material-design)
+
+---
+
+### `LAYOUT_STACK` reference
+- Use `Type = "LAYOUT_STACK"` to render a MudBlazor stack layout.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Optional props:
+  - `IsRow`: defaults to `false`; renders items horizontally.
+  - `IsReverse`: defaults to `false`; reverses the visual order.
+  - `Breakpoint`: one of the MudBlazor `Breakpoint` enum names such as `Sm`, `Md`, `Lg`; omitted values fall back to `None`.
+  - `Align`: one of the MudBlazor `AlignItems` enum names such as `Start`, `Center`, `Stretch`; omitted values fall back to `Stretch`.
+  - `Justify`: one of the MudBlazor `Justify` enum names such as `FlexStart`, `Center`, `SpaceBetween`; omitted values fall back to `FlexStart`.
+  - `Stretch`: one of the MudBlazor `StretchItems` enum names such as `None`, `Start`, `End`, `Stretch`; omitted values fall back to `None`.
+  - `Wrap`: one of the MudBlazor `Wrap` enum names such as `Wrap`, `NoWrap`, `WrapReverse`; omitted values fall back to `Wrap`.
+  - `Spacing`: integer spacing between child components; omitted values fall back to `3`.
+  - `Class`, `Style`: forwarded to the rendered `MudStack` for layout/styling.
+- `Children` may contain any other assistant components you want to arrange.
+
+#### Example: Define a stack of children components
+```lua
+{
+  ["Type"] = "LAYOUT_STACK",
+  ["Props"] = {
+    ["Name"] = "toolbarRow",
+    ["IsRow"] = true,
+    ["Align"] = "Center",
+    ["Justify"] = "SpaceBetween",
+    ["Spacing"] = 2
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+      ["Props"] = {...},
+    },
+    ...
+  }
+}
+```
+For a visual example and a full explanation look [here](https://www.mudblazor.com/components/stack#basic-usage)
+
+---
+
+### `LAYOUT_ACCORDION` reference
+- Use `Type = "LAYOUT_ACCORDION"` to render a MudBlazor accordion container (`MudExpansionPanels`).
+- Required props:
+  - `Name`: unique identifier for the layout node.
+- Required structure:
+  - `Children`: array of `LAYOUT_ACCORDION_SECTION` component tables. Other child component types are ignored by intent and should be avoided.
+- Optional props:
+  - `AllowMultiSelection`: defaults to `false`; allows multiple sections to stay expanded at the same time.
+  - `IsDense`: defaults to `false`; reduces the visual density of the accordion.
+  - `HasOutline`: defaults to `false`; toggles outlined panel styling.
+  - `IsSquare`: defaults to `false`; removes rounded corners from the accordion container.
+  - `Elevation`: integer elevation; omitted values fall back to `0`.
+  - `HasSectionPaddings`: defaults to `false`; toggles the section gutter/padding behavior.
+  - `Class`, `Style`: forwarded to the rendered `MudExpansionPanels` for layout/styling.
+
+#### Example: Define an accordion container
+```lua
+{
+  ["Type"] = "LAYOUT_ACCORDION",
+  ["Props"] = {
+    ["Name"] = "settingsAccordion",
+    ["AllowMultiSelection"] = true,
+    ["IsDense"] = false,
+    ["HasOutline"] = true,
+    ["IsSquare"] = false,
+    ["Elevation"] = 0,
+    ["HasSectionPaddings"] = true
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "LAYOUT_ACCORDION_SECTION",
+      ["Props"] = {
+        ["Name"] = "generalSection",
+        ["HeaderText"] = "General"
+      },
+      ["Children"] = {
+        {
+          ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+          ["Props"] = {...},
+        }
+      }
+    }
+  }
+}
+```
+Use `LAYOUT_ACCORDION` as the outer wrapper and put the actual content into one or more `LAYOUT_ACCORDION_SECTION` children.
+
+---
+
+### `LAYOUT_ACCORDION_SECTION` reference
+- Use `Type = "LAYOUT_ACCORDION_SECTION"` to render one expandable section inside `LAYOUT_ACCORDION`.
+- Required props:
+  - `Name`: unique identifier for the layout node.
+  - `HeaderText`: visible header text shown in the section title row.
+- Intended parent:
+  - Use this component inside `LAYOUT_ACCORDION`.
+- Optional props:
+  - `IsDisabled`: defaults to `false`; disables user interaction for the section.
+  - `IsExpanded`: defaults to `false`; sets the initial expanded state.
+  - `IsDense`: defaults to `false`; reduces section density.
+  - `HasInnerPadding`: defaults to `true`; controls the inner content gutter/padding.
+  - `HideIcon`: defaults to `false`; hides the expand/collapse icon.
+  - `HeaderIcon`: MudBlazor icon identifier rendered before the header text.
+  - `HeaderColor`: one of the MudBlazor `Color` enum names such as `Primary`, `Secondary`, `Warning`; omitted values fall back to `Inherit`.
+  - `HeaderTypo`: one of the MudBlazor `Typo` enum names such as `body1`, `subtitle1`, `h6`; omitted values follow the renderer default.
+  - `HeaderAlign`: one of the MudBlazor `Align` enum names such as `Start`, `Center`, `End`; omitted values follow the renderer default.
+  - `MaxHeight`: nullable integer max height in pixels for the expanded content area.
+  - `ExpandIcon`: MudBlazor icon identifier used for the expand/collapse control.
+  - `Class`, `Style`: forwarded to the rendered `MudExpansionPanel` for layout/styling.
+- `Children` may contain any other assistant components you want to reveal inside the section.
+
+#### Example: Define an accordion section
+```lua
+{
+  ["Type"] = "LAYOUT_ACCORDION_SECTION",
+  ["Props"] = {
+    ["Name"] = "advancedOptions",
+    ["HeaderText"] = "Advanced options",
+    ["IsDisabled"] = false,
+    ["IsExpanded"] = true,
+    ["IsDense"] = false,
+    ["HasInnerPadding"] = true,
+    ["HideIcon"] = false,
+    ["HeaderIcon"] = "Icons.Material.Filled.Tune",
+    ["HeaderColor"] = "Primary",
+    ["HeaderTypo"] = "subtitle1",
+    ["HeaderAlign"] = "Start",
+    ["MaxHeight"] = 320,
+    ["ExpandIcon"] = "Icons.Material.Filled.ExpandMore"
+  },
+  ["Children"] = {
+    {
+      ["Type"] = "<TEXT_AREA|BUTTON|BUTTON_GROUP|SWITCH|PROVIDER_SELECTION|...>",
+      ["Props"] = {...},
+    }
+  }
+}
+```
+`MaxHeight` is an integer pixel value, unlike `LAYOUT_PAPER` sizing props which accept CSS length strings such as `24rem` or `50vh`.
+
+## Useful Lua Functions
+### Included lua libraries
+- [Basic Functions Library](https://www.lua.org/manual/5.2/manual.html#6.1)
+- [Coroutine Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.2)
+- [String Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.4)
+- [Table Manipulation Library](https://www.lua.org/manual/5.2/manual.html#6.5)
+- [Mathematical Functions Library](https://www.lua.org/manual/5.2/manual.html#6.6)
+- [Bitwise Operations Library](https://www.lua.org/manual/5.2/manual.html#6.7)
+---
+
+### Logging helpers
+The assistant runtime exposes basic logging helpers to Lua. Use them to debug custom prompt building.
+
+- `LogDebug(message)`
+- `LogInfo(message)`
+- `LogWarning(message)`
+- `LogError(message)`
+
+#### Example: Use Logging in lua functions
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  LogInfo("BuildPrompt called")
+  return input.Text and input.Text.Value or ""
+end
+```
+---
+
+### Date/time helpers (assistant plugins only)
+Use these when you need timestamps inside Lua.
+
+- `DateTime(format)` returns a table with date/time parts plus a formatted string.
+  - `format` is optional; default is `yyyy-MM-dd HH:mm:ss` (ISO 8601-like).
+  - `formatted` contains the date in your desired format (e.g. `dd.MM.yyyy HH:mm`) or the default.
+  - Members: `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `formatted`.
+- `Timestamp()` returns a UTC timestamp in ISO-8601 format (`O` / round-trip), e.g. `2026-03-02T21:15:30.1234567Z`.
+
+#### Example: Use the datetime functions in lua 
+```lua
+local dt = DateTime("yyyy-MM-dd HH:mm:ss")
+LogInfo(dt.formatted)
+LogInfo(Timestamp())
+LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
+```
+
+## General Tips
+
+1. Give every component a _**unique**_ `Name`— it’s used to track state and treated like an Id.
+2. Keep in mind that components and their properties are _**case-sensitive**_ (e.g. if you write `["Type"] = "heading"` instead of `["Type"] = "HEADING"` the component will not be registered). Always copy-paste the component from the `plugin.lua` manifest to avoid this.
+3. When you expect default content (e.g., a textarea with instructions), keep `UserPrompt` but also set `PrefillText` so the user starts with a hint.
+4. If you need extra explanatory text (before or after the interactive controls), use `TEXT` or `HEADING` components.
+5. Keep `Preselect`/`PreselectContentCleanerAgent` flags in `WEB_CONTENT_READER` to simplify the initial UI for the user.
+
+## Useful Resources
+- [plugin.lua - Lua Manifest](https://github.com/MindWorkAI/AI-Studio/tree/main/app/MindWork%20AI%20Studio/Plugins/assistants/plugin.lua)
+- [Supported Icons](https://www.mudblazor.com/features/icons#icons)
+- [AI Studio Repository](https://github.com/MindWorkAI/AI-Studio/)
+- [Lua 5.2 Reference Manual](https://www.lua.org/manual/5.2/manual.html)
+- [MudBlazor Documentation](https://www.mudblazor.com/docs/overview)
