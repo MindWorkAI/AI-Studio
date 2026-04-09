@@ -26,13 +26,13 @@ public sealed class AssistantButtonGroup : NamedAssistantComponentBase
 
     public bool OverrideStyles
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.OverrideStyles), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.OverrideStyles));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.OverrideStyles), value);
     }
 
     public bool Vertical
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Vertical), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Vertical));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.Vertical), value);
     }
 

@@ -16,7 +16,7 @@ public sealed class AssistantButton : NamedAssistantComponentBase
     
     public bool IsIconButton
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsIconButton), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsIconButton));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsIconButton), value);
     }
 
@@ -40,7 +40,7 @@ public sealed class AssistantButton : NamedAssistantComponentBase
     
     public bool IsFullWidth
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsFullWidth), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsFullWidth));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsFullWidth), value);
     }
     

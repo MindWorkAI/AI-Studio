@@ -19,7 +19,7 @@ public sealed class AssistantPluginAuditService(AssistantAuditAgent auditAgent)
             PluginHash = plugin.ComputeAuditHash(),
             AuditedAtUtc = DateTimeOffset.UtcNow,
             AuditProviderId = provider.Id,
-            AuditProviderName = provider == AIStudio.Settings.Provider.NONE
+            AuditProviderName = provider == Settings.Provider.NONE
                 ? string.Empty
                 : provider.InstanceName,
             Level = AssistantAuditLevelExtensions.Parse(result.Level),

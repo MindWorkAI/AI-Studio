@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace AIStudio.Components
 {
@@ -92,7 +87,7 @@ namespace AIStudio.Components
 
         private List<AssistantDropdownItem> GetRenderedItems()
         {
-            var items = this.Items ?? [];
+            var items = this.Items;
             if (string.IsNullOrWhiteSpace(this.Default.Value))
                 return items;
 
@@ -122,10 +117,10 @@ namespace AIStudio.Components
             return item?.Display ?? value;
         }
 
-        private string MergeClasses(string custom, string fallback)
+        private static string MergeClasses(string custom, string fallback)
         {
-            var trimmedCustom = custom?.Trim() ?? string.Empty;
-            var trimmedFallback = fallback?.Trim() ?? string.Empty;
+            var trimmedCustom = custom.Trim();
+            var trimmedFallback = fallback.Trim();
             if (string.IsNullOrEmpty(trimmedCustom))
                 return trimmedFallback;
 

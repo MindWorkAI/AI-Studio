@@ -7,31 +7,23 @@ internal static class AssistantComponentPropHelper
     public static string ReadString(Dictionary<string, object> props, string key)
     {
         if (props.TryGetValue(key, out var value))
-        {
-            return value?.ToString() ?? string.Empty;
-        }
+            return value.ToString() ?? string.Empty;
 
         return string.Empty;
     }
 
-    public static void WriteString(Dictionary<string, object> props, string key, string value)
-    {
-        props[key] = value ?? string.Empty;
-    }
+    public static void WriteString(Dictionary<string, object> props, string key, string value) => props[key] = value;
 
     public static int ReadInt(Dictionary<string, object> props, string key, int fallback = 0)
     {
-        return props.TryGetValue(key, out var value) && int.TryParse(value?.ToString(), out var i) ? i : fallback;
+        return props.TryGetValue(key, out var value) && int.TryParse(value.ToString(), out var i) ? i : fallback;
     }
     
-    public static void WriteInt(Dictionary<string, object> props, string key, int value)
-    {
-        props[key] = value;
-    }
-    
+    public static void WriteInt(Dictionary<string, object> props, string key, int value) => props[key] = value;
+
     public static int? ReadNullableInt(Dictionary<string, object> props, string key)
     {
-        return props.TryGetValue(key, out var value) && int.TryParse(value?.ToString(), out var i) ? i : null;
+        return props.TryGetValue(key, out var value) && int.TryParse(value.ToString(), out var i) ? i : null;
     }
 
     public static void WriteNullableInt(Dictionary<string, object> props, string key, int? value)
@@ -47,10 +39,7 @@ internal static class AssistantComponentPropHelper
         return props.TryGetValue(key, out var value) && bool.TryParse(value.ToString(), out var b) ? b : fallback;
     }
 
-    public static void WriteBool(Dictionary<string, object> props, string key, bool value)
-    {
-        props[key] = value;
-    }
+    public static void WriteBool(Dictionary<string, object> props, string key, bool value) => props[key] = value;
 
     public static void WriteObject(Dictionary<string, object> props, string key, object? value)
     {
@@ -60,9 +49,9 @@ internal static class AssistantComponentPropHelper
             props[key] = value;
     }
     
-    public static MudBlazor.Color GetColor(string value, Color fallback) => Enum.TryParse<MudBlazor.Color>(value, out var color) ? color : fallback;
-    public static MudBlazor.Variant GetVariant(string value, Variant fallback) => Enum.TryParse<MudBlazor.Variant>(value, out var variant) ? variant : fallback;
-    public static MudBlazor.Adornment GetAdornment(string value, Adornment fallback) => Enum.TryParse<MudBlazor.Adornment>(value, out var adornment) ? adornment : fallback;
+    public static Color GetColor(string value, Color fallback) => Enum.TryParse<Color>(value, out var color) ? color : fallback;
+    public static Variant GetVariant(string value, Variant fallback) => Enum.TryParse<Variant>(value, out var variant) ? variant : fallback;
+    public static Adornment GetAdornment(string value, Adornment fallback) => Enum.TryParse<Adornment>(value, out var adornment) ? adornment : fallback;
     public static string GetIconSvg(string value) => MudBlazorIconRegistry.TryGetSvg(value.TrimStart('@'), out var svg) ? svg : string.Empty;
     public static Size GetComponentSize(string value, Size fallback) => Enum.TryParse<Size>(value, out var size) ? size : fallback;
     public static Justify? GetJustify(string value) => Enum.TryParse<Justify>(value, out var justify) ? justify : null;

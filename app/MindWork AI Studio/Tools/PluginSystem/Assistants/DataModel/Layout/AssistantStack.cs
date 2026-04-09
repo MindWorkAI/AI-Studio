@@ -8,13 +8,13 @@ internal sealed class AssistantStack : NamedAssistantComponentBase
 
     public bool IsRow
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsRow), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsRow));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsRow), value);
     }
     
     public bool IsReverse
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsReverse), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsReverse));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsReverse), value);
     }
     

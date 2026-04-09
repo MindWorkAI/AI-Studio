@@ -1,5 +1,4 @@
-@using AIStudio.Tools.PluginSystem.Assistants.DataModel
-<MudStack Row="true" Class='@this.MergeClasses(this.Class, "mb-3")' Style="@this.Style">
+<MudStack Row="true" Class='@MergeClasses(this.Class, "mb-3")' Style="@this.Style">
     @if (this.IsMultiselect)
     {
         <MudSelect

@@ -8,13 +8,13 @@ internal sealed class AssistantAccordion : NamedAssistantComponentBase
 
     public bool AllowMultiSelection
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.AllowMultiSelection), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.AllowMultiSelection));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.AllowMultiSelection), value);
     }
     
     public bool IsDense
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsDense), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsDense));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsDense), value);
     }
     
@@ -26,13 +26,13 @@ internal sealed class AssistantAccordion : NamedAssistantComponentBase
     
     public bool IsSquare
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsSquare), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsSquare));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsSquare), value);
     }
     
     public int Elevation
     {
-        get => AssistantComponentPropHelper.ReadInt(this.Props, nameof(this.Elevation), 0);
+        get => AssistantComponentPropHelper.ReadInt(this.Props, nameof(this.Elevation));
         set => AssistantComponentPropHelper.WriteInt(this.Props, nameof(this.Elevation), value);
     }
     

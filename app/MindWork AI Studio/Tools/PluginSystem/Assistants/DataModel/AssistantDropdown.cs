@@ -42,13 +42,13 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
     
     public bool IsMultiselect
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsMultiselect), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsMultiselect));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsMultiselect), value);
     }
 
     public bool HasSelectAll
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HasSelectAll), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HasSelectAll));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.HasSelectAll), value);
     }
 

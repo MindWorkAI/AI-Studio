@@ -1,5 +1,4 @@
 using System.Globalization;
-using MudBlazor;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 

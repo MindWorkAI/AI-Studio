@@ -52,6 +52,7 @@ public static class PluginAssistantSecurityResolver
         return MudBlazor.Icons.Material.Filled.LockOpen;
     }
     
+    // ReSharper disable UnusedParameter.Local
     private static string GetSecurityBadgeIcon(bool requiresAudit, bool hasAudit, bool hasHashMismatch, bool isBlocked, bool canOverride)
     {
         if (hasHashMismatch)
@@ -61,6 +62,7 @@ public static class PluginAssistantSecurityResolver
 
         return MudBlazor.Icons.Material.Filled.Security;
     }
+    // ReSharper restore UnusedParameter.Local
 
     /// <summary>
     /// Resolves the effective security state for an assistant plugin.

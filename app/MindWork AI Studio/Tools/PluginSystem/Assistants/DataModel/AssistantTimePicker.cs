@@ -49,7 +49,7 @@ internal sealed class AssistantTimePicker : StatefulAssistantComponentBase
 
     public bool AmPm
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.AmPm), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.AmPm));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.AmPm), value);
     }
 

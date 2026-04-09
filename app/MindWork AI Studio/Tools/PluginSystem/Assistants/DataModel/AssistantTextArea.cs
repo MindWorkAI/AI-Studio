@@ -1,5 +1,3 @@
-using AIStudio.Tools.PluginSystem.Assistants.Icons;
-
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal sealed class AssistantTextArea : StatefulAssistantComponentBase
@@ -22,7 +20,7 @@ internal sealed class AssistantTextArea : StatefulAssistantComponentBase
     
     public bool HelperTextOnFocus
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HelperTextOnFocus), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HelperTextOnFocus));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.HelperTextOnFocus), value);
     }
     
@@ -76,13 +74,13 @@ internal sealed class AssistantTextArea : StatefulAssistantComponentBase
 
     public bool IsSingleLine
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsSingleLine), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsSingleLine));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsSingleLine), value);
     }
 
     public bool ReadOnly
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.ReadOnly), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.ReadOnly));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.ReadOnly), value);
     }
 
@@ -114,7 +112,7 @@ internal sealed class AssistantTextArea : StatefulAssistantComponentBase
 
     #endregion
 
-    public Adornment GetAdornmentPos() => Enum.TryParse<MudBlazor.Adornment>(this.Adornment, out var position) ? position : MudBlazor.Adornment.Start;
+    public Adornment GetAdornmentPos() => Enum.TryParse<Adornment>(this.Adornment, out var position) ? position : MudBlazor.Adornment.Start;
     
     public Color GetAdornmentColor() => Enum.TryParse<Color>(this.AdornmentColor, out var color) ? color : Color.Default;
 }

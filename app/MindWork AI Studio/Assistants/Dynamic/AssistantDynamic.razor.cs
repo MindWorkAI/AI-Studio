@@ -13,7 +13,7 @@ namespace AIStudio.Assistants.Dynamic;
 public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 {
     [Parameter] 
-    public AssistantForm? RootComponent { get; set; } = null!;
+    public AssistantForm? RootComponent { get; set; }
     
     protected override string Title => this.title;
     protected override string Description => this.description;
@@ -171,9 +171,8 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
     private LuaTable BuildPromptInput()
     {
-        var state = new LuaTable();
         var rootComponent = this.RootComponent;
-        state = rootComponent is not null
+        var state = rootComponent is not null
             ? this.assistantState.ToLuaTable(rootComponent.Children)
             : new LuaTable();
 
@@ -184,8 +183,8 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             ["Actions"] = this.currentProfile.Actions,
             ["Num"] = this.currentProfile.Num,
         };
+        
         state["profile"] = profile;
-
         return state;
     }
 
@@ -218,7 +217,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         return string.IsNullOrEmpty(trimmedFallback) ? trimmedCustom : $"{trimmedCustom} {trimmedFallback}";
     }
 
-    private string? GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? null : style;
+    private static string GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? string.Empty : style;
 
     private bool IsButtonActionRunning(string buttonName) => this.executingButtonActions.Contains(buttonName);
     private bool IsSwitchActionRunning(string switchName) => this.executingSwitchActions.Contains(switchName);
@@ -251,7 +250,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (string.IsNullOrWhiteSpace(switchComponent.Name))
             return;
 
-        this.assistantState.Bools[switchComponent.Name] = value;
+        this.assistantState.Booleans[switchComponent.Name] = value;
 
         if (this.assistantPlugin is null || switchComponent.OnChanged is null)
         {

@@ -6,7 +6,6 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
-using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Agents.AssistantAudit;
 
@@ -251,7 +250,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// </summary>
     private static AssistantAuditResult NormalizeResult(AssistantAuditResult result)
     {
-        var normalizedFindings = result.Findings ?? [];
+        var normalizedFindings = result.Findings;
         var parsedLevel = AssistantAuditLevelExtensions.Parse(result.Level);
         var lowestFindingLevel = GetMostSevereFindingLevel(normalizedFindings);
         if (lowestFindingLevel != AssistantAuditLevel.UNKNOWN && (parsedLevel == AssistantAuditLevel.UNKNOWN || lowestFindingLevel < parsedLevel))

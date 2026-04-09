@@ -50,13 +50,13 @@ internal sealed class AssistantPaper : NamedAssistantComponentBase
     
     public bool IsOutlined
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsOutlined), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsOutlined));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsOutlined), value);
     }
     
     public bool IsSquare
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsSquare), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsSquare));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsSquare), value);
     }
     

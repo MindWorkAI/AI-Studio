@@ -40,19 +40,19 @@ internal sealed class AssistantAccordionSection : NamedAssistantComponentBase
     
     public bool IsDisabled
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsDisabled), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsDisabled));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsDisabled), value);
     }
     
     public bool IsExpanded
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsExpanded), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsExpanded));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsExpanded), value);
     }
     
     public bool IsDense
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsDense), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsDense));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.IsDense), value);
     }
     
@@ -64,7 +64,7 @@ internal sealed class AssistantAccordionSection : NamedAssistantComponentBase
     
     public bool HideIcon
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HideIcon), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.HideIcon));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.HideIcon), value);
     }
 

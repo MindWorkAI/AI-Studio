@@ -8,7 +8,7 @@ public sealed class AssistantState
     public readonly Dictionary<string, string> Text = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> SingleSelect = new(StringComparer.Ordinal);
     public readonly Dictionary<string, HashSet<string>> MultiSelect = new(StringComparer.Ordinal);
-    public readonly Dictionary<string, bool> Bools = new(StringComparer.Ordinal);
+    public readonly Dictionary<string, bool> Booleans = new(StringComparer.Ordinal);
     public readonly Dictionary<string, WebContentState> WebContent = new(StringComparer.Ordinal);
     public readonly Dictionary<string, FileContentState> FileContent = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> Colors = new(StringComparer.Ordinal);
@@ -21,7 +21,7 @@ public sealed class AssistantState
         this.Text.Clear();
         this.SingleSelect.Clear();
         this.MultiSelect.Clear();
-        this.Bools.Clear();
+        this.Booleans.Clear();
         this.WebContent.Clear();
         this.FileContent.Clear();
         this.Colors.Clear();
@@ -40,7 +40,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var textValue))
                 return false;
 
-            this.Text[fieldName] = textValue ?? string.Empty;
+            this.Text[fieldName] = textValue;
             return true;
         }
 
@@ -50,7 +50,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var singleSelectValue))
                 return false;
 
-            this.SingleSelect[fieldName] = singleSelectValue ?? string.Empty;
+            this.SingleSelect[fieldName] = singleSelectValue;
             return true;
         }
 
@@ -70,13 +70,13 @@ public sealed class AssistantState
             return true;
         }
 
-        if (this.Bools.ContainsKey(fieldName))
+        if (this.Booleans.ContainsKey(fieldName))
         {
             expectedType = "boolean";
             if (!value.TryRead<bool>(out var boolValue))
                 return false;
 
-            this.Bools[fieldName] = boolValue;
+            this.Booleans[fieldName] = boolValue;
             return true;
         }
 
@@ -86,7 +86,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var webContentValue))
                 return false;
 
-            webContentState.Content = webContentValue ?? string.Empty;
+            webContentState.Content = webContentValue;
             return true;
         }
 
@@ -96,7 +96,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var fileContentValue))
                 return false;
 
-            fileContentState.Content = fileContentValue ?? string.Empty;
+            fileContentState.Content = fileContentValue;
             return true;
         }
 
@@ -106,7 +106,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var colorValue))
                 return false;
 
-            this.Colors[fieldName] = colorValue ?? string.Empty;
+            this.Colors[fieldName] = colorValue;
             return true;
         }
 
@@ -116,7 +116,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var dateValue))
                 return false;
 
-            this.Dates[fieldName] = dateValue ?? string.Empty;
+            this.Dates[fieldName] = dateValue;
             return true;
         }
 
@@ -126,7 +126,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var dateRangeValue))
                 return false;
 
-            this.DateRanges[fieldName] = dateRangeValue ?? string.Empty;
+            this.DateRanges[fieldName] = dateRangeValue;
             return true;
         }
 
@@ -136,7 +136,7 @@ public sealed class AssistantState
             if (!value.TryRead<string>(out var timeValue))
                 return false;
 
-            this.Times[fieldName] = timeValue ?? string.Empty;
+            this.Times[fieldName] = timeValue;
             return true;
         }
 
@@ -158,7 +158,7 @@ public sealed class AssistantState
             {
                 target[named.Name] = new LuaTable
                 {
-                    ["Type"] = Enum.GetName<AssistantComponentType>(component.Type) ?? string.Empty,
+                    ["Type"] = Enum.GetName(component.Type) ?? string.Empty,
                     ["Value"] = component is IStatefulAssistantComponent ? this.ReadValueForLua(named.Name) : LuaValue.Nil,
                     ["Props"] = this.CreatePropsTable(component),
                 };
@@ -177,12 +177,12 @@ public sealed class AssistantState
             return singleSelectValue;
         if (this.MultiSelect.TryGetValue(name, out var multiSelectValue))
             return AssistantLuaConversion.CreateLuaArray(multiSelectValue.OrderBy(static value => value, StringComparer.Ordinal));
-        if (this.Bools.TryGetValue(name, out var boolValue))
+        if (this.Booleans.TryGetValue(name, out var boolValue))
             return boolValue;
         if (this.WebContent.TryGetValue(name, out var webContentValue))
-            return webContentValue.Content ?? string.Empty;
+            return webContentValue.Content;
         if (this.FileContent.TryGetValue(name, out var fileContentValue))
-            return fileContentValue.Content ?? string.Empty;
+            return fileContentValue.Content;
         if (this.Colors.TryGetValue(name, out var colorValue))
             return colorValue;
         if (this.Dates.TryGetValue(name, out var dateValue))
@@ -211,6 +211,7 @@ public sealed class AssistantState
                 continue;
 
             if (!AssistantLuaConversion.TryWriteAssistantValue(table, key, value))
+                // ReSharper disable once RedundantJumpStatement
                 continue;
         }
 

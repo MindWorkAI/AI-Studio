@@ -32,7 +32,6 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private PluginAssistantAudit? audit;
     private string promptPreview = string.Empty;
     private string promptFallbackPreview = string.Empty;
-    private string componentSummary = string.Empty;
     private ImmutableDictionary<string, string> luaFiles = ImmutableDictionary.Create<string, string>();
     private IReadOnlyCollection<TreeItemData<ITreeItem>> componentTreeItems = [];
     private IReadOnlyCollection<TreeItemData<ITreeItem>> fileSystemTreeItems = [];
@@ -77,7 +76,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         {
             this.promptPreview = await this.plugin.BuildAuditPromptPreviewAsync();
             this.promptFallbackPreview = this.plugin.BuildAuditPromptFallbackPreview();
-            this.componentSummary = this.plugin.CreateAuditComponentSummary();
+            this.plugin.CreateAuditComponentSummary();
             this.componentTreeItems = this.CreateAuditTreeItems(this.plugin.RootComponent);
             this.fileSystemTreeItems = this.CreatePluginFileSystemTreeItems(this.plugin.PluginPath);
             this.luaFiles = this.plugin.ReadAllLuaFiles();
@@ -262,7 +261,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         if (value is IDictionary dictionary)
             return this.CreateDictionaryChildren(dictionary, depth);
 
-        if (value is IEnumerable enumerable && value is not string)
+        if (value is IEnumerable enumerable and not string)
             return this.CreateEnumerableChildren(enumerable, depth);
 
         return this.CreateObjectChildren(value, depth);
@@ -328,26 +327,21 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         };
     }
 
-    private TreeItemData<ITreeItem> CreateFileTreeItem(string filePath, int depth)
+    private TreeItemData<ITreeItem> CreateFileTreeItem(string filePath, int depth) => new()
     {
-        var fileInfo = new FileInfo(filePath);
-
-        return new TreeItemData<ITreeItem>
+        Expanded = depth < 2,
+        Expandable = false,
+        Value = new AssistantAuditTreeItem
         {
-            Expanded = depth < 2,
+            Text = Path.GetFileName(filePath),
+            Caption = string.Empty,
+            Icon = GetFileIcon(filePath),
             Expandable = false,
-            Value = new AssistantAuditTreeItem
-            {
-                Text = Path.GetFileName(filePath),
-                Caption = string.Empty,
-                Icon = this.GetFileIcon(filePath),
-                Expandable = false,
-                IsComponent = false,
-            },
-        };
-    }
+            IsComponent = false,
+        },
+    };
 
-    private string GetFileIcon(string filePath)
+    private static string GetFileIcon(string filePath)
     {
         var extension = Path.GetExtension(filePath);
         return extension.ToLowerInvariant() switch
@@ -376,7 +370,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     /// <summary>
     /// Falls back to public instance properties for simple DTO-style values such as dropdown items.
-    /// Getter failures are treated defensively so the audit dialog never crashes because of a problematic property.
+    /// Getter failures are treated defensively, so the audit dialog never crashes because of a problematic property.
     /// </summary>
     private List<TreeItemData<ITreeItem>> CreateObjectChildren(object value, int depth)
     {

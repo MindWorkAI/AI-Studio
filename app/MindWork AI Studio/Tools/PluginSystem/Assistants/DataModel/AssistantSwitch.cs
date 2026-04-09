@@ -17,13 +17,13 @@ public sealed class AssistantSwitch : StatefulAssistantComponentBase
 
     public bool Value
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Value), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Value));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.Value), value);
     }
     
     public bool Disabled
     {
-        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Disabled), false);
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.Disabled));
         set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.Disabled), value);
     }
     
@@ -91,19 +91,19 @@ public sealed class AssistantSwitch : StatefulAssistantComponentBase
 
     public override void InitializeState(AssistantState state)
     {
-        if (!state.Bools.ContainsKey(this.Name))
-            state.Bools[this.Name] = this.Value;
+        if (!state.Booleans.ContainsKey(this.Name))
+            state.Booleans[this.Name] = this.Value;
     }
 
     public override string UserPromptFallback(AssistantState state)
     {
-        state.Bools.TryGetValue(this.Name, out var userDecision);
+        state.Booleans.TryGetValue(this.Name, out var userDecision);
         return this.BuildAuditPromptBlock(userDecision.ToString());
     }
 
     #endregion
 
-    public MudBlazor.Color GetColor(string colorString) => Enum.TryParse<Color>(colorString, out var color) ? color : MudBlazor.Color.Inherit;
+    public static Color GetColor(string colorString) => Enum.TryParse<Color>(colorString, out var color) ? color : Color.Inherit;
     public Placement GetLabelPlacement() => Enum.TryParse<Placement>(this.LabelPlacement, out var placement) ? placement : Placement.Right;
     public string GetIconSvg() => MudBlazorIconRegistry.TryGetSvg(this.Icon, out var svg) ? svg : string.Empty;
 }
