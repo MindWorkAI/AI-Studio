@@ -23,16 +23,19 @@ public partial class SelectFile : MSGComponentBase
     public string FileDialogTitle { get; set; } = "Select File";
     
     [Parameter]
-    public FileTypeFilter? Filter { get; set; }
+    public FileTypeFilter[]? Filter { get; set; }
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
+    
+    [Parameter]
+    public bool IsClearable { get; set; } = false;
 
     [Inject]
     public RustService RustService { get; set; } = null!;
     
     [Inject]
-    protected ILogger<SelectDirectory> Logger { get; init; } = null!;
+    protected ILogger<SelectFile> Logger { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     

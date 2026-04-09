@@ -17,13 +17,13 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
     }
     
-    public async Task<FileSelectionResponse> SelectFile(string title, FileTypeFilter? filter = null, string? initialFile = null)
+    public async Task<FileSelectionResponse> SelectFile(string title, FileTypeFilter[]? filter = null, string? initialFile = null)
     {
         var payload = new SelectFileOptions
         {
             Title = title,
             PreviousFile = initialFile is null ? null : new (initialFile),
-            Filter = filter
+            Filter = FileTypes.AsOneFileType(filter)
         };
 
         var result = await this.http.PostAsJsonAsync("/select/file", payload, this.jsonRustSerializerOptions);
@@ -36,13 +36,13 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<FileSelectionResponse>(this.jsonRustSerializerOptions);
     }
 
-    public async Task<FilesSelectionResponse> SelectFiles(string title, FileTypeFilter? filter = null, string? initialFile = null)
+    public async Task<FilesSelectionResponse> SelectFiles(string title, FileTypeFilter[]? filter = null, string? initialFile = null)
     {
         var payload = new SelectFileOptions
         {
             Title = title,
             PreviousFile = initialFile is null ? null : new (initialFile),
-            Filter = filter
+            Filter = FileTypes.AsOneFileType(filter)
         };
 
         var result = await this.http.PostAsJsonAsync("/select/files", payload, this.jsonRustSerializerOptions);
@@ -63,13 +63,13 @@ public sealed partial class RustService
     /// <param name="initialFile">An optional initial file path to pre-fill in the dialog.</param>
     /// <returns>A <see cref="FileSaveResponse"/> object containing information about whether the user canceled the
     /// operation and whether the select operation was successful.</returns>
-    public async Task<FileSaveResponse> SaveFile(string title, FileTypeFilter? filter = null, string? initialFile = null)
+    public async Task<FileSaveResponse> SaveFile(string title, FileTypeFilter[]? filter = null, string? initialFile = null)
     {
         var payload = new SaveFileOptions
         {
             Title = title,
             PreviousFile = initialFile is null ? null : new (initialFile),
-            Filter = filter
+            Filter = FileTypes.AsOneFileType(filter)
         };
         
         var result = await this.http.PostAsJsonAsync("/save/file", payload, this.jsonRustSerializerOptions);
@@ -81,4 +81,21 @@ public sealed partial class RustService
         
         return await result.Content.ReadFromJsonAsync<FileSaveResponse>(this.jsonRustSerializerOptions);
     }
+
+    public async Task<TokenizerUploadResponse> ValidateAndStoreTokenizer(string? modelId, string filePath)
+    {
+        var result = await this.http.PostAsJsonAsync("/tokenizer/val-and-store", new {
+            model_id = modelId,
+            file_path = filePath,
+        }, this.jsonRustSerializerOptions);
+
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to validate and store the tokenizer '{result.StatusCode}'");
+            return new TokenizerUploadResponse(-1, "An error occured while validating and storing the tokenizer");
+        }
+
+        return await result.Content.ReadFromJsonAsync<TokenizerUploadResponse>(this.jsonRustSerializerOptions);
+    }
+    
 }

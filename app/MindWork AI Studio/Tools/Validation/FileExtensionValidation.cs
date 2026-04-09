@@ -43,8 +43,7 @@ public static class FileExtensionValidation
     /// <returns>True if valid, false if invalid (error/warning already sent via MessageBus).</returns>
     public static async Task<bool> IsExtensionValidWithNotifyAsync(UseCase useCae, string filePath, bool validateMediaFileTypes = true, Settings.Provider? provider = null)
     {
-        var ext = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
-        if(FileTypeFilter.Executables.FilterExtensions.Contains(ext))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.EXECUTABLES))
         {
             await MessageBus.INSTANCE.SendError(new(
                 Icons.Material.Filled.AppBlocking,
@@ -53,7 +52,7 @@ public static class FileExtensionValidation
         }
 
         var capabilities = provider?.GetModelCapabilities() ?? new();
-        if (FileTypeFilter.AllImages.FilterExtensions.Contains(ext))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
         {
             switch (useCae)
             {
@@ -88,7 +87,7 @@ public static class FileExtensionValidation
             }
         }
 
-        if(FileTypeFilter.AllVideos.FilterExtensions.Contains(ext))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.FeaturedVideo,
@@ -96,7 +95,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if(FileTypeFilter.AllAudio.FilterExtensions.Contains(ext))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.AudioFile,
@@ -123,7 +122,7 @@ public static class FileExtensionValidation
             return false;
         }
 
-        if (!Array.Exists(FileTypeFilter.AllImages.FilterExtensions, x => x.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
         {
             await MessageBus.INSTANCE.SendError(new(
                 Icons.Material.Filled.ImageNotSupported,
