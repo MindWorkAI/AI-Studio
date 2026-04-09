@@ -24,7 +24,7 @@ else
                 case TreeItemData treeItem:
                     @if (treeItem.Type is TreeItemType.LOADING)
                     {
-                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@false" Items="@treeItem.Children!">
+                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@false" Items="@(treeItem.Children!)">
                             <BodyContent>
                                 <MudSkeleton Width="85%" Height="22px"/>
                             </BodyContent>
@@ -32,7 +32,7 @@ else
                     }
                     else if (treeItem.Type is TreeItemType.CHAT)
                     {
-                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@treeItem.Children!" OnClick="@(() => this.LoadChatAsync(treeItem.Path, true))">
+                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@(treeItem.Children!)" OnClick="@(() => this.LoadChatAsync(treeItem.Path, true))">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudText Style="justify-self: start;">
@@ -65,7 +65,7 @@ else
                     }
                     else if (treeItem.Type is TreeItemType.WORKSPACE)
                     {
-                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@treeItem.Children!" OnClick="@(() => this.OnWorkspaceClicked(treeItem))">
+                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@(treeItem.Children!)" OnClick="@(() => this.OnWorkspaceClicked(treeItem))">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudText Style="justify-self: start;">
@@ -86,7 +86,7 @@ else
                     }
                     else
                     {
-                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@treeItem.Children!">
+                        <MudTreeViewItem T="ITreeItem" Icon="@treeItem.Icon" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@(treeItem.Children!)">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudText Style="justify-self: start;">
