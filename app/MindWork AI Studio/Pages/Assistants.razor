@@ -1,6 +1,7 @@
+@attribute [Route(Routes.ASSISTANTS)]
 @using AIStudio.Dialogs.Settings
 @using AIStudio.Settings.DataModel
-@attribute [Route(Routes.ASSISTANTS)]
+@using AIStudio.Tools.PluginSystem.Assistants
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -27,6 +28,29 @@
                 <AssistantBlock TSettings="SettingsDialogGrammarSpelling" Component="Components.GRAMMAR_SPELLING_ASSISTANT" Name="@T("Grammar & Spelling")" Description="@T("Check grammar and spelling of a given text.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
                 <AssistantBlock TSettings="SettingsDialogRewrite" Component="Components.REWRITE_ASSISTANT" Name="@T("Rewrite & Improve")" Description="@T("Rewrite and improve a given text for a chosen style.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
                 <AssistantBlock TSettings="SettingsDialogSynonyms" Component="Components.SYNONYMS_ASSISTANT" Name="@T("Synonyms")" Description="@T("Find synonyms for a given word or phrase.")" Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
+            </MudStack>
+        }
+
+        @if (this.AssistantPlugins.Count > 0)
+        {
+            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
+                @T("Installed Assistants")
+            </MudText>
+            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+                @foreach (var assistantPlugin in this.AssistantPlugins)
+                {
+                    var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+                    <AssistantBlock TSettings="NoSettingsPanel"
+                                    Name="@T(assistantPlugin.AssistantTitle)"
+                                    Description="@T(assistantPlugin.Description)"
+                                    Icon="@Icons.Material.Filled.FindInPage"
+                                    Disabled="@(!securityState.CanStartAssistant)"
+                                    Link="@($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}")">
+                        <SecurityBadge>
+                            <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
+                        </SecurityBadge>
+                    </AssistantBlock>
+                }
             </MudStack>
         }
 

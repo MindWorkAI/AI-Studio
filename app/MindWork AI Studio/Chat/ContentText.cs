@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
 

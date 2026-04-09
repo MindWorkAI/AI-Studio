@@ -24,6 +24,7 @@ public static class ComponentsExtensions
         Components.AGENT_TEXT_CONTENT_CLEANER => false,
         Components.AGENT_DATA_SOURCE_SELECTION => false,
         Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
+        Components.AGENT_ASSISTANT_PLUGIN_AUDIT => false,
         
         _ => true,
     };
@@ -130,6 +131,7 @@ public static class ComponentsExtensions
             Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : null,
             Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : null,
             Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : null,
+            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider),
 
             _ => Settings.Provider.NONE,
         };
