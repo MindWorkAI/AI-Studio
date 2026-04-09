@@ -80,12 +80,13 @@ public sealed record DataMandatoryInfo
             return false;
         }
 
+        var normalizedMarkdown = AIStudio.Tools.Markdown.RemoveSharedIndentation(markdown);
         mandatoryInfo = new DataMandatoryInfo
         {
             Id = id.ToString(),
             Title = title,
             VersionText = versionText,
-            Markdown = markdown,
+            Markdown = normalizedMarkdown,
             AcceptButtonText = acceptButtonText,
             RejectButtonText = rejectButtonText,
             EnterpriseConfigurationPluginId = configPluginId,
