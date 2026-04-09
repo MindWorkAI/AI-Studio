@@ -1,4 +1,5 @@
 using Markdig;
+using System.Text;
 
 namespace AIStudio.Tools;
 
@@ -32,51 +33,117 @@ public static class Markdown
         if (string.IsNullOrWhiteSpace(value))
             return string.Empty;
 
-        var normalized = value.Replace("\r\n", "\n");
-        var lines = normalized.Split('\n');
+        return RemoveSharedIndentation(value.AsSpan());
+    }
 
-        var firstContentLine = 0;
-        while (firstContentLine < lines.Length && string.IsNullOrWhiteSpace(lines[firstContentLine]))
-            firstContentLine++;
-
-        var lastContentLine = lines.Length - 1;
-        while (lastContentLine >= firstContentLine && string.IsNullOrWhiteSpace(lines[lastContentLine]))
-            lastContentLine--;
-
-        if (firstContentLine > lastContentLine)
-            return string.Empty;
-
+    private static string RemoveSharedIndentation(ReadOnlySpan<char> value)
+    {
+        var firstContentLineStart = -1;
+        var lastContentLineStart = -1;
+        var lastContentLineEnd = -1;
         var commonIndentation = int.MaxValue;
-        for (var i = firstContentLine; i <= lastContentLine; i++)
+        var position = 0;
+
+        while (TryGetNextLine(value, position, out var lineStart, out var currentLineEnd, out var nextPosition))
         {
-            var line = lines[i];
-            if (string.IsNullOrWhiteSpace(line))
+            var lineContent = value[lineStart..currentLineEnd];
+            if (IsWhiteSpace(lineContent))
+            {
+                position = nextPosition;
                 continue;
+            }
 
-            var indentation = 0;
-            while (indentation < line.Length && char.IsWhiteSpace(line[indentation]))
-                indentation++;
+            if (firstContentLineStart < 0)
+                firstContentLineStart = lineStart;
 
-            commonIndentation = Math.Min(commonIndentation, indentation);
+            lastContentLineStart = lineStart;
+            lastContentLineEnd = currentLineEnd;
+            commonIndentation = Math.Min(commonIndentation, CountIndentation(lineContent));
+            position = nextPosition;
         }
+
+        if (firstContentLineStart < 0)
+            return string.Empty;
 
         if (commonIndentation == int.MaxValue)
             commonIndentation = 0;
 
-        for (var i = firstContentLine; i <= lastContentLine; i++)
+        var builder = new StringBuilder(lastContentLineEnd - firstContentLineStart);
+        var shouldAppendLineBreak = false;
+        position = firstContentLineStart;
+        
+        while (TryGetNextLine(value, position, out var lineStart, out var lineEnd, out var nextPosition))
         {
-            var line = lines[i];
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                lines[i] = string.Empty;
-                continue;
-            }
+            var lineContent = value[lineStart..lineEnd];
 
-            lines[i] = line.Length <= commonIndentation
-                ? string.Empty
-                : line[commonIndentation..];
+            if (shouldAppendLineBreak)
+                builder.Append('\n');
+
+            if (IsWhiteSpace(lineContent))
+                shouldAppendLineBreak = true;
+            else if (lineContent.Length > commonIndentation)
+            {
+                builder.Append(lineContent[commonIndentation..]);
+                shouldAppendLineBreak = true;
+            }
+            else
+                shouldAppendLineBreak = true;
+
+            if (lineStart == lastContentLineStart)
+                break;
+
+            position = nextPosition;
         }
 
-        return string.Join('\n', lines[firstContentLine..(lastContentLine + 1)]);
+        return builder.ToString();
+    }
+
+    private static bool IsWhiteSpace(ReadOnlySpan<char> value)
+    {
+        foreach (var character in value)
+        {
+            if (!char.IsWhiteSpace(character))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static int CountIndentation(ReadOnlySpan<char> value)
+    {
+        var indentation = 0;
+        while (indentation < value.Length && char.IsWhiteSpace(value[indentation]))
+            indentation++;
+
+        return indentation;
+    }
+
+    private static bool TryGetNextLine(ReadOnlySpan<char> value, int position, out int lineStart, out int lineEnd, out int nextPosition)
+    {
+        if (position > value.Length)
+        {
+            lineStart = 0;
+            lineEnd = 0;
+            nextPosition = position;
+            return false;
+        }
+
+        lineStart = position;
+        for (var i = position; i < value.Length; i++)
+        {
+            if (value[i] != '\n')
+                continue;
+
+            lineEnd = i > lineStart && value[i - 1] == '\r'
+                ? i - 1
+                : i;
+
+            nextPosition = i + 1;
+            return true;
+        }
+
+        lineEnd = value.Length;
+        nextPosition = value.Length + 1;
+        return true;
     }
 }
