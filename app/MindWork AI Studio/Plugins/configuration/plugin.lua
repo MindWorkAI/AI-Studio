@@ -266,6 +266,30 @@ CONFIG["CHAT_TEMPLATES"] = {}
 -- Document analysis policies for this configuration:
 CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 
+-- Mandatory infos that users must explicitly accept before using AI Studio:
+CONFIG["MANDATORY_INFOS"] = {}
+
+-- An example mandatory info:
+-- CONFIG["MANDATORY_INFOS"][#CONFIG["MANDATORY_INFOS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Title"] = "AI Usage Requirements",
+--     ["Version"] = "1",
+--     ["Markdown"] = [===[
+--                         ## Usage Requirements
+--
+--                         Before using this AI offering, please ensure that:
+--
+--                         - you have completed the required internal training,
+--                         - generated output is clearly labeled where necessary,
+--                         - results are reviewed by a human before reuse,
+--                         - all internal policies and applicable law are followed.
+--
+--                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===],
+--     ["AcceptButtonText"] = "Yes, I comply with these requirements",
+--     ["RejectButtonText"] = "Stop. I do not agree to these requirements"
+-- }
+
 -- An example document analysis policy:
 -- CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
 --     ["Id"] = "00000000-0000-0000-0000-000000000000",

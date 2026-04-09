@@ -727,6 +727,13 @@ pub struct ShortcutResponse {
     error_message: String,
 }
 
+/// Response for application exit requests.
+#[derive(Serialize)]
+pub struct AppExitResponse {
+    success: bool,
+    error_message: String,
+}
+
 /// Internal helper function to register a shortcut with its callback.
 /// This is used by both `register_shortcut` and `resume_shortcuts` to
 /// avoid code duplication.
@@ -753,6 +760,34 @@ fn register_shortcut_with_callback(
         Ok(_) => Ok(()),
         Err(e) => Err(e.into()),
     }
+}
+
+/// Requests a controlled shutdown of the entire desktop application.
+#[post("/app/exit")]
+pub fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot exit app: main window not available.");
+            return Json(AppExitResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let app_handle = main_window.app_handle();
+    info!(Source = "Tauri"; "Controlled app exit was requested by the UI.");
+    tauri::async_runtime::spawn(async move {
+        time::sleep(Duration::from_millis(50)).await;
+        app_handle.exit(0);
+    });
+
+    Json(AppExitResponse {
+        success: true,
+        error_message: String::new(),
+    })
 }
 
 /// Registers or updates a global shortcut. If the shortcut string is empty,

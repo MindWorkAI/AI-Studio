@@ -53,6 +53,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private UpdateResponse? currentUpdateResponse;
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
+    private bool startupCompleted;
+    private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
     
@@ -91,8 +93,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_ERROR, Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM,
-            Event.PLUGINS_RELOADED, Event.INSTALL_UPDATE,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED,
         ]);
         
         // Set the snackbar for the update service:
@@ -174,6 +176,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     await this.UpdateThemeConfiguration();
                     this.LoadNavItems();
                     this.StateHasChanged();
+                    if (this.startupCompleted)
+                        _ = this.EnsureMandatoryInfosAcceptedAsync();
                     break;
 
                 case Event.COLOR_THEME_CHANGED:
@@ -261,6 +265,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     this.LoadNavItems();
 
                     await this.InvokeAsync(this.StateHasChanged);
+                    if (this.startupCompleted)
+                        _ = this.EnsureMandatoryInfosAcceptedAsync();
+                    break;
+
+                case Event.STARTUP_COMPLETED:
+                    this.startupCompleted = true;
+                    _ = this.EnsureMandatoryInfosAcceptedAsync();
                     break;
             }
         });
@@ -368,12 +379,87 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
     }
+
+    private async Task EnsureMandatoryInfosAcceptedAsync()
+    {
+        if (!await this.mandatoryInfoDialogSemaphore.WaitAsync(0))
+            return;
+
+        try
+        {
+            while (true)
+            {
+                var pendingInfos = this.GetPendingMandatoryInfos().ToList();
+                if (pendingInfos.Count == 0)
+                    return;
+
+                foreach (var info in pendingInfos)
+                {
+                    var wasAccepted = await this.ShowMandatoryInfoDialog(info);
+                    if (!wasAccepted)
+                    {
+                        await this.RustService.ExitApplication();
+                        return;
+                    }
+
+                    await this.StoreMandatoryInfoAcceptance(info);
+                }
+            }
+        }
+        finally
+        {
+            this.mandatoryInfoDialogSemaphore.Release();
+        }
+    }
+
+    private IEnumerable<DataMandatoryInfo> GetPendingMandatoryInfos()
+    {
+        return PluginFactory.GetMandatoryInfos()
+            .Where(info =>
+            {
+                var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
+                return acceptance is null || acceptance.AcceptedVersion != info.VersionText;
+            });
+    }
+
+    private async Task<bool> ShowMandatoryInfoDialog(DataMandatoryInfo info)
+    {
+        var dialogParameters = new DialogParameters<MandatoryInfoDialog>
+        {
+            { x => x.Info, info },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<MandatoryInfoDialog>(null, dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false, Data: true };
+    }
+
+    private async Task StoreMandatoryInfoAcceptance(DataMandatoryInfo info)
+    {
+        var acceptances = this.SettingsManager.ConfigurationData.MandatoryInformation.Acceptances;
+        var acceptance = new DataMandatoryInfoAcceptance
+        {
+            InfoId = info.Id,
+            AcceptedVersion = info.VersionText,
+            AcceptedAtUtc = DateTimeOffset.UtcNow,
+            EnterpriseConfigurationPluginId = info.EnterpriseConfigurationPluginId,
+        };
+
+        var existingIndex = acceptances.FindIndex(item => item.InfoId == info.Id);
+        if (existingIndex >= 0)
+            acceptances[existingIndex] = acceptance;
+        else
+            acceptances.Add(acceptance);
+
+        await this.SettingsManager.StoreSettings();
+    }
     
     #region Implementation of IDisposable
 
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
+        this.mandatoryInfoDialogSemaphore.Dispose();
     }
 
     #endregion

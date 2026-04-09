@@ -1,0 +1,42 @@
+@inherits MSGComponentBase
+
+<MudStack Spacing="2">
+    @if (this.ShowTitle)
+    {
+        <MudText Typo="Typo.h4">@this.Info.Title</MudText>
+    }
+
+    <MudText Typo="Typo.body2">
+        @T("Version"): @this.Info.VersionText
+    </MudText>
+
+    @if (this.ShowAcceptanceMetadata)
+    {
+        @if (this.Acceptance is null)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
+                @T("This mandatory info has not been accepted yet.")
+            </MudAlert>
+        }
+        else if (!string.Equals(this.Acceptance.AcceptedVersion, this.Info.VersionText, StringComparison.Ordinal))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
+                @T("The current version has not been accepted yet.")
+                <br />
+                @T("Last accepted version"): @this.Acceptance.AcceptedVersion
+                <br />
+                @T("Accepted at (UTC)"): @this.Acceptance.AcceptedAtUtc.UtcDateTime.ToString("u")
+            </MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="@true">
+                @T("Accepted version"): @this.Acceptance.AcceptedVersion
+                <br />
+                @T("Accepted at (UTC)"): @this.Acceptance.AcceptedAtUtc.UtcDateTime.ToString("u")
+            </MudAlert>
+        }
+    }
+
+    <MudMarkdown Value="@this.Info.Markdown" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+</MudStack>
