@@ -11,9 +11,9 @@ public abstract partial class PluginBase : IPluginMetadata
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
     
     private readonly IReadOnlyCollection<string> baseIssues;
-    protected readonly LuaState state;
+    protected readonly LuaState State;
 
-    protected readonly List<string> pluginIssues = [];
+    protected readonly List<string> PluginIssues = [];
 
     /// <inheritdoc />
     public string IconSVG { get; }
@@ -65,7 +65,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <summary>
     /// The issues that occurred during the initialization of this plugin.
     /// </summary>
-    public IEnumerable<string> Issues => this.baseIssues.Concat(this.pluginIssues);
+    public IEnumerable<string> Issues => this.baseIssues.Concat(this.PluginIssues);
     
     /// <summary>
     /// True, when the plugin is valid.
@@ -74,11 +74,11 @@ public abstract partial class PluginBase : IPluginMetadata
     /// False means that there were issues during the initialization of the plugin.
     /// Please check the Issues property for more information.
     /// </remarks>
-    public bool IsValid => this is not NoPlugin && this.baseIssues.Count == 0 && this.pluginIssues.Count == 0;
+    public bool IsValid => this is not NoPlugin && this.baseIssues.Count == 0 && this.PluginIssues.Count == 0;
 
     protected PluginBase(bool isInternal, LuaState state, PluginType type, string parseError = "")
     {
-        this.state = state;
+        this.State = state;
         this.Type = type;
         
         var issues = new List<string>();
@@ -160,7 +160,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the ID could be read successfully.</returns>
     private bool TryInitId(out string message, out Guid id) 
     {
-        if (!this.state.Environment["ID"].TryRead<string>(out var idText))
+        if (!this.State.Environment["ID"].TryRead<string>(out var idText))
         {
             message = TB("The field ID does not exist or is not a valid string.");
             id = Guid.Empty;
@@ -192,7 +192,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the name could be read successfully.</returns>
     private bool TryInitName(out string message, out string name)
     {
-        if (!this.state.Environment["NAME"].TryRead(out name))
+        if (!this.State.Environment["NAME"].TryRead(out name))
         {
             message = TB("The field NAME does not exist or is not a valid string.");
             name = string.Empty;
@@ -217,7 +217,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the description could be read successfully.</returns>
     private bool TryInitDescription(out string message, out string description)
     {
-        if (!this.state.Environment["DESCRIPTION"].TryRead(out description))
+        if (!this.State.Environment["DESCRIPTION"].TryRead(out description))
         {
             message = TB("The field DESCRIPTION does not exist or is not a valid string.");
             description = string.Empty;
@@ -242,7 +242,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the version could be read successfully.</returns>
     private bool TryInitVersion(out string message, out PluginVersion version)
     {
-        if (!this.state.Environment["VERSION"].TryRead<string>(out var versionText))
+        if (!this.State.Environment["VERSION"].TryRead<string>(out var versionText))
         {
             message = TB("The field VERSION does not exist or is not a valid string.");
             version = PluginVersion.NONE;
@@ -274,7 +274,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the authors could be read successfully.</returns>
     private bool TryInitAuthors(out string message, out string[] authors)
     {
-        if (!this.state.Environment["AUTHORS"].TryRead<LuaTable>(out var authorsTable))
+        if (!this.State.Environment["AUTHORS"].TryRead<LuaTable>(out var authorsTable))
         {
             authors = [];
             message = TB("The table AUTHORS does not exist or is using an invalid syntax.");
@@ -305,7 +305,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the support contact could be read successfully.</returns>
     private bool TryInitSupportContact(out string message, out string contact)
     {
-        if (!this.state.Environment["SUPPORT_CONTACT"].TryRead(out contact))
+        if (!this.State.Environment["SUPPORT_CONTACT"].TryRead(out contact))
         {
             contact = string.Empty;
             message = TB("The field SUPPORT_CONTACT does not exist or is not a valid string.");
@@ -330,7 +330,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the source URL could be read successfully.</returns>
     private bool TryInitSourceURL(out string message, out string url)
     {
-        if (!this.state.Environment["SOURCE_URL"].TryRead(out url))
+        if (!this.State.Environment["SOURCE_URL"].TryRead(out url))
         {
             url = string.Empty;
             message = TB("The field SOURCE_URL does not exist or is not a valid string.");
@@ -395,7 +395,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the categories could be read successfully.</returns>
     private bool TryInitCategories(out string message, out PluginCategory[] categories)
     {
-        if (!this.state.Environment["CATEGORIES"].TryRead<LuaTable>(out var categoriesTable))
+        if (!this.State.Environment["CATEGORIES"].TryRead<LuaTable>(out var categoriesTable))
         {
             categories = [];
             message = TB("The table CATEGORIES does not exist or is using an invalid syntax.");
@@ -427,7 +427,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the target groups could be read successfully.</returns>
     private bool TryInitTargetGroups(out string message, out PluginTargetGroup[] targetGroups)
     {
-        if (!this.state.Environment["TARGET_GROUPS"].TryRead<LuaTable>(out var targetGroupsTable))
+        if (!this.State.Environment["TARGET_GROUPS"].TryRead<LuaTable>(out var targetGroupsTable))
         {
             targetGroups = [];
             message = TB("The table TARGET_GROUPS does not exist or is using an invalid syntax.");
@@ -459,7 +459,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the maintenance status could be read successfully.</returns>
     private bool TryInitIsMaintained(out string message, out bool isMaintained)
     {
-        if (!this.state.Environment["IS_MAINTAINED"].TryRead(out isMaintained))
+        if (!this.State.Environment["IS_MAINTAINED"].TryRead(out isMaintained))
         {
             isMaintained = false;
             message = TB("The field IS_MAINTAINED does not exist or is not a valid boolean.");
@@ -478,7 +478,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the deprecation message could be read successfully.</returns>
     private bool TryInitDeprecationMessage(out string message, out string deprecationMessage)
     {
-        if (!this.state.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
+        if (!this.State.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
         {
             deprecationMessage = string.Empty;
             message = TB("The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.");
@@ -497,7 +497,7 @@ public abstract partial class PluginBase : IPluginMetadata
     /// <returns>True, when the UI text content could be read successfully.</returns>
     protected bool TryInitUITextContent(out string message, out Dictionary<string, string> pluginContent)
     {
-        if (!this.state.Environment["UI_TEXT_CONTENT"].TryRead<LuaTable>(out var textTable))
+        if (!this.State.Environment["UI_TEXT_CONTENT"].TryRead<LuaTable>(out var textTable))
         {
             message = TB("The UI_TEXT_CONTENT table does not exist or is not a valid table.");
             pluginContent = [];

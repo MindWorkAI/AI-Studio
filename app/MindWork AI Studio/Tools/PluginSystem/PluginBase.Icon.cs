@@ -23,7 +23,7 @@ public abstract partial class PluginBase
     // ReSharper disable once UnusedMethodReturnValue.Local
     private bool TryInitIconSVG(out string message, out string iconSVG)
     {
-        if (!this.state.Environment["ICON_SVG"].TryRead(out iconSVG))
+        if (!this.State.Environment["ICON_SVG"].TryRead(out iconSVG))
         {
             iconSVG = DEFAULT_ICON_SVG;
             message = "The field ICON_SVG does not exist or is not a valid string.";
