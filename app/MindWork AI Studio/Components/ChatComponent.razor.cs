@@ -94,7 +94,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Apply template's file attachments, if any:
         foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment);
+            this.chatDocumentPaths.Add(attachment.Normalize());
 
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -392,7 +392,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Apply template's file attachments (replaces existing):
         this.chatDocumentPaths.Clear();
         foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment);
+            this.chatDocumentPaths.Add(attachment.Normalize());
 
         if(this.ChatThread is null)
             return;
@@ -538,10 +538,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
         {
+            var normalizedAttachments = this.chatDocumentPaths
+                .Select(attachment => attachment.Normalize())
+                .Where(attachment => attachment.IsValid)
+                .ToList();
+
             lastUserPrompt = new ContentText
             {
                 Text = this.userInput,
-                FileAttachments = [..this.chatDocumentPaths.Where(x => x.IsValid)],
+                FileAttachments = normalizedAttachments,
             };
 
             //
@@ -764,7 +769,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Apply template's file attachments:
         this.chatDocumentPaths.Clear();
         foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment);
+            this.chatDocumentPaths.Add(attachment.Normalize());
 
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();

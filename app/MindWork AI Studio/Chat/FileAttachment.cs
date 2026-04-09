@@ -54,6 +54,11 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     public bool Exists => File.Exists(this.FilePath);
 
     /// <summary>
+    /// Rebuilds the attachment from its current file path so file type detection uses the latest rules.
+    /// </summary>
+    public FileAttachment Normalize() => FromPath(this.FilePath);
+
+    /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,
     /// extracting the filename, and reading the file size.
     /// </summary>
