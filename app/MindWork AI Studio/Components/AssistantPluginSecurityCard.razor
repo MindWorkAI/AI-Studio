@@ -1,0 +1,203 @@
+@using AIStudio.Agents.AssistantAudit
+@inherits MSGComponentBase
+
+@if (this.Plugin is not null)
+{
+    var state = this.SecurityState;
+
+    <div class="d-flex">
+        <MudTooltip Text="@state.ActionLabel" Placement="Placement.Top">
+            <MudIconButton Icon="@state.BadgeIcon"
+                           Color="@state.AuditColor"
+                           Size="@(this.Compact ? Size.Small : Size.Medium)"
+                           OnClick="@this.ToggleSecurityCard" />
+        </MudTooltip>
+
+        <MudPopover Open="@this.showSecurityCard"
+                    AnchorOrigin="Origin.BottomRight"
+                    TransformOrigin="Origin.BottomLeft"
+                    OverflowBehavior="OverflowBehavior.FlipAlways"
+                    DropShadow="@true"
+                    Class="border-solid border-4 rounded-lg"
+                    Style="@this.GetPopoverStyle()">
+            <MudCard Elevation="2" Outlined Style="max-width: min(42rem, 90vw);">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="@state.AuditColor" Variant="Variant.Filled" Size="Size.Large">
+                            <MudIcon Icon="@state.AuditIcon" Size="Size.Medium" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo="Typo.h6">@T("Assistant Security")</MudText>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.AuditColor">
+                                @state.AuditLabel
+                            </MudChip>
+                            @if (!string.IsNullOrWhiteSpace(state.AvailabilityLabel))
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@state.AvailabilityColor" Icon="@state.AvailabilityIcon">
+                                    @state.AvailabilityLabel
+                                </MudChip>
+                            }
+                        </div>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                            @state.Headline
+                        </MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTooltip Text="@T("Show or hide the detailed security information.")">
+                            <MudIconButton Icon="@Icons.Material.Filled.ExpandMore" OnClick="@this.ToggleDetails" />
+                        </MudTooltip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+
+                <MudCardContent Class="pt-0 pb-2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4" Class="flex-wrap">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                            <MudText Typo="Typo.body2">@T("Confidence"):</MudText>
+                            <MudProgressLinear Color="@state.AuditColor"
+                                               Value="@this.GetConfidencePercentage()"
+                                               Rounded="@true"
+                                               Size="Size.Medium"
+                                               Style="width: 80px; min-width: 80px;" />
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @this.GetConfidenceLabel()
+                            </MudText>
+                        </MudStack>
+                        <MudDivider Vertical="@true" FlexItem="@true" />
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.BugReport" Size="Size.Small" Color="@state.AuditColor" />
+                            <MudText Typo="Typo.body2">@this.GetFindingSummary()</MudText>
+                        </MudStack>
+                        <MudDivider Vertical="@true" FlexItem="@true" />
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                @this.GetAuditTimestampLabel()
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+
+                <MudCollapse Expanded="@this.showDetails">
+                    <MudDivider />
+                    <MudCardContent>
+                        <MudStack Spacing="3">
+                            <MudAlert Severity="@this.GetStatusSeverity()" Variant="Variant.Outlined" Dense="@true">
+                                @state.Description
+                            </MudAlert>
+
+                            <MudPaper Outlined="true" Class="pa-2">
+                                <div class="d-flex align-center justify-space-between gap-2">
+                                    <MudText Typo="Typo.subtitle2">@T("Technical Details")</MudText>
+                                    <MudIconButton Icon="@(this.showMetadata ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                                   Size="Size.Small"
+                                                   OnClick="@this.ToggleMetadata" />
+                                </div>
+                                <MudCollapse Expanded="@this.showMetadata">
+                                    <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width: 180px;">
+                                                    <MudText Typo="Typo.body2"><b>@T("Plugin ID")</b></MudText>
+                                                </td>
+                                                <td><code style="font-size: 0.8rem;">@this.Plugin.Id</code></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <MudText Typo="Typo.body2"><b>@T("Current hash")</b></MudText>
+                                                </td>
+                                                <td><code style="font-size: 0.8rem;">@GetShortHash(state.CurrentHash)</code></td>
+                                            </tr>
+                                            @if (state.Audit is not null)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audit hash")</b></MudText>
+                                                    </td>
+                                                    <td><code style="font-size: 0.8rem;">@GetShortHash(state.Audit.PluginHash)</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audit provider")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@this.GetAuditProviderLabel()</MudText></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audited at")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@this.FormatFileTimestamp(state.Audit.AuditedAtUtc.ToLocalTime().DateTime)</MudText></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Audit level")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@state.AuditLabel</MudText></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Availability")</b></MudText>
+                                                    </td>
+                                                    <td><MudText Typo="Typo.body2">@state.AvailabilityLabel</MudText></td>
+                                                </tr>
+                                            }
+                                            <tr>
+                                                <td>
+                                                    <MudText Typo="Typo.body2"><b>@T("Required minimum")</b></MudText>
+                                                </td>
+                                                <td><MudText Typo="Typo.body2">@state.Settings.MinimumLevel.GetName()</MudText></td>
+                                            </tr>
+                                        </tbody>
+                                    </MudSimpleTable>
+                                </MudCollapse>
+                            </MudPaper>
+
+                            @if (state.Audit is null)
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="@true">
+                                    @T("No stored audit details are available yet.")
+                                </MudAlert>
+                            }
+                            else if (state.Audit.Findings.Count == 0)
+                            {
+                                <MudAlert Severity="Severity.Success" Variant="Variant.Text" Dense="@true">
+                                    @T("No security findings were stored for this assistant plugin.")
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <div style="max-height: min(22rem, 45vh); overflow-y: auto; padding-right: 0.25rem;">
+                                    <MudStack Spacing="2">
+                                        @foreach (var finding in state.Audit.Findings)
+                                        {
+                                            <MudAlert Severity="@finding.Severity.GetSeverity()" Variant="Variant.Text" Dense="@true">
+                                                <strong>@finding.Category</strong><span>: @finding.Description</span>
+                                                @if (!string.IsNullOrWhiteSpace(finding.Location))
+                                                {
+                                                    <div>
+                                                        <MudText Typo="Typo.caption">@finding.Location</MudText>
+                                                    </div>
+                                                }
+                                            </MudAlert>
+                                        }
+                                    </MudStack>
+                                </div>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCollapse>
+
+                <MudCardActions>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@this.OpenAuditDialogAsync">
+                        @state.ActionLabel
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="@this.HideSecurityCard">
+                        @T("Close")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudPopover>
+    </div>
+}

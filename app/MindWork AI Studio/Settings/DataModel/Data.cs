@@ -1,3 +1,5 @@
+using AIStudio.Tools.PluginSystem.Assistants;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
@@ -57,6 +59,11 @@ public sealed class Data
     public Dictionary<string, ManagedEditableDefaultState> ManagedEditableDefaults { get; set; } = [];
 
     /// <summary>
+    /// Cached audit results for assistant plugins.
+    /// </summary>
+    public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];
+
+    /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;
@@ -114,6 +121,8 @@ public sealed class Data
     public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
     
     public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+
+    public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
     
     public DataAgenda Agenda { get; init; } = new();
     

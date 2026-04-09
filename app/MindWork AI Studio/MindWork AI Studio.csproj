@@ -60,6 +60,11 @@
     <ItemGroup>
       <ProjectReference Include="..\SharedTools\SharedTools.csproj" />
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+      <ProjectReference Include="..\SourceGeneratedMappings\SourceGeneratedMappings.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Plugins\assistants\assets\" />
     </ItemGroup>
 
     <!-- Read the meta data file -->
