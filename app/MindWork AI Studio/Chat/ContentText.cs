@@ -229,11 +229,15 @@ public sealed class ContentText : IContent
 
         if(this.FileAttachments.Count > 0)
         {
+            var normalizedAttachments = this.FileAttachments
+                .Select(attachment => attachment.Normalize())
+                .ToList();
+
             // Get the list of existing documents:
-            var existingDocuments = this.FileAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
+            var existingDocuments = normalizedAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
 
             // Log warning for missing files:
-            var missingDocuments = this.FileAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
+            var missingDocuments = normalizedAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
             if (missingDocuments.Count > 0)
                 foreach (var missingDocument in missingDocuments)
                     LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
@@ -269,7 +273,7 @@ public sealed class ContentText : IContent
                         sb.AppendLine("````");
                     }
                     
-                    var numImages = this.FileAttachments.Count(x => x is { IsImage: true, Exists: true });
+                    var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
                     if (numImages > 0)
                     {
                         sb.AppendLine();
