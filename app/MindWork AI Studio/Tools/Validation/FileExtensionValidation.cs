@@ -103,7 +103,13 @@ public static class FileExtensionValidation
             return false;
         }
 
-        return true;
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
+            return true;
+
+        await MessageBus.INSTANCE.SendWarning(new(
+            Icons.Material.Filled.InsertDriveFile,
+            TB("Unsupported file type")));
+        return false;
     }
 
     /// <summary>

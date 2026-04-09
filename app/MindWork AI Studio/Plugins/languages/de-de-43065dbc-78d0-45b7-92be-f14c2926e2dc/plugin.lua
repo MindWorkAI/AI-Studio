@@ -7311,6 +7311,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T29806295
 -- Images are not supported at this place
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T305247150"] = "Bilder werden an dieser Stelle nicht unterstützt."
 
+-- Unsupported file type
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4041351522"] = "Nicht unterstützter Dateityp"
+
 -- Executables are not allowed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4167762413"] = "Ausführbare Dateien sind nicht erlaubt"
 
