@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace AIStudio.Tools.Rust;
 
@@ -74,7 +75,8 @@ public static class FileTypes
         if (types == null || types.Length == 0)
             return null;
         
-        if (types.Length == 1) return types[0];
+        if (types.Length == 1)
+            return types[0];
 
         return FileTypeFilter.Composite(TB("Custom"), OnlyAllowTypes(types));
     }
@@ -110,17 +112,17 @@ public static class FileTypes
 
         var fileName = Path.GetFileName(filePath);
         if (string.IsNullOrWhiteSpace(fileName))
-        {
             return false;
-        }
 
         if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAMES)))
         { 
-            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName)) return true;
+            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName))
+                return true;
         }
         
         if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAME_PREFIXES))){
-            if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))) return true;
+            if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                return true;
         }
         
         return false;
