@@ -19,5 +19,6 @@ public static class DialogOptions
     {
         BackdropClick = false,
         CloseOnEscapeKey = false,
+        FullWidth = true, MaxWidth = MaxWidth.Medium,
     };
 }
