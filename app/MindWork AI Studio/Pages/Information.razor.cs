@@ -175,7 +175,7 @@ public partial class Information : MSGComponentBase
                 var plugin = this.configPlugins.FirstOrDefault(item => item.Id == info.EnterpriseConfigurationPluginId);
                 var pluginName = plugin?.Name ?? T("Unknown configuration plugin");
                 var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
-                var headerText = $"{pluginName}: {info.Title}";
+                var headerText = $"{T("Consent:")} {info.Title}";
                 return new MandatoryInfoPanelData(headerText, pluginName, info, acceptance);
             })
             .ToList();
