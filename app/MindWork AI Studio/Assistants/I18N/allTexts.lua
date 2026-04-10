@@ -1711,6 +1711,12 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1820166585"] = "Yes, re
 -- Number of sources
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1848978959"] = "Number of sources"
 
+-- Show {0} tool calls
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1981771421"] = "Show {0} tool calls"
+
+-- Show tool call for {0}
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2004842583"] = "Show tool call for {0}"
+
 -- Do you really want to edit this message? In order to edit this message, the AI response will be deleted.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Do you really want to edit this message? In order to edit this message, the AI response will be deleted."
 
@@ -1749,6 +1755,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Remove 
 
 -- No, keep it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "No, keep it"
+
+-- No tool calls
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4224149521"] = "No tool calls"
 
 -- Export Chat to Microsoft Word
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export Chat to Microsoft Word"
@@ -1905,15 +1914,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T252
 
 -- Select a minimum confidence level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2579793544"] = "Select a minimum confidence level"
-
--- You have selected 1 preview feature.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T1384241824"] = "You have selected 1 preview feature."
-
--- No preview features selected.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T2809641588"] = "No preview features selected."
-
--- You have selected {0} preview features.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T3513450626"] = "You have selected {0} preview features."
 
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Preselected provider"
@@ -2614,26 +2614,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T975426229"] = "Export configuration"
 
+-- Settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1258653480"] = "Settings"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1725856265"] = "Description"
+
+-- Icon
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1759955728"] = "Icon"
+
 -- Configure global settings for each tool. Tool defaults for chat and assistants are configured in the corresponding feature settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T176751696"] = "Configure global settings for each tool. Tool defaults for chat and assistants are configured in the corresponding feature settings."
 
--- Configured
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2463440925"] = "Configured"
+-- This tool still needs to be configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1958939818"] = "This tool still needs to be configured."
 
 -- Tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2499909372"] = "Tools"
 
--- Tool
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3517012711"] = "Tool"
+-- Missing required settings: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2588115579"] = "Missing required settings: {0}"
 
--- Actions
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3865031940"] = "Actions"
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T266367750"] = "Name"
 
 -- State
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T502047894"] = "State"
-
--- Configuration required
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T979592518"] = "Configuration required"
 
 -- No transcription provider configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1079350363"] = "No transcription provider configured yet."
@@ -2707,6 +2713,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1908172666"] = "Lic
 -- Tool selection is hidden
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2096103917"] = "Tool selection is hidden"
 
+-- You have selected 1 tool.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2493128368"] = "You have selected 1 tool."
+
 -- Choose which tools should be preselected for new runs of this assistant.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2696618758"] = "Choose which tools should be preselected for new runs of this assistant."
 
@@ -2718,6 +2727,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3384582069"] 
 
 -- Show tool selection in this assistant?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3494508870"] = "Show tool selection in this assistant?"
+
+-- You have selected {0} tools.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3729156356"] = "You have selected {0} tools."
+
+-- No tools selected.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3934845540"] = "No tools selected."
 
 -- Default tools for chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T907403808"] = "Default tools for chat"
@@ -6822,6 +6837,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4174900468"] = "Sources pro
 
 -- Sources provided by the AI
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Sources provided by the AI"
+
+-- Current Weather", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));      public string GetDescription() => I18N.I.T("Use this demo tool to retrieve the current weather for a given city and state. It is primarily meant to demonstrate tool calling and tool settings in AI Studio.", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));      public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         "demoLabel" => I18N.I.T("Demo Label", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Title, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         "demoLabel" => I18N.I.T("Required demo setting for validating tool settings in tests. It does not affect the weather result.", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty("city", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty("state", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty("unit", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not ("celsius" or "fahrenheit
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::GETCURRENTWEATHERTOOL::T1597702905"] = "Current Weather\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));      public string GetDescription() => I18N.I.T(\"Use this demo tool to retrieve the current weather for a given city and state. It is primarily meant to demonstrate tool calling and tool settings in AI Studio.\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));      public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         \"demoLabel\" => I18N.I.T(\"Demo Label\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Title, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         \"demoLabel\" => I18N.I.T(\"Required demo setting for validating tool settings in tests. It does not affect the weather result.\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty(\"city\", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty(\"state\", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty(\"unit\", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not (\"celsius\" or \"fahrenheit"
+
+-- Use this demo tool to retrieve the current weather for a given city and state. It is primarily meant to demonstrate tool calling and tool settings in AI Studio.", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));      public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         "demoLabel" => I18N.I.T("Demo Label", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Title, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         "demoLabel" => I18N.I.T("Required demo setting for validating tool settings in tests. It does not affect the weather result.", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty("city", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty("state", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty("unit", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not ("celsius" or "fahrenheit
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::GETCURRENTWEATHERTOOL::T2152408159"] = "Use this demo tool to retrieve the current weather for a given city and state. It is primarily meant to demonstrate tool calling and tool settings in AI Studio.\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));      public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         \"demoLabel\" => I18N.I.T(\"Demo Label\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Title, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         \"demoLabel\" => I18N.I.T(\"Required demo setting for validating tool settings in tests. It does not affect the weather result.\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty(\"city\", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty(\"state\", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty(\"unit\", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not (\"celsius\" or \"fahrenheit"
+
+-- Required demo setting for validating tool settings in tests. It does not affect the weather result.", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty("city", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty("state", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty("unit", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not ("celsius" or "fahrenheit
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::GETCURRENTWEATHERTOOL::T25380508"] = "Required demo setting for validating tool settings in tests. It does not affect the weather result.\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty(\"city\", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty(\"state\", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty(\"unit\", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not (\"celsius\" or \"fahrenheit"
+
+-- Demo Label", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Title, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         "demoLabel" => I18N.I.T("Required demo setting for validating tool settings in tests. It does not affect the weather result.", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty("city", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty("state", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty("unit", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not ("celsius" or "fahrenheit
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::GETCURRENTWEATHERTOOL::T3346467484"] = "Demo Label\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Title, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch     {         \"demoLabel\" => I18N.I.T(\"Required demo setting for validating tool settings in tests. It does not affect the weather result.\", typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),         _ => I18N.I.T(fieldDefinition.Description, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool)),     };      public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)     {         var city = arguments.TryGetProperty(\"city\", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;         var state = arguments.TryGetProperty(\"state\", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;         var unit = arguments.TryGetProperty(\"unit\", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;          if (unit is not (\"celsius\" or \"fahrenheit"
+
+-- Tool
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T3517012711"] = "Tool"
+
+-- Tool description
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Tool description"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T185447014"] = "Pandoc Installation"

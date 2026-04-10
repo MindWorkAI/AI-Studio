@@ -16,18 +16,6 @@
             </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            @if (this.Role is ChatRole.AI && this.Content is ContentText toolContent && toolContent.ToolInvocations.Count > 0)
-            {
-                <MudDivider Vertical="true" Class="mx-1" />
-                <MudTooltip Text="@this.GetToolTraceTooltip()" Placement="Placement.Bottom">
-                    <MudPaper Class="d-flex align-center px-2 py-1 mr-1 border rounded-lg" Style="gap: 6px; cursor: pointer;" @onclick="@this.ToggleToolTrace">
-                        @foreach (var toolIcon in this.GetDistinctToolIcons())
-                        {
-                            <MudIcon Icon="@toolIcon" Color="Color.Info" />
-                        }
-                    </MudPaper>
-                </MudTooltip>
-            }
             @if (this.Content.FileAttachments.Count > 0)
             {
                 <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
@@ -108,6 +96,20 @@
                             }
                             else
                             {
+                                @if (this.Role is ChatRole.AI && textContent.ToolInvocations.Count > 0)
+                                {
+                                    <MudPaper Class="d-flex align-center justify-space-between px-3 py-2 mb-3 border rounded-lg" Style="gap: 8px;">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                            @foreach (var toolIcon in this.GetDistinctToolIcons())
+                                            {
+                                                <MudIcon Icon="@toolIcon" Color="Color.Info" />
+                                            }
+                                            <MudText Typo="Typo.body2">@this.GetToolTraceTooltip()</MudText>
+                                        </MudStack>
+                                        <MudIconButton Icon="@(this.showToolTrace ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" OnClick="@this.ToggleToolTrace" />
+                                    </MudPaper>
+                                }
+
                                 var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
                                 <div @ref="this.mathContentContainer" class="chat-math-container">
                                     @foreach (var segment in renderPlan.Segments)
@@ -137,7 +139,7 @@
 
                                 @if (this.Role is ChatRole.AI && textContent.ToolInvocations.Count > 0 && this.showToolTrace)
                                 {
-                                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">
                                         @string.Format(T("Tool Calls ({0})"), textContent.ToolInvocations.Count)
                                     </MudText>
                                     @foreach (var invocation in textContent.ToolInvocations.OrderBy(x => x.Order))

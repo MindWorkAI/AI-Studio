@@ -44,11 +44,12 @@
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                     <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || this.Disabled || !this.SupportsTools)" />
                                     <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
-                                    <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
+                                    <MudTooltip Text="@item.Implementation.GetDescription()">
+                                        <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
+                                    </MudTooltip>
                                 </MudStack>
                                 <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(item.Definition.Id))" />
                             </MudStack>
-                            <MudText Typo="Typo.body2" Class="mt-2">@item.Implementation.GetDescription()</MudText>
                             @if (!isConfigured)
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Warning">@T("Required settings are missing. Configure this tool before enabling it.")</MudText>

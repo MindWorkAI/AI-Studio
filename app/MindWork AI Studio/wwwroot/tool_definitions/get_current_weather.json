@@ -1,8 +1,6 @@
 {
   "schemaVersion": 1,
   "id": "get_current_weather",
-  "displayName": "Current Weather",
-  "icon": "material-icons:cloud",
   "implementationKey": "get_current_weather",
   "visibleIn": {
     "chat": true,
@@ -13,8 +11,6 @@
     "properties": {
       "demoLabel": {
         "type": "string",
-        "title": "Demo Label",
-        "description": "Required demo setting for validating tool settings in tests.",
         "secret": false
       }
     },
