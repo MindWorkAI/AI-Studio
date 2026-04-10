@@ -424,9 +424,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     private async Task<bool> ShowMandatoryInfoDialog(DataMandatoryInfo info)
     {
+        var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
         var dialogParameters = new DialogParameters<MandatoryInfoDialog>
         {
             { x => x.Info, info },
+            { x => x.Acceptance, acceptance },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<MandatoryInfoDialog>(info.Title, dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
