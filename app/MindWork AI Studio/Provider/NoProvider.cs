@@ -18,6 +18,9 @@ public class NoProvider : IProvider
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
+    /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
+
     public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
 
     public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);

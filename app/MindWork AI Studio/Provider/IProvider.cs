@@ -28,6 +28,11 @@ public interface IProvider
     /// The additional API parameters.
     /// </summary>
     public string AdditionalJsonApiParameters { get; }
+
+    /// <summary>
+    /// The tokenizer path associated with this provider configuration.
+    /// </summary>
+    public string TokenizerPath { get; }
     
     /// <summary>
     /// Starts a chat completion stream.

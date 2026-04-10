@@ -1,6 +1,7 @@
 @using AIStudio.Provider
 @using AIStudio.Provider.HuggingFace
 @using AIStudio.Provider.SelfHosted
+@using AIStudio.Tools.Rust
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
@@ -150,6 +151,24 @@
                 Validation="@this.providerValidation.ValidatingInstanceName"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
+
+            @if (this.DataLLMProvider != LLMProviders.NONE)
+            {
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("For better token estimates, you can configure a custom tokenizer for this provider.")
+                </MudJustifiedText>
+                <SelectFile
+                    File="@this.dataFilePath"
+                    FileChanged="@this.OnDataFilePathChanged"
+                    Label="@T("Selected file path for the custom tokenizer")"
+                    FileDialogTitle="@T("Choose a custom tokenizer here")"
+                    Filter="[FileTypes.JSON]"
+                    IsClearable="@true"
+                    Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
+                    ErrorText="@(this.dataCustomTokenizerValidationIssue)"
+                    Validation="@this.providerValidation.ValidatingCustomTokenizer"
+                    OnClear="@this.ClearPathTokenizer" />
+            }
             
             <MudStack>
                 <MudButton OnClick="@this.ToggleExpertSettings">

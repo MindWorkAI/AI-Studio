@@ -69,6 +69,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
+
+    [Parameter]
+    public string DataTokenizerPath { get; set; } = string.Empty;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -143,6 +146,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             Host = this.DataHost,
             IsEnterpriseConfiguration = false,
             EnterpriseConfigurationPluginId = Guid.Empty,
+            TokenizerPath = this.dataFilePath,
         };
     }
     
@@ -164,6 +168,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
+            this.dataFilePath = this.DataTokenizerPath;
             Console.WriteLine($"Previous instance name is '{this.dataEditingPreviousInstanceName}'");
             
             // When using self-hosted embedding, we must copy the model name:
@@ -241,7 +246,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         var response = await this.RustService.StoreTokenizer(this.DataName, this.dataEditingPreviousInstanceName, this.dataFilePath);
         Console.WriteLine($"Response from Rust: {response.Message}");
         if (!response.Success)
+        {
+            this.dataCustomTokenizerValidationIssue = response.Message;
+            await this.form.Validate();
             return;
+        }
+        this.dataFilePath = response.Message;
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:

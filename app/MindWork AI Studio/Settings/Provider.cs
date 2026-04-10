@@ -32,7 +32,8 @@ public sealed record Provider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
-    string AdditionalJsonApiParameters = "") : ConfigurationBaseObject, ISecretId
+    string AdditionalJsonApiParameters = "",
+    string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -151,6 +152,13 @@ public sealed record Provider(
             additionalJsonApiParameters = string.Empty;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
+
         provider = new Provider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -165,6 +173,7 @@ public sealed record Provider(
             Host = host,
             HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
+            TokenizerPath = tokenizerPath,
         };
 
         // Handle encrypted API key if present:

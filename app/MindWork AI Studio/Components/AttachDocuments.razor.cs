@@ -48,6 +48,9 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool UseSmallForm { get; set; }
     
+    [Parameter]
+    public FileType[]? AllowedFileTypes { get; set; }
+    
     /// <summary>
     /// When true, validate media file types before attaching. Default is true. That means that
     /// the user cannot attach unsupported media file types when the provider or model does not

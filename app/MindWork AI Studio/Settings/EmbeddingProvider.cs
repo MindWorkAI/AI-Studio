@@ -19,7 +19,8 @@ public sealed record EmbeddingProvider(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
-    Host Host = Host.NONE) : ConfigurationBaseObject, ISecretId
+    Host Host = Host.NONE,
+    string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -96,6 +97,13 @@ public sealed record EmbeddingProvider(
             return false;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -108,6 +116,7 @@ public sealed record EmbeddingProvider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
+            TokenizerPath = tokenizerPath,
         };
 
         // Handle encrypted API key if present:

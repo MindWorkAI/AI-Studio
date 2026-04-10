@@ -73,6 +73,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
+            { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);

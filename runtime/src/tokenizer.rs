@@ -1,5 +1,4 @@
-﻿use rocket::yansi::Paint;
-use std::fs;
+﻿use std::fs;
 use std::path::{PathBuf};
 use std::sync::OnceLock;
 use rocket::{post};
@@ -75,23 +74,16 @@ fn validate_tokenizer_at_path(path: &PathBuf) -> Result<usize, TokenizerError> {
     }
 
     let tokenizer = Tokenizer::from_file(path).map_err(|e| {
-        println!("Failed to load tokenizer from {}: {}", Paint::red(&path.display()), e);
         TokenizerError::from(format!(
             "Failed to load tokenizer from '{}': {}",
             path.display(),
             e
         ))
     })?;
-    println!("Loaded tokenizer from {}", Paint::green(&path.display()));
 
     let test_string = "Hello, world! This is a test string for tokenizer validation.";
 
     let encoding = tokenizer.encode(test_string, true).map_err(|e| {
-        println!(
-            "Tokenizer failed to encode validation string for {}: {}",
-            Paint::red(&path.display()),
-            e
-        );
         TokenizerError::from(format!(
             "Tokenizer failed to encode validation string: {}",
             e
@@ -114,7 +106,7 @@ fn validate_tokenizer_at_path(path: &PathBuf) -> Result<usize, TokenizerError> {
     Ok(token_count)
 }
 
-fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<(), std::io::Error> {
+fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<String, std::io::Error> {
     let data_dir = DATA_DIRECTORY
         .get()
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "DATA_DIRECTORY not initialized"))?;
@@ -124,11 +116,11 @@ fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<(), std::io::Err
     // Delete previous model if file_path is empty
     if payload.file_path.trim().is_empty() {
         if payload.previous_model_id.trim().is_empty() {
-            return Ok(()); // Nothing to delete
+            return Ok(String::from("")); // Nothing to delete
         }
         let previous_path = base_path.join(&payload.previous_model_id);
         fs::remove_dir_all(previous_path)?;
-        return Ok(());
+        return Ok(String::from(""));
     }
 
     // Copy file
@@ -136,22 +128,28 @@ fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<(), std::io::Err
     let source_name = source_path.file_name()
         .and_then(|n| n.to_str())
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid tokenizer file path"))?;
-    fs::create_dir_all(&base_path.join(&payload.model_id))?;
-    let destination_path = base_path.join(&payload.model_id).join(source_name);
-    println!("Moving tokenizer file from {} to {}", source_path.display(), destination_path.display());
+    let model_path = &base_path.join(&payload.model_id);
+    let destination_path = &model_path.join(source_name);
+    println!("source_path: {}, destination_path: {}", source_path.display(), destination_path.display());
+    println!("equals {}", source_path.eq(destination_path));
 
+    if !source_path.eq(destination_path) && model_path.exists() {
+        fs::remove_dir_all(model_path)?;
+    }
+    fs::create_dir_all(model_path)?;
+    println!("Moving tokenizer file from {} to {}", source_path.display(), destination_path.display());
     let previous_path = base_path.join(&payload.previous_model_id);
 
     // Delete previous tokenizer folder if specified
     if !payload.previous_model_id.trim().is_empty() && source_path.starts_with(&previous_path){
         fs::rename(&source_path, &destination_path)?;
-        if previous_path.exists() {
+        if previous_path.exists() && !previous_path.eq(model_path) {
             fs::remove_dir_all(previous_path)?;
         }
     }else{
         fs::copy( & source_path, & destination_path)?;
     }
-    Ok(())
+    Ok(destination_path.to_str().unwrap().to_string())
 }
 
 pub fn get_token_count(text: &str) -> Result<usize, TokenizerError> {
@@ -179,10 +177,10 @@ pub fn validate_tokenizer(_token: APIToken, payload: Json<TokenizerValidation>) 
 pub fn store_tokenizer(_token: APIToken, payload: Json<TokenizerStorage>) -> Json<TokenizerResponse>{
     println!("Received tokenizer store request: {}, {}, {}", payload.model_id, payload.previous_model_id, payload.file_path);
     match handle_tokenizer_store(&payload) {
-        Ok(()) => Json(TokenizerResponse {
+        Ok(dest_path) => Json(TokenizerResponse {
             success: true,
             token_count: 0,
-            message: "Success".to_string(),
+            message: dest_path,
         }),
         Err(e) => Json(TokenizerResponse {
             success: false,
