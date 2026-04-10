@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 using Lua;
 
 namespace AIStudio.Settings.DataModel;
@@ -22,7 +25,8 @@ public sealed record DataMandatoryInfo
     public string Title { get; private init; } = string.Empty;
 
     /// <summary>
-    /// The configured version string. When it changes, the user must accept the text again.
+    /// The configured version string shown to the user. A changed version triggers re-acceptance
+    /// and allows the UI to distinguish a new version from a content-only change.
     /// </summary>
     public string VersionText { get; private init; } = string.Empty;
 
@@ -40,6 +44,13 @@ public sealed record DataMandatoryInfo
     /// The label of the reject button.
     /// </summary>
     public string RejectButtonText { get; private init; } = string.Empty;
+
+    public string GetAcceptanceHash()
+    {
+        var content = $"Version:{this.VersionText}\nTitle:{this.Title}\nMarkdown:{this.Markdown}";
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+        return Convert.ToHexString(hash);
+    }
 
     public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataMandatoryInfo mandatoryInfo)
     {

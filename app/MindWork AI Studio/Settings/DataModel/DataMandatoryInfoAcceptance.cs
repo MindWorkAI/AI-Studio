@@ -13,6 +13,11 @@ public sealed record DataMandatoryInfoAcceptance
     public string AcceptedVersion { get; init; } = string.Empty;
 
     /// <summary>
+    /// The accepted hash of the mandatory info content.
+    /// </summary>
+    public string AcceptedHash { get; init; } = string.Empty;
+
+    /// <summary>
     /// The UTC time of the acceptance.
     /// </summary>
     public DateTimeOffset AcceptedAtUtc { get; init; }

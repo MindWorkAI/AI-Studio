@@ -418,7 +418,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             .Where(info =>
             {
                 var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
-                return acceptance is null || acceptance.AcceptedVersion != info.VersionText;
+                return acceptance is null || !string.Equals(acceptance.AcceptedHash, info.GetAcceptanceHash(), StringComparison.Ordinal);
             });
     }
 
@@ -441,6 +441,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             InfoId = info.Id,
             AcceptedVersion = info.VersionText,
+            AcceptedHash = info.GetAcceptanceHash(),
             AcceptedAtUtc = DateTimeOffset.UtcNow,
             EnterpriseConfigurationPluginId = info.EnterpriseConfigurationPluginId,
         };

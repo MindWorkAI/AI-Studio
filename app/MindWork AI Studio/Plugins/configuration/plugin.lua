@@ -267,6 +267,8 @@ CONFIG["CHAT_TEMPLATES"] = {}
 CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 
 -- Mandatory infos that users must explicitly accept before using AI Studio:
+-- AI Studio asks users again when Version, Title, or Markdown change.
+-- Changing Version additionally allows the UI to communicate that a new version is available.
 CONFIG["MANDATORY_INFOS"] = {}
 
 -- An example mandatory info:
