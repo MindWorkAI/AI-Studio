@@ -46,8 +46,8 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService)
             {
                 Order = order,
                 ToolId = definition.Id,
-                ToolName = definition.DisplayName,
-                ToolIcon = definition.Icon,
+                ToolName = implementation.GetDisplayName(),
+                ToolIcon = implementation.Icon,
                 ToolCallId = toolCallId,
                 Status = ToolInvocationTraceStatus.SUCCESS,
                 WasExecuted = true,
@@ -72,8 +72,8 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService)
             {
                 Order = order,
                 ToolId = definition.Id,
-                ToolName = definition.DisplayName,
-                ToolIcon = definition.Icon,
+                ToolName = implementation.GetDisplayName(),
+                ToolIcon = implementation.Icon,
                 ToolCallId = toolCallId,
                 Status = ToolInvocationTraceStatus.ERROR,
                 StatusMessage = error,

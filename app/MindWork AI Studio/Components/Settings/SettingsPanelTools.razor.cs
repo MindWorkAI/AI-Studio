@@ -31,4 +31,19 @@ public partial class SettingsPanelTools : SettingsPanelBase
         this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
         this.StateHasChanged();
     }
+
+    private string GetConfigurationTooltip(ToolCatalogItem item) => item.ConfigurationState.MissingRequiredFields.Count switch
+    {
+        0 => this.T("This tool still needs to be configured."),
+        _ => string.Format(this.T("Missing required settings: {0}"), string.Join(", ", item.ConfigurationState.MissingRequiredFields.Select(fieldName => this.GetFieldDisplayName(item, fieldName))))
+    };
+
+    private string GetFieldDisplayName(ToolCatalogItem item, string fieldName)
+    {
+        var fieldDefinition = item.Definition.SettingsSchema.Properties.GetValueOrDefault(fieldName);
+        if (fieldDefinition is null)
+            return fieldName;
+
+        return item.Implementation.GetSettingsFieldLabel(fieldName, fieldDefinition);
+    }
 }

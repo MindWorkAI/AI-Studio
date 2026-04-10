@@ -85,6 +85,8 @@ public sealed class ToolCatalogItem
 {
     public required ToolDefinition Definition { get; init; }
 
+    public required IToolImplementation Implementation { get; init; }
+
     public required ToolConfigurationState ConfigurationState { get; init; }
 }
 

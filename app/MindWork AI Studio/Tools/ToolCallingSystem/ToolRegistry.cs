@@ -69,12 +69,12 @@ public sealed class ToolRegistry
         var isChat = component is AIStudio.Tools.Components.CHAT;
         return this.definitionsById.Values
             .Where(x => isChat ? x.VisibleIn.Chat : x.VisibleIn.Assistants)
-            .OrderBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => this.implementationsByKey.GetValueOrDefault(x.ImplementationKey)?.GetDisplayName(), StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
     public IReadOnlyList<ToolDefinition> GetAllDefinitions() => this.definitionsById.Values
-        .OrderBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => this.implementationsByKey.GetValueOrDefault(x.ImplementationKey)?.GetDisplayName(), StringComparer.OrdinalIgnoreCase)
         .ToList();
 
     public ToolDefinition? GetDefinition(string toolId) => this.definitionsById.GetValueOrDefault(toolId);
@@ -93,9 +93,13 @@ public sealed class ToolRegistry
         var items = new List<ToolCatalogItem>(definitionList.Count);
         foreach (var definition in definitionList)
         {
+            if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
+                continue;
+
             items.Add(new ToolCatalogItem
             {
                 Definition = definition,
+                Implementation = implementation,
                 ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition),
             });
         }

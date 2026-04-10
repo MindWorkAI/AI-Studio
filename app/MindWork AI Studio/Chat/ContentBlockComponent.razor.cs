@@ -104,6 +104,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
     private bool isDisposed;
+    private bool showToolTrace;
 
     #region Overrides of ComponentBase
 
@@ -203,6 +204,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
+                hash.Add(this.showToolTrace);
                 foreach (var invocation in text.ToolInvocations)
                 {
                     hash.Add(invocation.Order);
@@ -249,6 +251,28 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
         ToolInvocationTraceStatus.BLOCKED => this.T("Blocked"),
         _ => this.T("Unknown"),
     };
+
+    private IReadOnlyList<ToolInvocationTrace> GetToolInvocations() => this.Content is ContentText textContent
+        ? textContent.ToolInvocations.OrderBy(x => x.Order).ToList()
+        : [];
+
+    private IReadOnlyList<string> GetDistinctToolIcons() => this.GetToolInvocations()
+        .Select(x => x.ToolIcon)
+        .Distinct(StringComparer.Ordinal)
+        .ToList();
+
+    private string GetToolTraceTooltip()
+    {
+        var invocations = this.GetToolInvocations();
+        return invocations.Count switch
+        {
+            0 => this.T("No tool calls"),
+            1 => string.Format(this.T("Show tool call for {0}"), invocations[0].ToolName),
+            _ => string.Format(this.T("Show {0} tool calls"), invocations.Count),
+        };
+    }
+
+    private void ToggleToolTrace() => this.showToolTrace = !this.showToolTrace;
 
     private MudMarkdownStyling MarkdownStyling => new()
     {

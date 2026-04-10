@@ -1684,11 +1684,23 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T601166687"] = "AI"
 -- Edit Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1183581066"] = "Edit Message"
 
+-- Result
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347088452"] = "Result"
+
 -- Do you really want to remove this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Do you really want to remove this message?"
 
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Yes, remove the AI response and edit it"
+
+-- Failed
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1434043348"] = "Failed"
+
+-- Tool Calls ({0})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1493057571"] = "Tool Calls ({0})"
+
+-- Executed
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1564757972"] = "Executed"
 
 -- Yes, regenerate it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1603883875"] = "Yes, regenerate it"
@@ -1708,6 +1720,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Removes
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Regenerate Message"
 
+-- Arguments
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2738624831"] = "Arguments"
+
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Number of attachments"
 
@@ -1717,8 +1732,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3175548294"] = "Cannot 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3267849393"] = "Edit"
 
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3424652889"] = "Unknown"
+
 -- Regenerate
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Regenerate"
+
+-- Blocked
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3816336467"] = "Blocked"
 
 -- Do you really want to regenerate this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3878878761"] = "Do you really want to regenerate this message?"
@@ -1731,6 +1752,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "No, kee
 
 -- Export Chat to Microsoft Word
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export Chat to Microsoft Word"
+
+-- No arguments
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T931993614"] = "No arguments"
 
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
@@ -2590,6 +2614,27 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T975426229"] = "Export configuration"
 
+-- Configure global settings for each tool. Tool defaults for chat and assistants are configured in the corresponding feature settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T176751696"] = "Configure global settings for each tool. Tool defaults for chat and assistants are configured in the corresponding feature settings."
+
+-- Configured
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2463440925"] = "Configured"
+
+-- Tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2499909372"] = "Tools"
+
+-- Tool
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3517012711"] = "Tool"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3865031940"] = "Actions"
+
+-- State
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T502047894"] = "State"
+
+-- Configuration required
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T979592518"] = "Configuration required"
+
 -- No transcription provider configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1079350363"] = "No transcription provider configured yet."
 
@@ -2658,6 +2703,48 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1392042694"] = "Ope
 
 -- License:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1908172666"] = "License:"
+
+-- Tool selection is hidden
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2096103917"] = "Tool selection is hidden"
+
+-- Choose which tools should be preselected for new runs of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2696618758"] = "Choose which tools should be preselected for new runs of this assistant."
+
+-- Default tools for this assistant
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3253667950"] = "Default tools for this assistant"
+
+-- Tool selection is visible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3384582069"] = "Tool selection is visible"
+
+-- Show tool selection in this assistant?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3494508870"] = "Show tool selection in this assistant?"
+
+-- Default tools for chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T907403808"] = "Default tools for chat"
+
+-- Choose which tools should be preselected for new chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T948842182"] = "Choose which tools should be preselected for new chats."
+
+-- Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1688023907"] = "Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished."
+
+-- Required settings are missing. Configure this tool before enabling it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Required settings are missing. Configure this tool before enabling it."
+
+-- The selected provider or model does not support tool calling.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3364063757"] = "The selected provider or model does not support tool calling."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3448155331"] = "Close"
+
+-- No tools are available in this context.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "No tools are available in this context."
+
+-- Tool Selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Tool Selection"
+
+-- Select tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T998515990"] = "Select tools"
 
 -- You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1015366320"] = "You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation."
@@ -4696,6 +4783,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T13933
 -- Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1528169602"] = "Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize."
 
+-- Slide Planner Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1549358578"] = "Slide Planner Assistant options are preselected"
+
+-- No Slide Planner Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1694374279"] = "No Slide Planner Assistant options are preselected"
+
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Choose whether the assistant should use the app default profile, no profile, or a specific profile."
 
@@ -4704,9 +4797,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T20146
 
 -- Which audience organizational level should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T216511105"] = "Which audience organizational level should be preselected?"
-
--- Preselect Slide Planner Assistant options?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T227645894"] = "Preselect Slide Planner Assistant options?"
 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2322771068"] = "Preselect a profile"
@@ -4724,10 +4814,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T25714
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2645589441"] = "Preselect the audience age group"
 
 -- Assistant: Slide Planner Assistant Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3215549988"] = "Assistant: Slide Planner Assistant Options"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3226042276"] = "Assistant: Slide Planner Assistant Options"
 
 -- Which audience expertise should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3228597992"] = "Which audience expertise should be preselected?"
+
+-- Preselect Slide Planner Assistant options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T339924858"] = "Preselect Slide Planner Assistant options?"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Close"
@@ -4735,14 +4828,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T34481
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Preselect important aspects"
 
--- No Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T4214398691"] = "No Slide Planner Assistant options are preselected"
-
 -- Preselect the audience profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T861397972"] = "Preselect the audience profile"
-
--- Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T93124146"] = "Slide Planner Assistant options are preselected"
 
 -- Which audience age group should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T956845877"] = "Which audience age group should be preselected?"
@@ -5001,6 +5088,18 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3547
 
 -- Preselect e-mail options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832719342"] = "Preselect e-mail options?"
+
+-- Save
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T1294818664"] = "Save"
+
+-- Tool Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3730473128"] = "Tool Settings"
+
+-- The selected tool could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3907843187"] = "The selected tool could not be loaded."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T900713019"] = "Cancel"
 
 -- Save
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1294818664"] = "Save"

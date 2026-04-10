@@ -25,13 +25,12 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         ? this.T("Choose which tools should be preselected for new chats.")
         : this.T("Choose which tools should be preselected for new runs of this assistant.");
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        this.availableTools = this.ToolRegistry
-            .GetDefinitionsForComponent(this.Component)
-            .Select(x => new ConfigurationSelectData<string>(x.DisplayName, x.Id))
+        this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))
+            .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
             .ToList();
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     private HashSet<string> GetSelectedValues() => this.SettingsManager.GetDefaultToolIds(this.Component);

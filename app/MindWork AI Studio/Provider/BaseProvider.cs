@@ -668,7 +668,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                     {
                         IsRunning = true,
                         ToolNames = responseMessage.ToolCalls
-                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Definition?.DisplayName ?? x.Function.Name)
+                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name)
                             .ToList(),
                     };
                     await currentAssistantContent.StreamingEvent();

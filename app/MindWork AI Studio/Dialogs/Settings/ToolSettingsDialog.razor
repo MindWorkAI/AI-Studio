@@ -4,8 +4,8 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@this.toolDefinition?.Icon" Class="mr-2" />
-            @(this.toolDefinition?.DisplayName ?? T("Tool Settings"))
+            <MudIcon Icon="@this.implementation?.Icon" Class="mr-2" />
+            @(this.implementation?.GetDisplayName() ?? T("Tool Settings"))
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -15,13 +15,18 @@
         }
         else
         {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-4">
+                @this.implementation?.GetDescription()
+            </MudJustifiedText>
+
+            <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
             @foreach (var property in this.toolDefinition.SettingsSchema.Properties)
             {
                 var fieldName = property.Key;
                 var field = property.Value;
                 if (field.EnumValues.Count > 0)
                 {
-                    <MudSelect T="string" Label="@field.Title" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+                    <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Class="mb-3">
                         @foreach (var option in field.EnumValues)
                         {
                             <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
@@ -30,9 +35,10 @@
                 }
                 else
                 {
-                    <MudTextField T="string" Label="@field.Title" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@field.Description" InputType="@(field.Secret ? InputType.Password : InputType.Text)" />
+                    <MudTextField T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@this.GetFieldDescription(fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" />
                 }
             }
+            </MudPaper>
         }
     </DialogContent>
     <DialogActions>
