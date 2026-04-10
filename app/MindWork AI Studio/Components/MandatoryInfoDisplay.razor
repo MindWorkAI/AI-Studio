@@ -1,11 +1,6 @@
 @inherits MSGComponentBase
 
 <MudStack Spacing="2">
-    @if (this.ShowTitle)
-    {
-        <MudText Typo="Typo.h4">@this.Info.Title</MudText>
-    }
-
     <MudText Typo="Typo.body2">
         @T("Version"): @this.Info.VersionText
     </MudText>

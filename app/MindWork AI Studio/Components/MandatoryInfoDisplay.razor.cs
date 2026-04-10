@@ -13,8 +13,5 @@ public partial class MandatoryInfoDisplay
     public DataMandatoryInfoAcceptance? Acceptance { get; set; }
 
     [Parameter]
-    public bool ShowTitle { get; set; } = true;
-
-    [Parameter]
     public bool ShowAcceptanceMetadata { get; set; }
 }

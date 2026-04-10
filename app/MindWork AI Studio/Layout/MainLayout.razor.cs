@@ -429,7 +429,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             { x => x.Info, info },
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<MandatoryInfoDialog>(null, dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<MandatoryInfoDialog>(info.Title, dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         return dialogResult is { Canceled: false, Data: true };
     }
