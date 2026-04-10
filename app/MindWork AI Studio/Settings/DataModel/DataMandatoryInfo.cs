@@ -45,10 +45,17 @@ public sealed record DataMandatoryInfo
     /// </summary>
     public string RejectButtonText { get; private init; } = string.Empty;
 
-    public string GetAcceptanceHash()
+    /// <summary>
+    /// The current hash used to determine whether the user needs to re-accept the info.
+    /// </summary>
+    public string AcceptanceHash { get; private init; } = string.Empty;
+
+    private static string CreateAcceptanceHash(string versionText, string title, string markdown)
     {
-        var content = $"Version:{this.VersionText}\nTitle:{this.Title}\nMarkdown:{this.Markdown}";
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+        var content = $"Version:{versionText}\nTitle:{title}\nMarkdown:{markdown}";
+        var bytes = Encoding.UTF8.GetBytes(content);
+        var hash = SHA256.HashData(bytes);
+        
         return Convert.ToHexString(hash);
     }
 
@@ -92,6 +99,7 @@ public sealed record DataMandatoryInfo
         }
 
         var normalizedMarkdown = AIStudio.Tools.Markdown.RemoveSharedIndentation(markdown);
+        var acceptanceHash = CreateAcceptanceHash(versionText, title, normalizedMarkdown);
         mandatoryInfo = new DataMandatoryInfo
         {
             Id = id.ToString(),
@@ -101,6 +109,7 @@ public sealed record DataMandatoryInfo
             AcceptButtonText = acceptButtonText,
             RejectButtonText = rejectButtonText,
             EnterpriseConfigurationPluginId = configPluginId,
+            AcceptanceHash = acceptanceHash,
         };
 
         return true;

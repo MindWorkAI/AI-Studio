@@ -33,7 +33,7 @@ public partial class MandatoryInfoDisplay
             if (!string.Equals(this.Acceptance.AcceptedVersion, this.Info.VersionText, StringComparison.Ordinal))
                 return MandatoryInfoAcceptanceStatus.VERSION_CHANGED;
 
-            if (!string.Equals(this.Acceptance.AcceptedHash, this.Info.GetAcceptanceHash(), StringComparison.Ordinal))
+            if (!string.Equals(this.Acceptance.AcceptedHash, this.Info.AcceptanceHash, StringComparison.Ordinal))
                 return MandatoryInfoAcceptanceStatus.CONTENT_CHANGED;
 
             return MandatoryInfoAcceptanceStatus.ACCEPTED;
