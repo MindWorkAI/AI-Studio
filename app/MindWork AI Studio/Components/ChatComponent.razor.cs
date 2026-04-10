@@ -92,6 +92,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
 
+        var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(deferredInput))
+            this.userInput = deferredInput;
+
         // Apply template's file attachments, if any:
         foreach (var attachment in this.currentChatTemplate.FileAttachments)
             this.chatDocumentPaths.Add(attachment);
