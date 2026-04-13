@@ -1,125 +1,49 @@
-// ReSharper disable NotAccessedPositionalProperty.Global
-
-using AIStudio.Tools.PluginSystem;
-
 namespace AIStudio.Tools.Rust;
 
 /// <summary>
-/// Represents a file type filter for file selection dialogs.
+/// Represents a file type that can optionally contain child file types.
+/// Use the static helpers <see cref="Leaf"/>, <see cref="Parent"/> and <see cref="Composite"/> to build readable trees.
 /// </summary>
-/// <param name="FilterName">The name of the filter.</param>
-/// <param name="FilterExtensions">The file extensions associated with the filter.</param>
-public readonly record struct FileTypeFilter(string FilterName, string[] FilterExtensions)
+/// <param name="FilterName">Display name of the type (e.g., "Document").</param>
+/// <param name="FilterExtensions">File extensions belonging to this type (without dot).</param>
+/// <param name="Children">Nested file types that are included when this type is selected.</param>
+public sealed record FileTypeFilter(string FilterName, string[] FilterExtensions, IReadOnlyList<FileTypeFilter> Children)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileTypeFilter).Namespace, nameof(FileTypeFilter));
+    /// <summary>
+    /// Factory for a leaf node.
+    /// Example: <c>FileType.Leaf(".NET", "cs", "razor")</c>
+    /// </summary>
+    public static FileTypeFilter Leaf(string name, params string[] extensions) =>
+        new(name, extensions, []);
 
-    private static string[] AllowedSourceLikeFileNames =>
-    [
-        "Dockerfile",
-        "Containerfile",
-        "Jenkinsfile",
-        "Makefile",
-        "GNUmakefile",
-        "Procfile",
-        "Vagrantfile",
-        "Tiltfile",
-        "Justfile",
-        "Brewfile",
-        "Caddyfile",
-        "Gemfile",
-        "Podfile",
-        "Fastfile",
-        "Appfile",
-        "Rakefile",
-        "Dangerfile",
-        "BUILD",
-        "WORKSPACE",
-        "BUCK",
-    ];
+    /// <summary>
+    /// Factory for a parent node that only has children.
+    /// Example: <c>FileType.Parent("Source Code", dotnet, java)</c>
+    /// </summary>
+    public static FileTypeFilter Parent(string name, params FileTypeFilter[]? children) =>
+        new(name, [], children ?? []);
 
-    private static string[] AllowedSourceLikeFileNamePrefixes =>
-    [
-        "Dockerfile",
-        "Containerfile",
-        "Jenkinsfile",
-        "Procfile",
-        "Caddyfile",
-    ];
-
-    public static bool IsAllowedSourceLikeFileName(string filePath)
+    /// <summary>
+    /// Factory for a composite node that has its own extensions in addition to children.
+    /// </summary>
+    public static FileTypeFilter Composite(string name, string[] extensions, params FileTypeFilter[] children) =>
+        new(name, extensions, children);
+    
+    /// <summary>
+    /// Collects all extensions for this type, including children.
+    /// </summary>
+    public IEnumerable<string> FlattenExtensions()
     {
-        var fileName = Path.GetFileName(filePath);
-        if (string.IsNullOrWhiteSpace(fileName))
-            return false;
-
-        if (AllowedSourceLikeFileNames.Any(name => string.Equals(name, fileName, StringComparison.OrdinalIgnoreCase)))
-            return true;
-
-        return AllowedSourceLikeFileNamePrefixes.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        return this.FilterExtensions
+            .Concat(this.Children.SelectMany(child => child.FlattenExtensions()))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
     }
     
-    public static FileTypeFilter PDF => new(TB("PDF Files"), ["pdf"]);
-    
-    public static FileTypeFilter Text => new(TB("Text Files"), ["txt", "md"]);
-    
-    public static FileTypeFilter AllOffice => new(TB("All Office Files"), ["docx", "xlsx", "pptx", "doc", "xls", "ppt", "pdf"]);
-    
-    public static FileTypeFilter AllImages => new(TB("All Image Files"), ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic"]);
-    
-    public static FileTypeFilter AllVideos => new(TB("All Video Files"), ["mp4", "m4v", "avi", "mkv", "mov", "wmv", "flv", "webm"]);
-    
-    public static FileTypeFilter AllAudio => new(TB("All Audio Files"), ["mp3", "wav", "wave", "aac", "flac", "ogg", "m4a", "wma", "alac", "aiff", "m4b"]);
-    
-    public static FileTypeFilter AllSourceCode => new(TB("All Source Code Files"), 
-        [
-            // .NET
-            "cs", "vb", "fs", "razor", "aspx", "cshtml", "csproj",
-            
-            // Java:
-            "java",
-            
-            // Python:
-            "py",
-            
-            // JavaScript/TypeScript:
-            "js", "ts",
-            
-            // C/C++:
-            "c", "cpp", "h", "hpp",
-            
-            // Ruby:
-            "rb",
-            
-            // Go:
-            "go",
-            
-            // Rust:
-            "rs",
-            
-            // Lua:
-            "lua",
-            
-            // PHP:
-            "php",
-            
-            // HTML/CSS:
-            "html", "css",
-            
-            // Swift/Kotlin:
-            "swift", "kt",
-            
-            // Shell scripts:
-            "sh", "bash",
-            
-            // Logging files:
-            "log",
-            
-            // JSON/YAML/XML:
-            "json", "yaml", "yml", "xml",
-            
-            // Config files:
-            "ini", "cfg", "toml", "plist",
-        ]);
-    
-    public static FileTypeFilter Executables => new(TB("Executable Files"), ["exe", "app", "bin", "appimage"]);
+    public bool ContainsType(FileTypeFilter target)
+    {
+        if (this == target)
+            return true;
+
+        return this.Children.Any(child => child.ContainsType(target));
+    }
 }
