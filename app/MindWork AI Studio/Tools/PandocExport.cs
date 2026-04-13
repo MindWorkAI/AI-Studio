@@ -69,7 +69,7 @@ public static class PandocExport
             var pandoc = await PandocProcessBuilder
                 .Create()
                 .UseStandaloneMode()
-                .WithInputFormat("markdown")
+                .WithInputFormat("gfm+emoji+tex_math_dollars")
                 .WithOutputFormat("docx")
                 .WithOutputFile(response.SaveFilePath)
                 .WithInputFile(tempMarkdownFilePath)
