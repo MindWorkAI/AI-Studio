@@ -25,6 +25,10 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         ? this.T("Choose which tools should be preselected for new chats.")
         : this.T("Choose which tools should be preselected for new runs of this assistant.");
 
+    private bool AreDefaultToolsDisabled =>
+        this.Component is not AIStudio.Tools.Components.CHAT &&
+        !this.SettingsManager.IsToolSelectionVisible(this.Component);
+
     protected override async Task OnInitializedAsync()
     {
         this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))

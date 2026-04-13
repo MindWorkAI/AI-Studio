@@ -11,9 +11,27 @@
             </MudAvatar>
         </CardHeaderAvatar>
         <CardHeaderContent>
-            <MudText Typo="Typo.body1">
-                @this.Role.ToName() (@this.Time.LocalDateTime)
-            </MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.body1">
+                    @this.Role.ToName() (@this.Time.LocalDateTime)
+                </MudText>
+                @if (this.HasToolTrace)
+                {
+                    <MudTooltip Text="@this.GetToolTraceTooltip()" Placement="Placement.Bottom">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   Size="Size.Small"
+                                   Class="px-2 py-1 rounded-pill"
+                                   Style="min-width:auto; border-width:1px; text-transform:none;"
+                                   OnClick="@this.ToggleToolTrace">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Build" Color="Color.Default" Size="Size.Small" />
+                                <MudIcon Icon="@(this.showToolTrace ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+                            </MudStack>
+                        </MudButton>
+                    </MudTooltip>
+                }
+            </MudStack>
         </CardHeaderContent>
         <CardHeaderActions>
             @if (this.Content.FileAttachments.Count > 0)
@@ -96,17 +114,64 @@
                             }
                             else
                             {
-                                @if (this.Role is ChatRole.AI && textContent.ToolInvocations.Count > 0)
+                                @if (this.HasToolTrace && this.showToolTrace)
                                 {
-                                    <MudPaper Class="d-flex align-center justify-space-between px-3 py-2 mb-3 border rounded-lg" Style="gap: 8px;">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                            @foreach (var toolIcon in this.GetDistinctToolIcons())
-                                            {
-                                                <MudIcon Icon="@toolIcon" Color="Color.Info" />
-                                            }
-                                            <MudText Typo="Typo.body2">@this.GetToolTraceTooltip()</MudText>
-                                        </MudStack>
-                                        <MudIconButton Icon="@(this.showToolTrace ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" OnClick="@this.ToggleToolTrace" />
+                                    <MudPaper Class="pa-3 mb-3 border rounded-lg" Style="border-width:1px;">
+                                        <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                            @string.Format(T("Tool Calls ({0})"), textContent.ToolInvocations.Count)
+                                        </MudText>
+                                        @foreach (var invocation in textContent.ToolInvocations.OrderBy(x => x.Order))
+                                        {
+                                            <MudPaper Class="pa-3 mb-3 border rounded-lg" Style="border-width:1px;">
+                                                <MudButton Variant="Variant.Text"
+                                                           Color="Color.Default"
+                                                           FullWidth="@true"
+                                                           Class="px-0 py-0 justify-space-between"
+                                                           Style="min-width:auto; text-transform:none;"
+                                                           OnClick="@(() => this.ToggleToolInvocation(invocation.Order))">
+                                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100">
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                            <MudIcon Icon="@invocation.ToolIcon" Color="Color.Info" />
+                                                            <MudText Typo="Typo.subtitle1">@($"{invocation.Order}. {invocation.ToolName}")</MudText>
+                                                            <MudChip T="string" Color="@ContentBlockComponent.GetTraceColor(invocation.Status)" Size="Size.Small" Variant="Variant.Outlined">
+                                                                @this.GetTraceStatusText(invocation)
+                                                            </MudChip>
+                                                        </MudStack>
+                                                        <MudIcon Icon="@(this.IsToolInvocationExpanded(invocation.Order) ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+                                                    </MudStack>
+                                                </MudButton>
+
+                                                @if (this.IsToolInvocationExpanded(invocation.Order))
+                                                {
+                                                    @if (!string.IsNullOrWhiteSpace(invocation.StatusMessage))
+                                                    {
+                                                        <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-3 mb-3">@invocation.StatusMessage</MudText>
+                                                    }
+
+                                                    <MudText Typo="Typo.subtitle2">@T("Result")</MudText>
+                                                    <MudPaper Class="pa-3 mt-2 mb-3">
+                                                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@this.GetToolInvocationResult(invocation)</MudText>
+                                                    </MudPaper>
+
+                                                    <MudText Typo="Typo.subtitle2">@T("Arguments")</MudText>
+                                                    @if (invocation.Arguments.Count == 0)
+                                                    {
+                                                        <MudText Typo="Typo.body2" Class="mb-3">@T("No arguments")</MudText>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudList T="string" Dense="@true" Class="mb-0">
+                                                            @foreach (var argument in invocation.Arguments)
+                                                            {
+                                                                <MudListItem T="string">
+                                                                    <MudText Typo="Typo.body2"><strong>@argument.Key:</strong> @argument.Value</MudText>
+                                                                </MudListItem>
+                                                            }
+                                                        </MudList>
+                                                    }
+                                                }
+                                            </MudPaper>
+                                        }
                                     </MudPaper>
                                 }
 
@@ -135,52 +200,6 @@
                                     <MudAlert Dense="@true" Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">
                                         @textContent.ToolRuntimeStatus.Message
                                     </MudAlert>
-                                }
-
-                                @if (this.Role is ChatRole.AI && textContent.ToolInvocations.Count > 0 && this.showToolTrace)
-                                {
-                                    <MudText Typo="Typo.subtitle2" Class="mb-2">
-                                        @string.Format(T("Tool Calls ({0})"), textContent.ToolInvocations.Count)
-                                    </MudText>
-                                    @foreach (var invocation in textContent.ToolInvocations.OrderBy(x => x.Order))
-                                    {
-                                        <MudPaper Class="pa-3 mb-3 border rounded-lg">
-                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
-                                                <MudIcon Icon="@invocation.ToolIcon" Color="Color.Info" />
-                                                <MudText Typo="Typo.subtitle1">@($"{invocation.Order}. {invocation.ToolName}")</MudText>
-                                                <MudChip T="string" Color="@ContentBlockComponent.GetTraceColor(invocation.Status)" Size="Size.Small" Variant="Variant.Outlined">
-                                                    @this.GetTraceStatusText(invocation)
-                                                </MudChip>
-                                            </MudStack>
-
-                                            @if (!string.IsNullOrWhiteSpace(invocation.StatusMessage))
-                                            {
-                                                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-3">@invocation.StatusMessage</MudText>
-                                            }
-
-                                            <MudText Typo="Typo.subtitle2">@T("Arguments")</MudText>
-                                            @if (invocation.Arguments.Count == 0)
-                                            {
-                                                <MudText Typo="Typo.body2" Class="mb-3">@T("No arguments")</MudText>
-                                            }
-                                            else
-                                            {
-                                                <MudList T="string" Dense="@true" Class="mb-3">
-                                                    @foreach (var argument in invocation.Arguments)
-                                                    {
-                                                        <MudListItem T="string">
-                                                            <MudText Typo="Typo.body2"><strong>@argument.Key:</strong> @argument.Value</MudText>
-                                                        </MudListItem>
-                                                    }
-                                                </MudList>
-                                            }
-
-                                            <MudText Typo="Typo.subtitle2">@T("Result")</MudText>
-                                            <MudPaper Class="pa-3 mt-2">
-                                                <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@invocation.Result</MudText>
-                                            </MudPaper>
-                                        </MudPaper>
-                                    }
                                 }
                             }
                         }

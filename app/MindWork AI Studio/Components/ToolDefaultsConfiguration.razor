@@ -8,5 +8,5 @@
     {
         <ConfigurationOption OptionDescription="@T("Show tool selection in this assistant?")" LabelOn="@T("Tool selection is visible")" LabelOff="@T("Tool selection is hidden")" State="@(() => this.SettingsManager.IsToolSelectionVisible(this.Component))" StateUpdate="@(value => this.SettingsManager.SetToolSelectionVisibility(this.Component, value))" />
     }
-    <ConfigurationMultiSelect TData="string" OptionDescription="@this.OptionTitle" SelectedValues="@this.GetSelectedValues" Data="@this.availableTools" SelectionUpdate="@this.UpdateSelection" OptionHelp="@this.OptionHelp" EmptySelectionText="@T("No tools selected.")" SingleSelectionText="@T("You have selected 1 tool.")" MultipleSelectionText="@T("You have selected {0} tools.")" />
+    <ConfigurationMultiSelect TData="string" OptionDescription="@this.OptionTitle" SelectedValues="@this.GetSelectedValues" Data="@this.availableTools" SelectionUpdate="@this.UpdateSelection" OptionHelp="@this.OptionHelp" Disabled="@(() => this.AreDefaultToolsDisabled)" EmptySelectionText="@T("No tools selected.")" SingleSelectionText="@T("You have selected 1 tool.")" MultipleSelectionText="@T("You have selected {0} tools.")" />
 }

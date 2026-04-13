@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace AIStudio.Chat;
 
@@ -105,6 +106,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private bool hasActiveMathContainer;
     private bool isDisposed;
     private bool showToolTrace;
+    private readonly HashSet<int> expandedToolInvocations = [];
 
     #region Overrides of ComponentBase
 
@@ -205,6 +207,9 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
                 hash.Add(this.showToolTrace);
+                hash.Add(this.expandedToolInvocations.Count);
+                foreach (var expandedInvocation in this.expandedToolInvocations.Order())
+                    hash.Add(expandedInvocation);
                 foreach (var invocation in text.ToolInvocations)
                 {
                     hash.Add(invocation.Order);
@@ -234,6 +239,8 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
+    private bool HasToolTrace => this.Role is ChatRole.AI && this.GetToolInvocations().Count > 0;
+
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
 
     private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
@@ -256,11 +263,6 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
         ? textContent.ToolInvocations.OrderBy(x => x.Order).ToList()
         : [];
 
-    private IReadOnlyList<string> GetDistinctToolIcons() => this.GetToolInvocations()
-        .Select(x => x.ToolIcon)
-        .Distinct(StringComparer.Ordinal)
-        .ToList();
-
     private string GetToolTraceTooltip()
     {
         var invocations = this.GetToolInvocations();
@@ -273,6 +275,18 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     }
 
     private void ToggleToolTrace() => this.showToolTrace = !this.showToolTrace;
+
+    private bool IsToolInvocationExpanded(int order) => this.expandedToolInvocations.Contains(order);
+
+    private void ToggleToolInvocation(int order)
+    {
+        if (!this.expandedToolInvocations.Add(order))
+            this.expandedToolInvocations.Remove(order);
+    }
+
+    private string GetToolInvocationResult(ToolInvocationTrace invocation) => string.IsNullOrWhiteSpace(invocation.Result)
+        ? this.T("No result")
+        : invocation.Result;
 
     private MudMarkdownStyling MarkdownStyling => new()
     {
