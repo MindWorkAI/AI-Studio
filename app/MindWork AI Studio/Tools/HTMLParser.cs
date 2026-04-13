@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Headers;
 
 using HtmlAgilityPack;
 
@@ -10,6 +10,8 @@ namespace AIStudio.Tools;
 
 public sealed class HTMLParser
 {
+    private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MindWorkAIStudio/1.0";
+
     private static readonly Config MARKDOWN_PARSER_CONFIG = new()
     {
         UnknownTags = Config.UnknownTagsOption.Bypass,
@@ -43,14 +45,38 @@ public sealed class HTMLParser
 
     public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30)
     {
-        using var httpClient = new HttpClient
+        using var handler = new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+        };
+        using var httpClient = new HttpClient(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
         };
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
-        using var response = await httpClient.GetAsync(url, timeoutCts.Token);
-        response.EnsureSuccessStatusCode();
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.TryAddWithoutValidation("User-Agent", USER_AGENT);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
+        request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US"));
+        request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en", 0.9));
+        request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+        request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+        request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
+        request.Headers.TryAddWithoutValidation("Upgrade-Insecure-Requests", "1");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "none");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "navigate");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "document");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-User", "?1");
+
+        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var statusCode = (int)response.StatusCode;
+            var reasonPhrase = string.IsNullOrWhiteSpace(response.ReasonPhrase) ? "Unknown" : response.ReasonPhrase;
+            throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{url}'.", null, response.StatusCode);
+        }
 
         var html = await response.Content.ReadAsStringAsync(token);
         var document = new HtmlDocument();
