@@ -1,14 +1,9 @@
-using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-
-using AIStudio.Tools;
 using AIStudio.Tools.PluginSystem;
-
 using HtmlAgilityPack;
 
-namespace AIStudio.Tools.ToolCallingSystem;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
 public sealed class ReadWebPageTool(HTMLParser htmlParser) : IToolImplementation
 {

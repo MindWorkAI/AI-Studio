@@ -1,8 +1,7 @@
 using System.Text.Json;
-
 using AIStudio.Tools.PluginSystem;
 
-namespace AIStudio.Tools.ToolCallingSystem;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
 public sealed class GetCurrentWeatherTool : IToolImplementation
 {

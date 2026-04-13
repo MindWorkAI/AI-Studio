@@ -2,10 +2,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-
 using AIStudio.Tools.PluginSystem;
 
-namespace AIStudio.Tools.ToolCallingSystem;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
 public sealed class SearXNGWebSearchTool : IToolImplementation
 {
