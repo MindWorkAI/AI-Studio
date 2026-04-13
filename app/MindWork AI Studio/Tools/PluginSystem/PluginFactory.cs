@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.PluginSystem;
 
@@ -126,5 +127,13 @@ public static partial class PluginFactory
             return;
         
         HOT_RELOAD_WATCHER.Dispose();
+    }
+
+    public static IReadOnlyList<DataMandatoryInfo> GetMandatoryInfos()
+    {
+        return RUNNING_PLUGINS
+            .OfType<PluginConfiguration>()
+            .SelectMany(plugin => plugin.MandatoryInfos)
+            .ToList();
     }
 }
