@@ -1,7 +1,5 @@
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -24,53 +22,31 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
-        if(!requestedSecret.Success)
-            yield break;
-        
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-        
-        // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
-        
-        // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
-        
-        // Prepare the xAI HTTP chat request:
-        var xChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
-        {
-            Model = chatModel.Id,
-            
-            // Build the messages:
-            // - First of all the system prompt
-            // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..messages],
-            
-            // Right now, we only support streaming completions:
-            Stream = true,
-            AdditionalApiParameters = apiParameters
-        }, JSON_SERIALIZER_OPTIONS);
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+                           "xAI",
+                           chatModel,
+                           chatThread,
+                           settingsManager,
+                           async (systemPrompt, apiParameters) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
 
-        async Task<HttpRequestMessage> RequestBuilder()
-        {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+                               return new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
 
-            // Set the authorization header:
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
+                                   Messages = [systemPrompt, ..messages],
 
-            // Set the content:
-            request.Content = new StringContent(xChatRequest, Encoding.UTF8, "application/json");
-            return request;
-        }
-        
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("xAI", RequestBuilder, token))
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
+                                   AdditionalApiParameters = apiParameters
+                               };
+                           },
+                           token: token))
             yield return content;
     }
 

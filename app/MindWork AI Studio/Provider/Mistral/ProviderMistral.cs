@@ -1,7 +1,5 @@
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -22,58 +20,37 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
-        if(!requestedSecret.Success)
-            yield break;
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+                           "Mistral",
+                           chatModel,
+                           chatThread,
+                           settingsManager,
+                           async (systemPrompt, apiParameters) =>
+                           {
+                               if (TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt))
+                                   apiParameters["safe_prompt"] = parsedSafePrompt;
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-        
-        // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
-        var safePrompt = TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt) && parsedSafePrompt;
-        var randomSeed = TryPopIntParameter(apiParameters, "random_seed", out var parsedRandomSeed) ? parsedRandomSeed : (int?)null;
+                               if (TryPopIntParameter(apiParameters, "random_seed", out var parsedRandomSeed))
+                                   apiParameters["random_seed"] = parsedRandomSeed;
 
-        // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
-        
-        // Prepare the Mistral HTTP chat request:
-        var mistralChatRequest = JsonSerializer.Serialize(new ChatRequest
-        {
-            Model = chatModel.Id,
-            
-            // Build the messages:
-            // - First of all the system prompt
-            // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..messages],
-            
-            // Right now, we only support streaming completions:
-            Stream = true,
-            RandomSeed = randomSeed,
-            SafePrompt = safePrompt,
-            AdditionalApiParameters = apiParameters
-        }, JSON_SERIALIZER_OPTIONS);
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
 
-        
-        async Task<HttpRequestMessage> RequestBuilder()
-        {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+                               return new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
 
-            // Set the authorization header:
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
+                                   Messages = [systemPrompt, ..messages],
 
-            // Set the content:
-            request.Content = new StringContent(mistralChatRequest, Encoding.UTF8, "application/json");
-            return request;
-        }
-        
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("Mistral", RequestBuilder, token))
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
+                                   AdditionalApiParameters = apiParameters
+                               };
+                           },
+                           token: token))
             yield return content;
     }
 
