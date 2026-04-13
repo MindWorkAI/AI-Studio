@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "id": "web_search",
+  "implementationKey": "web_search",
+  "visibleIn": {
+    "chat": true,
+    "assistants": true
+  },
+  "settingsSchema": {
+    "type": "object",
+    "properties": {
+      "baseUrl": {
+        "type": "string",
+        "secret": false
+      },
+      "defaultLanguage": {
+        "type": "string",
+        "secret": false
+      },
+      "defaultSafeSearch": {
+        "type": "string",
+        "enum": [
+          "0",
+          "1",
+          "2"
+        ],
+        "secret": false
+      },
+      "defaultCategories": {
+        "type": "string",
+        "secret": false
+      },
+      "defaultEngines": {
+        "type": "string",
+        "secret": false
+      },
+      "maxResults": {
+        "type": "string",
+        "secret": false
+      },
+      "timeoutSeconds": {
+        "type": "string",
+        "secret": false
+      }
+    },
+    "required": [
+      "baseUrl"
+    ]
+  },
+  "function": {
+    "name": "web_search",
+    "description": "Search the web via a configured SearXNG instance. Prefer categories for broad search intent. Use engines only when the user explicitly asks for specific search engines. Returns JSON with request metadata and the SearXNG response. When deeper content is needed, use read_web_page on relevant URLs from response.results.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search query to send to SearXNG."
+        },
+        "categories": {
+          "type": "array",
+          "description": "Optional list of SearXNG categories to use for the search.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "engines": {
+          "type": "array",
+          "description": "Optional list of specific SearXNG engines to use when the user requests them explicitly.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "language": {
+          "type": "string",
+          "description": "Optional language code for the search."
+        },
+        "time_range": {
+          "type": "string",
+          "description": "Optional time range filter for engines that support it.",
+          "enum": [
+            "day",
+            "month",
+            "year"
+          ]
+        },
+        "page": {
+          "type": "integer",
+          "description": "Optional search result page number starting at 1."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Optional maximum number of results to return to the model after local truncation."
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -37,6 +37,12 @@ public partial class ToolSelection : MSGComponentBase
     private bool showSelection;
     private IReadOnlyList<ToolCatalogItem> catalog = [];
 
+    protected override void OnParametersSet()
+    {
+        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
+        base.OnParametersSet();
+    }
+
     private bool SupportsTools =>
         this.LLMProvider != AIStudio.Settings.Provider.NONE &&
         this.LLMProvider.GetModelCapabilities().Contains(Capability.CHAT_COMPLETION_API) &&
@@ -59,8 +65,22 @@ public partial class ToolSelection : MSGComponentBase
         else
             updated.Remove(toolId);
 
+        updated = ToolSelectionRules.NormalizeSelection(updated);
         this.SelectedToolIds = updated;
         await this.SelectedToolIdsChanged.InvokeAsync(updated);
+    }
+
+    private bool IsSelectionLockedByDependency(string toolId) => ToolSelectionRules.IsRequiredBySelectedTools(toolId, this.SelectedToolIds);
+
+    private string? GetDependencyHint(string toolId)
+    {
+        if (toolId == ToolSelectionRules.WEB_SEARCH_TOOL_ID)
+            return this.T("Enabling this tool also enables Read Web Page.");
+
+        if (this.IsSelectionLockedByDependency(toolId))
+            return this.T("This tool is currently required because Web Search is enabled.");
+
+        return null;
     }
 
     private async Task OpenSettings(string toolId)

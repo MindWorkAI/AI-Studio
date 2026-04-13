@@ -22,6 +22,11 @@ public interface IToolImplementation
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         this.T(fieldDefinition.Description);
 
+    public Task<ToolConfigurationState?> ValidateConfigurationAsync(
+        ToolDefinition definition,
+        IReadOnlyDictionary<string, string> settingsValues,
+        CancellationToken token = default) => Task.FromResult<ToolConfigurationState?>(null);
+
     public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default);
 
     public string FormatTraceResult(string rawResult) => rawResult;

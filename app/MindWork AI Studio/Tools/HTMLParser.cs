@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http;
 using System.Text;
 
 using HtmlAgilityPack;
@@ -23,10 +24,8 @@ public sealed class HTMLParser
     /// <returns>The web content as text.</returns>
     public async Task<string> LoadWebContentText(Uri url)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var parser = new HtmlWeb();
-        var doc = await parser.LoadFromWebAsync(url, Encoding.UTF8, new NetworkCredential(), cts.Token);
-        return doc.ParsedText;
+        var response = await this.LoadWebPageAsync(url);
+        return response.Document.ParsedText;
     }
 
     /// <summary>
@@ -36,12 +35,40 @@ public sealed class HTMLParser
     /// <returns>The web content as an HTML string.</returns>
     public async Task<string> LoadWebContentHTML(Uri url)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var parser = new HtmlWeb();
-        var doc = await parser.LoadFromWebAsync(url, Encoding.UTF8, new NetworkCredential(), cts.Token);
-        var innerHtml = doc.DocumentNode.InnerHtml;
+        var response = await this.LoadWebPageAsync(url);
+        var innerHtml = response.Document.DocumentNode.InnerHtml;
 
         return innerHtml;
+    }
+
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30)
+    {
+        using var httpClient = new HttpClient
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        using var response = await httpClient.GetAsync(url, timeoutCts.Token);
+        response.EnsureSuccessStatusCode();
+
+        var html = await response.Content.ReadAsStringAsync(token);
+        var document = new HtmlDocument();
+        document.LoadHtml(html);
+
+        return new HTMLParserWebPage
+        {
+            RequestedUrl = url,
+            FinalUrl = response.RequestMessage?.RequestUri ?? url,
+            ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
+            Document = document,
+        };
+    }
+
+    public string ExtractTitle(HtmlDocument document)
+    {
+        var title = document.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim();
+        return WebUtility.HtmlDecode(title ?? string.Empty).Trim();
     }
 
     /// <summary>
@@ -54,4 +81,15 @@ public sealed class HTMLParser
         var markdownConverter = new Converter(MARKDOWN_PARSER_CONFIG);
         return markdownConverter.Convert(html);
     }
+}
+
+public sealed class HTMLParserWebPage
+{
+    public required Uri RequestedUrl { get; init; }
+
+    public required Uri FinalUrl { get; init; }
+
+    public required string ContentType { get; init; }
+
+    public required HtmlDocument Document { get; init; }
 }

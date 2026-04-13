@@ -21,6 +21,7 @@
             }
             
             <SettingsPanelApp AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+            
             <SettingsPanelTools />
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))

@@ -5,6 +5,7 @@ using System.Text.Json;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -349,7 +350,7 @@ public sealed class SettingsManager
     {
         var key = component.ToString();
         if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
-            return [..toolIds];
+            return ToolSelectionRules.NormalizeSelection(toolIds);
 
         return [];
     }

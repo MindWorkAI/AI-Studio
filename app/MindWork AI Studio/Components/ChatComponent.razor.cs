@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -92,7 +93,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT);
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
         // Apply template's file attachments, if any:
         foreach (var attachment in this.currentChatTemplate.FileAttachments)
@@ -610,7 +611,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.StateHasChanged();
             this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
-            this.ChatThread.RuntimeSelectedToolIds = [..this.selectedToolIds];
+            this.ChatThread.RuntimeSelectedToolIds = ToolSelectionRules.NormalizeSelection(this.selectedToolIds);
             
             // Use the selected provider to get the AI response.
             // By awaiting this line, we wait for the entire
@@ -643,7 +644,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.selectedToolIds = updatedToolIds;
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
     }
     

@@ -100,7 +100,7 @@ public sealed class ToolRegistry
             {
                 Definition = definition,
                 Implementation = implementation,
-                ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition),
+                ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation),
             });
         }
 
@@ -119,7 +119,7 @@ public sealed class ToolRegistry
         if (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) || !modelCapabilities.Contains(Capability.FUNCTION_CALLING))
             return [];
 
-        var selectedToolIdSet = selectedToolIds.ToHashSet(StringComparer.Ordinal);
+        var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
         var definitions = this.GetDefinitionsForComponent(component).Where(x => selectedToolIdSet.Contains(x.Id)).ToList();
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
         foreach (var definition in definitions)
@@ -127,7 +127,7 @@ public sealed class ToolRegistry
             if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
                 continue;
 
-            var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition);
+            var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);
             if (!configurationState.IsConfigured)
                 continue;
 

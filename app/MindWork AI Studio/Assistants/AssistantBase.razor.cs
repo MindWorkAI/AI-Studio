@@ -3,6 +3,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -257,7 +258,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.selectedToolIds = updatedToolIds;
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
     }
     
@@ -309,7 +310,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.chatThread.SelectedProvider = this.providerSettings.Id;
             this.chatThread.RuntimeComponent = this.Component;
             this.chatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
-                ? [..this.selectedToolIds]
+                ? ToolSelectionRules.NormalizeSelection(this.selectedToolIds)
                 : [];
         }
 

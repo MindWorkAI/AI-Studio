@@ -39,10 +39,11 @@
                     {
                         var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
                         var isConfigured = item.ConfigurationState.IsConfigured;
+                        var dependencyHint = this.GetDependencyHint(item.Definition.Id);
                         <MudPaper Class="pa-2 mb-2 border rounded-lg">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || this.Disabled || !this.SupportsTools)" />
+                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || this.Disabled || !this.SupportsTools || this.IsSelectionLockedByDependency(item.Definition.Id))" />
                                     <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
                                     <MudTooltip Text="@item.Implementation.GetDescription()">
                                         <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
@@ -52,7 +53,11 @@
                             </MudStack>
                             @if (!isConfigured)
                             {
-                                <MudText Typo="Typo.caption" Color="Color.Warning">@T("Required settings are missing. Configure this tool before enabling it.")</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message)</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(dependencyHint))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">@dependencyHint</MudText>
                             }
                         </MudPaper>
                     }

@@ -39,5 +39,5 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
 
     private HashSet<string> GetSelectedValues() => this.SettingsManager.GetDefaultToolIds(this.Component);
 
-    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = [..values];
+    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = [..ToolSelectionRules.NormalizeSelection(values)];
 }

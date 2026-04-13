@@ -29,7 +29,10 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         return values;
     }
 
-    public async Task<ToolConfigurationState> GetConfigurationStateAsync(ToolDefinition definition)
+    public async Task<ToolConfigurationState> GetConfigurationStateAsync(
+        ToolDefinition definition,
+        IToolImplementation? implementation = null,
+        CancellationToken token = default)
     {
         var values = await this.GetSettingsAsync(definition);
         var missing = new List<string>();
@@ -39,10 +42,25 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
                 missing.Add(requiredField);
         }
 
+        if (missing.Count > 0)
+        {
+            return new ToolConfigurationState
+            {
+                IsConfigured = false,
+                MissingRequiredFields = missing,
+            };
+        }
+
+        if (implementation is not null)
+        {
+            var validationState = await implementation.ValidateConfigurationAsync(definition, values, token);
+            if (validationState is not null && !validationState.IsConfigured)
+                return validationState;
+        }
+
         return new ToolConfigurationState
         {
-            IsConfigured = missing.Count == 0,
-            MissingRequiredFields = missing,
+            IsConfigured = true,
         };
     }
 

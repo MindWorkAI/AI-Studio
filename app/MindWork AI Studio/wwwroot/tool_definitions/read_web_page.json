@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "read_web_page",
+  "implementationKey": "read_web_page",
+  "visibleIn": {
+    "chat": true,
+    "assistants": true
+  },
+  "settingsSchema": {
+    "type": "object",
+    "properties": {
+      "timeoutSeconds": {
+        "type": "string",
+        "secret": false
+      },
+      "maxContentCharacters": {
+        "type": "string",
+        "secret": false
+      }
+    },
+    "required": []
+  },
+  "function": {
+    "name": "read_web_page",
+    "description": "Load a single HTTP or HTTPS web page, extract its main content as Markdown, and return structured JSON metadata for the model.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full HTTP or HTTPS URL of the web page to read."
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

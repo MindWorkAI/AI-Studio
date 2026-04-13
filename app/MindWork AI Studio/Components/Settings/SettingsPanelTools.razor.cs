@@ -34,6 +34,7 @@ public partial class SettingsPanelTools : SettingsPanelBase
 
     private string GetConfigurationTooltip(ToolCatalogItem item) => item.ConfigurationState.MissingRequiredFields.Count switch
     {
+        _ when !string.IsNullOrWhiteSpace(item.ConfigurationState.Message) => item.ConfigurationState.Message,
         0 => this.T("This tool still needs to be configured."),
         _ => string.Format(this.T("Missing required settings: {0}"), string.Join(", ", item.ConfigurationState.MissingRequiredFields.Select(fieldName => this.GetFieldDisplayName(item, fieldName))))
     };
