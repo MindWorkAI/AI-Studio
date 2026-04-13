@@ -14,7 +14,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser) : IToolImplementation
 {
     private const int DEFAULT_TIMEOUT_SECONDS = 30;
     private const int DEFAULT_MAX_CONTENT_CHARACTERS = 12000;
-    private const int MAX_TRACE_LENGTH = 4000;
+    private const int MAX_TRACE_LENGTH = 12000;
 
     private static readonly string[] REMOVED_NODE_XPATHS =
     [
@@ -39,7 +39,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser) : IToolImplementation
 
     public string GetDisplayName() => I18N.I.T("Read Web Page", typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
-    public string GetDescription() => I18N.I.T("Load a single web page, extract its main HTML content, and return Markdown plus metadata for the model.", typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
+    public string GetDescription() => I18N.I.T("Load a single web page, extract its main HTML content, and return structured working material for the model. Use the result to synthesize a natural-language answer instead of exposing the raw payload to the user.", typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -109,8 +109,8 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser) : IToolImplementation
 
         var document = page.Document;
         var title = htmlParser.ExtractTitle(document);
-        var contentRoot = document.DocumentNode.SelectSingleNode("//main") ??
-                          document.DocumentNode.SelectSingleNode("//article") ??
+        var contentRoot = document.DocumentNode.SelectSingleNode("//article") ??
+                          document.DocumentNode.SelectSingleNode("//main") ??
                           document.DocumentNode.SelectSingleNode("//body") ??
                           document.DocumentNode;
 
@@ -134,15 +134,27 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser) : IToolImplementation
 
         return new ToolExecutionResult
         {
-            JsonContent = new JsonObject
+            JsonContent = BuildResponseJson(page, title, markdown, warnings)
+        };
+    }
+
+    private static JsonObject BuildResponseJson(HTMLParserWebPage page, string title, string markdown, JsonArray warnings)
+    {
+        var response = new JsonObject
+        {
+            ["metadata"] = new JsonObject
             {
                 ["url"] = page.RequestedUrl.ToString(),
                 ["final_url"] = page.FinalUrl.ToString(),
                 ["title"] = title,
-                ["markdown"] = markdown,
-                ["warnings"] = warnings,
             },
+            ["content_markdown"] = markdown,
         };
+
+        if (warnings.Count > 0)
+            response["warnings"] = warnings;
+
+        return response;
     }
 
     public string FormatTraceResult(string rawResult)

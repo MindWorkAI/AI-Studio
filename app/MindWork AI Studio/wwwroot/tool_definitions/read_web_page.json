@@ -22,7 +22,7 @@
   },
   "function": {
     "name": "read_web_page",
-    "description": "Load a single HTTP or HTTPS web page, extract its main content as Markdown, and return structured JSON metadata for the model.",
+    "description": "Load a single HTTP or HTTPS web page, extract its main content as structured working material for the model, and use it to synthesize a natural-language answer for the user.",
     "strict": true,
     "parameters": {
       "type": "object",

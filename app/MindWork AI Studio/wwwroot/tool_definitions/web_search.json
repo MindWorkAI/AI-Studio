@@ -49,14 +49,14 @@
   },
   "function": {
     "name": "web_search",
-    "description": "Search the web via a configured SearXNG instance. Prefer categories for broad search intent. Use engines only when the user explicitly asks for specific search engines. Returns JSON with request metadata and the SearXNG response. When deeper content is needed, use read_web_page on relevant URLs from response.results.",
+    "description": "Search the web via a configured SearXNG instance and return candidate result URLs. Prefer categories for broad search intent. Use engines only when the user explicitly asks for specific search engines. Do not answer detailed or factual web questions from search results alone when read_web_page is available. Use read_web_page on relevant URLs from response.results before answering with page-level facts or summaries.",
     "strict": true,
     "parameters": {
       "type": "object",
       "properties": {
         "query": {
           "type": "string",
-          "description": "The search query to send to SearXNG."
+          "description": "The search query."
         },
         "categories": {
           "type": "array",

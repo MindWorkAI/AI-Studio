@@ -5,6 +5,7 @@ using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Chat;
@@ -193,6 +194,17 @@ public sealed record ChatThread
         }
         
         LOGGER.LogInformation(logMessage);
+
+        var toolPolicy = this.BuildToolPolicyPrompt();
+        if (!string.IsNullOrWhiteSpace(toolPolicy))
+        {
+            systemPromptText = $"""
+                                {systemPromptText}
+
+                                {toolPolicy}
+                                """;
+        }
+
         if(!this.IncludeDateTime)
             return systemPromptText;
         
@@ -211,6 +223,29 @@ public sealed record ChatThread
 
                 {systemPromptText}
                 """;
+    }
+
+    private string BuildToolPolicyPrompt()
+    {
+        var normalizedToolIds = ToolSelectionRules.NormalizeSelection(this.RuntimeSelectedToolIds);
+        var hasWebSearch = normalizedToolIds.Contains(ToolSelectionRules.WEB_SEARCH_TOOL_ID);
+        var hasReadWebPage = normalizedToolIds.Contains(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID);
+        if (!hasWebSearch || !hasReadWebPage)
+            return string.Empty;
+
+        return """
+               Tool usage policy for web research:
+
+               - Use `web_search` to discover relevant candidate URLs.
+               - Do not answer substantive web questions from search snippets alone when `read_web_page` is available.
+               - After `web_search`, use `read_web_page` on at least one relevant result before answering questions that require facts, summaries, comparisons, current information, or other page-level details.
+               - Search snippets alone are only sufficient for simple link-finding or very high-level orientation.
+               - Prefer answering from the extracted page content when it is available.
+               - Never expose raw tool outputs, JSON objects, or internal tool payloads to the user unless the user explicitly asks for structured output.
+               - Summarize tool results in natural language.
+               - Treat `read_web_page` results as working material for synthesis, not as final answer text.
+               - Do not paste wrapper fields such as `metadata`, `content_markdown`, or `warnings` verbatim into the final answer.
+               """;
     }
 
     /// <summary>

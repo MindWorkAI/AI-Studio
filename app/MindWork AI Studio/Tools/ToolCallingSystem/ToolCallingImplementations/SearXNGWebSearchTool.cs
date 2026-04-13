@@ -21,7 +21,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
     public string GetDisplayName() => I18N.I.T("Web Search", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
 
-    public string GetDescription() => I18N.I.T("Search the web with a configured SearXNG instance and return structured JSON results for the model. When deeper content is needed, use Read Web Page on relevant result URLs.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+    public string GetDescription() => I18N.I.T("Search the web with a configured SearXNG instance and return candidate URLs for the model. Use Read Web Page on relevant result URLs before answering factual or detailed web questions.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -182,15 +182,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         if (responseJson is not JsonObject responseObject)
             throw new InvalidOperationException("The SearXNG response JSON must be an object.");
 
-        var resultArray = responseObject["results"] as JsonArray;
-        if (resultArray is not null && resultArray.Count > effectiveLimit)
-        {
-            var truncatedResults = new JsonArray();
-            foreach (var result in resultArray.Take(effectiveLimit))
-                truncatedResults.Add(result?.DeepClone());
-
-            responseObject["results"] = truncatedResults;
-        }
+        responseObject = SanitizeResponse(responseObject, effectiveLimit);
 
         var requestJson = new JsonObject
         {
@@ -300,6 +292,106 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             array.Add(value);
 
         return array;
+    }
+
+    private static JsonObject SanitizeResponse(JsonObject responseObject, int effectiveLimit)
+    {
+        var sanitizedResponse = new JsonObject();
+
+        var resultArray = responseObject["results"] as JsonArray;
+        var sanitizedResults = BuildSanitizedResults(resultArray, effectiveLimit);
+        sanitizedResponse["results"] = sanitizedResults;
+
+        var suggestions = BuildSuggestions(responseObject["suggestions"] as JsonArray);
+        if (suggestions.Count > 0)
+            sanitizedResponse["suggestions"] = suggestions;
+
+        return sanitizedResponse;
+    }
+
+    private static JsonArray BuildSanitizedResults(JsonArray? resultArray, int effectiveLimit)
+    {
+        var sanitizedResults = new JsonArray();
+        if (resultArray is null)
+            return sanitizedResults;
+
+        var resultObjects = resultArray.OfType<JsonObject>().ToList();
+        var hasSortableScores = resultObjects.Any(result => TryGetScore(result, out _));
+        IEnumerable<JsonObject> orderedResults = hasSortableScores
+            ? resultObjects
+                .OrderByDescending(result => TryGetScore(result, out var score) ? score : double.MinValue)
+                .ThenBy(result => result["title"]?.ToString(), StringComparer.OrdinalIgnoreCase)
+            : resultObjects;
+
+        foreach (var result in orderedResults.Take(effectiveLimit))
+            sanitizedResults.Add(SanitizeResult(result));
+
+        return sanitizedResults;
+    }
+
+    private static JsonObject SanitizeResult(JsonObject result)
+    {
+        var sanitizedResult = new JsonObject();
+        CopyPropertyIfPresent(result, sanitizedResult, "title");
+        CopyPropertyIfPresent(result, sanitizedResult, "url");
+        CopyPropertyIfPresent(result, sanitizedResult, "content");
+        CopyPropertyIfPresent(result, sanitizedResult, "score");
+        CopyPropertyIfPresent(result, sanitizedResult, "engine");
+        CopyPropertyIfPresent(result, sanitizedResult, "category");
+        CopyPropertyIfPresent(result, sanitizedResult, "publishedDate");
+        CopyPropertyIfPresent(result, sanitizedResult, "published_date");
+
+        return sanitizedResult;
+    }
+
+    private static JsonArray BuildSuggestions(JsonArray? suggestionsArray)
+    {
+        var suggestions = new JsonArray();
+        if (suggestionsArray is null)
+            return suggestions;
+
+        foreach (var suggestionNode in suggestionsArray.Take(3))
+        {
+            var suggestion = suggestionNode switch
+            {
+                JsonValue value => value.TryGetValue<string>(out var stringSuggestion) ? stringSuggestion : null,
+                JsonObject suggestionObject when suggestionObject.TryGetPropertyValue("suggestion", out var suggestionValue) => suggestionValue?.ToString(),
+                JsonObject suggestionObject when suggestionObject.TryGetPropertyValue("title", out var titleValue) => titleValue?.ToString(),
+                _ => suggestionNode?.ToString(),
+            };
+
+            if (!string.IsNullOrWhiteSpace(suggestion))
+                suggestions.Add(suggestion);
+        }
+
+        return suggestions;
+    }
+
+    private static void CopyPropertyIfPresent(JsonObject source, JsonObject target, string propertyName)
+    {
+        if (source.TryGetPropertyValue(propertyName, out var propertyValue) && propertyValue is not null)
+            target[propertyName] = propertyValue.DeepClone();
+    }
+
+    private static bool TryGetScore(JsonObject result, out double score)
+    {
+        score = double.MinValue;
+        if (!result.TryGetPropertyValue("score", out var scoreNode) || scoreNode is null)
+            return false;
+
+        return scoreNode switch
+        {
+            JsonValue value when value.TryGetValue<double>(out var doubleScore) => ReturnScore(doubleScore, out score),
+            JsonValue value when value.TryGetValue<decimal>(out var decimalScore) => ReturnScore((double)decimalScore, out score),
+            JsonValue value when value.TryGetValue<int>(out var intScore) => ReturnScore(intScore, out score),
+            _ => double.TryParse(scoreNode.ToString(), out var parsedScore) && ReturnScore(parsedScore, out score),
+        };
+    }
+
+    private static bool ReturnScore(double input, out double score)
+    {
+        score = input;
+        return true;
     }
 
     private static List<string> SplitCommaSeparatedValues(string? value) => value?
