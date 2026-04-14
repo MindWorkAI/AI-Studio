@@ -136,9 +136,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
         }
         catch (JsonException e)
         {
-            if (body.Contains("invalid API key", StringComparison.InvariantCultureIgnoreCase) ||
-                body.Contains("valid API key", StringComparison.InvariantCultureIgnoreCase) ||
-                body.Contains("missing API key", StringComparison.InvariantCultureIgnoreCase))
+            if (body.Contains("API key", StringComparison.InvariantCultureIgnoreCase))
                 return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, body);
             
             LOGGER.LogError(e, "Unexpected error while parsing models from Helmholtz API response. Status Code: {StatusCode}. Reason: {ReasonPhrase}. Response Body: '{ResponseBody}'", response.StatusCode, response.ReasonPhrase, body);
