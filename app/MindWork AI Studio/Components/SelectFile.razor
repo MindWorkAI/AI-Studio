@@ -13,7 +13,7 @@
         Variant="Variant.Outlined"
     />
     
-    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="this.Disabled" OnClick="@this.OpenFileDialog">
+    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.Disabled || this.isOpeningFileDialog)" OnClick="@this.OpenFileDialog">
         @T("Choose File")
     </MudButton>
 </MudStack>

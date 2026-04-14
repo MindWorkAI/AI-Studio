@@ -6,11 +6,11 @@
         @if (this.isDraggingOver)
         {
             <MudBadge
-                Content="@this.DocumentPaths.Count"
-                Color="Color.Primary"
-                Overlap="true"
-                Class="cursor-pointer"
-                OnClick="@this.OpenAttachmentsDialog">
+                    Content="@this.DocumentPaths.Count"
+                    Color="Color.Primary"
+                    Overlap="true"
+                    Class="cursor-pointer"
+                    OnClick="@this.OpenAttachmentsDialog">
                 <MudLink OnClick="@this.AddFilesManually" Style="text-decoration: none;">
                     <MudTextField T="string"
                                   Text="@DROP_FILES_HERE_TEXT"
@@ -19,6 +19,7 @@
                                   Typo="Typo.body2"
                                   Variant="Variant.Outlined"
                                   ReadOnly="true"
+                                  Disabled="@(this.isOpeningFileDialog || this.isOpeningAttachmentsDialog)"
                     />
                 </MudLink>
             </MudBadge>
@@ -35,6 +36,7 @@
                     <MudIconButton
                         Icon="@Icons.Material.Filled.AttachFile"
                         Color="Color.Default"
+                        Disabled="@(this.isOpeningFileDialog || this.isOpeningAttachmentsDialog)"
                         OnClick="@this.AddFilesManually"/>
                 </MudBadge>
             </MudTooltip>
@@ -45,6 +47,7 @@
                 <MudIconButton
                     Icon="@Icons.Material.Filled.AttachFile"
                     Color="Color.Default"
+                    Disabled="@(this.isOpeningFileDialog || this.isOpeningAttachmentsDialog)"
                     OnClick="@this.AddFilesManually"/>
             </MudTooltip>
         }
@@ -60,6 +63,7 @@ else
             Variant="Variant.Filled"
             StartIcon="@Icons.Material.Filled.Add"
             Color="Color.Primary"
+            Disabled="@(this.isOpeningFileDialog || this.isOpeningAttachmentsDialog)"
             OnClick="@(() => this.AddFilesManually())"
             Style="vertical-align: top; margin-top: -2px;"
             Size="Size.Small">

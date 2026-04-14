@@ -102,6 +102,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private ElementReference mathContentContainer;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
+    private bool isOpeningAttachmentsDialog;
     private bool isDisposed;
 
     #region Overrides of ComponentBase
@@ -600,8 +601,20 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task OpenAttachmentsDialog()
     {
-        var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
-        this.Content.FileAttachments = result.ToList();
+        if (this.isOpeningAttachmentsDialog)
+            return;
+
+        this.isOpeningAttachmentsDialog = true;
+
+        try
+        {
+            var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
+            this.Content.FileAttachments = result.ToList();
+        }
+        finally
+        {
+            this.isOpeningAttachmentsDialog = false;
+        }
     }
 
     public async ValueTask DisposeAsync()

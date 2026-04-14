@@ -1,5 +1,5 @@
 @inherits MSGComponentBase
-<MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Class="mb-3" Disabled="@this.Disabled">
+<MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Class="mb-3" Disabled="@(this.Disabled || this.isSelectingFile)">
     @if (string.IsNullOrWhiteSpace(this.Text))
     {
         @T("Use file content as input")        

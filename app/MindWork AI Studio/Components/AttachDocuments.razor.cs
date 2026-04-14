@@ -78,6 +78,8 @@ public partial class AttachDocuments : MSGComponentBase
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isDraggingOver;
+    private bool isOpeningFileDialog;
+    private bool isOpeningAttachmentsDialog;
     
     #region Overrides of MSGComponentBase
 
@@ -202,40 +204,64 @@ public partial class AttachDocuments : MSGComponentBase
     
     private async Task AddFilesManually()
     {
+        if (this.isOpeningFileDialog)
+            return;
+
+        this.isOpeningFileDialog = true;
+
+        try
+        {
         // Ensure that Pandoc is installed and ready:
-        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-            showSuccessMessage: false,
-            showDialog: true);
+            var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                showSuccessMessage: false,
+                showDialog: true);
 
         // If Pandoc is not available (user cancelled installation), abort file selection:
-        if (!pandocState.IsAvailable)
-        {
-            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
-            return;
+            if (!pandocState.IsAvailable)
+            {
+                this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
+                return;
+            }
+
+            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
+            if (selectFiles.UserCancelled)
+                return;
+
+            foreach (var selectedFilePath in selectFiles.SelectedFilePaths)
+            {
+                if (!File.Exists(selectedFilePath))
+                    continue;
+
+                if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
+                    continue;
+
+                this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
+            }
+            
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
         }
-
-        var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
-        if (selectFiles.UserCancelled)
-            return;
-
-        foreach (var selectedFilePath in selectFiles.SelectedFilePaths)
+        finally
         {
-            if (!File.Exists(selectedFilePath))
-                continue;
-
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
-                continue;
-
-            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
+            this.isOpeningFileDialog = false;
         }
-        
-        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
-        await this.OnChange(this.DocumentPaths);
     }
     
     private async Task OpenAttachmentsDialog()
     {
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
+        if (this.isOpeningAttachmentsDialog)
+            return;
+
+        this.isOpeningAttachmentsDialog = true;
+
+        try
+        {
+            this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
+        }
+        finally
+        {
+            this.isOpeningAttachmentsDialog = false;
+        }
     }
 
     private async Task ClearAllFiles()

@@ -35,6 +35,7 @@ public partial class SelectFile : MSGComponentBase
     protected ILogger<SelectFile> Logger { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
+    private bool isOpeningFileDialog;
     
     #region Overrides of ComponentBase
 
@@ -55,10 +56,22 @@ public partial class SelectFile : MSGComponentBase
 
     private async Task OpenFileDialog()
     {
-        var response = await this.RustService.SelectFile(this.FileDialogTitle, this.Filter, string.IsNullOrWhiteSpace(this.File) ? null : this.File);
-        this.Logger.LogInformation($"The user selected the file '{response.SelectedFilePath}'.");
+        if (this.Disabled || this.isOpeningFileDialog)
+            return;
 
-        if (!response.UserCancelled)
-            this.InternalFileChanged(response.SelectedFilePath);
+        this.isOpeningFileDialog = true;
+
+        try
+        {
+            var response = await this.RustService.SelectFile(this.FileDialogTitle, this.Filter, string.IsNullOrWhiteSpace(this.File) ? null : this.File);
+            this.Logger.LogInformation($"The user selected the file '{response.SelectedFilePath}'.");
+
+            if (!response.UserCancelled)
+                this.InternalFileChanged(response.SelectedFilePath);
+        }
+        finally
+        {
+            this.isOpeningFileDialog = false;
+        }
     }
 }
