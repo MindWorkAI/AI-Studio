@@ -29,7 +29,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// The HTTP client to use it for all requests.
     /// </summary>
-    protected readonly HttpClient httpClient = new();
+    protected readonly HttpClient HttpClient = new();
     
     /// <summary>
     /// The logger to use.
@@ -73,7 +73,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         this.Provider = provider;
 
         // Set the base URL:
-        this.httpClient.BaseAddress = new(url);
+        this.HttpClient.BaseAddress = new(url);
     }
     
     #region Handling of IProvider, which all providers must implement
@@ -103,16 +103,16 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts);
     
     /// <inheritdoc />
-    public abstract Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public abstract Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     /// <inheritdoc />
-    public abstract Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public abstract Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     /// <inheritdoc />
-    public abstract Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public abstract Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
 
     /// <inheritdoc />
-    public abstract Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public abstract Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     #endregion
     
@@ -128,6 +128,71 @@ public abstract class BaseProvider : IProvider, ISecretId
     public string SecretName => this.InstanceName;
 
     #endregion
+
+    protected static ModelLoadResult SuccessfulModelLoadResult(IEnumerable<Model> models) => ModelLoadResult.FromModels(models);
+
+    protected static ModelLoadResult FailedModelLoadResult(ModelLoadFailureReason failureReason, string? technicalDetails = null) => ModelLoadResult.Failure(failureReason, technicalDetails);
+
+    protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
+    {
+        not null => apiKeyProvisional,
+        _ => await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
+        {
+            { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+            _ => null,
+        }
+    };
+
+    protected static ModelLoadFailureReason GetDefaultModelLoadFailureReason(HttpResponseMessage response) => response.StatusCode switch
+    {
+        HttpStatusCode.Unauthorized => ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY,
+        HttpStatusCode.Forbidden => ModelLoadFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR,
+        
+        _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
+    };
+
+    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(
+        SecretStoreType storeType,
+        string requestPath,
+        Func<TResponse, IEnumerable<Model>> modelFactory,
+        CancellationToken token,
+        string? apiKeyProvisional = null,
+        Func<HttpResponseMessage, string, ModelLoadFailureReason>? failureReasonSelector = null,
+        Action<HttpRequestMessage, string>? requestConfigurator = null,
+        JsonSerializerOptions? jsonSerializerOptions = null,
+        bool isTryingSecret = false)
+    {
+        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
+        if (string.IsNullOrWhiteSpace(secretKey) && !isTryingSecret)
+            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, requestPath);
+        if (requestConfigurator is not null)
+            requestConfigurator(request, secretKey ?? string.Empty);
+        else if (!string.IsNullOrWhiteSpace(secretKey))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+        using var response = await this.HttpClient.SendAsync(request, token);
+        var responseBody = await response.Content.ReadAsStringAsync(token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var failureReason = failureReasonSelector?.Invoke(response, responseBody) ?? GetDefaultModelLoadFailureReason(response);
+            return FailedModelLoadResult(failureReason, $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{responseBody}'");
+        }
+
+        try
+        {
+            var parsedResponse = JsonSerializer.Deserialize<TResponse>(responseBody, jsonSerializerOptions ?? JSON_SERIALIZER_OPTIONS);
+            if (parsedResponse is null)
+                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, "Model list response could not be deserialized.");
+
+            return SuccessfulModelLoadResult(modelFactory(parsedResponse));
+        }
+        catch (Exception e)
+        {
+            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, e.Message);
+        }
+    }
     
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
@@ -155,7 +220,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             // Please notice: We do not dispose the response here. The caller is responsible
             // for disposing the response object. This is important because the response
             // object is used to read the stream.
-            var nextResponse = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+            var nextResponse = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
             if (nextResponse.IsSuccessStatusCode)
             {
                 response = nextResponse;
@@ -696,7 +761,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                     break;
             }
             
-            using var response = await this.httpClient.SendAsync(request, token);
+            using var response = await this.HttpClient.SendAsync(request, token);
             var responseBody = response.Content.ReadAsStringAsync(token).Result;
         
             if (!response.IsSuccessStatusCode)
@@ -766,7 +831,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             // Set the content:
             request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");
-            using var response = await this.httpClient.SendAsync(request, token);
+            using var response = await this.HttpClient.SendAsync(request, token);
             var responseBody = response.Content.ReadAsStringAsync(token).Result;
         
             if (!response.IsSuccessStatusCode)

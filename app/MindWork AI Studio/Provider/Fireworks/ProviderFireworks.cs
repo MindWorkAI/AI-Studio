@@ -71,33 +71,32 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         // Source: https://docs.fireworks.ai/api-reference/audio-transcriptions#param-model
-        return Task.FromResult<IEnumerable<Model>>(
-            new List<Model>
-            {
-                new("whisper-v3", "Whisper v3"),
-                // new("whisper-v3-turbo", "Whisper v3 Turbo"), // does not work
-            });
+        return Task.FromResult(ModelLoadResult.FromModels(
+        [
+            new Model("whisper-v3", "Whisper v3"),
+            // new("whisper-v3-turbo", "Whisper v3 Turbo"), // does not work
+        ]));
     }
     
     #endregion
