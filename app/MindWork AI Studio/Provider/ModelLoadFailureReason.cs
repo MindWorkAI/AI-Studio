@@ -1,0 +1,11 @@
+namespace AIStudio.Provider;
+
+public enum ModelLoadFailureReason
+{
+    NONE,
+    INVALID_OR_MISSING_API_KEY,
+    AUTHENTICATION_OR_PERMISSION_ERROR,
+    PROVIDER_UNAVAILABLE,
+    INVALID_RESPONSE,
+    UNKNOWN,
+}

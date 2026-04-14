@@ -72,89 +72,82 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => !model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) &&
-                                     !model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => !model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) &&
+                                               !model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase))
+            ]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => 
-            model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase) ||
-            model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) ||
-            model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model =>
+                    model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase) ||
+                    model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) ||
+                    model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase))
+            ]
+        };
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
+        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional);
+        if (string.IsNullOrWhiteSpace(secretKey))
+            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
 
-        if (secretKey is null)
-            return [];
-        
         using var request = new HttpRequestMessage(HttpMethod.Get, "models");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
-        using var response = await this.httpClient.SendAsync(request, token);
-        
-        // Unfortunately, the Helmholtz API does not return a non-success status code when the API key is invalid. Instead, it returns a 200 OK with a body that contains an error message.
-        // Therefore, we have to check the body of the response to determine if the request was successful or not.
-        if(!response.IsSuccessStatusCode)
-            return [];
+        using var response = await this.HttpClient.SendAsync(request, token);
+        var body = await response.Content.ReadAsStringAsync(token);
+        if (!response.IsSuccessStatusCode)
+            return FailedModelLoadResult(GetDefaultModelLoadFailureReason(response), $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{body}'");
 
         try
         {
-            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-            return modelResponse.Data;
+            var modelResponse = JsonSerializer.Deserialize<ModelsResponse>(body, JSON_SERIALIZER_OPTIONS);
+            return SuccessfulModelLoadResult(modelResponse.Data);
         }
         catch (JsonException e)
         {
-            //
-            // We expect a JsonException to be thrown when the API key is invalid, because the body of the response will not
-            // be a valid JSON. Therefore, we catch this exception and show an appropriate error message to the user.
-            //
-            var body = await response.Content.ReadAsStringAsync(token);
-            
-            if(body.Contains("invalid API key", StringComparison.InvariantCultureIgnoreCase) ||
-               body.Contains("missing API key", StringComparison.InvariantCultureIgnoreCase))
-            {
-                LOGGER.LogWarning("Invalid API key provided for provider {ProviderId}. The response body was: '{ResponseBody}'", this.Id, body);
-                return [];
-            }
+            if (body.Contains("invalid API key", StringComparison.InvariantCultureIgnoreCase) ||
+                body.Contains("valid API key", StringComparison.InvariantCultureIgnoreCase) ||
+                body.Contains("missing API key", StringComparison.InvariantCultureIgnoreCase))
+                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, body);
             
             LOGGER.LogError(e, "Unexpected error while parsing models from Helmholtz API response. Status Code: {StatusCode}. Reason: {ReasonPhrase}. Response Body: '{ResponseBody}'", response.StatusCode, response.ReasonPhrase, body);
-            return [];
+            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, body);
         }
         catch (Exception e)
         {
             LOGGER.LogError(e, "Unexpected error while loading models from Helmholtz API. Status Code: {StatusCode}. Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
-            return [];
+            return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
         }
     }
 }

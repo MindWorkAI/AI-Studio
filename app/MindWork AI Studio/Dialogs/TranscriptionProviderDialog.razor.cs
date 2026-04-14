@@ -300,10 +300,12 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
 
         try
         {
-            var models = await provider.GetTranscriptionModels(this.dataAPIKey);
+            var result = await provider.GetTranscriptionModels(this.dataAPIKey);
+            if (!result.Success)
+                this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(T, provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
-            var orderedModels = models.OrderByDescending(n => n.Id);
+            var orderedModels = result.Models.OrderByDescending(n => n.Id);
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);

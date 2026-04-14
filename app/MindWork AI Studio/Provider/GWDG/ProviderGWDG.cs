@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -72,76 +70,55 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models = [..result.Models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase))]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models = [..result.Models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase))]
+        };
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
-        return Task.FromResult<IEnumerable<Model>>(
-            new List<Model>
-            {
-                new("whisper-large-v2", "Whisper v2 Large"),
-            });
+        return Task.FromResult(ModelLoadResult.FromModels(
+        [
+            new Model("whisper-large-v2", "Whisper v2 Large"),
+        ]));
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
+        var result = await this.LoadModelsResponse<ModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data,
+            token,
+            apiKeyProvisional);
 
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        if (!result.Success)
+            LOGGER.LogWarning("Failed to load models for provider {ProviderId}. FailureReason: {FailureReason}. TechnicalDetails: {TechnicalDetails}", this.Id, result.FailureReason, result.TechnicalDetails);
 
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-        {
-            if(response.StatusCode is HttpStatusCode.Unauthorized)
-                LOGGER.LogWarning("Unauthorized access when loading models for provider {ProviderId}. Please check the API key. Status Code: {StatusCode}. Reason: {ReasonPhrase}", this.Id, response.StatusCode, response.ReasonPhrase);
-            else
-                LOGGER.LogWarning("Failed to load models for provider {ProviderId}. Status Code: {StatusCode}. Reason: {ReasonPhrase}", this.Id, response.StatusCode, response.ReasonPhrase);
-            
-            return [];
-        }
-
-        try
-        {
-            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-            return modelResponse.Data;
-        }
-        catch (Exception e)
-        {
-            LOGGER.LogError(e, "Exception occurred while loading models for provider {ProviderId}. Exception Message: {ExceptionMessage}", this.Id, e.Message);
-            return [];
-        }
+        return result;
     }
 }

@@ -174,10 +174,21 @@ public sealed class ContentText : IContent
             return false;
         }
 
-        IEnumerable<Model> loadedModels;
+        IReadOnlyList<Model> loadedModels;
         try
         {
-            loadedModels = await provider.GetTextModels(token: token);
+            var modelLoadResult = await provider.GetTextModels(token: token);
+            if (!modelLoadResult.Success)
+            {
+                var userMessage = modelLoadResult.FailureReason.ToUserMessage(TB, provider.InstanceName);
+                if (!string.IsNullOrWhiteSpace(userMessage))
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+
+                LOGGER.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
+                return false;
+            }
+
+            loadedModels = modelLoadResult.Models;
         }
         catch (OperationCanceledException)
         {
