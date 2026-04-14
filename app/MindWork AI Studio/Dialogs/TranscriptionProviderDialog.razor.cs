@@ -302,7 +302,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         {
             var result = await provider.GetTranscriptionModels(this.dataAPIKey);
             if (!result.Success)
-                this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(T, provider.InstanceName);
+                this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
             var orderedModels = result.Models.OrderByDescending(n => n.Id);

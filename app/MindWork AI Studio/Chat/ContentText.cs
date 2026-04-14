@@ -180,7 +180,7 @@ public sealed class ContentText : IContent
             var modelLoadResult = await provider.GetTextModels(token: token);
             if (!modelLoadResult.Success)
             {
-                var userMessage = modelLoadResult.FailureReason.ToUserMessage(TB, provider.InstanceName);
+                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
                 if (!string.IsNullOrWhiteSpace(userMessage))
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
 
