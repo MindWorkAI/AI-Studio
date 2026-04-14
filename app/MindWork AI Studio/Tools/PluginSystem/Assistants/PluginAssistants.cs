@@ -497,7 +497,6 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     private void RegisterLuaHelpers()
     {
-        
         this.State.Environment["LogInfo"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
