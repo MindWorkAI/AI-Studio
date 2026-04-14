@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -121,10 +122,39 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
         using var response = await this.httpClient.SendAsync(request, token);
+        
+        // Unfortunately, the Helmholtz API does not return a non-success status code when the API key is invalid. Instead, it returns a 200 OK with a body that contains an error message.
+        // Therefore, we have to check the body of the response to determine if the request was successful or not.
         if(!response.IsSuccessStatusCode)
             return [];
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data;
+        try
+        {
+            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            return modelResponse.Data;
+        }
+        catch (JsonException e)
+        {
+            //
+            // We expect a JsonException to be thrown when the API key is invalid, because the body of the response will not
+            // be a valid JSON. Therefore, we catch this exception and show an appropriate error message to the user.
+            //
+            var body = await response.Content.ReadAsStringAsync(token);
+            
+            if(body.Contains("invalid API key", StringComparison.InvariantCultureIgnoreCase) ||
+               body.Contains("missing API key", StringComparison.InvariantCultureIgnoreCase))
+            {
+                LOGGER.LogWarning("Invalid API key provided for provider {ProviderId}. The response body was: '{ResponseBody}'", this.Id, body);
+                return [];
+            }
+            
+            LOGGER.LogError(e, "Unexpected error while parsing models from Helmholtz API response. Status Code: {StatusCode}. Reason: {ReasonPhrase}. Response Body: '{ResponseBody}'", response.StatusCode, response.ReasonPhrase, body);
+            return [];
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError(e, "Unexpected error while loading models from Helmholtz API. Status Code: {StatusCode}. Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
+            return [];
+        }
     }
 }

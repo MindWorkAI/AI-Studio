@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
@@ -123,9 +124,24 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
 
         using var response = await this.httpClient.SendAsync(request, token);
         if(!response.IsSuccessStatusCode)
+        {
+            if(response.StatusCode is HttpStatusCode.Unauthorized)
+                LOGGER.LogWarning("Unauthorized access when loading models for provider {ProviderId}. Please check the API key. Status Code: {StatusCode}. Reason: {ReasonPhrase}", this.Id, response.StatusCode, response.ReasonPhrase);
+            else
+                LOGGER.LogWarning("Failed to load models for provider {ProviderId}. Status Code: {StatusCode}. Reason: {ReasonPhrase}", this.Id, response.StatusCode, response.ReasonPhrase);
+            
             return [];
+        }
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data;
+        try
+        {
+            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            return modelResponse.Data;
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError(e, "Exception occurred while loading models for provider {ProviderId}. Exception Message: {ExceptionMessage}", this.Id, e.Message);
+            return [];
+        }
     }
 }
