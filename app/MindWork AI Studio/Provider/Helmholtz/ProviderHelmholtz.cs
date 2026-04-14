@@ -80,7 +80,8 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
             Models =
             [
                 ..result.Models.Where(model => !model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) &&
-                                               !model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase))
+                                               !model.Id.Contains("-embedding", StringComparison.InvariantCultureIgnoreCase)
+                                               )
             ]
         };
     }
@@ -100,7 +101,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
             Models =
             [
                 ..result.Models.Where(model =>
-                    model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase) ||
+                    model.Id.Contains("-embedding", StringComparison.InvariantCultureIgnoreCase) ||
                     model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) ||
                     model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase))
             ]
