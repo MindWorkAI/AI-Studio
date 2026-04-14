@@ -21,6 +21,7 @@ use crate::pdfium::PDFIUM_LIB_PATH;
 use crate::qdrant::{cleanup_qdrant, start_qdrant_server, stop_qdrant_server};
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
+use crate::tokenizer::set_path_resolver;
 
 /// The Tauri main window.
 static MAIN_WINDOW: Lazy<Mutex<Option<Window>>> = Lazy::new(|| Mutex::new(None));
@@ -116,6 +117,8 @@ pub fn start_tauri() {
 
             cleanup_qdrant();
             start_qdrant_server(app.path_resolver());
+
+            set_path_resolver(app.path_resolver());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();

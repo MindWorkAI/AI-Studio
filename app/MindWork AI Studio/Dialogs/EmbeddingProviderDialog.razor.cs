@@ -243,7 +243,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!this.dataIsValid)
             return;
         
-        var response = await this.RustService.StoreTokenizer(this.DataName, this.dataEditingPreviousInstanceName, this.dataFilePath);
+        var response = await this.RustService.StoreTokenizer("embedding_"+this.DataName, "embedding_"+this.dataEditingPreviousInstanceName, this.dataFilePath);
         Console.WriteLine($"Response from Rust: {response.Message}");
         if (!response.Success)
         {

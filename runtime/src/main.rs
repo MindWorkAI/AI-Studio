@@ -43,10 +43,6 @@ async fn main() {
         info!("Running in production mode.");
     }
 
-    if let Err(e) = init_tokenizer() {
-        warn!(Source = "Tokenizer"; "Error during the initialisation of the tokenizer: {}", e);
-    }
-
     generate_runtime_certificate();
     start_runtime_api();
     

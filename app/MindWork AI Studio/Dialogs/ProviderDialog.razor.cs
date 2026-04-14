@@ -268,7 +268,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (!this.dataIsValid)
             return;
 
-        var tokenizerResponse = await this.RustService.StoreTokenizer(this.DataInstanceName, this.dataEditingPreviousInstanceName, this.dataFilePath);
+        var tokenizerResponse = await this.RustService.StoreTokenizer("chat_"+this.DataInstanceName, "chat_"+this.dataEditingPreviousInstanceName, this.dataFilePath);
         if (!tokenizerResponse.Success)
         {
             this.dataCustomTokenizerValidationIssue = tokenizerResponse.Message;
