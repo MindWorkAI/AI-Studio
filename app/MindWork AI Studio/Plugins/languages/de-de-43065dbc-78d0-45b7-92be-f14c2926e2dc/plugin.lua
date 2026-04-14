@@ -6211,7 +6211,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "Kein Modell ausgew�
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T1143085203"] = "Wir konnten keine Modelle von '{0}' laden. Das Konto oder der API-Schl체ssel verf체gt nicht 체ber die erforderlichen Berechtigungen."
 
 -- We could not load models from '{0}'. The API key is probably missing, invalid, or expired.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2041046579"] = "Modelle aus '{0}' konnten nicht geladen werden. Der API-Schl체ssel fehlt wahrscheinlich, ist ung체ltig oder abgelaufen."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2041046579"] = "Modelle aus '{0}' konnten nicht geladen werden. Wahrscheinlich fehlt der API-Schl체ssel, ist ung체ltig oder abgelaufen."
 
 -- We could not load models from '{0}' because the provider is currently unavailable or could not be reached.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2115688703"] = "Wir konnten keine Modelle von '{0}' laden, da der Anbieter derzeit nicht verf체gbar oder nicht erreichbar ist."
