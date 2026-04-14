@@ -558,6 +558,15 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             var timestamp = DateTime.UtcNow.ToString("o");
             return new(context.Return(timestamp));
         });
+
+        this.State.Environment["InspectTable"] = new LuaFunction((context, _) =>
+        {
+            if (context.ArgumentCount == 0)
+                return new(context.Return("{}"));
+
+            var table = context.GetArgument<LuaTable>(0);
+            return new(context.Return(AssistantLuaConversion.InspectTable(table)));
+        });
     }
 
     private static void InitializeState(IEnumerable<IAssistantComponent> components, AssistantState state)

@@ -1066,11 +1066,13 @@ The assistant runtime exposes basic logging helpers to Lua. Use them to debug cu
 - `LogInfo(message)`
 - `LogWarning(message)`
 - `LogError(message)`
+- `InspectTable(table)` returns a readable string representation of a Lua table for debugging.
 
 #### Example: Use Logging in lua functions
 ```lua
 ASSISTANT.BuildPrompt = function(input)
   LogInfo("BuildPrompt called")
+  LogDebug(InspectTable(input))
   return input.Text and input.Text.Value or ""
 end
 ```
