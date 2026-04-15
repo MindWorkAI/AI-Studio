@@ -24,17 +24,6 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
-            // Check for Qwen 3:
-            if(modelName.StartsWith("qwen3"))
-                return
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
             // Check for Qwen 3.5:
             if(modelName.StartsWith("qwen3.5"))
                 return
@@ -58,12 +47,24 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            // Check for the 3.0 VL models:
             if(modelName.IndexOf("-vl-") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            // Check for Qwen 3:
+            if(modelName.StartsWith("qwen3"))
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
         }
