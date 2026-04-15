@@ -172,7 +172,7 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
-            if (modelName.IndexOf("mistral-small-") is not -1)
+            if (modelName.IndexOf("mistral-small-4") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, 
@@ -185,6 +185,29 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            if (modelName.IndexOf("mistral-small-3") is not -1 ||
+                modelName.IndexOf("mistral-small-4") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, 
+                    Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING,
+                
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            
+            if (modelName.IndexOf("mistral-small-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, 
+                    Capability.TEXT_OUTPUT,
+                
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
             
             if (modelName.IndexOf("voxtral-") is not -1)
                 return
