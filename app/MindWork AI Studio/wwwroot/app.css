@@ -116,6 +116,25 @@
     margin-bottom:2em;
 }
 
+.justified-markdown .mud-markdown-body p,
+.justified-markdown .mud-markdown-body li,
+.justified-markdown .mud-markdown-body blockquote p {
+    text-align: justify;
+    hyphens: auto;
+}
+
+.justified-markdown .mud-markdown-body pre,
+.justified-markdown .mud-markdown-body code,
+.justified-markdown .mud-markdown-body h1,
+.justified-markdown .mud-markdown-body h2,
+.justified-markdown .mud-markdown-body h3,
+.justified-markdown .mud-markdown-body h4,
+.justified-markdown .mud-markdown-body h5,
+.justified-markdown .mud-markdown-body h6,
+.justified-markdown .mud-markdown-body table {
+    text-align: left;
+}
+
 .code-block {
     background-color: #2d2d2d;
     color: #f8f8f2;

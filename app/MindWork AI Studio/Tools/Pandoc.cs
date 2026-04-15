@@ -34,6 +34,8 @@ public static partial class Pandoc
     /// </summary>
     private static bool HAS_LOGGED_AVAILABILITY_CHECK_ONCE;
 
+    private static readonly HttpClient WEB_CLIENT = new();
+
     /// <summary>
     /// Prepares a Pandoc process by using the Pandoc process builder.
     /// </summary>
@@ -181,20 +183,17 @@ public static partial class Pandoc
             // Download the latest Pandoc archive from GitHub:
             //
             var uri = await GenerateArchiveUriAsync();
-            using (var client = new HttpClient())
+            var response = await WEB_CLIENT.GetAsync(uri);
+            if (!response.IsSuccessStatusCode)
             {
-                var response = await client.GetAsync(uri);
-                if (!response.IsSuccessStatusCode)
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the archive was not found.")));
-                    LOG.LogError("Pandoc was not installed successfully, because the archive was not found (status code {0}): url='{1}', message='{2}'", response.StatusCode, uri, response.RequestMessage);
-                    return;
-                }
-
-                // Download the archive to the temporary file:
-                await using var tempFileStream = File.Create(pandocTempDownloadFile);
-                await response.Content.CopyToAsync(tempFileStream);
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the archive was not found.")));
+                LOG.LogError("Pandoc was not installed successfully, because the archive was not found (status code {0}): url='{1}', message='{2}'", response.StatusCode, uri, response.RequestMessage);
+                return;
             }
+
+            // Download the archive to the temporary file:
+            await using var tempFileStream = File.Create(pandocTempDownloadFile);
+            await response.Content.CopyToAsync(tempFileStream);
 
             if (uri.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
@@ -245,9 +244,7 @@ public static partial class Pandoc
     /// <remarks>Version numbers can have the following formats: x.x, x.x.x or x.x.x.x</remarks>
     /// <returns>Latest Pandoc version number</returns>
     public static async Task<string> FetchLatestVersionAsync() {
-        using var client = new HttpClient();
-        var response = await client.GetAsync(LATEST_URL);
-
+        var response = await WEB_CLIENT.GetAsync(LATEST_URL);
         if (!response.IsSuccessStatusCode)
         {
             LOG.LogError("Code {StatusCode}: Could not fetch Pandoc's latest page: {Response}", response.StatusCode, response.RequestMessage);

@@ -114,6 +114,8 @@ public sealed class Data
     
     public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
+    public DataMandatoryInformation MandatoryInformation { get; init; } = new();
+
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();

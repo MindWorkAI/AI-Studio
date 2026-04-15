@@ -11,6 +11,11 @@ internal static class AssistantLuaConversion
     public static LuaTable CreateLuaArray(IEnumerable values) => CreateLuaArrayCore(values);
 
     /// <summary>
+    /// Creates a readable string representation of a Lua table for debugging and inspection.
+    /// </summary>
+    public static string InspectTable(LuaTable table) => InspectTableCore(table, 0);
+
+    /// <summary>
     /// Reads a Lua value into either a scalar .NET value or one of the structured assistant data model types.
     /// Lua itself only exposes scalars and tables, so structured assistant types such as dropdown/list items
     /// must be detected from well-known table shapes.
@@ -267,5 +272,48 @@ internal static class AssistantLuaConversion
         }
 
         return luaArray;
+    }
+
+    private static string InspectTableCore(LuaTable table, int depth)
+    {
+        if (depth > 8)
+            return "{ ... }";
+
+        var indent = new string(' ', depth * 2);
+        var childIndent = new string(' ', (depth + 1) * 2);
+        var builder = new System.Text.StringBuilder();
+        builder.AppendLine("{");
+
+        foreach (var entry in table)
+        {
+            builder.Append(childIndent);
+            builder.Append(FormatLuaValue(entry.Key));
+            builder.Append(" = ");
+            builder.AppendLine(FormatLuaValue(entry.Value, depth + 1));
+        }
+
+        builder.Append(indent);
+        builder.Append('}');
+        return builder.ToString();
+    }
+
+    private static string FormatLuaValue(LuaValue value, int depth = 0)
+    {
+        if (value.Type is LuaValueType.Nil)
+            return "nil";
+
+        if (value.TryRead<string>(out var stringValue))
+            return $"\"{stringValue.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+
+        if (value.TryRead<bool>(out var boolValue))
+            return boolValue ? "true" : "false";
+
+        if (value.TryRead<double>(out var doubleValue))
+            return doubleValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        if (value.TryRead<LuaTable>(out var tableValue))
+            return InspectTableCore(tableValue, depth);
+
+        return value.ToString();
     }
 }

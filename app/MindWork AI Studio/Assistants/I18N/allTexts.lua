@@ -2098,6 +2098,27 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "C
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Install Pandoc"
 
+-- Version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1573770551"] = "Version"
+
+-- A new version of the terms is available. Please review it again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1711766303"] = "A new version of the terms is available. Please review it again."
+
+-- This mandatory info has not been accepted yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1870532312"] = "This mandatory info has not been accepted yet."
+
+-- Accepted version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T203086476"] = "Accepted version"
+
+-- Last accepted version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3407978086"] = "Last accepted version"
+
+-- Accepted at (UTC)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3511160492"] = "Accepted at (UTC)"
+
+-- Please review this text again. The content was changed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T941885055"] = "Please review this text again. The content was changed."
+
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications."
 
@@ -2296,6 +2317,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 -- Block activation below the minimum Audit-Level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T232834129"] = "Block activation below the minimum Audit-Level?"
 
+-- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821"] = "Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?"
+
 -- Agent: Security Audit for external Assistants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2910364422"] = "Agent: Security Audit for external Assistants"
 
@@ -2310,6 +2334,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 
 -- Security audit is automatically done in the background
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3684348859"] = "Security audit is automatically done in the background"
+
+-- Disable Assistant Audit Protection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4019550023"] = "Disable Assistant Audit Protection"
 
 -- Activation is blocked below the minimum Audit-Level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Activation is blocked below the minimum Audit-Level"
@@ -5695,6 +5722,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
 
+-- Unknown configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unknown configuration plugin"
+
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
 
@@ -5724,6 +5754,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Building on .NET
 
 -- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files."
+
+-- Consent:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Consent:"
 
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
@@ -5943,6 +5976,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T788846912"] = "Copies the config
 
 -- installed by AI Studio
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T833849470"] = "installed by AI Studio"
+
+-- Provided by configuration plugin: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T836298648"] = "Provided by configuration plugin: {0}"
 
 -- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate."
@@ -6174,6 +6210,21 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Un
 
 -- no model selected
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "no model selected"
+
+-- We could not load models from '{0}'. The account or API key does not have the required permissions.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T1143085203"] = "We could not load models from '{0}'. The account or API key does not have the required permissions."
+
+-- We could not load models from '{0}'. The API key is probably missing, invalid, or expired.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2041046579"] = "We could not load models from '{0}'. The API key is probably missing, invalid, or expired."
+
+-- We could not load models from '{0}' because the provider is currently unavailable or could not be reached.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2115688703"] = "We could not load models from '{0}' because the provider is currently unavailable or could not be reached."
+
+-- We could not load models from '{0}' because the provider returned an unexpected response.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2186844789"] = "We could not load models from '{0}' because the provider returned an unexpected response."
+
+-- We could not load models from '{0}' due to an unknown error.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T3907712809"] = "We could not load models from '{0}' due to an unknown error."
 
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Model as configured by whisper.cpp"
@@ -6820,6 +6871,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T6
 -- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles."
 
+-- This assistant changed after its last audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1161057634"] = "This assistant changed after its last audit."
+
 -- This assistant is currently locked.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T123211529"] = "This assistant is currently locked."
 
@@ -6831,6 +6885,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 
 -- The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1901245910"] = "The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully."
+
+-- This assistant can still be used because audit enforcement is disabled.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1950430056"] = "This assistant can still be used because audit enforcement is disabled."
 
 -- Changed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2311397435"] = "Changed"
@@ -6846,6 +6903,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 
 -- The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T274724689"] = "The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin."
+
+-- The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2774333862"] = "The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."
 
 -- Not Audited
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2828154864"] = "Not Audited"
@@ -6864,6 +6924,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 
 -- Unlocked
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3606159420"] = "Unlocked"
+
+-- The plugin code changed after the last security audit. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3619293572"] = "The plugin code changed after the last security audit. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."
 
 -- Blocked
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3816336467"] = "Blocked"

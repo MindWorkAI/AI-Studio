@@ -497,7 +497,6 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     private void RegisterLuaHelpers()
     {
-        
         this.State.Environment["LogInfo"] = new LuaFunction((context, _) =>
         {
             if (context.ArgumentCount == 0) return new(0);
@@ -558,6 +557,15 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         {
             var timestamp = DateTime.UtcNow.ToString("o");
             return new(context.Return(timestamp));
+        });
+
+        this.State.Environment["InspectTable"] = new LuaFunction((context, _) =>
+        {
+            if (context.ArgumentCount == 0)
+                return new(context.Return("{}"));
+
+            var table = context.GetArgument<LuaTable>(0);
+            return new(context.Return(AssistantLuaConversion.InspectTable(table)));
         });
     }
 

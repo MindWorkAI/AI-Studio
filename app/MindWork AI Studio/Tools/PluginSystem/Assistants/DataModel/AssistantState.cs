@@ -156,12 +156,17 @@ public sealed class AssistantState
         {
             if (component is INamedAssistantComponent named)
             {
-                target[named.Name] = new LuaTable
+                var componentEntry = new LuaTable
                 {
                     ["Type"] = Enum.GetName(component.Type) ?? string.Empty,
                     ["Value"] = component is IStatefulAssistantComponent ? this.ReadValueForLua(named.Name) : LuaValue.Nil,
                     ["Props"] = this.CreatePropsTable(component),
                 };
+
+                if (component is AssistantDropdown dropdown)
+                    this.AddDropdownDisplay(componentEntry, dropdown, named.Name);
+
+                target[named.Name] = componentEntry;
             }
 
             if (component.Children.Count > 0)
@@ -216,6 +221,27 @@ public sealed class AssistantState
         }
 
         return table;
+    }
+
+    private void AddDropdownDisplay(LuaTable componentEntry, AssistantDropdown dropdown, string name)
+    {
+        if (dropdown.IsMultiselect)
+        {
+            if (!this.MultiSelect.TryGetValue(name, out var selectedValues))
+                return;
+
+            componentEntry["Display"] = AssistantLuaConversion.CreateLuaArray(
+                selectedValues
+                    .OrderBy(static value => value, StringComparer.Ordinal)
+                    .Select(dropdown.ResolveDisplayText));
+
+            return;
+        }
+
+        if (!this.SingleSelect.TryGetValue(name, out var selectedValue))
+            return;
+
+        componentEntry["Display"] = dropdown.ResolveDisplayText(selectedValue);
     }
 
     private static HashSet<string> ReadStringValues(LuaTable values)
