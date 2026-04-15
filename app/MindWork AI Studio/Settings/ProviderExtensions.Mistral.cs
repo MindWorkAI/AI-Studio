@@ -19,7 +19,7 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
-        // Mistral large:
+        // Mistral large latest:
         if (modelName.IndexOf("mistral-large-latest") is not -1)                 
             return
             [
@@ -33,6 +33,7 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
+        // Mistral large:
         if (modelName.IndexOf("mistral-large-") is not -1)
             return
             [
@@ -43,7 +44,7 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
-        // Mistral medium:
+        // Mistral medium latest:
         if (modelName.IndexOf("mistral-medium-latest") is not -1)           
             return
             [
@@ -57,6 +58,7 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
+        // Mistral medium:
         if (modelName.IndexOf("mistral-medium-") is not -1)
             return
             [
@@ -69,7 +71,7 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
-        // Mistral small:
+        // Mistral small latest:
         if (modelName.IndexOf("mistral-small-latest") is not -1)        
             return
             [
@@ -83,6 +85,7 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
+        // Mistral small:
         if (modelName.IndexOf("mistral-small-") is not -1)
             return
             [
