@@ -995,7 +995,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
         }
 
-        var tokenizerResponse = await this.RustService.EnsureTokenizer(this.Provider);
+        var tokenizerResponse = await this.RustService.EnsureTokenizer(this.Provider.InstanceName, this.Provider.TokenizerPath);
         if (tokenizerResponse is null)
             return;
         if (!tokenizerResponse.Value.Success)

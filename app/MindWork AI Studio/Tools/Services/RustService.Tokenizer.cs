@@ -31,7 +31,7 @@ public sealed partial class RustService
     
     public async Task<TokenizerResponse> StoreTokenizer(string modelId, string previousmodelId, string filePath)
     {
-        Console.WriteLine($"Storing tokenizer for model '{modelId}' with previous model '{previousmodelId}' from file '{filePath}'");
+        this.logger!.LogInformation($"Storing tokenizer for model '{modelId}' with previous model '{previousmodelId}' from file '{filePath}'");
         var result = await this.http.PostAsJsonAsync("/tokenizer/store", new {
             model_id = modelId,
             previous_model_id = previousmodelId,
@@ -53,28 +53,26 @@ public sealed partial class RustService
     
     public async Task<TokenizerResponse?> GetTokenCount(string text)
     {
-        try
+        var result = await this.http.PostAsJsonAsync("/tokenizer/count", new {
+            text = text,
+        }, this.jsonRustSerializerOptions);
+
+        if (!result.IsSuccessStatusCode)
         {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            var payload = new { text };
-            var response = await this.http.PostAsJsonAsync("/tokenizer/count", payload, this.jsonRustSerializerOptions, cts.Token);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions, cancellationToken: cts.Token);
+            this.logger!.LogError($"Failed to get the token count '{result.StatusCode}'");
+            return new TokenizerResponse{
+                Success = false,
+                Message = "Error while getting token count from Rust service: "+result.StatusCode,
+                TokenCount = 0
+            };
         }
-        catch (Exception e)
-        {
-            if(this.logger is not null)
-                this.logger.LogError(e, "Error while getting token count from Rust service.");
-            else
-                Console.WriteLine($"Error while getting token count from Rust service: '{e}'.");
-            
-            return null;
-        }
+
+        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
     }
 
     public async Task<TokenizerResponse?> SetTokenizer(string providerName, string path)
     {
-        Console.WriteLine($"Setting a new tokenizer for '{providerName}'");
+        this.logger!.LogInformation($"Setting a new tokenizer for '{providerName}'");
         var result = await this.http.PostAsJsonAsync("/tokenizer/set", new {
             file_path = path,
         }, this.jsonRustSerializerOptions);
@@ -92,17 +90,7 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
     }
 
-    public Task<TokenizerResponse?> EnsureTokenizer(Settings.Provider provider)
-    {
-        return this.EnsureTokenizer(provider.InstanceName, provider.TokenizerPath);
-    }
-
-    public Task<TokenizerResponse?> EnsureTokenizer(IProvider provider)
-    {
-        return this.EnsureTokenizer(provider.InstanceName, provider.TokenizerPath);
-    }
-
-    private async Task<TokenizerResponse?> EnsureTokenizer(string providerName, string path)
+    public async Task<TokenizerResponse?> EnsureTokenizer(string providerName, string path)
     {
         await this.tokenizerLock.WaitAsync();
         try

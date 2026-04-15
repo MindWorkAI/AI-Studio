@@ -157,7 +157,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
 
         var embeddingProvider = provider.CreateProvider();
-        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, default, new List<string> { inputText });
+        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, CancellationToken.None, inputText);
 
         if (embeddings.Count == 0)
         {
