@@ -2319,6 +2319,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 -- Block activation below the minimum Audit-Level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T232834129"] = "Aktivierung unterhalb der Mindest-Audit-Stufe blockieren?"
 
+-- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821"] = "Wenn Sie diese Einstellung deaktivieren, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchten Sie diesen Schutz wirklich deaktivieren?"
+
 -- Agent: Security Audit for external Assistants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2910364422"] = "Agent: Sicherheits-Audit für externe Assistenten"
 
@@ -2333,6 +2336,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 
 -- Security audit is automatically done in the background
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3684348859"] = "Die Sicherheitsprüfung wird automatisch im Hintergrund durchgeführt."
+
+-- Disable Assistant Audit Protection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4019550023"] = "Assistenten-Audit-Schutz deaktivieren"
 
 -- Activation is blocked below the minimum Audit-Level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb des Mindest-Audit-Levels blockiert."
@@ -6867,6 +6873,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T6
 -- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält kein boolesches Flag, mit dem sich die Zulassung von Profilen steuern lässt."
 
+-- This assistant changed after its last audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1161057634"] = "Dieser Assistent wurde seit seinem letzten Audit geändert."
+
 -- This assistant is currently locked.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T123211529"] = "Dieser Assistent ist derzeit gesperrt."
 
@@ -6878,6 +6887,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 
 -- The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1901245910"] = "Das aktuelle Audit-Ergebnis ist „{0}“ und liegt damit unter Ihrem erforderlichen Mindestniveau „{1}“. Ihre Einstellungen erlauben weiterhin eine manuelle Aktivierung, aber der Assistent behält diesen Sicherheitsstatus bei und sollte sorgfältig überprüft werden."
+
+-- This assistant can still be used because audit enforcement is disabled.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1950430056"] = "Dieser Assistent kann weiterhin verwendet werden, da die Audit-Durchsetzung deaktiviert ist."
 
 -- Changed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2311397435"] = "Geändert"
@@ -6893,6 +6905,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 
 -- The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T274724689"] = "Das aktuelle Audit-Ergebnis „{0}“ liegt unter Ihrem erforderlichen Mindestniveau „{1}“. Daher blockieren Ihre Sicherheitseinstellungen dieses Assistenten-Plugin."
+
+-- The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2774333862"] = "Das aktuelle Prüfergebnis ist „{0}“, was unter Ihrem erforderlichen Mindestniveau „{1}“ liegt. Die Prüfungsdurchsetzung ist derzeit deaktiviert, daher kann dieses Assistenten-Plugin trotzdem aktiviert oder verwendet werden."
 
 -- Not Audited
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2828154864"] = "Nicht geprüft"
@@ -6911,6 +6926,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 
 -- Unlocked
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3606159420"] = "Entsperrt"
+
+-- The plugin code changed after the last security audit. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3619293572"] = "Der Plug-in-Code wurde nach dem letzten Sicherheitsaudit geändert. Die Audit-Durchsetzung ist derzeit deaktiviert, daher kann dieses Assistenten-Plug-in weiterhin aktiviert oder verwendet werden."
 
 -- Blocked
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3816336467"] = "Blockiert"

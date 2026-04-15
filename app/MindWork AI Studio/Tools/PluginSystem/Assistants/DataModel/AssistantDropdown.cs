@@ -121,6 +121,26 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
 
     #endregion
 
+    internal string ResolveDisplayText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return this.Default.Display;
+
+        var item = this.GetRenderedItems().FirstOrDefault(item => string.Equals(item.Value, value, StringComparison.Ordinal));
+        return item?.Display ?? value;
+    }
+
+    private List<AssistantDropdownItem> GetRenderedItems()
+    {
+        if (string.IsNullOrWhiteSpace(this.Default.Value))
+            return this.Items;
+
+        if (this.Items.Any(item => string.Equals(item.Value, this.Default.Value, StringComparison.Ordinal)))
+            return this.Items;
+
+        return [this.Default, .. this.Items];
+    }
+
     public IEnumerable<object> GetParsedDropdownValues()
     {
         foreach (var item in this.Items)
