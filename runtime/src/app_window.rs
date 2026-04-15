@@ -311,11 +311,11 @@ impl Event {
 
                     FileDropEvent::Dropped(files) => Event::new(TauriEventType::FileDropDropped,
                                                                 files.iter().map(|f| f.to_string_lossy().to_string()).collect(),
-                ),
+                    ),
 
                     FileDropEvent::Cancelled => Event::new(TauriEventType::FileDropCanceled,
                                                            Vec::new(),
-                ),
+                    ),
 
                     _ => Event::new(TauriEventType::Unknown,
                                     Vec::new(),
@@ -327,7 +327,7 @@ impl Event {
                 Event::new(TauriEventType::WindowFocused,
                            Vec::new(),
                 )
-                } else {
+            } else {
                 Event::new(TauriEventType::WindowNotFocused,
                            Vec::new(),
                 )
