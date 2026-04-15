@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
 
 namespace AIStudio.Chat;
@@ -13,6 +14,7 @@ namespace AIStudio.Chat;
 public sealed class ContentText : IContent
 {
     private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
     
     /// <summary>
     /// The minimum time between two streaming events, when the user
@@ -48,11 +50,21 @@ public sealed class ContentText : IContent
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
         if(chatThread is null)
+        {
+            await this.CompleteWithoutStreaming();
             return new();
+        }
         
         if(!chatThread.IsLLMProviderAllowed(provider))
         {
             LOGGER.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            await this.CompleteWithoutStreaming();
+            return chatThread;
+        }
+
+        if(!await this.CheckSelectedModelAvailability(provider, chatModel, token))
+        {
+            await this.CompleteWithoutStreaming();
             return chatThread;
         }
 
@@ -137,6 +149,78 @@ public sealed class ContentText : IContent
         return chatThread;
     }
 
+    private async Task CompleteWithoutStreaming()
+    {
+        this.InitialRemoteWait = false;
+        this.IsStreaming = false;
+        await this.StreamingDone();
+    }
+
+    private static bool ModelsMatch(Model modelA, Model modelB)
+    {
+        var idA = modelA.Id.Trim();
+        var idB = modelB.Id.Trim();
+        return string.Equals(idA, idB, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<bool> CheckSelectedModelAvailability(IProvider provider, Model chatModel, CancellationToken token = default)
+    {
+        if(chatModel.IsSystemModel)
+            return true;
+
+        if (string.IsNullOrWhiteSpace(chatModel.Id))
+        {
+            LOGGER.LogWarning("Skipping AI request because model ID is null or white space.");
+            return false;
+        }
+
+        IReadOnlyList<Model> loadedModels;
+        try
+        {
+            var modelLoadResult = await provider.GetTextModels(token: token);
+            if (!modelLoadResult.Success)
+            {
+                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
+                if (!string.IsNullOrWhiteSpace(userMessage))
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+
+                LOGGER.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
+                return false;
+            }
+
+            loadedModels = modelLoadResult.Models;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogWarning(e, "Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because the model list could not be loaded.", provider.InstanceName, provider.Provider);
+            return true;
+        }
+
+        var availableModels = loadedModels.Where(model => !string.IsNullOrWhiteSpace(model.Id)).ToList();
+        if (availableModels.Count == 0)
+        {
+            LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
+            return false;
+        }
+
+        if(availableModels.Any(model => ModelsMatch(model, chatModel)))
+            return true;
+        
+        var message = string.Format(
+            TB("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
+            chatModel.Id,
+            provider.InstanceName,
+            provider.Provider);
+        
+        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, message));
+        LOGGER.LogWarning("Skipping AI request because model '{ModelId}' is not available from '{ProviderInstanceName}' (provider={ProviderType}).", chatModel.Id, provider.InstanceName, provider.Provider);
+        return false;
+    }
+
     /// <inheritdoc />
     public IContent DeepClone() => new ContentText
     {
@@ -156,11 +240,15 @@ public sealed class ContentText : IContent
 
         if(this.FileAttachments.Count > 0)
         {
+            var normalizedAttachments = this.FileAttachments
+                .Select(attachment => attachment.Normalize())
+                .ToList();
+
             // Get the list of existing documents:
-            var existingDocuments = this.FileAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
+            var existingDocuments = normalizedAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
 
             // Log warning for missing files:
-            var missingDocuments = this.FileAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
+            var missingDocuments = normalizedAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
             if (missingDocuments.Count > 0)
                 foreach (var missingDocument in missingDocuments)
                     LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
@@ -196,7 +284,7 @@ public sealed class ContentText : IContent
                         sb.AppendLine("````");
                     }
                     
-                    var numImages = this.FileAttachments.Count(x => x is { IsImage: true, Exists: true });
+                    var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
                     if (numImages > 0)
                     {
                         sb.AppendLine();
