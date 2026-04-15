@@ -133,7 +133,7 @@ pub fn start_tauri() {
         if !matches!(event, RunEvent::MainEventsCleared) {
             debug!(Source = "Tauri"; "Tauri event received: location=app event handler   , event={event:?}");
         }
-        
+
         match event {
             RunEvent::WindowEvent { event, label, .. } => {
                 match event {
@@ -311,11 +311,11 @@ impl Event {
 
                     FileDropEvent::Dropped(files) => Event::new(TauriEventType::FileDropDropped,
                                                                 files.iter().map(|f| f.to_string_lossy().to_string()).collect(),
-                    ),
+                ),
 
                     FileDropEvent::Cancelled => Event::new(TauriEventType::FileDropCanceled,
                                                            Vec::new(),
-                    ),
+                ),
 
                     _ => Event::new(TauriEventType::Unknown,
                                     Vec::new(),
@@ -327,7 +327,7 @@ impl Event {
                 Event::new(TauriEventType::WindowFocused,
                            Vec::new(),
                 )
-            } else {
+                } else {
                 Event::new(TauriEventType::WindowNotFocused,
                            Vec::new(),
                 )
@@ -476,23 +476,23 @@ pub async fn install_update(_token: APIToken) {
 
 /// Let the user select a directory.
 #[post("/select/directory?<title>", data = "<previous_directory>")]
-pub fn select_directory(_token: APIToken, title: &str, previous_directory: Option<Json<PreviousDirectory>>) -> Json<DirectorySelectionResponse> {
+pub fn select_directory(
+    _token: APIToken,
+    title: &str,
+    previous_directory: Option<Json<PreviousDirectory>>,
+) -> Json<DirectorySelectionResponse> {
     let folder_path = match previous_directory {
         Some(previous) => {
             let previous_path = previous.path.as_str();
-            FileDialogBuilder::new()
+            create_file_dialog()
                 .set_title(title)
                 .set_directory(previous_path)
                 .pick_folder()
         },
 
-        None => {
-            FileDialogBuilder::new()
-                .set_title(title)
-                .pick_folder()
-        },
+        None => create_file_dialog().set_title(title).pick_folder(),
     };
-    
+
     match folder_path {
         Some(path) => {
             info!("User selected directory: {path:?}");
@@ -545,10 +545,12 @@ pub struct DirectorySelectionResponse {
 
 /// Let the user select a file.
 #[post("/select/file", data = "<payload>")]
-pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FileSelectionResponse> {
-
+pub fn select_file(
+    _token: APIToken,
+    payload: Json<SelectFileOptions>,
+) -> Json<FileSelectionResponse> {
     // Create a new file dialog builder:
-    let file_dialog = FileDialogBuilder::new();
+    let file_dialog = create_file_dialog();
 
     // Set the title of the file dialog:
     let file_dialog = file_dialog.set_title(&payload.title);
@@ -589,10 +591,12 @@ pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<F
 
 /// Let the user select some files.
 #[post("/select/files", data = "<payload>")]
-pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FilesSelectionResponse> {
-
+pub fn select_files(
+    _token: APIToken,
+    payload: Json<SelectFileOptions>,
+) -> Json<FilesSelectionResponse> {
     // Create a new file dialog builder:
-    let file_dialog = FileDialogBuilder::new();
+    let file_dialog = create_file_dialog();
 
     // Set the title of the file dialog:
     let file_dialog = file_dialog.set_title(&payload.title);
@@ -617,7 +621,10 @@ pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<
             info!("User selected {} files.", paths.len());
             Json(FilesSelectionResponse {
                 user_cancelled: false,
-                selected_file_paths: paths.iter().map(|p| p.to_str().unwrap().to_string()).collect(),
+                selected_file_paths: paths
+                    .iter()
+                    .map(|p| p.to_str().unwrap().to_string())
+                    .collect(),
             })
         }
 
@@ -633,9 +640,8 @@ pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<
 
 #[post("/save/file", data = "<payload>")]
 pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
-
     // Create a new file dialog builder:
-    let file_dialog = FileDialogBuilder::new();
+    let file_dialog = create_file_dialog();
 
     // Set the title of the file dialog:
     let file_dialog = file_dialog.set_title(&payload.title);
@@ -677,6 +683,28 @@ pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileS
 #[derive(Clone, Deserialize)]
 pub struct PreviousFile {
     file_path: String,
+}
+
+/// Creates a file dialog builder and assigns the main window as parent where supported.
+fn create_file_dialog() -> FileDialogBuilder {
+    let file_dialog = FileDialogBuilder::new();
+
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        let main_window_lock = MAIN_WINDOW.lock().unwrap();
+        match main_window_lock.as_ref() {
+            Some(window) => file_dialog.set_parent(window),
+            None => {
+                warn!(Source = "Tauri"; "Cannot assign parent window to file dialog: main window not available.");
+                file_dialog
+            }
+        }
+    }
+
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        file_dialog
+    }
 }
 
 /// Applies an optional file type filter to a FileDialogBuilder.
@@ -804,7 +832,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
             error_message: "Cannot register NONE shortcut".to_string(),
         });
     }
-    
+
     info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
 
     // Get the main window to access the global shortcut manager:
