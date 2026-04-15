@@ -1326,6 +1326,150 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T534887559"] =
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T656744944"] = "Bitte wählen Sie eine eigene Sprache aus."
 
+-- The custom prompt guide file is empty or could not be read.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1173408044"] = "Der benutzerdefinierte Prompting Leitfaden ist leer oder konnte nicht gelesen werden."
+
+-- Use English for complex prompts and explicitly request response language if needed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T119999744"] = "Verwenden Sie Englisch für komplexe Prompts und fordern Sie dann explizit die gewünschte Antwortsprache im Prompt an."
+
+-- The selected custom prompt guide file could not be found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1300996373"] = "Der ausgewählte benutzerdefinierte Prompting Leitfaden konnte nicht gefunden werden."
+
+-- Define a role for the model to focus output style and expertise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1316122151"] = "Definieren Sie eine Rolle für das Modell, um den Ausgabestil und die Expertise vorzugeben."
+
+-- Use headings or markers to separate context, task, and constraints.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1435532298"] = "Verwenden Sie Überschriften oder Markierungen, um Kontext, Aufgabe und Einschränkungen zu trennen."
+
+-- Custom Prompt Guide Preview
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1526658372"] = "Vorschau des benutzerdefinierten Prompting-Leitfadens."
+
+-- The model response was not in the expected JSON format. The raw response is shown as optimized prompt.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1548376553"] = "Die Modellantwort war nicht im erwarteten JSON-Format. Die Rohantwort wird als optimierter Prompt angezeigt."
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1582017048"] = "Anzeigen"
+
+-- Separate context, task, constraints, and output format with headings or markers.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1626024580"] = "Trennen Sie Kontext, Aufgabe, Einschränkungen und Ausgabeformat mit Überschriften oder Markierungen."
+
+-- Add short examples and background context for your specific use case.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1666841672"] = "Fügen Sie kurze Beispiele und Kontext für Ihren spezifischen Anwendungsfall hinzu."
+
+-- Assign a role to shape tone, expertise, and focus.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1679211785"] = "Weisen Sie eine Rolle zu, um Ton, Expertise und Fokus zu gestalten."
+
+-- Structure with markers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1695758233"] = "Mit Markierungen strukturieren"
+
+-- Please attach and load a valid custom prompt guide file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1760468309"] = "Bitte hängen Sie einen gültigen Prompting-Leitfaden an."
+
+-- Prompt Optimizer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1777666968"] = "Prompt-Optimierer"
+
+-- Add clearer goals and explicit quality expectations.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1833795299"] = "Fügen Sie klarere Ziele und explizite Qualitätsanforderungen hinzu."
+
+-- Optimize prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1857716344"] = "Prompt optimieren"
+
+-- Break the task into numbered steps if order matters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2185953360"] = "Zerlegen Sie die Aufgabe in nummerierte Schritte, wenn die Reihenfolge wichtig ist."
+
+-- Please provide a prompt or prompt description.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2228130444"] = "Bitte geben Sie einen Prompt oder eine Beschreibung des Prompts an."
+
+-- Add examples and context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2386806593"] = "Beispiele und Kontext hinzufügen"
+
+-- Custom prompt guide file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2458417590"] = "Benutzerdefinierter Prompting-Leitfaden"
+
+-- Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2466607250"] = "Verwenden Sie ein LLM, um Ihren Prompt zu optimieren, indem Sie entweder den Standard- oder Ihren individuellen Prompting-Leitfaden verwenden, und erhalten Sie gezielte Empfehlungen für zukünftige Versionen des Prompts."
+
+-- Replaced the previously selected custom prompt guide file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2698103422"] = "Der zuvor ausgewählte benutzerdefinierte Prompting-Leitfaden wurde ersetzt."
+
+-- (Optional) Important Aspects for the prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2713431429"] = "(Optional) Wichtige Aspekte für die Eingabe"
+
+-- Use the prompt recommendations from the custom prompt guide.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2830307837"] = "Verwenden Sie die Prompt-Empfehlungen aus dem benutzerdefinierten Prompting-Leitfaden."
+
+-- Be clear and direct
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2880063041"] = "Sei klar und direkt"
+
+-- The prompting guideline file could not be loaded. Please verify 'prompting_guideline.md' in Assistants/PromptOptimizer.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T30321193"] = "Die Standarddatei mit den Anweisungen für das Prompting konnte nicht geladen werden. Bitte überprüfen Sie „prompting_guideline.md“ im Ordner Assistants/PromptOptimizer."
+
+-- Custom language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3032662264"] = "Benutzerdefinierte Sprache"
+
+-- Give the model a role
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3420218291"] = "Geben Sie dem Modell eine Rolle"
+
+-- Failed to load custom prompt guide content.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3488117809"] = "Fehler beim Laden des Inhalts des benutzerdefinierten Prompting-Leitfadens."
+
+-- No file selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3522202289"] = "Keine Datei ausgewählt"
+
+-- Use custom prompt guide
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3528575759"] = "Benutzerdefinierten Prompting-Leitfaden verwenden"
+
+-- Prefer numbered steps when task order matters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3558299393"] = "Bevorzugen Sie nummerierte Schritte, wenn die Reihenfolge der Aufgaben wichtig ist."
+
+-- Recommendations for your prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3577149599"] = "Empfehlungen für den Prompt"
+
+-- (Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as output structure, or constraints.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3686962588"] = "(Optional) Geben Sie Aspekte an, auf die der Optimierer bei der Erstellung des Prompts achten soll, z. B. die Struktur der Ausgabe oder Einschränkungen."
+
+-- View default prompt guide
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4017099405"] = "Standard-Prompting-Leitfaden anzeigen"
+
+-- Prompt or prompt description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4058791116"] = "Prompt oder Beschreibung des Prompts"
+
+-- Include short examples and context that explain the purpose behind your requirements.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4143206140"] = "Fügen Sie kurze Beispiele und Kontext hinzu, die den Zweck Ihrer Anforderungen erläutern."
+
+-- Prompting Guideline
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4250996615"] = "Prompting-Leitfaden"
+
+-- Use sequential steps
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T487578804"] = "Schrittweise vorgehen"
+
+-- Use clear, explicit instructions and directly state quality expectations.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T596557540"] = "Verwenden Sie klare, explizite Anweisungen und geben Sie direkt die Qualitätsmerkmale an."
+
+-- Choose prompt language deliberately
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T616613304"] = "Wählen Sie die Prompt-Sprache bewusst aus"
+
+-- Prompt recommendations were updated based on your latest optimization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T633382478"] = "Die Prompt-Empfehlungen wurden basierend auf Ihrer letzten Optimierung aktualisiert."
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
+
+-- No further recommendation in this area.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T659636347"] = "Keine weiteren Empfehlungen in diesem Bereich."
+
+-- The prompting guideline file could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T666817418"] = "Die Anleitung für das Prompting konnte nicht geladen werden."
+
+-- Language for the optimized prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T773621440"] = "Sprache für den optimierten Prompt"
+
+-- Use these recommendations, that are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T805885769"] = "Verwenden Sie diese Empfehlungen, die auf dem Standard-Prompting-Leitfaden basieren, um Ihre Prompts zu verbessern. Die Vorschläge werden basierend auf Ihrer letzten Prompt-Optimierung aktualisiert."
+
+-- For complex tasks, write prompts in English.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T85710437"] = "Schreiben Sie die Prompts für komplexe Aufgaben in Englisch."
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
@@ -4035,6 +4179,15 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T900713019"] = "Abbrechen"
 -- The profile name must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T911748898"] = "Der Profilname muss eindeutig sein; der ausgewählte Name wird bereits verwendet."
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T3448155331"] = "Schließen"
+
+-- The full prompting guideline used by the Prompt Optimizer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "Der vollständige Prompting-Leitfaden, der standardmäßig vom Prompt-Optimierer verwendet wird."
+
+-- Prompting Guideline
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting-Leitfaden"
+
 -- Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1017509792"] = "Bitte beachten Sie: Dieser Bereich ist nur für Expertinnen und Experten. Sie sind dafür verantwortlich, die Korrektheit der zusätzlichen Parameter zu überprüfen, die Sie beim API‑Aufruf angeben. Standardmäßig verwendet AI Studio die OpenAI‑kompatible Chat Completions-API, sofern diese vom zugrunde liegenden Dienst und Modell unterstützt wird."
 
@@ -4962,6 +5115,39 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T55364659"
 -- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für ihre Projektmanagement-Aktivitäten anlegen, eines für ihre wissenschaftliche Arbeit und ein weiteres Profil, wenn Sie Programmcode schreiben müssen. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie bevorzugen oder nicht gerne verwenden. Später können Sie dann auswählen, wann und wo Sie jedes Profil nutzen möchten."
 
+-- Preselect the target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1417990312"] = "Zielsprache vorwählen"
+
+-- Preselect another target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1462295644"] = "Wählen Sie eine andere Zielsprache vor"
+
+-- Assistant: Prompt Optimizer Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2309650422"] = "Assistent: Optionen für die Prompt-Optimierung"
+
+-- Preselect aspects the optimizer should emphasize, such as role clarity, structure, or output constraints.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2365571378"] = "Wählen Sie im Voraus Aspekte aus, die der Optimierer betonen soll, wie z. B. Rollenklarheit, Struktur oder Ausgabebeschränkungen."
+
+-- No prompt optimizer options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2506620531"] = "Keine Prompt-Optimierer-Optionen sind vorausgewählt."
+
+-- Prompt optimizer options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2576287692"] = "Optionen für den Prompt-Optimizer sind vorausgewählt"
+
+-- Preselect prompt optimizer options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3159686278"] = "Voreingestellte Optionen für den Prompt-Optimierer auswählen?"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3448155331"] = "Schließen"
+
+-- Which target language should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3547337928"] = "Welche Zielsprache soll standardmäßig ausgewählt werden?"
+
+-- When enabled, you can preselect target language, important aspects, and provider defaults for the prompt optimizer assistant.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3570338905"] = "Wenn aktiviert, können Sie die Zielsprache, wichtige Aspekte und Standardwerte des Anbieters für den Prompt-Optimierungs-Assistenten vorab auswählen."
+
+-- Preselect important aspects
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3705987833"] = "Wichtige Aspekte vorwählen"
+
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Welcher Schreibstil soll standardmäßig ausgewählt werden?"
 
@@ -5499,8 +5685,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1614176092"] = "Assistenten"
 -- Coding
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1617786407"] = "Programmieren"
 
+-- Optimize your prompt using a structured guideline.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1709976267"] = "Optimieren Sie Ihren Prompt mithilfe eines strukturierten Leitfadens."
+
 -- Analyze a text or an email for tasks you need to complete.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analysieren Sie einen Text oder eine E-Mail nach Aufgaben, die Sie erledigen müssen."
+
+-- Prompt Optimizer
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1777666968"] = "Prompt-Optimierer"
 
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Texte zusammenfassen"
@@ -6530,6 +6722,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammati
 
 -- Legal Check Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Rechtlichen Prüfungs-Assistent"
+
+-- Prompt Optimizer Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1993795352"] = "Prompt-Optimierungs-Assistent"
 
 -- Job Posting Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2212811874"] = "Stellenanzeigen-Assistent"

@@ -81,6 +81,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
 
+    private protected virtual RenderFragment? HeaderActions => null;
+
+    private protected virtual RenderFragment? AfterResultContent => null;
+
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
@@ -368,9 +372,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         switch (destination)
         {
             case Tools.Components.CHAT:
-                var convertedChatThread = this.ConvertToChatThread;
-                convertedChatThread = convertedChatThread with { SelectedProvider = this.providerSettings.Id };
-                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                if (sendToButton.SendToChatAsInput)
+                    MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT_INPUT, contentToSend);
+                else
+                {
+                    var convertedChatThread = this.ConvertToChatThread;
+                    convertedChatThread = convertedChatThread with { SelectedProvider = this.providerSettings.Id };
+                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                }
                 break;
             
             default:
