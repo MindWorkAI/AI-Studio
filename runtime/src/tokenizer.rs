@@ -155,22 +155,10 @@ fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<String, std::io:
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid tokenizer file path"))?;
     let model_path = &base_path.join(&payload.model_id);
     let destination_path = &model_path.join(source_name);
-    println!(
-        "source_path: {}, destination_path: {}",
-        source_path.display(),
-        destination_path.display()
-    );
-    println!("equals {}", source_path.eq(destination_path));
-
     if !source_path.eq(destination_path) && model_path.exists() {
         fs::remove_dir_all(model_path)?;
     }
     fs::create_dir_all(model_path)?;
-    println!(
-        "Moving tokenizer file from {} to {}",
-        source_path.display(),
-        destination_path.display()
-    );
     let previous_path = base_path.join(&payload.previous_model_id);
 
     if !payload.previous_model_id.trim().is_empty() && source_path.starts_with(&previous_path) {
@@ -205,16 +193,11 @@ pub fn token_count(_token: APIToken, req: Json<SetTokenText>) -> Json<TokenizerR
 
 #[post("/tokenizer/validate", data = "<payload>")]
 pub fn validate_tokenizer(_token: APIToken, payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
-    println!("Received tokenizer validation request: {}", payload.file_path);
     Json(validate_tokenizer_at_path(&PathBuf::from(payload.file_path.clone())).into())
 }
 
 #[post("/tokenizer/store", data = "<payload>")]
 pub fn store_tokenizer(_token: APIToken, payload: Json<TokenizerStorage>) -> Json<TokenizerResponse> {
-    println!(
-        "Received tokenizer store request: {}, {}, {}",
-        payload.model_id, payload.previous_model_id, payload.file_path
-    );
     match handle_tokenizer_store(&payload) {
         Ok(dest_path) => Json(TokenizerResponse {
             success: true,
