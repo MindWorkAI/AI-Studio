@@ -30,7 +30,7 @@ Since November 2024: Work on RAG (integration of your data and files) has begun.
 - [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
 - [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
 - [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
-- [ ] App: Implement external embedding providers
+- [x] ~~App: Implement external embedding providers ([PR #654](https://github.com/MindWorkAI/AI-Studio/pull/654))~~
 - [ ] App: Implement the process to vectorize one local file using embeddings
 - [x] ~~Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant) ([PR #580](https://github.com/MindWorkAI/AI-Studio/pull/580))~~
 - [ ] App: Implement the continuous process of vectorizing data
@@ -67,7 +67,7 @@ Since March 2025: We have started developing the plugin system. There will be la
 - [x] ~~Provide MindWork AI Studio in German ([PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
 - [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494), [PR #497](https://github.com/MindWorkAI/AI-Studio/pull/497))~~
 - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
-- [ ] Add assistant plugins
+- [ ] Add assistant plugins ([PR #659](https://github.com/MindWorkAI/AI-Studio/pull/659))
 
 </details>
 </details>
@@ -79,6 +79,7 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.2.2: Added Qdrant as a building block for our local RAG preview, added an embedding test option to validate embedding providers, and improved enterprise and configuration plugins with preselected providers, additive preview features, support for multiple configurations, and more reliable synchronization.
 - v26.1.1: Added the option to attach files, including images, to chat templates; added support for source code file attachments in chats and document analysis; added a preview feature for recording your own voice for transcription; fixed various bugs in provider dialogs and profile selection.
 - v0.10.0: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, the possibility to use file attachments in chats, and support for images as input.
 - v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
@@ -90,7 +91,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.9.39: Added the plugin system as a preview feature.
 - v0.9.31: Added Helmholtz & GWDG as LLM providers. This is a huge improvement for many researchers out there who can use these providers for free. We added DeepSeek as a provider as well.
 - v0.9.29: Added agents to support the RAG process (selecting the best data sources & validating retrieved data as part of the augmentation process)
-- v0.9.26+: Added RAG for external data sources using our [ERI interface](https://mindworkai.org/#eri---external-retrieval-interface) as a preview feature.
  
 </details>
 

@@ -1,4 +1,5 @@
 @using AIStudio.Tools.PluginSystem
+@using AIStudio.Tools.PluginSystem.Assistants
 @inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
@@ -64,19 +65,25 @@
                 </MudTd>
                 <MudTd>
                     <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                        @if (context.Type is PluginType.ASSISTANT)
+                        {
+                            var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == context.Id);
+                            <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
+                        }
                         @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
                         {
                             var isEnabled = this.SettingsManager.IsPluginEnabled(context);
-                            <MudTooltip Text="@(isEnabled ? T("Disable plugin") : T("Enable plugin"))">
-                                <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))"/>
+                            var activationSwitchDisabled = this.IsActivationSwitchDisabled(context, isEnabled);
+                            <MudTooltip Text="@this.GetActivationTooltip(context, isEnabled)">
+                                <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))" Disabled="@activationSwitchDisabled"/>
                             </MudTooltip>
                         }
-                        
+
                         @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
                         {
                             var sourceUrl = context.SourceURL;
                             var isSendingMail = IsSendingMail(sourceUrl);
-                            if(isSendingMail)
+                            if (isSendingMail)
                             {
                                 <MudTooltip Text="@T("Send a mail")">
                                     <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>

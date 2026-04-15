@@ -1,0 +1,47 @@
+@inherits MSGComponentBase
+
+<MudStack Spacing="2">
+    <MudText Typo="Typo.body2">
+        @T("Version"): @this.Info.VersionText
+    </MudText>
+
+    @if (this.ShowAcceptanceMetadata)
+    {
+        @if (this.AcceptanceStatus is MandatoryInfoAcceptanceStatus.MISSING)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
+                @T("This mandatory info has not been accepted yet.")
+            </MudAlert>
+        }
+        else if (this.AcceptanceStatus is MandatoryInfoAcceptanceStatus.VERSION_CHANGED)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
+                @T("A new version of the terms is available. Please review it again.")
+                <br />
+                @T("Last accepted version"): @this.Acceptance!.AcceptedVersion
+                <br />
+                @T("Accepted at (UTC)"): @this.Acceptance.AcceptedAtUtc.UtcDateTime.ToString("u")
+            </MudAlert>
+        }
+        else if (this.AcceptanceStatus is MandatoryInfoAcceptanceStatus.CONTENT_CHANGED)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
+                @T("Please review this text again. The content was changed.")
+                <br />
+                @T("Last accepted version"): @this.Acceptance!.AcceptedVersion
+                <br />
+                @T("Accepted at (UTC)"): @this.Acceptance.AcceptedAtUtc.UtcDateTime.ToString("u")
+            </MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="@true">
+                @T("Accepted version"): @this.Acceptance!.AcceptedVersion
+                <br />
+                @T("Accepted at (UTC)"): @this.Acceptance.AcceptedAtUtc.UtcDateTime.ToString("u")
+            </MudAlert>
+        }
+    }
+
+    <MudJustifiedMarkdown Value="@this.Info.Markdown" />
+</MudStack>

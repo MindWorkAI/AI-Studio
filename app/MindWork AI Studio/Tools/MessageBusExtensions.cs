@@ -11,6 +11,6 @@ public static class MessageBusExtensions
     
     public static void ApplyFilters(this IMessageBusReceiver component, ComponentBase[] components, Event[] events)
     {
-        MessageBus.INSTANCE.ApplyFilters(component, components, events);
+        MessageBus.INSTANCE.ApplyFilters(component, components, events.ToHashSet());
     }
 }

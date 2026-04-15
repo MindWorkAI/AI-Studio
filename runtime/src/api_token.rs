@@ -1,4 +1,6 @@
-use rand::{RngCore, SeedableRng};
+use log::error;
+use rand::rngs::SysRng;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaChaRng;
 
 /// The API token data structure used to authenticate requests.
@@ -36,7 +38,16 @@ impl APIToken {
 
 pub fn generate_api_token() -> APIToken {
     let mut token = [0u8; 32];
-    let mut rng = ChaChaRng::from_os_rng();
+
+    // The API token authenticates privileged runtime requests. If the OS-backed
+    // RNG cannot provide a secure seed, we abort instead of using a weaker RNG
+    // because a predictable token would silently break the app's security model.
+    let mut sys_rng = SysRng;
+    let mut rng = ChaChaRng::try_from_rng(&mut sys_rng)
+        .unwrap_or_else(|e| {
+            error!(Source = "API Token"; "Failed to seed ChaChaRng from SysRng: {e}");
+            panic!("Failed to seed ChaChaRng from SysRng: {e}");
+        });
     rng.fill_bytes(&mut token);
     APIToken::from_bytes(token.to_vec())
 }

@@ -6,6 +6,7 @@ using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Provider;
+using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
@@ -131,6 +132,17 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Navigation never expands, but there are tooltips"), NavBehavior.NEVER_EXPAND_USE_TOOLTIPS);
         yield return new(TB("Navigation never expands, no tooltips"), NavBehavior.NEVER_EXPAND_NO_TOOLTIPS);
         yield return new(TB("Always expand navigation"), NavBehavior.ALWAYS_EXPAND);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<StartPage>> GetStartPageData()
+    {
+        yield return new(TB("Welcome"), StartPage.HOME);
+        yield return new(TB("Chat"), StartPage.CHAT);
+        yield return new(TB("Assistants"), StartPage.ASSISTANTS);
+        yield return new(TB("Information"), StartPage.INFORMATION);
+        yield return new(TB("Plugins"), StartPage.PLUGINS);
+        yield return new(TB("Supporters"), StartPage.SUPPORTERS);
+        yield return new(TB("Settings"), StartPage.SETTINGS);
     }
 
     public static IEnumerable<ConfigurationSelectData<IconSources>> GetIconSourcesData()
@@ -287,5 +299,16 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var theme in Enum.GetValues<Themes>())
             yield return new(theme.GetName(), theme);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AssistantAuditLevel>> GetAssistantAuditLevelsData()
+    {
+        foreach (var level in Enum.GetValues<AssistantAuditLevel>())
+        {
+            if (level == AssistantAuditLevel.UNKNOWN)
+                continue;
+
+            yield return new(level.GetName(), level);
+        }
     }
 }

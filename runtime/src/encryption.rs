@@ -4,10 +4,11 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use hmac::Hmac;
-use log::info;
+use log::{error, info};
 use once_cell::sync::Lazy;
 use pbkdf2::pbkdf2;
-use rand::{RngCore, SeedableRng};
+use rand::rngs::SysRng;
+use rand::{Rng, SeedableRng};
 use rocket::{data, Data, Request};
 use rocket::data::ToByteUnit;
 use rocket::http::Status;
@@ -31,15 +32,25 @@ pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
 
     // We use a cryptographically secure pseudo-random number generator
     // to generate the secret password & salt. ChaCha20Rng is the algorithm
-    // of our choice:
-    let mut rng = rand_chacha::ChaChaRng::from_os_rng();
+    // of our choice. If the OS-backed RNG is unavailable, we fail fast instead
+    // of falling back to a weaker RNG because these values protect the IPC
+    // channel and must remain cryptographically secure.
+    let mut sys_rng = SysRng;
+    let mut rng = rand_chacha::ChaChaRng::try_from_rng(&mut sys_rng)
+        .unwrap_or_else(|e| {
+            error!(Source = "Encryption"; "Failed to seed ChaChaRng from SysRng: {e}");
+            panic!("Failed to seed ChaChaRng from SysRng: {e}");
+        });
 
     // Fill the secret key & salt with random bytes:
     rng.fill_bytes(&mut secret_key);
     rng.fill_bytes(&mut secret_key_salt);
 
     info!("Secret password for the IPC channel was generated successfully.");
-    Encryption::new(&secret_key, &secret_key_salt).unwrap()
+    Encryption::new(&secret_key, &secret_key_salt).unwrap_or_else(|e| {
+        error!(Source = "Encryption"; "Failed to initialize encryption for the IPC channel: {e}");
+        panic!("Failed to initialize encryption for the IPC channel: {e}");
+    })
 });
 
 /// The encryption struct used for the IPC channel.
@@ -98,9 +109,14 @@ impl Encryption {
     /// Encrypts the given data.
     pub fn encrypt(&self, data: &str) -> Result<EncryptedText, String> {
         let cipher = Aes256CbcEnc::new(&self.key.into(), &self.iv.into());
-        let encrypted = cipher.encrypt_padded_vec_mut::<Pkcs7>(data.as_bytes());
+        let data = data.as_bytes();
+        let mut buffer = vec![0u8; data.len() + 16];
+        buffer[..data.len()].copy_from_slice(data);
+        let encrypted = cipher
+            .encrypt_padded_mut::<Pkcs7>(&mut buffer, data.len())
+            .map_err(|e| format!("Error encrypting data: {e}"))?;
         let mut result = BASE64_STANDARD.encode(self.secret_key_salt);
-        result.push_str(&BASE64_STANDARD.encode(&encrypted));
+        result.push_str(&BASE64_STANDARD.encode(encrypted));
         Ok(EncryptedText::new(result))
     }
 
@@ -118,9 +134,12 @@ impl Encryption {
         }
 
         let cipher = Aes256CbcDec::new(&self.key.into(), &self.iv.into());
-        let decrypted = cipher.decrypt_padded_vec_mut::<Pkcs7>(encrypted).map_err(|e| format!("Error decrypting data: {e}"))?;
+        let mut buffer = encrypted.to_vec();
+        let decrypted = cipher
+            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+            .map_err(|e| format!("Error decrypting data: {e}"))?;
 
-        String::from_utf8(decrypted).map_err(|e| format!("Error converting decrypted data to string: {}", e))
+        String::from_utf8(decrypted.to_vec()).map_err(|e| format!("Error converting decrypted data to string: {}", e))
     }
 }
 

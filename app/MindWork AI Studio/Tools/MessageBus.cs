@@ -33,10 +33,10 @@ public sealed class MessageBus
     /// <param name="receiver">That's you, the receiver.</param>
     /// <param name="filterComponents">A list of components for which you want to receive messages. Use an empty list to receive messages from all components.</param>
     /// <param name="events">A list of events for which you want to receive messages.</param>
-    public void ApplyFilters(IMessageBusReceiver receiver, ComponentBase[] filterComponents, Event[] events)
+    public void ApplyFilters(IMessageBusReceiver receiver, ComponentBase[] filterComponents, HashSet<Event> events)
     {
         this.componentFilters[receiver] = filterComponents;
-        this.componentEvents[receiver] = events;
+        this.componentEvents[receiver] = events.ToArray();
     }
     
     public void RegisterComponent(IMessageBusReceiver receiver)

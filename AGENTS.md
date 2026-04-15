@@ -29,6 +29,14 @@ dotnet run build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
+### Running .NET builds from an agent
+- Do not run `.NET` builds such as `dotnet run build`, `dotnet build`, or similar build commands from an agent. Codex agents can hit a known sandbox issue during `.NET` builds, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related failures.
+- Instead, ask the user to run the `.NET` build locally in their IDE and report the result back.
+- Recommend the canonical repo build flow for the user: open an IDE terminal in the repository and run `cd app/Build && dotnet run build`.
+- If the context fits better, it is also acceptable to ask the user to start the build using their IDE's built-in build action, as long as it is clear the build must be run locally by the user.
+- After asking for the build, wait for the user's feedback before diagnosing issues, making follow-up changes, or suggesting the next step.
+- Treat the user's build output, error messages, or success confirmation as the source of truth for further troubleshooting.
+- For reference: https://github.com/openai/codex/issues/4915
 
 ### Running Tests
 Currently, no automated test suite exists in the repository.
@@ -177,12 +185,17 @@ Multi-level confidence scheme allows users to control which providers see which 
 ## Important Development Notes
 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
+- **End of file formatting** - Do not append an extra empty line at the end of files.
+- **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
+- **Agent-run .NET builds** - Do not run `.NET` builds from an agent. Ask the user to run the build locally in their IDE, preferably via `cd app/Build && dotnet run build` in an IDE terminal, then wait for their feedback before continuing.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 - **MudBlazor** - Component library requires DI setup in Program.cs
 - **Encryption** - Initialized before Rust service is marked ready
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
+- **Naming conventions** - Constants, enum members, and `static readonly` fields use `UPPER_SNAKE_CASE` such as `MY_CONSTANT`.
+- **Empty lines** - Avoid adding extra empty lines at the end of files.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
@@ -193,6 +206,7 @@ please ensure they are clear and concise, avoiding technical jargon where possib
 following words:
 
 - Added
+- Released
 - Improved
 - Changed
 - Fixed
