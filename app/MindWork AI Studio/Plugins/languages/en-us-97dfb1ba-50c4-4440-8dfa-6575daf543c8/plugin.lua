@@ -48,6 +48,36 @@ LANG_NAME = "English (United States)"
 
 UI_TEXT_CONTENT = {}
 
+-- No audit provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826200"] = "No audit provider is configured."
+
+-- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087"] = "The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."
+
+-- The audit agent did not return a usable response.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188890"] = "The audit agent did not return a usable response."
+
+-- No provider is configured for the Security Audit Agent.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "No provider is configured for the Security Audit Agent."
+
+-- The audit result was empty.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "The audit result was empty."
+
+-- The audit agent returned invalid JSON.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T917600186"] = "The audit agent returned invalid JSON."
+
+-- Concerning
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T1500095429"] = "Concerning"
+
+-- Dangerous
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3421510547"] = "Dangerous"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3424652889"] = "Unknown"
+
+-- Safe
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T760494712"] = "Safe"
+
 -- Objective
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Objective"
 
@@ -542,6 +572,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Yes, hide the policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Yes, hide the policy definition"
+
+-- No assistant plugin are currently installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1913566603"] = "No assistant plugin are currently installed."
+
+-- Please select one of your profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] = "Please select one of your profiles."
 
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input."
@@ -1458,9 +1494,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367
 -- Text content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1820253043"] = "Text content"
 
--- Slide Planner Assistant
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1883918574"] = "Slide Planner Assistant"
-
 -- Please provide a text or at least one valid document or image.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2013746884"] = "Please provide a text or at least one valid document or image."
 
@@ -1490,6 +1523,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965
 
 -- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2910177051"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience."
+
+-- Slide Planner Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2924755246"] = "Slide Planner Assistant"
 
 -- The result of your previous slide builder session.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3000286990"] = "The result of your previous slide builder session."
@@ -1734,6 +1770,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "No, kee
 -- Export Chat to Microsoft Word
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export Chat to Microsoft Word"
 
+-- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."
+
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
 
@@ -1748,6 +1787,63 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
+
+-- Show or hide the detailed security information.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
+
+-- Assistant Audit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1506922856"] = "Assistant Audit"
+
+-- Plugin ID
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1661076691"] = "Plugin ID"
+
+-- Audit level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1681369326"] = "Audit level"
+
+-- Availability
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1805629238"] = "Availability"
+
+-- Assistant Security
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1841954939"] = "Assistant Security"
+
+-- Required minimum
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2354026284"] = "Required minimum"
+
+-- Audit provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2757790517"] = "Audit provider"
+
+-- Technical Details
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2769062110"] = "Technical Details"
+
+-- No audit yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3138877447"] = "No audit yet"
+
+-- Confidence
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3243388657"] = "Confidence"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3424652889"] = "Unknown"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3448155331"] = "Close"
+
+-- No stored audit details are available yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3647137899"] = "No stored audit details are available yet."
+
+-- Current hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3896860082"] = "Current hash"
+
+-- Audited at
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4103354206"] = "Audited at"
+
+-- No security findings were stored for this assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4256679240"] = "No security findings were stored for this assistant plugin."
+
+-- Audit hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T53507304"] = "Audit hash"
+
+-- {0} Finding(s)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T631393016"] = "{0} Finding(s)"
 
 -- Click the paperclip to attach files, or click the number to see your attached files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Click the paperclip to attach files, or click the number to see your attached files."
@@ -2004,6 +2100,27 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "C
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Install Pandoc"
 
+-- Version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1573770551"] = "Version"
+
+-- A new version of the terms is available. Please review it again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1711766303"] = "A new version of the terms is available. Please review it again."
+
+-- This mandatory info has not been accepted yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1870532312"] = "This mandatory info has not been accepted yet."
+
+-- Accepted version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T203086476"] = "Accepted version"
+
+-- Last accepted version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3407978086"] = "Last accepted version"
+
+-- Accepted at (UTC)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3511160492"] = "Accepted at (UTC)"
+
+-- Please review this text again. The content was changed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T941885055"] = "Please review this text again. The content was changed."
+
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications."
 
@@ -2180,6 +2297,57 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T4256489763"] = "Choose 
 
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Choose File"
+
+-- External Assistants rated below this audit level are treated as insufficiently reviewed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
+
+-- The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1701891173"] = "The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended)."
+
+-- Users may still activate plugins below the minimum Audit-Level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1840342259"] = "Users may still activate plugins below the minimum Audit-Level"
+
+-- Automatically audit new or updated plugins in the background?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1843401860"] = "Automatically audit new or updated plugins in the background?"
+
+-- Require a security audit before activating external Assistants?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2010360320"] = "Require a security audit before activating external Assistants?"
+
+-- External Assistants must be audited before activation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2065972970"] = "External Assistants must be audited before activation"
+
+-- Block activation below the minimum Audit-Level?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T232834129"] = "Block activation below the minimum Audit-Level?"
+
+-- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821"] = "Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?"
+
+-- Agent: Security Audit for external Assistants
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2910364422"] = "Agent: Security Audit for external Assistants"
+
+-- External Assistant can be activated without an audit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2915620630"] = "External Assistant can be activated without an audit"
+
+-- Security audit is done manually by the user
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3568079552"] = "Security audit is done manually by the user"
+
+-- Minimum required audit level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3599539909"] = "Minimum required audit level"
+
+-- Security audit is automatically done in the background
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3684348859"] = "Security audit is automatically done in the background"
+
+-- Disable Assistant Audit Protection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4019550023"] = "Disable Assistant Audit Protection"
+
+-- Activation is blocked below the minimum Audit-Level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Activation is blocked below the minimum Audit-Level"
+
+-- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352"] = "Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider."
+
+-- This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T893652865"] = "This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes."
 
 -- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1297967572"] = "When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM."
@@ -2867,6 +3035,150 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Please select
 
 -- Delete Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Workspace"
+
+-- Entries: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1098127509"] = "Entries: {0}"
+
+-- User Prompt Preview
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1184162672"] = "User Prompt Preview"
+
+-- {0:0.##} GB
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1224874808"] = "{0:0.##} GB"
+
+-- Potentially Dangerous Plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1229643769"] = "Potentially Dangerous Plugin"
+
+-- Plugin root
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1303883002"] = "Plugin root"
+
+-- Last modified
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1310524248"] = "Last modified"
+
+-- Count: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T131135808"] = "Count: {0}"
+
+-- {0:0.##} MB
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1357418474"] = "{0:0.##} MB"
+
+-- No security issues were found during this check.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1423034104"] = "No security issues were found during this check."
+
+-- No provider configured
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1476185409"] = "No provider configured"
+
+-- {0:0.##} KB
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T14914764"] = "{0:0.##} KB"
+
+-- Prompt: empty
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1533307170"] = "Prompt: empty"
+
+-- This plugin is below the required safety level. Your settings still allow activation, but enabling it requires an extra confirmation because it may be unsafe.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1539381299"] = "This plugin is below the required safety level. Your settings still allow activation, but enabling it requires an extra confirmation because it may be unsafe."
+
+-- Components
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1550582665"] = "Components"
+
+-- Created
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T165548891"] = "Created"
+
+-- Lua Manifest
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T165738710"] = "Lua Manifest"
+
+-- Enable Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1676241565"] = "Enable Assistant Plugin"
+
+-- User Prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1700917692"] = "User Prompt"
+
+-- Unknown plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1834795216"] = "Unknown plugin"
+
+-- This plugin cannot be activated because its audit result is below the required safety level and your settings block activation in this case.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1839656215"] = "This plugin cannot be activated because its audit result is below the required safety level and your settings block activation in this case."
+
+-- Children: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T193192210"] = "Children: {0}"
+
+-- null
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1996966820"] = "null"
+
+-- Properties
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2177370620"] = "Properties"
+
+-- Items: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2204150657"] = "Items: {0}"
+
+-- {0} B
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2562655035"] = "{0} B"
+
+-- The assistant plugin could not be resolved for auditing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T273798258"] = "The assistant plugin could not be resolved for auditing."
+
+-- Audit provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2757790517"] = "Audit provider"
+
+-- Size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2789707388"] = "Size"
+
+-- Prompt: set
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3156437951"] = "Prompt: set"
+
+-- Findings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3224848879"] = "Findings"
+
+-- Advanced Prompt Building
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3399544173"] = "Advanced Prompt Building"
+
+-- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required safety level \"{2}\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3418077666"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required safety level \\\"{2}\\\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3424652889"] = "Unknown"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3448155331"] = "Close"
+
+-- Value
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3511155050"] = "Value"
+
+-- Last accessed
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3579946376"] = "Last accessed"
+
+-- Unknown key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3647690370"] = "Unknown key"
+
+-- Minimum required safety level
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3652671056"] = "Minimum required safety level"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3662391977"] = "Unavailable"
+
+-- Plugin Structure
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T371537943"] = "Plugin Structure"
+
+-- Audit Result
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3844960449"] = "Audit Result"
+
+-- empty
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T413646574"] = "empty"
+
+-- Fallback Prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T4229995215"] = "Fallback Prompt"
+
+-- System Prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System Prompt"
+
+-- This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T737998363"] = "This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected."
+
+-- Safe
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T760494712"] = "Safe"
+
+-- Start Security Check
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T811648299"] = "Start Security Check"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T900713019"] = "Cancel"
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Only text content is supported in the editing mode yet."
@@ -4698,6 +5010,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T13933
 -- Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1528169602"] = "Preselect aspects for the LLM to focus on when generating slides, such as bullet points or specific topics to emphasize."
 
+-- Slide Planner Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1549358578"] = "Slide Planner Assistant options are preselected"
+
+-- No Slide Planner Assistant options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1694374279"] = "No Slide Planner Assistant options are preselected"
+
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Choose whether the assistant should use the app default profile, no profile, or a specific profile."
 
@@ -4706,9 +5024,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T20146
 
 -- Which audience organizational level should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T216511105"] = "Which audience organizational level should be preselected?"
-
--- Preselect Slide Planner Assistant options?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T227645894"] = "Preselect Slide Planner Assistant options?"
 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2322771068"] = "Preselect a profile"
@@ -4726,10 +5041,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T25714
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2645589441"] = "Preselect the audience age group"
 
 -- Assistant: Slide Planner Assistant Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3215549988"] = "Assistant: Slide Planner Assistant Options"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3226042276"] = "Assistant: Slide Planner Assistant Options"
 
 -- Which audience expertise should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3228597992"] = "Which audience expertise should be preselected?"
+
+-- Preselect Slide Planner Assistant options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T339924858"] = "Preselect Slide Planner Assistant options?"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Close"
@@ -4737,14 +5055,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T34481
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Preselect important aspects"
 
--- No Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T4214398691"] = "No Slide Planner Assistant options are preselected"
-
 -- Preselect the audience profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T861397972"] = "Preselect the audience profile"
-
--- Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T93124146"] = "Slide Planner Assistant options are preselected"
 
 -- Which audience age group should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T956845877"] = "Which audience age group should be preselected?"
@@ -5190,9 +5502,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1617786407"] = "Coding"
 -- Analyze a text or an email for tasks you need to complete.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analyze a text or an email for tasks you need to complete."
 
--- Slide Planner Assistant
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1883918574"] = "Slide Planner Assistant"
-
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Text Summarizer"
 
@@ -5226,11 +5535,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Develop
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Generate a job posting for a given job description."
 
+-- Slide Planner Assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2924755246"] = "Slide Planner Assistant"
+
+-- Installed Assistants
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installed Assistants"
+
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "My Tasks"
 
 -- E-Mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3026443472"] = "E-Mail"
+
+-- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."
 
 -- Develop slide content based on a given topic and content.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311912219"] = "Develop slide content based on a given topic and content."
@@ -5406,6 +5724,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
 
+-- Unknown configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unknown configuration plugin"
+
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
 
@@ -5435,6 +5756,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Building on .NET
 
 -- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files."
+
+-- Consent:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Consent:"
 
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
@@ -5655,6 +5979,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T788846912"] = "Copies the config
 -- installed by AI Studio
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T833849470"] = "installed by AI Studio"
 
+-- Provided by configuration plugin: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T836298648"] = "Provided by configuration plugin: {0}"
+
 -- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate."
 
@@ -5664,8 +5991,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "For some data tra
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Install Pandoc"
 
+-- Potentially Dangerous Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1229643769"] = "Potentially Dangerous Plugin"
+
 -- Disable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1430375822"] = "Disable plugin"
+
+-- Assistant Audit
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistant Audit"
 
 -- Internal Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Internal Plugins"
@@ -5682,11 +6015,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Enable plugin"
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
+-- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2531356312"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required minimum level \\\"{2}\\\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"
+
 -- Enabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Enabled Plugins"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Actions"
+
+-- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."
 
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Open website"
@@ -5870,6 +6212,21 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Un
 
 -- no model selected
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "no model selected"
+
+-- We could not load models from '{0}'. The account or API key does not have the required permissions.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T1143085203"] = "We could not load models from '{0}'. The account or API key does not have the required permissions."
+
+-- We could not load models from '{0}'. The API key is probably missing, invalid, or expired.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2041046579"] = "We could not load models from '{0}'. The API key is probably missing, invalid, or expired."
+
+-- We could not load models from '{0}' because the provider is currently unavailable or could not be reached.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2115688703"] = "We could not load models from '{0}' because the provider is currently unavailable or could not be reached."
+
+-- We could not load models from '{0}' because the provider returned an unexpected response.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2186844789"] = "We could not load models from '{0}' because the provider returned an unexpected response."
+
+-- We could not load models from '{0}' due to an unknown error.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T3907712809"] = "We could not load models from '{0}' due to an unknown error."
 
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Model as configured by whisper.cpp"
@@ -6171,9 +6528,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1546040625"] = "My Task
 -- Grammar & Spelling Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammar & Spelling Assistant"
 
--- Slide Planner Assistant
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1883918574"] = "Slide Planner Assistant"
-
 -- Legal Check Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Legal Check Assistant"
 
@@ -6188,6 +6542,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2684676843"] = "Text Su
 
 -- Synonym Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2921123194"] = "Synonym Assistant"
+
+-- Slide Planner Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2924755246"] = "Slide Planner Assistant"
 
 -- Document Analysis Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T348883878"] = "Document Analysis Assistant"
@@ -6413,6 +6770,183 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3290596792"] = "Error during Mi
 
 -- Microsoft Word export successful
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T4256043333"] = "Microsoft Word export successful"
+
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1041509726"] = "Text"
+
+-- Stack
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T135058847"] = "Stack"
+
+-- Button group
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1392576058"] = "Button group"
+
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1494001562"] = "Image"
+
+-- Text Area
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1593629311"] = "Text Area"
+
+-- Grid Item
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1991378436"] = "Grid Item"
+
+-- List
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2368288673"] = "List"
+
+-- File Content Reader
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2395548053"] = "File Content Reader"
+
+-- Provider Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T268262394"] = "Provider Selection"
+
+-- Root
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2703841893"] = "Root"
+
+-- Container
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2990360344"] = "Container"
+
+-- Web Content Reader
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3244127223"] = "Web Content Reader"
+
+-- Date Range Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3290584542"] = "Date Range Selection"
+
+-- Accordion
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3372988345"] = "Accordion"
+
+-- Switch
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3656636817"] = "Switch"
+
+-- Dropdown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3829804792"] = "Dropdown"
+
+-- Accordion Section
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T4180733902"] = "Accordion Section"
+
+-- Profile Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T4192015724"] = "Profile Selection"
+
+-- Heading
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T4231005109"] = "Heading"
+
+-- Unknown Element
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T434854509"] = "Unknown Element"
+
+-- Color Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T477864646"] = "Color Selection"
+
+-- Time Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T503858178"] = "Time Selection"
+
+-- Date Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T683784719"] = "Date Selection"
+
+-- Grid
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T800286385"] = "Grid"
+
+-- Button
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T864557713"] = "Button"
+
+-- Failed to parse the UI render tree from the ASSISTANT lua table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Failed to parse the UI render tree from the ASSISTANT lua table."
+
+-- The provided ASSISTANT lua table does not contain a valid UI table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1841068402"] = "The provided ASSISTANT lua table does not contain a valid UI table."
+
+-- The provided ASSISTANT lua table does not contain a valid description.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2514141654"] = "The provided ASSISTANT lua table does not contain a valid description."
+
+-- The provided ASSISTANT lua table does not contain a valid title.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2814605990"] = "The provided ASSISTANT lua table does not contain a valid title."
+
+-- The ASSISTANT lua table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "The ASSISTANT lua table does not exist or is not a valid table."
+
+-- The provided ASSISTANT lua table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "The provided ASSISTANT lua table does not contain a valid system prompt."
+
+-- The ASSISTANT table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "The ASSISTANT table does not contain a valid system prompt."
+
+-- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax."
+
+-- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles."
+
+-- This assistant changed after its last audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1161057634"] = "This assistant changed after its last audit."
+
+-- This assistant is currently locked.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T123211529"] = "This assistant is currently locked."
+
+-- Audit Required
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1669285905"] = "Audit Required"
+
+-- Run Security Check Again
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1737337972"] = "Run Security Check Again"
+
+-- The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1901245910"] = "The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully."
+
+-- This assistant can still be used because audit enforcement is disabled.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1950430056"] = "This assistant can still be used because audit enforcement is disabled."
+
+-- Changed
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2311397435"] = "Changed"
+
+-- The stored audit matches the current plugin code and meets your required minimum level '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2619426408"] = "The stored audit matches the current plugin code and meets your required minimum level '{0}'."
+
+-- No security audit exists yet, and your current security settings require one before this assistant plugin may be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2687548907"] = "No security audit exists yet, and your current security settings require one before this assistant plugin may be enabled or used."
+
+-- This assistant can still be used because your settings allow it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2730893303"] = "This assistant can still be used because your settings allow it."
+
+-- The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T274724689"] = "The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin."
+
+-- The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2774333862"] = "The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."
+
+-- Not Audited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2828154864"] = "Not Audited"
+
+-- This assistant is locked until it is audited again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2868721080"] = "This assistant is locked until it is audited again."
+
+-- Open Security Check
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T290241209"] = "Open Security Check"
+
+-- Restricted
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3325062668"] = "Restricted"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3424652889"] = "Unknown"
+
+-- Unlocked
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3606159420"] = "Unlocked"
+
+-- The plugin code changed after the last security audit. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3619293572"] = "The plugin code changed after the last security audit. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."
+
+-- Blocked
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3816336467"] = "Blocked"
+
+-- This assistant is currently unlocked.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3824876012"] = "This assistant is currently unlocked."
+
+-- No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3899951594"] = "No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used."
+
+-- Start Security Check
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T811648299"] = "Start Security Check"
+
+-- This assistant currently has no stored audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T921972844"] = "This assistant currently has no stored audit."
+
+-- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "The table AUTHORS does not exist or is using an invalid syntax."
@@ -6666,29 +7200,47 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T304
 -- AI-based data source selection with AI retrieval context validation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "AI-based data source selection with AI retrieval context validation"
 
--- Executable Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2217313358"] = "Executable Files"
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
 
--- All Source Code Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2460199369"] = "All Source Code Files"
+-- Office Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office Files"
 
--- All Audio Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2575722901"] = "All Audio Files"
+-- Executable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1364437037"] = "Executable"
 
--- All Video Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2850789856"] = "All Video Files"
+-- Mail
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1399880782"] = "Mail"
 
--- PDF Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T3108466742"] = "PDF Files"
+-- Source like
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1487238587"] = "Source like"
 
--- All Image Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T4086723714"] = "All Image Files"
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1494001562"] = "Image"
 
--- Text Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T639143005"] = "Text Files"
+-- Video
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1533528076"] = "Video"
 
--- All Office Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T709668067"] = "All Office Files"
+-- Source Code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1569048941"] = "Source Code"
+
+-- Config
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1779622119"] = "Config"
+
+-- Audio
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2291602489"] = "Audio"
+
+-- Custom
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Custom"
+
+-- Media
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"
+
+-- Source like prefix
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like prefix"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"
@@ -6821,6 +7373,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T29806295
 
 -- Images are not supported at this place
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T305247150"] = "Images are not supported at this place"
+
+-- Unsupported file type
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4041351522"] = "Unsupported file type"
 
 -- Executables are not allowed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4167762413"] = "Executables are not allowed"

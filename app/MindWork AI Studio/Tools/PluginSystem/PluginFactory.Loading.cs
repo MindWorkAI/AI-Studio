@@ -1,7 +1,6 @@
 using System.Text;
-
 using AIStudio.Settings;
-
+using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Standard;
 
@@ -186,6 +185,10 @@ public static partial class PluginFactory
         // Check document analysis policies:
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
+
+        // Check left-over mandatory info acceptances:
+        if (SETTINGS_MANAGER.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
+            wasConfigurationChanged = true;
         
         // Check for a preselected provider:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
@@ -237,6 +240,26 @@ public static partial class PluginFactory
         // Check for the voice recording shortcut:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check if audit is required before it can be activated
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Register new preselected provider for the security audit
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Change the minimum required audit level that is required for the allowance of assistants
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.MinimumLevel, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check if external plugins are strictly forbidden, when the minimum audit level is fell below
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check if security audits are invoked automatically and transparent for the user
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
         {
@@ -258,6 +281,7 @@ public static partial class PluginFactory
         }
 
         // Add some useful libraries:
+        state.OpenBasicLibrary();
         state.OpenModuleLibrary();
         state.OpenStringLibrary();
         state.OpenTableLibrary();
@@ -297,6 +321,11 @@ public static partial class PluginFactory
                 var configPlug = new PluginConfiguration(isInternal, state, type);
                 await configPlug.InitializeAsync(true);
                 return configPlug;
+            
+            case PluginType.ASSISTANT:
+                var assistantPlugin = new PluginAssistants(isInternal, state, type);
+                assistantPlugin.TryLoad();
+                return assistantPlugin;
             
             default:
                 return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");

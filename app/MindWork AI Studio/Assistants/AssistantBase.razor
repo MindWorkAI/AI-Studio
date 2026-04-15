@@ -56,16 +56,16 @@
             <div id="@BEFORE_RESULT_DIV_ID" class="mt-3">
             </div>
 
-            @if (this.ShowResult && !this.ShowEntireChatThread && this.resultingContentBlock is not null)
+            @if (this.ShowResult && !this.ShowEntireChatThread && this.resultingContentBlock is not null && this.resultingContentBlock.Content is not null)
             {
-                <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@(this.resultingContentBlock.Content)"/>
+                <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@this.resultingContentBlock.Content"/>
             }
             
             @if(this.ShowResult && this.ShowEntireChatThread && this.chatThread is not null)
             {
                 foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
                 {
-                    @if (!block.HideFromUser)
+                    @if (block is { HideFromUser: false, Content: not null })
                     {
                         <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
                     }
