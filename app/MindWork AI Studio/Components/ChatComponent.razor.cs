@@ -879,22 +879,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         var chatProfile = this.ChatThread?.SelectedProfile;
         var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
-        switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
-        {
-            default:
-            case LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE:
-                this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT, chatProvider);
-                break;
-            
-            case LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER:
-                this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
-                break;
-            
-            case LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER:
-                if(this.Provider == AIStudio.Settings.Provider.NONE)
-                    this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
-                break;
-        }
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProvider);
         
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
