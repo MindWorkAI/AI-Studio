@@ -17,6 +17,9 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "AlibabaCloud";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

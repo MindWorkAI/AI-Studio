@@ -17,6 +17,9 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "GWDG SAIA";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

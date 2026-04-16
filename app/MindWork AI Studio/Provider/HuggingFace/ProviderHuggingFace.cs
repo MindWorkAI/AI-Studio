@@ -24,6 +24,9 @@ public sealed class ProviderHuggingFace : BaseProvider
     public override string InstanceName { get; set; } = "HuggingFace";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => false;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(

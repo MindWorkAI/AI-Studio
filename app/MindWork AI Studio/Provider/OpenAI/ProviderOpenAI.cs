@@ -24,6 +24,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
     public override string InstanceName { get; set; } = "OpenAI";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:

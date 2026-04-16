@@ -91,6 +91,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />
+    public abstract bool HasModelLoadingCapability { get; }
+
+    /// <inheritdoc />
     public abstract IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <inheritdoc />

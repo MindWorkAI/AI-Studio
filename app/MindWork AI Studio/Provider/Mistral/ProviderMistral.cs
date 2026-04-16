@@ -12,9 +12,14 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, "http
 
     #region Implementation of IProvider
 
+    /// <inheritdoc />
     public override string Id => LLMProviders.MISTRAL.ToName();
     
+    /// <inheritdoc />
     public override string InstanceName { get; set; } = "Mistral";
+    
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

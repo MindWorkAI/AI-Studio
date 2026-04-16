@@ -19,6 +19,9 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Helmholtz Blablador";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
