@@ -1329,6 +1329,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Ask your questions"
 
+-- Analyze the following text and extract my tasks:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1349891364"] = "Analyze the following text and extract my tasks:"
+
 -- Please provide some text as input. For example, an email.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1962809521"] = "Please provide some text as input. For example, an email."
 
@@ -1803,7 +1806,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T1907192403"] = "Text Summarizer"
 
--- Create a summary of my text
+-- Create a summary of my text.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T2013275370"] = "Create a summary of my text."
 
 -- Target language
