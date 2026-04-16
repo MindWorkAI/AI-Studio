@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.TextSummarizer;
@@ -30,10 +29,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     protected override bool SubmitDisabled => this.isAgentRunning;
     
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+    protected override string SendToChatVisibleUserPromptText => T("Create a summary of my text");
     
     protected override void ResetForm()
     {
