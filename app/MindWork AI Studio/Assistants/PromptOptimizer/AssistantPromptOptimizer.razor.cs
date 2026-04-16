@@ -547,7 +547,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             { x => x.GuidelineMarkdown, promptingGuideline }
         };
 
-        var dialogReference = await this.DialogService.ShowAsync<PromptingGuidelineDialog>(T("Prompting Guideline"), dialogParameters, AIStudio.Dialogs.DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<PromptingGuidelineDialog>(T("Prompting Guideline"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
         await dialogReference.Result;
     }
 
@@ -566,6 +566,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             { x => x.FileContent, this.customPromptingGuidelineContent },
         };
 
-        await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Custom Prompt Guide Preview"), dialogParameters, AIStudio.Dialogs.DialogOptions.FULLSCREEN);
+        await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Custom Prompt Guide Preview"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
     }
 }
