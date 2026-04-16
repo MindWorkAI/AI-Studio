@@ -18,6 +18,9 @@ public class NoProvider : IProvider
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
+    /// <inheritdoc />
+    public bool HasModelLoadingCapability => false;
+
     public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
 
     public Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));

@@ -14,9 +14,14 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, "
 
     #region Implementation of IProvider
 
+    /// <inheritdoc />
     public override string Id => LLMProviders.ANTHROPIC.ToName();
 
+    /// <inheritdoc />
     public override string InstanceName { get; set; } = "Anthropic";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

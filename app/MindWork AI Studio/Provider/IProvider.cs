@@ -28,6 +28,12 @@ public interface IProvider
     /// The additional API parameters.
     /// </summary>
     public string AdditionalJsonApiParameters { get; }
+
+    /// <summary>
+    /// Whether this provider instance can load available models from the backend/API.
+    /// This capability may differ by provider type, host, or modality.
+    /// </summary>
+    public bool HasModelLoadingCapability { get; }
     
     /// <summary>
     /// Starts a chat completion stream.

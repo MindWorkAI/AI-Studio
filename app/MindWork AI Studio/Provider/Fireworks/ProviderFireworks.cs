@@ -19,6 +19,9 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     public override string InstanceName { get; set; } = "Fireworks.ai";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => false;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ResponseStreamLine, ChatCompletionAnnotationStreamLine>(

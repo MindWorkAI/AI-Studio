@@ -16,9 +16,14 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
     #region Implementation of IProvider
 
+    /// <inheritdoc />
     public override string Id => LLMProviders.SELF_HOSTED.ToName();
     
+    /// <inheritdoc />
     public override string InstanceName { get; set; } = "Self-hosted";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)

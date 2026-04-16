@@ -174,6 +174,9 @@ public sealed class ContentText : IContent
             return false;
         }
 
+        if (!provider.HasModelLoadingCapability)
+            return true;
+
         IReadOnlyList<Model> loadedModels;
         try
         {
@@ -203,6 +206,11 @@ public sealed class ContentText : IContent
         var availableModels = loadedModels.Where(model => !string.IsNullOrWhiteSpace(model.Id)).ToList();
         if (availableModels.Count == 0)
         {
+            var emptyModelsMessage = string.Format(
+                TB("We could load models from '{0}', but the provider did not return any usable text models."),
+                provider.InstanceName);
+
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, emptyModelsMessage));
             LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }

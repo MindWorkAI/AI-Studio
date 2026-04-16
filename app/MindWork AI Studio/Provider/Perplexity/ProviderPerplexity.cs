@@ -26,6 +26,9 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Perplexity";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
